@@ -15,6 +15,32 @@ class PlotRenderer:
         """Return unique values in their current order (dataframe is already sorted)."""
         return [c for c in series.unique() if pd.notna(c)]
 
+    @staticmethod
+    def _compute_error_stat(grouped, error_type):
+        """Per-group error-bar statistic for `error_type` ('none'/'sd'/'sem'/
+        'ci95'), or None if 'none' (caller should omit yerr entirely).
+        Returns a pandas Series (not `.values`) so callers needing
+        index-based `.get(x, 0)` lookups (bar) and callers needing
+        positional `.values` (point/line, whose group order already
+        matches x_vals) can each use it as-is."""
+        if error_type == 'sd':
+            return grouped.std()
+        if error_type == 'sem':
+            return grouped.sem()
+        if error_type == 'ci95':
+            return grouped.sem() * 1.96
+        return None
+
+    def _series_style(self, idx):
+        """Optional per-series style overrides (linewidth/alpha/zorder/
+        marker_size/edge_color) for hue category `idx`, read from
+        legend_properties. Returns {} if legend_properties hasn't been
+        populated yet (e.g. the very first render of a fresh graph) or
+        doesn't cover this index -- callers should treat every key as
+        possibly absent and fall back to the existing global default."""
+        props = getattr(self.vg, 'legend_properties', None) or []
+        return props[idx] if idx < len(props) else {}
+
     def _prepare_plot_data(self, df, y):
         """Prepare dataframe and X positions for plotting."""
         cols = []
@@ -94,7 +120,9 @@ class PlotRenderer:
         edge_c = getattr(self.vg, 'scatter_edgecolor', 'black')
         ms = np.sqrt(self.vg.scatter_size) if hasattr(self.vg, 'scatter_size') else 7
         join = getattr(self.vg, 'join_for_point_plot', False)
-        
+        error_type = getattr(self.vg, 'error_bar_type', 'ci95')
+        capsize = getattr(self.vg, 'error_bar_capsize', 3.0)
+
         if self.vg.z and self.vg.z in plot_df.columns:
             categories = self._get_sorted_categories(plot_df[self.vg.z], df=plot_df)
             n_hue = len(categories)
@@ -108,43 +136,52 @@ class PlotRenderer:
                 subset = plot_df[plot_df[self.vg.z] == cat]
                 if subset.empty: continue
                 grouped = subset.groupby(self.vg.x)[y]
-                
+
                 x_cat_vals = list(grouped.groups.keys())
                 x_vals = np.array([x_positions[val] + offsets[idx] for val in x_cat_vals], dtype=float)
-                
+
                 means = grouped.mean().values
-                cis = grouped.sem().values * 1.96  # 95% CI
-                cis = np.nan_to_num(cis)
-                
+                error_stat = self._compute_error_stat(grouped, error_type)
+                cis = np.nan_to_num(error_stat.values) if error_stat is not None else None
+
                 color = colors[idx % len(colors)]
                 marker = markers[idx % len(markers)] if markers else 'o'
-                
+                style = self._series_style(idx)
+                series_ms = style.get('marker_size', ms)
+                series_edge = style.get('edge_color', edge_c)
+                extra = {k: style[k] for k in ('linewidth', 'alpha', 'zorder') if style.get(k) is not None}
+
                 self.vg.ax.errorbar(
                     x_vals, means, yerr=cis,
-                    fmt=marker, color=color, markersize=ms,
-                    markeredgecolor=edge_c, markeredgewidth=0.5,
-                    capsize=3, elinewidth=1,
-                    linestyle='-' if join else 'none'
+                    fmt=marker, color=color, markersize=series_ms,
+                    markeredgecolor=series_edge, markeredgewidth=0.5,
+                    capsize=capsize, elinewidth=1,
+                    linestyle='-' if join else 'none', **extra
                 )
-                self.vg.ax.plot([], [], marker=marker, color=color, markersize=ms,
-                             markeredgecolor=edge_c, markeredgewidth=0.5,
-                             linestyle='-' if join else 'none', label=str(cat))
+                self.vg.ax.plot([], [], marker=marker, color=color, markersize=series_ms,
+                             markeredgecolor=series_edge, markeredgewidth=0.5,
+                             linestyle='-' if join else 'none', label=str(cat), **extra)
         else:
             grouped = plot_df.groupby(self.vg.x)[y]
             x_cat_vals = list(grouped.groups.keys())
             x_vals = np.array([x_positions[val] for val in x_cat_vals], dtype=float)
             means = grouped.mean().values
-            cis = grouped.sem().values * 1.96
-            cis = np.nan_to_num(cis)
-            
+            error_stat = self._compute_error_stat(grouped, error_type)
+            cis = np.nan_to_num(error_stat.values) if error_stat is not None else None
+
+            style = self._series_style(0)
+            series_ms = style.get('marker_size', ms)
+            series_edge = style.get('edge_color', edge_c)
+            extra = {k: style[k] for k in ('linewidth', 'alpha', 'zorder') if style.get(k) is not None}
+
             self.vg.ax.errorbar(
                 x_vals, means, yerr=cis,
-                fmt='o', color=c, markersize=ms,
-                markeredgecolor=edge_c, markeredgewidth=0.5,
-                capsize=3, elinewidth=1,
-                linestyle='-' if join else 'none'
+                fmt='o', color=c, markersize=series_ms,
+                markeredgecolor=series_edge, markeredgewidth=0.5,
+                capsize=capsize, elinewidth=1,
+                linestyle='-' if join else 'none', **extra
             )
-            
+
         if not is_numeric:
             self.vg.ax.set_xticks(list(x_positions.values()))
             self.vg.ax.set_xticklabels([str(v) for v in x_unique])
@@ -153,7 +190,7 @@ class PlotRenderer:
         plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
         edge_c = getattr(self.vg, 'scatter_edgecolor', 'black')
         dodge = getattr(self.vg, 'dodge_scatter_plot', False) and not is_numeric
-        
+
         if self.vg.z and self.vg.z in plot_df.columns:
             categories = self._get_sorted_categories(plot_df[self.vg.z], df=plot_df)
             n_hue = len(categories)
@@ -166,22 +203,32 @@ class PlotRenderer:
                 subset = plot_df[plot_df[self.vg.z] == cat]
                 if subset.empty: continue
                 color = colors[idx % len(colors)]
-                
+
                 x_vals = np.array([x_positions[val] + offsets[idx] for val in subset[self.vg.x]], dtype=float)
-                
+
+                style = self._series_style(idx)
+                series_s = style.get('marker_size', self.vg.scatter_size)
+                series_edge = style.get('edge_color', edge_c)
+                extra = {k: style[k] for k in ('alpha', 'zorder') if style.get(k) is not None}
+
                 self.vg.ax.scatter(
                     x_vals, subset[y].values,
-                    color=color, s=self.vg.scatter_size,
-                    edgecolors=edge_c, linewidths=0.5, label=str(cat)
+                    color=color, s=series_s,
+                    edgecolors=series_edge, linewidths=0.5, label=str(cat), **extra
                 )
         else:
             x_vals = np.array([x_positions[val] for val in plot_df[self.vg.x]], dtype=float)
+            style = self._series_style(0)
+            series_s = style.get('marker_size', self.vg.scatter_size)
+            series_edge = style.get('edge_color', edge_c)
+            extra = {k: style[k] for k in ('alpha', 'zorder') if style.get(k) is not None}
+
             self.vg.ax.scatter(
                 x_vals, plot_df[y].values,
-                color=c, s=self.vg.scatter_size,
-                edgecolors=edge_c, linewidths=0.5
+                color=c, s=series_s,
+                edgecolors=series_edge, linewidths=0.5, **extra
             )
-            
+
         if not is_numeric:
             self.vg.ax.set_xticks(list(x_positions.values()))
             self.vg.ax.set_xticklabels([str(v) for v in x_unique])
@@ -263,43 +310,53 @@ class PlotRenderer:
 
     def _plot_line(self, df, y, colors, c):
         plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
-        
+        error_type = getattr(self.vg, 'error_bar_type', 'ci95')
+
         if self.vg.z and self.vg.z in plot_df.columns:
             categories = self._get_sorted_categories(plot_df[self.vg.z], df=plot_df)
             for idx, cat in enumerate(categories):
                 subset = plot_df[plot_df[self.vg.z] == cat]
                 if subset.empty: continue
                 grouped = subset.groupby(self.vg.x)[y]
-                
+
                 x_cat_vals = list(grouped.groups.keys())
                 x_vals = np.array([x_positions[val] for val in x_cat_vals], dtype=float)
-                
+
                 means = grouped.mean().values
-                cis = grouped.sem().values * 1.96  # 95% CI
-                cis = np.nan_to_num(cis)
-                
+                error_stat = self._compute_error_stat(grouped, error_type)
+
                 color = colors[idx % len(colors)]
-                
-                self.vg.ax.plot(x_vals, means, color=color, label=str(cat))
-                self.vg.ax.fill_between(x_vals, means - cis, means + cis, color=color, alpha=0.2)
+                style = self._series_style(idx)
+                extra = {k: style[k] for k in ('linewidth', 'alpha', 'zorder') if style.get(k) is not None}
+
+                self.vg.ax.plot(x_vals, means, color=color, label=str(cat), **extra)
+                if error_stat is not None:
+                    cis = np.nan_to_num(error_stat.values)
+                    self.vg.ax.fill_between(x_vals, means - cis, means + cis, color=color, alpha=0.2)
         else:
             grouped = plot_df.groupby(self.vg.x)[y]
             x_cat_vals = list(grouped.groups.keys())
             x_vals = np.array([x_positions[val] for val in x_cat_vals], dtype=float)
             means = grouped.mean().values
-            cis = grouped.sem().values * 1.96
-            cis = np.nan_to_num(cis)
-            
-            self.vg.ax.plot(x_vals, means, color=c)
-            self.vg.ax.fill_between(x_vals, means - cis, means + cis, color=c, alpha=0.2)
-            
+            error_stat = self._compute_error_stat(grouped, error_type)
+
+            style = self._series_style(0)
+            extra = {k: style[k] for k in ('linewidth', 'alpha', 'zorder') if style.get(k) is not None}
+
+            self.vg.ax.plot(x_vals, means, color=c, **extra)
+            if error_stat is not None:
+                cis = np.nan_to_num(error_stat.values)
+                self.vg.ax.fill_between(x_vals, means - cis, means + cis, color=c, alpha=0.2)
+
         if not is_numeric:
             self.vg.ax.set_xticks(list(x_positions.values()))
             self.vg.ax.set_xticklabels([str(v) for v in x_unique])
 
     def _plot_bar(self, df, y, colors, c):
         plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
-        
+        bar_error_type = getattr(self.vg, 'bar_error_bar_type', 'sd')
+        capsize = getattr(self.vg, 'error_bar_capsize', 3.0)
+
         if len(x_unique) < 2:
             bar_width = 0.4
         else:
@@ -321,34 +378,46 @@ class PlotRenderer:
                 subset = plot_df[plot_df[self.vg.z] == cat]
                 grouped = subset.groupby(self.vg.x)[y]
                 means = grouped.mean()
-                stds = grouped.std() if self.vg.show_bar_plot_error_bar else None
+                stds = (self._compute_error_stat(grouped, bar_error_type)
+                        if self.vg.show_bar_plot_error_bar else None)
                 color = colors[h_idx % len(colors)]
-                
+
                 positions = [x_positions[xv] + offsets[h_idx] for xv in x_unique]
                 heights = [means.get(xv, 0) for xv in x_unique]
                 yerr = [stds.get(xv, 0) for xv in x_unique] if stds is not None else None
-                
+
+                style = self._series_style(h_idx)
+                edge = style.get('edge_color', 'black')
+                lw = style.get('linewidth', 0.8)
+                extra = {k: style[k] for k in ('alpha', 'zorder') if style.get(k) is not None}
+
                 self.vg.ax.bar(
                     positions, heights, width=sub_width * 0.9,
-                    color=color, edgecolor='black', linewidth=0.8,
-                    yerr=yerr, capsize=3, ecolor='black',
-                    label=str(cat)
+                    color=color, edgecolor=edge, linewidth=lw,
+                    yerr=yerr, capsize=capsize, ecolor='black',
+                    label=str(cat), **extra
                 )
         else:
             grouped = plot_df.groupby(self.vg.x)[y]
             means = grouped.mean()
-            stds = grouped.std() if self.vg.show_bar_plot_error_bar else None
-            
+            stds = (self._compute_error_stat(grouped, bar_error_type)
+                    if self.vg.show_bar_plot_error_bar else None)
+
             positions = [x_positions[xv] for xv in x_unique]
             heights = [means.get(xv, 0) for xv in x_unique]
             yerr = [stds.get(xv, 0) for xv in x_unique] if stds is not None else None
-            
+
+            style = self._series_style(0)
+            edge = style.get('edge_color', 'black')
+            lw = style.get('linewidth', 0.8)
+            extra = {k: style[k] for k in ('alpha', 'zorder') if style.get(k) is not None}
+
             self.vg.ax.bar(
                 positions, heights, width=bar_width,
-                color=c, edgecolor='black', linewidth=0.8,
-                yerr=yerr, capsize=3, ecolor='black'
+                color=c, edgecolor=edge, linewidth=lw,
+                yerr=yerr, capsize=capsize, ecolor='black', **extra
             )
-            
+
         if is_numeric:
             self.vg.ax.set_xticks([x_positions[xv] for xv in x_unique])
             self.vg.ax.set_xticklabels([str(xv) for xv in x_unique])

@@ -22,6 +22,7 @@ from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
 from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon
 from spectroview.view.components.customized_widgets import CustomizedPalette
 from spectroview.view.components.customize_graph.customize_graph_dialog import CustomizeGraphDialog
+from spectroview.view.components.v_export_dialog import VExportDialog, VBatchExportDialog
 from spectroview.view.components.graph_commit import snapshot, diff
 
 class VWorkspaceGraphs(QWidget):
@@ -357,6 +358,7 @@ class VWorkspaceGraphs(QWidget):
         # Create all label inputs
         labels = [
             ('plot_title', 'Plot title:', 'Type to modify the plot title'),
+            ('plot_subtitle', 'Subtitle:', 'Optional text shown under the title'),
             ('xlabel', 'X label:', 'X axis label'),
             ('ylabel', 'Y label:', 'Y axis label'),
             ('zlabel', 'Z label:', 'Z axis label')
@@ -526,8 +528,15 @@ class VWorkspaceGraphs(QWidget):
         self.btn_save_as_template.setToolTip("Save all currently open plots as a Template")
         self.btn_save_as_template.setMinimumHeight(25)
 
+        self.btn_export_all = QPushButton()
+        self.btn_export_all.setIcon(QIcon(os.path.join(ICON_DIR, "save-all.png")))
+        self.btn_export_all.setText(" Export All")
+        self.btn_export_all.setToolTip("Export every open graph to a folder")
+        self.btn_export_all.setMinimumHeight(25)
+
         template_buttons_layout.addWidget(self.btn_apply_template)
         template_buttons_layout.addWidget(self.btn_save_as_template)
+        template_buttons_layout.addWidget(self.btn_export_all)
 
         parent_layout.addLayout(template_buttons_layout)
     
@@ -544,7 +553,8 @@ class VWorkspaceGraphs(QWidget):
         self.btn_add_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
         self.btn_update_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "update.png"), icon_color))
         self.btn_add_multi_wafer.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
-        
+        self.btn_export_all.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save-all.png"), icon_color))
+
         # v_data_filter buttons
         self.v_data_filter.btn_add.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
         self.v_data_filter.btn_remove.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "close.png"), icon_color))
@@ -575,6 +585,7 @@ class VWorkspaceGraphs(QWidget):
         # Plot template buttons
         self.btn_apply_template.clicked.connect(self._on_apply_template_clicked)
         self.btn_save_as_template.clicked.connect(self._on_save_as_template_clicked)
+        self.btn_export_all.clicked.connect(self._on_export_all_clicked)
 
         # Plot style connection
         self.cbb_plot_style.currentTextChanged.connect(self._on_plot_style_changed)
@@ -825,6 +836,7 @@ class VWorkspaceGraphs(QWidget):
         graph_widget = VGraph(graph_id=graph_model.graph_id)
         graph_widget.replicate_requested.connect(self._on_replicate_graph)
         graph_widget.customize_requested.connect(self._show_or_switch_customize_dialog)
+        graph_widget.export_requested.connect(self._on_export_graph_requested)
         graph_widget.properties_changed.connect(self._on_graph_properties_changed)
         graph_widget.notify.connect(self._show_toast_notification)
 
@@ -920,6 +932,18 @@ class VWorkspaceGraphs(QWidget):
                 self, "Template Saved",
                 f"Saved '{name}' with {len(configs)} plot{'s' if len(configs) > 1 else ''}."
             )
+
+    def _on_export_all_clicked(self) -> None:
+        """Export every currently open graph to a folder in one pass."""
+        if not self.graph_widgets:
+            QMessageBox.information(
+                self, "No Graphs", "There are no open graphs to export."
+            )
+            return
+
+        widgets = {gid: gw for gid, (gw, _, _) in self.graph_widgets.items()}
+        dialog = VBatchExportDialog(widgets, parent=self)
+        dialog.exec()
 
     def _on_template_applied(self, configs: list) -> None:
         """Apply every plot config in a saved template against the
@@ -1034,7 +1058,15 @@ class VWorkspaceGraphs(QWidget):
             self._customize_dialog.show()
             self._customize_dialog.raise_()
             self._customize_dialog.activateWindow()
-    
+
+    def _on_export_graph_requested(self, graph_id: int):
+        """Open the (modal, one-shot) export dialog for a single graph."""
+        if graph_id not in self.graph_widgets:
+            return
+        graph_widget, _, _ = self.graph_widgets[graph_id]
+        dialog = VExportDialog(graph_widget, parent=self)
+        dialog.exec()
+
     def _on_update_plot(self):
         """Update selected plot."""
         # Get currently active MDI subwindow
@@ -1479,6 +1511,7 @@ class VWorkspaceGraphs(QWidget):
             
             # Text inputs
             self.edit_plot_title.setText(model.plot_title or "")
+            self.edit_plot_subtitle.setText(getattr(model, 'plot_subtitle', None) or "")
             self.edit_xlabel.setText(model.xlabel or "")
             self.edit_ylabel.setText(model.ylabel or "")
             self.edit_zlabel.setText(model.zlabel or "")
@@ -1549,6 +1582,7 @@ class VWorkspaceGraphs(QWidget):
             'xlogscale': False,
             'ylogscale': False,
             'plot_title': (self.edit_plot_title.text() or None) if include_labels else None,
+            'plot_subtitle': (self.edit_plot_subtitle.text() or None) if include_labels else None,
             'xlabel': (self.edit_xlabel.text() or None) if include_labels else None,
             'ylabel': (self.edit_ylabel.text() or None) if include_labels else None,
             'zlabel': (self.edit_zlabel.text() or None) if include_labels else None,
@@ -1597,13 +1631,17 @@ class VWorkspaceGraphs(QWidget):
 
         # Independent copies for mutable containers the widget can mutate
         # in place (dragging a legend entry, editing an axis break, dragging
-        # an annotation, editing filters) -- aliasing the model's own object
-        # would leak unsaved edits into it.
+        # an annotation, editing filters, toggling a spine) -- aliasing the
+        # model's own object would leak unsaved edits into it.
         graph_widget.y = model.y.copy() if model.y else []
         graph_widget.legend_properties = model.legend_properties.copy() if model.legend_properties else []
         graph_widget.axis_breaks = copy.deepcopy(model.axis_breaks) if model.axis_breaks else {'x': None, 'y': None}
         graph_widget.annotations = copy.deepcopy(model.annotations) if model.annotations else []
         graph_widget.filters = copy.deepcopy(model.filters) if model.filters else []
+        graph_widget.spines_visible = (
+            copy.deepcopy(model.spines_visible) if model.spines_visible
+            else {'top': True, 'right': True, 'bottom': True, 'left': True}
+        )
 
         # scatter_edgecolor must always be a valid, non-empty color string.
         edge_c = model.scatter_edgecolor
@@ -1759,6 +1797,7 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_x2.clear()
         self.cbb_graph_list.clear()
         self.edit_plot_title.clear()
+        self.edit_plot_subtitle.clear()
         self.edit_xlabel.clear()
         self.edit_ylabel.clear()
         self.edit_zlabel.clear()

@@ -36,12 +36,15 @@ _FLOAT_KEYS: tuple[str, ...] = (
     "xmin", "xmax", "ymin", "ymax",
     "zmin", "zmax", "y2min", "y2max",
     "y3min", "y3max", "x2min", "x2max",
+    "error_bar_capsize", "legend_alpha",
 )
 
 # Fields that must be ints
 _INT_KEYS: tuple[str, ...] = (
     "x_rot", "scatter_size", "plot_width", "plot_height",
     "dpi", "trendline_order", "hist_bins",
+    "title_fontsize", "axis_label_fontsize", "tick_label_fontsize",
+    "legend_ncol", "legend_fontsize",
 )
 
 

@@ -9,6 +9,7 @@ Provides:
   gets them via normal fixture discovery without import-path juggling).
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -19,6 +20,14 @@ import pytest
 # Ensure the repository root is importable regardless of CWD.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+
+# Render Qt widgets offscreen (no real native windows) during tests. Must be
+# set before QApplication is constructed. Without this, a full test run
+# creates enough real, natively-backed widgets (many VGraph canvases,
+# range sliders, etc. across hundreds of tests in one process) to exhaust
+# the platform's native window-handle budget and segfault -- setdefault()
+# so a developer/CI setting a different platform explicitly still wins.
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QApplication
@@ -68,6 +77,32 @@ def qapp():
     if app is None:
         app = QApplication(sys.argv)
     yield app
+
+
+@pytest.fixture(autouse=True)
+def _release_qt_widgets_between_tests():
+    """Force a GC pass (+ pending Qt deleteLater()s) after every test.
+
+    Real GUI tests each construct several native-backed widgets (VGraph's
+    matplotlib canvas, CustomizeAxis's range sliders, ...) as plain local
+    variables with no explicit teardown; left to Python's lazy GC, hundreds
+    of them can stay alive simultaneously across a full run and exhaust the
+    platform's native surface budget (a real crash seen in practice: a
+    segfault deep inside FigureCanvasQTAgg.__init__ once enough dead-but-
+    not-yet-collected canvases had piled up). Prompting collection after
+    each test keeps the live set small instead.
+    """
+    yield
+    import gc
+    from PySide6.QtCore import QEvent
+    gc.collect()
+    app = QApplication.instance()
+    if app is not None:
+        app.sendPostedEvents(None, QEvent.DeferredDelete)
+        app.processEvents()
+        gc.collect()
+        app.sendPostedEvents(None, QEvent.DeferredDelete)
+        app.processEvents()
 
 
 @pytest.fixture

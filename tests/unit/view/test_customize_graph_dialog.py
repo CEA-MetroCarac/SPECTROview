@@ -12,7 +12,7 @@ import pytest
 
 from spectroview.view.components.v_graph import VGraph
 from spectroview.view.components.customize_graph.customize_graph_dialog import (
-    CustomizeGraphDialog, CustomizeLegend, CustomizeAxis,
+    CustomizeGraphDialog, CustomizeLegend, CustomizeAxis, CustomizeSecondaryAxes,
     CustomizeMoreOptions, CustomizeAnnotations,
 )
 
@@ -57,9 +57,81 @@ class TestCustomizeLegend:
         widget = CustomizeLegend(vg)
         widget.load_legend_properties()
         n_quadrants = excel_df["Quadrant"].nunique()
-        assert widget.legend_layout.count() == 3  # label/marker/color sub-layouts... see below
+        # label, marker(empty for non-point), color, linewidth, alpha,
+        # zorder, marker_size, edge_color -- scatter shows all 8 sub-layouts
+        # (marker_size/edge_color are only added for _MARKER_STYLES).
+        assert widget.legend_layout.count() == 8
         # More directly: the graph's own legend_properties count matches hue count.
         assert len(vg.get_legend_properties()) == n_quadrants
+
+    def test_per_series_style_overrides_stored_and_cleared(self, qapp, excel_df):
+        """Per-series linewidth/alpha/zorder/marker_size/edge_color are
+        optional overrides -- absent (not a sentinel value) when unset, and
+        removed again (not left at a stale value) when reset to blank."""
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        widget = CustomizeLegend(vg)
+        widget.load_legend_properties()
+
+        widget._update_legend_property_numeric(0, "linewidth", 2.5)
+        widget._update_legend_property_numeric(0, "alpha", 0.5)
+        assert vg.legend_properties[0]["linewidth"] == 2.5
+        assert vg.legend_properties[0]["alpha"] == 0.5
+
+        widget._update_legend_property_numeric(0, "linewidth", widget._UNSET)
+        assert "linewidth" not in vg.legend_properties[0]
+
+    def test_per_series_marker_size_and_edge_color_only_shown_for_marker_styles(self, qapp, excel_df):
+        vg_scatter = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        widget_scatter = CustomizeLegend(vg_scatter)
+        widget_scatter.load_legend_properties()
+        assert widget_scatter.legend_layout.count() == 8
+
+        vg_bar = _plotted_graph(qapp, excel_df, plot_style="bar", x="Zone", y=["ampli_Si"])
+        widget_bar = CustomizeLegend(vg_bar)
+        widget_bar.load_legend_properties()
+        # bar isn't in _MARKER_STYLES: label, marker(empty), color, linewidth, alpha, zorder = 6
+        assert widget_bar.legend_layout.count() == 6
+
+    def test_error_bar_group_visible_only_for_point_line_bar(self, qapp, excel_df):
+        for style, x, y in [("point", "Zone", ["ampli_Si"]), ("line", "x0_Si", ["ampli_Si"]),
+                             ("bar", "Zone", ["ampli_Si"])]:
+            vg = _plotted_graph(qapp, excel_df, plot_style=style, x=x, y=y)
+            widget = CustomizeLegend(vg)
+            assert widget.error_bar_group.isVisibleTo(widget) is True
+
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        widget = CustomizeLegend(vg)
+        assert widget.error_bar_group.isVisibleTo(widget) is False
+
+    def test_error_bar_type_dropdown_offers_none_for_point_but_not_bar(self, qapp, excel_df):
+        vg_point = _plotted_graph(qapp, excel_df, plot_style="point", x="Zone", y=["ampli_Si"])
+        widget_point = CustomizeLegend(vg_point)
+        point_values = [widget_point.cbb_error_bar_type.itemData(i)
+                         for i in range(widget_point.cbb_error_bar_type.count())]
+        assert "none" in point_values
+
+        vg_bar = _plotted_graph(qapp, excel_df, plot_style="bar", x="Zone", y=["ampli_Si"])
+        widget_bar = CustomizeLegend(vg_bar)
+        bar_values = [widget_bar.cbb_error_bar_type.itemData(i)
+                      for i in range(widget_bar.cbb_error_bar_type.count())]
+        assert "none" not in bar_values
+
+    def test_apply_writes_error_bar_settings_back_and_emits_signal(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, plot_style="point", x="Zone", y=["ampli_Si"])
+        widget = CustomizeLegend(vg)
+        idx = widget.cbb_error_bar_type.findData("sem")
+        widget.cbb_error_bar_type.setCurrentIndex(idx)
+        widget.spin_error_bar_capsize.setValue(6.0)
+
+        received = []
+        vg.properties_changed.connect(lambda gid, props: received.append((gid, props)))
+        widget.apply_changes()
+
+        assert vg.error_bar_type == "sem"
+        assert vg.error_bar_capsize == 6.0
+        gid, props = received[0]
+        assert props["error_bar_type"] == "sem"
+        assert props["error_bar_capsize"] == 6.0
 
     def test_load_populates_scatter_size_and_edgecolor_controls(self, qapp, excel_df):
         vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
@@ -101,6 +173,45 @@ class TestCustomizeLegend:
         widget.cb_legend_outside.setChecked(True)
         assert vg.legend_outside is True
 
+    def test_legend_loc_disabled_when_outside_checked(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        widget = CustomizeLegend(vg)
+        assert widget.combo_legend_loc.isEnabled() is True
+        widget.cb_legend_outside.setChecked(True)
+        assert widget.combo_legend_loc.isEnabled() is False
+
+    def test_legend_style_defaults_match_pre_existing_hardcoded_behavior(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        widget = CustomizeLegend(vg)
+        assert widget.spin_legend_ncol.value() == 1
+        assert widget.cb_legend_frame.isChecked() is True
+        assert widget.spin_legend_alpha.value() == pytest.approx(0.7)
+        assert widget.combo_legend_loc.currentText() == "best"
+
+    def test_apply_writes_legend_style_back_and_emits_signal(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        widget = CustomizeLegend(vg)
+        widget.spin_legend_ncol.setValue(2)
+        widget.cb_legend_frame.setChecked(False)
+        widget.edit_legend_title.setText("Groups")
+        widget.spin_legend_fontsize.setValue(8)
+        widget.spin_legend_alpha.setValue(0.3)
+        widget.combo_legend_loc.setCurrentText("upper left")
+
+        received = []
+        vg.properties_changed.connect(lambda gid, props: received.append(props))
+        widget.apply_changes()
+
+        assert vg.legend_ncol == 2
+        assert vg.legend_frame is False
+        assert vg.legend_title == "Groups"
+        assert vg.legend_fontsize == 8
+        assert vg.legend_alpha == pytest.approx(0.3)
+        assert vg.legend_loc == "upper left"
+        props = received[0]
+        assert props["legend_ncol"] == 2
+        assert props["legend_loc"] == "upper left"
+
     def test_cancel_changes_restores_original_legend_properties(self, qapp, excel_df):
         vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
         widget = CustomizeLegend(vg)
@@ -130,13 +241,12 @@ class TestCustomizeAxis:
         assert widget.spin_xmin.value() == 510.0
         assert widget.spin_xmax.value() == 520.0
 
-    def test_unset_limits_display_blank_not_the_sentinel_number(self, qapp, excel_df):
+    def test_unset_limits_display_placeholder_not_the_sentinel_number(self, qapp, excel_df):
         """Regression test: spinboxes used to show the literal '-999999'
         for an unset limit, which read as a confusing real value rather
-        than 'no limit set'. setSpecialValueText() makes the sentinel
-        (spinbox range minimum) render as a blank box instead -- the
-        rendered text is a single space (Qt treats an empty special-value
-        string as "unconfigured"), so assert on the stripped text."""
+        than 'no limit set'. PlaceholderDoubleSpinBox's setSpecialValueText()
+        makes the sentinel (spinbox range minimum) render as a grayed
+        "default" placeholder word instead."""
         vg = _plotted_graph(qapp, excel_df)
         assert vg.xmin is None and vg.ymin is None and vg.zmin is None
         widget = CustomizeAxis(vg)
@@ -145,7 +255,27 @@ class TestCustomizeAxis:
         for spin in (widget.spin_xmin, widget.spin_xmax, widget.spin_ymin,
                      widget.spin_ymax, widget.spin_zmin, widget.spin_zmax):
             assert spin.value() == widget._UNSET_LIMIT
-            assert spin.text().strip() == ""
+            assert spin.text().strip() == "default"
+
+    def test_first_construction_does_not_corrupt_unset_limits_via_slider_clamp(self, qapp, excel_df):
+        """Regression test: _update_range_slider_bounds() derives each range
+        slider's drag bounds from the data and calls slider.setRange(lo, hi).
+        The slider's initial value is (0, 100); for any numeric column whose
+        real range excludes 0-100 (e.g. ampli_Si ~6500-9200), setRange()
+        alone auto-clamps that stale value into the new bounds and fires
+        valueChanged -- which _on_range_slider_changed then writes into the
+        spinboxes, silently replacing the "default" placeholder with a real
+        (wrong) number. This only happens on the *first* load_axis_settings()
+        call (a second call self-heals, since by then the slider's value is
+        already inside the unchanged range) so the test must check right
+        after construction, not after a redundant reload."""
+        vg = _plotted_graph(qapp, excel_df, x="x0_Si", y=["ampli_Si"])
+        assert vg.xmin is None and vg.ymin is None
+        widget = CustomizeAxis(vg)  # __init__ calls load_axis_settings() once
+
+        for spin in (widget.spin_xmin, widget.spin_xmax, widget.spin_ymin, widget.spin_ymax):
+            assert spin.value() == widget._UNSET_LIMIT
+            assert spin.text().strip() == "default"
 
     def test_set_limit_displays_its_real_value_not_blank(self, qapp, excel_df):
         vg = _plotted_graph(qapp, excel_df)
@@ -155,14 +285,14 @@ class TestCustomizeAxis:
         assert widget.spin_xmin.text().strip() != ""
         assert widget.spin_xmax.text().strip() != ""
 
-    def test_clear_limits_button_makes_boxes_blank_again(self, qapp, excel_df):
+    def test_clear_limits_button_shows_placeholder_again(self, qapp, excel_df):
         vg = _plotted_graph(qapp, excel_df)
         vg.xmin, vg.xmax = 510.0, 520.0
         widget = CustomizeAxis(vg)
         widget.load_axis_settings()
         widget._on_clear_limits()
-        assert widget.spin_xmin.text().strip() == ""
-        assert widget.spin_xmax.text().strip() == ""
+        assert widget.spin_xmin.text().strip() == "default"
+        assert widget.spin_xmax.text().strip() == "default"
 
     def test_apply_writes_limits_back_including_zero(self, qapp, excel_df):
         vg = _plotted_graph(qapp, excel_df)
@@ -172,6 +302,34 @@ class TestCustomizeAxis:
         widget._apply_axis_settings()
         assert vg.ymin == 0.0
         assert vg.ymax == 20000.0
+
+    def test_range_slider_bounds_derived_from_data(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, x="x0_Si", y=["ampli_Si"])
+        widget = CustomizeAxis(vg)
+        widget.load_axis_settings()
+        data_min, data_max = excel_df["x0_Si"].min(), excel_df["x0_Si"].max()
+        assert widget.x_range_slider.minimum() < data_min
+        assert widget.x_range_slider.maximum() > data_max
+
+    def test_spinbox_edit_updates_range_slider(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, x="x0_Si", y=["ampli_Si"])
+        widget = CustomizeAxis(vg)
+        widget.load_axis_settings()
+        data_min, data_max = excel_df["x0_Si"].min(), excel_df["x0_Si"].max()
+        lo_val, hi_val = data_min, (data_min + data_max) / 2
+        widget.spin_xmin.setValue(lo_val)
+        widget.spin_xmax.setValue(hi_val)
+        assert widget.x_range_slider.value() == pytest.approx((lo_val, hi_val), abs=0.01)
+
+    def test_range_slider_drag_updates_spinboxes(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, x="x0_Si", y=["ampli_Si"])
+        widget = CustomizeAxis(vg)
+        widget.load_axis_settings()
+        data_min, data_max = excel_df["x0_Si"].min(), excel_df["x0_Si"].max()
+        lo_val, hi_val = data_min, (data_min + data_max) / 2
+        widget.x_range_slider.setValue((lo_val, hi_val))
+        assert widget.spin_xmin.value() == pytest.approx(lo_val, abs=0.01)
+        assert widget.spin_xmax.value() == pytest.approx(hi_val, abs=0.01)
 
     def test_sentinel_minus_999999_becomes_none(self, qapp, excel_df):
         vg = _plotted_graph(qapp, excel_df)
@@ -223,6 +381,85 @@ class TestCustomizeAxis:
         widget._apply_axis_settings()
         assert vg.ylogscale is True
         assert vg.ax.get_yscale() == "log"
+
+    def test_symlog_scale_applied(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        widget = CustomizeAxis(vg)
+        widget.combo_y_scale.setCurrentText("Symlog")
+        widget._apply_axis_settings()
+        assert vg.ylogscale is True
+        assert vg.yscale_mode == "symlog"
+        assert vg.ax.get_yscale() == "symlog"
+
+    def test_symlog_round_trips_through_load(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        vg.xlogscale = True
+        vg.xscale_mode = "symlog"
+        widget = CustomizeAxis(vg)
+        widget.load_axis_settings()
+        assert widget.combo_x_scale.currentText() == "Symlog"
+
+    def test_axis_inversion_applied(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        widget = CustomizeAxis(vg)
+        widget.cb_invert_x.setChecked(True)
+        widget._apply_axis_settings()
+        assert vg.x_inverted is True
+        assert vg.ax.xaxis_inverted() == True
+
+    def test_tick_direction_applied(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        widget = CustomizeAxis(vg)
+        widget.combo_tick_direction.setCurrentText("In")
+        widget._apply_axis_settings()
+        assert vg.tick_direction == "in"
+
+    def test_tick_direction_default_stays_none(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        widget = CustomizeAxis(vg)
+        widget._apply_axis_settings()
+        assert vg.tick_direction is None
+
+    def test_tick_label_format_applied(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        widget = CustomizeAxis(vg)
+        idx = widget.combo_tick_format.findData("%.2f")
+        widget.combo_tick_format.setCurrentIndex(idx)
+        widget._apply_axis_settings()
+        assert vg.tick_label_format == "%.2f"
+
+    def test_tick_format_auto_is_none(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        widget = CustomizeAxis(vg)
+        assert widget.combo_tick_format.currentText().startswith("Auto")
+        widget._apply_axis_settings()
+        assert vg.tick_label_format is None
+
+    def test_tick_format_preserves_custom_value_set_outside_gui(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        vg.tick_label_format = "%.3g"  # not one of the GUI presets
+        widget = CustomizeAxis(vg)
+        widget.load_axis_settings()
+        assert widget.combo_tick_format.currentData() == "%.3g"
+        widget._apply_axis_settings()
+        assert vg.tick_label_format == "%.3g"
+
+    def test_font_sizes_show_mplstyle_defaults_and_are_settable(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        widget = CustomizeAxis(vg)
+        assert widget.spin_title_fontsize.value() == 12
+        assert widget.spin_axis_label_fontsize.value() == 12
+        assert widget.spin_tick_fontsize.value() == 9
+
+        widget._apply_axis_settings()
+        assert vg.title_fontsize == 12
+        assert vg.axis_label_fontsize == 12
+        assert vg.tick_label_fontsize == 9
+
+        widget.spin_title_fontsize.setValue(18)
+        widget._apply_axis_settings()
+        assert vg.title_fontsize == 18
+        assert vg.ax.title.get_fontsize() == 18
 
     def test_x_as_numeric_type_applied(self, qapp, excel_df):
         vg = _plotted_graph(qapp, excel_df, x="Zone", plot_style="point")
@@ -276,6 +513,98 @@ class TestCustomizeAxis:
         assert widget.xy_limits_widget.isVisibleTo(widget) is True
 
 
+class TestCustomizeSecondaryAxes:
+    def test_secondary_axis_row_disabled_when_axis_inactive(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        widget = CustomizeSecondaryAxes(vg)
+        row = widget._secondary_axis_rows['y2']
+        assert row['label'].isEnabled() is False
+
+    def test_secondary_axis_row_enabled_when_axis_active(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        vg.y2 = "area_Si"
+        vg.plot(excel_df)
+        widget = CustomizeSecondaryAxes(vg)
+        row = widget._secondary_axis_rows['y2']
+        assert row['label'].isEnabled() is True
+        assert row['color'].text() == "red"  # matches the pre-existing hardcoded default
+
+    def test_apply_secondary_axis_color_and_marker(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        vg.y2 = "area_Si"
+        vg.plot(excel_df)
+        widget = CustomizeSecondaryAxes(vg)
+        row = widget._secondary_axis_rows['y2']
+        row['color'].setText("#0000FF")
+        row['marker'].setCurrentText("D")
+        row['label'].setText("Custom Y2")
+
+        received = []
+        vg.properties_changed.connect(lambda gid, props: received.append(props))
+        widget.apply_changes()
+
+        assert vg.y2color == "#0000FF"
+        assert vg.y2marker == "D"
+        assert vg.y2label == "Custom Y2"
+        assert received[0]["y2color"] == "#0000FF"
+
+    def test_switch_graph_reloads_secondary_axis_rows(self, qapp, excel_df):
+        vg1 = _plotted_graph(qapp, excel_df)
+        vg2 = _plotted_graph(qapp, excel_df)
+        vg2.y2 = "area_Si"
+        vg2.plot(excel_df)
+        widget = CustomizeSecondaryAxes(vg1)
+        assert widget._secondary_axis_rows['y2']['label'].isEnabled() is False
+
+        widget.switch_graph(vg2)
+        assert widget.graph_widget is vg2
+        assert widget._secondary_axis_rows['y2']['label'].isEnabled() is True
+
+    def test_color_button_usable_for_active_axis(self, qapp, excel_df, monkeypatch):
+        """Regression test for a real reported bug: opening the Customize
+        dialog on a graph with an active secondary axis (y2 assigned) and
+        clicking the "Secondary axes" row's Color button raised
+        `TypeError: <lambda>() missing 1 required positional argument: '_'`.
+
+        Root cause: `btn_color.clicked.connect(lambda _, k=axis_key: ...)`
+        relies on Qt always invoking the connected callable with exactly the
+        one `bool checked` argument QPushButton.clicked carries. That count
+        is decided by PySide6's own signal/slot arg-matching, which is not
+        guaranteed stable across PySide6 builds -- the user's build called
+        the lambda with zero arguments, and since `_` has no default, Python
+        raised exactly this TypeError (reproduced verbatim by calling the
+        pre-fix lambda shape with zero args). The fix uses
+        `lambda *_a, k=v: ...`, which tolerates any argument count Qt
+        decides to pass.
+        """
+        import inspect
+
+        from spectroview.view.components.customize_graph import (
+            customize_axis, customize_legend, customize_secondary_axes,
+        )
+
+        for module in (customize_axis, customize_legend, customize_secondary_axes):
+            source = inspect.getsource(module)
+            assert "lambda _," not in source, (
+                f"{module.__name__} reintroduced the fragile "
+                "`lambda _, k=v: ...` Qt-signal-connection pattern -- use "
+                "`lambda *_a, k=v: ...` instead (see this test's docstring)."
+            )
+
+        from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QColorDialog
+
+        monkeypatch.setattr(QColorDialog, "getColor", staticmethod(lambda *a, **k: QColor("blue")))
+
+        vg = _plotted_graph(qapp, excel_df)
+        vg.y2 = "fwhm_Si"
+        widget = CustomizeSecondaryAxes(vg)
+        row = widget._secondary_axis_rows["y2"]
+        assert row["color"].isEnabled()
+        widget._pick_secondary_axis_color("y2")  # must not raise
+        row["color"].click()  # exercises the actual connected lambda via a real Qt signal
+
+
 class TestCustomizeMoreOptions:
     def test_trendline_group_visible_only_for_trendline(self, qapp, excel_df):
         vg = _plotted_graph(qapp, excel_df, plot_style="trendline", y=["area_Si"])
@@ -318,6 +647,49 @@ class TestCustomizeMoreOptions:
         widget._apply()
         assert vg.show_bar_plot_error_bar is True
         assert vg.wafer_stats is False
+
+    def test_figure_style_defaults_blank(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        widget = CustomizeMoreOptions(vg)
+        assert widget._btn_figure_facecolor.text() == "(default)"
+        assert widget._edit_subtitle.text() == ""
+        assert widget._cb_spine_top.isChecked() is True
+        assert widget._combo_figure_theme.currentText() == "Light"
+
+    def test_apply_figure_theme_writes_back(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        widget = CustomizeMoreOptions(vg)
+        widget._combo_figure_theme.setCurrentText("Dark")
+
+        received = []
+        vg.properties_changed.connect(lambda gid, props: received.append(props))
+        widget._apply()
+
+        assert vg.figure_theme == "dark"
+        assert received[0]["figure_theme"] == "dark"
+
+    def test_apply_figure_style_writes_back_and_emits_signal(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        widget = CustomizeMoreOptions(vg)
+        widget._btn_figure_facecolor.setText("#EEEEEE")
+        widget._edit_subtitle.setText("A subtitle")
+        widget._spin_subtitle_fontsize.setValue(9)
+        widget._cb_spine_top.setChecked(False)
+        widget._cb_spine_right.setChecked(False)
+        widget._spin_x_margin.setValue(0.1)
+        widget._spin_y_margin.setValue(0.15)
+
+        received = []
+        vg.properties_changed.connect(lambda gid, props: received.append(props))
+        widget._apply()
+
+        assert vg.figure_facecolor == "#EEEEEE"
+        assert vg.plot_subtitle == "A subtitle"
+        assert vg.subtitle_fontsize == 9
+        assert vg.spines_visible == {'top': False, 'right': False, 'bottom': True, 'left': True}
+        assert vg.figure_margins == [0.1, 0.15]
+        assert received[0]["figure_facecolor"] == "#EEEEEE"
+        assert received[0]["spines_visible"]["top"] is False
 
     def test_apply_sorting_settings_reset_legend_properties_when_changed(self, qapp, excel_df):
         """_apply() resets legend_properties to [] when sort settings change
@@ -441,6 +813,7 @@ class TestCustomizeGraphDialogTopLevel:
         assert dialog.graph_widget is vg2
         assert dialog.legend_widget.graph_widget is vg2
         assert dialog.axis_widget.graph_widget is vg2
+        assert dialog.secondary_axes_widget.graph_widget is vg2
         assert dialog.annotations_widget.graph_widget is vg2
         assert dialog.more_options_widget.graph_widget is vg2
 

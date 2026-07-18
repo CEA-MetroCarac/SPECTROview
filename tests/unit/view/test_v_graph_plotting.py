@@ -168,6 +168,17 @@ class TestHueGroupingAndLegend:
         assert legend is not None
         assert len(legend.get_texts()) == n_quadrants
 
+    def test_point_plot_hue_groups_default_to_circle_markers(self, vg, excel_df):
+        """DEFAULT_MARKERS defaults every new series to 'o' (all circles) --
+        per-series marker customization remains available via
+        legend_properties, but is opt-in, not an automatic shape cycle."""
+        _configure(vg, x="Zone", y=["fwhm_Si"], z="Quadrant", plot_style="point")
+        vg.plot(excel_df)
+        n_quadrants = excel_df["Quadrant"].nunique()
+        assert n_quadrants > 1
+        props = vg.get_legend_properties()
+        assert all(p["marker"] == "o" for p in props)
+
     def test_no_hue_still_produces_a_plot(self, vg, excel_df):
         _configure(vg, x="Zone", y=["fwhm_Si"], z=None, plot_style="point")
         vg.plot(excel_df)
@@ -186,6 +197,35 @@ class TestHueGroupingAndLegend:
         vg.legend_visible = False
         vg.plot(excel_df)
         assert vg.ax.get_legend() is None
+
+    def test_legend_ncol_applied(self, vg, excel_df):
+        _configure(vg, x="Zone", y=["fwhm_Si"], z="Quadrant", plot_style="point")
+        vg.legend_ncol = 2
+        vg.plot(excel_df)
+        assert vg.ax.get_legend()._ncols == 2
+
+    def test_legend_title_applied(self, vg, excel_df):
+        _configure(vg, x="Zone", y=["fwhm_Si"], z="Quadrant", plot_style="point")
+        vg.legend_title = "Groups"
+        vg.plot(excel_df)
+        assert vg.ax.get_legend().get_title().get_text() == "Groups"
+
+    def test_legend_frame_off_applied(self, vg, excel_df):
+        _configure(vg, x="Zone", y=["fwhm_Si"], z="Quadrant", plot_style="point")
+        vg.legend_frame = False
+        vg.plot(excel_df)
+        assert vg.ax.get_legend().get_frame_on() is False
+
+    def test_legend_default_alpha_matches_pre_existing_hardcoded_value(self, vg, excel_df):
+        _configure(vg, x="Zone", y=["fwhm_Si"], z="Quadrant", plot_style="point")
+        vg.plot(excel_df)
+        assert vg.ax.get_legend().get_frame().get_alpha() == pytest.approx(0.7)
+
+    def test_legend_loc_applied(self, vg, excel_df):
+        _configure(vg, x="Zone", y=["fwhm_Si"], z="Quadrant", plot_style="point")
+        vg.legend_loc = "upper left"
+        vg.plot(excel_df)
+        assert vg.ax.get_legend() is not None  # smoke: renders without error
 
 
 class TestAxisCustomization:
@@ -211,6 +251,49 @@ class TestAxisCustomization:
         vg.ylogscale = True
         vg.plot(excel_df)
         assert vg.ax.get_yscale() == "log"
+
+    def test_symlog_scale_applied(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.ylogscale = True
+        vg.yscale_mode = "symlog"
+        vg.plot(excel_df)
+        assert vg.ax.get_yscale() == "symlog"
+
+    def test_axis_inversion_applied(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.x_inverted = True
+        vg.y_inverted = True
+        vg.plot(excel_df)
+        assert vg.ax.xaxis_inverted() == True
+        assert vg.ax.yaxis_inverted() == True
+
+    def test_no_inversion_by_default(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        assert vg.ax.xaxis_inverted() == False
+
+    def test_tick_direction_applied(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.tick_direction = "in"
+        vg.plot(excel_df)
+        # matplotlib exposes the configured direction via _major_tick_kw
+        assert vg.ax.xaxis._major_tick_kw.get('tickdir') == 'in'
+
+    def test_title_and_label_fontsize_applied(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot_title = "My Title"
+        vg.title_fontsize = 20
+        vg.axis_label_fontsize = 15
+        vg.plot(excel_df)
+        assert vg.ax.title.get_fontsize() == 20
+        assert vg.ax.xaxis.label.get_fontsize() == 15
+        assert vg.ax.yaxis.label.get_fontsize() == 15
+
+    def test_tick_label_format_applied(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.tick_label_format = "%.1f"
+        vg.plot(excel_df)
+        assert vg.ax.xaxis.get_major_formatter().fmt == "%.1f"
 
     def test_labels_and_title_applied(self, vg, excel_df):
         _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
@@ -343,6 +426,35 @@ class TestSecondaryAxes:
         assert vg.ax2 is not first_ax2
         assert first_ax2 not in vg.figure.axes
 
+    def test_y2_color_override_applied(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.y2 = "area_Si"
+        vg.y2color = "blue"
+        vg.plot(excel_df)
+        assert vg.ax2.yaxis.label.get_color() == "blue"
+
+    def test_y3_color_override_applied(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.y3 = "fwhm_Si"
+        vg.y3color = "orange"
+        vg.plot(excel_df)
+        assert vg.ax3.yaxis.label.get_color() == "orange"
+
+    def test_x2_color_override_applied(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.x2 = "Y"
+        vg.x2color = "teal"
+        vg.plot(excel_df)
+        assert vg.ax_x2.xaxis.label.get_color() == "teal"
+
+    def test_y2_marker_override_applied_for_point_style(self, vg, excel_df):
+        _configure(vg, x="Zone", y=["ampli_Si"], plot_style="point")
+        vg.y2 = "area_Si"
+        vg.y2marker = "D"
+        vg.plot(excel_df)
+        container = vg.ax2.containers[0]
+        assert container.lines[0].get_marker() == "D"
+
 
 class TestScatterCustomization:
     def test_scatter_size_reflected_in_marker_area(self, vg, excel_df):
@@ -361,6 +473,76 @@ class TestScatterCustomization:
         pathcol = vg.ax.collections[0]
         edgecolors = pathcol.get_edgecolors()
         assert len(edgecolors) > 0
+
+    def test_per_series_marker_size_and_edge_color_override(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], z="Quadrant", plot_style="scatter")
+        vg.plot(excel_df)  # populate legend_properties for the hue groups
+        vg.legend_properties[0]["marker_size"] = 300
+        vg.legend_properties[0]["edge_color"] = "#00FF00"
+        vg.plot(excel_df)
+
+        pathcol = vg.ax.collections[0]
+        assert pathcol.get_sizes()[0] == pytest.approx(300, rel=0.2)
+
+
+class TestErrorBarOptions:
+    """error_bar_type (point/line, unconditional-by-default) and
+    bar_error_bar_type (bar, only consulted when show_bar_plot_error_bar is
+    True) replace the old hardcoded-95%-CI-always / SD-only behavior."""
+
+    def test_point_error_bar_type_none_suppresses_yerr(self, vg, excel_df):
+        _configure(vg, x="Zone", y=["ampli_Si"], plot_style="point")
+        vg.error_bar_type = "none"
+        vg.plot(excel_df)
+        line = vg.ax.containers[0]
+        assert line.has_yerr is False
+
+    def test_point_error_bar_type_ci95_matches_default_hardcoded_behavior(self, vg, excel_df):
+        _configure(vg, x="Zone", y=["ampli_Si"], plot_style="point")
+        vg.error_bar_type = "ci95"
+        vg.plot(excel_df)
+        line = vg.ax.containers[0]
+        assert line.has_yerr is True
+
+    def test_line_error_bar_type_none_removes_ci_band(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="line")
+        vg.error_bar_type = "none"
+        vg.plot(excel_df)
+        # fill_between draws a PolyCollection; none should exist when suppressed.
+        assert len(vg.ax.collections) == 0
+
+    def test_bar_error_bar_type_changes_yerr_values(self, vg, excel_df):
+        # SD and SEM statistics differ for n>1 groups, so re-rendering with
+        # a different type must move the drawn error-bar cap/whisker lines.
+        _configure(vg, x="Zone", y=["ampli_Si"], plot_style="bar")
+        vg.show_bar_plot_error_bar = True
+        vg.bar_error_bar_type = "sd"
+        vg.plot(excel_df)
+        sd_lines = [np.asarray(ln.get_ydata()) for ln in vg.ax.lines]
+
+        vg2 = VGraph(graph_id=2)
+        vg2.create_plot_widget(dpi=72)
+        _configure(vg2, x="Zone", y=["ampli_Si"], plot_style="bar")
+        vg2.show_bar_plot_error_bar = True
+        vg2.bar_error_bar_type = "sem"
+        vg2.plot(excel_df)
+        sem_lines = [np.asarray(ln.get_ydata()) for ln in vg2.ax.lines]
+
+        assert len(sd_lines) == len(sem_lines) and len(sd_lines) > 0
+        assert any(not np.array_equal(a, b) for a, b in zip(sd_lines, sem_lines))
+
+    def test_bar_error_bar_off_by_default_shows_no_error_bars(self, vg, excel_df):
+        _configure(vg, x="Zone", y=["ampli_Si"], plot_style="bar")
+        vg.plot(excel_df)
+        assert len(vg.ax.lines) == 0
+
+    def test_error_bar_capsize_applied(self, vg, excel_df):
+        _configure(vg, x="Zone", y=["ampli_Si"], plot_style="point")
+        vg.error_bar_capsize = 10.0
+        vg.plot(excel_df)
+        # No direct getter for capsize on an ErrorbarContainer; smoke-check
+        # it renders without error at a non-default value.
+        assert vg.ax.containers[0].has_yerr is True
 
 
 class TestHistogramCustomization:
@@ -406,6 +588,75 @@ class TestTrendlineCustomization:
         _configure(vg, x="x0_Si", y=["area_Si"], plot_style="trendline")
         vg.trendline_anchor_enabled = True
         vg.trendline_anchor_origin = True
+        vg.plot(excel_df)  # must not raise
+
+
+class TestFigureStyle:
+    """figure_facecolor/plot_subtitle/spines_visible are optional and
+    skipped when unset; figure_margins/subtitle_fontsize are concrete
+    fields defaulting to matplotlib/mplstyle's own values -- either way, an
+    old saved graph (none of these fields set) renders identically to
+    before this feature existed."""
+
+    def test_defaults_leave_all_spines_visible(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        assert vg.ax.spines['top'].get_visible() is True
+        assert vg.ax.spines['right'].get_visible() is True
+
+    def test_hidden_spines_applied(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.spines_visible = {'top': False, 'right': False, 'bottom': True, 'left': True}
+        vg.plot(excel_df)
+        assert vg.ax.spines['top'].get_visible() is False
+        assert vg.ax.spines['right'].get_visible() is False
+        assert vg.ax.spines['bottom'].get_visible() is True
+
+    def test_facecolor_applied(self, vg, excel_df):
+        import matplotlib.colors as mcolors
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.figure_facecolor = "#EEEEEE"
+        vg.plot(excel_df)
+        assert mcolors.to_hex(vg.ax.get_facecolor()) == "#eeeeee"
+
+    def test_default_theme_is_light(self, vg, excel_df):
+        import matplotlib.colors as mcolors
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        assert mcolors.to_hex(vg.ax.get_facecolor()) == "#ffffff"
+
+    def test_dark_theme_changes_background(self, vg, excel_df):
+        import matplotlib.colors as mcolors
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.figure_theme = "dark"
+        vg.plot(excel_df)
+        assert mcolors.to_hex(vg.ax.get_facecolor()) == "#242424"
+
+    def test_theme_recreated_on_create_plot_widget(self, vg, excel_df):
+        """The theme must also apply at Figure-creation time (create_plot_widget),
+        not just at plot() time, since the mplstyle context governs figure-level
+        rcParams (e.g. figure.facecolor) captured when the Figure is constructed."""
+        import matplotlib.colors as mcolors
+        vg.figure_theme = "dark"
+        vg.create_plot_widget(dpi=72)
+        assert mcolors.to_hex(vg.figure.get_facecolor()) == "#242424"
+
+    def test_subtitle_renders_as_text_below_title(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot_title = "Title"
+        vg.plot_subtitle = "Subtitle text"
+        vg.plot(excel_df)
+        texts = [t.get_text() for t in vg.ax.texts]
+        assert "Subtitle text" in texts
+
+    def test_no_subtitle_by_default(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        assert len(vg.ax.texts) == 0
+
+    def test_margins_applied_does_not_crash(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.figure_margins = [0.2, 0.3]
         vg.plot(excel_df)  # must not raise
 
 

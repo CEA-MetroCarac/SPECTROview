@@ -1,6 +1,19 @@
 
+import os
 import sys
 from pathlib import Path
+
+# The app uses PySide6 throughout, but superqt (used for QLabeledDoubleRangeSlider)
+# resolves its Qt binding via qtpy, which auto-detects whatever's installed --
+# and defaults to PyQt5 if both PyQt5 and PySide6 are present (as they are in
+# this dev environment). Mixing PyQt5-wrapped and PySide6-wrapped Qt objects
+# in the same widget tree is undefined behavior (two different C++/Python
+# binding layers both believing they own the same native objects) and causes
+# hard-to-diagnose crashes under load. Force qtpy to PySide6 before anything
+# imports it, so every superqt widget is wrapped consistently with the rest
+# of the app. setdefault() so an explicit QT_API set by the environment wins.
+os.environ.setdefault("QT_API", "pyside6")
+
 VERSION = "26.30.1"
 
 
@@ -45,7 +58,7 @@ MARKERS = [
     '1', '2', '3', '4', '5', '6', '7', '8'
 ]
 
-DEFAULT_MARKERS = MARKERS.copy()
+DEFAULT_MARKERS = ['o'] * len(MARKERS)
 
 X_AXIS_UNIT = [
     'Wavenumber (cm$^{-1}$)',

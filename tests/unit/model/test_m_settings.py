@@ -77,6 +77,25 @@ class TestViewOptions:
         assert reloaded["lw"] == 2.5
 
 
+class TestExportOptions:
+    def test_defaults(self, settings):
+        data = settings.load_export_options()
+        assert data["format"] == "png"
+        assert data["dpi"] == 300
+        assert data["transparent"] is False
+        assert data["theme"] == "Light Mode"
+
+    def test_round_trip(self, settings):
+        settings.save_export_options({
+            "format": "svg", "dpi": 600, "transparent": True, "theme": "Dark Mode",
+        })
+        reloaded = MSettings().load_export_options()
+        assert reloaded["format"] == "svg"
+        assert reloaded["dpi"] == 600
+        assert reloaded["transparent"] is True
+        assert reloaded["theme"] == "Dark Mode"
+
+
 class TestAiSettings:
     def test_round_trip_api_keys(self, settings):
         settings.save_ai_settings({"api_key_Anthropic": "sk-test-123", "history_folder": "/tmp/hist"})

@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from matplotlib.figure import Figure
-from matplotlib.ticker import FuncFormatter
+from matplotlib.ticker import FuncFormatter, FormatStrFormatter
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
@@ -14,7 +14,19 @@ from PySide6.QtWidgets import QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QD
 from PySide6.QtCore import QObject, QEvent, QSize, Signal, QTimer
 from PySide6.QtGui import QIcon
 
-from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR, PLOT_POLICY_LIGHT
+from spectroview import (
+    DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR,
+    PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, PLOT_POLICY_SOFT_DARK,
+)
+
+# figure_theme value -> mplstyle file. "light" (the default) reproduces the
+# app's only-ever-existing hardcoded behavior; dark/soft_dark reuse the same
+# theme files the Maps/Spectra viewers already switch between.
+_THEME_STYLE_MAP = {
+    "light": PLOT_POLICY_LIGHT,
+    "dark": PLOT_POLICY_DARK,
+    "soft_dark": PLOT_POLICY_SOFT_DARK,
+}
 from spectroview.view.components.customize_graph.customize_graph_dialog import (
     EditLineDialog, EditTextDialog
 )
@@ -33,6 +45,8 @@ class VGraph(QWidget):
     replicate_requested = Signal(int)
     # Signal emitted when customize dialog is requested (graph_id)
     customize_requested = Signal(int)
+    # Signal emitted when the export dialog is requested (graph_id)
+    export_requested = Signal(int)
     # Signal emitted for user-facing diagnostic notifications
     notify = Signal(str)
     
@@ -67,6 +81,8 @@ class VGraph(QWidget):
         
         # Labels
         self.plot_title = None
+        self.plot_subtitle = None
+        self.subtitle_fontsize = 10  # matches the pre-existing hardcoded fallback; only rendered once plot_subtitle is set
         self.xlabel = None
         self.ylabel = None
         self.zlabel = None
@@ -76,6 +92,8 @@ class VGraph(QWidget):
         self.ylogscale = False
         self.y2logscale = False
         self.y3logscale = False
+        self.xscale_mode = "log"  # log/symlog -- which scale xlogscale switches to when True
+        self.yscale_mode = "log"  # log/symlog -- which scale ylogscale switches to when True
         
         # Secondary/tertiary axes
         self.y2 = None
@@ -86,21 +104,46 @@ class VGraph(QWidget):
         self.y3max = None
         self.y2label = None
         self.y3label = None
-        
+        self.y2color = "red"      # matches the pre-existing hardcoded color in _plot_secondary_axis
+        self.y2marker = "s"
+        self.y3color = "green"    # matches the pre-existing hardcoded color in _plot_tertiary_axis
+        self.y3marker = "s"
+
         # Secondary X axis
         self.x2 = None
         self.x2label = None
         self.x2min = None
         self.x2max = None
         self.x2logscale = False
+        self.x2color = "purple"   # matches the pre-existing hardcoded color in _plot_secondary_x_axis
+        self.x2marker = "D"
         
         # Visual properties
         self.x_rot = 0
         self.grid = False
+        self.tick_direction = None   # in/out/inout; None = matplotlib's own default
+        self.tick_label_format = None  # e.g. "%.2f"; None = default ScalarFormatter
+        self.x_inverted = False
+        self.y_inverted = False
+        self.title_fontsize = 12       # matches mplstyle's axes.titlesize
+        self.axis_label_fontsize = 12  # matches mplstyle's axes.labelsize
+        self.tick_label_fontsize = 9   # matches mplstyle's x/ytick.labelsize
+        self.figure_facecolor = None     # None = mplstyle's figure/axes facecolor
+        self.figure_margins = [0.05, 0.05]  # [x_margin, y_margin]; matches matplotlib's own default
+        self.spines_visible = {'top': True, 'right': True, 'bottom': True, 'left': True}
+        self.figure_theme = "light"  # light/dark/soft_dark -- selects the mplstyle used to render this graph
+        self.export_width_mm = None   # None = use the current on-screen figure size at export time
+        self.export_height_mm = None
         self.legend_visible = True
         self.legend_outside = False
         self.legend_properties = []
         self.legend_bbox = None  # (x, y) in axes coords for dragged position
+        self.legend_ncol = 1
+        self.legend_frame = True
+        self.legend_title = None
+        self.legend_fontsize = 10  # matches mplstyle's legend.fontsize
+        self.legend_alpha = 0.7  # matches the pre-existing hardcoded framealpha=0.7
+        self.legend_loc = "best"   # inside-legend position; ignored when legend_outside is True
         
         # Plot-specific settings
         self.color_palette = "jet"
@@ -114,6 +157,9 @@ class VGraph(QWidget):
         self.trendline_anchor_y = 0.0
         self.trendline_equations = []  # List of dicts: {label, equation, r2} per hue group
         self.show_bar_plot_error_bar = False
+        self.error_bar_type = "ci95"       # none/sd/sem/ci95 -- point & line, shown unconditionally
+        self.bar_error_bar_type = "sd"     # none/sd/sem/ci95 -- bar, only used when show_bar_plot_error_bar
+        self.error_bar_capsize = 3.0
         self.join_for_point_plot = False
         self.dodge_point_plot = True
         self.dodge_scatter_plot = False
@@ -176,7 +222,7 @@ class VGraph(QWidget):
         # workspace used to call plt.close('all') here to clean up after
         # itself, which also silently closed unrelated live figures owned by
         # other workspaces (e.g. the Maps viewer's plt.figure()-based canvas).
-        with plt.style.context(PLOT_POLICY_LIGHT):
+        with plt.style.context(_THEME_STYLE_MAP.get(self.figure_theme, PLOT_POLICY_LIGHT)):
             self.figure = Figure(layout="compressed", dpi=self.dpi)
             self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
@@ -244,11 +290,19 @@ class VGraph(QWidget):
         self.btn_copy_figure.setFixedSize(30, 30)
         self.btn_copy_figure.setToolTip("Copy figure to clipboard")
         self.btn_copy_figure.clicked.connect(self.copy_to_clipboard)
-        
+
+        # Create Export button
+        self.btn_export = QPushButton()
+        self.btn_export.setIcon(QIcon(f"{ICON_DIR}/save-as.png"))
+        self.btn_export.setIconSize(QSize(26, 26))
+        self.btn_export.setFixedSize(30, 30)
+        self.btn_export.setToolTip("Export graph to file")
+        self.btn_export.clicked.connect(lambda: self.export_requested.emit(self.graph_id))
+
         # Initialize icon colors using actual app settings
         theme = MSettings().get_theme()
         self.update_icon_colors(theme)
-        
+
         # Create toolbar layout with customize and copy buttons
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
@@ -258,6 +312,7 @@ class VGraph(QWidget):
         toolbar_layout.addWidget(self.btn_replicate)
         toolbar_layout.addWidget(self.btn_customize)
         toolbar_layout.addWidget(self.btn_copy_figure)
+        toolbar_layout.addWidget(self.btn_export)
         
         # Create container widget for toolbar layout
         toolbar_container = QWidget()
@@ -294,10 +349,12 @@ class VGraph(QWidget):
             self.btn_customize.setIcon(get_tinted_icon(f"{ICON_DIR}/customize.png", icon_color))
         if hasattr(self, 'btn_copy_figure'):
             self.btn_copy_figure.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
+        if hasattr(self, 'btn_export'):
+            self.btn_export.setIcon(get_tinted_icon(f"{ICON_DIR}/save-as.png", icon_color))
 
     def plot(self, df=None):
         """Wrapper to render plot using local style context."""
-        with plt.style.context(PLOT_POLICY_LIGHT):
+        with plt.style.context(_THEME_STYLE_MAP.get(self.figure_theme, PLOT_POLICY_LIGHT)):
             self._plot_internal(df)
 
     def _plot_internal(self, df):
@@ -327,7 +384,9 @@ class VGraph(QWidget):
         
         self._set_limits()
         self._set_axis_scale(df)
+        self._set_axis_direction()  # must run after _set_limits: it flips whatever the current limits are
         self._set_labels()
+        self._set_figure_style()  # after _set_labels: the subtitle is positioned relative to the title
         self._set_grid()
         self._set_rotation()
         self._set_legend()
@@ -535,10 +594,30 @@ class VGraph(QWidget):
                             custom_labels.append(l)
                     unique_labels = custom_labels
                         
+                # Shared legend-box styling (ncol/frame/title/fontsize/alpha)
+                # applies whether the legend sits inside or outside the axes;
+                # only its *position* differs between the two branches below.
+                style_kwargs = {
+                    'ncol': getattr(self, 'legend_ncol', 1),
+                    'frameon': getattr(self, 'legend_frame', True),
+                    'framealpha': getattr(self, 'legend_alpha', 0.7),
+                }
+                if getattr(self, 'legend_title', None):
+                    style_kwargs['title'] = self.legend_title
+                style_kwargs['fontsize'] = getattr(self, 'legend_fontsize', None) or 10
+
                 if getattr(self, 'legend_outside', False):
-                    legend = self.ax.legend(unique_handles, unique_labels, loc='center left', bbox_to_anchor=(1.02, 0.5), framealpha=0.7)
+                    legend = self.ax.legend(
+                        unique_handles, unique_labels,
+                        loc='center left', bbox_to_anchor=(1.02, 0.5),
+                        **style_kwargs
+                    )
                 else:
-                    legend = self.ax.legend(unique_handles, unique_labels, loc='best', framealpha=0.7)
+                    legend = self.ax.legend(
+                        unique_handles, unique_labels,
+                        loc=getattr(self, 'legend_loc', 'best'),
+                        **style_kwargs
+                    )
                     if getattr(self, 'legend_bbox', None) is not None:
                         legend._loc = tuple(self.legend_bbox)
                         
@@ -561,15 +640,25 @@ class VGraph(QWidget):
         """Add grid for the plot (supports linear & log scale automatically)."""
         is_wafer = (self.plot_style == 'wafer')
         self.ax.set_axisbelow(True)
-        
+
+        # tick_direction stays an optional override (only threaded in when
+        # set, so matplotlib's own default direction applies otherwise);
+        # tick_label_fontsize is a concrete font-size field, always applied
+        # (with a defensive fallback in case an old save or the scripting
+        # API leaves it None).
+        extra_ticks = {'labelsize': getattr(self, 'tick_label_fontsize', None) or 9}
+        if getattr(self, 'tick_direction', None):
+            extra_ticks['direction'] = self.tick_direction
+
         self.ax.tick_params(
             which='major',
             bottom=False if is_wafer else True,
             left=True,
             top=False if is_wafer else getattr(self, 'minor_ticks_top', False),
-            right=getattr(self, 'minor_ticks_right', False)
+            right=getattr(self, 'minor_ticks_right', False),
+            **extra_ticks
         )
-        
+
         if any([getattr(self, 'minor_ticks_bottom', True),
                 getattr(self, 'minor_ticks_left', True),
                 getattr(self, 'minor_ticks_top', False),
@@ -580,7 +669,8 @@ class VGraph(QWidget):
                 bottom=False if is_wafer else getattr(self, 'minor_ticks_bottom', True),
                 top=False if is_wafer else getattr(self, 'minor_ticks_top', False),
                 left=getattr(self, 'minor_ticks_left', True),
-                right=getattr(self, 'minor_ticks_right', False)
+                right=getattr(self, 'minor_ticks_right', False),
+                **({'direction': self.tick_direction} if getattr(self, 'tick_direction', None) else {})
             )
         else:
             self.ax.minorticks_off()
@@ -636,39 +726,54 @@ class VGraph(QWidget):
             self._apply_limit_pair(self.ax_x2.set_xlim, self.x2min, self.x2max, "x2-axis")
     
     def _set_axis_scale(self, df):
-        """Apply log scale only if the corresponding axis column is numeric."""
+        """Apply log/symlog scale only if the corresponding axis column is numeric."""
         if df is None:
             return
 
         if self.xlogscale:
             x_data = df[self.x]
             if np.issubdtype(x_data.dtype, np.number):
-                self.ax.set_xscale('log')
+                self.ax.set_xscale(self.xscale_mode if self.xscale_mode == 'symlog' else 'log')
             else:
                 self.notify.emit(f"Skipping x-logscale because '{self.x}' is categorical.")
 
         if self.ylogscale and len(self.y) > 0:
             y_data = df[self.y[0]]
             if np.issubdtype(y_data.dtype, np.number):
-                self.ax.set_yscale('log')
+                self.ax.set_yscale(self.yscale_mode if self.yscale_mode == 'symlog' else 'log')
             else:
                 self.notify.emit(f"Skipping y-logscale because '{self.y[0]}' is categorical.")
-        
+
         if self.ax2 and self.y2 and self.y2logscale:
             y2_data = df[self.y2]
             if np.issubdtype(y2_data.dtype, np.number):
                 self.ax2.set_yscale('log')
-        
+
         if self.ax3 and self.y3 and self.y3logscale:
             y3_data = df[self.y3]
             if np.issubdtype(y3_data.dtype, np.number):
                 self.ax3.set_yscale('log')
-        
+
         if self.ax_x2 and self.x2 and self.x2logscale:
             x2_data = df[self.x2]
             if np.issubdtype(x2_data.dtype, np.number):
                 self.ax_x2.set_xscale('log')
-    
+
+        if self.tick_label_format:
+            formatter = FormatStrFormatter(self.tick_label_format)
+            self.ax.xaxis.set_major_formatter(formatter)
+            self.ax.yaxis.set_major_formatter(formatter)
+
+    def _set_axis_direction(self):
+        """Invert X/Y axes if requested. Must run after _set_limits(), since
+        it flips whatever the current limits happen to be. self.ax.clear()
+        at the top of _plot_internal already resets any inversion from a
+        previous render, so this only needs to act when inversion is on."""
+        if self.x_inverted:
+            self.ax.invert_xaxis()
+        if self.y_inverted:
+            self.ax.invert_yaxis()
+
     def _format_axis_label(self, col_name) -> str:
         """Format axis label based on specific parameter rules.
 
@@ -733,7 +838,58 @@ class VGraph(QWidget):
                     self.ax.set_ylabel("Frequency")
                 else:
                     self.ax.set_ylabel(self._get_y_label_default(self.y))
-    
+
+        # Font-size fields are always concrete (12/12pt by default, matching
+        # mplstyle) -- applied once here rather than threading fontsize=
+        # into every set_title/set_xlabel/set_ylabel call above. The `or`
+        # fallback only matters defensively (an old save or the scripting
+        # API leaving the field as None).
+        self.ax.title.set_fontsize(self.title_fontsize or 12)
+        axis_label_fontsize = self.axis_label_fontsize or 12
+        self.ax.xaxis.label.set_fontsize(axis_label_fontsize)
+        self.ax.yaxis.label.set_fontsize(axis_label_fontsize)
+
+    def _set_figure_style(self):
+        """Figure/axes-wide styling: background color, subtitle, spine
+        visibility, margins. All optional and skipped when unset, so an old
+        saved graph (none of these fields set) renders identically to
+        before this feature existed.
+
+        Runs inside plot()'s `with plt.style.context(theme)` block, but
+        `ax.clear()` (called earlier in _plot_internal) does not retroactively
+        repaint the axes patch from a *new* style context if the Axes was
+        originally created under a different one (e.g. the widget was built
+        with the default light theme, then figure_theme was changed to dark
+        without recreating the Figure) -- so the current theme's facecolor is
+        applied explicitly here as a baseline, with figure_facecolor (an
+        explicit user override, independent of theme) layered on top.
+        """
+        self.ax.set_facecolor(plt.rcParams['axes.facecolor'])
+        self.figure.set_facecolor(plt.rcParams['figure.facecolor'])
+        if self.figure_facecolor:
+            self.ax.set_facecolor(self.figure_facecolor)
+            self.figure.set_facecolor(self.figure_facecolor)
+
+        if self.plot_subtitle:
+            # Sits right at the axes' top edge -- the title itself floats
+            # further up above this, via its own default padding, so the
+            # two don't collide without needing precise pad arithmetic.
+            fontsize = self.subtitle_fontsize if self.subtitle_fontsize is not None else 10
+            self.ax.text(
+                0.5, 1.0, self.plot_subtitle,
+                transform=self.ax.transAxes, ha='center', va='bottom',
+                fontsize=fontsize,
+            )
+
+        spines = self.spines_visible or {}
+        for side, visible in spines.items():
+            if side in self.ax.spines:
+                self.ax.spines[side].set_visible(visible)
+
+        if self.figure_margins:
+            x_margin, y_margin = self.figure_margins
+            self.ax.margins(x=x_margin, y=y_margin)
+
     def _draw_twin_series(self, twin_ax, x_vals, y_vals, *, color, marker, series_label):
         """Draw one series onto a twin axis, dispatching by the primary
         plot_style (point/line/scatter share this look across y2/y3/x2).
@@ -779,9 +935,9 @@ class VGraph(QWidget):
         if getattr(self, 'x_as_numeric', False):
             x_vals = pd.to_numeric(x_vals, errors='coerce')
 
-        if self._draw_twin_series(self.ax2, x_vals, df[self.y2], color='red', marker='s', series_label=self.y2):
-            self.ax2.set_ylabel(self.y2label or self._format_axis_label(self.y2), color='red')
-            self.ax2.tick_params(axis='y', colors='red')
+        if self._draw_twin_series(self.ax2, x_vals, df[self.y2], color=self.y2color, marker=self.y2marker, series_label=self.y2):
+            self.ax2.set_ylabel(self.y2label or self._format_axis_label(self.y2), color=self.y2color)
+            self.ax2.tick_params(axis='y', colors=self.y2color)
         else:
             self.ax2.remove()
             self.ax2 = None
@@ -802,9 +958,9 @@ class VGraph(QWidget):
         if getattr(self, 'x_as_numeric', False):
             x_vals = pd.to_numeric(x_vals, errors='coerce')
 
-        if self._draw_twin_series(self.ax3, x_vals, df[self.y3], color='green', marker='s', series_label=self.y3):
-            self.ax3.set_ylabel(self.y3label or self._format_axis_label(self.y3), color='green')
-            self.ax3.tick_params(axis='y', colors='green')
+        if self._draw_twin_series(self.ax3, x_vals, df[self.y3], color=self.y3color, marker=self.y3marker, series_label=self.y3):
+            self.ax3.set_ylabel(self.y3label or self._format_axis_label(self.y3), color=self.y3color)
+            self.ax3.tick_params(axis='y', colors=self.y3color)
         else:
             self.ax3.remove()
             self.ax3 = None
@@ -824,11 +980,11 @@ class VGraph(QWidget):
         if getattr(self, 'x2logscale', False):
             x_vals = pd.to_numeric(x_vals, errors='coerce')
 
-        if self._draw_twin_series(self.ax_x2, x_vals, df[self.y[0]], color='purple', marker='D', series_label=self.y[0]):
+        if self._draw_twin_series(self.ax_x2, x_vals, df[self.y[0]], color=self.x2color, marker=self.x2marker, series_label=self.y[0]):
             self.ax_x2.set_xlabel(
-                self.x2label or self._format_axis_label(self.x2), color='purple'
+                self.x2label or self._format_axis_label(self.x2), color=self.x2color
             )
-            self.ax_x2.tick_params(axis='x', colors='purple')
+            self.ax_x2.tick_params(axis='x', colors=self.x2color)
         else:
             self.ax_x2.remove()
             self.ax_x2 = None

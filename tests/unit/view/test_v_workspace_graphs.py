@@ -385,3 +385,74 @@ class TestUpdatePlotPreservesDfName:
         ws._on_update_plot()
 
         assert ws.vm.get_graph(graph_model.graph_id).df_name == 'sheet1'
+
+
+class TestSubtitleSidePanelSync:
+    """The side panel's 'Title and labels' group and the Customize dialog's
+    More Options > Figure style tab both edit MGraph.plot_subtitle -- they
+    must stay consistent (one shared field, not two independent copies)."""
+
+    def test_sync_gui_from_graph_loads_subtitle(self, ws, excel_df):
+        ws.vm.add_dataframe('sheet1', excel_df)
+        ws.vm.select_dataframe('sheet1')
+        graph_model = ws.vm.create_graph({
+            'df_name': 'sheet1', 'plot_style': 'scatter',
+            'x': 'x0_Si', 'y': ['ampli_Si'], 'plot_subtitle': 'From dialog',
+        })
+        ws._sync_gui_from_graph(graph_model)
+        assert ws.edit_plot_subtitle.text() == 'From dialog'
+
+    def test_update_plot_writes_subtitle_back(self, ws, excel_df):
+        ws.vm.add_dataframe('sheet1', excel_df)
+        ws.vm.select_dataframe('sheet1')
+        graph_model = ws.vm.create_graph({
+            'df_name': 'sheet1', 'plot_style': 'scatter',
+            'x': 'x0_Si', 'y': ['ampli_Si'],
+        })
+        ws._build_graph_widget(graph_model, excel_df, lambda e: None)
+        sub_window = ws.graph_widgets[graph_model.graph_id][2]
+        ws.mdi_area.setActiveSubWindow(sub_window)
+        ws._on_subwindow_activated(sub_window)
+
+        ws.edit_plot_subtitle.setText("From side panel")
+        ws._on_update_plot()
+
+        assert ws.vm.get_graph(graph_model.graph_id).plot_subtitle == "From side panel"
+
+
+class TestExportAll:
+    def test_empty_workspace_shows_info_message_and_opens_no_dialog(self, ws, monkeypatch):
+        infos = []
+        monkeypatch.setattr(QMessageBox, 'information', lambda *a, **k: infos.append(a))
+        opened = []
+        class _StubDialog:
+            def __init__(self, widgets, parent=None):
+                opened.append(widgets)
+            def exec(self):
+                pass
+        monkeypatch.setattr("spectroview.view.v_workspace_graphs.VBatchExportDialog", _StubDialog)
+
+        ws._on_export_all_clicked()
+
+        assert len(infos) == 1
+        assert opened == []
+
+    def test_open_workspace_opens_batch_dialog_with_every_graph_widget(self, ws, excel_df, monkeypatch):
+        graph_model = ws.vm.create_graph({
+            'df_name': 'sheet1', 'plot_style': 'scatter',
+            'x': 'x0_Si', 'y': ['ampli_Si'],
+        })
+        widget = ws._build_graph_widget(graph_model, excel_df, lambda e: None)
+
+        received = {}
+        class _StubDialog:
+            def __init__(self, widgets, parent=None):
+                received['widgets'] = widgets
+            def exec(self):
+                received['exec_called'] = True
+        monkeypatch.setattr("spectroview.view.v_workspace_graphs.VBatchExportDialog", _StubDialog)
+
+        ws._on_export_all_clicked()
+
+        assert received['widgets'] == {graph_model.graph_id: widget}
+        assert received['exec_called'] is True

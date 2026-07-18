@@ -21,6 +21,7 @@ import datetime
 import struct
 import re
 import numpy as np
+import matplotlib
 from io import BytesIO
 
 from copy import deepcopy
@@ -469,7 +470,60 @@ def copy_fig_to_clb(canvas, size_ratio=None):
         figure.set_size_inches(original_size, forward=True)
         figure.set_dpi(original_dpi)
         canvas.draw()
-        
+
+# Vector formats where embedding real (editable/searchable) text instead of
+# outlined paths matters for publication use.
+_VECTOR_FORMATS = ('pdf', 'eps', 'svg')
+
+def export_figure_to_file(canvas, filepath, fmt, dpi=300, transparent=False, size_inches=None):
+    """Export a matplotlib figure canvas to a file (PNG/TIFF/SVG/PDF/EPS).
+
+    Mirrors copy_fig_to_clb's temporarily-resize-then-restore pattern so a
+    caller can request a specific physical export size without permanently
+    resizing the on-screen figure. Vector formats get font-embedding
+    rcParams (fonttype 42 for PDF/EPS, real <text> elements for SVG) so
+    exported text stays editable/searchable rather than outlined -- applied
+    only for the duration of this save via matplotlib.rc_context, not
+    process-wide.
+
+    Returns True on success, False (after showing an error dialog) on failure.
+    """
+    if not canvas:
+        QMessageBox.critical(None, "Error", "No plot to export.")
+        return False
+
+    figure = canvas.figure
+    original_size = figure.get_size_inches()
+    original_dpi = figure.dpi
+
+    try:
+        if size_inches:
+            figure.set_size_inches(size_inches, forward=True)
+            canvas.draw()
+
+        # bbox_inches='tight' (copy_fig_to_clb's convenience default, avoids
+        # excess whitespace) recomputes the saved bbox from rendered content
+        # -- which silently ignores an explicitly requested physical size.
+        # Only use it when the caller did NOT ask for a specific size; honor
+        # the exact requested dimensions otherwise.
+        bbox_inches = None if size_inches else 'tight'
+        savefig_kwargs = dict(format=fmt, dpi=dpi, transparent=transparent, bbox_inches=bbox_inches)
+
+        if fmt in _VECTOR_FORMATS:
+            with matplotlib.rc_context({'pdf.fonttype': 42, 'ps.fonttype': 42, 'svg.fonttype': 'none'}):
+                figure.savefig(filepath, **savefig_kwargs)
+        else:
+            figure.savefig(filepath, **savefig_kwargs)
+        return True
+    except Exception as e:
+        QMessageBox.critical(None, "Error", f"Error exporting figure: {e}")
+        return False
+    finally:
+        # Restore original figure state
+        figure.set_size_inches(original_size, forward=True)
+        figure.set_dpi(original_dpi)
+        canvas.draw()
+
 def build_clean_fit_model(fit_model):
     """Build a clean, consistently ordered fit model dict for serialization.
 

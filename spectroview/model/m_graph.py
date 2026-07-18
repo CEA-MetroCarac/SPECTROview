@@ -38,6 +38,12 @@ class MGraph:
     y2: Optional[str] = None  # Secondary y-axis
     y3: Optional[str] = None  # Tertiary y-axis
     x2: Optional[str] = None  # Secondary x-axis
+    y2color: str = "red"      # matches the pre-existing hardcoded color in _plot_secondary_axis
+    y2marker: str = "s"
+    y3color: str = "green"    # matches the pre-existing hardcoded color in _plot_tertiary_axis
+    y3marker: str = "s"
+    x2color: str = "purple"   # matches the pre-existing hardcoded color in _plot_secondary_x_axis
+    x2marker: str = "D"
 
     # Axis limits
     xmin: Optional[float] = None
@@ -59,9 +65,13 @@ class MGraph:
     y2logscale: bool = False
     y3logscale: bool = False
     x2logscale: bool = False
+    xscale_mode: str = "log"  # log/symlog -- which scale xlogscale switches to when True
+    yscale_mode: str = "log"  # log/symlog -- which scale ylogscale switches to when True
 
     # Labels
     plot_title: Optional[str] = None
+    plot_subtitle: Optional[str] = None
+    subtitle_fontsize: int = 10  # matches the pre-existing hardcoded fallback; only rendered once plot_subtitle is set
     xlabel: Optional[str] = None
     ylabel: Optional[str] = None
     zlabel: Optional[str] = None
@@ -72,12 +82,33 @@ class MGraph:
     # Visual properties
     x_rot: int = 0  # X-axis label rotation
     grid: bool = False
+    tick_direction: Optional[str] = None   # in/out/inout; None = matplotlib's own default
+    tick_label_format: Optional[str] = None  # e.g. "%.2f"; None = default ScalarFormatter
+    x_inverted: bool = False
+    y_inverted: bool = False
+    title_fontsize: int = 12       # matches mplstyle's axes.titlesize
+    axis_label_fontsize: int = 12  # matches mplstyle's axes.labelsize
+    tick_label_fontsize: int = 9   # matches mplstyle's x/ytick.labelsize
+    figure_facecolor: Optional[str] = None     # None = mplstyle's figure/axes facecolor
+    figure_margins: List[float] = field(default_factory=lambda: [0.05, 0.05])  # [x_margin, y_margin]; matches matplotlib's own default
+    spines_visible: Dict[str, bool] = field(
+        default_factory=lambda: {'top': True, 'right': True, 'bottom': True, 'left': True}
+    )
+    figure_theme: str = "light"  # light/dark/soft_dark -- selects the mplstyle used to render this graph
+    export_width_mm: Optional[float] = None   # None = use the current on-screen figure size at export time
+    export_height_mm: Optional[float] = None
 
     # Legend
     legend_visible: bool = True
     legend_outside: bool = False
     legend_properties: List[Dict[str, Any]] = field(default_factory=list)
     legend_bbox: Optional[List[float]] = None  # (x, y) in axes coords for dragged position
+    legend_ncol: int = 1
+    legend_frame: bool = True
+    legend_title: Optional[str] = None
+    legend_fontsize: int = 10  # matches mplstyle's legend.fontsize
+    legend_alpha: float = 0.7  # matches the pre-existing hardcoded framealpha=0.7
+    legend_loc: str = "best"   # inside-legend position; ignored when legend_outside is True
 
     # Plot-specific properties
     color_palette: str = "jet"  # For wafer/2D maps
@@ -90,6 +121,9 @@ class MGraph:
     trendline_anchor_x: float = 0.0
     trendline_anchor_y: float = 0.0
     show_bar_plot_error_bar: bool = False
+    error_bar_type: str = "ci95"       # none/sd/sem/ci95 -- point & line, shown unconditionally
+    bar_error_bar_type: str = "sd"     # none/sd/sem/ci95 -- bar, only used when show_bar_plot_error_bar
+    error_bar_capsize: float = 3.0
     join_for_point_plot: bool = False
     dodge_point_plot: bool = True
     dodge_scatter_plot: bool = False

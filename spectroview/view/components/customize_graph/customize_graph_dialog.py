@@ -17,6 +17,7 @@ from spectroview import ICON_DIR
 from spectroview.view.components.customize_graph.customize_legend import CustomizeLegend
 from spectroview.view.components.customize_graph.customize_annotations import CustomizeAnnotations
 from spectroview.view.components.customize_graph.customize_axis import CustomizeAxis
+from spectroview.view.components.customize_graph.customize_secondary_axes import CustomizeSecondaryAxes
 from spectroview.view.components.customize_graph.customize_more_options import CustomizeMoreOptions
 from spectroview.view.components.customize_graph.customize_annotation_dialogs import (
     EditLineDialog, EditTextDialog, ColorDelegate,
@@ -24,8 +25,8 @@ from spectroview.view.components.customize_graph.customize_annotation_dialogs im
 
 __all__ = [
     "CustomizeGraphDialog", "CustomizeLegend", "CustomizeAnnotations",
-    "CustomizeAxis", "CustomizeMoreOptions", "EditLineDialog",
-    "EditTextDialog", "ColorDelegate",
+    "CustomizeAxis", "CustomizeSecondaryAxes", "CustomizeMoreOptions",
+    "EditLineDialog", "EditTextDialog", "ColorDelegate",
 ]
 
 
@@ -66,9 +67,11 @@ class CustomizeGraphDialog(QDialog):
         tab_legend = self._create_legend_tab()
         tab_general = self._create_general_tab()
         tab_axis = self._create_axis_tab()
+        tab_secondary_axes = self._create_secondary_axes_tab()
 
         # Add tabs to widget
         self.tabs.addTab(tab_axis, "Axis")
+        self.tabs.addTab(tab_secondary_axes, "Secondary axes")
         self.tabs.addTab(tab_legend, "Legend / Color")
         self.tabs.addTab(tab_annotations, "Annotations")
         self.tabs.addTab(tab_general, "More options")
@@ -93,6 +96,7 @@ class CustomizeGraphDialog(QDialog):
         """Apply changes from all tabs and close dialog."""
         self.legend_widget.apply_changes()
         self.axis_widget._apply_axis_settings()
+        self.secondary_axes_widget.apply_changes()
         self.more_options_widget._apply()
 
         # After more options are applied (which may replot and recreate legend properties),
@@ -150,17 +154,28 @@ class CustomizeGraphDialog(QDialog):
         layout.addWidget(self.axis_widget)
         return tab
 
+    def _create_secondary_axes_tab(self):
+        """Create secondary axes (Y2/Y3/X2) customization tab."""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
+
+        self.secondary_axes_widget = CustomizeSecondaryAxes(self.graph_widget, parent=tab)
+        layout.addWidget(self.secondary_axes_widget)
+        return tab
+
     def open_legend_tab(self):
         """Open the dialog and switch to the Legend tab."""
         self.legend_widget.load_legend_properties()
-        self.tabs.setCurrentIndex(1) # Switch to Legend tab (index 1)
+        self.tabs.setCurrentIndex(self.tabs.indexOf(self.legend_widget.parent()))
         self.show()
         self.raise_()
         self.activateWindow()
 
     def open_axis_tab(self):
         """Open the dialog and switch to the AXIS tab."""
-        self.tabs.setCurrentIndex(0) # Switch to Axis tab (index 0)
+        self.tabs.setCurrentIndex(self.tabs.indexOf(self.axis_widget.parent()))
         self.show()
         self.raise_()
         self.activateWindow()
@@ -168,8 +183,8 @@ class CustomizeGraphDialog(QDialog):
     def switch_graph(self, graph_widget, graph_id):
         """Switch the dialog to a different graph widget.
 
-        Re-binds all child widgets (legend, annotations, axis, more_options) to the new
-        graph and reloads their content.
+        Re-binds all child widgets (legend, annotations, axis, secondary
+        axes, more_options) to the new graph and reloads their content.
         """
         if self.graph_id == graph_id:
             return  # Already showing this graph
@@ -182,4 +197,5 @@ class CustomizeGraphDialog(QDialog):
         self.legend_widget.switch_graph(graph_widget)
         self.annotations_widget.switch_graph(graph_widget)
         self.axis_widget.switch_graph(graph_widget)
+        self.secondary_axes_widget.switch_graph(graph_widget)
         self.more_options_widget.switch_graph(graph_widget)

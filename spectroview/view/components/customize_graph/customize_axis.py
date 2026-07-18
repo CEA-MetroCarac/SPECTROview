@@ -1,19 +1,59 @@
 """Axis tab of the Customize Graph dialog: axis scale/data-type, limits,
-minor ticks, and the "Broken axis (beta)" feature.
+tick direction/format/font-size, axis inversion, minor ticks, and the
+"Broken axis (beta)" feature.
 
 Split out of customize_graph_dialog.py; no behavior changes.
 """
+import pandas as pd
+
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QLabel, QPushButton,
-    QComboBox, QDoubleSpinBox, QCheckBox, QMessageBox,
+    QComboBox, QDoubleSpinBox, QSpinBox, QCheckBox, QMessageBox,
 )
 
 from spectroview import ICON_DIR
+from spectroview.view.components.customize_graph.spin_widgets import PlaceholderDoubleSpinBox
+
+try:
+    from superqt import QLabeledDoubleRangeSlider
+except ImportError:  # pragma: no cover - superqt is a hard dependency in practice
+    QLabeledDoubleRangeSlider = None
+
+# Text <-> MGraph.tick_direction value ("Default" means None -- matplotlib's
+# own default, not overridden).
+_TICK_DIRECTION_MAP = {"Default": None, "In": "in", "Out": "out", "In & Out": "inout"}
+_TICK_DIRECTION_TEXT = {v: k for k, v in _TICK_DIRECTION_MAP.items()}
+
+# Tick-label-format presets, replacing a freeform printf-style text field
+# (confusing for non-technical users) with a small set of common choices.
+# Value None means "Auto" -- matplotlib's own default ScalarFormatter.
+_TICK_FORMAT_PRESETS = [
+    ("Auto (default)", None),
+    ("Integer  (e.g. 1234)", "%.0f"),
+    ("1 decimal  (e.g. 12.3)", "%.1f"),
+    ("2 decimals  (e.g. 12.34)", "%.2f"),
+    ("Scientific  (e.g. 1.2e+03)", "%.1e"),
+]
+
+# Real mplstyle defaults (identical across all three theme files -- they
+# only differ in color, not typography) so the font-size spinboxes always
+# show a concrete, meaningful number instead of a blank/sentinel value.
+_DEFAULT_TITLE_FONTSIZE = 12
+_DEFAULT_AXIS_LABEL_FONTSIZE = 12
+_DEFAULT_TICK_FONTSIZE = 9
+
+# QDoubleSpinBox.sizeHint() for a PlaceholderDoubleSpinBox showing "default"
+# measures ~102px (text + up/down arrow buttons); a narrower explicit
+# setMaximumWidth() clips the word to e.g. "defau" instead of shrinking the
+# arrows. Kept as one named width so every optional-override spinbox in this
+# tab clips consistently (i.e. never).
+_PLACEHOLDER_SPIN_WIDTH = 105
 
 
 class CustomizeAxis(QWidget):
-    """Widget for customizing axis settings (breaks)."""
+    """Widget for customizing axis settings (scale, limits, style, breaks)."""
 
     def __init__(self, graph_widget, parent=None):
         super().__init__(parent)
@@ -31,20 +71,129 @@ class CustomizeAxis(QWidget):
 
     # Sentinel used throughout this class for "no limit set": the spinbox's
     # own range minimum doubles as the unset marker, so no separate flag is
-    # needed. setSpecialValueText() makes that sentinel state render as a
-    # blank box instead of the confusing literal "-999999" -- note the text
-    # must be a single space, not "": Qt treats an *empty* special-value
-    # string as "no special text configured" and falls back to showing the
-    # raw number, so "" alone doesn't produce a blank display.
+    # needed. PlaceholderDoubleSpinBox renders that sentinel state as a
+    # grayed "default" placeholder instead of the confusing literal
+    # "-999999", and fixes the up/down-arrow click to jump to a sensible
+    # starting value (updated per-graph via set_start_value()) instead of
+    # stepping from the sentinel itself.
     _UNSET_LIMIT = -999999
-    _BLANK_TEXT = " "
 
-    def _make_limit_spinbox(self) -> QDoubleSpinBox:
-        """Create one axis-limit spinbox that displays blank when unset."""
-        spin = QDoubleSpinBox()
+    def _make_limit_spinbox(self, start_value=0.0) -> PlaceholderDoubleSpinBox:
+        """Create one axis-limit spinbox that shows a grayed "default"
+        placeholder when unset."""
+        spin = PlaceholderDoubleSpinBox(self._UNSET_LIMIT, start_value, "default")
         spin.setRange(self._UNSET_LIMIT, 999999)
-        spin.setSpecialValueText(self._BLANK_TEXT)
         return spin
+
+    def _add_limit_row_with_slider(self, parent_layout, axis_label, prefix):
+        """Build one 'label: [min spin] [====slider====] [max spin]' row for
+        a primary axis (X/Y/Z), bidirectionally synced, following the same
+        QLabeledDoubleRangeSlider pattern used by v_map_viewer.py's
+        range sliders. Falls back to spinbox-only if superqt is missing."""
+        row = QHBoxLayout()
+        row.addWidget(QLabel(f"{axis_label} axis limits:"))
+
+        spin_min = self._make_limit_spinbox()
+        spin_min.setMaximumWidth(_PLACEHOLDER_SPIN_WIDTH)
+        setattr(self, f'spin_{prefix}min', spin_min)
+        row.addWidget(spin_min)
+
+        slider = None
+        if QLabeledDoubleRangeSlider is not None:
+            slider = QLabeledDoubleRangeSlider(Qt.Orientation.Horizontal)
+            slider.setEdgeLabelMode(QLabeledDoubleRangeSlider.EdgeLabelMode.NoLabel)
+            slider.setHandleLabelPosition(QLabeledDoubleRangeSlider.LabelPosition.NoLabel)
+            slider.setRange(0, 100)
+            slider.setValue((0, 100))
+            setattr(self, f'{prefix}_range_slider', slider)
+            row.addWidget(slider, stretch=1)
+
+        spin_max = self._make_limit_spinbox()
+        spin_max.setMaximumWidth(_PLACEHOLDER_SPIN_WIDTH)
+        setattr(self, f'spin_{prefix}max', spin_max)
+        row.addWidget(spin_max)
+
+        if slider is not None:
+            slider.valueChanged.connect(lambda values, p=prefix: self._on_range_slider_changed(p, values))
+            # *_a (not a bare `_`) absorbs however many positional args Qt's
+            # signal/slot arg-count auto-detection decides to pass for a
+            # lambda whose only other parameter has a default (observed to
+            # vary: 6.10.2 here passes the emitted double, but a user report
+            # against a different PySide6 build passed zero args to the
+            # equivalent QPushButton.clicked case below and raised
+            # "missing 1 required positional argument") -- don't depend on it.
+            spin_min.valueChanged.connect(lambda *_a, p=prefix: self._update_range_slider_from_spins(p))
+            spin_max.valueChanged.connect(lambda *_a, p=prefix: self._update_range_slider_from_spins(p))
+
+        parent_layout.addLayout(row)
+
+    def _on_range_slider_changed(self, prefix, values):
+        """Double-slider dragged -- mirror the new (min, max) into the
+        spinboxes (no live replot; takes effect on Apply like every other
+        field in this dialog)."""
+        spin_min = getattr(self, f'spin_{prefix}min')
+        spin_max = getattr(self, f'spin_{prefix}max')
+        spin_min.blockSignals(True)
+        spin_max.blockSignals(True)
+        spin_min.setValue(values[0])
+        spin_max.setValue(values[1])
+        spin_min._update_placeholder_style()
+        spin_max._update_placeholder_style()
+        spin_min.blockSignals(False)
+        spin_max.blockSignals(False)
+
+    def _update_range_slider_from_spins(self, prefix):
+        """Spinbox edited -- mirror it into the slider. An unset ("default")
+        spinbox shows the slider spanning its full range, matching what
+        "no limit set" actually means (matplotlib auto-scale)."""
+        slider = getattr(self, f'{prefix}_range_slider', None)
+        if slider is None:
+            return
+        spin_min = getattr(self, f'spin_{prefix}min')
+        spin_max = getattr(self, f'spin_{prefix}max')
+        u = self._UNSET_LIMIT
+        lo, hi = slider.minimum(), slider.maximum()
+        vmin = lo if spin_min.value() == u else spin_min.value()
+        vmax = hi if spin_max.value() == u else spin_max.value()
+        vmin = max(lo, min(vmin, hi))
+        vmax = max(lo, min(vmax, hi))
+        if vmin <= vmax:
+            slider.blockSignals(True)
+            slider.setValue((vmin, vmax))
+            slider.blockSignals(False)
+
+    def _update_range_slider_bounds(self):
+        """Derive each slider's drag range from the graph's current data,
+        padded past the raw extent (mirroring matplotlib's own auto-margin)
+        so dragging isn't clipped to the exact data min/max. Also updates
+        each spinbox's arrow-click start value to the same padded bound."""
+        gw = self.graph_widget
+        df = getattr(gw, 'df', None)
+        columns = {'x': gw.x, 'y': (gw.y[0] if gw.y else None), 'z': gw.z}
+        for prefix, col in columns.items():
+            slider = getattr(self, f'{prefix}_range_slider', None)
+            if slider is None:
+                continue
+            lo, hi = 0.0, 100.0
+            if df is not None and col is not None and col in getattr(df, 'columns', []):
+                series = pd.to_numeric(df[col], errors='coerce').dropna()
+                if not series.empty:
+                    data_min, data_max = float(series.min()), float(series.max())
+                    pad = (data_max - data_min) * 0.1 or 1.0
+                    lo, hi = data_min - pad, data_max + pad
+            # Block signals: setRange() alone can clamp the slider's current
+            # value into the new bounds (e.g. a stale (0, 100) default sitting
+            # outside real data range), which fires valueChanged and — via
+            # _on_range_slider_changed — overwrites the spinboxes with that
+            # clamped number, stomping an unset ("default") limit with a real
+            # one. _update_range_slider_from_spins() below is the single
+            # source of truth for repositioning the slider from the spinboxes.
+            slider.blockSignals(True)
+            slider.setRange(lo, hi)
+            slider.blockSignals(False)
+            getattr(self, f'spin_{prefix}min').set_start_value(lo)
+            getattr(self, f'spin_{prefix}max').set_start_value(hi)
+            self._update_range_slider_from_spins(prefix)
 
     def _setup_ui(self):
         """Setup the UI components for the axis customization widget."""
@@ -64,7 +213,7 @@ class CustomizeAxis(QWidget):
 
         x_prop_layout.addWidget(QLabel("Scale:"))
         self.combo_x_scale = QComboBox()
-        self.combo_x_scale.addItems(["Linear", "Logarithmic"])
+        self.combo_x_scale.addItems(["Linear", "Logarithmic", "Symlog"])
         x_prop_layout.addWidget(self.combo_x_scale)
 
         x_prop_layout.addSpacing(20)
@@ -73,6 +222,10 @@ class CustomizeAxis(QWidget):
         self.combo_x_type = QComboBox()
         self.combo_x_type.addItems(["Auto", "Category", "Numerical"])
         x_prop_layout.addWidget(self.combo_x_type)
+
+        x_prop_layout.addSpacing(20)
+        self.cb_invert_x = QCheckBox("Inverted")
+        x_prop_layout.addWidget(self.cb_invert_x)
         x_prop_layout.addStretch()
 
         # Y axis properties
@@ -81,7 +234,7 @@ class CustomizeAxis(QWidget):
 
         y_prop_layout.addWidget(QLabel("Scale:"))
         self.combo_y_scale = QComboBox()
-        self.combo_y_scale.addItems(["Linear", "Logarithmic"])
+        self.combo_y_scale.addItems(["Linear", "Logarithmic", "Symlog"])
         y_prop_layout.addWidget(self.combo_y_scale)
 
         y_prop_layout.addSpacing(20)
@@ -90,6 +243,10 @@ class CustomizeAxis(QWidget):
         self.combo_y_type = QComboBox()
         self.combo_y_type.addItems(["Auto", "Category", "Numerical"])
         y_prop_layout.addWidget(self.combo_y_type)
+
+        y_prop_layout.addSpacing(20)
+        self.cb_invert_y = QCheckBox("Inverted")
+        y_prop_layout.addWidget(self.cb_invert_y)
         y_prop_layout.addStretch()
 
         props_layout.addLayout(x_prop_layout)
@@ -97,6 +254,60 @@ class CustomizeAxis(QWidget):
 
         layout.addWidget(props_group)
 
+        # ===== Axis Appearance Section (tick direction/format/font sizes,
+        # minor ticks -- merged into one group since they're all "how the
+        # axis itself looks" decisions) =====
+        style_group = QGroupBox("Axis Appearance:")
+        style_layout = QVBoxLayout(style_group)
+        style_layout.setContentsMargins(4, 4, 4, 4)
+        style_layout.setSpacing(8)
+
+        minor_row = QHBoxLayout()
+        minor_row.addWidget(QLabel("Minor ticks:"))
+        self.cb_minor_bottom = QCheckBox("X (Bottom)")
+        self.cb_minor_top = QCheckBox("X (Top)")
+        self.cb_minor_left = QCheckBox("Y (Left)")
+        self.cb_minor_right = QCheckBox("Y (Right)")
+        minor_row.addWidget(self.cb_minor_bottom)
+        minor_row.addWidget(self.cb_minor_top)
+        minor_row.addWidget(self.cb_minor_left)
+        minor_row.addWidget(self.cb_minor_right)
+        minor_row.addStretch()
+        style_layout.addLayout(minor_row)
+
+        tick_row = QHBoxLayout()
+        tick_row.addWidget(QLabel("Tick direction:"))
+        self.combo_tick_direction = QComboBox()
+        self.combo_tick_direction.addItems(list(_TICK_DIRECTION_MAP.keys()))
+        tick_row.addWidget(self.combo_tick_direction)
+
+        tick_row.addSpacing(20)
+        tick_row.addWidget(QLabel("Tick label format:"))
+        self.combo_tick_format = QComboBox()
+        for label, value in _TICK_FORMAT_PRESETS:
+            self.combo_tick_format.addItem(label, value)
+        tick_row.addWidget(self.combo_tick_format)
+        tick_row.addStretch()
+        style_layout.addLayout(tick_row)
+
+        font_row = QHBoxLayout()
+        font_row.addWidget(QLabel("Font size (pt):"))
+        for label_text, attr, default in [
+            ("Title:", "spin_title_fontsize", _DEFAULT_TITLE_FONTSIZE),
+            ("Axis label:", "spin_axis_label_fontsize", _DEFAULT_AXIS_LABEL_FONTSIZE),
+            ("Tick label:", "spin_tick_fontsize", _DEFAULT_TICK_FONTSIZE),
+        ]:
+            font_row.addWidget(QLabel(label_text))
+            spin = QSpinBox()
+            spin.setRange(4, 72)
+            spin.setSingleStep(1)
+            spin.setValue(default)
+            setattr(self, attr, spin)
+            font_row.addWidget(spin)
+        font_row.addStretch()
+        style_layout.addLayout(font_row)
+
+        layout.addWidget(style_group)
 
         # ===== Axis Limits Section =====
         limits_group = QGroupBox("Set Axis Limits:")
@@ -111,26 +322,12 @@ class CustomizeAxis(QWidget):
         xy_limits_layout = QVBoxLayout(self.xy_limits_widget)
         xy_limits_layout.setContentsMargins(0, 0, 0, 0)
         xy_limits_layout.setSpacing(8)
-        for axis in ['X', 'Y']:
-            h_layout = QHBoxLayout()
-            h_layout.addWidget(QLabel(f"{axis} axis limits:"))
-            for limit_type in ['min', 'max']:
-                spin = self._make_limit_spinbox()
-                setattr(self, f'spin_{axis.lower()}{limit_type}', spin)
-                h_layout.addWidget(QLabel(limit_type))
-                h_layout.addWidget(spin)
-            xy_limits_layout.addLayout(h_layout)
+        self._add_limit_row_with_slider(xy_limits_layout, "X", "x")
+        self._add_limit_row_with_slider(xy_limits_layout, "Y", "y")
         limits_layout.addWidget(self.xy_limits_widget)
 
         # Z limits
-        z_limits_layout = QHBoxLayout()
-        z_limits_layout.addWidget(QLabel("Z axis limits:"))
-        for limit_type in ['min', 'max']:
-            spin = self._make_limit_spinbox()
-            setattr(self, f'spin_z{limit_type}', spin)
-            z_limits_layout.addWidget(QLabel(limit_type))
-            z_limits_layout.addWidget(spin)
-        limits_layout.addLayout(z_limits_layout)
+        self._add_limit_row_with_slider(limits_layout, "Z", "z")
 
         # Limit buttons
         limits_btn_layout = QHBoxLayout()
@@ -144,25 +341,6 @@ class CustomizeAxis(QWidget):
         limits_btn_layout.addWidget(self.btn_set_limits)
         limits_btn_layout.addWidget(self.btn_clear_limits)
         limits_layout.addLayout(limits_btn_layout)
-
-        # ===== Minor Ticks Section =====
-        minor_ticks_group = QGroupBox("Add minor tick:")
-        minor_ticks_layout = QHBoxLayout()
-        minor_ticks_layout.setContentsMargins(4, 4, 4, 4)
-        minor_ticks_layout.setSpacing(8)
-
-        self.cb_minor_bottom = QCheckBox("X (Bottom)")
-        self.cb_minor_top = QCheckBox("X (Top)")
-        self.cb_minor_left = QCheckBox("Y (Left)")
-        self.cb_minor_right = QCheckBox("Y (Right)")
-
-        minor_ticks_layout.addWidget(self.cb_minor_bottom)
-        minor_ticks_layout.addWidget(self.cb_minor_top)
-        minor_ticks_layout.addWidget(self.cb_minor_left)
-        minor_ticks_layout.addWidget(self.cb_minor_right)
-        minor_ticks_layout.addStretch()
-
-        minor_ticks_group.setLayout(minor_ticks_layout)
 
         # ===== Axis Break Section =====
         break_group = QGroupBox("Broken axis (beta):")
@@ -221,7 +399,6 @@ class CustomizeAxis(QWidget):
         break_group.setLayout(break_layout)
 
         layout.addWidget(limits_group)
-        layout.addWidget(minor_ticks_group)
         layout.addWidget(break_group)
         layout.addStretch()
 
@@ -242,15 +419,21 @@ class CustomizeAxis(QWidget):
         self.spin_ymax.setValue(gw.ymax if gw.ymax is not None else u)
         self.spin_zmin.setValue(gw.zmin if gw.zmin is not None else u)
         self.spin_zmax.setValue(gw.zmax if gw.zmax is not None else u)
+        self._update_range_slider_bounds()
 
-        # Load Axis Scales
+        # Load Axis Scales (log/symlog share the xlogscale/ylogscale on/off
+        # gate; xscale_mode/yscale_mode pick which of the two)
         if getattr(gw, 'xlogscale', False):
-            self.combo_x_scale.setCurrentText("Logarithmic")
+            self.combo_x_scale.setCurrentText(
+                "Symlog" if getattr(gw, 'xscale_mode', 'log') == 'symlog' else "Logarithmic"
+            )
         else:
             self.combo_x_scale.setCurrentText("Linear")
 
         if getattr(gw, 'ylogscale', False):
-            self.combo_y_scale.setCurrentText("Logarithmic")
+            self.combo_y_scale.setCurrentText(
+                "Symlog" if getattr(gw, 'yscale_mode', 'log') == 'symlog' else "Logarithmic"
+            )
         else:
             self.combo_y_scale.setCurrentText("Linear")
 
@@ -270,6 +453,21 @@ class CustomizeAxis(QWidget):
             self.combo_y_type.setCurrentText("Numerical")
         else:
             self.combo_y_type.setCurrentText("Category")
+
+        # Load axis inversion
+        self.cb_invert_x.setChecked(getattr(gw, 'x_inverted', False))
+        self.cb_invert_y.setChecked(getattr(gw, 'y_inverted', False))
+
+        # Load tick direction / label format / font sizes
+        self.combo_tick_direction.setCurrentText(
+            _TICK_DIRECTION_TEXT.get(getattr(gw, 'tick_direction', None), "Default")
+        )
+        self._load_tick_format(getattr(gw, 'tick_label_format', None))
+        self.spin_title_fontsize.setValue(getattr(gw, 'title_fontsize', None) or _DEFAULT_TITLE_FONTSIZE)
+        self.spin_axis_label_fontsize.setValue(
+            getattr(gw, 'axis_label_fontsize', None) or _DEFAULT_AXIS_LABEL_FONTSIZE
+        )
+        self.spin_tick_fontsize.setValue(getattr(gw, 'tick_label_fontsize', None) or _DEFAULT_TICK_FONTSIZE)
 
         if not hasattr(self.graph_widget, 'axis_breaks'):
             self.graph_widget.axis_breaks = {'x': None, 'y': None}
@@ -316,6 +514,22 @@ class CustomizeAxis(QWidget):
             range_y = (y_max - y_min) / 4
             self.y_break_start.setValue(mid_y - range_y/2)
             self.y_break_end.setValue(mid_y + range_y/2)
+
+    def _load_tick_format(self, value):
+        """Select the preset matching `value` in the tick-format combo. A
+        value set outside the GUI (scripting/AI-agent tool) that doesn't
+        match any preset gets a one-off "Custom" entry inserted so it isn't
+        silently discarded/overwritten by opening this dialog."""
+        combo = self.combo_tick_format
+        idx = combo.findData(value)
+        # Drop any previously-inserted custom entry before re-checking.
+        if combo.itemData(combo.count() - 1) not in dict(_TICK_FORMAT_PRESETS).values():
+            combo.removeItem(combo.count() - 1)
+            idx = combo.findData(value)
+        if idx < 0:
+            combo.addItem(f"Custom  ({value})", value)
+            idx = combo.count() - 1
+        combo.setCurrentIndex(idx)
 
     def _apply_axis_settings(self):
         """Apply axis settings to the graph."""
@@ -364,8 +578,13 @@ class CustomizeAxis(QWidget):
         gw.minor_ticks_top = self.cb_minor_top.isChecked()
         gw.minor_ticks_right = self.cb_minor_right.isChecked()
 
-        gw.xlogscale = (self.combo_x_scale.currentText() == "Logarithmic")
-        gw.ylogscale = (self.combo_y_scale.currentText() == "Logarithmic")
+        x_scale_text = self.combo_x_scale.currentText()
+        gw.xlogscale = x_scale_text in ("Logarithmic", "Symlog")
+        gw.xscale_mode = "symlog" if x_scale_text == "Symlog" else "log"
+
+        y_scale_text = self.combo_y_scale.currentText()
+        gw.ylogscale = y_scale_text in ("Logarithmic", "Symlog")
+        gw.yscale_mode = "symlog" if y_scale_text == "Symlog" else "log"
 
         x_text = self.combo_x_type.currentText()
         if x_text == "Auto":
@@ -383,6 +602,14 @@ class CustomizeAxis(QWidget):
         else:
             gw.y_as_numeric = False
 
+        gw.x_inverted = self.cb_invert_x.isChecked()
+        gw.y_inverted = self.cb_invert_y.isChecked()
+        gw.tick_direction = _TICK_DIRECTION_MAP[self.combo_tick_direction.currentText()]
+        gw.tick_label_format = self.combo_tick_format.currentData()
+        gw.title_fontsize = self.spin_title_fontsize.value()
+        gw.axis_label_fontsize = self.spin_axis_label_fontsize.value()
+        gw.tick_label_fontsize = self.spin_tick_fontsize.value()
+
         # Emit signal to ViewModel
         gw.properties_changed.emit(gw.graph_id, {
             'xmin': gw.xmin, 'xmax': gw.xmax,
@@ -395,8 +622,17 @@ class CustomizeAxis(QWidget):
             'minor_ticks_right': gw.minor_ticks_right,
             'xlogscale': gw.xlogscale,
             'ylogscale': gw.ylogscale,
+            'xscale_mode': gw.xscale_mode,
+            'yscale_mode': gw.yscale_mode,
             'x_as_numeric': gw.x_as_numeric,
-            'y_as_numeric': gw.y_as_numeric
+            'y_as_numeric': gw.y_as_numeric,
+            'x_inverted': gw.x_inverted,
+            'y_inverted': gw.y_inverted,
+            'tick_direction': gw.tick_direction,
+            'tick_label_format': gw.tick_label_format,
+            'title_fontsize': gw.title_fontsize,
+            'axis_label_fontsize': gw.axis_label_fontsize,
+            'tick_label_fontsize': gw.tick_label_fontsize,
         })
 
         # Refresh the plot with settings applied

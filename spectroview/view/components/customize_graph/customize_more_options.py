@@ -4,15 +4,19 @@ based on the current plot_style.
 
 Split out of customize_graph_dialog.py; no behavior changes.
 """
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QColor
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QLabel, QPushButton,
-    QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QRadioButton,
+    QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QRadioButton, QLineEdit,
     QApplication, QScrollArea, QSizePolicy, QTableWidget, QTableWidgetItem,
-    QAbstractItemView, QHeaderView,
+    QAbstractItemView, QHeaderView, QColorDialog,
 )
 
 from spectroview import ICON_DIR
+
+# Text <-> MGraph.figure_theme value.
+_THEME_TEXT_MAP = {"Light": "light", "Dark": "dark", "Soft Dark": "soft_dark"}
+_THEME_VALUE_TEXT = {v: k for k, v in _THEME_TEXT_MAP.items()}
 
 
 class CustomizeMoreOptions(QWidget):
@@ -50,6 +54,9 @@ class CustomizeMoreOptions(QWidget):
 
         # ---- General (always visible) ----
         self._build_general_section()
+
+        # ---- Figure style section (always visible) ----
+        self._build_figure_style_section()
 
         # ---- Data sorting section ----
         self._build_sorting_section()
@@ -92,6 +99,93 @@ class CustomizeMoreOptions(QWidget):
 
         self._general_group = grp
         self._inner_layout.addWidget(grp)
+
+    # ---- Figure style section --------------------------------------------
+
+    def _build_figure_style_section(self):
+        grp = QGroupBox("Figure style:")
+        layout = QVBoxLayout(grp)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
+
+        # Theme (selects the underlying mplstyle -- background/text/grid
+        # colors as a set; figure_facecolor below is a separate, more
+        # specific override layered on top of whichever theme is chosen)
+        theme_row = QHBoxLayout()
+        theme_row.addWidget(QLabel("Theme:"))
+        self._combo_figure_theme = QComboBox()
+        self._combo_figure_theme.addItems(["Light", "Dark", "Soft Dark"])
+        theme_row.addWidget(self._combo_figure_theme)
+        theme_row.addStretch()
+        layout.addLayout(theme_row)
+
+        # Background color
+        bg_row = QHBoxLayout()
+        bg_row.addWidget(QLabel("Background color:"))
+        self._btn_figure_facecolor = QPushButton("(default)")
+        self._btn_figure_facecolor.setFixedWidth(90)
+        self._btn_figure_facecolor.clicked.connect(self._pick_figure_facecolor)
+        bg_row.addWidget(self._btn_figure_facecolor)
+        bg_row.addStretch()
+        layout.addLayout(bg_row)
+
+        # Subtitle
+        sub_row = QHBoxLayout()
+        sub_row.addWidget(QLabel("Subtitle:"))
+        self._edit_subtitle = QLineEdit()
+        self._edit_subtitle.setPlaceholderText("Optional text shown under the title")
+        sub_row.addWidget(self._edit_subtitle)
+        sub_row.addWidget(QLabel("Font size:"))
+        self._spin_subtitle_fontsize = QSpinBox()
+        self._spin_subtitle_fontsize.setRange(4, 72)
+        self._spin_subtitle_fontsize.setSingleStep(1)
+        self._spin_subtitle_fontsize.setValue(10)  # matches the pre-existing hardcoded fallback
+        self._spin_subtitle_fontsize.setMaximumWidth(60)
+        sub_row.addWidget(self._spin_subtitle_fontsize)
+        layout.addLayout(sub_row)
+
+        # Spine visibility
+        spine_row = QHBoxLayout()
+        spine_row.addWidget(QLabel("Show spines:"))
+        self._cb_spine_top = QCheckBox("Top")
+        self._cb_spine_right = QCheckBox("Right")
+        self._cb_spine_bottom = QCheckBox("Bottom")
+        self._cb_spine_left = QCheckBox("Left")
+        for cb in (self._cb_spine_top, self._cb_spine_right, self._cb_spine_bottom, self._cb_spine_left):
+            spine_row.addWidget(cb)
+        spine_row.addStretch()
+        layout.addLayout(spine_row)
+
+        # Margins
+        margin_row = QHBoxLayout()
+        margin_row.addWidget(QLabel("Margins:"))
+        margin_row.addWidget(QLabel("X"))
+        self._spin_x_margin = QDoubleSpinBox()
+        self._spin_x_margin.setRange(0.0, 1.0)
+        self._spin_x_margin.setDecimals(2)
+        self._spin_x_margin.setSingleStep(0.05)
+        self._spin_x_margin.setValue(0.05)  # matches matplotlib's own default axes.xmargin
+        margin_row.addWidget(self._spin_x_margin)
+        margin_row.addWidget(QLabel("Y"))
+        self._spin_y_margin = QDoubleSpinBox()
+        self._spin_y_margin.setRange(0.0, 1.0)
+        self._spin_y_margin.setDecimals(2)
+        self._spin_y_margin.setSingleStep(0.05)
+        self._spin_y_margin.setValue(0.05)  # matches matplotlib's own default axes.ymargin
+        margin_row.addWidget(self._spin_y_margin)
+        margin_row.addStretch()
+        layout.addLayout(margin_row)
+
+        self._figure_style_group = grp
+        self._inner_layout.addWidget(grp)
+
+    def _pick_figure_facecolor(self):
+        """Open color picker for the figure/axes background override."""
+        current = QColor(self._btn_figure_facecolor.text()) if self._btn_figure_facecolor.text() != "(default)" else QColor('white')
+        color = QColorDialog.getColor(current, self, "Select Background Color")
+        if color.isValid():
+            self._btn_figure_facecolor.setText(color.name())
+            self._btn_figure_facecolor.setStyleSheet(f"background-color: {color.name()};")
 
     # ---- Data sorting section -------------------------------------------
 
@@ -271,6 +365,32 @@ class CustomizeMoreOptions(QWidget):
         self._cb_error_bar.setEnabled(style == 'bar')
         self._cb_wafer_stats.setEnabled(style == 'wafer')
 
+        # --- Figure style section ---
+        self._combo_figure_theme.setCurrentText(
+            _THEME_VALUE_TEXT.get(getattr(gw, 'figure_theme', 'light'), "Light")
+        )
+
+        facecolor = getattr(gw, 'figure_facecolor', None)
+        if facecolor:
+            self._btn_figure_facecolor.setText(facecolor)
+            self._btn_figure_facecolor.setStyleSheet(f"background-color: {facecolor};")
+        else:
+            self._btn_figure_facecolor.setText("(default)")
+            self._btn_figure_facecolor.setStyleSheet("")
+
+        self._edit_subtitle.setText(getattr(gw, 'plot_subtitle', None) or "")
+        self._spin_subtitle_fontsize.setValue(getattr(gw, 'subtitle_fontsize', None) or 10)
+
+        spines = getattr(gw, 'spines_visible', None) or {'top': True, 'right': True, 'bottom': True, 'left': True}
+        self._cb_spine_top.setChecked(spines.get('top', True))
+        self._cb_spine_right.setChecked(spines.get('right', True))
+        self._cb_spine_bottom.setChecked(spines.get('bottom', True))
+        self._cb_spine_left.setChecked(spines.get('left', True))
+
+        margins = getattr(gw, 'figure_margins', None) or [0.05, 0.05]
+        self._spin_x_margin.setValue(margins[0])
+        self._spin_y_margin.setValue(margins[1])
+
         # --- Data sorting section ---
         sort_enabled = getattr(gw, 'sort_data_enabled', True)
         self._cb_sort_enabled.setChecked(sort_enabled)
@@ -338,6 +458,20 @@ class CustomizeMoreOptions(QWidget):
         gw.show_bar_plot_error_bar = self._cb_error_bar.isChecked()
         gw.wafer_stats = self._cb_wafer_stats.isChecked()
 
+        # Figure style
+        gw.figure_theme = _THEME_TEXT_MAP[self._combo_figure_theme.currentText()]
+        facecolor_text = self._btn_figure_facecolor.text()
+        gw.figure_facecolor = facecolor_text if facecolor_text != "(default)" else None
+        gw.plot_subtitle = self._edit_subtitle.text().strip() or None
+        gw.subtitle_fontsize = self._spin_subtitle_fontsize.value()
+        gw.spines_visible = {
+            'top': self._cb_spine_top.isChecked(),
+            'right': self._cb_spine_right.isChecked(),
+            'bottom': self._cb_spine_bottom.isChecked(),
+            'left': self._cb_spine_left.isChecked(),
+        }
+        gw.figure_margins = [self._spin_x_margin.value(), self._spin_y_margin.value()]
+
         # Data sorting — capture old values first to detect changes
         old_sort_enabled = getattr(gw, 'sort_data_enabled', True)
         old_sort_by = getattr(gw, 'sort_data_by', 'Z')
@@ -387,6 +521,12 @@ class CustomizeMoreOptions(QWidget):
             'wafer_stats': gw.wafer_stats,
             'sort_data_enabled': gw.sort_data_enabled,
             'sort_data_by': gw.sort_data_by,
+            'figure_theme': gw.figure_theme,
+            'figure_facecolor': gw.figure_facecolor,
+            'plot_subtitle': gw.plot_subtitle,
+            'subtitle_fontsize': gw.subtitle_fontsize,
+            'spines_visible': gw.spines_visible,
+            'figure_margins': gw.figure_margins,
         }
         if style == 'trendline':
             props.update({

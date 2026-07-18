@@ -55,6 +55,21 @@ class MSettings:
             self.settings.setValue(f"view_options/{key}", value)
         self.settings.sync()
 
+    # ---------- Export Options (Graph Workspace figure export) ----------
+    def load_export_options(self) -> dict:
+        """Last-used figure export settings, remembered across dialog opens."""
+        return {
+            "format": self.settings.value("export_options/format", "png", str),
+            "dpi": self.settings.value("export_options/dpi", 300, int),
+            "transparent": self.settings.value("export_options/transparent", False, bool),
+            "theme": self.settings.value("export_options/theme", "Light Mode", str),
+        }
+
+    def save_export_options(self, data: dict):
+        for key, value in data.items():
+            self.settings.setValue(f"export_options/{key}", value)
+        self.settings.sync()
+
     # ---------- Model folder ----------
     def get_model_folder(self) -> str:
         return self.settings.value("model_folder", "", str)

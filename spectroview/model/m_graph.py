@@ -1,129 +1,144 @@
 # model/m_graph.py
 """Graph data model with all plot properties."""
 
+import copy
+from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 
 
+@dataclass
 class MGraph:
-    """Graph/plot data model storing configuration and visual properties."""
-    
-    def __init__(self, graph_id: Optional[int] = None):
-        """Initialize graph with default properties."""
-        self.graph_id = graph_id
-        
-        # Data source
-        self.df_name: Optional[str] = None
-        self.filters: List[str] = []
-        
-        # Plot configuration
-        self.plot_style: str = "point"  # point, line, bar, wafer, 2Dmap, etc.
-        self.plot_width: int = 480
-        self.plot_height: int = 420
-        self.dpi: int = 100
-        
-        # Axes
-        self.x: Optional[str] = None
-        self.y: List[str] = []  # Primary y-axis (can have multiple series)
-        self.z: Optional[str] = None  # For wafer/2D plots
-        
-        # Secondary axes
-        self.y2: Optional[str] = None  # Secondary y-axis
-        self.y3: Optional[str] = None  # Tertiary y-axis
-        self.x2: Optional[str] = None  # Secondary x-axis
-        
-        # Axis limits
-        self.xmin: Optional[float] = None
-        self.xmax: Optional[float] = None
-        self.ymin: Optional[float] = None
-        self.ymax: Optional[float] = None
-        self.zmin: Optional[float] = None
-        self.zmax: Optional[float] = None
-        self.y2min: Optional[float] = None
-        self.y2max: Optional[float] = None
-        self.y3min: Optional[float] = None
-        self.y3max: Optional[float] = None
-        self.x2min: Optional[float] = None
-        self.x2max: Optional[float] = None
-        
-        # Axis scales
-        self.xlogscale: bool = False
-        self.ylogscale: bool = False
-        self.y2logscale: bool = False
-        self.y3logscale: bool = False
-        self.x2logscale: bool = False
-        
-        # Labels
-        self.plot_title: Optional[str] = None
-        self.xlabel: Optional[str] = None
-        self.ylabel: Optional[str] = None
-        self.zlabel: Optional[str] = None
-        self.y2label: Optional[str] = None
-        self.y3label: Optional[str] = None
-        self.x2label: Optional[str] = None
-        
-        # Visual properties
-        self.x_rot: int = 0  # X-axis label rotation
-        self.grid: bool = False
-        
-        # Legend
-        self.legend_visible: bool = True
-        self.legend_outside: bool = False
-        self.legend_properties: List[Dict[str, Any]] = []
-        self.legend_bbox = None  # (x, y) in axes coords for dragged position
-        
-        # Plot-specific properties
-        self.color_palette: str = "jet"  # For wafer/2D maps
-        self.wafer_size: float = 300.0  # Wafer diameter in mm
-        self.wafer_stats: bool = True
-        self.trendline_order: int = 1
-        self.show_trendline_eq: bool = True
-        self.trendline_anchor_enabled: bool = False
-        self.trendline_anchor_origin: bool = True   # True=through (0,0), False=custom
-        self.trendline_anchor_x: float = 0.0
-        self.trendline_anchor_y: float = 0.0
-        self.show_bar_plot_error_bar: bool = False
-        self.join_for_point_plot: bool = False
-        self.dodge_point_plot: bool = True
-        self.dodge_scatter_plot: bool = False
-        self.scatter_size: int = 70  # Marker size for scatter plots
-        self.scatter_edgecolor: str = "black"  # Edge color for scatter plot markers
-        self.x_as_numeric: Optional[bool] = None  # None=Auto, True=Numerical, False=Category
-        self.y_as_numeric: Optional[bool] = None  # None=Auto, True=Numerical, False=Category
-        
-        self.minor_ticks_bottom: bool = True
-        self.minor_ticks_left: bool = True
-        self.minor_ticks_top: bool = False
-        self.minor_ticks_right: bool = False
-        
-        # Histogram-specific
-        self.hist_bins: int = 20
-        self.hist_kde: bool = False
-        self.hist_step: bool = False
-        
-        # Data sorting
-        self.sort_data_enabled: bool = True   # Enable intelligent sorting
-        self.sort_data_by: str = "Z"          # Sort by: "Z" (hue), "X", or "Y"
-        
-        # Annotations (lines and text)
-        self.annotations: List[Dict[str, Any]] = []
+    """Graph/plot data model storing configuration and visual properties.
 
-        # Axis breaks: {'x': {'start','end'} | None, 'y': {'start','end'} | None}
-        self.axis_breaks: Dict[str, Optional[Dict[str, float]]] = {'x': None, 'y': None}
-    
+    A plain (non-slotted) dataclass: every field name/type/default lives in
+    exactly one place here, but the class still supports free `setattr`,
+    `vars()`, and `hasattr` the same way a hand-written class would -- callers
+    across the codebase (the scripting API, the AI agent, save/load, the View
+    layer's model->widget sync) rely on that flat, freely-mutable shape.
+    """
+
+    graph_id: Optional[int] = None
+
+    # Data source
+    df_name: Optional[str] = None
+    filters: List[Dict[str, Any]] = field(default_factory=list)
+
+    # Plot configuration
+    plot_style: str = "point"  # point, line, bar, wafer, 2Dmap, etc.
+    plot_width: int = 480
+    plot_height: int = 420
+    dpi: int = 100
+
+    # Axes
+    x: Optional[str] = None
+    y: List[str] = field(default_factory=list)  # Primary y-axis (can have multiple series)
+    z: Optional[str] = None  # For wafer/2D plots
+
+    # Secondary axes
+    y2: Optional[str] = None  # Secondary y-axis
+    y3: Optional[str] = None  # Tertiary y-axis
+    x2: Optional[str] = None  # Secondary x-axis
+
+    # Axis limits
+    xmin: Optional[float] = None
+    xmax: Optional[float] = None
+    ymin: Optional[float] = None
+    ymax: Optional[float] = None
+    zmin: Optional[float] = None
+    zmax: Optional[float] = None
+    y2min: Optional[float] = None
+    y2max: Optional[float] = None
+    y3min: Optional[float] = None
+    y3max: Optional[float] = None
+    x2min: Optional[float] = None
+    x2max: Optional[float] = None
+
+    # Axis scales
+    xlogscale: bool = False
+    ylogscale: bool = False
+    y2logscale: bool = False
+    y3logscale: bool = False
+    x2logscale: bool = False
+
+    # Labels
+    plot_title: Optional[str] = None
+    xlabel: Optional[str] = None
+    ylabel: Optional[str] = None
+    zlabel: Optional[str] = None
+    y2label: Optional[str] = None
+    y3label: Optional[str] = None
+    x2label: Optional[str] = None
+
+    # Visual properties
+    x_rot: int = 0  # X-axis label rotation
+    grid: bool = False
+
+    # Legend
+    legend_visible: bool = True
+    legend_outside: bool = False
+    legend_properties: List[Dict[str, Any]] = field(default_factory=list)
+    legend_bbox: Optional[List[float]] = None  # (x, y) in axes coords for dragged position
+
+    # Plot-specific properties
+    color_palette: str = "jet"  # For wafer/2D maps
+    wafer_size: float = 300.0  # Wafer diameter in mm
+    wafer_stats: bool = True
+    trendline_order: int = 1
+    show_trendline_eq: bool = True
+    trendline_anchor_enabled: bool = False
+    trendline_anchor_origin: bool = True   # True=through (0,0), False=custom
+    trendline_anchor_x: float = 0.0
+    trendline_anchor_y: float = 0.0
+    show_bar_plot_error_bar: bool = False
+    join_for_point_plot: bool = False
+    dodge_point_plot: bool = True
+    dodge_scatter_plot: bool = False
+    scatter_size: int = 70  # Marker size for scatter plots
+    scatter_edgecolor: str = "black"  # Edge color for scatter plot markers
+    x_as_numeric: Optional[bool] = None  # None=Auto, True=Numerical, False=Category
+    y_as_numeric: Optional[bool] = None  # None=Auto, True=Numerical, False=Category
+
+    minor_ticks_bottom: bool = True
+    minor_ticks_left: bool = True
+    minor_ticks_top: bool = False
+    minor_ticks_right: bool = False
+
+    # Histogram-specific
+    hist_bins: int = 20
+    hist_kde: bool = False
+    hist_step: bool = False
+
+    # Data sorting
+    sort_data_enabled: bool = True   # Enable intelligent sorting
+    sort_data_by: str = "Z"          # Sort by: "Z" (hue), "X", or "Y"
+
+    # Annotations (lines and text)
+    annotations: List[Dict[str, Any]] = field(default_factory=list)
+
+    # Axis breaks: {'x': {'start','end'} | None, 'y': {'start','end'} | None}
+    axis_breaks: Dict[str, Optional[Dict[str, float]]] = field(
+        default_factory=lambda: {'x': None, 'y': None}
+    )
+
     def save(self) -> Dict[str, Any]:
         """Serialize graph to dictionary.
 
-        Built from `vars(self)` (in the same order `__init__` assigns them,
-        starting with `graph_id`) """
-        return dict(vars(self))
-    
+        Built from `vars(self)` (in the same order the fields are declared
+        above, starting with `graph_id`). Deep-copied so a caller holding
+        onto the returned dict (e.g. a saved template) never aliases this
+        model's own mutable fields (`y`, `filters`, `annotations`,
+        `legend_properties`, `axis_breaks`) and is unaffected by later edits
+        to this graph.
+        """
+        return copy.deepcopy(vars(self))
+
     def load(self, data: Dict[str, Any]):
         """Load graph properties from dictionary."""
         # List of float-type limit properties
-        float_limit_keys = ['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax', 
+        float_limit_keys = ['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax',
                            'y2min', 'y2max', 'y3min', 'y3max',
                            'x2min', 'x2max']
-        
+
         for key, value in data.items():
             if hasattr(self, key):
                 # Convert string limit values to float or None
@@ -135,13 +150,13 @@ class MGraph:
                 # Backward compatibility for x_as_numeric: False -> None
                 if key == 'x_as_numeric' and value is False:
                     value = None
-                
+
                 setattr(self, key, value)
-        
+
         # Backward compatibility: ensure annotations exists for old .graphs files
         if not hasattr(self, 'annotations') or self.annotations is None:
             self.annotations = []
-    
+
     def get_display_name(self) -> str:
         """Get display name for graph list."""
         x_str = self.x if self.x else "None"

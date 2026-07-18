@@ -5,6 +5,7 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
+from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -32,6 +33,8 @@ class VGraph(QWidget):
     replicate_requested = Signal(int)
     # Signal emitted when customize dialog is requested (graph_id)
     customize_requested = Signal(int)
+    # Signal emitted for user-facing diagnostic notifications
+    notify = Signal(str)
     
     def __init__(self, graph_id=None):
         super().__init__()
@@ -39,13 +42,13 @@ class VGraph(QWidget):
         
         # Data source
         self.df_name = None
-        self.filters = {}
+        self.filters = []
         # Store DataFrame for replotting
         self.df = None
-        
+
         # Plot dimensions
-        self.plot_width = 480  
-        self.plot_height = 400
+        self.plot_width = 480
+        self.plot_height = 420
         self.dpi = 100
         
         # Plot type and axes
@@ -167,10 +170,14 @@ class VGraph(QWidget):
             self.dpi = 100
         
         self.clear_layout(self.graph_layout)
-        plt.close('all')
-        
+
+        # Use the OO Figure API (not plt.figure()) so this widget's figures
+        # are never registered with pyplot's global figure manager -- this
+        # workspace used to call plt.close('all') here to clean up after
+        # itself, which also silently closed unrelated live figures owned by
+        # other workspaces (e.g. the Maps viewer's plt.figure()-based canvas).
         with plt.style.context(PLOT_POLICY_LIGHT):
-            self.figure = plt.figure(layout="compressed", dpi=self.dpi)
+            self.figure = Figure(layout="compressed", dpi=self.dpi)
             self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
         
@@ -590,24 +597,18 @@ class VGraph(QWidget):
     def _set_rotation(self):
         """Set rotation of the ticklabels of the x axis."""
         if self.x_rot != 0:
-            plt.setp(
-                self.ax.get_xticklabels(),
-                rotation=self.x_rot,
-                ha="right",
-                rotation_mode="anchor"
-            )
+            rotation, ha, rotation_mode = self.x_rot, "right", "anchor"
         else:
             # Reset to default when rotation is 0
-            plt.setp(
-                self.ax.get_xticklabels(),
-                rotation=0,
-                ha="center",
-                rotation_mode=None
-            )
+            rotation, ha, rotation_mode = 0, "center", None
+
+        for label in self.ax.get_xticklabels():
+            label.set_rotation(rotation)
+            label.set_ha(ha)
+            label.set_rotation_mode(rotation_mode)
     
     
-    @staticmethod
-    def _apply_limit_pair(setter, vmin, vmax, axis_name: str) -> None:
+    def _apply_limit_pair(self, setter, vmin, vmax, axis_name: str) -> None:
         """Apply a (min, max) limit pair via *setter* (e.g. ax.set_xlim),
         skipping degenerate equal bounds instead of handing matplotlib a
         zero-width range (which triggers a "singular transformation"
@@ -619,7 +620,7 @@ class VGraph(QWidget):
             return
         vmin, vmax = float(vmin), float(vmax)
         if vmin == vmax:
-            print(f"[INFO] Skipping {axis_name} limits: min == max ({vmin}).")
+            self.notify.emit(f"Skipping {axis_name} limits: min == max ({vmin}).")
             return
         setter(vmin, vmax)
 
@@ -636,19 +637,22 @@ class VGraph(QWidget):
     
     def _set_axis_scale(self, df):
         """Apply log scale only if the corresponding axis column is numeric."""
+        if df is None:
+            return
+
         if self.xlogscale:
             x_data = df[self.x]
             if np.issubdtype(x_data.dtype, np.number):
                 self.ax.set_xscale('log')
             else:
-                print(f"[INFO] Skipping x-logscale because '{self.x}' is categorical.")
-        
+                self.notify.emit(f"Skipping x-logscale because '{self.x}' is categorical.")
+
         if self.ylogscale and len(self.y) > 0:
             y_data = df[self.y[0]]
             if np.issubdtype(y_data.dtype, np.number):
                 self.ax.set_yscale('log')
             else:
-                print(f"[INFO] Skipping y-logscale because '{self.y[0]}' is categorical.")
+                self.notify.emit(f"Skipping y-logscale because '{self.y[0]}' is categorical.")
         
         if self.ax2 and self.y2 and self.y2logscale:
             y2_data = df[self.y2]

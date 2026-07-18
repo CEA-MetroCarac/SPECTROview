@@ -22,6 +22,7 @@ from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
 from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon
 from spectroview.view.components.customized_widgets import CustomizedPalette
 from spectroview.view.components.customize_graph.customize_graph_dialog import CustomizeGraphDialog
+from spectroview.view.components.graph_commit import snapshot, diff
 
 class VWorkspaceGraphs(QWidget):
     """View for Graphs Workspace."""
@@ -117,7 +118,7 @@ class VWorkspaceGraphs(QWidget):
         toolbar_layout.addWidget(self.btn_minimize_all)
 
         # Plot size label
-        self.lbl_plot_size = QLabel("(480x400)")
+        self.lbl_plot_size = QLabel("(480x420)")
         self.lbl_plot_size.setMinimumWidth(70)
         toolbar_layout.addWidget(self.lbl_plot_size)
         
@@ -582,6 +583,7 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_graph_list.currentIndexChanged.connect(self._on_graph_selected_toolbar)
         self.btn_minimize_all.clicked.connect(self._on_minimize_all)
         self.btn_delete_all.clicked.connect(self._on_delete_all)
+        self.cb_grid_toolbar.stateChanged.connect(self._on_grid_changed_toolbar)
 
         # MDI area connections
         self.mdi_area.subWindowActivated.connect(self._on_subwindow_activated)
@@ -824,6 +826,7 @@ class VWorkspaceGraphs(QWidget):
         graph_widget.replicate_requested.connect(self._on_replicate_graph)
         graph_widget.customize_requested.connect(self._show_or_switch_customize_dialog)
         graph_widget.properties_changed.connect(self._on_graph_properties_changed)
+        graph_widget.notify.connect(self._show_toast_notification)
 
         self._configure_graph_from_model(graph_widget, graph_model)
         graph_widget.create_plot_widget(graph_model.dpi)
@@ -1054,7 +1057,17 @@ class VWorkspaceGraphs(QWidget):
         
         # Collect updated plot properties from GUI
         plot_config = self._collect_plot_config()
-        
+
+        # "Update plot" must never silently rebind the graph's own
+        # DataFrame based on whatever happens to be browsed in the side
+        # list at this moment -- the side panel's DataFrame selection only
+        # exists to populate axis-column dropdowns, and can drift from the
+        # active graph's own binding (e.g. the user browsed a different
+        # DataFrame without reactivating this plot's window in between).
+        # Preserve the graph's original df_name instead of trusting
+        # _collect_plot_config()'s vm.selected_df_name-derived value.
+        plot_config['df_name'] = graph_model.df_name
+
         # Preserve limits and annotations that are managed outside main GUI
         plot_config['xmin'] = graph_widget.xmin
         plot_config['xmax'] = graph_widget.xmax
@@ -1091,9 +1104,11 @@ class VWorkspaceGraphs(QWidget):
         # Get updated model
         graph_model = self.vm.get_graph(graph_model.graph_id)
         
-        # Apply filters
-        filtered_df = self.vm.apply_filters(self.vm.selected_df_name, current_filters)
-        
+        # Apply filters against the graph's own DataFrame, not whatever is
+        # currently selected in the side list (they can differ if the user
+        # switched DataFrame selection after activating this plot).
+        filtered_df = self.vm.apply_filters(graph_model.df_name, current_filters)
+
         # Reconfigure and re-render
         self._configure_graph_from_model(graph_widget, graph_model)
         graph_widget.create_plot_widget(graph_model.dpi)
@@ -1581,11 +1596,14 @@ class VWorkspaceGraphs(QWidget):
             setattr(graph_widget, key, value)
 
         # Independent copies for mutable containers the widget can mutate
-        # in place (dragging a legend entry, editing an axis break) --
-        # aliasing the model's own object would leak unsaved edits into it.
+        # in place (dragging a legend entry, editing an axis break, dragging
+        # an annotation, editing filters) -- aliasing the model's own object
+        # would leak unsaved edits into it.
         graph_widget.y = model.y.copy() if model.y else []
         graph_widget.legend_properties = model.legend_properties.copy() if model.legend_properties else []
         graph_widget.axis_breaks = copy.deepcopy(model.axis_breaks) if model.axis_breaks else {'x': None, 'y': None}
+        graph_widget.annotations = copy.deepcopy(model.annotations) if model.annotations else []
+        graph_widget.filters = copy.deepcopy(model.filters) if model.filters else []
 
         # scatter_edgecolor must always be a valid, non-empty color string.
         edge_c = model.scatter_edgecolor
@@ -1631,8 +1649,24 @@ class VWorkspaceGraphs(QWidget):
         graph_id = self.cbb_graph_list.currentData()
         if graph_id is not None and graph_id in self.graph_widgets:
             graph_widget, _, _ = self.graph_widgets[graph_id]
-            graph_widget.grid = (state == Qt.Checked)
-            graph_widget.plot(self.vm.get_dataframe(self.vm.selected_df_name))
+            before = snapshot(graph_widget)
+            # bool(state), not `state == Qt.Checked`: PySide6's CheckState
+            # enum doesn't compare equal to the plain int the stateChanged
+            # signal actually carries (0/2) -- matches the pattern already
+            # used by _on_select_all_slots for the same reason.
+            graph_widget.grid = bool(state)
+            # Replot from the widget's own already-filtered DataFrame, not a
+            # fresh unfiltered fetch keyed on whatever is selected in the
+            # side list (same class of data-source bug as B11).
+            if graph_widget.df is not None:
+                graph_widget.plot(graph_widget.df)
+            # Commit through the same properties_changed -> vm.update_graph
+            # path every customize-dialog tab already uses, instead of
+            # leaving the change unsynced (it used to only apply visually
+            # and not persist to the model or survive a save).
+            graph_widget.properties_changed.emit(
+                graph_widget.graph_id, diff(graph_widget, before)
+            )
     
     def _on_graph_closed(self, graph_id: int):
         """Handle graph closing."""
@@ -1657,28 +1691,21 @@ class VWorkspaceGraphs(QWidget):
     
     def save_workspace(self):
         """Save workspace."""
-        # Update all graph models with current state before saving
+        # Update all graph models with current state before saving. Uses a
+        # generic snapshot/diff against MGraph's full field schema (see
+        # graph_commit.py) rather than a hand-picked field list, so a
+        # widget-mutable field newly added in the future can't be silently
+        # left out of what gets synced back before save.
         for gid, (gw, gd, sw) in self.graph_widgets.items():
+            before = snapshot(gw)
             size = sw.size()
+            gw.plot_width, gw.plot_height = size.width(), size.height()
             # Save legend position if it was dragged
             gw._save_legend_position()
-            self.vm.update_graph(gid, {
-                'plot_width': size.width(),
-                'plot_height': size.height(),
-                'legend_properties': gw.legend_properties,
-                'legend_visible': gw.legend_visible,
+            patch = diff(gw, before)
+            if patch:
+                self.vm.update_graph(gid, patch)
 
-                'legend_bbox': gw.legend_bbox,
-                'annotations': getattr(gw, 'annotations', []),  # Sync annotations back to model
-                'axis_breaks': getattr(gw, 'axis_breaks', {'x': None, 'y': None}),  # Sync axis breaks back to model
-                'xmin': gw.xmin,
-                'xmax': gw.xmax,
-                'ymin': gw.ymin,
-                'ymax': gw.ymax,
-                'zmin': gw.zmin,
-                'zmax': gw.zmax
-            })
-        
         # Save workspace
         self.vm.save_workspace()
     

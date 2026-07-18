@@ -81,6 +81,23 @@ class TestBuildGraphWidget:
 
         assert ws.vm.get_graph(widget.graph_id).plot_title == 'Changed via signal'
 
+    def test_toggling_toolbar_grid_checkbox_persists_to_the_model(self, ws, excel_df):
+        """Regression test: the toolbar's grid checkbox was fully built in
+        the UI but never connected in setup_connections() -- toggling it
+        changed the visual grid but never reached the model (so it was lost
+        on the next "Update plot" and never survived a save)."""
+        graph_model = ws.vm.create_graph({
+            'df_name': 'sheet1', 'plot_style': 'scatter',
+            'x': 'x0_Si', 'y': ['ampli_Si'],
+        })
+        ws._build_graph_widget(graph_model, excel_df, lambda e: None)
+        ws._update_graph_list(ws.vm.get_graph_ids())
+
+        assert ws.vm.get_graph(graph_model.graph_id).grid is False
+        ws.cb_grid_toolbar.setChecked(True)
+
+        assert ws.vm.get_graph(graph_model.graph_id).grid is True
+
     def test_replicate_and_customize_signals_are_connected(self, ws, excel_df, monkeypatch):
         """Regression guard: both signals used to be wired identically at all
         three call sites -- confirm the shared helper still connects them.
@@ -221,6 +238,27 @@ class TestConfigureGraphFromModel:
         assert model.y == ['b']
         assert len(model.legend_properties) == 1
 
+    def test_annotations_and_filters_are_independent_copies(self, ws):
+        """Regression test: annotations and filters used to be aliased
+        (not deep-copied) between model and widget in
+        _configure_graph_from_model, so dragging an annotation or editing a
+        filter on the widget could silently mutate the model before any
+        "Update plot"/"Apply" commit happened."""
+        model = ws.vm.create_graph({
+            'df_name': 'sheet1', 'plot_style': 'scatter', 'x': 'a', 'y': ['b'],
+        })
+        model.annotations = [{'type': 'text', 'x': 1, 'y': 2, 'text': 'hi'}]
+        model.filters = [{'expression': 'a > 0', 'state': True}]
+
+        widget = VGraph(graph_id=999)
+        ws._configure_graph_from_model(widget, model)
+
+        widget.annotations.append({'type': 'vline', 'x': 5})
+        widget.filters.append({'expression': 'b < 10', 'state': True})
+
+        assert len(model.annotations) == 1
+        assert len(model.filters) == 1
+
     def test_invalid_scatter_edgecolor_falls_back_to_black(self, ws):
         model = ws.vm.create_graph({
             'df_name': 'sheet1', 'plot_style': 'scatter', 'x': 'a', 'y': ['b'],
@@ -305,3 +343,45 @@ class TestTemplateApply:
         assert ws._required_plot_columns(cfg) == {
             'colX', 'colY1', 'colY2', 'colZ', 'colY2secondary'
         }
+
+
+class TestUpdatePlotPreservesDfName:
+    """Regression coverage for a bug found while fixing B11: activating a
+    plot's window correctly resyncs the side panel to that plot's own
+    DataFrame (via _sync_gui_from_graph), but if the user then browses a
+    *different* DataFrame in the side list without reactivating any window,
+    mdi_area.activeSubWindow() stays on the original plot while
+    vm.selected_df_name drifts. _collect_plot_config() always reads
+    vm.selected_df_name, so "Update plot" used to silently rebind the
+    active graph to whatever DataFrame the side panel had drifted to."""
+
+    def test_browsing_a_different_df_without_reactivating_does_not_rebind_the_plot(
+        self, ws, excel_df
+    ):
+        other_df = excel_df.copy()
+        other_df['ampli_Si'] = 999.0
+        ws.vm.add_dataframe('sheet1', excel_df)
+        ws.vm.add_dataframe('sheet1_copy', other_df)
+        ws.vm.select_dataframe('sheet1')
+
+        graph_model = ws.vm.create_graph({
+            'df_name': 'sheet1', 'plot_style': 'scatter',
+            'x': 'x0_Si', 'y': ['ampli_Si'],
+        })
+        ws._build_graph_widget(graph_model, excel_df, lambda e: None)
+        sub_window = ws.graph_widgets[graph_model.graph_id][2]
+
+        # Activate the plot's window once (real click on the plot) --
+        # resyncs the side panel to 'sheet1'.
+        ws.mdi_area.setActiveSubWindow(sub_window)
+        ws._on_subwindow_activated(sub_window)
+        assert ws.vm.selected_df_name == 'sheet1'
+
+        # Browse a different DataFrame in the side list WITHOUT touching
+        # the MDI area -- the active subwindow doesn't change.
+        ws.vm.select_dataframe('sheet1_copy')
+        assert ws.mdi_area.activeSubWindow() is sub_window
+
+        ws._on_update_plot()
+
+        assert ws.vm.get_graph(graph_model.graph_id).df_name == 'sheet1'

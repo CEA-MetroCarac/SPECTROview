@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 from scipy import stats
-import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS
@@ -503,8 +502,8 @@ class PlotRenderer:
         ymax = df[y_col].max()
         
         heatmap_data = df.pivot(index=y_col, columns=x_col, values=z_col)
-        vmin = self.vg.zmin if self.vg.zmin else heatmap_data.min().min()
-        vmax = self.vg.zmax if self.vg.zmax else heatmap_data.max().max()
+        vmin = self.vg.zmin if self.vg.zmin is not None else heatmap_data.min().min()
+        vmax = self.vg.zmax if self.vg.zmax is not None else heatmap_data.max().max()
         
         heatmap = self.vg.ax.imshow(
             heatmap_data,
@@ -524,7 +523,9 @@ class PlotRenderer:
                 pass
         
         # Add new colorbar and store reference
-        self.vg.ax._2dmap_colorbar = plt.colorbar(heatmap, orientation='vertical')
+        self.vg.ax._2dmap_colorbar = self.vg.ax.figure.colorbar(
+            heatmap, ax=self.vg.ax, orientation='vertical'
+        )
 
     def _fit_trendline(self, df):
         """Fit polynomial trendline with optional anchor constraint.
@@ -625,8 +626,8 @@ class PlotRenderer:
 
     def _plot_wafer(self, df):
         """Plot wafer plot by creating an object of WaferPlot Class."""
-        vmin = self.vg.zmin if self.vg.zmin else None
-        vmax = self.vg.zmax if self.vg.zmax else None
+        vmin = self.vg.zmin if self.vg.zmin is not None else None
+        vmax = self.vg.zmax if self.vg.zmax is not None else None
         
         wdf = WaferPlot()
         wdf.plot(
@@ -707,7 +708,7 @@ class WaferPlot:
                 pass
         
         # Add new colorbar and store reference
-        ax._wafer_colorbar = plt.colorbar(im, ax=ax)
+        ax._wafer_colorbar = ax.figure.colorbar(im, ax=ax)
         
         if stats:
             self.stats(z, ax)

@@ -45,7 +45,7 @@ MARKERS = [
     '1', '2', '3', '4', '5', '6', '7', '8'
 ]
 
-DEFAULT_MARKERS = ['o'] * len(MARKERS)
+DEFAULT_MARKERS = MARKERS.copy()
 
 X_AXIS_UNIT = [
     'Wavenumber (cm$^{-1}$)',

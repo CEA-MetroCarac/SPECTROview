@@ -13,9 +13,12 @@ from PySide6.QtGui import QIcon, QDesktopServices, QBrush, QFont, QShortcut, QKe
 
 from spectroview import ICON_DIR, PLOT_STYLES, AXIS_LABELS
 from spectroview.model.m_settings import MSettings
-from spectroview.model.m_plot_template_store import MPlotTemplateStore
+from spectroview.model.m_plot_recipe_store import MPlotRecipeStore
+from spectroview.model.m_style_template_store import MStyleTemplateStore
+from spectroview.model.graph_style import extract_style, apply_style_dict, default_style
 from spectroview.view.components.v_data_filter import VDataFilter
-from spectroview.view.components.v_plot_template_dialog import VPlotTemplateDialog
+from spectroview.view.components.v_plot_recipe_dialog import VPlotRecipeDialog
+from spectroview.view.components.v_style_template_dialog import VStyleTemplateDialog
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.view.components.v_graph import VGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
@@ -23,6 +26,7 @@ from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon
 from spectroview.view.components.customized_widgets import CustomizedPalette
 from spectroview.view.components.customize_graph.customize_graph_dialog import CustomizeGraphDialog
 from spectroview.view.components.v_export_dialog import VExportDialog, VBatchExportDialog
+from spectroview.view.components.v_multipanel_dialog import VMultiPanelDialog
 from spectroview.view.components.graph_commit import snapshot, diff
 
 class VWorkspaceGraphs(QWidget):
@@ -33,12 +37,17 @@ class VWorkspaceGraphs(QWidget):
         self.m_settings = MSettings()
         self.vm = VMWorkspaceGraphs(self.m_settings)
 
-        # Plot templates are managed entirely here (browse/apply/save-all);
-        # the template folder setting is shared with the AI Chat panel,
-        # which still offers a per-response "save these plots as Template"
-        # shortcut via the same store.
-        template_folder = self.m_settings.get_template_folder()
-        self.template_store = MPlotTemplateStore(template_folder)
+        # Just a valid starting store; every handler that actually opens or
+        # saves to one rebuilds it from the current setting first
+        # (_refresh_recipe_and_style_stores()), or a Working Folder
+        # configured after this widget is built would never take effect.
+        self.recipe_store = MPlotRecipeStore(self.m_settings.get_plot_recipe_folder())
+        self.style_template_store = MStyleTemplateStore(self.m_settings.get_plot_style_folder())
+
+        # Session-level "copied style" clipboard for Copy Style/Paste Style
+        # (not persisted -- for a reusable named style, see "Save Style"
+        # instead, backed by style_template_store above).
+        self._copied_style: Optional[dict] = None
 
         # Graph storage: {graph_id: (Graph widget, QDialog, QMdiSubWindow)}
         self.graph_widgets = {}
@@ -122,15 +131,6 @@ class VWorkspaceGraphs(QWidget):
         self.lbl_plot_size = QLabel("(480x420)")
         self.lbl_plot_size.setMinimumWidth(70)
         toolbar_layout.addWidget(self.lbl_plot_size)
-        
-        # DPI spinbox
-        toolbar_layout.addWidget(QLabel("DPI:"))
-        self.spin_dpi_toolbar = QSpinBox()
-        self.spin_dpi_toolbar.setRange(50, 300)
-        self.spin_dpi_toolbar.setValue(100)
-        self.spin_dpi_toolbar.setSingleStep(10)
-        self.spin_dpi_toolbar.setMaximumWidth(60)
-        toolbar_layout.addWidget(self.spin_dpi_toolbar)
         
         # X label rotation
         toolbar_layout.addWidget(QLabel("X label rotation:"))
@@ -517,16 +517,16 @@ class VWorkspaceGraphs(QWidget):
 
         parent_layout.addLayout(action_buttons_layout)
 
-        # Plot template buttons — browse/apply and save-all, second row
+        # Plot recipe buttons — browse/apply and save-all, second row
         template_buttons_layout = QHBoxLayout()
 
-        self.btn_apply_template = QPushButton("📊 Templates")
-        self.btn_apply_template.setToolTip("Browse & apply saved plot templates")
-        self.btn_apply_template.setMinimumHeight(25)
+        self.btn_apply_recipe = QPushButton("📊 Plot Recipes")
+        self.btn_apply_recipe.setToolTip("Browse & apply saved plot recipes")
+        self.btn_apply_recipe.setMinimumHeight(25)
 
-        self.btn_save_as_template = QPushButton("💾 Save as Template")
-        self.btn_save_as_template.setToolTip("Save all currently open plots as a Template")
-        self.btn_save_as_template.setMinimumHeight(25)
+        self.btn_save_as_recipe = QPushButton("💾 Save Plot Recipe")
+        self.btn_save_as_recipe.setToolTip("Save all currently open plots as a Plot Recipe")
+        self.btn_save_as_recipe.setMinimumHeight(25)
 
         self.btn_export_all = QPushButton()
         self.btn_export_all.setIcon(QIcon(os.path.join(ICON_DIR, "save-all.png")))
@@ -534,11 +534,36 @@ class VWorkspaceGraphs(QWidget):
         self.btn_export_all.setToolTip("Export every open graph to a folder")
         self.btn_export_all.setMinimumHeight(25)
 
-        template_buttons_layout.addWidget(self.btn_apply_template)
-        template_buttons_layout.addWidget(self.btn_save_as_template)
+        self.btn_compose_figure = QPushButton("🖼️ Compose Figure")
+        self.btn_compose_figure.setToolTip("Combine several open graphs into one multi-panel exported figure")
+        self.btn_compose_figure.setMinimumHeight(25)
+
+        template_buttons_layout.addWidget(self.btn_apply_recipe)
+        template_buttons_layout.addWidget(self.btn_save_as_recipe)
         template_buttons_layout.addWidget(self.btn_export_all)
+        template_buttons_layout.addWidget(self.btn_compose_figure)
 
         parent_layout.addLayout(template_buttons_layout)
+
+        # Undo/Redo -- third row, own line since they're used far more
+        # often than the template/export actions above and deserve to
+        # always be visible rather than competing for space in a crowded row.
+        undo_redo_layout = QHBoxLayout()
+
+        self.btn_undo = QPushButton("↶ Undo")
+        self.btn_undo.setToolTip("Undo the last action (Ctrl+Z)")
+        self.btn_undo.setMinimumHeight(25)
+        self.btn_undo.setEnabled(False)
+
+        self.btn_redo = QPushButton("↷ Redo")
+        self.btn_redo.setToolTip("Redo the last undone action (Ctrl+Shift+Z)")
+        self.btn_redo.setMinimumHeight(25)
+        self.btn_redo.setEnabled(False)
+
+        undo_redo_layout.addWidget(self.btn_undo)
+        undo_redo_layout.addWidget(self.btn_redo)
+
+        parent_layout.addLayout(undo_redo_layout)
     
     def apply_theme(self, theme: str):
         """Propagate theme changes to all child graphs and update sidebar icons."""
@@ -582,10 +607,13 @@ class VWorkspaceGraphs(QWidget):
         self.btn_add_plot.clicked.connect(self._on_add_plot)
         self.btn_update_plot.clicked.connect(self._on_update_plot)
 
-        # Plot template buttons
-        self.btn_apply_template.clicked.connect(self._on_apply_template_clicked)
-        self.btn_save_as_template.clicked.connect(self._on_save_as_template_clicked)
+        # Plot recipe buttons
+        self.btn_apply_recipe.clicked.connect(self._on_apply_recipe_clicked)
+        self.btn_save_as_recipe.clicked.connect(self._on_save_as_recipe_clicked)
         self.btn_export_all.clicked.connect(self._on_export_all_clicked)
+        self.btn_compose_figure.clicked.connect(self._on_compose_figure_clicked)
+        self.btn_undo.clicked.connect(self._on_undo_clicked)
+        self.btn_redo.clicked.connect(self._on_redo_clicked)
 
         # Plot style connection
         self.cbb_plot_style.currentTextChanged.connect(self._on_plot_style_changed)
@@ -598,14 +626,60 @@ class VWorkspaceGraphs(QWidget):
 
         # MDI area connections
         self.mdi_area.subWindowActivated.connect(self._on_subwindow_activated)
-        
+
         # ViewModel → View signal connections
         vm.dataframes_changed.connect(self._update_df_list)
         vm.dataframe_columns_changed.connect(self._update_column_combos)
         vm.dataframe_columns_changed.connect(self._update_slot_selector)
         vm.graphs_changed.connect(self._update_graph_list)
+        vm.undo_state_changed.connect(self._on_undo_state_changed)
         vm.notify.connect(self._show_toast_notification)
-    
+
+        self._setup_keyboard_shortcuts()
+
+    def _setup_keyboard_shortcuts(self):
+        """Undo/redo/copy-style/paste-style accelerators, scoped to the MDI
+        area (WidgetWithChildrenShortcut on self.mdi_area) rather than the
+        whole workspace widget -- so they fire while a graph window has
+        focus but don't shadow a side-panel QLineEdit's own native Ctrl+Z/
+        Ctrl+C/Ctrl+V while the user is typing a title/label there."""
+        undo_sc = QShortcut(QKeySequence("Ctrl+Z"), self.mdi_area)
+        undo_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        undo_sc.activated.connect(self._on_undo_clicked)
+
+        redo_sc = QShortcut(QKeySequence("Ctrl+Shift+Z"), self.mdi_area)
+        redo_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        redo_sc.activated.connect(self._on_redo_clicked)
+
+        copy_style_sc = QShortcut(QKeySequence("Ctrl+C"), self.mdi_area)
+        copy_style_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        copy_style_sc.activated.connect(self._on_copy_style_shortcut)
+
+        paste_style_sc = QShortcut(QKeySequence("Ctrl+V"), self.mdi_area)
+        paste_style_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        paste_style_sc.activated.connect(self._on_paste_style_shortcut)
+
+    def _get_active_graph_id(self) -> Optional[int]:
+        """graph_id of the currently active MDI subwindow, or None if no
+        graph window is active."""
+        active_subwindow = self.mdi_area.activeSubWindow()
+        if not active_subwindow:
+            return None
+        for gid, (_gw, _gd, sw) in self.graph_widgets.items():
+            if sw == active_subwindow:
+                return gid
+        return None
+
+    def _on_copy_style_shortcut(self):
+        gid = self._get_active_graph_id()
+        if gid is not None:
+            self._on_style_action_requested(gid, "copy")
+
+    def _on_paste_style_shortcut(self):
+        gid = self._get_active_graph_id()
+        if gid is not None:
+            self._on_style_action_requested(gid, "paste")
+
     def _update_df_placeholder(self):
         """Update placeholder text for dataframe list based on state."""
         if self.df_listbox.count() == 0:
@@ -806,9 +880,39 @@ class VWorkspaceGraphs(QWidget):
         if not plot_config['x'] or not plot_config['y']:
             QMessageBox.warning(self, "Missing Axes", "Please select X and Y axes.")
             return
-        
+        self._apply_default_style_to_config(plot_config)
+
         self._create_and_display_plot(plot_config, filters=current_filters)
-    
+
+    def _apply_default_style_to_config(self, plot_config: dict) -> None:
+        """Merge the user's "Set as Default Style" baseline (if any) under
+        a freshly-collected plot_config, for a graph being built from
+        scratch (Add Plot / Add Multi-Wafer) -- never for
+        _on_replicate_graph() or recipe-apply, whose configs already carry
+        an intentional, fully-specified style that must not be silently
+        overwritten. plot_config's own keys always win: the default style
+        only ever contains graph_style.STYLE_FIELD_NAMES keys, so there's
+        no collision with plot_config's data-identity fields (x/y/z/
+        df_name/plot_style) in practice, but `update` (not overwrite)
+        keeps that guarantee explicit rather than assumed."""
+        default_style = self.m_settings.get_default_graph_style()
+        if default_style:
+            # Prevent the default style from forcing top/right/bottom spines onto a wafer plot
+            if plot_config.get('plot_style') == 'wafer':
+                default_style.pop('spines_visible', None)
+                
+            merged = dict(default_style)
+            merged.update(plot_config)
+            plot_config.clear()
+            plot_config.update(merged)
+            
+        # Default wafer plot spines to left-only if not explicitly set by a saved default style
+        if 'spines_visible' not in plot_config:
+            if plot_config.get('plot_style') == 'wafer':
+                plot_config['spines_visible'] = {'top': False, 'right': False, 'bottom': False, 'left': True}
+            else:
+                plot_config['spines_visible'] = {'top': True, 'right': True, 'bottom': True, 'left': True}
+
     def _validate_plot_request(self) -> bool:
         """Validate DataFrame selection."""
         if not self.vm.selected_df_name:
@@ -837,6 +941,7 @@ class VWorkspaceGraphs(QWidget):
         graph_widget.replicate_requested.connect(self._on_replicate_graph)
         graph_widget.customize_requested.connect(self._show_or_switch_customize_dialog)
         graph_widget.export_requested.connect(self._on_export_graph_requested)
+        graph_widget.style_action_requested.connect(self._on_style_action_requested)
         graph_widget.properties_changed.connect(self._on_graph_properties_changed)
         graph_widget.notify.connect(self._show_toast_notification)
 
@@ -850,7 +955,9 @@ class VWorkspaceGraphs(QWidget):
             on_render_error(e)
             return None
 
-        self.vm.update_graph(graph_model.graph_id, {'legend_properties': graph_widget.legend_properties})
+        # Write directly onto the model (not vm.update_graph()): derived
+        # bookkeeping, not a user edit, so it must never be undo-tracked.
+        graph_model.legend_properties = graph_widget.legend_properties
 
         sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
         graph_dialog = self._wrap_graph_in_dialog(graph_widget)
@@ -864,28 +971,32 @@ class VWorkspaceGraphs(QWidget):
 
     def _create_and_display_plot(self, plot_config: dict, select_in_list: bool = True, filters: list = None):
         """Create and display a plot from configuration."""
-        # Use provided filters or get current ones
-        if filters is None:
-            filters = self.v_data_filter.get_filters()
+        self.vm.begin_undo_batch()
+        try:
+            # Use provided filters or get current ones
+            if filters is None:
+                filters = self.v_data_filter.get_filters()
 
-        graph_model = self.vm.create_graph(plot_config)
-        # CRITICAL: Use df_name from plot_config, not vm.selected_df_name
-        # because vm.selected_df_name can be changed by window activation events
-        filtered_df = self.vm.apply_filters(plot_config['df_name'], filters)
+            graph_model = self.vm.create_graph(plot_config)
+            # CRITICAL: Use df_name from plot_config, not vm.selected_df_name
+            # because vm.selected_df_name can be changed by window activation events
+            filtered_df = self.vm.apply_filters(plot_config['df_name'], filters)
 
-        def _on_render_error(e):
-            QMessageBox.critical(self, "Plot Error", f"Error rendering plot: {str(e)}")
+            def _on_render_error(e):
+                QMessageBox.critical(self, "Plot Error", f"Error rendering plot: {str(e)}")
 
-        if self._build_graph_widget(graph_model, filtered_df, _on_render_error) is None:
-            return
+            if self._build_graph_widget(graph_model, filtered_df, _on_render_error) is None:
+                return
 
-        self._update_graph_list(self.vm.get_graph_ids())
+            self._update_graph_list(self.vm.get_graph_ids())
 
-        if select_in_list:
-            for i in range(self.cbb_graph_list.count()):
-                if self.cbb_graph_list.itemData(i) == graph_model.graph_id:
-                    self.cbb_graph_list.setCurrentIndex(i)
-                    break
+            if select_in_list:
+                for i in range(self.cbb_graph_list.count()):
+                    if self.cbb_graph_list.itemData(i) == graph_model.graph_id:
+                        self.cbb_graph_list.setCurrentIndex(i)
+                        break
+        finally:
+            self.vm.end_undo_batch()
     
     def _wrap_graph_in_dialog(self, graph_widget: VGraph) -> QDialog:
         """Wrap graph widget in dialog."""
@@ -905,14 +1016,31 @@ class VWorkspaceGraphs(QWidget):
         self._create_and_display_plot(plot_config, select_in_list=False, filters=filters)
         return True
 
-    def _on_apply_template_clicked(self) -> None:
-        dialog = VPlotTemplateDialog(self.template_store, self)
-        dialog.template_applied.connect(self._on_template_applied)
+    def _refresh_recipe_and_style_stores(self) -> None:
+        """Rebuild both stores from the *current* Working Folder setting.
+
+        Fixes a real bug: self.recipe_store/self.style_template_store used
+        to be built once in __init__ and never touched again, so a Working
+        Folder configured (or changed) after this widget already existed
+        -- i.e. almost always, since it's built at app startup -- silently
+        never took effect until restart, even though the setting itself
+        saved correctly. Reconstructing here (cheap: the constructor is
+        just a folder scan) guarantees correctness at the point of use
+        without needing a signal connection from VMSettings all the way
+        back to this unrelated ViewModel/View."""
+        self.recipe_store = MPlotRecipeStore(self.m_settings.get_plot_recipe_folder())
+        self.style_template_store = MStyleTemplateStore(self.m_settings.get_plot_style_folder())
+
+    def _on_apply_recipe_clicked(self) -> None:
+        self._refresh_recipe_and_style_stores()
+        dialog = VPlotRecipeDialog(self.recipe_store, self)
+        dialog.recipe_applied.connect(self._on_recipe_applied)
         dialog.exec()
 
-    def _on_save_as_template_clicked(self) -> None:
+    def _on_save_as_recipe_clicked(self) -> None:
         """Save every currently open graph's live configuration as a new
-        Template. Self-contained — no AI Chat panel dependency."""
+        Plot Recipe. Self-contained — no AI Chat panel dependency."""
+        self._refresh_recipe_and_style_stores()
         configs = []
         for graph_model in self.vm.graphs.values():
             cfg = graph_model.save()
@@ -921,15 +1049,15 @@ class VWorkspaceGraphs(QWidget):
 
         if not configs:
             QMessageBox.information(
-                self, "No Graphs", "There are no open graphs to save as a template."
+                self, "No Graphs", "There are no open graphs to save as a recipe."
             )
             return
 
-        name, ok = QInputDialog.getText(self, "Save as Template", "Template name:")
+        name, ok = QInputDialog.getText(self, "Save Plot Recipe", "Recipe name:")
         if ok and name:
-            self.template_store.save_template(name, configs)
+            self.recipe_store.save_recipe(name, configs)
             QMessageBox.information(
-                self, "Template Saved",
+                self, "Recipe Saved",
                 f"Saved '{name}' with {len(configs)} plot{'s' if len(configs) > 1 else ''}."
             )
 
@@ -945,8 +1073,82 @@ class VWorkspaceGraphs(QWidget):
         dialog = VBatchExportDialog(widgets, parent=self)
         dialog.exec()
 
-    def _on_template_applied(self, configs: list) -> None:
-        """Apply every plot config in a saved template against the
+    def _on_compose_figure_clicked(self) -> None:
+        """Open the multi-panel composer to combine several open graphs
+        into one exported figure."""
+        if not self.graph_widgets:
+            QMessageBox.information(
+                self, "No Graphs", "There are no open graphs to compose."
+            )
+            return
+
+        widgets = {gid: gw for gid, (gw, _, _) in self.graph_widgets.items()}
+        dialog = VMultiPanelDialog(widgets, parent=self)
+        dialog.exec()
+
+    def _on_style_action_requested(self, graph_id: int, action: str) -> None:
+        """Central dispatch for VGraph's per-graph "🎨 Style" menu (save/
+        apply template, copy/paste, reset-to-default) -- one connection per
+        graph widget, same pattern as customize_requested/export_requested.
+        See model/graph_style.py for the style/data field partition every
+        branch here shares."""
+        entry = self.graph_widgets.get(graph_id)
+        if not entry:
+            return
+        gw = entry[0]
+
+        if action == "save_template":
+            self._save_style_template(gw)
+        elif action == "apply_template":
+            self._apply_style_template_dialog(gw)
+        elif action == "copy":
+            self._copied_style = extract_style(vars(gw))
+            self._show_toast_notification(f"Style copied from graph {graph_id}.")
+        elif action == "paste":
+            if not self._copied_style:
+                QMessageBox.information(self, "Nothing to Paste", "Copy a graph's style first.")
+                return
+            self._apply_style_to_graph(gw, self._copied_style)
+        elif action == "reset":
+            self._apply_style_to_graph(gw, default_style())
+        elif action == "set_default":
+            self.m_settings.set_default_graph_style(extract_style(vars(gw)))
+            self._show_toast_notification(
+                f"Graph {graph_id}'s style is now the default for new plots."
+            )
+
+    def _save_style_template(self, gw: VGraph) -> None:
+        self._refresh_recipe_and_style_stores()
+        name, ok = QInputDialog.getText(self, "Save Style", "Style name:")
+        if not (ok and name):
+            return
+        style = extract_style(vars(gw))
+        tpl_id = self.style_template_store.save_template(name, style)
+        if tpl_id:
+            self._show_toast_notification(f"Saved style '{name}'.")
+        else:
+            QMessageBox.warning(
+                self, "Could Not Save",
+                "No working folder is configured yet (set one in Settings)."
+            )
+
+    def _apply_style_template_dialog(self, gw: VGraph) -> None:
+        self._refresh_recipe_and_style_stores()
+        dialog = VStyleTemplateDialog(self.style_template_store, self)
+        dialog.style_applied.connect(lambda style, target=gw: self._apply_style_to_graph(target, style))
+        dialog.exec()
+
+    def _apply_style_to_graph(self, gw: VGraph, style: dict) -> None:
+        """Write `style` onto `gw`, replot, and persist via the same
+        properties_changed path every other Apply handler in this codebase
+        uses (so undo/save-workspace/etc. all see the change)."""
+        applied = apply_style_dict(gw, style)
+        if gw.df is not None:
+            gw.plot(gw.df)
+        gw.properties_changed.emit(gw.graph_id, applied)
+
+    def _on_recipe_applied(self, configs: list) -> None:
+        """Apply every plot config in a saved recipe against the
         currently selected DataFrame (not each plot's originally-saved
         df_name). A plot whose required axis columns (x, y, z, y2, y3, x2)
         aren't all present in that DataFrame is skipped — rather than
@@ -958,7 +1160,7 @@ class VWorkspaceGraphs(QWidget):
         if not df_name:
             QMessageBox.warning(
                 self, "No DataFrame Selected",
-                "Please select a DataFrame before applying a template."
+                "Please select a DataFrame before applying a recipe."
             )
             return
 
@@ -967,18 +1169,22 @@ class VWorkspaceGraphs(QWidget):
 
         applied = 0
         skipped = []
-        for i, raw_cfg in enumerate(configs, start=1):
-            cfg = copy.deepcopy(raw_cfg)
-            normalize_plot_config(cfg)
+        self.vm.begin_undo_batch()  # one undo step for the whole recipe, not one per plot
+        try:
+            for i, raw_cfg in enumerate(configs, start=1):
+                cfg = copy.deepcopy(raw_cfg)
+                normalize_plot_config(cfg)
 
-            missing = sorted(self._required_plot_columns(cfg) - available_columns)
-            if missing:
-                skipped.append((i, missing))
-                continue
+                missing = sorted(self._required_plot_columns(cfg) - available_columns)
+                if missing:
+                    skipped.append((i, missing))
+                    continue
 
-            cfg['df_name'] = df_name
-            self.create_plot_from_config(df_name, cfg)
-            applied += 1
+                cfg['df_name'] = df_name
+                self.create_plot_from_config(df_name, cfg)
+                applied += 1
+        finally:
+            self.vm.end_undo_batch()
 
         if skipped:
             lines = [
@@ -991,7 +1197,7 @@ class VWorkspaceGraphs(QWidget):
                 f"{applied} of {len(configs)} plot(s) applied.\n\n" + "\n".join(lines)
             )
         elif applied:
-            self.vm.notify.emit(f"Applied {applied} plot(s) from template.")
+            self.vm.notify.emit(f"Applied {applied} plot(s) from recipe.")
 
     @staticmethod
     def _required_plot_columns(cfg: dict) -> set:
@@ -1069,107 +1275,116 @@ class VWorkspaceGraphs(QWidget):
 
     def _on_update_plot(self):
         """Update selected plot."""
-        # Get currently active MDI subwindow
-        active_subwindow = self.mdi_area.activeSubWindow()
-        if not active_subwindow:
-            QMessageBox.warning(self, "No Plot Selected", "Please select a plot to update.")
-            return
-        
-        # Find the corresponding graph
-        graph_widget = None
-        graph_model = None
-        for gid, (gw, gd, sw) in self.graph_widgets.items():
-            if sw == active_subwindow:
-                graph_widget = gw
-                graph_model = self.vm.get_graph(gid)
-                break
-        
-        if not graph_widget or not graph_model:
-            return
-        
-        # Collect updated plot properties from GUI
-        plot_config = self._collect_plot_config()
-
-        # "Update plot" must never silently rebind the graph's own
-        # DataFrame based on whatever happens to be browsed in the side
-        # list at this moment -- the side panel's DataFrame selection only
-        # exists to populate axis-column dropdowns, and can drift from the
-        # active graph's own binding (e.g. the user browsed a different
-        # DataFrame without reactivating this plot's window in between).
-        # Preserve the graph's original df_name instead of trusting
-        # _collect_plot_config()'s vm.selected_df_name-derived value.
-        plot_config['df_name'] = graph_model.df_name
-
-        # Preserve limits and annotations that are managed outside main GUI
-        plot_config['xmin'] = graph_widget.xmin
-        plot_config['xmax'] = graph_widget.xmax
-        plot_config['ymin'] = graph_widget.ymin
-        plot_config['ymax'] = graph_widget.ymax
-        plot_config['zmin'] = graph_widget.zmin
-        plot_config['zmax'] = graph_widget.zmax
-        plot_config['annotations'] = getattr(graph_widget, 'annotations', [])
-        plot_config['axis_breaks'] = getattr(graph_widget, 'axis_breaks', {'x': None, 'y': None})
-        
-        # Check if Z-axis has changed (reset legend properties if so)
-        z_changed = plot_config['z'] != graph_model.z
-        if z_changed:
-            graph_widget.legend_properties = []
-        
-        # Check if filters have changed
-        current_filters = self.v_data_filter.get_filters()
-        if current_filters != graph_model.filters:
-            graph_widget.legend_properties = []
-        
-        # Update graph model
-        self.vm.update_graph(graph_model.graph_id, plot_config)
-        
-        # Capture current legend position from matplotlib before syncing
-        graph_widget._save_legend_position()
-        
-        # Sync current legend properties to model BEFORE reconfiguring
-        # (so customizations from the dialog are not lost)
-        self.vm.update_graph(graph_model.graph_id, {
-            'legend_properties': graph_widget.legend_properties,
-            'legend_bbox': graph_widget.legend_bbox
-        })
-        
-        # Get updated model
-        graph_model = self.vm.get_graph(graph_model.graph_id)
-        
-        # Apply filters against the graph's own DataFrame, not whatever is
-        # currently selected in the side list (they can differ if the user
-        # switched DataFrame selection after activating this plot).
-        filtered_df = self.vm.apply_filters(graph_model.df_name, current_filters)
-
-        # Reconfigure and re-render
-        self._configure_graph_from_model(graph_widget, graph_model)
-        graph_widget.create_plot_widget(graph_model.dpi)
-
+        self.vm.begin_undo_batch()
         try:
-            self._render_plot(graph_widget, filtered_df, graph_model)
-        except Exception as e:
-            QMessageBox.critical(
-                self, "Plot Update Error",
-                f"Error updating plot: {str(e)}"
-            )
-            return
-        
-        # Save legend properties back to model after rendering
-        self.vm.update_graph(graph_model.graph_id, {
-            'legend_properties': graph_widget.legend_properties,
-            'legend_bbox': graph_widget.legend_bbox
-        })
-        
-        # If Z changed and CustomizeGraphDialog is open, reload its content
-        if z_changed and self._customize_dialog is not None and self._customize_dialog.isVisible():
-            if self._customize_dialog.graph_id == graph_model.graph_id:
-                self._customize_dialog.legend_widget.load_legend_properties()
-        
-        # Update window title
-        title = f"{graph_model.graph_id}-{graph_model.plot_style}: [{graph_model.x}] vs [{graph_model.y[0] if graph_model.y else 'None'}]"
-        if graph_model.z:
-            title += f" - [{graph_model.z}]"
-        active_subwindow.setWindowTitle(title)
+            # Get currently active MDI subwindow
+            active_subwindow = self.mdi_area.activeSubWindow()
+            if not active_subwindow:
+                QMessageBox.warning(self, "No Plot Selected", "Please select a plot to update.")
+                return
+
+            # Find the corresponding graph
+            graph_widget = None
+            graph_model = None
+            for gid, (gw, gd, sw) in self.graph_widgets.items():
+                if sw == active_subwindow:
+                    graph_widget = gw
+                    graph_model = self.vm.get_graph(gid)
+                    break
+
+            if not graph_widget or not graph_model:
+                return
+
+            # Collect updated plot properties from GUI
+            plot_config = self._collect_plot_config()
+
+            # Preserve the graph's own df_name -- the side panel's selected
+            # DataFrame can drift from it (browsed without reactivating this
+            # plot's window), and "Update plot" must never silently rebind.
+            plot_config['df_name'] = graph_model.df_name
+
+            # Preserve limits and annotations that are managed outside main GUI
+            plot_config['xmin'] = graph_widget.xmin
+            plot_config['xmax'] = graph_widget.xmax
+            plot_config['ymin'] = graph_widget.ymin
+            plot_config['ymax'] = graph_widget.ymax
+            plot_config['zmax'] = graph_widget.zmax
+            plot_config['annotations'] = getattr(graph_widget, 'annotations', [])
+            plot_config['axis_breaks'] = getattr(graph_widget, 'axis_breaks', {'x': None, 'y': None})
+
+            # Check if plot style changed to/from wafer
+            if plot_config['plot_style'] != graph_model.plot_style:
+                if plot_config['plot_style'] == 'wafer':
+                    plot_config['spines_visible'] = {'top': False, 'right': False, 'bottom': False, 'left': True}
+                elif graph_model.plot_style == 'wafer':
+                    plot_config['spines_visible'] = {'top': True, 'right': True, 'bottom': True, 'left': True}
+            else:
+                # Auto-correct existing wafer plots that still have the old default 4-spines
+                if plot_config['plot_style'] == 'wafer' and getattr(graph_model, 'spines_visible', None) == {'top': True, 'right': True, 'bottom': True, 'left': True}:
+                    plot_config['spines_visible'] = {'top': False, 'right': False, 'bottom': False, 'left': True}
+
+            # Check if Z-axis has changed (reset legend properties if so)
+            z_changed = plot_config['z'] != graph_model.z
+            if z_changed:
+                graph_widget.legend_properties = []
+
+            # Check if filters have changed
+            current_filters = self.v_data_filter.get_filters()
+            if current_filters != graph_model.filters:
+                graph_widget.legend_properties = []
+
+            # Update graph model
+            self.vm.update_graph(graph_model.graph_id, plot_config)
+
+            # Capture current legend position from matplotlib before syncing
+            graph_widget._save_legend_position()
+
+            # Sync current legend properties to model BEFORE reconfiguring
+            # (so customizations from the dialog are not lost)
+            self.vm.update_graph(graph_model.graph_id, {
+                'legend_properties': graph_widget.legend_properties,
+                'legend_bbox': graph_widget.legend_bbox
+            })
+
+            # Get updated model
+            graph_model = self.vm.get_graph(graph_model.graph_id)
+
+            # Apply filters against the graph's own DataFrame, not whatever is
+            # currently selected in the side list (they can differ if the user
+            # switched DataFrame selection after activating this plot).
+            filtered_df = self.vm.apply_filters(graph_model.df_name, current_filters)
+
+            # Reconfigure and re-render
+            self._configure_graph_from_model(graph_widget, graph_model)
+            graph_widget.create_plot_widget(graph_model.dpi)
+
+            try:
+                self._render_plot(graph_widget, filtered_df, graph_model)
+            except Exception as e:
+                QMessageBox.critical(
+                    self, "Plot Update Error",
+                    f"Error updating plot: {str(e)}"
+                )
+                return
+
+            # Save legend properties back to model after rendering
+            self.vm.update_graph(graph_model.graph_id, {
+                'legend_properties': graph_widget.legend_properties,
+                'legend_bbox': graph_widget.legend_bbox
+            })
+
+            # If Z changed and CustomizeGraphDialog is open, reload its content
+            if z_changed and self._customize_dialog is not None and self._customize_dialog.isVisible():
+                if self._customize_dialog.graph_id == graph_model.graph_id:
+                    self._customize_dialog.legend_widget.load_legend_properties()
+
+            # Update window title
+            title = f"{graph_model.graph_id}-{graph_model.plot_style}: [{graph_model.x}] vs [{graph_model.y[0] if graph_model.y else 'None'}]"
+            if graph_model.z:
+                title += f" - [{graph_model.z}]"
+            active_subwindow.setWindowTitle(title)
+        finally:
+            self.vm.end_undo_batch()
     
     def _update_df_list(self, df_names: list):
         """Update DataFrame list from ViewModel."""
@@ -1304,51 +1519,56 @@ class VWorkspaceGraphs(QWidget):
         """Create multi-wafer plots."""
         # Capture filters FIRST before any GUI state changes
         current_filters = self.v_data_filter.get_filters()
-        
+
         checked_slots = [int(float(cb.text())) for cb in self.slot_checkboxes if cb.isChecked()]
-        
+
         if not checked_slots:
             QMessageBox.warning(self, "No Slots Selected", "Please select at least one slot.")
             return
-        
+
         if not self._validate_plot_request():
             return
-        
-        # Force wafer plot style
-        wafer_index = self.cbb_plot_style.findText('wafer')
-        if wafer_index >= 0:
-            self.cbb_plot_style.setCurrentIndex(wafer_index)
-        
-        plot_config = self._collect_plot_config(include_labels=False)
-        plot_config['plot_style'] = 'wafer'
-        
-        created_graphs = self.vm.create_multi_wafer_graphs(
-            self.vm.selected_df_name,
-            checked_slots,
-            plot_config,
-            current_filters
-        )
-        
-        successfully_created = 0
-        for graph_model in created_graphs:
-            filtered_df = self.vm.apply_filters(self.vm.selected_df_name, graph_model.filters)
 
-            def _on_render_error(e, graph_model=graph_model):
-                slot_expr = graph_model.filters[-1].get('expression', 'unknown') if graph_model.filters else 'unknown'
-                QMessageBox.warning(
-                    self, "Plot Error",
-                    f"Error rendering plot for {slot_expr}: {str(e)}"
-                )
+        self.vm.begin_undo_batch()
+        try:
+            # Force wafer plot style
+            wafer_index = self.cbb_plot_style.findText('wafer')
+            if wafer_index >= 0:
+                self.cbb_plot_style.setCurrentIndex(wafer_index)
 
-            if self._build_graph_widget(graph_model, filtered_df, _on_render_error) is None:
-                continue
-            successfully_created += 1
+            plot_config = self._collect_plot_config(include_labels=False)
+            plot_config['plot_style'] = 'wafer'
+            self._apply_default_style_to_config(plot_config)
 
-        # Update graph list
-        self._update_graph_list(self.vm.get_graph_ids())
-        
-        if successfully_created > 0:
-            self.vm.notify.emit(f"Created {successfully_created} wafer plot(s)")
+            created_graphs = self.vm.create_multi_wafer_graphs(
+                self.vm.selected_df_name,
+                checked_slots,
+                plot_config,
+                current_filters
+            )
+
+            successfully_created = 0
+            for graph_model in created_graphs:
+                filtered_df = self.vm.apply_filters(self.vm.selected_df_name, graph_model.filters)
+
+                def _on_render_error(e, graph_model=graph_model):
+                    slot_expr = graph_model.filters[-1].get('expression', 'unknown') if graph_model.filters else 'unknown'
+                    QMessageBox.warning(
+                        self, "Plot Error",
+                        f"Error rendering plot for {slot_expr}: {str(e)}"
+                    )
+
+                if self._build_graph_widget(graph_model, filtered_df, _on_render_error) is None:
+                    continue
+                successfully_created += 1
+
+            # Update graph list
+            self._update_graph_list(self.vm.get_graph_ids())
+
+            if successfully_created > 0:
+                self.vm.notify.emit(f"Created {successfully_created} wafer plot(s)")
+        finally:
+            self.vm.end_undo_batch()
     
     def _update_graph_list(self, graph_ids: list):
         """Update graph list."""
@@ -1406,19 +1626,26 @@ class VWorkspaceGraphs(QWidget):
             if self._customize_dialog is not None:
                 self._customize_dialog.close()
                 self._customize_dialog = None
-            
-            # Close all MDI subwindows
+
+            # Disconnect `closed` first: a programmatic batch teardown must
+            # not cascade into _on_graph_closed()'s per-window delete_graph()
+            # (which would push one undo step per graph instead of one).
             for sub_window in self.mdi_area.subWindowList():
+                sub_window.closed.disconnect()
                 self.mdi_area.removeSubWindow(sub_window)
                 sub_window.close()
-            
-            # Delete graphs from ViewModel
-            for graph_id in list(self.graph_widgets.keys()):
-                self.vm.delete_graph(graph_id)
-            
+
+            # Delete graphs from ViewModel (one undo step for the whole batch)
+            self.vm.begin_undo_batch()
+            try:
+                for graph_id in list(self.graph_widgets.keys()):
+                    self.vm.delete_graph(graph_id)
+            finally:
+                self.vm.end_undo_batch()
+
             # Clear graph widgets storage
             self.graph_widgets.clear()
-            
+
             # Update graph list combobox
             self._update_graph_list([])
     
@@ -1517,7 +1744,6 @@ class VWorkspaceGraphs(QWidget):
             self.edit_zlabel.setText(model.zlabel or "")
             
             # Toolbar controls
-            self.spin_dpi_toolbar.setValue(model.dpi)
             self.spin_xlabel_rotation.setValue(model.x_rot)
             
             # Filters
@@ -1588,7 +1814,6 @@ class VWorkspaceGraphs(QWidget):
             'zlabel': (self.edit_zlabel.text() or None) if include_labels else None,
             'color_palette': self.cbb_colormap.currentText() if use_palette else 'jet',
             'wafer_size': float(self.cbb_wafer_size.currentText()),
-            'dpi': self.spin_dpi_toolbar.value(),
             'x_rot': self.spin_xlabel_rotation.value(),
             'legend_visible': True,
             'grid': self.cb_grid_toolbar.isChecked(),
@@ -1688,20 +1913,15 @@ class VWorkspaceGraphs(QWidget):
         if graph_id is not None and graph_id in self.graph_widgets:
             graph_widget, _, _ = self.graph_widgets[graph_id]
             before = snapshot(graph_widget)
-            # bool(state), not `state == Qt.Checked`: PySide6's CheckState
-            # enum doesn't compare equal to the plain int the stateChanged
-            # signal actually carries (0/2) -- matches the pattern already
-            # used by _on_select_all_slots for the same reason.
+            # bool(state), not `state == Qt.Checked`: the stateChanged
+            # signal carries a plain int (0/2), not the CheckState enum.
             graph_widget.grid = bool(state)
-            # Replot from the widget's own already-filtered DataFrame, not a
-            # fresh unfiltered fetch keyed on whatever is selected in the
-            # side list (same class of data-source bug as B11).
+            # Replot from the widget's own already-filtered df, not a fresh
+            # fetch keyed on the side list's current selection.
             if graph_widget.df is not None:
                 graph_widget.plot(graph_widget.df)
-            # Commit through the same properties_changed -> vm.update_graph
-            # path every customize-dialog tab already uses, instead of
-            # leaving the change unsynced (it used to only apply visually
-            # and not persist to the model or survive a save).
+            # Commit through the same path every customize-dialog tab uses,
+            # so this persists to the model and survives a save.
             graph_widget.properties_changed.emit(
                 graph_widget.graph_id, diff(graph_widget, before)
             )
@@ -1729,11 +1949,9 @@ class VWorkspaceGraphs(QWidget):
     
     def save_workspace(self):
         """Save workspace."""
-        # Update all graph models with current state before saving. Uses a
-        # generic snapshot/diff against MGraph's full field schema (see
-        # graph_commit.py) rather than a hand-picked field list, so a
-        # widget-mutable field newly added in the future can't be silently
-        # left out of what gets synced back before save.
+        # Generic snapshot/diff against MGraph's full field schema (see
+        # graph_commit.py), not a hand-picked field list, so nothing new is
+        # ever silently left out of what gets synced back before save.
         for gid, (gw, gd, sw) in self.graph_widgets.items():
             before = snapshot(gw)
             size = sw.size()
@@ -1750,17 +1968,41 @@ class VWorkspaceGraphs(QWidget):
     def load_workspace(self, file_path: str):
         """Load workspace."""
         self.clear_workspace()
-        
+
         # Load data into ViewModel
         self.vm.load_workspace(file_path)
-        
+
         # Select first DataFrame if available
         if self.df_listbox.count() > 0:
             self.df_listbox.setCurrentRow(0)
-        
+
         # Recreate graph widgets and MDI subwindows for each loaded graph.
-        # A graph that fails to render (e.g. a stale column reference) is
-        # skipped with a toast rather than aborting the rest of the load.
+        self._rebuild_all_graph_widgets()
+
+    def _rebuild_all_graph_widgets(self):
+        """Tear down every VGraph widget/MDI subwindow and rebuild them
+        from the ViewModel's current self.vm.graphs.
+
+        The graph-widget-lifecycle portion of what load_workspace() does,
+        factored out so undo()/redo() can reuse it without touching
+        dataframes/selected_df_name/filter UI (those aren't part of
+        undo/redo -- only the graph set is). A graph that fails to render
+        (e.g. a stale column reference) is skipped with a toast rather
+        than aborting the rest of the rebuild.
+        """
+        if self._customize_dialog is not None:
+            self._customize_dialog.close()
+            self._customize_dialog = None
+
+        for sub_window in self.mdi_area.subWindowList():
+            # Disconnect first: a programmatic teardown must not cascade
+            # into _on_graph_closed()'s delete_graph(), which would delete
+            # the very graphs this method is about to rebuild.
+            sub_window.closed.disconnect()
+            self.mdi_area.removeSubWindow(sub_window)
+            sub_window.close()
+        self.graph_widgets.clear()
+
         for graph_id in self.vm.get_graph_ids():
             graph_model = self.vm.get_graph(graph_id)
             if not graph_model:
@@ -1774,7 +2016,29 @@ class VWorkspaceGraphs(QWidget):
                 )
 
             self._build_graph_widget(graph_model, filtered_df, _on_render_error)
-    
+
+        self._update_graph_list(self.vm.get_graph_ids())
+
+    def _on_undo_clicked(self):
+        """Revert the last undo-tracked action (see
+        VMWorkspaceGraphs.begin_undo_batch()/undo() for what counts as
+        "one action")."""
+        if self.vm.undo():
+            self._rebuild_all_graph_widgets()
+            self.vm.notify.emit("Undid last action.")
+
+    def _on_redo_clicked(self):
+        """Re-apply the last undone action."""
+        if self.vm.redo():
+            self._rebuild_all_graph_widgets()
+            self.vm.notify.emit("Redid last action.")
+
+    def _on_undo_state_changed(self):
+        """Keep the Undo/Redo buttons' enabled state in sync with the
+        ViewModel's undo/redo stacks."""
+        self.btn_undo.setEnabled(self.vm.can_undo)
+        self.btn_redo.setEnabled(self.vm.can_redo)
+
     def clear_workspace(self):
         """Clear workspace."""
         # Close singleton customize dialog
@@ -1782,8 +2046,11 @@ class VWorkspaceGraphs(QWidget):
             self._customize_dialog.close()
             self._customize_dialog = None
         
-        # Close and remove all MDI subwindows
+        # Disconnect `closed` first so this programmatic teardown doesn't
+        # cascade into _on_graph_closed()'s delete_graph() (harmless here
+        # since clear_workspace() below wipes everything anyway).
         for sub_window in self.mdi_area.subWindowList():
+            sub_window.closed.disconnect()
             sub_window.close()
             self.mdi_area.removeSubWindow(sub_window)
         

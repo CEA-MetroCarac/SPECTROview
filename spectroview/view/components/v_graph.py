@@ -4,15 +4,18 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 from matplotlib.figure import Figure
-from matplotlib.ticker import FuncFormatter, FormatStrFormatter
+from matplotlib.ticker import FormatStrFormatter
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-from PySide6.QtWidgets import QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QDialog
+from PySide6.QtWidgets import (
+    QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QDialog, QToolButton, QMenu,
+)
 from PySide6.QtCore import QObject, QEvent, QSize, Signal, QTimer
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QAction
 
 from spectroview import (
     DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR,
@@ -28,7 +31,8 @@ _THEME_STYLE_MAP = {
     "soft_dark": PLOT_POLICY_SOFT_DARK,
 }
 from spectroview.view.components.customize_graph.customize_graph_dialog import (
-    EditLineDialog, EditTextDialog
+    EditLineDialog, EditTextDialog, EditArrowDialog, EditSpanDialog,
+    EditBoxDialog, EditCalloutDialog,
 )
 from spectroview.model.m_settings import MSettings
 from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_fig_to_clb, get_tinted_icon
@@ -47,6 +51,9 @@ class VGraph(QWidget):
     customize_requested = Signal(int)
     # Signal emitted when the export dialog is requested (graph_id)
     export_requested = Signal(int)
+    # Signal emitted for a per-graph style action (graph_id, action name --
+    # one of 'save_template'/'apply_template'/'copy'/'paste'/'reset')
+    style_action_requested = Signal(int, str)
     # Signal emitted for user-facing diagnostic notifications
     notify = Signal(str)
     
@@ -147,6 +154,8 @@ class VGraph(QWidget):
         
         # Plot-specific settings
         self.color_palette = "jet"
+        self.colormap_norm = "linear"  # linear/log/centered
+        self.colormap_center = 0.0
         self.wafer_size = 300
         self.wafer_stats = True
         self.trendline_order = 1
@@ -165,6 +174,7 @@ class VGraph(QWidget):
         self.dodge_scatter_plot = False
         self.scatter_size = 70  # Marker size for scatter plots
         self.scatter_edgecolor = 'black'  # Edge color for scatter plot markers
+        self.unify_marker_style = True  # True: every series uses scatter_size/scatter_edgecolor; False: per-series legend_properties overrides apply
         self.x_as_numeric = None  # None=Auto, True=Numerical, False=Category
         self.y_as_numeric = None  # None=Auto, True=Numerical, False=Category
         # Histogram-specific
@@ -181,8 +191,20 @@ class VGraph(QWidget):
         
         # Axis breaks storage
         self.axis_breaks = {'x': None, 'y': None}
-        self._break_markers = []  # Store artist references for cleanup
-        
+        self.ax_break_secondary = None  # second panel of a broken axis, if active
+        self._current_break_mode = None  # None/'x'/'y' -- tracks which Axes layout is currently built
+        self._subtitle_artist = None  # the Text artist _set_figure_style() draws plot_subtitle onto
+
+        # Inset (zoom) axes -- one optional inset per graph
+        self.inset_enabled = False
+        self.inset_bounds = [0.55, 0.55, 0.35, 0.35]  # [x0, y0, width, height] in axes-fraction
+        self.inset_xmin = None
+        self.inset_xmax = None
+        self.inset_ymin = None
+        self.inset_ymax = None
+        self.inset_show_zoom_indicator = True
+        self.inset_ax = None  # the rendered inset Axes, if any (not persisted)
+
         # Matplotlib objects
         self.figure = None
         self.ax = None
@@ -217,14 +239,17 @@ class VGraph(QWidget):
         
         self.clear_layout(self.graph_layout)
 
-        # Use the OO Figure API (not plt.figure()) so this widget's figures
-        # are never registered with pyplot's global figure manager -- this
-        # workspace used to call plt.close('all') here to clean up after
-        # itself, which also silently closed unrelated live figures owned by
-        # other workspaces (e.g. the Maps viewer's plt.figure()-based canvas).
+        # OO Figure API (not plt.figure()): keeps this widget's figures out
+        # of pyplot's global manager, so plt.close('all') elsewhere can't
+        # silently close them.
         with plt.style.context(_THEME_STYLE_MAP.get(self.figure_theme, PLOT_POLICY_LIGHT)):
             self.figure = Figure(layout="compressed", dpi=self.dpi)
             self.ax = self.figure.add_subplot(111)
+            
+            # Reset broken axis state since this is a completely new figure
+            self._current_break_mode = None
+            self.ax_break_secondary = None
+            
         self.canvas = FigureCanvas(self.figure)
         
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
@@ -299,6 +324,29 @@ class VGraph(QWidget):
         self.btn_export.setToolTip("Export graph to file")
         self.btn_export.clicked.connect(lambda: self.export_requested.emit(self.graph_id))
 
+        # Style menu: every action just emits style_action_requested,
+        # handled centrally by VWorkspaceGraphs.
+        self.btn_style_menu = QToolButton()
+        self.btn_style_menu.setText("🎨")
+        self.btn_style_menu.setFixedSize(30, 30)
+        self.btn_style_menu.setToolTip("Graph style: save/apply, copy/paste, reset, set default")
+        self.btn_style_menu.setPopupMode(QToolButton.InstantPopup)
+        style_menu = QMenu(self)
+        for action_text, action_name in [
+            ("Save Style...", "save_template"),
+            ("Apply Style...", "apply_template"),
+            ("Copy Style", "copy"),
+            ("Paste Style", "paste"),
+            ("Reset to Default", "reset"),
+            ("Set as Default Style", "set_default"),
+        ]:
+            action = QAction(action_text, self)
+            action.triggered.connect(
+                lambda checked=False, name=action_name: self.style_action_requested.emit(self.graph_id, name)
+            )
+            style_menu.addAction(action)
+        self.btn_style_menu.setMenu(style_menu)
+
         # Initialize icon colors using actual app settings
         theme = MSettings().get_theme()
         self.update_icon_colors(theme)
@@ -313,6 +361,7 @@ class VGraph(QWidget):
         toolbar_layout.addWidget(self.btn_customize)
         toolbar_layout.addWidget(self.btn_copy_figure)
         toolbar_layout.addWidget(self.btn_export)
+        toolbar_layout.addWidget(self.btn_style_menu)
         
         # Create container widget for toolbar layout
         toolbar_container = QWidget()
@@ -360,12 +409,27 @@ class VGraph(QWidget):
     def _plot_internal(self, df):
         """Renders plot based on DataFrame and current properties."""
         self.df = df
-        
+
         # Ensure scatter_edgecolor is always a valid string color, defaulting to 'black'
         edge_c = getattr(self, 'scatter_edgecolor', 'black')
         if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
             self.scatter_edgecolor = 'black'
-        
+
+        self._setup_broken_axes()  # no-op unless the break mode changed since the last render
+
+        if self._current_break_mode:
+            self._plot_internal_with_break(df)
+        else:
+            self._plot_internal_normal(df)
+
+        self.get_legend_properties()
+        self.canvas.draw_idle()
+
+    def _plot_internal_normal(self, df):
+        """The original single-axes render pipeline -- completely unchanged
+        by the broken-axis rewrite (see _plot_internal_with_break for that
+        path); this is what runs for the overwhelming majority of graphs
+        (no axis break active)."""
         self.ax.clear()
         if self.ax2:
             self.ax2.clear()
@@ -373,7 +437,7 @@ class VGraph(QWidget):
             self.ax3.clear()
         if self.ax_x2:
             self.ax_x2.clear()
-        
+
         if df is not None and self.df_name is not None and self.x is not None and self.y is not None:
             self._plot_primary_axis(df)
             self._plot_secondary_axis(df)
@@ -381,7 +445,7 @@ class VGraph(QWidget):
             self._plot_secondary_x_axis(df)
         else:
             self.ax.plot([], [])
-        
+
         self._set_limits()
         self._set_axis_scale(df)
         self._set_axis_direction()  # must run after _set_limits: it flips whatever the current limits are
@@ -390,12 +454,309 @@ class VGraph(QWidget):
         self._set_grid()
         self._set_rotation()
         self._set_legend()
-        self._apply_axis_breaks()  # Apply breaks before annotations
         self._render_annotations()  # Render annotations after all plot elements
-        
-        self.get_legend_properties()
+        self._render_inset(df)  # Inset drawn last: needs self.ax's final view/transform
+
+    def restyle(self) -> bool:
+        """Fast preview path for a pure cosmetic change: re-run label/grid/
+        limit/scale/legend styling on the existing artists without a full
+        replot. Callers must check can_restyle_without_replot() first.
+        Returns False (caller must fall back to plot()) when a broken axis
+        is active, since that needs both panels kept in sync."""
+        if self._current_break_mode is not None:
+            return False
+
+        with plt.style.context(_THEME_STYLE_MAP.get(self.figure_theme, PLOT_POLICY_LIGHT)):
+            self._set_limits()
+            self._set_axis_scale(self.df)
+            self._set_axis_direction()
+            self._set_labels()
+            self._set_figure_style()
+            self._set_grid()
+            self._set_rotation()
+            self._set_legend()
+
         self.canvas.draw_idle()
-    
+        return True
+
+    def _setup_broken_axes(self):
+        """Ensure self.ax (and self.ax_break_secondary) match the current
+        axis_breaks state. Only rebuilds the layout when the break mode
+        changed since the last render, so ordinary replots keep Axes
+        identity/toolbar history stable. If both X and Y breaks are somehow
+        set, X wins (simultaneous X+Y isn't supported)."""
+        x_break = self.axis_breaks.get('x')
+        y_break = self.axis_breaks.get('y') if not x_break else None
+        new_mode = 'x' if x_break else ('y' if y_break else None)
+
+        if new_mode == self._current_break_mode:
+            return
+
+        if self.ax is not None:
+            try:
+                self.ax.remove()
+            except Exception:
+                pass
+        if self.ax_break_secondary is not None:
+            try:
+                self.ax_break_secondary.remove()
+            except Exception:
+                pass
+            self.ax_break_secondary = None
+
+        if new_mode is None:
+            self.ax = self.figure.add_subplot(111)
+        elif new_mode == 'x':
+            gs = self.figure.add_gridspec(1, 2, wspace=0.005)
+            self.ax = self.figure.add_subplot(gs[0, 0])
+            self.ax_break_secondary = self.figure.add_subplot(gs[0, 1], sharey=self.ax)
+        else:
+            gs = self.figure.add_gridspec(2, 1, hspace=0.005)
+            # self.ax stays the "primary" (bottom) panel so every existing
+            # self.ax-based call site keeps working unchanged.
+            self.ax_break_secondary = self.figure.add_subplot(gs[0, 0])
+            self.ax = self.figure.add_subplot(gs[1, 0], sharex=self.ax_break_secondary)
+
+        self._current_break_mode = new_mode
+
+        engine = self.figure.get_layout_engine()
+        if engine is not None:
+            if new_mode is not None:
+                # Tighten the layout engine's own padding so the small gridspec
+                # gap isn't overridden and forced wider by the layout manager
+                engine.set(w_pad=0.0, h_pad=0.0, wspace=0.005, hspace=0.005)
+            else:
+                # Restore standard compressed layout defaults
+                engine.set(w_pad=0.04167, h_pad=0.04167, wspace=0.02, hspace=0.02)
+
+    def _plot_internal_with_break(self, df):
+        """Two-panel broken-axis render path (see _setup_broken_axes()).
+        Mirrors the normal single-axes pipeline (same per-step methods on
+        both panels via the self.ax swap in _render_series_on()), but uses
+        per-panel range splitting instead of _set_limits(), and skips
+        secondary/twin axes, zoom inset, and per-panel title/legend
+        duplication (documented scope limits)."""
+        primary = self.ax
+        secondary = self.ax_break_secondary
+        is_x_break = (self._current_break_mode == 'x')
+        break_range = self.axis_breaks['x' if is_x_break else 'y']
+
+        primary.clear()
+        secondary.clear()
+
+        # Twin axes aren't supported alongside a broken axis -- drop any
+        # stale ones left over from a previous non-break render.
+        for attr in ('ax2', 'ax3', 'ax_x2'):
+            old = getattr(self, attr, None)
+            if old is not None:
+                try:
+                    old.remove()
+                except Exception:
+                    pass
+                setattr(self, attr, None)
+
+        has_data = df is not None and self.df_name is not None and self.x is not None and self.y is not None
+
+        # Primary panel: the exact normal single-axes pipeline.
+        if has_data:
+            self._plot_primary_axis(df)
+        else:
+            primary.plot([], [])
+        self._set_axis_scale(df)
+        self._set_labels()
+        if not is_x_break:
+            # Y-break: primary (self.ax) is the bottom panel, so
+            # _set_labels()'s title lands in the panel gap -- move it up.
+            title_text = primary.get_title()
+            title_fontsize = primary.title.get_fontsize()
+            if title_text:
+                primary.set_title('')
+                secondary.set_title(title_text, fontsize=title_fontsize)
+                
+            # Center the ylabel across both panels (y=1.0025 is the gap between bottom and top)
+            primary.yaxis.label.set_y(1.0025)
+            primary.yaxis.label.set_va('center')
+        self._set_figure_style()
+        
+        if is_x_break:
+            # Center title, subtitle, and xlabel across both panels 
+            # (x=1.0025 is the gap between the left and right panels)
+            primary.title.set_x(1.0025)
+            primary.title.set_ha('center')
+            
+            primary.xaxis.label.set_x(1.0025)
+            primary.xaxis.label.set_ha('center')
+            
+            if getattr(self, '_subtitle_artist', None):
+                self._subtitle_artist.set_x(1.0025)
+                self._subtitle_artist.set_ha('center')
+        self._set_grid()
+        self._set_legend()
+
+        # Secondary panel: same series, unclipped (clipping to its half of
+        # the range happens in _apply_break_split below). Title/subtitle/
+        # legend stay primary-only -- this is a continuation, not a second axis.
+        if has_data:
+            self._render_series_on(secondary)
+        else:
+            secondary.plot([], [])
+
+        original_ax = self.ax
+        self.ax = secondary
+        try:
+            self._set_axis_scale(df)
+            self._set_grid()
+        finally:
+            self.ax = original_ax
+        secondary.set_facecolor(primary.get_facecolor())
+        for side, visible in (self.spines_visible or {}).items():
+            if side in secondary.spines:
+                secondary.spines[side].set_visible(visible)
+        if self.figure_margins:
+            x_margin, y_margin = self.figure_margins
+            secondary.margins(x=x_margin, y=y_margin)
+
+        self._apply_break_split(primary, secondary, is_x_break, break_range)
+        
+        self._set_rotation()
+        original_ax = self.ax
+        self.ax = secondary
+        try:
+            self._set_rotation()
+        finally:
+            self.ax = original_ax
+
+        self._render_annotations()  # primary panel's copy (secondary's was drawn by _render_series_on above)
+
+    def _apply_break_split(self, primary, secondary, is_x_break, break_range):
+        """Clip each panel to its half of the broken range, hide the facing
+        spines, and draw the diagonal 'd' marks on the real spine
+        boundaries -- the standard brokenaxes-style technique, replacing
+        the old post-hoc artist mutation that didn't work for bar/box/
+        wafer/2Dmap."""
+        start, end = break_range['start'], break_range['end']
+
+        if is_x_break:
+            lo, hi = primary.get_xlim()
+        else:
+            lo, hi = primary.get_ylim()
+
+        clipped_start = min(max(start, lo), hi)
+        clipped_end = min(max(end, lo), hi)
+
+        # A break clamped to zero width (e.g. stale range after switching
+        # columns) would hand matplotlib a singular xlim/ylim -- treat it as
+        # "no break" instead: both panels show the full range, unsplit.
+        if clipped_start <= lo or clipped_end >= hi or clipped_start >= clipped_end:
+            if is_x_break:
+                primary.set_xlim(lo, hi)
+                secondary.set_xlim(lo, hi)
+            else:
+                primary.set_ylim(lo, hi)
+                secondary.set_ylim(lo, hi)
+            return
+
+        if is_x_break:
+            primary.set_xlim(lo, clipped_start)
+            secondary.set_xlim(clipped_end, hi)
+            primary.spines['right'].set_visible(False)
+            secondary.spines['left'].set_visible(False)
+            secondary.tick_params(axis='y', which='both', left=False, labelleft=False)
+        else:
+            primary.set_ylim(lo, clipped_start)
+            secondary.set_ylim(clipped_end, hi)
+            primary.spines['top'].set_visible(False)
+            secondary.spines['bottom'].set_visible(False)
+            secondary.tick_params(axis='x', which='both', bottom=False, labelbottom=False)
+
+        self._draw_break_marks(primary, secondary, is_x_break)
+
+    def _draw_break_marks(self, primary, secondary, is_x_break):
+        """Small diagonal marks on the two facing spines signaling "the
+        axis is broken here" -- the standard matplotlib broken-axis
+        technique (matplotlib's own gallery example: broken_axis.html),
+        now drawn on real spine boundaries instead of mutated data, so it
+        renders identically regardless of plot style."""
+        kwargs = dict(
+            marker=[(-1, -1), (1, 1)], markersize=5, linestyle="none",
+            color='k', mec='k', mew=1, clip_on=False,
+        )
+        dashed_kwargs = dict(
+            color='k', linestyle='--', linewidth=0.5, alpha=0.8, clip_on=False
+        )
+        if is_x_break:
+            primary.plot([1, 1], [0, 1], transform=primary.transAxes, **dashed_kwargs)
+            secondary.plot([0, 0], [0, 1], transform=secondary.transAxes, **dashed_kwargs)
+            primary.plot([1], [0], transform=primary.transAxes, **kwargs)
+            primary.plot([1], [1], transform=primary.transAxes, **kwargs)
+            secondary.plot([0], [0], transform=secondary.transAxes, **kwargs)
+            secondary.plot([0], [1], transform=secondary.transAxes, **kwargs)
+        else:
+            primary.plot([0, 1], [1, 1], transform=primary.transAxes, **dashed_kwargs)
+            secondary.plot([0, 1], [0, 0], transform=secondary.transAxes, **dashed_kwargs)
+            primary.plot([0], [1], transform=primary.transAxes, **kwargs)
+            primary.plot([1], [1], transform=primary.transAxes, **kwargs)
+            secondary.plot([0], [0], transform=secondary.transAxes, **kwargs)
+            secondary.plot([1], [0], transform=secondary.transAxes, **kwargs)
+
+    def _render_series_on(self, target_ax):
+        """Redraw the primary series + annotations onto `target_ax` instead
+        of `self.ax`: temporarily repoints self.ax and self.figure there,
+        replays the render calls, then restores both. Does not replay
+        limits/legend/twin-axes/labels -- callers set target_ax's own
+        limits afterward. Shared by the inset renderer, broken-axis
+        two-panel renderer, and the multi-panel composer."""
+        original_ax = self.ax
+        original_figure = self.figure
+        self.ax = target_ax
+        self.figure = target_ax.figure
+        try:
+            if self.df is not None and self.df_name is not None and self.x is not None and self.y is not None:
+                self._plot_primary_axis(self.df)
+            self._render_annotations()
+        finally:
+            self.ax = original_ax
+            self.figure = original_figure
+
+    def _render_inset(self, df):
+        """Draw the optional zoom-inset axes: the same primary series +
+        annotations as the main plot, at its own x/y limits. Skipped when a
+        broken axis is active (out of scope -- which panel would it attach to?)."""
+        if self.inset_ax is not None:
+            try:
+                self.inset_ax.remove()
+            except Exception:
+                pass
+            self.inset_ax = None
+
+        if not getattr(self, 'inset_enabled', False):
+            return
+        if self.axis_breaks.get('x') or self.axis_breaks.get('y'):
+            return
+
+        try:
+            inset_ax = self.ax.inset_axes(self.inset_bounds)
+            self.inset_ax = inset_ax
+            self._render_series_on(inset_ax)
+
+            if self.inset_xmin is not None or self.inset_xmax is not None:
+                xlo, xhi = inset_ax.get_xlim()
+                inset_ax.set_xlim(
+                    self.inset_xmin if self.inset_xmin is not None else xlo,
+                    self.inset_xmax if self.inset_xmax is not None else xhi,
+                )
+            if self.inset_ymin is not None or self.inset_ymax is not None:
+                ylo, yhi = inset_ax.get_ylim()
+                inset_ax.set_ylim(
+                    self.inset_ymin if self.inset_ymin is not None else ylo,
+                    self.inset_ymax if self.inset_ymax is not None else yhi,
+                )
+
+            if self.inset_show_zoom_indicator:
+                self.ax.indicate_inset_zoom(inset_ax, edgecolor="gray")
+        except Exception as e:
+            print(f"[WARNING] Failed to render inset axes: {e}")
+
     def get_legend_properties(self):
         """Retrieves properties of each legend within legend box."""
         if hasattr(self, 'legend_properties') and self.legend_properties:
@@ -477,15 +838,19 @@ class VGraph(QWidget):
     
     
     def _on_legend_pick(self, event):
-        """Handle pick event — record annotation candidate for drag, or legend double-click."""
+        """Handle pick event — legend double-click.
+
+        Annotation drag-candidate detection used to also happen here, but
+        moved to _on_annotation_click's manual hit-test: matplotlib's
+        pick_event only reaches an artist when event.inaxes equals that
+        artist's own Axes (see _ax_data_coords), which silently never
+        happens for annotations on self.ax whenever a secondary Y-axis is
+        also present -- it fully overlaps self.ax and has higher z-order.
+        """
         artist = event.artist
         if hasattr(artist, '_annotation_data'):
-            # Record as drag candidate (actual drag starts on mouse move)
-            self._drag_candidate = artist
-            self._drag_start_x = event.mouseevent.xdata
-            self._drag_start_y = event.mouseevent.ydata
             return
-        
+
         # Check if legend was clicked
         if artist.get_label() == '_legend_':
             return
@@ -641,11 +1006,7 @@ class VGraph(QWidget):
         is_wafer = (self.plot_style == 'wafer')
         self.ax.set_axisbelow(True)
 
-        # tick_direction stays an optional override (only threaded in when
-        # set, so matplotlib's own default direction applies otherwise);
-        # tick_label_fontsize is a concrete font-size field, always applied
-        # (with a defensive fallback in case an old save or the scripting
-        # API leaves it None).
+        # tick_direction only overrides matplotlib's default when set.
         extra_ticks = {'labelsize': getattr(self, 'tick_label_fontsize', None) or 9}
         if getattr(self, 'tick_direction', None):
             extra_ticks['direction'] = self.tick_direction
@@ -766,12 +1127,20 @@ class VGraph(QWidget):
 
     def _set_axis_direction(self):
         """Invert X/Y axes if requested. Must run after _set_limits(), since
-        it flips whatever the current limits happen to be. self.ax.clear()
-        at the top of _plot_internal already resets any inversion from a
-        previous render, so this only needs to act when inversion is on."""
-        if self.x_inverted:
+        it flips whatever the current limits happen to be.
+
+        Axes.invert_xaxis()/invert_yaxis() *toggle* the current inverted
+        state rather than setting it absolutely, so this compares against
+        xaxis_inverted()/yaxis_inverted() first rather than calling them
+        unconditionally whenever self.x_inverted/y_inverted is True --
+        that used to be safe only because self.ax.clear() (earlier in
+        _plot_internal) always resets inversion to False first on every
+        full replot. restyle()'s fast path (Phase 5E) calls this repeatedly
+        *without* a clear in between, where an unconditional toggle would
+        flip-flop the axis back to normal on every other call."""
+        if self.x_inverted != self.ax.xaxis_inverted():
             self.ax.invert_xaxis()
-        if self.y_inverted:
+        if self.y_inverted != self.ax.yaxis_inverted():
             self.ax.invert_yaxis()
 
     def _format_axis_label(self, col_name) -> str:
@@ -839,11 +1208,8 @@ class VGraph(QWidget):
                 else:
                     self.ax.set_ylabel(self._get_y_label_default(self.y))
 
-        # Font-size fields are always concrete (12/12pt by default, matching
-        # mplstyle) -- applied once here rather than threading fontsize=
-        # into every set_title/set_xlabel/set_ylabel call above. The `or`
-        # fallback only matters defensively (an old save or the scripting
-        # API leaving the field as None).
+        # Applied once here rather than threading fontsize= into every
+        # set_title/set_xlabel/set_ylabel call above.
         self.ax.title.set_fontsize(self.title_fontsize or 12)
         axis_label_fontsize = self.axis_label_fontsize or 12
         self.ax.xaxis.label.set_fontsize(axis_label_fontsize)
@@ -851,35 +1217,51 @@ class VGraph(QWidget):
 
     def _set_figure_style(self):
         """Figure/axes-wide styling: background color, subtitle, spine
-        visibility, margins. All optional and skipped when unset, so an old
-        saved graph (none of these fields set) renders identically to
-        before this feature existed.
-
-        Runs inside plot()'s `with plt.style.context(theme)` block, but
-        `ax.clear()` (called earlier in _plot_internal) does not retroactively
-        repaint the axes patch from a *new* style context if the Axes was
-        originally created under a different one (e.g. the widget was built
-        with the default light theme, then figure_theme was changed to dark
-        without recreating the Figure) -- so the current theme's facecolor is
-        applied explicitly here as a baseline, with figure_facecolor (an
-        explicit user override, independent of theme) layered on top.
-        """
+        visibility, margins. `ax.clear()` doesn't retroactively repaint an
+        Axes built under a different theme, so the current theme's
+        facecolor is re-applied here explicitly, with figure_facecolor (an
+        explicit user override) layered on top."""
         self.ax.set_facecolor(plt.rcParams['axes.facecolor'])
         self.figure.set_facecolor(plt.rcParams['figure.facecolor'])
         if self.figure_facecolor:
             self.ax.set_facecolor(self.figure_facecolor)
             self.figure.set_facecolor(self.figure_facecolor)
 
+        # Same gap as facecolor above, for text/spine color -- without this,
+        # switching to Dark/Soft Dark left labels/title/ticks/spines black.
+        self.ax.xaxis.label.set_color(plt.rcParams['axes.labelcolor'])
+        self.ax.yaxis.label.set_color(plt.rcParams['axes.labelcolor'])
+        self.ax.title.set_color(plt.rcParams['text.color'])
+        self.ax.tick_params(axis='x', colors=plt.rcParams['xtick.color'])
+        self.ax.tick_params(axis='y', colors=plt.rcParams['ytick.color'])
+        for spine in self.ax.spines.values():
+            spine.set_edgecolor(plt.rcParams['axes.edgecolor'])
+
+        # Detect a stale artist from a since-replaced Axes (e.g. after
+        # _setup_broken_axes() rebuilds the layout) via ax.texts membership.
+        if self._subtitle_artist is not None and self._subtitle_artist not in self.ax.texts:
+            self._subtitle_artist = None
+
         if self.plot_subtitle:
             # Sits right at the axes' top edge -- the title itself floats
             # further up above this, via its own default padding, so the
             # two don't collide without needing precise pad arithmetic.
             fontsize = self.subtitle_fontsize if self.subtitle_fontsize is not None else 10
-            self.ax.text(
-                0.5, 1.0, self.plot_subtitle,
-                transform=self.ax.transAxes, ha='center', va='bottom',
-                fontsize=fontsize,
-            )
+            if self._subtitle_artist is not None:
+                # Update the existing artist in place -- calling ax.text()
+                # again on every restyle() tick (Phase 5E's no-clear fast
+                # path) would otherwise stack a new copy on top each time.
+                self._subtitle_artist.set_text(self.plot_subtitle)
+                self._subtitle_artist.set_fontsize(fontsize)
+            else:
+                self._subtitle_artist = self.ax.text(
+                    0.5, 1.0, self.plot_subtitle,
+                    transform=self.ax.transAxes, ha='center', va='bottom',
+                    fontsize=fontsize,
+                )
+        elif self._subtitle_artist is not None:
+            self._subtitle_artist.remove()
+            self._subtitle_artist = None
 
         spines = self.spines_visible or {}
         for side, visible in spines.items():
@@ -1007,6 +1389,14 @@ class VGraph(QWidget):
                     self._render_hline(ann)
                 elif ann_type == 'text':
                     self._render_text(ann)
+                elif ann_type == 'arrow':
+                    self._render_arrow(ann)
+                elif ann_type in ('vspan', 'hspan'):
+                    self._render_span(ann)
+                elif ann_type == 'box':
+                    self._render_box(ann)
+                elif ann_type == 'callout':
+                    self._render_callout(ann)
             except Exception as e:
                 print(f"[WARNING] Failed to render annotation {ann.get('id')}: {e}")
     
@@ -1086,25 +1476,162 @@ class VGraph(QWidget):
         text_obj._annotation_data = ann
         text_obj._is_dragging = False
         return text_obj
-    
+
+    def _render_arrow(self, ann: dict):
+        """Render arrow annotation.
+
+        Uses a FancyArrowPatch (added via add_patch) rather than
+        ax.annotate('', ...) -- Patch.contains() picks along the whole
+        drawn arrow shape, whereas an empty-string Annotation's pick region
+        is effectively just its (near zero-size) text anchor point, which
+        would make double-click-to-edit and drag only work when clicking
+        almost exactly on the arrow tip.
+        """
+        x1, y1 = ann.get('x1', 0), ann.get('y1', 0)
+        x2, y2 = ann.get('x2', 0), ann.get('y2', 0)
+        color = ann.get('color', 'black')
+        linewidth = ann.get('linewidth', 1.5)
+        linestyle = ann.get('linestyle', '-')
+
+        arrow = patches.FancyArrowPatch(
+            (x1, y1), (x2, y2),
+            color=color,
+            linewidth=linewidth,
+            linestyle=linestyle,
+            arrowstyle='-|>',
+            mutation_scale=15,
+            zorder=100,
+            picker=True,
+        )
+        self.ax.add_patch(arrow)
+
+        arrow._annotation_data = ann
+        arrow._is_dragging = False
+        return arrow
+
+    def _render_span(self, ann: dict):
+        """Render a vertical or horizontal shaded span (axvspan/axhspan).
+
+        Both return a plain Rectangle patch under the hood (confirmed:
+        axvspan's y-extent is a blended-transform 0-1 axes fraction, x is
+        data coords, and vice-versa for axhspan) -- that's what makes
+        dragging just a set_x()/set_y() call, no custom polygon math.
+        """
+        ann_type = ann.get('type')
+        color = ann.get('color', 'orange')
+        alpha = ann.get('alpha', 0.3)
+
+        if ann_type == 'vspan':
+            x1, x2 = ann.get('x1', 0), ann.get('x2', 1)
+            span = self.ax.axvspan(x1, x2, color=color, alpha=alpha, zorder=50, picker=True)
+        else:
+            y1, y2 = ann.get('y1', 0), ann.get('y2', 1)
+            span = self.ax.axhspan(y1, y2, color=color, alpha=alpha, zorder=50, picker=True)
+
+        span._annotation_data = ann
+        span._is_dragging = False
+        return span
+
+    def _render_box(self, ann: dict):
+        """Render a rectangle/box annotation."""
+        x, y = ann.get('x', 0), ann.get('y', 0)
+        width = ann.get('width', 1)
+        height = ann.get('height', 1)
+        facecolor = ann.get('facecolor', 'yellow')
+        edgecolor = ann.get('edgecolor', 'black')
+        linewidth = ann.get('linewidth', 1.5)
+        alpha = ann.get('alpha', 0.3)
+
+        box = patches.Rectangle(
+            (x, y), width, height,
+            facecolor=facecolor,
+            edgecolor=edgecolor,
+            linewidth=linewidth,
+            alpha=alpha,
+            zorder=99,
+            picker=True,
+        )
+        self.ax.add_patch(box)
+
+        box._annotation_data = ann
+        box._is_dragging = False
+        return box
+
+    def _render_callout(self, ann: dict):
+        """Render a callout: text with an arrow pointing at a data point."""
+        x, y = ann.get('x', 0), ann.get('y', 0)
+        tx, ty = ann.get('tx', x), ann.get('ty', y)
+        text = ann.get('text', '')
+        fontsize = ann.get('fontsize', 11)
+        color = ann.get('color', 'black')
+        arrowcolor = ann.get('arrowcolor', 'black')
+
+        callout = self.ax.annotate(
+            text, xy=(x, y), xytext=(tx, ty),
+            fontsize=fontsize, color=color,
+            arrowprops=dict(arrowstyle='->', color=arrowcolor),
+            zorder=101,
+            picker=True,
+        )
+
+        callout._annotation_data = ann
+        callout._is_dragging = False
+        return callout
+
+    def _ax_data_coords(self, event):
+        """(x, y) of a mouse event in self.ax's own data-coordinate system,
+        computed directly from the event's pixel position rather than
+        trusting event.xdata/event.ydata.
+
+        event.xdata/ydata are derived from event.inaxes, which matplotlib
+        resolves to whichever overlapping Axes is topmost in z-order --
+        e.g. a secondary Y-axis created via ax.twinx() shares self.ax's
+        entire bounding box and is added later (higher z-order), so
+        event.inaxes resolves to it instead of self.ax for clicks anywhere
+        on the plot, not just near the twin axis. That silently broke both
+        annotation picking (see _on_annotation_click) and drag position
+        updates for any graph with a secondary/tertiary axis configured.
+        Transforming the raw pixel position through self.ax.transData
+        ourselves sidesteps the ambiguity entirely.
+        """
+        return self.ax.transData.inverted().transform((event.x, event.y))
+
     def _on_annotation_click(self, event):
-        """Handle click on annotation — only double-click opens edit dialog."""
-        if not event.dblclick or event.inaxes != self.ax:
+        """Handle a press on the canvas: a single click on an annotation
+        starts a potential drag, a double-click opens its edit dialog.
+
+        Hit-testing is done manually against self.ax's own annotation
+        artists (self.ax.findobj() + artist.contains(event)) rather than
+        relying on matplotlib's pick_event -- Figure.pick() only delivers a
+        pick event to an artist when event.inaxes equals that artist's own
+        Axes, which (see _ax_data_coords) is unreliable whenever a
+        secondary Y-axis overlaps self.ax. artist.contains(event) itself
+        only needs the event's pixel position, which is always correct.
+        """
+        if event.x is None or event.y is None:
             return
-        
-        # Cancel any pending drag on double-click
+
+        # Cancel any pending/in-progress drag -- a new press always
+        # supersedes it, whether or not this press turns out to be on an
+        # annotation.
         if hasattr(self, '_drag_candidate'):
             del self._drag_candidate
         if hasattr(self, '_dragged_annotation'):
             self._dragged_annotation._is_dragging = False
             del self._dragged_annotation
-        
-        # Check if double-click is on an annotation
+
         for ann in self.ax.findobj():
             if hasattr(ann, '_annotation_data'):
                 contains, _ = ann.contains(event)
                 if contains:
-                    self._edit_annotation_direct(ann._annotation_data)
+                    if event.dblclick:
+                        self._edit_annotation_direct(ann._annotation_data)
+                    else:
+                        # Record as drag candidate -- actual drag starts on
+                        # mouse move past a small threshold (see
+                        # _on_annotation_drag).
+                        self._drag_candidate = ann
+                        self._drag_start_x, self._drag_start_y = self._ax_data_coords(event)
                     return
                     
     def _edit_annotation_direct(self, annotation):
@@ -1135,50 +1662,127 @@ class VGraph(QWidget):
                 # Update annotation properties
                 props = dialog.get_properties()
                 annotation.update(props)
-                
+
                 # Refresh plot
                 self.ax.clear()
                 if self.df is not None:
                     self.plot(self.df)
-    
+
+        elif annotation['type'] == 'arrow':
+            dialog = EditArrowDialog(annotation, None)
+            if dialog.exec() == QDialog.Accepted:
+                annotation.update(dialog.get_properties())
+                self.ax.clear()
+                if self.df is not None:
+                    self.plot(self.df)
+
+        elif annotation['type'] in ('vspan', 'hspan'):
+            dialog = EditSpanDialog(annotation, None)
+            if dialog.exec() == QDialog.Accepted:
+                annotation.update(dialog.get_properties())
+                self.ax.clear()
+                if self.df is not None:
+                    self.plot(self.df)
+
+        elif annotation['type'] == 'box':
+            dialog = EditBoxDialog(annotation, None)
+            if dialog.exec() == QDialog.Accepted:
+                annotation.update(dialog.get_properties())
+                self.ax.clear()
+                if self.df is not None:
+                    self.plot(self.df)
+
+        elif annotation['type'] == 'callout':
+            dialog = EditCalloutDialog(annotation, None)
+            if dialog.exec() == QDialog.Accepted:
+                annotation.update(dialog.get_properties())
+                self.ax.clear()
+                if self.df is not None:
+                    self.plot(self.df)
+
     def _on_annotation_drag(self, event):
-        """Handle annotation drag (mouse move while dragging)."""
-        if event.xdata is None or event.ydata is None:
+        """Handle annotation drag (mouse move while dragging).
+
+        Uses _ax_data_coords(event) throughout instead of event.xdata/
+        event.ydata -- see that method's docstring for why those are
+        unreliable whenever a secondary Y-axis overlaps self.ax.
+        """
+        if event.x is None or event.y is None:
             return
-        
+        xdata, ydata = self._ax_data_coords(event)
+
         # Promote drag candidate to actual drag once mouse moves
         if hasattr(self, '_drag_candidate') and not hasattr(self, '_dragged_annotation'):
-            dx = abs(event.xdata - (self._drag_start_x or 0))
-            dy = abs(event.ydata - (self._drag_start_y or 0))
+            dx = abs(xdata - (self._drag_start_x or 0))
+            dy = abs(ydata - (self._drag_start_y or 0))
             # Use a small threshold to distinguish click from drag
             x_range = abs(self.ax.get_xlim()[1] - self.ax.get_xlim()[0])
             y_range = abs(self.ax.get_ylim()[1] - self.ax.get_ylim()[0])
             if dx > x_range * 0.005 or dy > y_range * 0.005:
                 self._dragged_annotation = self._drag_candidate
                 self._dragged_annotation._is_dragging = True
+                # Snapshot for delta-based dragging of multi-point shapes
+                # below (vline/hline/text jump straight to the mouse instead).
+                self._drag_start_coords = dict(self._dragged_annotation._annotation_data)
                 del self._drag_candidate
-        
+
         if not hasattr(self, '_dragged_annotation'):
             return
-        
+
         ann = self._dragged_annotation
         if not getattr(ann, '_is_dragging', False):
             return
-        
+
         ann_data = ann._annotation_data
-        
+        ann_type = ann_data['type']
+
         # Update visual position based on annotation type
-        if ann_data['type'] == 'vline':
-            ann.set_xdata([event.xdata, event.xdata])
-            ann_data['x'] = event.xdata
-        elif ann_data['type'] == 'hline':
-            ann.set_ydata([event.ydata, event.ydata])
-            ann_data['y'] = event.ydata
-        elif ann_data['type'] == 'text':
-            ann.set_position((event.xdata, event.ydata))
-            ann_data['x'] = event.xdata
-            ann_data['y'] = event.ydata
-        
+        if ann_type == 'vline':
+            ann.set_xdata([xdata, xdata])
+            ann_data['x'] = xdata
+        elif ann_type == 'hline':
+            ann.set_ydata([ydata, ydata])
+            ann_data['y'] = ydata
+        elif ann_type == 'text':
+            ann.set_position((xdata, ydata))
+            ann_data['x'] = xdata
+            ann_data['y'] = ydata
+        elif ann_type == 'arrow':
+            start = self._drag_start_coords
+            dx = xdata - self._drag_start_x
+            dy = ydata - self._drag_start_y
+            ann_data['x1'] = start['x1'] + dx
+            ann_data['y1'] = start['y1'] + dy
+            ann_data['x2'] = start['x2'] + dx
+            ann_data['y2'] = start['y2'] + dy
+            ann.set_positions((ann_data['x1'], ann_data['y1']), (ann_data['x2'], ann_data['y2']))
+        elif ann_type == 'vspan':
+            start = self._drag_start_coords
+            dx = xdata - self._drag_start_x
+            ann_data['x1'] = start['x1'] + dx
+            ann_data['x2'] = start['x2'] + dx
+            ann.set_x(ann_data['x1'])
+        elif ann_type == 'hspan':
+            start = self._drag_start_coords
+            dy = ydata - self._drag_start_y
+            ann_data['y1'] = start['y1'] + dy
+            ann_data['y2'] = start['y2'] + dy
+            ann.set_y(ann_data['y1'])
+        elif ann_type == 'box':
+            start = self._drag_start_coords
+            dx = xdata - self._drag_start_x
+            dy = ydata - self._drag_start_y
+            ann_data['x'] = start['x'] + dx
+            ann_data['y'] = start['y'] + dy
+            ann.set_xy((ann_data['x'], ann_data['y']))
+        elif ann_type == 'callout':
+            # Moves only the text position -- the arrow's pointed-at data
+            # point (xy) is left fixed, matching set_position()'s own
+            # behavior (it only ever touches xytext, never xy).
+            ann.set_position((xdata, ydata))
+            ann_data['tx'] = xdata
+            ann_data['ty'] = ydata
+
         self.canvas.draw_idle()
     
     def _on_annotation_release(self, event):
@@ -1207,144 +1811,29 @@ class VGraph(QWidget):
             self.annotation_position_changed.emit(
                 self.graph_id, ann_data['id'], ann_data['x'], ann_data['y']
             )
-        
+        elif ann_data['type'] == 'arrow':
+            self.annotation_position_changed.emit(
+                self.graph_id, ann_data['id'], ann_data['x1'], ann_data['y1']
+            )
+        elif ann_data['type'] == 'vspan':
+            self.annotation_position_changed.emit(
+                self.graph_id, ann_data['id'], ann_data['x1'], 0
+            )
+        elif ann_data['type'] == 'hspan':
+            self.annotation_position_changed.emit(
+                self.graph_id, ann_data['id'], 0, ann_data['y1']
+            )
+        elif ann_data['type'] == 'box':
+            self.annotation_position_changed.emit(
+                self.graph_id, ann_data['id'], ann_data['x'], ann_data['y']
+            )
+        elif ann_data['type'] == 'callout':
+            self.annotation_position_changed.emit(
+                self.graph_id, ann_data['id'], ann_data['tx'], ann_data['ty']
+            )
+
         del self._dragged_annotation
+        if hasattr(self, '_drag_start_coords'):
+            del self._drag_start_coords
         self.canvas.draw_idle()
     
-    def _apply_axis_breaks(self):
-        """Apply axis breaks by adjusting limits and hiding ticks in break range."""
-        if not hasattr(self, 'axis_breaks') or not self.axis_breaks:
-            return
-        
-        # Clear old break markers to prevent accumulation
-        if hasattr(self, '_break_markers'):
-            for artist in self._break_markers:
-                try:
-                    artist.remove()
-                except:
-                    pass  # Artist may already be removed
-            self._break_markers = []
-        else:
-            self._break_markers = []
-        
-        # Apply X-axis break  
-        if self.axis_breaks.get('x'):
-            self._apply_single_axis_break('x', self.axis_breaks['x']['start'], self.axis_breaks['x']['end'])
-        
-        # Apply Y-axis break
-        if self.axis_breaks.get('y'):
-            self._apply_single_axis_break('y', self.axis_breaks['y']['start'], self.axis_breaks['y']['end'])
-
-    def _apply_single_axis_break(self, axis, break_start, break_end):
-        """Apply a single axis break (shared logic for X and Y)."""
-        is_x = (axis == 'x')
-        
-        # Get current limits
-        x_min, x_max = self.ax.get_xlim()
-        y_min, y_max = self.ax.get_ylim()
-        
-        min_val, max_val = (x_min, x_max) if is_x else (y_min, y_max)
-        
-        # Don't apply if break is outside data range
-        if break_start < min_val or break_end > max_val:
-            return
-            
-        break_range = break_end - break_start
-        
-        # Use fixed pixel gap for consistent appearance
-        gap_pixels = 3
-        # Convert pixels to data coordinates
-        bbox = self.ax.get_window_extent().transformed(self.figure.dpi_scale_trans.inverted())
-        size_idx = 0 if is_x else 1
-        bbox_size = bbox.width if is_x else bbox.height
-        gap_size = gap_pixels / bbox_size * (max_val - min_val) / self.figure.get_size_inches()[size_idx]
-        
-        for line in self.ax.get_lines():
-            xdata = np.asarray(line.get_xdata())
-            ydata = np.asarray(line.get_ydata())
-            
-            data = xdata if is_x else ydata
-            other_data = ydata if is_x else xdata
-            
-            data_new = data.copy()
-            mask = data >= break_end
-            data_new[mask] = data[mask] - break_range + gap_size
-            
-            keep_mask = (data <= break_start) | (data >= break_end)
-            
-            if is_x:
-                line.set_data(data_new[keep_mask], other_data[keep_mask])
-            else:
-                line.set_data(other_data[keep_mask], data_new[keep_mask])
-                
-        for collection in self.ax.collections:
-            offsets = collection.get_offsets()
-            if offsets is not None and len(offsets) > 0:
-                xdata = offsets[:, 0]
-                ydata = offsets[:, 1]
-                
-                data = xdata if is_x else ydata
-                other_data = ydata if is_x else xdata
-                
-                data_new = data.copy()
-                mask = data >= break_end
-                data_new[mask] = data[mask] - break_range + gap_size
-                
-                keep_mask = (data <= break_start) | (data >= break_end)
-                
-                if is_x:
-                    collection.set_offsets(np.column_stack([data_new[keep_mask], other_data[keep_mask]]))
-                else:
-                    collection.set_offsets(np.column_stack([other_data[keep_mask], data_new[keep_mask]]))
-                
-                for get_func, set_func in [
-                    (collection.get_facecolors, collection.set_facecolors),
-                    (collection.get_edgecolors, collection.set_edgecolors),
-                    (collection.get_sizes, collection.set_sizes)
-                ]:
-                    try:
-                        vals = get_func()
-                        if vals is not None and len(vals) == len(data):
-                            set_func(vals[keep_mask])
-                    except Exception:
-                        pass
-        
-        # Adjust axis limits and add markers
-        new_range = max_val - break_range + gap_size - min_val
-        ax_break = (break_start + gap_size / 2 - min_val) / new_range
-        
-        d = 0.015  # how big to make the diagonal lines in axes coordinates
-        dx = 0.01  # half distance between the two parallel lines
-        kwargs = dict(transform=self.ax.transAxes, color='gray', clip_on=False, linewidth=1)
-        
-        if is_x:
-            self.ax.set_xlim(min_val, max_val - break_range + gap_size)
-            p1, = self.ax.plot([ax_break - dx - d, ax_break - dx + d], [-d, d], **kwargs)
-            p2, = self.ax.plot([ax_break + dx - d, ax_break + dx + d], [-d, d], **kwargs)
-            p3, = self.ax.plot([ax_break - dx - d, ax_break - dx + d], [1 - d, 1 + d], **kwargs)
-            p4, = self.ax.plot([ax_break + dx - d, ax_break + dx + d], [1 - d, 1 + d], **kwargs)
-            
-            def break_formatter(val, pos):
-                if val > break_start + gap_size / 2:
-                    return f"{val + break_range - gap_size:g}"
-                return f"{val:g}"
-            self.ax.xaxis.set_major_formatter(FuncFormatter(break_formatter))
-        else:
-            self.ax.set_ylim(min_val, max_val - break_range + gap_size)
-            p1, = self.ax.plot([-d, d], [ax_break - dx - d, ax_break - dx + d], **kwargs)
-            p2, = self.ax.plot([-d, d], [ax_break + dx - d, ax_break + dx + d], **kwargs)
-            p3, = self.ax.plot([1 - d, 1 + d], [ax_break - dx - d, ax_break - dx + d], **kwargs)
-            p4, = self.ax.plot([1 - d, 1 + d], [ax_break + dx - d, ax_break + dx + d], **kwargs)
-            
-            def break_formatter(val, pos):
-                if val > break_start + gap_size / 2:
-                    return f"{val + break_range - gap_size:g}"
-                return f"{val:g}"
-            self.ax.yaxis.set_major_formatter(FuncFormatter(break_formatter))
-            
-        self._break_markers.extend([p1, p2, p3, p4])
-        
-
-
-
-

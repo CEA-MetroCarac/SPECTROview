@@ -37,9 +37,12 @@ ALL_SAVE_KEYS = {
     'trendline_anchor_origin', 'trendline_anchor_x', 'trendline_anchor_y',
     'show_bar_plot_error_bar', 'error_bar_type', 'bar_error_bar_type', 'error_bar_capsize',
     'join_for_point_plot', 'dodge_point_plot',
-    'dodge_scatter_plot', 'scatter_size', 'scatter_edgecolor', 'x_as_numeric',
+    'dodge_scatter_plot', 'scatter_size', 'scatter_edgecolor', 'unify_marker_style', 'x_as_numeric',
     'y_as_numeric', 'hist_bins', 'hist_kde', 'hist_step', 'sort_data_enabled',
     'sort_data_by', 'annotations', 'axis_breaks',
+    'colormap_norm', 'colormap_center',
+    'inset_enabled', 'inset_bounds', 'inset_xmin', 'inset_xmax',
+    'inset_ymin', 'inset_ymax', 'inset_show_zoom_indicator',
 }
 
 # A representative, non-default value for every customizable field, keyed by
@@ -82,6 +85,7 @@ CUSTOM_VALUES = {
     'error_bar_capsize': 5.0,
     'join_for_point_plot': True, 'dodge_point_plot': False,
     'dodge_scatter_plot': True, 'scatter_size': 120, 'scatter_edgecolor': '#00FF00',
+    'unify_marker_style': False,
     'x_as_numeric': True, 'y_as_numeric': False,
     'hist_bins': 50, 'hist_kde': True, 'hist_step': True,
     'sort_data_enabled': False, 'sort_data_by': 'X',
@@ -89,6 +93,10 @@ CUSTOM_VALUES = {
     'minor_ticks_bottom': False, 'minor_ticks_left': False,
     'minor_ticks_top': True, 'minor_ticks_right': True,
     'axis_breaks': {'x': {'start': 10.0, 'end': 20.0}, 'y': {'start': 1.0, 'end': 2.0}},
+    'colormap_norm': 'log', 'colormap_center': 5.0,
+    'inset_enabled': True, 'inset_bounds': [0.6, 0.6, 0.3, 0.3],
+    'inset_xmin': 1.0, 'inset_xmax': 2.0, 'inset_ymin': 3.0, 'inset_ymax': 4.0,
+    'inset_show_zoom_indicator': False,
 }
 
 

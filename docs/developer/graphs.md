@@ -12,11 +12,19 @@ graph TD
     MDI --> VG["VGraph"]
     VG --> PR["PlotRenderer"]
     VWG --> DF["DataFilter"]
-    VWG --> CGD["CustomizeDialog"]
+    VWG --> CGD["CustomizeGraphDialog"]
+    CGD --> GC["graph_commit (snapshot/diff)"]
+    CGD --> GS["graph_style (style/restyle partition)"]
+
+    VWG --> RS["MPlotRecipeStore"]
+    VWG --> STS["MStyleTemplateStore"]
+    VWG --> EXP["VExportDialog / VBatchExportDialog"]
+    VWG --> MP["VMultiPanelDialog"]
 
     VWG -->|"calls"| VMWG["VMWorkspaceGraphs"]
     VMWG -->|"signals"| VWG
     VMWG --> MG["MGraph"]
+    VMWG --> UNDO["Undo/redo stacks"]
 ```
 
 ---
@@ -25,9 +33,9 @@ graph TD
 
 ### **`VMWorkspaceGraphs` — The ViewModel**
 
-**File**: `spectroview/viewmodel/vm_workspace_graphs.py` (~438 lines)
+**File**: `spectroview/viewmodel/vm_workspace_graphs.py`
 
-Manages DataFrames and graph models. Unlike the `Spectra`/`Maps` ViewModels, this ViewModel is relatively lightweight — the heavy rendering logic lives in the `VGraph` widget.
+Manages DataFrames, graph models, and the workspace's undo/redo history. Unlike the `Spectra`/`Maps` ViewModels, this ViewModel is relatively lightweight — the heavy rendering logic lives in the `VGraph` widget.
 
 | Responsibility | Methods |
 |---------------|---------|
@@ -36,6 +44,7 @@ Manages DataFrames and graph models. Unlike the `Spectra`/`Maps` ViewModels, thi
 | **Graph CRUD** | `create_graph()`, `get_graph()`, `update_graph()`, `delete_graph()` |
 | **Filtering** | `apply_filters(df_name, filters)` — `pd.DataFrame.query()` based |
 | **Multi-wafer** | `create_multi_wafer_graphs()` — Batch-creates one wafer plot per slot |
+| **Undo/redo** | `undo()`, `redo()`, `begin_undo_batch()`/`end_undo_batch()`, `can_undo`/`can_redo` |
 | **Persistence** | `save_workspace()`, `load_workspace()`, `clear_workspace()` |
 
 #### **Signals**
@@ -44,73 +53,73 @@ Manages DataFrames and graph models. Unlike the `Spectra`/`Maps` ViewModels, thi
 dataframes_changed = Signal(list)           # List of DataFrame names updated
 dataframe_columns_changed = Signal(list)    # Column names of selected DataFrame
 graphs_changed = Signal(list)               # List of graph IDs updated
+undo_state_changed = Signal()               # can_undo/can_redo changed -- sync toolbar buttons
 notify = Signal(str)                        # Toast notification
 ```
 
 ### **`MGraph` — The Plot Configuration Model**
 
-**File**: `spectroview/model/m_graph.py` (~157 lines)
+**File**: `spectroview/model/m_graph.py`
 
-A pure data class that stores everything needed to recreate a plot:
+A pure dataclass (113 fields) that stores everything needed to recreate a plot. `save()`/`load(data)` provide complete serialization; `get_display_name()` builds the MDI subwindow title. Rather than enumerate every field here (see `m_graph.py` for the exhaustive, authoritative list), fields group into:
 
-| Property | Type | Purpose |
-|----------|------|---------|
-| `graph_id` | `int` | Unique identifier |
-| `df_name` | `str` | Source DataFrame name |
-| `plot_style` | `str` | One of `PLOT_STYLES` (`point`, `scatter`, `box`, `bar`, `line`, `wafer`, `2Dmap`, `trendline`, `histogram`) |
-| `x`, `y`, `z` | `str` / `list[str]` / `str` | Column mappings for axes |
-| `filters` | `list[dict]` | Saved filter state |
-| `plot_title`, `xlabel`, `ylabel`, `zlabel` | `str` | Label overrides |
-| `xmin`/`xmax`, `ymin`/`ymax`, `zmin`/`zmax` | `float` | Axis limits |
-| `xlogscale`, `ylogscale` | `bool` | Log scale toggles |
-| `y2`, `y3` | `str` | Secondary/tertiary Y-axis columns |
-| `color_palette` | `str` | Matplotlib colormap name |
-| `wafer_size` | `int` | Wafer diameter (300, 200, 150, 100) |
-| `wafer_stats` | `bool` | Toggle statistics on wafer plots |
-| `join_for_point_plot` | `bool` | Toggle connecting lines on point plots |
-| `show_bar_plot_error_bar` | `bool` | Toggle standard deviation error bars on bar plots |
-| `scatter_size` | `int` | Marker size (default 50) |
-| `scatter_edgecolor` | `str` | Marker edge color (default 'black') |
-| `trendline_order` | `int` | Order of polynomial regression fit |
-| `show_trendline_eq` | `bool` | Toggle visibility of fit equation list |
-| `trendline_anchor_enabled` | `bool` | Force fit to pass through a specific point |
-| `trendline_anchor_origin` | `bool` | Force anchor through origin (0, 0) vs. custom coordinate |
-| `trendline_anchor_x`/`y` | `float` | Coordinates of the custom anchor point |
-| `hist_bins` | `int` | Number of histogram bins (2–500, default 20) |
-| `hist_kde` | `bool` | Overlay Kernel Density Estimate line |
-| `hist_step` | `bool` | Draw outline-only step histogram vs. filled bars |
-| `legend_properties` | `list[dict]` | Per-series label, color, marker overrides |
-| `legend_bbox` | `list[float]` | Dragged coordinates of the legend box |
-| `annotations` | `list[dict]` | Vertical lines, horizontal lines, text annotations |
-| `dpi` | `int` | Figure DPI |
-| `plot_width`/`height` | `int` | Window dimensions |
+| Category | Examples |
+|---|---|
+| Identity / data source | `graph_id`, `df_name`, `plot_style`, `x`/`y`/`z`, `filters` |
+| Primary axis limits | `xmin`/`xmax`, `ymin`/`ymax`, `zmin`/`zmax` |
+| Axis scale/orientation | `xlogscale`/`ylogscale`, `xscale_mode`/`yscale_mode`, `x_inverted`/`y_inverted` |
+| Secondary axes (Y2/Y3/X2) | per-axis column, `color`, `marker`, `min`/`max`, `logscale`, `label` |
+| Labels/titles | `plot_title`, `plot_subtitle`, `xlabel`/`ylabel`/`zlabel` |
+| Style/appearance | `grid`, `tick_direction`, `tick_label_format`, font sizes, `figure_facecolor`, `figure_margins`, `spines_visible`, `figure_theme`, minor-tick toggles |
+| Legend | `legend_visible`, `legend_outside`, `legend_properties`, `legend_bbox`, `legend_ncol`, `legend_frame`, `legend_title`, `legend_fontsize`, `legend_alpha`, `legend_loc` |
+| Plot-style-specific | wafer/2Dmap colormap (`color_palette`, `colormap_norm`, `colormap_center`), trendline fit/anchor, error bars, point/scatter (`scatter_size`, `scatter_edgecolor`, `unify_marker_style`), histogram, sort order |
+| Annotations | `annotations` (list of typed dicts, see [Annotations Tab](#annotations-tab)) |
+| Broken axis | `axis_breaks` |
+| Inset (zoom) axes | `inset_enabled`, `inset_bounds`, `inset_xmin`/`xmax`/`ymin`/`ymax`, `inset_show_zoom_indicator` |
+| Export/window geometry | `plot_width`/`height`, `dpi`, `export_width_mm`/`height_mm` |
 
-`MGraph` provides `save()` and `load(data)` methods for complete serialization.
+Note: style templates, plot recipes, and the working-folder setting are **not** `MGraph` fields — they're separate systems built around subsets of these fields (see [Style Templates & Plot Recipes](#style-templates--plot-recipes)).
 
 ### **`VGraph` — The Rendering Widget**
 
 **File**: `spectroview/view/components/v_graph.py`
 
-Each plot in the MDI area is a `VGraph` instance. It holds a Matplotlib `Figure` + `FigureCanvas` and acts as the UI wrapper. It manages interactions, context menus, and toolbar actions, but delegates the actual drawing algorithms to the `PlotRenderer`.
+Each plot in the MDI area is a `VGraph` instance. It holds a Matplotlib `Figure` + `FigureCanvas` and acts as the UI wrapper. It manages interactions, context menus, and toolbar actions (Style menu, Export, Replicate), but delegates the actual drawing algorithms to `PlotRenderer`.
+
+Two rendering paths:
+- **`plot(df)`** — full replot: clears and rebuilds the Axes from scratch. Required whenever artists themselves change (series data, colors/markers per point, colormap, secondary/twin axes, annotations, insets) or a broken axis is active/toggled.
+- **`restyle()`** — fast path that repaints an already-rendered Axes in place (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling) without touching plotted data. Returns `False` (forcing a full replot instead) whenever a broken axis is active. See [Live Preview & Restyle Fast Path](#live-preview--restyle-fast-path) for how the Customize dialog decides which path to use.
+
+`_set_figure_style()` re-applies `axes.facecolor`/`figure.facecolor`/`axes.labelcolor`/`text.color`/`xtick.color`/`ytick.color`/`axes.edgecolor` from `plt.rcParams` on every render — necessary because `ax.clear()` does not retroactively repaint an Axes built under a different Matplotlib style/theme context, which previously left tick/label/spine colors stuck black after switching to a dark theme.
 
 ### **`PlotRenderer` — The Plotting Engine**
 
 **File**: `spectroview/view/components/v_plot_renderer.py`
 
-Separated from `VGraph` for maintainability, this class encapsulates the pure Matplotlib rendering logic for all plot styles (e.g., `plot_scatter`, `plot_histogram`, and the `WaferPlot` class). It receives a reference to the `VGraph` instance (`self.vg`) to access configuration state (`self.vg.x`, `self.vg.plot_style`, etc.) and draws directly onto the Matplotlib `Axes`.
+Separated from `VGraph` for maintainability, this class encapsulates the pure Matplotlib rendering logic for all plot styles (e.g., `_plot_scatter`, `_plot_histogram`, and the `WaferPlot` class). It receives a reference to the `VGraph` instance (`self.vg`) to access configuration state (`self.vg.x`, `self.vg.plot_style`, etc.) and draws directly onto the Matplotlib `Axes`.
+
+#### Colormap Normalization
+
+`_build_color_norm(vmin, vmax, norm_kind, center)` builds the color-scale mapping for wafer/2Dmap heatmaps from `MGraph.colormap_norm` (`"linear"`/`"log"`/`"centered"`) and `MGraph.colormap_center`, editable from the More Options tab's "Colormap scale" group (only shown for `wafer`/`2Dmap`). `"log"` uses `LogNorm`, `"centered"` uses `CenteredNorm` (useful for diverging data like stress/strain centered at 0), and both degrade gracefully back to plain linear `vmin`/`vmax` if the requested norm is invalid for the actual data range (e.g. log norm on non-positive data).
+
+Both `_plot_wafer`/`_plot_2dmap` resolve `vmin`/`vmax` through `_clear_degenerate_zlim(zmin, zmax)` first, which treats an explicit `zmin == zmax` (both set, equal) the same as unset, falling back to the data-derived range. A handful of pre-existing saved `.graphs` files carry an explicit `zmin == zmax == 0.0` (from an old, since-fixed default) — honoring that literally collapses `matplotlib.colors.Normalize(vmin=0, vmax=0)` to mapping every value to the same color, which is what actually broke color mapping when reopening those files, not the colormap-normalization feature itself.
+
+`_resolve_marker_size(style, fallback)` / `_resolve_edge_color(style, fallback)` centralize the "Unify Marker size / Edge color" behavior (see [Legend / Color Tab](#legend--color-tab)): when `VGraph.unify_marker_style` is `True`, every series uses the graph-wide `scatter_size`/`scatter_edgecolor`; when `False`, each series' `legend_properties[i]` override (if any) wins.
 
 ---
 
 ## **Data Flow: Creating a Plot**
 
 1. **User Action**: The user selects a DataFrame, configures the X/Y/Z axes, and clicks "Add plot" in the `VWorkspaceGraphs` UI.
-2. **Configuration Capture**: The View calls `_collect_plot_config()` to gather all UI settings into a configuration dictionary.
-3. **Model Creation**: The View calls `vm.create_graph(plot_config)`. The ViewModel instantiates an `MGraph(graph_id)`, applies the configuration, and returns the graph model.
+2. **Configuration Capture**: The View calls `_collect_plot_config()` to gather all UI settings into a configuration dictionary, then merges in `MSettings.get_default_graph_style()` (the user's "Set as Default Style" baseline, if any — see [Style Templates & Plot Recipes](#style-templates--plot-recipes)) via `_apply_default_style_to_config()`. The collected config's data-identity fields (`x`/`y`/`z`/`df_name`/`plot_style`) always win over the default style, since the default only ever contains appearance fields.
+3. **Model Creation**: The View calls `vm.create_graph(plot_config)`. The ViewModel instantiates an `MGraph(graph_id)`, applies the configuration, records an undo point, and returns the graph model.
 4. **Widget Initialization**: The View instantiates a `VGraph(graph_id)` widget and calls `create_plot_widget(dpi)` to set up the Matplotlib canvas.
 5. **Data Filtering**: The View requests the `filtered_df` from the ViewModel by calling `vm.apply_filters(df_name, filters)`.
-6. **Rendering**: The View calls `VGraph.plot(filtered_df)`. 
+6. **Rendering**: The View calls `VGraph.plot(filtered_df)`.
 7. **Plot Execution**: `VGraph` calls `_plot_primary_axis()`, which instantiates a `PlotRenderer(self)` and delegates the drawing logic (e.g., `self.renderer._plot_scatter()`), then applies limits, labels, and legends before returning the rendered canvas.
 8. **UI Integration**: The View wraps the new `VGraph` widget in a `QMdiSubWindow` and adds it to the MDI area.
+
+This same default-style merge applies to `_on_plot_multi_wafer()`; it deliberately does **not** apply when applying a Plot Recipe or replicating an existing graph, since those already carry a fully-specified, intentional style.
 
 ---
 
@@ -120,25 +129,26 @@ Each plot style maps to a specific Seaborn or custom rendering function:
 
 | Style | Seaborn Function | Hue Support | Notes |
 |-------|-----------------|-------------|-------|
-| `point` | `sns.pointplot()` | ✓ Z column | Supports "join" toggle for connecting points |
-| `scatter` | `sns.scatterplot()` | ✓ Z column | Edgecolor black, 50pt markers |
+| `point` | `sns.pointplot()` | ✓ Z column | "Join" toggle for connecting points; only style with a per-series Marker column |
+| `scatter` | `sns.scatterplot()` | ✓ Z column | Marker size/edge color unified across series by default (see Unify checkbox) |
 | `box` | `sns.boxplot()` | ✓ Z column | Width 0.4, palette support |
-| `bar` | `sns.barplot()` | ✓ Z column | Optional error bars (sd) |
+| `bar` | `sns.barplot()` | ✓ Z column | Optional error bars (sd/95% CI) |
 | `line` | `sns.lineplot()` | ✓ Z column | Standard line plot |
 | `trendline` | `sns.regplot()` / `ax.scatter()` / `ax.plot()` | ✓ Z column | Polynomial regression with custom zero-intercept anchoring and equation table export |
 | `histogram` | `sns.histplot()` | ✓ Z column | Bins customization, KDE overlay, step outline vs. filled bars |
-| `wafer` | Custom `WaferPlot` | — | Circular wafer visualization with die sites |
-| `2Dmap` | `ax.imshow()` | — | Rectangular heatmap via `pivot()` |
+| `wafer` | Custom `WaferPlot` | — | Circular wafer visualization with die sites; colormap normalization (linear/log/centered) |
+| `2Dmap` | `ax.imshow()` | — | Rectangular heatmap via `pivot()`; same colormap normalization options as wafer |
 
 ### **Multi-Axis Support**
 
-`VGraph` supports up to **3 Y-axes**:
+`VGraph` supports up to **3 Y-axes**, plus a secondary X-axis:
 
 - **Primary Y** (`self.ax`): Standard left axis
-- **Secondary Y** (`self.ax2`): Right axis, red color, created via `ax.twinx()`
-- **Tertiary Y** (`self.ax3`): Far-right axis, green color, offset by 100 points
+- **Secondary Y** (`self.ax2`): Right axis, created via `ax.twinx()`
+- **Tertiary Y** (`self.ax3`): Far-right axis, offset outward
+- **Secondary X** (`x2`): created via `ax.twiny()`
 
-Each axis can use a different column and plot style.
+Each secondary axis can use a different column and has its own label, min/max limits, log-scale toggle, color, and marker — all editable from the **Secondary axes** section at the bottom of the Customize dialog's Axis tab (previously only settable via script or hardcoded). A row is enabled only once that axis has a column assigned.
 
 ---
 
@@ -209,47 +219,120 @@ When a DataFrame contains a `Slot` column (common in semiconductor datasets):
 
 ### **`CustomizeGraphDialog` (Singleton)**
 
-**Package**: `spectroview/view/components/customize_graph/` — `CustomizeGraphDialog` (in `customize_graph_dialog.py`) hosts four tab widgets, each in its own module: `customize_legend.py`, `customize_axis.py`, `customize_annotations.py`, `customize_more_options.py`, plus the small shared `customize_annotation_dialogs.py` (line/text edit dialogs, color delegate).
+**Package**: `spectroview/view/components/customize_graph/` — `CustomizeGraphDialog` (in `customize_graph_dialog.py`) hosts four tab widgets, each in its own module, plus the small shared `customize_annotation_dialogs.py` (per-annotation-type edit dialogs, color delegate):
 
-A workspace-level singleton dialog that auto-switches context when the user activates a different MDI subwindow. Features:
+| Tab | Class | Module |
+|---|---|---|
+| Axis | `CustomizeAxis` | `customize_axis.py` |
+| Legend / Color | `CustomizeLegend` | `customize_legend.py` |
+| Annotations | `CustomizeAnnotations` | `customize_annotations.py` |
+| More options | `CustomizeMoreOptions` | `customize_more_options.py` |
 
-| Feature | Description |
-|---------|-------------|
-| **Legend editor** | Rename labels, change colors and markers per series |
-| **Axis limits** | Set exact min/max for all axes |
-| **Annotations** | Add vertical/horizontal lines and text labels |
-| **Axis breaks** | Insert break markers at specified positions |
-| **Export** | Copy to clipboard, save as image |
+`CustomizeAxis` also owns the Inset (zoom) axes and Secondary axes (Y2/Y3/X2) sections — these used to be their own tabs, but were folded back into the Axis tab since axis-shaped controls belong together and a 7-tab dialog wasn't actually easier to navigate. Given how much that adds, the tab wraps its content in a `QScrollArea` (matching `CustomizeMoreOptions`'s own pattern) so the dialog's minimum height stays reasonable on smaller screens. `CustomizeMoreOptions` similarly owns Font sizes (Title/Subtitle/Axis label/Tick label, one row) and the figure Theme selector (folded into "Plot options:"), consolidated from a former standalone Text Size tab and a since-removed "Figure style" groupbox.
 
-### **Legend Customization**
+A workspace-level singleton dialog that auto-switches context when the user activates a different MDI subwindow. Its initial size (560×760) is a starting point only — Qt's layout system clamps both dimensions upward as needed for whichever tab's content is largest (e.g. the Legend tab's per-series columns when Unify is unchecked), so the literal numbers don't need to be exact.
 
-Legend properties are stored in `VGraph.legend_properties`:
+### **Live Preview & Restyle Fast Path**
 
-```python
-[
-    {"label": "Group A", "marker": "o", "color": "#1f77b4", "rgba": (0.12, 0.47, 0.71, 1.0)},
-    {"label": "Group B", "marker": "s", "color": "#ff7f0e", "rgba": (1.0, 0.50, 0.06, 1.0)},
-]
-```
+Every control in every tab restarts a single debounced 400ms `QTimer` on change. On timeout, each tab's apply method runs with `replot=False` against the live widget, and `graph_commit.snapshot()`/`diff()` (see below) determine exactly which fields changed. If the changed fields are a subset of `graph_style.RESTYLE_SAFE_FIELDS`, the dialog calls `VGraph.restyle()` (fast in-place repaint); otherwise it does a full `VGraph.plot(df)`. This preview never touches the undo stack or `vm.update_graph()` — it's purely visual until the user clicks **Apply**, which wraps every tab's changes in one `vm.begin_undo_batch()`/`end_undo_batch()` pair (one undo step per Apply, regardless of how many tabs were edited). **Cancel** reverts the widget from a snapshot taken when the dialog opened, without ever having touched the ViewModel.
 
-These are synchronized to `MGraph.legend_properties` via the `properties_changed` signal, ensuring they persist across save/load cycles.
+### **`graph_style.py` — the style/data field partition**
 
-### **Annotation System**
+**File**: `spectroview/model/graph_style.py`
 
-Annotations are stored as dicts in `MGraph.annotations`:
+- **`STYLE_FIELD_NAMES`** — every `MGraph` field *except* identity/data columns, data-coordinate limits, annotations, and window/output geometry (computed by excluding `_NON_STYLE_FIELDS`). This is "how a graph looks," portable from one graph to another regardless of its data.
+- **`RESTYLE_SAFE_FIELDS`** — a narrower subset of `STYLE_FIELD_NAMES`: fields safe for `VGraph.restyle()`'s fast repaint path (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling). Excludes anything that requires artists to be recreated (per-series color/marker/size, colormap, secondary axes, annotations, insets).
+- **`extract_style(source_dict)`** / **`apply_style_dict(graph_widget, style_dict)`** / **`default_style()`** — pull the style subset out of a graph, write a style dict onto a widget (resetting `legend_properties` so per-series colors re-derive), and produce the hardcoded factory-default style respectively.
+- **`can_restyle_without_replot(changed_fields)`** — `True` iff every changed field is in `RESTYLE_SAFE_FIELDS`.
 
-```python
-# Vertical line
-{"type": "vline", "id": "vl_1", "x": 520.7, "color": "red", "linestyle": "--", "linewidth": 1.5}
+### **`graph_commit.py` — change tracking**
 
-# Horizontal line
-{"type": "hline", "id": "hl_1", "y": 100.0, "color": "blue", "linestyle": "-", "linewidth": 1.0}
+**File**: `spectroview/view/components/graph_commit.py`
 
-# Text
-{"type": "text", "id": "txt_1", "x": 300, "y": 500, "text": "Peak A", "fontsize": 12, "color": "black"}
-```
+`snapshot(gw)` deep-copies every `MGraph` field (except `graph_id`) off a live `VGraph` widget; `diff(gw, before)` returns a patch dict of only the fields that differ from a prior snapshot. Used both by the Customize dialog's live-preview tick (deciding restyle vs. replot) and by toolbar-level edits (e.g. the grid checkbox, or syncing a dragged legend position / resized subwindow into the model before `save_workspace()`) — in both cases the resulting patch flows through `properties_changed.emit()` → `vm.update_graph()`, which is what actually records the undo step.
 
-Annotations support **drag interaction** — clicking and dragging a vertical/horizontal line updates its position in real time and emits `annotation_position_changed`.
+### **Undo/Redo**
+
+The undo/redo stack lives in `VMWorkspaceGraphs`, not the View: `_undo_stack`/`_redo_stack` hold whole-workspace snapshots (`{graph_id: MGraph.save()-dict}`), capped at 50 entries. Every `create_graph()`/`update_graph()`/`delete_graph()` call records one undo point unless it's inside a `begin_undo_batch()`/`end_undo_batch()` pair, in which case the whole batch collapses into a single step — used by the Customize dialog's Apply button (one step for all four tabs) and by Plot Recipe application (one step for the whole recipe, not one per plot). `undo_state_changed` keeps the toolbar's Undo/Redo buttons in sync via `can_undo`/`can_redo`.
+
+### **Keyboard Shortcuts**
+
+Registered on `self.mdi_area` (not the whole workspace widget, so they don't shadow a side-panel `QLineEdit`'s native shortcuts while typing) and act on the active MDI subwindow's graph:
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+Z` | Undo |
+| `Ctrl+Shift+Z` | Redo |
+| `Ctrl+C` | Copy the active graph's style |
+| `Ctrl+V` | Paste the copied style onto the active graph |
+
+### **Axis Tab**
+
+The tab wraps its content in a `QScrollArea` (like More Options) since it now covers every axis-shaped concern in one place — content is tall enough on smaller screens to need scrolling.
+
+- **Axis properties**: per-axis (X/Y) scale (Linear/Logarithmic/Symlog), data type (Auto/Category/Numerical), and Inverted toggle.
+- **Axis Appearance**: minor ticks (independently for X-Bottom/X-Top/Y-Left/Y-Right), **Show spines** (Top/Right/Bottom/Left), tick direction (Default/In/Out/In & Out), and tick label format (Auto/Integer/1-decimal/2-decimal/Scientific).
+- **Set Axis Limits**: one spinbox-slider row per X/Y/Z axis (X/Y hidden for `wafer`/`2Dmap`, where Z is the color-scale control instead). Each min/max spinbox is paired with a double-range slider whose drag bounds derive from the actual data range (padded 10%). When a limit is unset, the spinbox shows the plot's real current rendered value grayed out — not a generic "default" placeholder — so the displayed number is always meaningful; this same real-value-placeholder pattern applies to every optional spinbox in this dialog (inset limits, per-series legend overrides).
+- **Broken axis**: X-axis break and Y-axis break are mutually exclusive (enabling one disables the other, since the renderer only supports one break axis at a time). Rendering splits the Axes into two panels via `gridspec` — side-by-side sharing the Y axis for an X-break, stacked sharing the X axis for a Y-break — each panel clipped to its half of the range with the facing spines hidden and standard diagonal "//" break marks drawn on the real spine boundaries. A broken axis always forces a full replot (`VGraph.restyle()` returns `False` while one is active) and is mutually exclusive with inset axes.
+- **Inset (zoom) axes**: a checkable group with Position (x0, y0) and Size (w, h) in axes-fraction coordinates, independent X/Y limits, and a "Show zoom indicator" toggle that draws the connector lines from the inset box back to the region it zooms into on the main plot (`ax.indicate_inset_zoom()`). The inset Axes itself is never persisted — it's rebuilt on every render from `MGraph.inset_bounds`. Mutually exclusive with a broken axis.
+- **Secondary axes** (bottom of the tab): one row per Y2/Y3/X2 axis (each disabled until that axis has a column assigned), exposing Label, Min/Max, Log toggle, Color, and Marker — see [Multi-Axis Support](#multi-axis-support).
+
+Font sizes (Title/Axis label/Tick label) live in the **More Options** tab, not here.
+
+### **Legend / Color Tab**
+
+- **Legends box**: an optional **"Unify marker size / edge color"** checkbox (checked by default). While checked, a single Marker size / Edge color row at the top of the box applies to every series, and the per-series Marker size/Edge color table columns are hidden. Unchecking it reveals those per-series columns (for `point`/`scatter`-family styles only) so each series can override marker size and edge color independently — `PlotRenderer._resolve_marker_size()`/`_resolve_edge_color()` implement the fallback. Per-series Label, Color, and Alpha are always editable individually; Marker is point-style-only, and Line width only shows for styles that actually draw a line (`line`/`trendline`, or `point` with "Join" enabled) — a bare scatter/box/bar has nothing for a line width to describe. Unset per-series linewidth/alpha spinboxes show the real value that will actually be used (e.g. "1.50"), grayed out, rather than a generic placeholder.
+- **Legend style**: columns, frame, title, font size, alpha, position.
+- **Error bars**: type (95% CI / SD / None, style-dependent options) and cap size.
+
+### **Annotations Tab**
+
+Eight annotation types, each an "Add" button plus a dedicated edit dialog in `customize_annotation_dialogs.py`:
+
+| Type | Purpose | Edit dialog |
+|---|---|---|
+| `vline` / `hline` | Vertical/horizontal reference line | `EditLineDialog` |
+| `text` | Free text label with optional background box | `EditTextDialog` |
+| `arrow` | Point-to-point arrow | `EditArrowDialog` |
+| `vspan` / `hspan` | Shaded vertical/horizontal band | `EditSpanDialog` |
+| `box` | Filled/outlined rectangle | `EditBoxDialog` |
+| `callout` | Text label with a pointer arrow to a data point | `EditCalloutDialog` |
+
+All stored as typed dicts in `MGraph.annotations`. Every type supports **drag interaction** — clicking and dragging updates position in real time and emits `annotation_position_changed` — implemented by `VGraph._on_annotation_click()`/`_on_annotation_drag()`/`_on_annotation_release()` in `v_graph.py`. Hit-testing is done manually (`self.ax.findobj()` + `artist.contains(event)`) rather than via matplotlib's `pick_event`: `Figure.pick()` only delivers a pick event to an artist when `event.inaxes` equals that artist's own Axes, which silently never happens for an annotation on the primary Axes whenever a secondary Y-axis is also present (it fully overlaps the primary Axes and has higher z-order, so `event.inaxes` resolves to it instead) — this used to make every annotation on a graph with `y2`/`y3` configured completely undraggable. `VGraph._ax_data_coords(event)` resolves the drag position from the event's own pixel coordinates through `self.ax.transData` directly, sidestepping the same `event.inaxes` ambiguity for the position itself.
+
+### **More Options Tab**
+
+**Plot options**: the existing checkboxes (grid, join points, etc.) plus a **Theme** selector (Light/Dark/Soft Dark — re-applies `axes.facecolor`/label/tick/spine colors from `plt.rcParams` on every render so switching themes doesn't leave stale black text/spines).
+
+**Font sizes (pt)**: Title, Subtitle, Axis label, and Tick label spinboxes in a single row (defaults 12/10/12/9, matching the active Matplotlib style). The Subtitle *text* itself (what it says, not its size) lives in the workspace side panel (`VWorkspaceGraphs`), not in this dialog — the old "Figure style" groupbox's redundant Subtitle text field was removed for that reason. Background color, Show-spines, and Margins controls that used to live in "Figure style" are still respected if set programmatically via `MGraph.figure_facecolor`/`figure_margins`, just without a dedicated picker (Show-spines moved to the Axis tab).
+
+**Colormap scale** (wafer/2Dmap only): Normalization (Linear/Log/Centered) and, for Centered, a Center value — see [Colormap Normalization](#colormap-normalization) below.
+
+---
+
+## **Style Templates & Plot Recipes**
+
+Two conceptually distinct, previously-conflated features:
+
+- **Plot Recipe** (`MPlotRecipeStore` / `VPlotRecipeDialog`, folder: `<working folder>/plot_recipe/`) — a saved **set of full plot configurations** (data bindings *and* style: `df_name`, `x`/`y`/`z`, `filters`, plus every style field), one JSON file per recipe. Applying a recipe **creates new plots**: `_on_recipe_applied()` re-targets each saved config's `df_name` at the *currently selected* DataFrame (not each plot's originally-saved one) and skips + reports any plot whose required columns are missing, rather than aborting the whole batch. The whole recipe applies as one undo step. The dialog supports browse/search/apply/rename/**duplicate**/delete.
+- **Style Template** (`MStyleTemplateStore` / `VStyleTemplateDialog`, folder: `<working folder>/plot_style/`) — a saved **appearance-only** style dict (`graph_style.extract_style()`), one JSON file per template. Applying one (`_apply_style_to_graph()`) writes onto an **existing** graph via `graph_style.apply_style_dict()` — data bindings are never touched. A leaner sibling of `VPlotRecipeDialog`: no graph-count or Duplicate, since a style template is always exactly one style dict.
+
+Both stores are deliberately **rebuilt from the current Working Folder setting at the point of use** (`VWorkspaceGraphs._refresh_recipe_and_style_stores()`, called at the top of every apply/save handler, including the AI Chat panel's own recipe-save flow via `VMChat.refresh_recipe_store()`) rather than built once at startup — fixing a bug where a Working Folder configured after the workspace tab already existed silently never took effect until an app restart.
+
+Each `VGraph`'s toolbar **Style menu** ties these together: **Save Style…** / **Apply Style…** (open the respective dialog), **Copy Style** / **Paste Style** (in-memory, `Ctrl+C`/`Ctrl+V`), **Reset to Default** (always the hardcoded factory `graph_style.default_style()`), and **Set as Default Style** (saves the current graph's style, via `MSettings.set_default_graph_style()`, as the baseline new graphs start from — see [Data Flow: Creating a Plot](#data-flow-creating-a-plot)). These are two independent, non-overlapping concepts: **Reset to Default** always restores the factory style regardless of what's been set as default; **Set as Default Style** only changes what *newly created* plots start with, is persisted across restarts, and never affects existing graphs or Reset-to-Default's behavior.
+
+---
+
+## **Export & Multi-Panel Composer**
+
+**File**: `spectroview/view/components/v_export_dialog.py`
+
+- **`VExportDialog(graph_widget, parent=None)`** — exports a single graph to PNG/TIFF/SVG/PDF/EPS with format/DPI/transparency/export-time-theme-override controls, plus a physical-size section (journal presets, mm/inch toggle, blank = current on-screen size) that persists back onto the graph's `export_width_mm`/`export_height_mm` fields.
+- **`VBatchExportDialog(graph_widgets: dict, parent=None)`** — exports every currently-open graph to a chosen folder in one pass, each at its own already-persisted physical size, reporting per-graph failures in a summary dialog.
+
+**File**: `spectroview/view/components/v_multipanel_dialog.py`
+
+- **`VMultiPanelDialog(graph_widgets: dict, parent=None)`** — composes several checked/reordered open graphs into one throwaway `matplotlib.figure.Figure` grid (auto-suggested rows/cols, constrained layout, shared-axis-label collapsing on interior panels, lettered/numbered panel labels). Each panel is rendered by temporarily repointing the source `VGraph`'s `.ax`/`.figure` onto the composed figure's subplot and calling its normal render path, then restoring the source widget so the live workspace is never mutated. Graphs with an active broken axis render via a simplified single-panel path in the composed figure (a documented scope limit).
 
 ---
 
@@ -268,7 +351,7 @@ graph LR
 ```
 
 - Each plot is wrapped in a `QMdiSubWindow` for independent sizing, minimizing, and arranging.
-- The bottom toolbar provides global controls: graph selector combobox, DPI, X-label rotation, grid toggle.
+- The bottom toolbar provides global controls: graph selector combobox, X-label rotation, grid toggle. (A DPI spinbox used to live here too — removed: it only ever set the *default* DPI for the next newly-created plot, silently doing nothing when changed with an existing graph selected despite visually syncing to show that graph's DPI, which read as a live edit control but wasn't one. `MGraph.dpi` still defaults to 100 and can be set via script/AI-agent; on-screen rendering resolution isn't something users need to hand-tune day to day, and export resolution has its own explicit control in `VExportDialog`.)
 - "Minimize All" collapses all windows for a clean workspace.
 - Graph selection in the combobox activates the corresponding subwindow and syncs the right panel controls.
 
@@ -290,7 +373,28 @@ When a graph is selected via the combobox or by clicking its subwindow:
 
 ## **Persistence**
 
+### **SPECTROview Working Folder**
+
+A single user-configured root folder (Settings panel) with three subfolders auto-created under it (`os.makedirs(..., exist_ok=True)`) on first configuration:
+
+| Subfolder | Purpose | `MSettings` getter |
+|---|---|---|
+| `fit_model/` | Fit-model JSON templates (Spectra/Maps workspaces) | `get_fit_model_folder()` |
+| `plot_recipe/` | Plot Recipes | `get_plot_recipe_folder()` |
+| `plot_style/` | Style Templates | `get_plot_style_folder()` |
+
+`get_working_folder()` one-time-migrates from the older, separate "Fit model folder"/"Plot template folder" settings if either was previously configured, so existing setups aren't orphaned. A separate setting, `get_default_graph_style()`/`set_default_graph_style()`, stores the "Set as Default Style" baseline (see [Style Templates & Plot Recipes](#style-templates--plot-recipes)) — unrelated to the working folder, but persisted the same way (`QSettings`, disk-backed, survives restarts).
+
 ### **Save Format (`.graphs`)**
+
+Current format (`format_version: 3`) is a **ZIP archive**, written by `WorkspaceIO.save_workspace()`:
+
+```
+metadata.json                          # {"format_version": 3, "plots": {...}, "dataframe_sources": {...}}
+dataframes/<name>.parquet              # one Parquet file per DataFrame, streamed directly into the zip
+```
+
+Each entry in `metadata["plots"]` is a full `MGraph.save()` dict keyed by `graph_id`:
 
 ```json
 {
@@ -310,21 +414,13 @@ When a graph is selected via the combobox or by clicking its subwindow:
             "dpi": 100
         }
     },
-    "original_dfs": {
-        "fit_results": "1f8b0800..."
-    },
     "dataframe_sources": {
         "fit_results": "/path/to/original.xlsx"
     }
 }
 ```
 
-DataFrames are stored as gzip-compressed CSV encoded as hex strings. On load, they are decompressed and reconstructed:
-
-```python
-csv_data = gzip.decompress(bytes.fromhex(hex_string)).decode('utf-8')
-df = pd.read_csv(StringIO(csv_data))
-```
+`WorkspaceIO.load_workspace()` sniffs the ZIP magic number; files that predate this format (raw JSON, DataFrames embedded as gzip-compressed CSV hex strings under an `original_dfs` key) are detected as legacy and loaded via a dedicated fallback path — kept only for opening old files, never used for saving.
 
 ---
 
@@ -337,4 +433,4 @@ The "Replicate" button on each graph toolbar creates a deep copy of the plot:
 3. Captures the current subwindow size for the replica.
 4. Calls `_create_and_display_plot()` with the cloned config.
 
-This enables rapid A/B comparison of the same data with different visual settings.
+This enables rapid A/B comparison of the same data with different visual settings. Unlike newly-created plots (Add Plot / Add Multi-Wafer), a replicated graph's style is **not** overridden by the "Set as Default Style" baseline, since it already carries a fully-specified, intentional style.

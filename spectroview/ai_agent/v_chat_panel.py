@@ -1069,35 +1069,36 @@ class VChatPanel(QDialog):
                 self.plot_requested.emit(cfg)
 
             # Only genuine new-plot configs are meaningful to save as a
-            # reusable template — not graph update/delete instructions.
+            # reusable recipe — not graph update/delete instructions.
             plot_only_cfgs = [c for c in cfgs if "_graph_update" not in c and "_graph_delete" not in c]
             if plot_only_cfgs:
                 btn = QPushButton(
-                    f"💾 Save {len(plot_only_cfgs)} plot{'s' if len(plot_only_cfgs) > 1 else ''} as Template"
+                    f"💾 Save {len(plot_only_cfgs)} plot{'s' if len(plot_only_cfgs) > 1 else ''} as Recipe"
                 )
                 btn.setObjectName("btnRowPrimary")
                 btn.setMaximumWidth(220)
-                btn.clicked.connect(lambda: self.prompt_and_save_template(plot_only_cfgs))
+                btn.clicked.connect(lambda: self.prompt_and_save_recipe(plot_only_cfgs))
                 self._insert_widget_after_card(btn)
 
         self._active_card = None
         self._scroll_to_bottom()
 
-    def prompt_and_save_template(self, configs: list) -> None:
-        """Prompt for a name and persist *configs* as a new plot template.
+    def prompt_and_save_recipe(self, configs: list) -> None:
+        """Prompt for a name and persist *configs* as a new plot recipe.
 
-        Used by the inline "Save N plot(s) as Template" button offered
+        Used by the inline "Save N plot(s) as Recipe" button offered
         after the AI creates plots (see _on_result_ready) — general
-        template browse/apply/save-all management now lives in the Graphs
+        recipe browse/apply/save-all management now lives in the Graphs
         workspace itself (VWorkspaceGraphs), not here.
         """
         if not configs:
             return
-        name, ok = QInputDialog.getText(self, "Save as Template", "Template name:")
+        self.vm.refresh_recipe_store()
+        name, ok = QInputDialog.getText(self, "Save Plot Recipe", "Recipe name:")
         if ok and name:
-            self.vm.template_store.save_template(name, configs)
+            self.vm.recipe_store.save_recipe(name, configs)
             QMessageBox.information(
-                self, "Template Saved",
+                self, "Recipe Saved",
                 f"Saved '{name}' with {len(configs)} plot{'s' if len(configs) > 1 else ''}."
             )
 

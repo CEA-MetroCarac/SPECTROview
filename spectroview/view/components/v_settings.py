@@ -149,37 +149,28 @@ class VSettingsDialog(QDialog):
         fitting_tab_layout.addWidget(line)
         fitting_tab_layout.addSpacing(10)
 
-        # ───── Fit model folder ─────
-        grp_model = QGroupBox("Fit model folder:")
-        model_layout = QVBoxLayout(grp_model)
-        model_layout.setContentsMargins(4, 4, 4, 4)
-        model_layout.setSpacing(8)
+        # ───── Working folder ─────
+        grp_working = QGroupBox("SPECTROview Working Folder:")
+        working_layout = QVBoxLayout(grp_working)
+        working_layout.setContentsMargins(4, 4, 4, 4)
+        working_layout.setSpacing(8)
 
         folder_row = QHBoxLayout()
-        self.btn_model_folder = QPushButton("Browse")
-        self.btn_model_folder.setMaximumWidth(60)
-        self.le_model_folder = QLineEdit()
-        folder_row.addWidget(self.btn_model_folder)
-        folder_row.addWidget(self.le_model_folder)
-        model_layout.addLayout(folder_row)
+        self.btn_working_folder = QPushButton("Browse")
+        self.btn_working_folder.setMaximumWidth(60)
+        self.le_working_folder = QLineEdit()
+        folder_row.addWidget(self.btn_working_folder)
+        folder_row.addWidget(self.le_working_folder)
+        working_layout.addLayout(folder_row)
 
-        fitting_tab_layout.addWidget(grp_model)
+        lbl_working_hint = QLabel(
+            "Creates fit_model/, plot_recipe/, and plot_style/ subfolders automatically."
+        )
+        lbl_working_hint.setStyleSheet("color: gray; font-style: italic; font-size: 10px;")
+        lbl_working_hint.setWordWrap(True)
+        working_layout.addWidget(lbl_working_hint)
 
-        # ───── Plot template folder ─────
-        grp_templates = QGroupBox("Plot template folder:")
-        templates_layout = QVBoxLayout(grp_templates)
-        templates_layout.setContentsMargins(4, 4, 4, 4)
-        templates_layout.setSpacing(8)
-
-        templates_row = QHBoxLayout()
-        self.btn_template_folder = QPushButton("Browse")
-        self.btn_template_folder.setMaximumWidth(60)
-        self.le_template_folder = QLineEdit()
-        templates_row.addWidget(self.btn_template_folder)
-        templates_row.addWidget(self.le_template_folder)
-        templates_layout.addLayout(templates_row)
-
-        fitting_tab_layout.addWidget(grp_templates)
+        fitting_tab_layout.addWidget(grp_working)
 
         self.tabs.addTab(tab_fitting, "General")
 
@@ -283,18 +274,16 @@ class VSettingsDialog(QDialog):
         main_layout.addWidget(buttons)
 
         # Folder picker
-        self.btn_model_folder.clicked.connect(self.vm.pick_model_folder)
+        self.btn_working_folder.clicked.connect(self.vm.pick_working_folder)
         self.btn_history_folder.clicked.connect(self.vm.pick_history_folder)
-        self.btn_template_folder.clicked.connect(self.vm.pick_template_folder)
 
     # ──────────────────────────────────────────────
     # VM Connections
     # ──────────────────────────────────────────────
     def _connect_vm(self):
         self.vm.settings_loaded.connect(self._apply_settings)
-        self.vm.model_folder_changed.connect(self.le_model_folder.setText)
+        self.vm.working_folder_changed.connect(self.le_working_folder.setText)
         self.vm.history_folder_changed.connect(self.le_history_folder.setText)
-        self.vm.template_folder_changed.connect(self.le_template_folder.setText)
         self.vm.settings_saved.connect(self.accept)
 
     # ──────────────────────────────────────────────
@@ -312,8 +301,8 @@ class VSettingsDialog(QDialog):
         self.spin_minfwhm.setValue(data.get("minfwhm", 0.1))
         self.spin_maxfwhm.setValue(data.get("maxfwhm", 200.0))
 
-        self.le_model_folder.setText(data.get("model_folder", ""))
-        
+        self.le_working_folder.setText(data.get("working_folder", ""))
+
         # AI settings
         self.edit_openai.setText(data.get("api_key_OpenAI", ""))
         self.edit_anthropic.setText(data.get("api_key_Anthropic", ""))
@@ -323,7 +312,6 @@ class VSettingsDialog(QDialog):
         self.edit_custom.setText(data.get("api_key_Custom", ""))
         self.edit_custom_url.setText(data.get("custom_base_url", ""))
         self.le_history_folder.setText(data.get("history_folder", ""))
-        self.le_template_folder.setText(data.get("template_folder", ""))
 
     def _on_ai_agent_code_entered(self):
         result = self.vm.try_ai_agent_code(self.edit_ai_agent_code.text())
@@ -345,8 +333,8 @@ class VSettingsDialog(QDialog):
             "maxshift": self.spin_maxshift.value(),
             "minfwhm": self.spin_minfwhm.value(),
             "maxfwhm": self.spin_maxfwhm.value(),
-            "model_folder": self.le_model_folder.text(),
-            
+            "working_folder": self.le_working_folder.text(),
+
             "api_key_OpenAI": self.edit_openai.text(),
             "api_key_Anthropic": self.edit_anthropic.text(),
             "api_key_Gemini": self.edit_gemini.text(),
@@ -355,6 +343,5 @@ class VSettingsDialog(QDialog):
             "api_key_Custom": self.edit_custom.text(),
             "custom_base_url": self.edit_custom_url.text(),
             "history_folder": self.le_history_folder.text(),
-            "template_folder": self.le_template_folder.text(),
         })
 

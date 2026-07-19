@@ -68,7 +68,8 @@ Available palettes: `jet` (default), `viridis`, `plasma`, `magma`, `cividis`, `c
 
 - Axis labels and limits (X, Y, Z)
 - Log scale (X and Y axes independently)
-- Color palette
+- Color palette; colormap normalization for wafer/2D map (`colormap_norm`:
+  linear/log/centered, `colormap_center` for the centered mode)
 - Legend visibility and placement
 - Scatter point size
 - Trendline polynomial order
@@ -76,6 +77,17 @@ Available palettes: `jet` (default), `viridis`, `plasma`, `magma`, `cividis`, `c
 - Plot dimensions (width, height in pixels) and DPI
 - Rotation of X-axis tick labels
 - Filters (pandas `.query()` expressions)
+- Annotations: vline, hline, text, arrow, vspan/hspan (shaded region), box
+  (rectangle), callout (text + arrow to a point) — draggable, editable via
+  the Annotations tab of the Customize Graph dialog
+- Broken axis (`axis_breaks`): skip an uninteresting range on X *or* Y (not
+  both at once) via a real two-panel layout — works for every plot style
+- Inset (zoom) axes: one optional inset per graph showing the same series
+  at its own X/Y limits (`inset_enabled`, `inset_bounds`,
+  `inset_xmin`/`xmax`/`ymin`/`ymax`, `inset_show_zoom_indicator`)
+- Not exposed as named `plot_graph`/`update_graph` tool parameters (see AI
+  Agent Tools below) — set via each tool's `other_properties` dict using
+  the MGraph field names above
 
 ---
 
@@ -96,7 +108,15 @@ Available in the Spectra workspace and VBF engine:
 
 # Export Capabilities
 
-- **Graph export**: PNG, SVG, PDF via the graph context menu
+- **Graph export**: PNG, TIFF, SVG, PDF, EPS with DPI, transparent
+  background, physical size (mm/in, journal presets), and an export-time
+  theme override, via each graph's own Export dialog
+- **Batch graph export**: "Export All" exports every open graph to a
+  folder in one pass
+- **Multi-panel figure composer**: "Compose Figure" combines several open
+  graphs into one exported figure (a grid of subplots), with optional
+  shared axis labels (hide interior tick/axis labels) and panel labels
+  (a/b/c, A/B/C, i/ii/iii, or numeric)
 - **Table export**: Copy to clipboard as TSV from the AI chat DataFrame preview
 - **Project export**: Save full workspace as `.specview` file
 - **Batch fit results**: Export VBF results as CSV or Excel

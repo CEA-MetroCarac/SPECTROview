@@ -476,6 +476,7 @@ class TestScatterCustomization:
 
     def test_per_series_marker_size_and_edge_color_override(self, vg, excel_df):
         _configure(vg, x="x0_Si", y=["ampli_Si"], z="Quadrant", plot_style="scatter")
+        vg.unify_marker_style = False  # per-series overrides are ignored while unified
         vg.plot(excel_df)  # populate legend_properties for the hue groups
         vg.legend_properties[0]["marker_size"] = 300
         vg.legend_properties[0]["edge_color"] = "#00FF00"
@@ -483,6 +484,17 @@ class TestScatterCustomization:
 
         pathcol = vg.ax.collections[0]
         assert pathcol.get_sizes()[0] == pytest.approx(300, rel=0.2)
+
+    def test_unify_marker_style_ignores_per_series_overrides(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], z="Quadrant", plot_style="scatter")
+        vg.scatter_size = 70
+        assert vg.unify_marker_style is True  # the default
+        vg.plot(excel_df)
+        vg.legend_properties[0]["marker_size"] = 300
+        vg.plot(excel_df)
+
+        pathcol = vg.ax.collections[0]
+        assert pathcol.get_sizes()[0] == pytest.approx(70, rel=0.2)
 
 
 class TestErrorBarOptions:
@@ -569,6 +581,30 @@ class TestHistogramCustomization:
 
 
 class TestTrendlineCustomization:
+    def test_per_series_marker_override_respected_when_not_unified(self, vg, excel_df):
+        """Regression: _plot_trendline() used to always draw scatter
+        markers from the global scatter_size/scatter_edgecolor directly,
+        never consulting legend_properties at all -- unlike point/scatter,
+        which already supported per-series overrides."""
+        _configure(vg, x="x0_Si", y=["area_Si"], z="Quadrant", plot_style="trendline")
+        vg.unify_marker_style = False
+        vg.plot(excel_df)
+        vg.legend_properties[0]["marker_size"] = 300
+        vg.plot(excel_df)
+
+        pathcol = vg.ax.collections[0]
+        assert pathcol.get_sizes()[0] == pytest.approx(300, rel=0.2)
+
+    def test_unify_marker_style_ignores_per_series_override(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["area_Si"], z="Quadrant", plot_style="trendline")
+        vg.scatter_size = 70
+        vg.plot(excel_df)
+        vg.legend_properties[0]["marker_size"] = 300
+        vg.plot(excel_df)
+
+        pathcol = vg.ax.collections[0]
+        assert pathcol.get_sizes()[0] == pytest.approx(70, rel=0.2)
+
     def test_polynomial_order_changes_fit_curve(self, vg, excel_df):
         _configure(vg, x="x0_Si", y=["area_Si"], plot_style="trendline")
         vg.trendline_order = 1
@@ -632,6 +668,31 @@ class TestFigureStyle:
         vg.plot(excel_df)
         assert mcolors.to_hex(vg.ax.get_facecolor()) == "#242424"
 
+    def test_dark_theme_recolors_labels_ticks_and_spines(self, vg, excel_df):
+        """Regression: ax.clear() doesn't retroactively repaint an Axes
+        built under a *different* theme (same root cause already fixed for
+        facecolor) -- axis labels, title, tick labels, and spines used to
+        stay black under Dark/Soft Dark instead of following the theme."""
+        import matplotlib.colors as mcolors
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.figure_theme = "dark"
+        vg.plot_title = "Title"
+        vg.plot(excel_df)
+
+        assert mcolors.to_hex(vg.ax.xaxis.label.get_color()) != "#000000"
+        assert mcolors.to_hex(vg.ax.yaxis.label.get_color()) != "#000000"
+        assert mcolors.to_hex(vg.ax.title.get_color()) != "#000000"
+        for spine in vg.ax.spines.values():
+            assert mcolors.to_hex(spine.get_edgecolor()) != "#000000"
+        for label in vg.ax.get_xticklabels() + vg.ax.get_yticklabels():
+            assert mcolors.to_hex(label.get_color()) != "#000000"
+
+    def test_light_theme_labels_stay_default_black(self, vg, excel_df):
+        import matplotlib.colors as mcolors
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        assert mcolors.to_hex(vg.ax.yaxis.label.get_color()) == "#000000"
+
     def test_theme_recreated_on_create_plot_widget(self, vg, excel_df):
         """The theme must also apply at Figure-creation time (create_plot_widget),
         not just at plot() time, since the mplstyle context governs figure-level
@@ -658,6 +719,495 @@ class TestFigureStyle:
         _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
         vg.figure_margins = [0.2, 0.3]
         vg.plot(excel_df)  # must not raise
+
+
+class TestColormapNormalization:
+    """colormap_norm/colormap_center (wafer/2Dmap only) -- default 'linear'
+    renders identically to before this feature existed (plain vmin=/vmax=
+    Normalize); 'log'/'centered' swap in a matplotlib norm object instead."""
+
+    def test_default_is_linear_normalize(self, vg, excel_df):
+        from matplotlib.colors import Normalize
+        _configure(vg, x="X", y=["Y"], z="ampli_Si", plot_style="wafer")
+        vg.plot(excel_df)
+        im = vg.ax.get_images()[0]
+        assert type(im.norm) is Normalize
+
+    def test_log_norm_applied_on_wafer(self, vg, excel_df):
+        from matplotlib.colors import LogNorm
+        _configure(vg, x="X", y=["Y"], z="ampli_Si", plot_style="wafer")
+        vg.colormap_norm = "log"
+        vg.plot(excel_df)
+        im = vg.ax.get_images()[0]
+        assert isinstance(im.norm, LogNorm)
+        assert im.norm.vmin > 0
+
+    def test_centered_norm_applied_on_wafer(self, vg, excel_df):
+        from matplotlib.colors import CenteredNorm
+        _configure(vg, x="X", y=["Y"], z="ampli_Si", plot_style="wafer")
+        vg.colormap_norm = "centered"
+        vg.colormap_center = 8000.0
+        vg.plot(excel_df)
+        im = vg.ax.get_images()[0]
+        assert isinstance(im.norm, CenteredNorm)
+        assert im.norm.vcenter == 8000.0
+
+    def test_log_norm_falls_back_to_linear_when_data_crosses_zero(self, vg, excel_df):
+        """LogNorm requires strictly positive data; rather than raising or
+        producing a broken/all-masked heatmap, a zero-crossing Z range
+        silently falls back to linear (matches this codebase's existing
+        graceful-degradation style for wafer/2Dmap rendering)."""
+        from matplotlib.colors import Normalize, LogNorm
+        df = excel_df.copy()
+        df["ampli_Si"] = df["ampli_Si"] - df["ampli_Si"].mean()  # now crosses 0
+        _configure(vg, x="X", y=["Y"], z="ampli_Si", plot_style="wafer")
+        vg.colormap_norm = "log"
+        vg.plot(df)
+        im = vg.ax.get_images()[0]
+        assert not isinstance(im.norm, LogNorm)
+        assert type(im.norm) is Normalize
+
+    def test_log_norm_applied_on_2dmap(self, vg, excel_df):
+        from matplotlib.colors import LogNorm
+        unique_xy_df = excel_df.drop_duplicates(subset=["X", "Y"])
+        _configure(vg, x="X", y=["Y"], z="ampli_Si", plot_style="2Dmap")
+        vg.colormap_norm = "log"
+        vg.plot(unique_xy_df)
+        im = vg.ax.get_images()[0]
+        assert isinstance(im.norm, LogNorm)
+
+
+class TestNewAnnotationTypes:
+    """arrow/vspan/hspan/box/callout: each renders as the matplotlib artist
+    type that makes it correctly pickable (FancyArrowPatch/Rectangle over
+    ax.annotate('', ...), see _render_arrow's docstring), and drag support
+    is delta-based (shift the whole shape by the mouse move, not jump to an
+    absolute position) since these are multi-point shapes."""
+
+    def _find_by_id(self, vg, ann_id):
+        for artist in vg.ax.findobj():
+            if hasattr(artist, '_annotation_data') and artist._annotation_data['id'] == ann_id:
+                return artist
+        raise AssertionError(f"no artist found for annotation id={ann_id}")
+
+    def test_arrow_renders_as_fancyarrowpatch(self, vg, excel_df):
+        import matplotlib.patches as mpatches
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.annotations = [{'id': 'a1', 'type': 'arrow', 'x1': 510, 'y1': 7000, 'x2': 515, 'y2': 8000}]
+        vg.plot(excel_df)
+        artist = self._find_by_id(vg, 'a1')
+        assert isinstance(artist, mpatches.FancyArrowPatch)
+
+    def test_vspan_and_hspan_render_as_rectangle(self, vg, excel_df):
+        import matplotlib.patches as mpatches
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.annotations = [
+            {'id': 'a1', 'type': 'vspan', 'x1': 510, 'x2': 515},
+            {'id': 'a2', 'type': 'hspan', 'y1': 7000, 'y2': 8000},
+        ]
+        vg.plot(excel_df)
+        assert isinstance(self._find_by_id(vg, 'a1'), mpatches.Rectangle)
+        assert isinstance(self._find_by_id(vg, 'a2'), mpatches.Rectangle)
+
+    def test_box_renders_as_rectangle_with_correct_geometry(self, vg, excel_df):
+        import matplotlib.patches as mpatches
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.annotations = [{'id': 'a1', 'type': 'box', 'x': 510, 'y': 7000, 'width': 5, 'height': 1000}]
+        vg.plot(excel_df)
+        artist = self._find_by_id(vg, 'a1')
+        assert isinstance(artist, mpatches.Rectangle)
+        assert artist.get_width() == 5
+        assert artist.get_height() == 1000
+
+    def test_callout_renders_as_annotation_with_arrow(self, vg, excel_df):
+        from matplotlib.text import Annotation
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.annotations = [{'id': 'a1', 'type': 'callout', 'x': 510, 'y': 7000, 'tx': 515, 'ty': 8000, 'text': 'peak'}]
+        vg.plot(excel_df)
+        artist = self._find_by_id(vg, 'a1')
+        assert isinstance(artist, Annotation)
+        assert artist.get_text() == 'peak'
+        assert artist.arrow_patch is not None
+
+    def test_bad_annotation_type_data_does_not_crash_whole_render(self, vg, excel_df):
+        """_render_annotations wraps each annotation in try/except -- a
+        malformed one (missing required key) must not take down the rest
+        of the plot, matching vline/hline/text's existing behavior."""
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.annotations = [
+            {'id': 'bad', 'type': 'box'},  # missing x/y/width/height -> uses .get() defaults, should not raise
+            {'id': 'good', 'type': 'vline', 'x': 510},
+        ]
+        vg.plot(excel_df)  # must not raise
+        assert self._find_by_id(vg, 'good') is not None
+
+    def _drag(self, vg, artist, start_xy, end_xy):
+        # _on_annotation_drag reads event.x/event.y (pixel coords) and
+        # transforms them through self.ax.transData itself -- see
+        # VGraph._ax_data_coords's docstring for why it no longer trusts
+        # event.xdata/event.ydata directly (unreliable whenever a secondary
+        # Y-axis overlaps the primary Axes). Provide real pixel coordinates
+        # here too so the round-trip lands back on the intended data point.
+        class _E:
+            def __init__(self, xdata, ydata):
+                self.x, self.y = vg.ax.transData.transform((xdata, ydata))
+        vg._drag_candidate = artist
+        vg._drag_start_x, vg._drag_start_y = start_xy
+        vg._on_annotation_drag(_E(start_xy[0] + 1000, start_xy[1] + 1000))  # exceed promotion threshold
+        vg._on_annotation_drag(_E(*end_xy))
+        vg._on_annotation_release(_E(*end_xy))
+
+    def test_drag_arrow_shifts_both_endpoints_by_same_delta(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.annotations = [{'id': 'a1', 'type': 'arrow', 'x1': 500, 'y1': 7000, 'x2': 505, 'y2': 7500}]
+        vg.plot(excel_df)
+        artist = self._find_by_id(vg, 'a1')
+        self._drag(vg, artist, (500, 7000), (510, 7100))  # delta = (+10, +100)
+        ann = vg.annotations[0]
+        assert ann['x1'] == pytest.approx(510) and ann['y1'] == pytest.approx(7100)
+        assert ann['x2'] == pytest.approx(515) and ann['y2'] == pytest.approx(7600)
+
+    def test_drag_vspan_preserves_width(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.annotations = [{'id': 'a1', 'type': 'vspan', 'x1': 500, 'x2': 505}]
+        vg.plot(excel_df)
+        artist = self._find_by_id(vg, 'a1')
+        self._drag(vg, artist, (500, 0), (510, 0))  # delta_x = +10
+        ann = vg.annotations[0]
+        assert ann['x2'] - ann['x1'] == pytest.approx(5)  # width unchanged
+        assert ann['x1'] == pytest.approx(510)
+
+    def test_drag_box_preserves_width_and_height(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.annotations = [{'id': 'a1', 'type': 'box', 'x': 500, 'y': 7000, 'width': 5, 'height': 1000}]
+        vg.plot(excel_df)
+        artist = self._find_by_id(vg, 'a1')
+        self._drag(vg, artist, (500, 7000), (510, 7100))
+        ann = vg.annotations[0]
+        assert ann['x'] == pytest.approx(510) and ann['y'] == pytest.approx(7100)
+        assert ann['width'] == 5 and ann['height'] == 1000
+        assert artist.get_width() == 5 and artist.get_height() == 1000
+
+    def test_drag_callout_moves_text_but_not_the_pointed_at_xy(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.annotations = [{'id': 'a1', 'type': 'callout', 'x': 500, 'y': 7000, 'tx': 505, 'ty': 7500, 'text': 'peak'}]
+        vg.plot(excel_df)
+        artist = self._find_by_id(vg, 'a1')
+        self._drag(vg, artist, (505, 7500), (520, 7900))
+        ann = vg.annotations[0]
+        assert ann['x'] == 500 and ann['y'] == 7000  # untouched
+        assert ann['tx'] == pytest.approx(520) and ann['ty'] == pytest.approx(7900)
+
+
+class TestInsetAxes:
+    """inset_enabled draws a second, smaller Axes (via Axes.inset_axes())
+    showing the same series, at inset_xmin/xmax/ymin/ymax if set (else the
+    same auto-scaled view). Disabled by default -- an old saved graph (no
+    inset fields set) renders identically to before this feature existed."""
+
+    def test_disabled_by_default_no_inset_created(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        assert vg.inset_ax is None
+
+    def test_enabled_creates_inset_with_same_series(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.inset_enabled = True
+        vg.plot(excel_df)
+        assert vg.inset_ax is not None
+        assert len(vg.inset_ax.collections) > 0  # scatter draws via collections
+
+    def test_inset_limits_applied_when_set(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.inset_enabled = True
+        vg.inset_xmin, vg.inset_xmax = 510.0, 515.0
+        vg.inset_ymin, vg.inset_ymax = 7000.0, 8000.0
+        vg.plot(excel_df)
+        assert vg.inset_ax.get_xlim() == pytest.approx((510.0, 515.0))
+        assert vg.inset_ax.get_ylim() == pytest.approx((7000.0, 8000.0))
+
+    def test_inset_limits_unset_leave_auto_scale(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.inset_enabled = True
+        vg.plot(excel_df)
+        # Auto-scaled inset should span a real (non-degenerate) range.
+        xlo, xhi = vg.inset_ax.get_xlim()
+        assert xhi > xlo
+
+    def test_inset_bounds_applied(self, vg, excel_df):
+        """Different inset_bounds must actually reposition/resize the inset
+        (not just be accepted and ignored)."""
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.inset_enabled = True
+
+        vg.inset_bounds = [0.1, 0.1, 0.15, 0.15]
+        vg.plot(excel_df)
+        small_pos = vg.inset_ax.get_position()
+
+        vg.inset_bounds = [0.55, 0.55, 0.4, 0.4]
+        vg.plot(excel_df)
+        big_pos = vg.inset_ax.get_position()
+
+        assert big_pos.width > small_pos.width
+        assert big_pos.height > small_pos.height
+        assert (big_pos.x0, big_pos.y0) != (small_pos.x0, small_pos.y0)
+
+    def test_zoom_indicator_default_on(self, vg, excel_df):
+        # indicate_inset_zoom() returns/attaches one InsetIndicator artist
+        # to the main ax (this matplotlib version's representation of the
+        # rectangle + connector lines) -- confirmed via direct call, not
+        # assumed, since the exact artist container matplotlib uses for
+        # this has changed across versions.
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.inset_enabled = True
+        vg.plot(excel_df)
+        assert len(vg.ax.artists) > 0
+
+    def test_zoom_indicator_disabled_adds_no_indicator_artist(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.inset_enabled = True
+        vg.inset_show_zoom_indicator = False
+        vg.plot(excel_df)
+        assert len(vg.ax.artists) == 0
+
+    def test_replot_does_not_leak_old_inset(self, vg, excel_df):
+        """Regression guard: ax.clear() detaches the old inset from the
+        figure's child_axes on every replot -- if _render_inset() didn't
+        also drop its own self.inset_ax reference, repeated plot() calls
+        would accumulate stale, invisible-but-still-referenced Axes."""
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.inset_enabled = True
+        vg.plot(excel_df)
+        first_inset = vg.inset_ax
+        vg.plot(excel_df)
+        second_inset = vg.inset_ax
+        assert first_inset is not second_inset
+        assert first_inset not in vg.ax.child_axes
+        assert second_inset in vg.ax.child_axes
+
+    def test_disabling_after_enabled_removes_inset(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.inset_enabled = True
+        vg.plot(excel_df)
+        assert vg.inset_ax is not None
+
+        vg.inset_enabled = False
+        vg.plot(excel_df)
+        assert vg.inset_ax is None
+        assert len(vg.ax.child_axes) == 0
+
+    def test_inset_skipped_when_axis_break_active(self, vg, excel_df):
+        """Documented limitation: inset + broken axis are not combined."""
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.inset_enabled = True
+        vg.axis_breaks = {'x': {'start': 511.0, 'end': 512.0}, 'y': None}
+        vg.plot(excel_df)
+        assert vg.inset_ax is None
+
+    def test_render_series_on_restores_ax_and_figure(self, vg, excel_df):
+        """The shared swap/restore helper must leave self.ax/self.figure
+        exactly as they were, regardless of what it drew onto the target."""
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        original_ax, original_figure = vg.ax, vg.figure
+
+        scratch_ax = vg.ax.inset_axes([0.1, 0.1, 0.2, 0.2])
+        vg._render_series_on(scratch_ax)
+
+        assert vg.ax is original_ax
+        assert vg.figure is original_figure
+
+
+class TestBrokenAxis:
+    """Rewrite: a broken axis is now two real Axes (side-by-side for an X
+    break, stacked for a Y break), each showing the full series clipped to
+    its half of the range -- replacing the old post-hoc mutation of
+    ax.get_lines()/ax.collections data, which silently didn't work for any
+    plot style using ax.patches (bar, box) or ax.images (wafer, 2Dmap)."""
+
+    def test_no_break_by_default_single_axes(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        assert vg._current_break_mode is None
+        assert vg.ax_break_secondary is None
+        assert len(vg.figure.axes) == 1
+
+    def test_x_break_creates_two_panels_with_split_xlim(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.axis_breaks = {'x': {'start': 514.8, 'end': 514.9}, 'y': None}
+        vg.plot(excel_df)
+        assert vg._current_break_mode == 'x'
+        assert vg.ax_break_secondary is not None
+        assert len(vg.figure.axes) == 2
+        p_lo, p_hi = vg.ax.get_xlim()
+        s_lo, s_hi = vg.ax_break_secondary.get_xlim()
+        assert p_hi == pytest.approx(514.8)
+        assert s_lo == pytest.approx(514.9)
+        assert p_lo < p_hi and s_lo < s_hi
+
+    def test_y_break_stacks_panels_high_values_on_top(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.axis_breaks = {'x': None, 'y': {'start': 7500, 'end': 8000}}
+        vg.plot(excel_df)
+        assert vg._current_break_mode == 'y'
+        p_lo, p_hi = vg.ax.get_ylim()          # primary = bottom = low values
+        s_lo, s_hi = vg.ax_break_secondary.get_ylim()  # secondary = top = high values
+        assert p_hi == pytest.approx(7500)
+        assert s_lo == pytest.approx(8000)
+        assert s_hi > p_hi  # top panel really is the higher-value side
+
+    def test_x_break_hides_facing_spines_only(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.axis_breaks = {'x': {'start': 514.8, 'end': 514.9}, 'y': None}
+        vg.plot(excel_df)
+        assert vg.ax.spines['right'].get_visible() is False
+        assert vg.ax_break_secondary.spines['left'].get_visible() is False
+        # Outer spines untouched (still their default-visible state).
+        assert vg.ax.spines['left'].get_visible() is True
+        assert vg.ax_break_secondary.spines['right'].get_visible() is True
+
+    def test_secondary_panel_y_ticklabels_hidden_for_x_break(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.axis_breaks = {'x': {'start': 514.8, 'end': 514.9}, 'y': None}
+        vg.plot(excel_df)
+        assert all(not t.get_visible() for t in vg.ax_break_secondary.get_yticklabels())
+
+    @pytest.mark.parametrize("style", ["bar", "box"])
+    def test_patch_based_styles_split_correctly(self, vg, excel_df, style):
+        """Regression test: the old implementation only mutated
+        ax.get_lines()/ax.collections data, so a break on a bar or box
+        plot (drawn via ax.patches) silently rendered as if unbroken. The
+        rewrite redraws the whole chart on each panel instead, so it works
+        identically regardless of which artist type the style uses."""
+        _configure(vg, x="Zone", y=["ampli_Si"], plot_style=style)
+        vg.axis_breaks = {'x': None, 'y': {'start': 7500, 'end': 8000}}
+        vg.plot(excel_df)
+        assert len(vg.ax.patches) > 0, f"{style}: primary panel has no patches"
+        assert len(vg.ax_break_secondary.patches) > 0, f"{style}: secondary panel has no patches"
+
+    def test_legend_includes_all_hue_categories_despite_split(self, vg, excel_df):
+        """The full (unclipped) series is drawn on the primary panel before
+        xlim is narrowed, so get_legend_handles_labels() still sees every
+        hue category's artist regardless of whether its data happens to
+        fall inside the visible clipped range."""
+        _configure(vg, x="x0_Si", y=["ampli_Si"], z="Quadrant", plot_style="scatter")
+        vg.axis_breaks = {'x': {'start': 514.8, 'end': 514.9}, 'y': None}
+        vg.plot(excel_df)
+        legend = vg.ax.get_legend()
+        assert legend is not None
+        labels = {t.get_text() for t in legend.get_texts()}
+        assert labels == set(excel_df["Quadrant"].dropna().unique())
+
+    def test_title_placed_on_top_panel_for_y_break(self, vg, excel_df):
+        """Y-break: primary (self.ax) is the bottom panel -- the title must
+        be moved to the secondary (top) panel, not left floating in the
+        gap between the two stacked panels."""
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot_title = "My Title"
+        vg.axis_breaks = {'x': None, 'y': {'start': 7500, 'end': 8000}}
+        vg.plot(excel_df)
+        assert vg.ax.get_title() == ""
+        assert vg.ax_break_secondary.get_title() == "My Title"
+
+    def test_title_stays_on_primary_panel_for_x_break(self, vg, excel_df):
+        """X-break: both panels are the same row, so the title above
+        primary (the left panel) is already visually correct -- no move
+        needed."""
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot_title = "My Title"
+        vg.axis_breaks = {'x': {'start': 514.8, 'end': 514.9}, 'y': None}
+        vg.plot(excel_df)
+        assert vg.ax.get_title() == "My Title"
+
+    def test_annotation_appears_only_on_the_panel_containing_its_coordinate(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.axis_breaks = {'x': {'start': 514.8, 'end': 514.9}, 'y': None}
+        vg.annotations = [{'id': 'v1', 'type': 'vline', 'x': 514.5, 'color': 'red'}]  # falls in primary's range
+        vg.plot(excel_df)
+        primary_lines = [l for l in vg.ax.get_lines() if hasattr(l, '_annotation_data')]
+        secondary_lines = [l for l in vg.ax_break_secondary.get_lines() if hasattr(l, '_annotation_data')]
+        assert len(primary_lines) == 1
+        assert len(secondary_lines) == 1  # both panels get a copy; visibility is clipped by xlim, not artist presence
+
+    def test_both_x_and_y_set_defensively_prefers_x(self, vg, excel_df):
+        """Scripting/AI-agent path can set both breaks directly, bypassing
+        the dialog's mutual-exclusion UI -- the renderer must still pick
+        one deterministically rather than attempting an unsupported 2x2
+        grid."""
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.axis_breaks = {
+            'x': {'start': 514.8, 'end': 514.9},
+            'y': {'start': 7500, 'end': 8000},
+        }
+        vg.plot(excel_df)
+        assert vg._current_break_mode == 'x'
+
+    def test_break_outside_data_range_does_not_split_or_warn(self, vg, excel_df):
+        """Regression test for a real bug found during review: clamping an
+        out-of-range break naively could produce set_xlim(lo, lo) -- a
+        zero-width panel that matplotlib both warns about and silently
+        auto-expands. A break that doesn't meaningfully overlap the
+        rendered range must fall back to "no split" instead."""
+        import warnings
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.axis_breaks = {'x': {'start': 1.0, 'end': 2.0}, 'y': None}  # data is ~514-516
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            vg.plot(excel_df)  # must not raise/warn
+        assert vg.ax.get_xlim() == vg.ax_break_secondary.get_xlim()
+        assert vg.ax.spines['right'].get_visible() is True  # no fake split applied
+
+    def test_toggling_break_off_rebuilds_single_axes(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.axis_breaks = {'x': {'start': 514.8, 'end': 514.9}, 'y': None}
+        vg.plot(excel_df)
+        assert len(vg.figure.axes) == 2
+
+        vg.axis_breaks = {'x': None, 'y': None}
+        vg.plot(excel_df)
+        assert vg._current_break_mode is None
+        assert vg.ax_break_secondary is None
+        assert len(vg.figure.axes) == 1
+
+    def test_switching_break_axis_rebuilds_layout(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.axis_breaks = {'x': {'start': 514.8, 'end': 514.9}, 'y': None}
+        vg.plot(excel_df)
+        assert vg._current_break_mode == 'x'
+
+        vg.axis_breaks = {'x': None, 'y': {'start': 7500, 'end': 8000}}
+        vg.plot(excel_df)
+        assert vg._current_break_mode == 'y'
+        assert len(vg.figure.axes) == 2  # rebuilt, not accumulated to 3+
+
+    def test_repeated_replot_does_not_leak_axes(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.axis_breaks = {'x': {'start': 514.8, 'end': 514.9}, 'y': None}
+        for _ in range(3):
+            vg.plot(excel_df)
+        assert len(vg.figure.axes) == 2
+
+    def test_twin_axis_not_drawn_while_break_active(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.y2 = "fwhm_Si"
+        vg.axis_breaks = {'x': {'start': 514.8, 'end': 514.9}, 'y': None}
+        vg.plot(excel_df)
+        assert vg.ax2 is None
+
+    def test_stale_twin_axis_removed_when_break_enabled_afterward(self, vg, excel_df):
+        """A graph can have y2 configured from before a break was turned
+        on -- the stale ax2 from that earlier non-break render must be
+        cleaned up, not just left orphaned on the figure, even though its
+        own creation is now skipped."""
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.y2 = "fwhm_Si"
+        vg.plot(excel_df)
+        assert vg.ax2 is not None
+
+        vg.axis_breaks = {'x': {'start': 514.8, 'end': 514.9}, 'y': None}
+        vg.plot(excel_df)
+        assert vg.ax2 is None
+        assert len(vg.figure.axes) == 2  # not 3 (primary + secondary + orphaned ax2)
 
 
 class TestFailureModes:
@@ -712,3 +1262,104 @@ class TestFailureModes:
         _configure(vg, x="Zone", y=["fwhm_Si"], plot_style="point")
         with pytest.raises(AttributeError):
             vg.plot(excel_df)
+
+
+class TestRestyle:
+    """Phase 5E: VGraph.restyle() re-runs the label/grid/limit/legend
+    styling steps against the artists already on screen, without clearing
+    or re-plotting the series -- the fast path for a pure cosmetic edit
+    (see model/graph_style.py's RESTYLE_SAFE_FIELDS for exactly which
+    fields this is valid for). Two idempotency traps make this genuinely
+    unsafe to build from the existing per-step methods unmodified:
+    Axes.invert_xaxis()/invert_yaxis() toggle rather than set, and the
+    subtitle used to be drawn via a bare ax.text() call that stacked a new
+    artist on every call -- both fixed alongside restyle() itself and
+    covered here."""
+
+    def test_restyle_does_not_touch_the_plotted_artist(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        artist_before = vg.ax.collections[0]
+
+        vg.title_fontsize = 22
+        vg.grid = True
+        ok = vg.restyle()
+
+        assert ok is True
+        assert vg.ax.collections[0] is artist_before  # same object, not replotted
+        assert vg.ax.title.get_fontsize() == 22
+
+    def test_restyle_applies_limits_scale_and_labels(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+
+        vg.xmin, vg.xmax = 514.6, 515.0
+        vg.xlabel = "Custom X"
+        vg.restyle()
+
+        assert vg.ax.get_xlim() == pytest.approx((514.6, 515.0))
+        assert vg.ax.get_xlabel() == "Custom X"
+
+    def test_restyle_returns_false_when_a_break_is_active(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.axis_breaks['x'] = {'start': 514.7, 'end': 514.8}
+        vg.plot(excel_df)  # builds the two-panel break layout
+
+        assert vg.restyle() is False
+
+    def test_restyle_twice_does_not_duplicate_the_subtitle(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot_subtitle = "Sub"
+        vg.plot(excel_df)
+        assert len(vg.ax.texts) == 1
+
+        vg.restyle()
+        vg.restyle()
+
+        assert len(vg.ax.texts) == 1
+        assert vg.ax.texts[0].get_text() == "Sub"
+
+    def test_restyle_updates_subtitle_text_in_place(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot_subtitle = "First"
+        vg.plot(excel_df)
+        artist = vg.ax.texts[0]
+
+        vg.plot_subtitle = "Second"
+        vg.restyle()
+
+        assert len(vg.ax.texts) == 1
+        assert vg.ax.texts[0] is artist  # same artist, text updated
+        assert vg.ax.texts[0].get_text() == "Second"
+
+    def test_restyle_removes_subtitle_when_cleared(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot_subtitle = "Sub"
+        vg.plot(excel_df)
+
+        vg.plot_subtitle = None
+        vg.restyle()
+
+        assert len(vg.ax.texts) == 0
+
+    def test_restyle_twice_does_not_flip_axis_inversion_back(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.x_inverted = True
+        vg.plot(excel_df)
+        assert vg.ax.xaxis_inverted() == True  # noqa: E712 -- xaxis_inverted() returns numpy.bool_, not bool
+
+        vg.restyle()
+        vg.restyle()
+        vg.restyle()
+
+        assert vg.ax.xaxis_inverted() == True  # noqa: E712 -- xaxis_inverted() returns numpy.bool_, not bool
+
+    def test_restyle_toggling_inversion_off_uninverts(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.x_inverted = True
+        vg.plot(excel_df)
+
+        vg.x_inverted = False
+        vg.restyle()
+
+        assert vg.ax.xaxis_inverted() == False  # noqa: E712 -- xaxis_inverted() returns numpy.bool_, not bool

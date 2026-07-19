@@ -12,10 +12,10 @@ stands in for the widget it normally reads configuration from; no
 QApplication is required to use this module.
 
 All 9 plot styles the Graphs workspace supports are covered here: point,
-scatter, box, line, bar, trendline, histogram, wafer, 2Dmap. Plot templates
+scatter, box, line, bar, trendline, histogram, wafer, 2Dmap. Plot recipes
 (named, reusable sets of plot configs) are also exposed via
-`list_plot_templates`/`load_plot_template`/`save_plot_template`/
-`delete_plot_template`.
+`list_plot_recipes`/`load_plot_recipe`/`save_plot_recipe`/
+`delete_plot_recipe`.
 """
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
@@ -26,7 +26,7 @@ import pandas as pd
 from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS
 from spectroview.api.exceptions import TemplateError
 from spectroview.model.m_graph import MGraph
-from spectroview.model.m_plot_template_store import MPlotTemplateStore
+from spectroview.model.m_plot_recipe_store import MPlotRecipeStore
 from spectroview.view.components.v_plot_renderer import PlotRenderer
 
 
@@ -182,56 +182,56 @@ def plot_wafer(df: pd.DataFrame, x: str, y: str, z: str, title: Optional[str] = 
     return ax
 
 
-# ── Plot templates (named, reusable sets of plot configs) ─────────────────
+# ── Plot recipes (named, reusable sets of plot configs) ────────────────────
 
-def list_plot_templates(folder: Union[str, Path]) -> List[Dict[str, Any]]:
-    """List plot templates saved in `folder`.
+def list_plot_recipes(folder: Union[str, Path]) -> List[Dict[str, Any]]:
+    """List plot recipes saved in `folder`.
 
     Returns:
         List of {'id', 'name', 'created_at', 'graph_count'} summaries.
     """
-    store = MPlotTemplateStore(str(folder))
+    store = MPlotRecipeStore(str(folder))
     return [
         {"id": s.id, "name": s.name, "created_at": s.created_at, "graph_count": s.graph_count}
-        for s in store.list_templates()
+        for s in store.list_recipes()
     ]
 
 
-def load_plot_template(folder: Union[str, Path], template_id: str) -> List[Dict[str, Any]]:
-    """Load a plot template's list of plot-config dicts (each shaped like `MGraph.save()`).
+def load_plot_recipe(folder: Union[str, Path], recipe_id: str) -> List[Dict[str, Any]]:
+    """Load a plot recipe's list of plot-config dicts (each shaped like `MGraph.save()`).
 
     Raises:
-        TemplateError: no template with that id exists in `folder`.
+        TemplateError: no recipe with that id exists in `folder`.
     """
-    store = MPlotTemplateStore(str(folder))
-    tpl = store.load_template(template_id)
-    if tpl is None:
-        raise TemplateError(f"No plot template with id '{template_id}' in {folder}.")
-    return tpl.configs
+    store = MPlotRecipeStore(str(folder))
+    recipe = store.load_recipe(recipe_id)
+    if recipe is None:
+        raise TemplateError(f"No plot recipe with id '{recipe_id}' in {folder}.")
+    return recipe.configs
 
 
-def save_plot_template(folder: Union[str, Path], name: str, configs: List[Dict[str, Any]]) -> str:
-    """Save a list of plot-config dicts as a named, reusable template.
+def save_plot_recipe(folder: Union[str, Path], name: str, configs: List[Dict[str, Any]]) -> str:
+    """Save a list of plot-config dicts as a named, reusable recipe.
 
     Args:
         folder: destination folder (created if missing).
-        name: display name for the template.
+        name: display name for the recipe.
         configs: non-empty list of plot-config dicts, each shaped like `MGraph.save()`.
 
     Returns:
-        The new template's id.
+        The new recipe's id.
 
     Raises:
         TemplateError: `configs` is empty.
     """
-    store = MPlotTemplateStore(str(folder))
-    tpl = store.save_template(name, configs)
-    if tpl is None:
+    store = MPlotRecipeStore(str(folder))
+    recipe = store.save_recipe(name, configs)
+    if recipe is None:
         raise TemplateError("configs must be a non-empty list.")
-    return tpl.id
+    return recipe.id
 
 
-def delete_plot_template(folder: Union[str, Path], template_id: str) -> bool:
-    """Delete a plot template by id. Returns True if a template was deleted."""
-    store = MPlotTemplateStore(str(folder))
-    return store.delete_template(template_id)
+def delete_plot_recipe(folder: Union[str, Path], recipe_id: str) -> bool:
+    """Delete a plot recipe by id. Returns True if a recipe was deleted."""
+    store = MPlotRecipeStore(str(folder))
+    return store.delete_recipe(recipe_id)

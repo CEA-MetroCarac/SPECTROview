@@ -1,5 +1,5 @@
-#spectroview/view/components/v_plot_template_dialog.py
-"""Full management dialog for saved plot templates — modeled closely on
+#spectroview/view/components/v_plot_recipe_dialog.py
+"""Full management dialog for saved plot recipes — modeled closely on
 spectroview/ai_agent/v_history_dialog.py (search, Apply/Rename/Duplicate/
 Delete), reused from both the AI chat panel and (in a lighter, apply-only
 form) the Graphs workspace.
@@ -12,20 +12,20 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 
-from spectroview.model.m_plot_template_store import MPlotTemplateStore, PlotTemplateSummary
+from spectroview.model.m_plot_recipe_store import MPlotRecipeStore, PlotRecipeSummary
 
 
-class _PlotTemplateItemWidget(QWidget):
-    """Row widget for a single saved template."""
+class _PlotRecipeItemWidget(QWidget):
+    """Row widget for a single saved recipe."""
 
     on_apply = Signal(str)
     on_rename = Signal(str)
     on_duplicate = Signal(str)
     on_delete = Signal(str)
 
-    def __init__(self, template_id: str, name: str, graph_count: int, parent=None):
+    def __init__(self, recipe_id: str, name: str, graph_count: int, parent=None):
         super().__init__(parent)
-        self.template_id = template_id
+        self.recipe_id = recipe_id
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(6, 6, 6, 6)
@@ -67,10 +67,10 @@ class _PlotTemplateItemWidget(QWidget):
             btn.setCursor(Qt.PointingHandCursor)
             btn.setStyleSheet("font-size: 11px;")
 
-        self.btn_apply.clicked.connect(lambda: self.on_apply.emit(self.template_id))
-        self.btn_rename.clicked.connect(lambda: self.on_rename.emit(self.template_id))
-        self.btn_duplicate.clicked.connect(lambda: self.on_duplicate.emit(self.template_id))
-        self.btn_delete.clicked.connect(lambda: self.on_delete.emit(self.template_id))
+        self.btn_apply.clicked.connect(lambda: self.on_apply.emit(self.recipe_id))
+        self.btn_rename.clicked.connect(lambda: self.on_rename.emit(self.recipe_id))
+        self.btn_duplicate.clicked.connect(lambda: self.on_duplicate.emit(self.recipe_id))
+        self.btn_delete.clicked.connect(lambda: self.on_delete.emit(self.recipe_id))
 
         right_layout.addWidget(self.btn_apply, 0, 0, 2, 2)
         right_layout.addWidget(lbl_meta, 0, 2, 1, 3, Qt.AlignRight | Qt.AlignBottom)
@@ -84,16 +84,16 @@ class _PlotTemplateItemWidget(QWidget):
         layout.addWidget(right_widget, stretch=0)
 
 
-class VPlotTemplateDialog(QDialog):
-    """Browse, search, apply, rename, duplicate, and delete saved plot templates."""
+class VPlotRecipeDialog(QDialog):
+    """Browse, search, apply, rename, duplicate, and delete saved plot recipes."""
 
-    template_applied = Signal(list)  # emits the template's list of plot-config dicts
+    recipe_applied = Signal(list)  # emits the recipe's list of plot-config dicts
 
-    def __init__(self, store: MPlotTemplateStore, parent=None):
+    def __init__(self, store: MPlotRecipeStore, parent=None):
         super().__init__(parent)
         self.store = store
-        self._cached_summaries: list[PlotTemplateSummary] = []
-        self.setWindowTitle("📊 Plot Templates")
+        self._cached_summaries: list[PlotRecipeSummary] = []
+        self.setWindowTitle("📊 Plot Recipes")
         self.setMinimumSize(600, 400)
         self.resize(700, 500)
 
@@ -102,7 +102,7 @@ class VPlotTemplateDialog(QDialog):
         layout.setSpacing(6)
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search templates...")
+        self.search_input.setPlaceholderText("Search recipes...")
         self.search_input.textChanged.connect(self._on_search)
         layout.addWidget(self.search_input)
 
@@ -121,7 +121,7 @@ class VPlotTemplateDialog(QDialog):
 
     def _reload_and_render(self, filter_text: str = "") -> None:
         self.store.scan_folder()
-        self._cached_summaries = self.store.list_templates()
+        self._cached_summaries = self.store.list_recipes()
         self._render_list(filter_text)
 
     def _render_list(self, filter_text: str = "") -> None:
@@ -133,8 +133,8 @@ class VPlotTemplateDialog(QDialog):
                 continue
 
             item = QListWidgetItem(self.list_widget)
-            widget = _PlotTemplateItemWidget(
-                template_id=summary.id,
+            widget = _PlotRecipeItemWidget(
+                recipe_id=summary.id,
                 name=summary.name,
                 graph_count=summary.graph_count,
                 parent=self.list_widget,
@@ -154,41 +154,41 @@ class VPlotTemplateDialog(QDialog):
     def _on_search(self, text: str) -> None:
         self._render_list(text)
 
-    def _on_apply(self, template_id: str) -> None:
-        tpl = self.store.load_template(template_id)
-        if tpl and tpl.configs:
-            self.template_applied.emit(tpl.configs)
+    def _on_apply(self, recipe_id: str) -> None:
+        recipe = self.store.load_recipe(recipe_id)
+        if recipe and recipe.configs:
+            self.recipe_applied.emit(recipe.configs)
         self.accept()
 
-    def _on_rename(self, template_id: str) -> None:
-        summary = self.store.get_summary(template_id)
+    def _on_rename(self, recipe_id: str) -> None:
+        summary = self.store.get_summary(recipe_id)
         if not summary:
             return
         new_name, ok = QInputDialog.getText(
-            self, "Rename Template", "New name:", text=summary.name
+            self, "Rename Recipe", "New name:", text=summary.name
         )
         if ok and new_name:
-            tpl = self.store.load_template(template_id)
-            if tpl:
-                tpl.rename(new_name)
-                tpl.save()
+            recipe = self.store.load_recipe(recipe_id)
+            if recipe:
+                recipe.rename(new_name)
+                recipe.save()
                 self._reload_and_render(self.search_input.text())
 
-    def _on_duplicate(self, template_id: str) -> None:
-        tpl = self.store.load_template(template_id)
-        if tpl:
-            new_tpl = tpl.duplicate()
-            new_tpl.save(self.store.folder_path)
+    def _on_duplicate(self, recipe_id: str) -> None:
+        recipe = self.store.load_recipe(recipe_id)
+        if recipe:
+            new_recipe = recipe.duplicate()
+            new_recipe.save(self.store.folder_path)
             self._reload_and_render(self.search_input.text())
 
-    def _on_delete(self, template_id: str) -> None:
-        summary = self.store.get_summary(template_id)
-        name = summary.name if summary else "this template"
+    def _on_delete(self, recipe_id: str) -> None:
+        summary = self.store.get_summary(recipe_id)
+        name = summary.name if summary else "this recipe"
         reply = QMessageBox.question(
-            self, "Delete Template", f"Permanently delete '{name}'?",
+            self, "Delete Recipe", f"Permanently delete '{name}'?",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
         )
         if reply != QMessageBox.Yes:
             return
-        self.store.delete_template(template_id)
+        self.store.delete_recipe(recipe_id)
         self._reload_and_render(self.search_input.text())

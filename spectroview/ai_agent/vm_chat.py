@@ -40,7 +40,8 @@ from PySide6.QtCore import QObject, Signal, QSettings
 from spectroview.ai_agent.m_llm_client import LLMClient, get_ollama_model_info
 from spectroview.ai_agent.m_conversation import MConversation
 from spectroview.ai_agent.m_conversation_store import MConversationStore
-from spectroview.model.m_plot_template_store import MPlotTemplateStore
+from spectroview.model.m_settings import MSettings
+from spectroview.model.m_plot_recipe_store import MPlotRecipeStore
 from spectroview.ai_agent.m_prompt_manager import PromptManager
 from spectroview.ai_agent.utils.plot_utils import expand_all_plot_configs
 from spectroview.ai_agent.utils.df_summary import summarize_dataframe_columns
@@ -150,12 +151,11 @@ class VMChat(QObject):
         self._history_folder = str(s.value("history_folder", ""))
         s.endGroup()
 
-        s_fit = QSettings("CEA-Leti", "SPECTROview")
-        self._template_folder = str(s_fit.value("template_folder", "", str))
+        self._recipe_folder = MSettings().get_plot_recipe_folder()
 
         self.conversation_store = MConversationStore(self._history_folder)
         self._conversation = self.conversation_store.create_conversation()
-        self.template_store = MPlotTemplateStore(self._template_folder)
+        self.recipe_store = MPlotRecipeStore(self._recipe_folder)
         self.max_context_messages: Optional[int] = None # None means no cap
 
         # ── Prompt engineering ───────────────────────────────────────────
@@ -203,6 +203,15 @@ class VMChat(QObject):
     # ------------------------------------------------------------------
     # Public API — called by VChatPanel
     # ------------------------------------------------------------------
+
+    def refresh_recipe_store(self) -> None:
+        """Rebuild self.recipe_store from the *current* Working Folder
+        setting -- same fix as VWorkspaceGraphs._refresh_recipe_and_style_stores()
+        for the same bug (a store built once in __init__ never saw a
+        Working Folder configured afterward). Call before every save, same
+        as the Graphs workspace does."""
+        self._recipe_folder = MSettings().get_plot_recipe_folder()
+        self.recipe_store = MPlotRecipeStore(self._recipe_folder)
 
     def set_dataframes(self, dfs: Dict[str, pd.DataFrame], active_name: str = "") -> None:
         """Update the available DataFrames.

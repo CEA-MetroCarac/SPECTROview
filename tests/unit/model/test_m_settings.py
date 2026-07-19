@@ -41,10 +41,96 @@ class TestLastDirectory:
         assert MSettings().get_last_directory() == str(tmp_path)
 
 
-class TestModelFolder:
+class TestWorkingFolder:
+    """One user-configured root folder with 3 auto-created subfolders
+    (fit_model/plot_recipe/plot_style), replacing the old separate
+    "Fit model folder"/"Plot template folder" settings."""
+
+    def test_defaults_to_empty_when_unset(self, settings):
+        assert settings.get_working_folder() == ""
+
     def test_round_trip(self, settings, tmp_path):
-        settings.set_model_folder(str(tmp_path))
-        assert MSettings().get_model_folder() == str(tmp_path)
+        settings.set_working_folder(str(tmp_path))
+        assert MSettings().get_working_folder() == str(tmp_path)
+
+    def test_set_creates_all_three_subfolders(self, settings, tmp_path):
+        working = tmp_path / "spectroview_data"
+        settings.set_working_folder(str(working))
+        assert (working / "fit_model").is_dir()
+        assert (working / "plot_recipe").is_dir()
+        assert (working / "plot_style").is_dir()
+
+    def test_derived_subfolder_getters(self, settings, tmp_path):
+        settings.set_working_folder(str(tmp_path))
+        assert settings.get_fit_model_folder() == str(tmp_path / "fit_model")
+        assert settings.get_plot_recipe_folder() == str(tmp_path / "plot_recipe")
+        assert settings.get_plot_style_folder() == str(tmp_path / "plot_style")
+
+    def test_derived_subfolder_getters_empty_when_unconfigured(self, settings):
+        assert settings.get_fit_model_folder() == ""
+        assert settings.get_plot_recipe_folder() == ""
+        assert settings.get_plot_style_folder() == ""
+
+    def test_migrates_from_legacy_template_folder(self, settings, tmp_path):
+        """One-time migration: an existing "template_folder" setting (from
+        before this feature) seeds the new working_folder so it isn't
+        orphaned -- this is also the regression case for the reported bug
+        (a configured template_folder that appeared to do nothing)."""
+        settings.settings.setValue("template_folder", str(tmp_path))
+
+        assert MSettings().get_working_folder() == str(tmp_path)
+        # The migration is persisted, not just computed on the fly.
+        assert settings.settings.value("working_folder", "", str) == str(tmp_path)
+
+    def test_migrates_from_legacy_model_folder_when_no_template_folder(self, settings, tmp_path):
+        settings.settings.setValue("model_folder", str(tmp_path))
+        assert MSettings().get_working_folder() == str(tmp_path)
+
+    def test_legacy_template_folder_takes_priority_over_model_folder(self, settings, tmp_path):
+        settings.settings.setValue("template_folder", str(tmp_path / "recipes"))
+        settings.settings.setValue("model_folder", str(tmp_path / "models"))
+        assert MSettings().get_working_folder() == str(tmp_path / "recipes")
+
+    def test_explicit_working_folder_wins_over_legacy_settings(self, settings, tmp_path):
+        settings.settings.setValue("template_folder", str(tmp_path / "old"))
+        settings.set_working_folder(str(tmp_path / "new"))
+        assert MSettings().get_working_folder() == str(tmp_path / "new")
+
+
+class TestDefaultGraphStyle:
+    """The user-chosen "Set as Default Style" baseline that new graphs
+    start with (see VWorkspaceGraphs._apply_default_style_to_config()) --
+    deliberately separate from "Reset to Default"
+    (graph_style.default_style()), which always stays hardcoded/factory."""
+
+    def test_defaults_to_empty_when_unset(self, settings):
+        assert settings.get_default_graph_style() == {}
+
+    def test_round_trip(self, settings):
+        style = {"grid": True, "title_fontsize": 22, "color_palette": "viridis"}
+        settings.set_default_graph_style(style)
+        assert MSettings().get_default_graph_style() == style
+
+    def test_round_trip_preserves_nested_values(self, settings):
+        """Style dicts can contain nested containers (spines_visible dict,
+        figure_margins list) -- must survive the JSON round trip intact."""
+        style = {
+            "spines_visible": {"top": False, "right": False, "bottom": True, "left": True},
+            "figure_margins": [0.1, 0.15],
+        }
+        settings.set_default_graph_style(style)
+        assert MSettings().get_default_graph_style() == style
+
+    def test_clear_removes_it(self, settings):
+        settings.set_default_graph_style({"grid": True})
+        settings.clear_default_graph_style()
+        assert MSettings().get_default_graph_style() == {}
+
+    def test_corrupted_value_falls_back_to_empty(self, settings):
+        """Defensive: a hand-edited or version-mismatched QSettings value
+        that isn't valid JSON must not crash the app on load."""
+        settings.settings.setValue("default_graph_style", "{not valid json")
+        assert MSettings().get_default_graph_style() == {}
 
 
 class TestUpdateChecker:

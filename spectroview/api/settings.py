@@ -25,14 +25,26 @@ def set_fit_defaults(**kwargs: Any) -> None:
     MSettings().save_fit_settings(kwargs)
 
 
-def get_model_folder() -> str:
-    """Return the folder SPECTROview scans for fit-model JSON templates."""
-    return MSettings().get_model_folder()
+def get_working_folder() -> str:
+    """Return the configured SPECTROview Working Folder.
+
+    Three subfolders are auto-created under it by `set_working_folder()`:
+    fit_model/ (fit-model JSON templates), plot_recipe/ (Graph Workspace
+    plot recipes), plot_style/ (Graph Workspace style templates).
+    """
+    return MSettings().get_working_folder()
 
 
-def set_model_folder(path: Union[str, Path]) -> None:
-    """Set the folder SPECTROview scans for fit-model JSON templates."""
-    MSettings().set_model_folder(str(path))
+def set_working_folder(path: Union[str, Path]) -> None:
+    """Set the Working Folder, creating its fit_model/plot_recipe/plot_style
+    subfolders if they don't already exist."""
+    MSettings().set_working_folder(str(path))
+
+
+def get_fit_model_folder() -> str:
+    """Return the folder SPECTROview scans for fit-model JSON templates
+    (the `fit_model` subfolder of the Working Folder)."""
+    return MSettings().get_fit_model_folder()
 
 
 def get_last_directory() -> str:

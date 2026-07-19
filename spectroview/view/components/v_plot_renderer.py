@@ -2,9 +2,54 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 import matplotlib.patches as patches
+from matplotlib.colors import LogNorm, CenteredNorm
 
 from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS
 from spectroview.viewmodel.utils import show_alert
+
+
+def _clear_degenerate_zlim(zmin, zmax):
+    """Treat an explicit zmin == zmax (both set, equal) as unset (None, None).
+
+    A handful of pre-existing saved .graphs files carry an explicit
+    zmin == zmax == 0.0 (apparently from an old, since-fixed default) --
+    honoring that literally collapses the wafer/2Dmap color scale to a
+    single flat color (matplotlib.colors.Normalize(vmin=0, vmax=0) maps
+    every value to the same 0.0), which is what actually broke color
+    mapping when reopening those files, not the colormap-normalization
+    feature itself. A genuinely degenerate range never carries useful
+    information, so fall back to the data-derived range the same way an
+    unset limit already does, rather than rendering a flat, uninformative
+    heatmap/wafer.
+    """
+    if zmin is not None and zmax is not None and zmin == zmax:
+        return None, None
+    return zmin, zmax
+
+
+def _build_color_norm(vmin, vmax, norm_kind, center=0.0):
+    """Build a color-scale Normalize object for a wafer/2Dmap imshow call.
+
+    Returns None for 'linear' (caller should pass plain vmin=/vmax=) or when
+    the requested normalization isn't valid for this data range (e.g. log
+    norm on data that isn't strictly positive, or a degenerate zero-width
+    range) -- falls back to linear rather than raising, matching this
+    codebase's existing graceful-degradation style around wafer/2Dmap
+    rendering (see WaferPlot / _plot_2dmap error handling).
+    """
+    if vmin is None or vmax is None:
+        return None
+    if norm_kind == 'log':
+        if vmin <= 0:
+            return None
+        return LogNorm(vmin=vmin, vmax=vmax)
+    if norm_kind == 'centered':
+        halfrange = max(abs(vmax - center), abs(vmin - center))
+        if halfrange <= 0:
+            return None
+        return CenteredNorm(vcenter=center, halfrange=halfrange)
+    return None
+
 
 class PlotRenderer:
     """Class that handles all plot rendering logic, decoupled from the VGraph widget."""
@@ -40,6 +85,22 @@ class PlotRenderer:
         possibly absent and fall back to the existing global default."""
         props = getattr(self.vg, 'legend_properties', None) or []
         return props[idx] if idx < len(props) else {}
+
+    def _resolve_marker_size(self, style, fallback):
+        """`fallback` (the graph-wide scatter_size-derived value) when
+        unify_marker_style is on -- every series must look the same,
+        regardless of any per-series marker_size a graph may have saved
+        from before Unify existed/was checked. Otherwise the existing
+        per-series-override-with-fallback behavior."""
+        if getattr(self.vg, 'unify_marker_style', True):
+            return fallback
+        return style.get('marker_size', fallback)
+
+    def _resolve_edge_color(self, style, fallback):
+        """Edge-color counterpart of _resolve_marker_size()."""
+        if getattr(self.vg, 'unify_marker_style', True):
+            return fallback
+        return style.get('edge_color', fallback)
 
     def _prepare_plot_data(self, df, y):
         """Prepare dataframe and X positions for plotting."""
@@ -118,7 +179,7 @@ class PlotRenderer:
     def _plot_point(self, df, y, colors, markers, c):
         plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
         edge_c = getattr(self.vg, 'scatter_edgecolor', 'black')
-        ms = np.sqrt(self.vg.scatter_size) if hasattr(self.vg, 'scatter_size') else 7
+        base_area = getattr(self.vg, 'scatter_size', 49)
         join = getattr(self.vg, 'join_for_point_plot', False)
         error_type = getattr(self.vg, 'error_bar_type', 'ci95')
         capsize = getattr(self.vg, 'error_bar_capsize', 3.0)
@@ -147,8 +208,9 @@ class PlotRenderer:
                 color = colors[idx % len(colors)]
                 marker = markers[idx % len(markers)] if markers else 'o'
                 style = self._series_style(idx)
-                series_ms = style.get('marker_size', ms)
-                series_edge = style.get('edge_color', edge_c)
+                series_area = self._resolve_marker_size(style, base_area)
+                series_ms = np.sqrt(series_area)
+                series_edge = self._resolve_edge_color(style, edge_c)
                 extra = {k: style[k] for k in ('linewidth', 'alpha', 'zorder') if style.get(k) is not None}
 
                 self.vg.ax.errorbar(
@@ -170,8 +232,9 @@ class PlotRenderer:
             cis = np.nan_to_num(error_stat.values) if error_stat is not None else None
 
             style = self._series_style(0)
-            series_ms = style.get('marker_size', ms)
-            series_edge = style.get('edge_color', edge_c)
+            series_area = self._resolve_marker_size(style, base_area)
+            series_ms = np.sqrt(series_area)
+            series_edge = self._resolve_edge_color(style, edge_c)
             extra = {k: style[k] for k in ('linewidth', 'alpha', 'zorder') if style.get(k) is not None}
 
             self.vg.ax.errorbar(
@@ -207,8 +270,8 @@ class PlotRenderer:
                 x_vals = np.array([x_positions[val] + offsets[idx] for val in subset[self.vg.x]], dtype=float)
 
                 style = self._series_style(idx)
-                series_s = style.get('marker_size', self.vg.scatter_size)
-                series_edge = style.get('edge_color', edge_c)
+                series_s = self._resolve_marker_size(style, self.vg.scatter_size)
+                series_edge = self._resolve_edge_color(style, edge_c)
                 extra = {k: style[k] for k in ('alpha', 'zorder') if style.get(k) is not None}
 
                 self.vg.ax.scatter(
@@ -219,8 +282,8 @@ class PlotRenderer:
         else:
             x_vals = np.array([x_positions[val] for val in plot_df[self.vg.x]], dtype=float)
             style = self._series_style(0)
-            series_s = style.get('marker_size', self.vg.scatter_size)
-            series_edge = style.get('edge_color', edge_c)
+            series_s = self._resolve_marker_size(style, self.vg.scatter_size)
+            series_edge = self._resolve_edge_color(style, edge_c)
             extra = {k: style[k] for k in ('alpha', 'zorder') if style.get(k) is not None}
 
             self.vg.ax.scatter(
@@ -434,16 +497,19 @@ class PlotRenderer:
             for idx, cat in enumerate(categories):
                 subset = df[df[self.vg.z] == cat]
                 color = colors[idx % len(colors)]
-                
+
                 try:
                     x_fit, y_fit, coeffs = self._fit_trendline(subset)
                 except Exception:
                     continue
-                
+
+                style = self._series_style(idx)
+                series_s = self._resolve_marker_size(style, self.vg.scatter_size)
+                series_edge = self._resolve_edge_color(style, self.vg.scatter_edgecolor)
                 self.vg.ax.scatter(
                     subset[self.vg.x], subset[y],
-                    color=color, s=self.vg.scatter_size,
-                    edgecolors=self.vg.scatter_edgecolor, linewidths=0.5,
+                    color=color, s=series_s,
+                    edgecolors=series_edge, linewidths=0.5,
                     label=str(cat), zorder=3
                 )
                 
@@ -467,11 +533,14 @@ class PlotRenderer:
                 })
         else:
             x_fit, y_fit, coeffs = self._fit_trendline(df)
-            
+
+            style = self._series_style(0)
+            series_s = self._resolve_marker_size(style, self.vg.scatter_size)
+            series_edge = self._resolve_edge_color(style, self.vg.scatter_edgecolor)
             self.vg.ax.scatter(
                 df[self.vg.x], df[y],
-                color=c, s=self.vg.scatter_size,
-                edgecolors=self.vg.scatter_edgecolor, linewidths=0.5,
+                color=c, s=series_s,
+                edgecolors=series_edge, linewidths=0.5,
                 label='All data', zorder=3
             )
             
@@ -571,17 +640,25 @@ class PlotRenderer:
         ymax = df[y_col].max()
         
         heatmap_data = df.pivot(index=y_col, columns=x_col, values=z_col)
-        vmin = self.vg.zmin if self.vg.zmin is not None else heatmap_data.min().min()
-        vmax = self.vg.zmax if self.vg.zmax is not None else heatmap_data.max().max()
-        
+        zmin, zmax = _clear_degenerate_zlim(self.vg.zmin, self.vg.zmax)
+        vmin = zmin if zmin is not None else heatmap_data.min().min()
+        vmax = zmax if zmax is not None else heatmap_data.max().max()
+
+        norm = _build_color_norm(
+            float(vmin) if pd.notna(vmin) else None,
+            float(vmax) if pd.notna(vmax) else None,
+            getattr(self.vg, 'colormap_norm', 'linear'),
+            getattr(self.vg, 'colormap_center', 0.0),
+        )
+        imshow_kwargs = dict(vmin=vmin, vmax=vmax) if norm is None else dict(norm=norm)
+
         heatmap = self.vg.ax.imshow(
             heatmap_data,
             aspect='equal',
             extent=[xmin, xmax, ymin, ymax],
             cmap=self.vg.color_palette,
             origin='lower',
-            vmin=vmin,
-            vmax=vmax
+            **imshow_kwargs
         )
         
         # Remove existing colorbar if present to prevent accumulation
@@ -695,8 +772,7 @@ class PlotRenderer:
 
     def _plot_wafer(self, df):
         """Plot wafer plot by creating an object of WaferPlot Class."""
-        vmin = self.vg.zmin if self.vg.zmin is not None else None
-        vmax = self.vg.zmax if self.vg.zmax is not None else None
+        vmin, vmax = _clear_degenerate_zlim(self.vg.zmin, self.vg.zmax)
         
         wdf = WaferPlot()
         wdf.plot(
@@ -708,7 +784,9 @@ class PlotRenderer:
             vmin=vmin,
             vmax=vmax,
             stats=self.vg.wafer_stats,
-            r=(self.vg.wafer_size / 2)
+            r=(self.vg.wafer_size / 2),
+            norm_kind=getattr(self.vg, 'colormap_norm', 'linear'),
+            norm_center=getattr(self.vg, 'colormap_center', 0.0),
         )
         
         # Annotate slot number if active filter
@@ -739,25 +817,37 @@ class WaferPlot:
     def __init__(self, inter_method='linear'):
         self.inter_method = inter_method
     
-    def plot(self, ax, x, y, z, cmap="jet", r=100, vmax=None, vmin=None, stats=True):
+    def plot(self, ax, x, y, z, cmap="jet", r=100, vmax=None, vmin=None, stats=True,
+              norm_kind='linear', norm_center=0.0):
         """Plot wafer map with interpolated data."""
         xi, yi = np.meshgrid(np.linspace(-r, r, 600), np.linspace(-r, r, 600))
         from scipy.interpolate import griddata
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
-        
+
+        norm = None
+        if norm_kind != 'linear':
+            # A custom norm needs concrete numbers even if vmin/vmax are
+            # unset -- resolve from the grid, ignoring NaN (sparse regions).
+            zi_valid = zi[~np.isnan(zi)]
+            resolved_vmin = vmin if vmin is not None else (float(zi_valid.min()) if zi_valid.size else None)
+            resolved_vmax = vmax if vmax is not None else (float(zi_valid.max()) if zi_valid.size else None)
+            norm = _build_color_norm(resolved_vmin, resolved_vmax, norm_kind, norm_center)
+        imshow_kwargs = dict(vmin=vmin, vmax=vmax) if norm is None else dict(norm=norm)
+
         im = ax.imshow(
             zi,
             extent=[-r - 1, r + 1, -r - 0.5, r + 0.5],
             origin='lower',
             cmap=cmap,
-            interpolation='nearest', zorder=2
+            interpolation='nearest', zorder=2,
+            **imshow_kwargs
         )
-        
+
         ax.scatter(x, y, facecolors='none', edgecolors='black', s=20, zorder=3)
-        
+
         wafer_circle = patches.Circle((0, 0), radius=r, fill=False, color='black', linewidth=1)
         ax.add_patch(wafer_circle)
-        
+
         ax.set_ylabel("Wafer size (mm)")
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
@@ -765,10 +855,7 @@ class WaferPlot:
         ax.tick_params(axis='x', which='both', bottom=False, top=False)
         ax.tick_params(axis='y', which='both', right=False, left=True)
         ax.set_xticklabels([])
-        
-        if vmax is not None and vmin is not None:
-            im.set_clim(vmin, vmax)
-        
+
         # Remove existing colorbar if present to prevent accumulation
         if hasattr(ax, '_wafer_colorbar') and ax._wafer_colorbar is not None:
             try:

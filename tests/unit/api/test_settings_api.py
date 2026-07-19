@@ -19,10 +19,14 @@ class TestFitDefaults:
         assert expected.issubset(defaults.keys())
 
 
-class TestModelFolder:
+class TestWorkingFolder:
     def test_round_trip(self, tmp_path):
-        settings.set_model_folder(tmp_path)
-        assert settings.get_model_folder() == str(tmp_path)
+        settings.set_working_folder(tmp_path)
+        assert settings.get_working_folder() == str(tmp_path)
+
+    def test_fit_model_folder_is_a_subfolder_of_the_working_folder(self, tmp_path):
+        settings.set_working_folder(tmp_path)
+        assert settings.get_fit_model_folder() == str(tmp_path / "fit_model")
 
 
 class TestLastDirectory:

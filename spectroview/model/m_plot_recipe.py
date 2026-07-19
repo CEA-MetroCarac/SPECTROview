@@ -1,4 +1,4 @@
-#spectroview/model/m_plot_template.py
+#spectroview/model/m_plot_recipe.py
 
 import json
 import os
@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 
-class MPlotTemplate:
+class MPlotRecipe:
     """A saved, reusable set of one or more plot configurations.
 
     Each entry in ``configs`` is a plot-config dict compatible with
@@ -21,7 +21,7 @@ class MPlotTemplate:
 
     def __init__(self, filepath: Optional[str] = None):
         self.id: str = str(uuid.uuid4())
-        self.name: str = "New Template"
+        self.name: str = "New Recipe"
         self.created_at: str = datetime.now().isoformat()
         self.configs: List[Dict[str, Any]] = []
         self._filepath: Optional[str] = filepath
@@ -36,18 +36,18 @@ class MPlotTemplate:
     def rename(self, new_name: str) -> None:
         self.name = new_name
 
-    def duplicate(self) -> "MPlotTemplate":
+    def duplicate(self) -> "MPlotRecipe":
         """Create a deep copy with a new ID."""
         import copy
-        new_tpl = MPlotTemplate()
+        new_tpl = MPlotRecipe()
         new_tpl.name = f"{self.name} (Copy)"
         new_tpl.configs = copy.deepcopy(self.configs)
         return new_tpl
 
     def save(self, folder: Optional[str] = None) -> None:
-        """Write the template to a JSON file."""
+        """Write the recipe to a JSON file."""
         if not self.configs:
-            return  # don't save an empty template
+            return  # don't save an empty recipe
 
         safe_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', self.name)
         safe_name = safe_name[:40].strip('_') or "Untitled"
@@ -84,7 +84,7 @@ class MPlotTemplate:
             with open(self._filepath, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
         except Exception as e:
-            print(f"Error saving plot template: {e}")
+            print(f"Error saving plot recipe: {e}")
 
     def load(self, filepath: str) -> None:
         """Deserialize from JSON."""
@@ -97,4 +97,4 @@ class MPlotTemplate:
             self.created_at = data.get("created_at", self.created_at)
             self.configs = data.get("configs", [])
         except Exception as e:
-            print(f"Error loading plot template {filepath}: {e}")
+            print(f"Error loading plot recipe {filepath}: {e}")

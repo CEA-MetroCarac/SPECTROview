@@ -12,7 +12,9 @@
       "Bash(python3 -m py_compile spectroview/ai_agent/v_chat_panel.py)",
       "Bash(python3 -m pytest tests/test_ai_agent_reasoning_toggle.py -q)",
       "Bash(python3 -m py_compile spectroview/model/m_plot_template.py spectroview/model/m_plot_template_store.py)",
-      "Bash(python3 -m py_compile spectroview/view/components/v_plot_template_dialog.py)"
+      "Bash(python3 -m py_compile spectroview/view/components/v_plot_template_dialog.py)",
+      "Bash(python -m pytest tests/unit/model/test_m_graph.py -q)",
+      "Bash(QT_QPA_PLATFORM=offscreen python3 -c ' *)"
     ],
     "additionalDirectories": [
       "/private/tmp"

@@ -97,9 +97,9 @@ graphs.plot_wafer(df, x="X", y="Y", z="ampli_Si", wafer_size=300.0, show_stats=T
 
 ---
 
-## Plot Templates
+## Plot Recipes
 
-A plot template is a named, reusable set of plot configurations (each shaped like the dict `MGraph.save()` produces in the GUI) saved as a JSON file in a folder — the same mechanism the GUI's "Save as Template" feature uses.
+A plot recipe is a named, reusable set of plot configurations (each shaped like the dict `MGraph.save()` produces in the GUI) saved as a JSON file in a folder — the same mechanism the GUI's "Save Plot Recipe" feature uses. (Not to be confused with a *style template*, which saves only appearance, not data bindings — see [`spectroview/model/m_style_template_store.py`](../../spectroview/model/m_style_template_store.py).)
 
 ```python
 from spectroview.api import graphs
@@ -108,12 +108,12 @@ configs = [
     {"plot_style": "scatter", "x": "peak_1_ampli", "y": ["peak_2_ampli"], "z": "Condition"},
     {"plot_style": "box", "x": "Sample", "y": ["peak_1_fwhm"], "z": "Condition"},
 ]
-template_id = graphs.save_plot_template("./templates", "Standard QC Plots", configs)
+recipe_id = graphs.save_plot_recipe("./recipes", "Standard QC Plots", configs)
 
 # List and reload later
-for summary in graphs.list_plot_templates("./templates"):
+for summary in graphs.list_plot_recipes("./recipes"):
     print(summary["name"], summary["graph_count"])
 
-configs = graphs.load_plot_template("./templates", template_id)
-graphs.delete_plot_template("./templates", template_id)
+configs = graphs.load_plot_recipe("./recipes", recipe_id)
+graphs.delete_plot_recipe("./recipes", recipe_id)
 ```

@@ -6,7 +6,7 @@ Split out of customize_graph_dialog.py; no behavior changes.
 """
 import copy
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QPushButton, QLabel,
@@ -20,7 +20,8 @@ from spectroview.view.components.customize_graph.spin_widgets import (
 )
 
 # Plot styles that draw per-series markers whose size/edge-color make sense
-# to override (mirrors the existing scatter_group visibility condition).
+# to set (mirrors the unified_marker_widget/per-series-columns visibility
+# condition in load_legend_properties()/_build_legend_widgets()).
 _MARKER_STYLES = ('scatter', 'trendline', 'point')
 # Plot styles with a configurable error-bar TYPE (bar's on/off gate is the
 # pre-existing show_bar_plot_error_bar checkbox in the More Options tab;
@@ -84,43 +85,79 @@ class CustomizeLegend(QWidget):
         self.main_layout.setSpacing(8)
 
         # Container for legend widgets (labels, markers, colors, styles)
-        self.legend_container = QGroupBox("Legends box:")
+        self.legend_container = QGroupBox("Legend box:")
         box_layout = QVBoxLayout(self.legend_container)
         box_layout.setContentsMargins(4, 4, 4, 4)
         box_layout.setSpacing(8)
 
+        top_row_layout = QHBoxLayout()
+        
         self.cb_legend_outside = QCheckBox("Put legend box outside")
         self.cb_legend_outside.stateChanged.connect(self._on_legend_outside_changed)
-        box_layout.addWidget(self.cb_legend_outside)
+        top_row_layout.addWidget(self.cb_legend_outside)
+
+        top_row_layout.addSpacing(10)
+        self.cb_legend_frame = QCheckBox("Frame")
+        top_row_layout.addWidget(self.cb_legend_frame)
+
+        top_row_layout.addSpacing(10)
+        top_row_layout.addWidget(QLabel("Columns:"))
+        self.spin_legend_ncol = QSpinBox()
+        self.spin_legend_ncol.setRange(1, 10)
+        top_row_layout.addWidget(self.spin_legend_ncol)
+
+        top_row_layout.addSpacing(10)
+        top_row_layout.addWidget(QLabel("Title:"))
+        self.edit_legend_title = QLineEdit()
+        self.edit_legend_title.setPlaceholderText("Optional legend title")
+        top_row_layout.addWidget(self.edit_legend_title)
+
+        top_row_layout.addStretch()
+        box_layout.addLayout(top_row_layout)
+
+        self.unify_row_widget = QWidget()
+        unify_row_layout = QHBoxLayout(self.unify_row_widget)
+        unify_row_layout.setContentsMargins(0, 0, 0, 0)
+        unify_row_layout.setSpacing(8)
+
+        self.cb_unify_marker_style = QCheckBox("Unify marker size / edge color")
+        self.cb_unify_marker_style.setToolTip(
+            "Checked: every series uses the same marker size and edge color, "
+            "set below. Unchecked: each series can override them "
+            "individually in the table below."
+        )
+        self.cb_unify_marker_style.toggled.connect(self._on_unify_marker_style_toggled)
+        unify_row_layout.addWidget(self.cb_unify_marker_style)
+
+        # Shown only while Unify is checked (see load_legend_properties()) --
+        # the single shared marker size / edge color, replacing what used to
+        # be its own always-visible "Scatter / Marker settings" groupbox.
+        self.unified_marker_widget = QWidget()
+        unified_marker_layout = QHBoxLayout(self.unified_marker_widget)
+        unified_marker_layout.setContentsMargins(0, 0, 0, 0)
+        unified_marker_layout.setSpacing(8)
+        unified_marker_layout.addWidget(QLabel("Marker size:"))
+        self.spin_scatter_size = QSpinBox()
+        self.spin_scatter_size.setRange(5, 500)
+        self.spin_scatter_size.setSingleStep(10)
+        self.spin_scatter_size.setValue(70)
+        unified_marker_layout.addWidget(self.spin_scatter_size)
+        unified_marker_layout.addSpacing(10)
+        unified_marker_layout.addWidget(QLabel("Edge color:"))
+        self.btn_scatter_edgecolor = QPushButton()
+        self.btn_scatter_edgecolor.setFixedWidth(80)
+        self._set_color_button(self.btn_scatter_edgecolor, 'black')
+        self.btn_scatter_edgecolor.clicked.connect(self._pick_scatter_edgecolor)
+        unified_marker_layout.addWidget(self.btn_scatter_edgecolor)
+        
+        unify_row_layout.addWidget(self.unified_marker_widget)
+        unify_row_layout.addStretch()
+        box_layout.addWidget(self.unify_row_widget)
 
         self.legend_layout = QHBoxLayout()
         box_layout.addLayout(self.legend_layout)
 
-        self.main_layout.addWidget(self.legend_container)
-
-        # ───── Legend box style (ncol/frame/title/fontsize/alpha/location) ─────
-        self.legend_style_group = QGroupBox("Legend style:")
-        style_layout = QVBoxLayout(self.legend_style_group)
-        style_layout.setContentsMargins(4, 4, 4, 4)
-        style_layout.setSpacing(8)
-
-        row1 = QHBoxLayout()
-        row1.addWidget(QLabel("Columns:"))
-        self.spin_legend_ncol = QSpinBox()
-        self.spin_legend_ncol.setRange(1, 10)
-        row1.addWidget(self.spin_legend_ncol)
-
-        row1.addSpacing(10)
-        self.cb_legend_frame = QCheckBox("Frame")
-        row1.addWidget(self.cb_legend_frame)
-
-        row1.addSpacing(10)
-        row1.addWidget(QLabel("Title:"))
-        self.edit_legend_title = QLineEdit()
-        self.edit_legend_title.setPlaceholderText("Optional legend title")
-        row1.addWidget(self.edit_legend_title)
-        style_layout.addLayout(row1)
-
+        # ───── Legend box style (fontsize/alpha/location) ─────
         row2 = QHBoxLayout()
         row2.addWidget(QLabel("Font size:"))
         self.spin_legend_fontsize = QSpinBox()
@@ -146,41 +183,10 @@ class CustomizeLegend(QWidget):
         ])
         row2.addWidget(self.combo_legend_loc)
         row2.addStretch()
-        style_layout.addLayout(row2)
+        
+        box_layout.addLayout(row2)
 
-        self.main_layout.addWidget(self.legend_style_group)
-
-        # ───── Scatter/Marker-specific settings ─────
-        self.scatter_group = QGroupBox("Scatter / Marker settings:")
-        scatter_layout = QHBoxLayout(self.scatter_group)
-        scatter_layout.setContentsMargins(4, 4, 4, 4)
-        scatter_layout.setSpacing(8)
-
-        # Marker size
-        scatter_layout.addWidget(QLabel("Marker size:"))
-        self.spin_scatter_size = QSpinBox()
-        self.spin_scatter_size.setRange(5, 500)
-        self.spin_scatter_size.setSingleStep(10)
-        self.spin_scatter_size.setValue(70)
-        scatter_layout.addWidget(self.spin_scatter_size)
-
-        scatter_layout.addSpacing(10)
-
-        # Edge color
-        scatter_layout.addWidget(QLabel("Edge color:"))
-        self.btn_scatter_edgecolor = QPushButton()
-        self.btn_scatter_edgecolor.setFixedWidth(80)
-        self._set_color_button(self.btn_scatter_edgecolor, 'black')
-        self.btn_scatter_edgecolor.clicked.connect(self._pick_scatter_edgecolor)
-        scatter_layout.addWidget(self.btn_scatter_edgecolor)
-
-        scatter_layout.addStretch()
-        self.main_layout.addWidget(self.scatter_group)
-
-        # Only show scatter group when plot is scatter, trendline, or point style
-        self.scatter_group.setVisible(
-            self.graph_widget.plot_style in _MARKER_STYLES
-        )
+        self.main_layout.addWidget(self.legend_container)
 
         # ───── Error-bar settings ─────
         self.error_bar_group = QGroupBox("Error bars:")
@@ -220,6 +226,10 @@ class CustomizeLegend(QWidget):
         self.cb_legend_outside.setChecked(self.original_legend_outside)
         self.cb_legend_outside.blockSignals(False)
 
+        self.cb_unify_marker_style.blockSignals(True)
+        self.cb_unify_marker_style.setChecked(getattr(self.graph_widget, 'unify_marker_style', True))
+        self.cb_unify_marker_style.blockSignals(False)
+
         # Load legend box style
         self.spin_legend_ncol.setValue(getattr(self.graph_widget, 'legend_ncol', 1))
         self.cb_legend_frame.setChecked(getattr(self.graph_widget, 'legend_frame', True))
@@ -256,9 +266,13 @@ class CustomizeLegend(QWidget):
         if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
             edge_c = 'black'
         self._set_color_button(self.btn_scatter_edgecolor, edge_c)
-        # Show/hide scatter group based on plot style
-        self.scatter_group.setVisible(
-            self.graph_widget.plot_style in _MARKER_STYLES
+        # Only shown for marker-drawing styles, and only while Unify is
+        # checked (unchecked: each series's own column in the table above
+        # is where marker size / edge color get set instead).
+        is_marker_style = self.graph_widget.plot_style in _MARKER_STYLES
+        self.cb_unify_marker_style.setVisible(is_marker_style)
+        self.unified_marker_widget.setVisible(
+            self.cb_unify_marker_style.isChecked() and is_marker_style
         )
 
         # Load error-bar settings
@@ -299,15 +313,23 @@ class CustomizeLegend(QWidget):
         label_layout = QVBoxLayout()
         marker_layout = QVBoxLayout()
         color_layout = QVBoxLayout()
-        linewidth_layout = QVBoxLayout()
         alpha_layout = QVBoxLayout()
-        zorder_layout = QVBoxLayout()
-        show_marker_col = self.graph_widget.plot_style in _MARKER_STYLES
+        
+        show_linewidth_col = (
+            self.graph_widget.plot_style in ('line', 'trendline') or
+            (self.graph_widget.plot_style == 'point' and getattr(self.graph_widget, 'join_for_point_plot', False))
+        )
+        linewidth_layout = QVBoxLayout() if show_linewidth_col else None
+        
+        show_marker_col = (
+            self.graph_widget.plot_style in _MARKER_STYLES
+            and not getattr(self.graph_widget, 'unify_marker_style', True)
+        )
         marker_size_layout = QVBoxLayout() if show_marker_col else None
         edge_color_layout = QVBoxLayout() if show_marker_col else None
 
         # Headers
-        for header in ['Label', 'Marker', 'Color', 'Line width', 'Alpha', 'Z-order']:
+        for header in ['Label', 'Marker', 'Color', 'Line width', 'Alpha']:
             lbl = QLabel(header)
             lbl.setAlignment(Qt.AlignCenter)
             if header == 'Label':
@@ -318,11 +340,10 @@ class CustomizeLegend(QWidget):
             elif header == 'Color':
                 color_layout.addWidget(lbl)
             elif header == 'Line width':
-                linewidth_layout.addWidget(lbl)
+                if show_linewidth_col:
+                    linewidth_layout.addWidget(lbl)
             elif header == 'Alpha':
                 alpha_layout.addWidget(lbl)
-            elif header == 'Z-order':
-                zorder_layout.addWidget(lbl)
         if show_marker_col:
             for lbl_text, layout in (('Marker size', marker_size_layout), ('Edge color', edge_color_layout)):
                 lbl = QLabel(lbl_text)
@@ -332,7 +353,7 @@ class CustomizeLegend(QWidget):
         for idx, prop in enumerate(legend_properties):
             # Label
             label = QLineEdit(prop['label'])
-            label.setFixedWidth(140)
+            label.setFixedWidth(120)
             label.textChanged.connect(
                 lambda text, i=idx: self._update_legend_property(i, 'label', text)
             )
@@ -341,6 +362,7 @@ class CustomizeLegend(QWidget):
             # Marker (only for point plots)
             if self.graph_widget.plot_style == 'point':
                 marker = QComboBox()
+                marker.setFixedWidth(50)
                 marker.addItems(MARKERS)
                 marker.setCurrentText(prop['marker'])
                 marker.currentTextChanged.connect(
@@ -350,6 +372,7 @@ class CustomizeLegend(QWidget):
 
             # Color combobox with colored items
             color = QComboBox()
+            color.setFixedWidth(90)
             delegate = ColorDelegate(color)
             color.setItemDelegate(delegate)
 
@@ -372,39 +395,37 @@ class CustomizeLegend(QWidget):
             # Optional per-series style overrides -- blank (unset) by
             # default, since old saved graphs have none of these keys and
             # must keep falling back to the graph-wide default.
-            lw_spin = self._make_optional_spinbox(
-                minimum=0.0, maximum=20.0, decimals=2, step=0.5, start_value=1.5
-            )
-            lw_spin.setValue(prop.get('linewidth', self._UNSET))
-            lw_spin.valueChanged.connect(
-                lambda v, i=idx: self._update_legend_property_numeric(i, 'linewidth', v)
-            )
-            linewidth_layout.addWidget(lw_spin)
+            if show_linewidth_col:
+                lw_spin = self._make_optional_spinbox(
+                    minimum=0.0, maximum=20.0, decimals=2, step=0.5, start_value=1.5
+                )
+                lw_spin.setFixedWidth(60)
+                lw_spin.setValue(prop.get('linewidth', self._UNSET))
+                lw_spin.set_placeholder_value(1.5)
+                lw_spin.valueChanged.connect(
+                    lambda v, i=idx: self._update_legend_property_numeric(i, 'linewidth', v)
+                )
+                linewidth_layout.addWidget(lw_spin)
 
             alpha_spin = self._make_optional_spinbox(
                 minimum=0.0, maximum=1.0, decimals=2, step=0.1, start_value=1.0
             )
+            alpha_spin.setFixedWidth(60)
             alpha_spin.setValue(prop.get('alpha', self._UNSET))
+            alpha_spin.set_placeholder_value(1.0)
             alpha_spin.valueChanged.connect(
                 lambda v, i=idx: self._update_legend_property_numeric(i, 'alpha', v)
             )
             alpha_layout.addWidget(alpha_spin)
 
-            zorder_spin = self._make_optional_spinbox(
-                minimum=-100.0, maximum=100.0, decimals=1, step=1.0, start_value=2.0
-            )
-            zorder_spin.setValue(prop.get('zorder', self._UNSET))
-            zorder_spin.valueChanged.connect(
-                lambda v, i=idx: self._update_legend_property_numeric(i, 'zorder', v)
-            )
-            zorder_layout.addWidget(zorder_spin)
-
             if show_marker_col:
                 default_marker_size = getattr(self.graph_widget, 'scatter_size', 70)
                 ms_spin = self._make_optional_spinbox(
-                    is_int=True, minimum=1, maximum=500, start_value=default_marker_size
+                    is_int=True, minimum=1, maximum=500, step=10, start_value=default_marker_size
                 )
+                ms_spin.setFixedWidth(60)
                 ms_spin.setValue(int(prop.get('marker_size', self._UNSET)))
+                ms_spin.set_placeholder_value(default_marker_size)
                 ms_spin.valueChanged.connect(
                     lambda v, i=idx: self._update_legend_property_numeric(i, 'marker_size', v)
                 )
@@ -413,9 +434,11 @@ class CustomizeLegend(QWidget):
                 edge_btn = QPushButton()
                 edge_btn.setFixedWidth(70)
                 edge_val = prop.get('edge_color')
-                self._set_color_button(edge_btn, edge_val or 'black')
+                # Show the resolved color -- an unset override falls back to
+                # the graph-wide scatter_edgecolor, not a generic "(default)".
+                self._set_color_button(edge_btn, edge_val or getattr(self.graph_widget, 'scatter_edgecolor', 'black'))
                 if not edge_val:
-                    edge_btn.setText("(default)")
+                    edge_btn.setToolTip("Using the global marker edge color")
                 edge_btn.clicked.connect(
                     lambda *_a, i=idx, btn=edge_btn: self._pick_series_edge_color(i, btn)
                 )
@@ -426,22 +449,25 @@ class CustomizeLegend(QWidget):
         if self.graph_widget.plot_style == 'point':
             marker_layout.addStretch()
         color_layout.addStretch()
-        linewidth_layout.addStretch()
+        if show_linewidth_col:
+            linewidth_layout.addStretch()
         alpha_layout.addStretch()
-        zorder_layout.addStretch()
         if show_marker_col:
             marker_size_layout.addStretch()
             edge_color_layout.addStretch()
 
         self.legend_layout.addLayout(label_layout)
-        self.legend_layout.addLayout(marker_layout)
+        if self.graph_widget.plot_style == 'point':
+            self.legend_layout.addLayout(marker_layout)
         self.legend_layout.addLayout(color_layout)
-        self.legend_layout.addLayout(linewidth_layout)
+        if show_linewidth_col:
+            self.legend_layout.addLayout(linewidth_layout)
         self.legend_layout.addLayout(alpha_layout)
-        self.legend_layout.addLayout(zorder_layout)
         if show_marker_col:
             self.legend_layout.addLayout(marker_size_layout)
             self.legend_layout.addLayout(edge_color_layout)
+            
+        self.legend_layout.addStretch()
 
     def _update_legend_property(self, idx, property_type, text):
         """Update a legend property and refresh the plot live."""
@@ -481,6 +507,28 @@ class CustomizeLegend(QWidget):
         else:
             self.graph_widget.canvas.draw_idle()
 
+    def _on_unify_marker_style_toggled(self, checked):
+        """Unify marker size/edge color across every series (checked) vs.
+        letting each series override them individually (unchecked --
+        today's per-series Marker size/Edge color table columns)."""
+        self.graph_widget.unify_marker_style = checked
+        if self.graph_widget.df is not None:
+            self.graph_widget.plot(self.graph_widget.df)
+        else:
+            self.graph_widget.canvas.draw_idle()
+        # Rebuild the table (show/hide per-series columns) and refresh the
+        # unified row's own visibility -- load_legend_properties() is the
+        # single place both are already kept in sync.
+        self.load_legend_properties()
+        # Deferred to the next event-loop iteration: the dialog doesn't
+        # auto-grow until Qt settles the old columns' deleteLater() cleanup.
+        QTimer.singleShot(0, self._resize_window_to_fit_content)
+
+    def _resize_window_to_fit_content(self):
+        window = self.window()
+        if window is not None:
+            window.adjustSize()
+
     def _update_combobox_color(self, combobox):
         """Update combobox background color to match selected color.
 
@@ -510,8 +558,14 @@ class CustomizeLegend(QWidget):
         if color.isValid():
             self._set_color_button(self.btn_scatter_edgecolor, color.name())
 
-    def apply_changes(self):
-        """Apply legend changes by doing a full replot."""
+    def apply_changes(self, replot: bool = True):
+        """Apply legend changes by doing a full replot.
+
+        `replot=False` (used by CustomizeGraphDialog._preview_apply()'s
+        debounced live preview) skips both replot points below, leaving the
+        combined restyle()-or-replot decision to the dialog after all four
+        tabs have applied their fields, instead of each tab replotting on
+        its own."""
         # Error-bar settings
         style = self.graph_widget.plot_style
         if style in _ERROR_BAR_STYLES:
@@ -531,15 +585,18 @@ class CustomizeLegend(QWidget):
         self.graph_widget.legend_loc = self.combo_legend_loc.currentText()
 
         # Full replot to ensure all changes are committed
-        if self.graph_widget.df is not None:
-            self.graph_widget.plot(self.graph_widget.df)
-        else:
-            self.graph_widget.canvas.draw_idle()
+        if replot:
+            if self.graph_widget.df is not None:
+                self.graph_widget.plot(self.graph_widget.df)
+            else:
+                self.graph_widget.canvas.draw_idle()
 
         # Update the backup so Cancel won't revert applied changes
         self.original_legend_properties = copy.deepcopy(self.graph_widget.get_legend_properties())
         self.original_legend_outside = getattr(self.graph_widget, 'legend_outside', False)
         self.original_legend_bbox = getattr(self.graph_widget, 'legend_bbox', None)
+
+        self.graph_widget.unify_marker_style = self.cb_unify_marker_style.isChecked()
 
         # Apply scatter-specific properties
         if self.graph_widget.plot_style in ['scatter', 'trendline', 'point']:
@@ -547,9 +604,14 @@ class CustomizeLegend(QWidget):
             edge_c = self.btn_scatter_edgecolor.text()
             if not edge_c or not isinstance(edge_c, str) or edge_c.strip() in ("", "None", "none", "null"):
                 edge_c = 'black'
-            self.graph_widget.scatter_edgecolor = edge_c
+            # Compare as colors, not strings (button text is hex-normalized)
+            # so re-applying the same color doesn't register as a change --
+            # this runs on every live-preview tick, so a string mismatch
+            # alone would force a full replot every tick.
+            if QColor(edge_c) != QColor(self.graph_widget.scatter_edgecolor):
+                self.graph_widget.scatter_edgecolor = edge_c
             # Replot to reflect changes
-            if self.graph_widget.df is not None:
+            if replot and self.graph_widget.df is not None:
                 self.graph_widget.plot(self.graph_widget.df)
 
         # Notify ViewModel of the updated legend/scatter/error-bar properties
@@ -563,6 +625,7 @@ class CustomizeLegend(QWidget):
             'legend_fontsize': self.graph_widget.legend_fontsize,
             'legend_alpha': self.graph_widget.legend_alpha,
             'legend_loc': self.graph_widget.legend_loc,
+            'unify_marker_style': self.graph_widget.unify_marker_style,
         }
         if self.graph_widget.plot_style in ['scatter', 'trendline', 'point']:
             props['scatter_size'] = self.graph_widget.scatter_size

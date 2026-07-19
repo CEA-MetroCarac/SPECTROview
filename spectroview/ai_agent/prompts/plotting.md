@@ -30,7 +30,7 @@ All of the following are **optional, top-level tool arguments** — do NOT nest 
 - `hist_bins` — number of bins, for `histogram` style
 - `trendline_order` — polynomial order, for `trendline` style
 
-For any property without a dedicated argument above (e.g. `x_rot`, `plot_width`, `plot_height`, `dpi`, `hist_kde`), pass it inside the `other_properties` dict instead.
+For any property without a dedicated argument above (e.g. `x_rot`, `plot_width`, `plot_height`, `dpi`, `hist_kde`, `colormap_norm`/`colormap_center` for wafer/2Dmap, `axis_breaks`, `inset_enabled` and the other `inset_*` fields), pass it inside the `other_properties` dict instead.
 
 ## Multi-Style Plots
 

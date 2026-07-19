@@ -11,9 +11,8 @@ class VMSettings(QObject):
     # ───── ViewModel → View signals ─────
     settings_loaded = Signal(dict)
     settings_saved = Signal()
-    model_folder_changed = Signal(str)
+    working_folder_changed = Signal(str)
     history_folder_changed = Signal(str)
-    template_folder_changed = Signal(str)
     ai_agent_visibility_changed = Signal(bool)  # emitted when the unlock code is entered
 
     # Secret codes gating the (unreleased) AI Agent feature. Not case-sensitive.
@@ -27,38 +26,40 @@ class VMSettings(QObject):
     # ---------- Load ----------
     def load(self):
         data = self.settings.load_fit_settings()
-        data["model_folder"] = self.settings.get_model_folder()
-        data["template_folder"] = self.settings.get_template_folder()
+        data["working_folder"] = self.settings.get_working_folder()
         ai_data = self.settings.load_ai_settings()
         data.update(ai_data)
         self.settings_loaded.emit(data)
 
     # ---------- Save ----------
     def save(self, data: dict):
-        model_folder = data.pop("model_folder", "")
-        template_folder = data.pop("template_folder", "")
-        
+        working_folder = data.pop("working_folder", "")
+
         ai_keys = ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini",
                    "api_key_DeepSeek", "api_key_Mistral", "api_key_Custom", "custom_base_url", "history_folder"]
         ai_data = {k: data.pop(k, "") for k in ai_keys if k in data}
-        
+
         self.settings.save_fit_settings(data)
         self.settings.save_ai_settings(ai_data)
 
-        if model_folder:
-            self.settings.set_model_folder(model_folder)
-        self.settings.set_template_folder(template_folder)
+        if working_folder:
+            self.settings.set_working_folder(working_folder)
 
         self.settings_saved.emit()
 
     # ---------- Folder picker ----------
-    def pick_model_folder(self):
+    def pick_working_folder(self):
+        """Persists immediately (unlike the old pick_template_folder(),
+        which only emitted the signal to update the line edit and waited
+        for the Settings dialog's OK button) -- part of the fix for
+        recipe/style dialogs never seeing a folder configured after the
+        Graph Workspace tab was already built."""
         folder = QFileDialog.getExistingDirectory(
-            None, "Select Fit Model Folder", ""
+            None, "Select SPECTROview Working Folder", ""
         )
         if folder:
-            self.settings.set_model_folder(folder)
-            self.model_folder_changed.emit(folder)
+            self.settings.set_working_folder(folder)
+            self.working_folder_changed.emit(folder)
 
     def pick_history_folder(self):
         folder = QFileDialog.getExistingDirectory(
@@ -66,13 +67,6 @@ class VMSettings(QObject):
         )
         if folder:
             self.history_folder_changed.emit(folder)
-
-    def pick_template_folder(self):
-        folder = QFileDialog.getExistingDirectory(
-            None, "Select Plot Template Folder", ""
-        )
-        if folder:
-            self.template_folder_changed.emit(folder)
 
     # ---------- AI Agent unlock ----------
     def try_ai_agent_code(self, code: str):

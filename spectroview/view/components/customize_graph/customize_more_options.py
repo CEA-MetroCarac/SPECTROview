@@ -1,15 +1,15 @@
-"""'More options' tab of the Customize Graph dialog: adaptive controls
-(join/dodge/error-bar/wafer-stats, data sorting, trendline, histogram) shown
-based on the current plot_style.
+"""'More options' tab of the Customize Graph dialog: general plot options
+(incl. figure theme), font sizes, data sorting, and adaptive controls
+(trendline, histogram, colormap) shown based on the current plot_style.
 
 Split out of customize_graph_dialog.py; no behavior changes.
 """
-from PySide6.QtGui import QIcon, QColor
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QLabel, QPushButton,
-    QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QRadioButton, QLineEdit,
+    QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QRadioButton,
     QApplication, QScrollArea, QSizePolicy, QTableWidget, QTableWidgetItem,
-    QAbstractItemView, QHeaderView, QColorDialog,
+    QAbstractItemView, QHeaderView,
 )
 
 from spectroview import ICON_DIR
@@ -17,6 +17,14 @@ from spectroview import ICON_DIR
 # Text <-> MGraph.figure_theme value.
 _THEME_TEXT_MAP = {"Light": "light", "Dark": "dark", "Soft Dark": "soft_dark"}
 _THEME_VALUE_TEXT = {v: k for k, v in _THEME_TEXT_MAP.items()}
+
+# Real mplstyle defaults (same across all three theme files -- they only
+# differ in color, not typography) so the font-size spinboxes always show a
+# concrete, meaningful number instead of a blank/sentinel value.
+_DEFAULT_TITLE_FONTSIZE = 12
+_DEFAULT_SUBTITLE_FONTSIZE = 10
+_DEFAULT_AXIS_LABEL_FONTSIZE = 12
+_DEFAULT_TICK_FONTSIZE = 9
 
 
 class CustomizeMoreOptions(QWidget):
@@ -41,7 +49,6 @@ class CustomizeMoreOptions(QWidget):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
 
-        # Scrollable inner area
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.NoFrame)
@@ -52,24 +59,16 @@ class CustomizeMoreOptions(QWidget):
         scroll.setWidget(inner)
         outer.addWidget(scroll)
 
-        # ---- General (always visible) ----
         self._build_general_section()
-
-        # ---- Figure style section (always visible) ----
-        self._build_figure_style_section()
-
-        # ---- Data sorting section ----
+        self._build_font_size_section()
         self._build_sorting_section()
-
-        # ---- Trendline section ----
         self._build_trendline_section()
-
-        # ---- Histogram section ----
         self._build_histogram_section()
+        self._build_colormap_section()
 
         self._inner_layout.addStretch()
 
-    # ---- General section ------------------------------------------------
+    # ---- General section (plot options + figure theme) ------------------
 
     def _build_general_section(self):
         grp = QGroupBox("Plot options:")
@@ -77,40 +76,23 @@ class CustomizeMoreOptions(QWidget):
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(8)
 
-        # Join points (point plot)
         self._cb_join = QCheckBox("Join data points (point plot)")
         layout.addWidget(self._cb_join)
 
-        # Dodge points (point plot)
         self._cb_dodge = QCheckBox("Dodge overlapping points (point plot)")
         layout.addWidget(self._cb_dodge)
 
-        # Dodge points (scatter plot)
         self._cb_dodge_scatter = QCheckBox("Dodge overlapping points (scatter plot)")
         layout.addWidget(self._cb_dodge_scatter)
 
-        # Error bar (bar plot)
         self._cb_error_bar = QCheckBox("Show error bar (bar plot)")
         layout.addWidget(self._cb_error_bar)
 
-        # Wafer stats (wafer plot)
         self._cb_wafer_stats = QCheckBox("Show statistics (wafer plot)")
         layout.addWidget(self._cb_wafer_stats)
 
-        self._general_group = grp
-        self._inner_layout.addWidget(grp)
-
-    # ---- Figure style section --------------------------------------------
-
-    def _build_figure_style_section(self):
-        grp = QGroupBox("Figure style:")
-        layout = QVBoxLayout(grp)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(8)
-
-        # Theme (selects the underlying mplstyle -- background/text/grid
-        # colors as a set; figure_facecolor below is a separate, more
-        # specific override layered on top of whichever theme is chosen)
+        # Theme selects the underlying mplstyle (background/text/grid
+        # colors as a set).
         theme_row = QHBoxLayout()
         theme_row.addWidget(QLabel("Theme:"))
         self._combo_figure_theme = QComboBox()
@@ -119,73 +101,37 @@ class CustomizeMoreOptions(QWidget):
         theme_row.addStretch()
         layout.addLayout(theme_row)
 
-        # Background color
-        bg_row = QHBoxLayout()
-        bg_row.addWidget(QLabel("Background color:"))
-        self._btn_figure_facecolor = QPushButton("(default)")
-        self._btn_figure_facecolor.setFixedWidth(90)
-        self._btn_figure_facecolor.clicked.connect(self._pick_figure_facecolor)
-        bg_row.addWidget(self._btn_figure_facecolor)
-        bg_row.addStretch()
-        layout.addLayout(bg_row)
-
-        # Subtitle
-        sub_row = QHBoxLayout()
-        sub_row.addWidget(QLabel("Subtitle:"))
-        self._edit_subtitle = QLineEdit()
-        self._edit_subtitle.setPlaceholderText("Optional text shown under the title")
-        sub_row.addWidget(self._edit_subtitle)
-        sub_row.addWidget(QLabel("Font size:"))
-        self._spin_subtitle_fontsize = QSpinBox()
-        self._spin_subtitle_fontsize.setRange(4, 72)
-        self._spin_subtitle_fontsize.setSingleStep(1)
-        self._spin_subtitle_fontsize.setValue(10)  # matches the pre-existing hardcoded fallback
-        self._spin_subtitle_fontsize.setMaximumWidth(60)
-        sub_row.addWidget(self._spin_subtitle_fontsize)
-        layout.addLayout(sub_row)
-
-        # Spine visibility
-        spine_row = QHBoxLayout()
-        spine_row.addWidget(QLabel("Show spines:"))
-        self._cb_spine_top = QCheckBox("Top")
-        self._cb_spine_right = QCheckBox("Right")
-        self._cb_spine_bottom = QCheckBox("Bottom")
-        self._cb_spine_left = QCheckBox("Left")
-        for cb in (self._cb_spine_top, self._cb_spine_right, self._cb_spine_bottom, self._cb_spine_left):
-            spine_row.addWidget(cb)
-        spine_row.addStretch()
-        layout.addLayout(spine_row)
-
-        # Margins
-        margin_row = QHBoxLayout()
-        margin_row.addWidget(QLabel("Margins:"))
-        margin_row.addWidget(QLabel("X"))
-        self._spin_x_margin = QDoubleSpinBox()
-        self._spin_x_margin.setRange(0.0, 1.0)
-        self._spin_x_margin.setDecimals(2)
-        self._spin_x_margin.setSingleStep(0.05)
-        self._spin_x_margin.setValue(0.05)  # matches matplotlib's own default axes.xmargin
-        margin_row.addWidget(self._spin_x_margin)
-        margin_row.addWidget(QLabel("Y"))
-        self._spin_y_margin = QDoubleSpinBox()
-        self._spin_y_margin.setRange(0.0, 1.0)
-        self._spin_y_margin.setDecimals(2)
-        self._spin_y_margin.setSingleStep(0.05)
-        self._spin_y_margin.setValue(0.05)  # matches matplotlib's own default axes.ymargin
-        margin_row.addWidget(self._spin_y_margin)
-        margin_row.addStretch()
-        layout.addLayout(margin_row)
-
-        self._figure_style_group = grp
+        self._general_group = grp
         self._inner_layout.addWidget(grp)
 
-    def _pick_figure_facecolor(self):
-        """Open color picker for the figure/axes background override."""
-        current = QColor(self._btn_figure_facecolor.text()) if self._btn_figure_facecolor.text() != "(default)" else QColor('white')
-        color = QColorDialog.getColor(current, self, "Select Background Color")
-        if color.isValid():
-            self._btn_figure_facecolor.setText(color.name())
-            self._btn_figure_facecolor.setStyleSheet(f"background-color: {color.name()};")
+    # ---- Font sizes section -----------------------------------------------
+
+    def _build_font_size_section(self):
+        """Every font-size control on a graph, in one row: Title, Subtitle
+        (the subtitle text itself is edited in the workspace's side panel,
+        not duplicated here), Axis label, Tick label."""
+        grp = QGroupBox("Font sizes (pt):")
+        layout = QHBoxLayout(grp)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
+
+        for label_text, attr, default in [
+            ("Title:", "_spin_title_fontsize", _DEFAULT_TITLE_FONTSIZE),
+            ("Subtitle:", "_spin_subtitle_fontsize", _DEFAULT_SUBTITLE_FONTSIZE),
+            ("Axis label:", "_spin_axis_label_fontsize", _DEFAULT_AXIS_LABEL_FONTSIZE),
+            ("Tick label:", "_spin_tick_fontsize", _DEFAULT_TICK_FONTSIZE),
+        ]:
+            layout.addWidget(QLabel(label_text))
+            spin = QSpinBox()
+            spin.setRange(4, 72)
+            spin.setSingleStep(1)
+            spin.setValue(default)
+            spin.setMaximumWidth(60)
+            setattr(self, attr, spin)
+            layout.addWidget(spin)
+
+        layout.addStretch()
+        self._inner_layout.addWidget(grp)
 
     # ---- Data sorting section -------------------------------------------
 
@@ -197,7 +143,6 @@ class CustomizeMoreOptions(QWidget):
 
         sort_row = QHBoxLayout()
 
-        # Checkbox to enable/disable intelligent sorting
         self._cb_sort_enabled = QCheckBox("Enable intelligent data sorting")
         self._cb_sort_enabled.setChecked(True)
         self._cb_sort_enabled.toggled.connect(self._on_sort_enabled_toggled)
@@ -215,7 +160,6 @@ class CustomizeMoreOptions(QWidget):
         sort_row.addStretch()
         layout.addLayout(sort_row)
 
-        # Info label
         info = QLabel("Sorts legend and data order for consistent, deterministic plots.")
         info.setStyleSheet("color: gray; font-style: italic; font-size: 10px;")
         info.setWordWrap(True)
@@ -232,7 +176,6 @@ class CustomizeMoreOptions(QWidget):
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(8)
 
-        # Polynomial order
         order_row = QHBoxLayout()
         order_row.addWidget(QLabel("Polynomial order:"))
         self._spin_order = QSpinBox()
@@ -244,7 +187,6 @@ class CustomizeMoreOptions(QWidget):
         order_row.addStretch()
         layout.addLayout(order_row)
 
-        # Anchor group
         anchor_grp = QGroupBox("Anchor point")
         anchor_grp.setCheckable(True)
         anchor_grp.setChecked(False)
@@ -275,7 +217,6 @@ class CustomizeMoreOptions(QWidget):
         custom_row.addStretch()
         anchor_layout.addLayout(custom_row)
 
-        # Enable/disable spinboxes based on radio selection
         self._rb_origin.toggled.connect(lambda on: self._spin_ax.setEnabled(not on))
         self._rb_origin.toggled.connect(lambda on: self._spin_ay.setEnabled(not on))
         self._spin_ax.setEnabled(False)
@@ -283,7 +224,6 @@ class CustomizeMoreOptions(QWidget):
 
         layout.addWidget(anchor_grp)
 
-        # Equation table
         eq_label_row = QHBoxLayout()
         eq_label_row.addWidget(QLabel("Fit equation(s):"))
         self._btn_copy_eq = QPushButton("Copy")
@@ -342,6 +282,42 @@ class CustomizeMoreOptions(QWidget):
         self._histogram_group = grp
         self._inner_layout.addWidget(grp)
 
+    # ---- Colormap normalization section (wafer/2Dmap) --------------------
+
+    def _build_colormap_section(self):
+        grp = QGroupBox("Colormap scale (wafer / 2Dmap)")
+        layout = QHBoxLayout(grp)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(8)
+
+        layout.addWidget(QLabel("Normalization:"))
+        self._combo_colormap_norm = QComboBox()
+        self._combo_colormap_norm.addItem("Linear", "linear")
+        self._combo_colormap_norm.addItem("Log", "log")
+        self._combo_colormap_norm.addItem("Centered", "centered")
+        self._combo_colormap_norm.currentIndexChanged.connect(self._on_colormap_norm_changed)
+        layout.addWidget(self._combo_colormap_norm)
+
+        layout.addSpacing(10)
+        self._lbl_colormap_center = QLabel("Center value:")
+        layout.addWidget(self._lbl_colormap_center)
+        self._spin_colormap_center = QDoubleSpinBox()
+        self._spin_colormap_center.setRange(-1e6, 1e6)
+        self._spin_colormap_center.setDecimals(2)
+        self._spin_colormap_center.setSingleStep(1.0)
+        self._spin_colormap_center.setMaximumWidth(90)
+        layout.addWidget(self._spin_colormap_center)
+        layout.addStretch()
+
+        self._colormap_group = grp
+        self._inner_layout.addWidget(grp)
+
+    def _on_colormap_norm_changed(self):
+        """Center value only means anything for the 'centered' norm."""
+        is_centered = self._combo_colormap_norm.currentData() == "centered"
+        self._lbl_colormap_center.setEnabled(is_centered)
+        self._spin_colormap_center.setEnabled(is_centered)
+
     # ------------------------------------------------------------------ #
     #  Load / Apply
     # ------------------------------------------------------------------ #
@@ -358,38 +334,25 @@ class CustomizeMoreOptions(QWidget):
         self._cb_error_bar.setChecked(getattr(gw, 'show_bar_plot_error_bar', True))
         self._cb_wafer_stats.setChecked(getattr(gw, 'wafer_stats', True))
 
-        # Highlight relevant checkboxes based on style
         self._cb_join.setEnabled(style == 'point')
         self._cb_dodge.setEnabled(style == 'point')
         self._cb_dodge_scatter.setEnabled(style == 'scatter')
         self._cb_error_bar.setEnabled(style == 'bar')
         self._cb_wafer_stats.setEnabled(style == 'wafer')
 
-        # --- Figure style section ---
         self._combo_figure_theme.setCurrentText(
             _THEME_VALUE_TEXT.get(getattr(gw, 'figure_theme', 'light'), "Light")
         )
 
-        facecolor = getattr(gw, 'figure_facecolor', None)
-        if facecolor:
-            self._btn_figure_facecolor.setText(facecolor)
-            self._btn_figure_facecolor.setStyleSheet(f"background-color: {facecolor};")
-        else:
-            self._btn_figure_facecolor.setText("(default)")
-            self._btn_figure_facecolor.setStyleSheet("")
-
-        self._edit_subtitle.setText(getattr(gw, 'plot_subtitle', None) or "")
-        self._spin_subtitle_fontsize.setValue(getattr(gw, 'subtitle_fontsize', None) or 10)
-
-        spines = getattr(gw, 'spines_visible', None) or {'top': True, 'right': True, 'bottom': True, 'left': True}
-        self._cb_spine_top.setChecked(spines.get('top', True))
-        self._cb_spine_right.setChecked(spines.get('right', True))
-        self._cb_spine_bottom.setChecked(spines.get('bottom', True))
-        self._cb_spine_left.setChecked(spines.get('left', True))
-
-        margins = getattr(gw, 'figure_margins', None) or [0.05, 0.05]
-        self._spin_x_margin.setValue(margins[0])
-        self._spin_y_margin.setValue(margins[1])
+        # --- Font sizes section ---
+        self._spin_title_fontsize.setValue(getattr(gw, 'title_fontsize', None) or _DEFAULT_TITLE_FONTSIZE)
+        self._spin_subtitle_fontsize.setValue(
+            getattr(gw, 'subtitle_fontsize', None) or _DEFAULT_SUBTITLE_FONTSIZE
+        )
+        self._spin_axis_label_fontsize.setValue(
+            getattr(gw, 'axis_label_fontsize', None) or _DEFAULT_AXIS_LABEL_FONTSIZE
+        )
+        self._spin_tick_fontsize.setValue(getattr(gw, 'tick_label_fontsize', None) or _DEFAULT_TICK_FONTSIZE)
 
         # --- Data sorting section ---
         sort_enabled = getattr(gw, 'sort_data_enabled', True)
@@ -426,6 +389,16 @@ class CustomizeMoreOptions(QWidget):
             self._rb_step.setChecked(step)
             self._rb_filled.setChecked(not step)
 
+        # --- Colormap normalization section (wafer/2Dmap only) ---
+        is_map = style in ('wafer', '2Dmap')
+        self._colormap_group.setVisible(is_map)
+        if is_map:
+            norm_kind = getattr(gw, 'colormap_norm', 'linear')
+            idx = self._combo_colormap_norm.findData(norm_kind)
+            self._combo_colormap_norm.setCurrentIndex(idx if idx >= 0 else 0)
+            self._spin_colormap_center.setValue(getattr(gw, 'colormap_center', 0.0))
+            self._on_colormap_norm_changed()
+
     def _refresh_equation_table(self):
         """Populate the equation table from trendline_equations stored on the graph widget."""
         equations = getattr(self.graph_widget, 'trendline_equations', [])
@@ -446,50 +419,41 @@ class CustomizeMoreOptions(QWidget):
             lines.append(f"{entry.get('label','')}\t{entry.get('equation','')}\t{entry.get('r2','')}")
         QApplication.clipboard().setText("\n".join(lines))
 
-    def _apply(self):
-        """Write widget values back to the graph widget and replot."""
+    def _apply(self, replot: bool = True):
+        """Write widget values back to the graph widget and replot.
+
+        `replot=False` (the dialog's debounced live preview) skips both the
+        replot and the trendline-equation-table refresh that depends on
+        its freshly computed results, leaving the combined
+        restyle()-or-replot decision to the dialog after every tab has
+        applied its fields."""
         gw = self.graph_widget
         style = gw.plot_style
 
-        # General
         gw.join_for_point_plot = self._cb_join.isChecked()
         gw.dodge_point_plot = self._cb_dodge.isChecked()
         gw.dodge_scatter_plot = self._cb_dodge_scatter.isChecked()
         gw.show_bar_plot_error_bar = self._cb_error_bar.isChecked()
         gw.wafer_stats = self._cb_wafer_stats.isChecked()
-
-        # Figure style
         gw.figure_theme = _THEME_TEXT_MAP[self._combo_figure_theme.currentText()]
-        facecolor_text = self._btn_figure_facecolor.text()
-        gw.figure_facecolor = facecolor_text if facecolor_text != "(default)" else None
-        gw.plot_subtitle = self._edit_subtitle.text().strip() or None
+
+        gw.title_fontsize = self._spin_title_fontsize.value()
         gw.subtitle_fontsize = self._spin_subtitle_fontsize.value()
-        gw.spines_visible = {
-            'top': self._cb_spine_top.isChecked(),
-            'right': self._cb_spine_right.isChecked(),
-            'bottom': self._cb_spine_bottom.isChecked(),
-            'left': self._cb_spine_left.isChecked(),
-        }
-        gw.figure_margins = [self._spin_x_margin.value(), self._spin_y_margin.value()]
+        gw.axis_label_fontsize = self._spin_axis_label_fontsize.value()
+        gw.tick_label_fontsize = self._spin_tick_fontsize.value()
 
         # Data sorting — capture old values first to detect changes
         old_sort_enabled = getattr(gw, 'sort_data_enabled', True)
         old_sort_by = getattr(gw, 'sort_data_by', 'Z')
-
         gw.sort_data_enabled = self._cb_sort_enabled.isChecked()
         sort_index = self._cbb_sort_by.currentIndex()
         gw.sort_data_by = ['Z', 'X', 'Y'][sort_index]
 
-        # If sort settings changed, reset legend_properties so the legend is
-        # rebuilt from scratch in the new sorted order (labels + colors in sync).
-        sort_settings_changed = (
-            gw.sort_data_enabled != old_sort_enabled or
-            gw.sort_data_by != old_sort_by
-        )
-        if sort_settings_changed:
+        # Sort settings changed -> reset legend_properties so it rebuilds
+        # from scratch in the new order (labels + colors stay in sync).
+        if gw.sort_data_enabled != old_sort_enabled or gw.sort_data_by != old_sort_by:
             gw.legend_properties = []
 
-        # Trendline
         if style == 'trendline':
             gw.trendline_order = self._spin_order.value()
             gw.trendline_anchor_enabled = self._anchor_grp.isChecked()
@@ -497,36 +461,34 @@ class CustomizeMoreOptions(QWidget):
             gw.trendline_anchor_x = self._spin_ax.value()
             gw.trendline_anchor_y = self._spin_ay.value()
 
-        # Histogram
         if style == 'histogram':
             gw.hist_bins = self._spin_bins.value()
             gw.hist_kde = self._cb_kde.isChecked()
             gw.hist_step = self._rb_step.isChecked()
 
+        if style in ('wafer', '2Dmap'):
+            gw.colormap_norm = self._combo_colormap_norm.currentData()
+            gw.colormap_center = self._spin_colormap_center.value()
 
-        # Replot
-        if gw.df is not None:
-            gw.plot(gw.df)
+        if replot:
+            if gw.df is not None:
+                gw.plot(gw.df)
+            if style == 'trendline':
+                self._refresh_equation_table()
 
-        # Refresh equation table after replot (new equations computed)
-        if style == 'trendline':
-            self._refresh_equation_table()
-
-        # Emit properties_changed so ViewModel persists the new settings
         props = {
             'join_for_point_plot': gw.join_for_point_plot,
             'dodge_point_plot': gw.dodge_point_plot,
             'dodge_scatter_plot': gw.dodge_scatter_plot,
             'show_bar_plot_error_bar': gw.show_bar_plot_error_bar,
             'wafer_stats': gw.wafer_stats,
+            'figure_theme': gw.figure_theme,
+            'title_fontsize': gw.title_fontsize,
+            'subtitle_fontsize': gw.subtitle_fontsize,
+            'axis_label_fontsize': gw.axis_label_fontsize,
+            'tick_label_fontsize': gw.tick_label_fontsize,
             'sort_data_enabled': gw.sort_data_enabled,
             'sort_data_by': gw.sort_data_by,
-            'figure_theme': gw.figure_theme,
-            'figure_facecolor': gw.figure_facecolor,
-            'plot_subtitle': gw.plot_subtitle,
-            'subtitle_fontsize': gw.subtitle_fontsize,
-            'spines_visible': gw.spines_visible,
-            'figure_margins': gw.figure_margins,
         }
         if style == 'trendline':
             props.update({
@@ -541,6 +503,11 @@ class CustomizeMoreOptions(QWidget):
                 'hist_bins': gw.hist_bins,
                 'hist_kde': gw.hist_kde,
                 'hist_step': gw.hist_step,
+            })
+        if style in ('wafer', '2Dmap'):
+            props.update({
+                'colormap_norm': gw.colormap_norm,
+                'colormap_center': gw.colormap_center,
             })
         gw.properties_changed.emit(gw.graph_id, props)
 

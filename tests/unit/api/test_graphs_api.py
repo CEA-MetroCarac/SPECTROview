@@ -226,26 +226,26 @@ class TestPlot2DMapAndWafer:
         assert returned_ax is ax
 
 
-class TestPlotTemplateCRUD:
+class TestPlotRecipeCRUD:
     def test_save_list_load_delete_round_trip(self, tmp_path):
         configs = [{"plot_style": "scatter", "x": "x0_Si", "y": ["ampli_Si"]}]
-        template_id = graphs.save_plot_template(tmp_path, "My Template", configs)
+        recipe_id = graphs.save_plot_recipe(tmp_path, "My Recipe", configs)
 
-        summaries = graphs.list_plot_templates(tmp_path)
-        assert any(s["id"] == template_id and s["name"] == "My Template" for s in summaries)
+        summaries = graphs.list_plot_recipes(tmp_path)
+        assert any(s["id"] == recipe_id and s["name"] == "My Recipe" for s in summaries)
 
-        loaded = graphs.load_plot_template(tmp_path, template_id)
+        loaded = graphs.load_plot_recipe(tmp_path, recipe_id)
         assert loaded == configs
 
-        assert graphs.delete_plot_template(tmp_path, template_id) is True
-        assert graphs.list_plot_templates(tmp_path) == []
+        assert graphs.delete_plot_recipe(tmp_path, recipe_id) is True
+        assert graphs.list_plot_recipes(tmp_path) == []
 
     def test_save_empty_configs_raises_template_error(self, tmp_path):
         from spectroview.api.exceptions import TemplateError
         with pytest.raises(TemplateError):
-            graphs.save_plot_template(tmp_path, "Empty", [])
+            graphs.save_plot_recipe(tmp_path, "Empty", [])
 
-    def test_load_missing_template_raises_template_error(self, tmp_path):
+    def test_load_missing_recipe_raises_template_error(self, tmp_path):
         from spectroview.api.exceptions import TemplateError
         with pytest.raises(TemplateError):
-            graphs.load_plot_template(tmp_path, "not-a-real-id")
+            graphs.load_plot_recipe(tmp_path, "not-a-real-id")

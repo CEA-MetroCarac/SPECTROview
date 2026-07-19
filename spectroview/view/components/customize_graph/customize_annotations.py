@@ -14,7 +14,10 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview import ICON_DIR
-from spectroview.view.components.customize_graph.customize_annotation_dialogs import EditLineDialog, EditTextDialog
+from spectroview.view.components.customize_graph.customize_annotation_dialogs import (
+    EditLineDialog, EditTextDialog, EditArrowDialog, EditSpanDialog,
+    EditBoxDialog, EditCalloutDialog,
+)
 
 
 class CustomizeAnnotations(QWidget):
@@ -54,8 +57,9 @@ class CustomizeAnnotations(QWidget):
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(8)
 
-        # Add buttons
+        # Add buttons -- two rows so the panel doesn't get too cramped
         btn_layout = QHBoxLayout()
+        btn_layout2 = QHBoxLayout()
 
         self.btn_add_vline = QPushButton("V-Line")
         self.btn_add_vline.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
@@ -72,6 +76,32 @@ class CustomizeAnnotations(QWidget):
         btn_layout.addWidget(self.btn_add_vline)
         btn_layout.addWidget(self.btn_add_hline)
         btn_layout.addWidget(self.btn_add_text)
+
+        self.btn_add_arrow = QPushButton("Arrow")
+        self.btn_add_arrow.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_arrow.setIconSize(QSize(16, 16))
+
+        self.btn_add_vspan = QPushButton("V-Span")
+        self.btn_add_vspan.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_vspan.setIconSize(QSize(16, 16))
+
+        self.btn_add_hspan = QPushButton("H-Span")
+        self.btn_add_hspan.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_hspan.setIconSize(QSize(16, 16))
+
+        self.btn_add_box = QPushButton("Box")
+        self.btn_add_box.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_box.setIconSize(QSize(16, 16))
+
+        self.btn_add_callout = QPushButton("Callout")
+        self.btn_add_callout.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_callout.setIconSize(QSize(16, 16))
+
+        btn_layout2.addWidget(self.btn_add_arrow)
+        btn_layout2.addWidget(self.btn_add_vspan)
+        btn_layout2.addWidget(self.btn_add_hspan)
+        btn_layout2.addWidget(self.btn_add_box)
+        btn_layout2.addWidget(self.btn_add_callout)
 
         # Annotation list
         self.annotation_list = QListWidget()
@@ -90,6 +120,7 @@ class CustomizeAnnotations(QWidget):
         mgmt_layout.addWidget(self.btn_delete)
 
         layout.addLayout(btn_layout)
+        layout.addLayout(btn_layout2)
         layout.addWidget(QLabel("Current Annotations:"))
         layout.addWidget(self.annotation_list)
         layout.addLayout(mgmt_layout)
@@ -98,6 +129,11 @@ class CustomizeAnnotations(QWidget):
         self.btn_add_vline.clicked.connect(self._add_vline)
         self.btn_add_hline.clicked.connect(self._add_hline)
         self.btn_add_text.clicked.connect(self._add_text)
+        self.btn_add_arrow.clicked.connect(self._add_arrow)
+        self.btn_add_vspan.clicked.connect(self._add_vspan)
+        self.btn_add_hspan.clicked.connect(self._add_hspan)
+        self.btn_add_box.clicked.connect(self._add_box)
+        self.btn_add_callout.clicked.connect(self._add_callout)
         self.btn_edit.clicked.connect(self._edit_annotation)
         self.btn_delete.clicked.connect(self._delete_annotation)
 
@@ -114,6 +150,16 @@ class CustomizeAnnotations(QWidget):
         center_x = (xlim[0] + xlim[1]) / 2
         center_y = (ylim[0] + ylim[1]) / 2
         return center_x, center_y
+
+    def _get_plot_extent(self):
+        """Get (x_range, y_range) of the current plot view -- used to size
+        new span/box/arrow/callout defaults proportionally to the data
+        instead of a fixed data-unit constant that could be huge or tiny
+        depending on what's plotted."""
+        ax = self.graph_widget.ax
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+        return xlim[1] - xlim[0], ylim[1] - ylim[0]
 
     def _notify_annotations_changed(self):
         """Push the current annotation list to the ViewModel."""
@@ -190,6 +236,101 @@ class CustomizeAnnotations(QWidget):
         self._refresh_plot()
         self.load_annotations()
 
+    def _add_arrow(self):
+        """Add a short diagonal arrow centered on the plot view."""
+        center_x, center_y = self._get_plot_center()
+        x_range, y_range = self._get_plot_extent()
+
+        ann_id = f"arrow_{int(time.time() * 1000000)}"
+        annotation = {
+            'id': ann_id,
+            'type': 'arrow',
+            'x1': center_x - x_range * 0.1, 'y1': center_y - y_range * 0.1,
+            'x2': center_x + x_range * 0.1, 'y2': center_y + y_range * 0.1,
+            'color': 'black', 'linewidth': 1.5, 'linestyle': '-',
+        }
+
+        self.graph_widget.annotations.append(annotation)
+        self._notify_annotations_changed()
+        self._refresh_plot()
+        self.load_annotations()
+
+    def _add_vspan(self):
+        """Add a vertical shaded span, 20% of the X range, centered."""
+        center_x, _ = self._get_plot_center()
+        x_range, _ = self._get_plot_extent()
+
+        ann_id = f"vspan_{int(time.time() * 1000000)}"
+        annotation = {
+            'id': ann_id,
+            'type': 'vspan',
+            'x1': center_x - x_range * 0.1, 'x2': center_x + x_range * 0.1,
+            'color': 'orange', 'alpha': 0.3,
+        }
+
+        self.graph_widget.annotations.append(annotation)
+        self._notify_annotations_changed()
+        self._refresh_plot()
+        self.load_annotations()
+
+    def _add_hspan(self):
+        """Add a horizontal shaded span, 20% of the Y range, centered."""
+        _, center_y = self._get_plot_center()
+        _, y_range = self._get_plot_extent()
+
+        ann_id = f"hspan_{int(time.time() * 1000000)}"
+        annotation = {
+            'id': ann_id,
+            'type': 'hspan',
+            'y1': center_y - y_range * 0.1, 'y2': center_y + y_range * 0.1,
+            'color': 'orange', 'alpha': 0.3,
+        }
+
+        self.graph_widget.annotations.append(annotation)
+        self._notify_annotations_changed()
+        self._refresh_plot()
+        self.load_annotations()
+
+    def _add_box(self):
+        """Add a rectangle box, 20%x20% of the plot view, centered."""
+        center_x, center_y = self._get_plot_center()
+        x_range, y_range = self._get_plot_extent()
+        width, height = x_range * 0.2, y_range * 0.2
+
+        ann_id = f"box_{int(time.time() * 1000000)}"
+        annotation = {
+            'id': ann_id,
+            'type': 'box',
+            'x': center_x - width / 2, 'y': center_y - height / 2,
+            'width': width, 'height': height,
+            'facecolor': 'yellow', 'edgecolor': 'black', 'linewidth': 1.5, 'alpha': 0.3,
+        }
+
+        self.graph_widget.annotations.append(annotation)
+        self._notify_annotations_changed()
+        self._refresh_plot()
+        self.load_annotations()
+
+    def _add_callout(self):
+        """Add a callout: text offset up-right from a point at plot center,
+        connected by an arrow."""
+        center_x, center_y = self._get_plot_center()
+        x_range, y_range = self._get_plot_extent()
+
+        ann_id = f"callout_{int(time.time() * 1000000)}"
+        annotation = {
+            'id': ann_id,
+            'type': 'callout',
+            'x': center_x, 'y': center_y,
+            'tx': center_x + x_range * 0.15, 'ty': center_y + y_range * 0.15,
+            'text': 'Callout', 'fontsize': 11, 'color': 'black', 'arrowcolor': 'black',
+        }
+
+        self.graph_widget.annotations.append(annotation)
+        self._notify_annotations_changed()
+        self._refresh_plot()
+        self.load_annotations()
+
     def _edit_annotation(self):
         """Edit selected annotation."""
         selected = self.annotation_list.currentItem()
@@ -238,6 +379,38 @@ class CustomizeAnnotations(QWidget):
                 self._refresh_plot()
                 self.load_annotations()
 
+        elif annotation['type'] == 'arrow':
+            dialog = EditArrowDialog(annotation, self)
+            if dialog.exec() == QDialog.Accepted:
+                annotation.update(dialog.get_properties())
+                self._notify_annotations_changed()
+                self._refresh_plot()
+                self.load_annotations()
+
+        elif annotation['type'] in ('vspan', 'hspan'):
+            dialog = EditSpanDialog(annotation, self)
+            if dialog.exec() == QDialog.Accepted:
+                annotation.update(dialog.get_properties())
+                self._notify_annotations_changed()
+                self._refresh_plot()
+                self.load_annotations()
+
+        elif annotation['type'] == 'box':
+            dialog = EditBoxDialog(annotation, self)
+            if dialog.exec() == QDialog.Accepted:
+                annotation.update(dialog.get_properties())
+                self._notify_annotations_changed()
+                self._refresh_plot()
+                self.load_annotations()
+
+        elif annotation['type'] == 'callout':
+            dialog = EditCalloutDialog(annotation, self)
+            if dialog.exec() == QDialog.Accepted:
+                annotation.update(dialog.get_properties())
+                self._notify_annotations_changed()
+                self._refresh_plot()
+                self.load_annotations()
+
     def _delete_annotation(self):
         """Delete selected annotation."""
         selected = self.annotation_list.currentItem()
@@ -271,6 +444,18 @@ class CustomizeAnnotations(QWidget):
                 text = f"├ HLine @ y={ann['y']:.2f} ({ann.get('color', 'blue')})"
             elif ann['type'] == 'text':
                 text = f"└ Text \"{ann['text'][:20]}...\" @ ({ann['x']:.1f},{ann['y']:.1f})"
+            elif ann['type'] == 'arrow':
+                text = (f"├ Arrow ({ann['x1']:.1f},{ann['y1']:.1f}) → "
+                        f"({ann['x2']:.1f},{ann['y2']:.1f}) ({ann.get('color', 'black')})")
+            elif ann['type'] == 'vspan':
+                text = f"├ V-Span x=[{ann['x1']:.2f}, {ann['x2']:.2f}] ({ann.get('color', 'orange')})"
+            elif ann['type'] == 'hspan':
+                text = f"├ H-Span y=[{ann['y1']:.2f}, {ann['y2']:.2f}] ({ann.get('color', 'orange')})"
+            elif ann['type'] == 'box':
+                text = (f"├ Box @ ({ann['x']:.1f},{ann['y']:.1f}) "
+                        f"{ann['width']:.2f}×{ann['height']:.2f} ({ann.get('facecolor', 'yellow')})")
+            elif ann['type'] == 'callout':
+                text = f"└ Callout \"{ann['text'][:20]}\" @ ({ann['x']:.1f},{ann['y']:.1f})"
             else:
                 text = f"Unknown type: {ann['type']}"
 

@@ -67,7 +67,7 @@ All changes across tabs are applied together via the unified **Apply** button at
   <i>The Axis tab of the Customize Graph Dialog.</i>
 </div>
 
-The **Axis** tab controls axis scaling, data types, limits, minor ticks, and axis breaks.
+The **Axis** tab controls axis scaling, data types, limits, appearance, axis breaks, inset (zoom) axes, and secondary axes. Font sizes for titles/labels/ticks live in the **More Options** tab instead.
 
 ##### Axis Properties
 
@@ -86,7 +86,7 @@ Manually constrain the visible range of each axis (X, Y, Z) by specifying **min*
 
 | Control | Description |
 |---|---|
-| **X / Y / Z axis limits** | Enter min and max values to constrain the visible range. Set both to `-999999` to use automatic limits. |
+| **X / Y / Z axis limits** | Enter min and max values to constrain the visible range. Leave a spinbox unset (it shows the plot's real current value, grayed out) to keep that side automatic. |
 | **Get current limits from plot** | Captures the current visible limits from the plot and fills the spinboxes. Useful as a starting point before fine-tuning. |
 | **Clear limits** | Resets all axis limits back to automatic (unconstrained). |
 
@@ -95,16 +95,14 @@ Manually constrain the visible range of each axis (X, Y, Z) by specifying **min*
   <i>Adjusting the axis limits of the selected plot.</i>
 </div>
 
-##### Add Minor Ticks
+##### Axis Appearance
 
-Enable or disable minor tick marks on each edge of the plot independently:
-
-| Checkbox | Description |
+| Control | Description |
 |---|---|
-| **X (Bottom)** | Show minor ticks on the bottom X axis (enabled by default). |
-| **X (Top)** | Show minor ticks on the top X axis. |
-| **Y (Left)** | Show minor ticks on the left Y axis (enabled by default). |
-| **Y (Right)** | Show minor ticks on the right Y axis. |
+| **Minor ticks** (X Bottom/Top, Y Left/Right) | Enable minor tick marks on each edge of the plot independently (X Bottom and Y Left are on by default). |
+| **Show spines** (Top/Right/Bottom/Left) | Toggle visibility of each of the four plot border lines independently. |
+| **Tick direction** | `Default`, `In`, `Out`, or `In & Out`. |
+| **Tick label format** | `Auto`, `Integer`, `1-decimal`, `2-decimal`, or `Scientific`. |
 
 ##### Broken Axis (Beta)
 
@@ -117,6 +115,23 @@ Create a visual break in an axis to omit an uninteresting range and focus on rel
 
 > **Note**: This feature is in beta. Axis breaks work best with linear scales.
 
+##### Inset (Zoom) Axes
+
+Draw a small zoomed-in view of a region of the plot inside the main plot area:
+
+| Control | Description |
+|---|---|
+| **Enable inset axes** | Turns the inset view on/off. |
+| **Position (x0, y0) / Size (w, h)** | Placement and size of the inset box, as a fraction of the plot area (0–1). |
+| **X / Y limits** | The data range the inset zooms into. Leave at the grayed default to auto-fit. |
+| **Show zoom indicator** | Draws connector lines from the inset box back to the region it zooms into on the main plot. |
+
+> **Note**: Inset axes and a broken axis are mutually exclusive — enabling one disables the other.
+
+##### Secondary Axes
+
+Plot additional Y-columns (or a second X-column) against independent scales, one row per axis (**Y2**, **Y3**, **X2**). Each row is enabled once a column is assigned to that axis and lets you set a **Label**, **Min/Max** limits, a **Log scale** toggle, a **Color**, and a **Marker**.
+
 ---
 
 #### 3.2 Legend / Color Tab
@@ -126,16 +141,18 @@ Create a visual break in an axis to omit an uninteresting range and focus on rel
   <i>The Legend / Color tab of the Customize Graph Dialog.</i>
 </div>
 
-The **Legend / Color** tab lets you customize the appearance and placement of the plot legend, as well as scatter/marker settings.
+The **Legend / Color** tab lets you customize the appearance and placement of the plot legend, per-series colors/markers, and error bar style.
 
 ##### Legend Box
 
 | Control | Description |
 |---|---|
 | **Put legend box outside** | Moves the legend box to the right of the plot area, keeping it out of the way of your data. Uncheck to place it inside the plot. |
+| **Unify marker size / edge color** | Checked by default: one Marker size / Edge color control at the top applies to every series. Uncheck to reveal per-series Marker size and Edge color columns below (for `scatter`/`point`/`trendline` styles), so each series can be sized/outlined independently. |
 | **Label** | Edit the display name for each data series in the legend. |
-| **Marker** | Choose a marker symbol for each series (available for `point` plots). |
+| **Marker** | Choose a marker symbol for each series (available for `point`/`scatter` plots). |
 | **Color** | Pick a color for each series from the predefined palette. |
+| **Alpha / Line width** | Per-series transparency, and line width for styles that draw a line (`line`, `trendline`, or `point` with Join enabled). |
 
 > **Tip**: The legend box can be **dragged** to any position directly on the plot canvas using the mouse.
 
@@ -144,14 +161,13 @@ The **Legend / Color** tab lets you customize the appearance and placement of th
   <i>Adjusting legends and colors of the selected plot.</i>
 </div>
 
-##### Scatter / Marker Settings
-
-This section appears only for `scatter`, `trendline`, and `point` plot styles:
+##### Legend Style & Error Bars
 
 | Control | Description |
 |---|---|
-| **Marker size** | Adjust the marker size (range: 5–500, default: 70). Affects both scatter points and point plot markers. |
-| **Edge color** | Pick the border color of scatter/point markers (default: black). Click the color button to open the color picker. |
+| **Columns / Frame / Title / Font size / Alpha / Position** | Layout and appearance of the legend box itself. |
+| **Error bar type** | `95% CI`, `Standard Deviation`, or `None` (options depend on plot style). |
+| **Cap size** | Width of the error bar end caps. |
 
 ---
 
@@ -170,19 +186,16 @@ Click one of the buttons at the top to add an annotation at the center of the cu
 
 | Button | Description |
 |---|---|
-| **V-Line** | Adds a vertical reference line (default: red, dashed). |
-| **H-Line** | Adds a horizontal reference line (default: blue, dashed). |
+| **V-Line** / **H-Line** | Adds a vertical/horizontal reference line (default: red/blue, dashed). |
 | **Text** | Adds a text label with a rounded background box (default: yellow background). |
+| **Arrow** | Adds a point-to-point arrow. |
+| **V-Span** / **H-Span** | Adds a shaded vertical/horizontal band between two values. |
+| **Box** | Adds a filled or outlined rectangle. |
+| **Callout** | Adds a text label with a pointer arrow to a specific data point. |
 
 ##### Managing Annotations
 
-All current annotations are listed below the buttons. Select an annotation to **Edit** or **Delete** it.
-
-**Editing a line annotation** allows you to change:
-- Color, line style (solid, dashed, dotted, dash-dot), and line width.
-
-**Editing a text annotation** allows you to change:
-- Text content, font size, text color, background frame toggle, background color, and transparency.
+All current annotations are listed below the buttons. Select an annotation to **Edit** or **Delete** it. Each annotation type's edit dialog exposes the properties relevant to it — line/span/box color, style, and width; text content, font size, color, and background; arrow/callout endpoint and pointer position.
 
 > **Tip**: Annotations can be **dragged** directly on the plot canvas. Their positions are persisted when saving the workspace. Double-clicking an annotation on the canvas also opens its edit dialog.
 
@@ -213,6 +226,11 @@ These checkboxes are always visible, but only enabled when the corresponding plo
 | **Dodge overlapping points** | `scatter` | Offsets overlapping hue groups horizontally for scatter plots. |
 | **Show error bar** | `bar` | Displays standard deviation error bars on top of each bar. |
 | **Show statistics** | `wafer` | Overlays statistical summary (mean, std, etc.) on the wafer map. |
+| **Theme** | all styles | Figure color scheme: `Light`, `Dark`, or `Soft Dark`. |
+
+##### Font Sizes (pt)
+
+Set the point size of the Title, Subtitle, Axis label, and Tick label independently (defaults: 12/10/12/9). The subtitle *text* itself is edited in the side panel, not here.
 
 ##### Data Sorting
 
@@ -244,6 +262,15 @@ Visible only when the plot style is `histogram`:
 | **Bins** | Number of histogram bins (2–500, default: 20). |
 | **Overlay KDE curve** | Superimposes a smooth Kernel Density Estimate curve on the histogram. |
 | **Fill style** | Choose **Filled** bars (default) or **Step** (outline only). |
+
+##### Colormap Scale
+
+Visible only for `wafer` and `2Dmap` styles — controls how data values map to colors:
+
+| Option | Description |
+|---|---|
+| **Normalization** | `Linear` (default), `Log`, or `Centered` (diverging scale around a reference value). |
+| **Center value** | For `Centered` normalization, the data value that sits at the midpoint of the colormap. |
 
 <br>
 

@@ -37,6 +37,8 @@ _FLOAT_KEYS: tuple[str, ...] = (
     "zmin", "zmax", "y2min", "y2max",
     "y3min", "y3max", "x2min", "x2max",
     "error_bar_capsize", "legend_alpha",
+    "colormap_center",
+    "inset_xmin", "inset_xmax", "inset_ymin", "inset_ymax",
 )
 
 # Fields that must be ints

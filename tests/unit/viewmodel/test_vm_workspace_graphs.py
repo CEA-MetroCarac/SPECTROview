@@ -444,3 +444,144 @@ class TestClearWorkspace:
         assert loaded_vm.graphs == {}
         assert loaded_vm.selected_df_name is None
         assert loaded_vm._next_graph_id == 1
+
+
+class TestUndoRedo:
+    """Workspace-level undo/redo -- one stack of whole-workspace graph
+    snapshots (not per-graph), since create/delete affect the graph *set*,
+    not just one graph's fields. See begin_undo_batch()/undo()/redo()
+    docstrings for the design.
+
+    _restore_snapshot() always builds fresh MGraph instances via load()
+    rather than reusing existing objects, so assertions after undo()/redo()
+    must re-fetch via vm.graphs[graph_id] / vm.get_graph(...) -- a
+    previously-held graph reference goes stale."""
+
+    def test_no_history_initially(self, vm):
+        assert vm.can_undo is False
+        assert vm.can_redo is False
+        assert vm.undo() is False
+        assert vm.redo() is False
+
+    def test_create_graph_is_undoable(self, vm):
+        vm.create_graph()
+        assert vm.can_undo is True
+
+        assert vm.undo() is True
+        assert vm.get_graph_ids() == []
+        assert vm.can_undo is False
+        assert vm.can_redo is True
+
+    def test_redo_reapplies_create(self, vm):
+        graph = vm.create_graph()
+        vm.undo()
+
+        assert vm.redo() is True
+        assert vm.get_graph_ids() == [graph.graph_id]
+        assert vm.can_redo is False
+
+    def test_update_graph_is_undoable_without_undoing_the_create(self, vm):
+        graph = vm.create_graph({"plot_style": "scatter", "x": "A", "y": ["B"]})
+        vm.update_graph(graph.graph_id, {"x": "changed"})
+        assert graph.x == "changed"
+
+        vm.undo()
+
+        assert graph.graph_id in vm.get_graph_ids()  # graph itself survives
+        assert vm.graphs[graph.graph_id].x == "A"  # only the update reverted
+
+    def test_delete_graph_is_undoable(self, vm):
+        graph = vm.create_graph()
+        vm.delete_graph(graph.graph_id)
+        assert vm.get_graph_ids() == []
+
+        vm.undo()
+
+        assert vm.get_graph_ids() == [graph.graph_id]
+
+    def test_new_action_after_undo_clears_redo_history(self, vm):
+        vm.create_graph()
+        vm.undo()
+        assert vm.can_redo is True
+
+        vm.create_graph()
+
+        assert vm.can_redo is False
+        assert vm.redo() is False
+
+    def test_batch_collapses_several_mutations_into_one_undo_step(self, vm):
+        vm.begin_undo_batch()
+        try:
+            g1 = vm.create_graph()
+            vm.create_graph()
+            vm.update_graph(g1.graph_id, {"grid": True})
+        finally:
+            vm.end_undo_batch()
+
+        assert len(vm._undo_stack) == 1
+
+        vm.undo()
+
+        assert vm.get_graph_ids() == []  # both creates + the update undone together
+
+    def test_nested_batches_compose_into_one_outer_step(self, vm):
+        vm.begin_undo_batch()
+        try:
+            for _ in range(3):
+                vm.begin_undo_batch()
+                try:
+                    vm.create_graph()
+                finally:
+                    vm.end_undo_batch()
+        finally:
+            vm.end_undo_batch()
+
+        assert len(vm._undo_stack) == 1
+
+        vm.undo()
+
+        assert vm.get_graph_ids() == []
+
+    def test_max_undo_depth_caps_stack_and_drops_oldest(self, vm):
+        vm._max_undo_depth = 3
+        for _ in range(5):
+            vm.create_graph()
+        assert len(vm._undo_stack) == 3
+
+    def test_load_workspace_resets_undo_history(self, loaded_vm, tmp_path, monkeypatch, qapp):
+        from PySide6.QtWidgets import QFileDialog
+
+        loaded_vm.select_dataframe("dataset_Excel_sheet1")
+        loaded_vm.create_graph({"df_name": "dataset_Excel_sheet1"})
+        assert loaded_vm.can_undo is True
+
+        save_path = tmp_path / "undo_reset.graphs"
+        monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: (str(save_path), ""))
+        loaded_vm.save_workspace()
+
+        loaded_vm.load_workspace(str(save_path))
+
+        assert loaded_vm.can_undo is False
+        assert loaded_vm.can_redo is False
+
+    def test_clear_workspace_resets_undo_history(self, vm):
+        vm.create_graph()
+        assert vm.can_undo is True
+
+        vm.clear_workspace()
+
+        assert vm.can_undo is False
+        assert vm.can_redo is False
+
+    def test_undo_state_changed_signal_emitted_on_push_undo_and_redo(self, vm):
+        received = []
+        vm.undo_state_changed.connect(lambda: received.append(None))
+
+        vm.create_graph()
+        assert len(received) == 1
+
+        vm.undo()
+        assert len(received) == 2
+
+        vm.redo()
+        assert len(received) == 3

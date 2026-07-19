@@ -24,21 +24,132 @@ class VMWorkspaceGraphs(QObject):
     dataframe_columns_changed = Signal(list)
     graphs_changed = Signal(list)
     notify = Signal(str)
-    
+    undo_state_changed = Signal()
+
     def __init__(self, settings: MSettings):
         super().__init__()
         self.settings = settings
-        
+
         # Data storage
         self.dataframes: Dict[str, pd.DataFrame] = {}
         self.dataframe_sources: Dict[str, str] = {}  # Track source file paths for refresh
         self.graphs: Dict[int, MGraph] = {}
-        
+
         # Current selection
         self.selected_df_name: Optional[str] = None
-        
+
         # Graph ID counter
         self._next_graph_id = 1
+
+        # ───── Undo/redo: a stack of whole-workspace graph snapshots ─────
+        self._undo_stack: List[Dict[int, dict]] = []
+        self._redo_stack: List[Dict[int, dict]] = []
+        self._max_undo_depth = 50
+        # begin_undo_batch()/end_undo_batch() let a View handler that makes
+        # several create_graph()/update_graph()/delete_graph() calls for
+        # ONE logical user action (e.g. "Update plot" syncs legend
+        # properties in a follow-up call after the main property update)
+        # collapse them into a single undo step instead of one per call.
+        # Depth-counted so nested batches (e.g. applying a template loops
+        # _create_and_display_plot(), which is itself batch-wrapped)
+        # compose correctly -- only the outermost begin/end pair matters.
+        self._undo_batch_depth = 0
+        self._undo_batch_pending = False
+
+    # ------------------------------------------------------------------------
+    # Undo / redo
+    # ------------------------------------------------------------------------
+    def begin_undo_batch(self) -> None:
+        """Mark the start of a sequence of mutations that represent ONE
+        logical user action. Call `end_undo_batch()` (via try/finally) when
+        done. Only the first actual mutation inside the outermost
+        begin/end pair records an undo snapshot; further mutations before
+        the matching end_undo_batch() collapse into that same step."""
+        self._undo_batch_depth += 1
+        if self._undo_batch_depth == 1:
+            self._undo_batch_pending = True
+
+    def end_undo_batch(self) -> None:
+        self._undo_batch_depth = max(0, self._undo_batch_depth - 1)
+        if self._undo_batch_depth == 0:
+            self._undo_batch_pending = False
+
+    def _record_undo_point_if_needed(self) -> None:
+        """Called at the start of every graph-set mutation
+        (create_graph/update_graph/delete_graph/create_multi_wafer_graphs).
+        Outside any begin/end_undo_batch() pair, every call is its own undo
+        step (correct for the common case: one Apply = one update_graph()
+        call). Inside a batch, only the first call captures a snapshot."""
+        if self._undo_batch_depth == 0:
+            self._push_undo_snapshot()
+        elif self._undo_batch_pending:
+            self._push_undo_snapshot()
+            self._undo_batch_pending = False
+
+    def _capture_snapshot(self) -> Dict[int, dict]:
+        """Deep-copied snapshot of every graph's current saved state
+        (MGraph.save() already deep-copies its mutable fields)."""
+        return {graph_id: graph.save() for graph_id, graph in self.graphs.items()}
+
+    def _push_undo_snapshot(self) -> None:
+        self._undo_stack.append(self._capture_snapshot())
+        if len(self._undo_stack) > self._max_undo_depth:
+            self._undo_stack.pop(0)
+        self._redo_stack.clear()  # a new action invalidates prior redo history
+        self.undo_state_changed.emit()
+
+    def _restore_snapshot(self, snapshot: Dict[int, dict]) -> None:
+        """Replace self.graphs wholesale with `snapshot`'s contents (mirrors
+        load_workspace()'s graph-restoration loop). The View is responsible
+        for reconciling its own VGraph widgets/MDI subwindows against the
+        new self.graphs afterward -- this only updates ViewModel state."""
+        self.graphs.clear()
+        for graph_id, graph_data in snapshot.items():
+            graph = MGraph(graph_id=graph_id)
+            graph.load(graph_data)
+            self.graphs[graph_id] = graph
+        self._next_graph_id = max(self.graphs.keys()) + 1 if self.graphs else 1
+        self._emit_graphs_list()
+
+    def _reset_undo_history(self) -> None:
+        """Clear undo/redo history -- called whenever the workspace's graph
+        set is replaced wholesale (load/clear), since "undo" should never
+        reach back into a *previous*, now-discarded workspace's state."""
+        self._undo_stack.clear()
+        self._redo_stack.clear()
+        self._undo_batch_depth = 0
+        self._undo_batch_pending = False
+        self.undo_state_changed.emit()
+
+    @property
+    def can_undo(self) -> bool:
+        return bool(self._undo_stack)
+
+    @property
+    def can_redo(self) -> bool:
+        return bool(self._redo_stack)
+
+    def undo(self) -> bool:
+        """Revert to the workspace state before the last undo-tracked
+        action. Returns False (no-op) if there's nothing to undo."""
+        if not self._undo_stack:
+            return False
+        self._redo_stack.append(self._capture_snapshot())
+        snapshot = self._undo_stack.pop()
+        self._restore_snapshot(snapshot)
+        self.undo_state_changed.emit()
+        return True
+
+    def redo(self) -> bool:
+        """Re-apply the last undone action. Returns False (no-op) if
+        there's nothing to redo."""
+        if not self._redo_stack:
+            return False
+        self._undo_stack.append(self._capture_snapshot())
+        snapshot = self._redo_stack.pop()
+        self._restore_snapshot(snapshot)
+        self.undo_state_changed.emit()
+        return True
 
     # ------------------------------------------------------------------------
     # Dataframe management
@@ -246,9 +357,10 @@ class VMWorkspaceGraphs(QObject):
         df = self.dataframes[df_name]
         return sorted(df['Slot'].dropna().unique())
     
-    def create_multi_wafer_graphs(self, df_name: str, slot_numbers: List, 
+    def create_multi_wafer_graphs(self, df_name: str, slot_numbers: List,
                                    plot_config: Dict, base_filters: List[Dict]) -> List[MGraph]:
         """Create multiple wafer graphs for each slot."""
+        self._record_undo_point_if_needed()
         created_graphs = []
         
         for slot_num in slot_numbers:
@@ -308,6 +420,7 @@ class VMWorkspaceGraphs(QObject):
     
     def create_graph(self, plot_config: Dict = None) -> MGraph:
         """Create a new graph."""
+        self._record_undo_point_if_needed()
         graph = MGraph(graph_id=self._next_graph_id)
         
         # Apply configuration if provided
@@ -334,7 +447,8 @@ class VMWorkspaceGraphs(QObject):
         """Update graph properties."""
         if graph_id not in self.graphs:
             return
-        
+
+        self._record_undo_point_if_needed()
         graph = self.graphs[graph_id]
         for key, value in properties.items():
             if hasattr(graph, key):
@@ -343,6 +457,7 @@ class VMWorkspaceGraphs(QObject):
     def delete_graph(self, graph_id: int):
         """Delete a graph."""
         if graph_id in self.graphs:
+            self._record_undo_point_if_needed()
             del self.graphs[graph_id]
             self._emit_graphs_list()
     
@@ -389,11 +504,12 @@ class VMWorkspaceGraphs(QObject):
             if is_legacy:
                 self.load_workspace_legacy(file_path)
                 return
-            
+
+            self._reset_undo_history()
             self.graphs.clear()
             self.dataframes.clear()
             self.dataframe_sources.clear()
-            
+
             # Restore DataFrames
             if dataframes:
                 self.dataframes = dataframes
@@ -422,11 +538,12 @@ class VMWorkspaceGraphs(QObject):
         try:
             with open(file_path, 'r') as f:
                 data = json.load(f)
-            
+
+            self._reset_undo_history()
             self.graphs.clear()
             self.dataframes.clear()
             self.dataframe_sources.clear()
-            
+
             # Load DataFrames
             for k, v in data.get('original_dfs', {}).items():
                 compressed_data = bytes.fromhex(v)
@@ -456,6 +573,7 @@ class VMWorkspaceGraphs(QObject):
     
     def clear_workspace(self):
         """Clear workspace."""
+        self._reset_undo_history()
         self.graphs.clear()
         self.dataframes.clear()
         self.dataframe_sources.clear()  # Clear source file references

@@ -31,7 +31,7 @@ class VMFitModelBuilder(QObject):
     # View → VM
     def refresh_models(self):
         """Reload models from default model folder only."""
-        folder = self.settings.get_model_folder()
+        folder = self.settings.get_fit_model_folder()
 
         if not folder:
             self.models_changed.emit([])
@@ -54,7 +54,7 @@ class VMFitModelBuilder(QObject):
 
     def pick_and_load_model(self):
         """Load a JSON model without changing default model folder."""
-        start_dir = self.settings.get_model_folder() or ""
+        start_dir = self.settings.get_fit_model_folder() or ""
 
         file_path, _ = QFileDialog.getOpenFileName(
             None,

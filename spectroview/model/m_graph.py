@@ -112,6 +112,8 @@ class MGraph:
 
     # Plot-specific properties
     color_palette: str = "jet"  # For wafer/2D maps
+    colormap_norm: str = "linear"  # linear/log/centered -- color-scale normalization for wafer/2Dmap
+    colormap_center: float = 0.0   # vcenter for "centered" norm (e.g. 0 for diverging stress/strain data)
     wafer_size: float = 300.0  # Wafer diameter in mm
     wafer_stats: bool = True
     trendline_order: int = 1
@@ -129,6 +131,7 @@ class MGraph:
     dodge_scatter_plot: bool = False
     scatter_size: int = 70  # Marker size for scatter plots
     scatter_edgecolor: str = "black"  # Edge color for scatter plot markers
+    unify_marker_style: bool = True  # True: every series uses scatter_size/scatter_edgecolor; False: per-series legend_properties overrides apply
     x_as_numeric: Optional[bool] = None  # None=Auto, True=Numerical, False=Category
     y_as_numeric: Optional[bool] = None  # None=Auto, True=Numerical, False=Category
 
@@ -153,6 +156,16 @@ class MGraph:
     axis_breaks: Dict[str, Optional[Dict[str, float]]] = field(
         default_factory=lambda: {'x': None, 'y': None}
     )
+
+    # Inset (zoom) axes: one optional inset per graph, showing the same
+    # series as the main plot at its own x/y limits.
+    inset_enabled: bool = False
+    inset_bounds: List[float] = field(default_factory=lambda: [0.55, 0.55, 0.35, 0.35])  # [x0, y0, width, height] in axes-fraction
+    inset_xmin: Optional[float] = None
+    inset_xmax: Optional[float] = None
+    inset_ymin: Optional[float] = None
+    inset_ymax: Optional[float] = None
+    inset_show_zoom_indicator: bool = True
 
     def save(self) -> Dict[str, Any]:
         """Serialize graph to dictionary.

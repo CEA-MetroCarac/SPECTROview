@@ -12,9 +12,10 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PySide6.QtWidgets import (
-    QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QDialog, QToolButton, QMenu,
+    QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QDialog, QToolButton, QMenu, QFrame,
+    QApplication,
 )
-from PySide6.QtCore import QObject, QEvent, QSize, Signal, QTimer
+from PySide6.QtCore import QObject, QEvent, QSize, Signal, QTimer, Qt
 from PySide6.QtGui import QIcon, QAction
 
 from spectroview import (
@@ -34,27 +35,19 @@ from spectroview.view.components.customize_graph.customize_graph_dialog import (
     EditLineDialog, EditTextDialog, EditArrowDialog, EditSpanDialog,
     EditBoxDialog, EditCalloutDialog,
 )
-from spectroview.model.m_settings import MSettings
-from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_fig_to_clb, get_tinted_icon
+from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_fig_to_clb
 from spectroview.view.components.v_plot_renderer import PlotRenderer
 
 
 class VGraph(QWidget):
     """Graph widget rendering plots based on MGraph model properties."""
-    # Signal emitted when graph properties are directly changed
     properties_changed = Signal(int, dict)
-    # Signal emitted when annotation position changes (graph_id, ann_id, new_x, new_y)
     annotation_position_changed = Signal(int, str, float, float)
-    # Signal emitted when replicate is requested
     replicate_requested = Signal(int)
-    # Signal emitted when customize dialog is requested (graph_id)
     customize_requested = Signal(int)
-    # Signal emitted when the export dialog is requested (graph_id)
     export_requested = Signal(int)
-    # Signal emitted for a per-graph style action (graph_id, action name --
-    # one of 'save_template'/'apply_template'/'copy'/'paste'/'reset')
+    export_all_requested = Signal()
     style_action_requested = Signal(int, str)
-    # Signal emitted for user-facing diagnostic notifications
     notify = Signal(str)
     
     def __init__(self, graph_id=None):
@@ -69,7 +62,7 @@ class VGraph(QWidget):
 
         # Plot dimensions
         self.plot_width = 480
-        self.plot_height = 420
+        self.plot_height = 385
         self.dpi = 100
         
         # Plot type and axes
@@ -231,16 +224,7 @@ class VGraph(QWidget):
                     self.clear_layout(item.layout())
     
     def create_plot_widget(self, dpi, layout=None):
-        """Creates matplotlib figure canvas and adds it to layout.
-
-        The toolbar/action-button row (self.toolbar_container) is built here
-        but deliberately never added to this widget's own layout -- it's a
-        parentless, hidden widget until VWorkspaceGraphs reparents it into
-        the workspace's single shared toolbar slot for whichever graph is
-        currently active. clear_layout(self.graph_layout) only tears down
-        the canvas on a rebuild, so the previous toolbar_container (if any)
-        is torn down explicitly below.
-        """
+        """Creates matplotlib figure canvas and adds it to layout."""
         if dpi:
             self.dpi = dpi
         else:
@@ -299,46 +283,48 @@ class VGraph(QWidget):
 
         self.toolbar.setIconSize(QSize(30, 30))  # Set larger icon size
         for action in self.toolbar.actions():
-            if action.text() in ['Save', 'Back', 'Forward']:
+            if action.text() in ['Save', 'Back', 'Forward', 'Subplots', 'Customize']:
                 action.setVisible(False)
         
         # Create Replicate button
         self.btn_replicate = QPushButton()
-        self.btn_replicate.setIcon(QIcon(f"{ICON_DIR}/replicate.png"))
+        self.btn_replicate.setIcon(QIcon(f"{ICON_DIR}/duplicate.png"))
         self.btn_replicate.setIconSize(QSize(26, 26))
         self.btn_replicate.setFixedSize(30, 30)
-        self.btn_replicate.setToolTip("Replicate graph")
+        self.btn_replicate.setToolTip("Duplicate selected graph")
         self.btn_replicate.clicked.connect(lambda *args: self.replicate_requested.emit(self.graph_id))
 
-        # Create Customize button
+        # Create Customize button -- colorful icon, same regardless of theme.
         self.btn_customize = QPushButton()
-        self.btn_customize.setIcon(QIcon(f"{ICON_DIR}/customize.png"))
+        self.btn_customize.setIcon(QIcon(f"{ICON_DIR}/customize2.png"))
         self.btn_customize.setIconSize(QSize(26, 26))
         self.btn_customize.setFixedSize(30, 30)
-        self.btn_customize.setToolTip("Customize graph")
+        self.btn_customize.setToolTip("Customize graph (Ctrl + E)")
         self.btn_customize.clicked.connect(lambda: self.customize_requested.emit(self.graph_id))
-        
-        # Create Copy button
+
+        # Create Copy button -- colorful icon, same regardless of theme.
         self.btn_copy_figure = QPushButton()
-        self.btn_copy_figure.setIcon(QIcon(f"{ICON_DIR}/copy.png"))
+        self.btn_copy_figure.setIcon(QIcon(f"{ICON_DIR}/copy3.png"))
         self.btn_copy_figure.setIconSize(QSize(26, 26))
         self.btn_copy_figure.setFixedSize(30, 30)
-        self.btn_copy_figure.setToolTip("Copy figure to clipboard")
+        self.btn_copy_figure.setToolTip("Copy selected figure to clipboard (Ctrl +C)")
         self.btn_copy_figure.clicked.connect(self.copy_to_clipboard)
 
-        # Create Export button
+        # Create Export button -- colorful icon, same regardless of theme.
+        # Click exports just this graph; Ctrl+Click exports every open graph.
         self.btn_export = QPushButton()
-        self.btn_export.setIcon(QIcon(f"{ICON_DIR}/save-as.png"))
+        self.btn_export.setIcon(QIcon(f"{ICON_DIR}/export.png"))
         self.btn_export.setIconSize(QSize(26, 26))
         self.btn_export.setFixedSize(30, 30)
-        self.btn_export.setToolTip("Export graph to file")
-        self.btn_export.clicked.connect(lambda: self.export_requested.emit(self.graph_id))
+        self.btn_export.setToolTip("Export selected graph to file. Hold Ctrl + Click to export all open graphs")
+        self.btn_export.clicked.connect(self._on_export_clicked)
 
         # Style menu: every action just emits style_action_requested,
         # handled centrally by VWorkspaceGraphs.
         self.btn_style_menu = QToolButton()
-        self.btn_style_menu.setText("🎨")
         self.btn_style_menu.setFixedSize(30, 30)
+        self.btn_style_menu.setIcon(QIcon(f"{ICON_DIR}/styling.png"))
+        self.btn_style_menu.setIconSize(QSize(26, 26))
         self.btn_style_menu.setToolTip("Graph style: save/apply, copy/paste, reset, set default")
         self.btn_style_menu.setPopupMode(QToolButton.InstantPopup)
         style_menu = QMenu(self)
@@ -357,15 +343,20 @@ class VGraph(QWidget):
             style_menu.addAction(action)
         self.btn_style_menu.setMenu(style_menu)
 
-        # Initialize icon colors using actual app settings
-        theme = MSettings().get_theme()
-        self.update_icon_colors(theme)
-
         # Create toolbar layout with customize and copy buttons
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
-        toolbar_layout.setSpacing(4)
+        toolbar_layout.setSpacing(8)
         toolbar_layout.addWidget(self.toolbar)
+
+        # Vertical separator between the matplotlib nav buttons and our own
+        # action buttons, which then get pushed flush against the right
+        # edge of the (now workspace-wide, see VWorkspaceGraphs) toolbar.
+        separator = QFrame()
+        separator.setFrameShape(QFrame.VLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        toolbar_layout.addWidget(separator)
+
         toolbar_layout.addStretch()
         toolbar_layout.addWidget(self.btn_replicate)
         toolbar_layout.addWidget(self.btn_customize)
@@ -402,18 +393,15 @@ class VGraph(QWidget):
     def copy_to_clipboard(self):
         """Copy the current figure to clipboard."""
         copy_fig_to_clb(self.canvas)
-    
-    def update_icon_colors(self, theme: str):
-        """Update toolbar icons color based on current application theme."""
-        icon_color = "#404040" if theme != "dark" else "#F0F0F0"
-        if hasattr(self, 'btn_replicate'):
-            self.btn_replicate.setIcon(get_tinted_icon(f"{ICON_DIR}/replicate.png", icon_color))
-        if hasattr(self, 'btn_customize'):
-            self.btn_customize.setIcon(get_tinted_icon(f"{ICON_DIR}/customize.png", icon_color))
-        if hasattr(self, 'btn_copy_figure'):
-            self.btn_copy_figure.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
-        if hasattr(self, 'btn_export'):
-            self.btn_export.setIcon(get_tinted_icon(f"{ICON_DIR}/save-as.png", icon_color))
+
+    def _on_export_clicked(self):
+        """Export button: plain click exports just this graph; Ctrl+Click
+        exports every open graph instead (mirrors VSpectraViewer's copy
+        button pattern)."""
+        if QApplication.keyboardModifiers() & Qt.ControlModifier:
+            self.export_all_requested.emit()
+        else:
+            self.export_requested.emit(self.graph_id)
 
     def plot(self, df=None):
         """Wrapper to render plot using local style context."""

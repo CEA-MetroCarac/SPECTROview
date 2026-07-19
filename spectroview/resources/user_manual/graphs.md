@@ -45,16 +45,27 @@ ______
 
 ### **3. The Shared Graph Toolbar**
 
-Every plot window shares one toolbar, shown in the bottom bar of the workspace and always acting on whichever plot window is currently active (click a plot, or pick it from the graph selector dropdown, to make it active):
+The bottom bar of the workspace hosts every global control plus one shared graph toolbar that always acts on whichever plot window is currently active. To make a plot active: click it, or pick it from the **Active plot** dropdown in the side panel (just above **Add plot** / **Update plot**).
 
 | Control | Description |
 |---|---|
+| **Delete all** | Removes every plot from the workspace. |
+| **Minimize all** | Minimizes every plot window. |
+| **Undo / Redo** | Steps backward/forward through the workspace's edit history (`Ctrl+Z` / `Ctrl+Shift+Z`). |
+| **Compose Figure** | Combines several open plots into one multi-panel exported figure. |
 | **Home / Pan / Zoom / Subplots** | Standard Matplotlib navigation: reset the view, pan, zoom to a rectangle, or adjust subplot margins. |
+
+A vertical separator marks where the plot's own controls start — always aligned to the right edge of the window:
+
+| Control | Description |
+|---|---|
 | **Replicate** | Creates a duplicate of the active plot. |
-| **Customize** | Opens the Customize Graph Dialog for the active plot (see below). |
-| **Copy** | Copies the active plot's figure to the clipboard as an image. |
-| **Export** | Opens the export dialog for the active plot. |
-| **Style menu (🎨)** | Save/apply a style, copy/paste style, reset to default, or set the current style as the default for new plots. |
+| **Customize** | Opens the Customize Graph Dialog for the active plot (`Ctrl+E`, see below). |
+| **Copy** | Copies the active plot's figure to the clipboard as an image (`Ctrl+C`). |
+| **Export** | Click to export the active plot to file. **Hold Ctrl + Click** to export every open plot at once instead. |
+| **Style menu (🎨)** | Save/apply a style, copy/paste style (`Ctrl+V` to paste), reset to default, or set the current style as the default for new plots. |
+
+> **Note**: `Ctrl+Z`, `Ctrl+Shift+Z`, `Ctrl+C`, `Ctrl+V`, and `Ctrl+E` above only work while the **Graphs** tab is the active tab — they won't interfere with the same shortcuts elsewhere in the app (e.g. typing in a text field).
 
 ______
 

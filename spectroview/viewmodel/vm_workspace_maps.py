@@ -1118,7 +1118,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             'z': None,
             'filters': [],
             'plot_width': 480,
-            'plot_height': 420,
+            'plot_height': 385,
             'dpi': 100
         }
         

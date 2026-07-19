@@ -1363,3 +1363,41 @@ class TestRestyle:
         vg.restyle()
 
         assert vg.ax.xaxis_inverted() == False  # noqa: E712 -- xaxis_inverted() returns numpy.bool_, not bool
+
+
+class TestExportButtonModifierClick:
+    """The toolbar's Export button, like VSpectraViewer's Copy button, does
+    double duty based on the Ctrl modifier at click time: a plain click
+    exports just this graph (export_requested), Ctrl+Click exports every
+    open graph instead (export_all_requested) -- this is what let the
+    workspace's separate "Export All" side-panel button be removed."""
+
+    def test_plain_click_emits_export_requested_for_this_graph(self, vg, monkeypatch):
+        from PySide6.QtWidgets import QApplication
+        from PySide6.QtCore import Qt
+        monkeypatch.setattr(QApplication, 'keyboardModifiers', staticmethod(lambda: Qt.NoModifier))
+
+        received = []
+        received_all = []
+        vg.export_requested.connect(lambda gid: received.append(gid))
+        vg.export_all_requested.connect(lambda: received_all.append(True))
+
+        vg._on_export_clicked()
+
+        assert received == [vg.graph_id]
+        assert received_all == []
+
+    def test_ctrl_click_emits_export_all_requested_instead(self, vg, monkeypatch):
+        from PySide6.QtWidgets import QApplication
+        from PySide6.QtCore import Qt
+        monkeypatch.setattr(QApplication, 'keyboardModifiers', staticmethod(lambda: Qt.ControlModifier))
+
+        received = []
+        received_all = []
+        vg.export_requested.connect(lambda gid: received.append(gid))
+        vg.export_all_requested.connect(lambda: received_all.append(True))
+
+        vg._on_export_clicked()
+
+        assert received == []
+        assert received_all == [True]

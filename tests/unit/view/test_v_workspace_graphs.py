@@ -849,11 +849,11 @@ class TestKeyboardShortcuts:
         graph_model = ws.vm.create_graph(cfg)
         return ws._build_graph_widget(graph_model, excel_df, lambda e: None)
 
-    def test_all_four_shortcuts_registered_with_expected_context(self, ws):
+    def test_all_shortcuts_registered_with_expected_context(self, ws):
         shortcuts = ws.mdi_area.findChildren(QShortcut)
         by_key = {sc.key().toString(): sc for sc in shortcuts}
 
-        for key in ("Ctrl+Z", "Ctrl+Shift+Z", "Ctrl+C", "Ctrl+V"):
+        for key in ("Ctrl+Z", "Ctrl+Shift+Z", "Ctrl+C", "Ctrl+V", "Ctrl+E"):
             assert key in by_key, f"{key} not registered on mdi_area"
             assert by_key[key].context() == Qt.ShortcutContext.WidgetWithChildrenShortcut
 
@@ -867,17 +867,29 @@ class TestKeyboardShortcuts:
 
         assert ws._get_active_graph_id() == gw.graph_id
 
-    def test_copy_paste_shortcuts_are_noop_with_no_active_graph(self, ws):
-        ws._on_copy_style_shortcut()  # must not raise
+    def test_copy_figure_and_paste_style_shortcuts_are_noop_with_no_active_graph(self, ws):
+        ws._on_copy_figure_shortcut()  # must not raise
         ws._on_paste_style_shortcut()  # must not raise
         assert getattr(ws, '_copied_style', None) is None
 
-    def test_copy_then_paste_shortcuts_copy_the_active_graphs_style(self, ws, excel_df):
+    def test_copy_figure_shortcut_copies_the_active_graphs_figure(self, ws, excel_df, monkeypatch):
+        """Ctrl+C copies the active graph's *figure* (matching the toolbar's
+        Copy button), not its style -- style copy/paste is still reachable
+        via the Style menu, just without a Ctrl+C shortcut of its own."""
+        gw = self._graph(ws, excel_df)
+        sub_window = ws.graph_widgets[gw.graph_id][2]
+        ws.mdi_area.setActiveSubWindow(sub_window)
+        calls = []
+        monkeypatch.setattr(gw, 'copy_to_clipboard', lambda: calls.append(gw.graph_id))
+
+        ws._on_copy_figure_shortcut()
+
+        assert calls == [gw.graph_id]
+
+    def test_paste_style_shortcut_applies_a_style_copied_via_the_style_menu(self, ws, excel_df):
         source = self._graph(ws, excel_df)
         source.color_palette = "viridis"
-        source_window = ws.graph_widgets[source.graph_id][2]
-        ws.mdi_area.setActiveSubWindow(source_window)
-        ws._on_copy_style_shortcut()
+        ws._on_style_action_requested(source.graph_id, "copy")
 
         target = self._graph(ws, excel_df)
         target_window = ws.graph_widgets[target.graph_id][2]
@@ -885,6 +897,21 @@ class TestKeyboardShortcuts:
         ws._on_paste_style_shortcut()
 
         assert target.color_palette == "viridis"
+
+    def test_customize_shortcut_is_noop_with_no_active_graph(self, ws):
+        ws._on_customize_shortcut()  # must not raise
+
+    def test_customize_shortcut_opens_the_dialog_for_the_active_graph(self, ws, excel_df, monkeypatch):
+        """Ctrl+E mirrors clicking the toolbar's Customize button."""
+        gw = self._graph(ws, excel_df)
+        sub_window = ws.graph_widgets[gw.graph_id][2]
+        ws.mdi_area.setActiveSubWindow(sub_window)
+        calls = []
+        monkeypatch.setattr(ws, '_show_or_switch_customize_dialog', lambda gid: calls.append(gid))
+
+        ws._on_customize_shortcut()
+
+        assert calls == [gw.graph_id]
 
     def test_undo_redo_shortcuts_drive_the_same_handlers_as_the_buttons(self, ws, excel_df, monkeypatch):
         calls = []

@@ -89,7 +89,9 @@ class VWorkspaceGraphs(QWidget):
         self.mdi_area = QMdiArea()
         self.mdi_area.setMinimumWidth(600)
         self.mdi_area.setBackground(QBrush(Qt.transparent))
-        self.mdi_area.setStyleSheet("QMdiArea { border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 6px; }")
+        self.mdi_area.setStyleSheet(
+            "QMdiArea { border: 0px solid rgba(128, 128, 128, 0.2); border-radius: 0.5px; }"
+        )
         left_layout.addWidget(self.mdi_area)
         
         # Bottom Toolbar
@@ -117,34 +119,58 @@ class VWorkspaceGraphs(QWidget):
         self.btn_delete_all.setMaximumWidth(100)
         toolbar_layout.addWidget(self.btn_delete_all)
 
-        # Graph list combobox
-        self.cbb_graph_list = QComboBox()
-        self.cbb_graph_list.setMinimumWidth(150)
-        toolbar_layout.addWidget(self.cbb_graph_list)
-        
-        # Minimize all button
-        self.btn_minimize_all = QPushButton("Minimize All")
-        self.btn_minimize_all.setMaximumWidth(100)
+        # Minimize all button -- icon only, no label.
+        self.btn_minimize_all = QPushButton()
+        self.btn_minimize_all.setIcon(QIcon(os.path.join(ICON_DIR, "minimize_windows.png")))
+        self.btn_minimize_all.setIconSize(QSize(22, 22))
+        self.btn_minimize_all.setFixedSize(30, 30)
+        self.btn_minimize_all.setToolTip("Minimize All")
         toolbar_layout.addWidget(self.btn_minimize_all)
 
-        # Plot size label
-        self.lbl_plot_size = QLabel("(480x420)")
-        self.lbl_plot_size.setMinimumWidth(70)
-        toolbar_layout.addWidget(self.lbl_plot_size)
+        # Undo/Redo -- moved here from the side panel: workspace-global
+        # actions, not per-graph, so they live in this fixed part of the
+        # bottom toolbar rather than inside the shared graph toolbar slot
+        # below (which gets swapped out per active graph).
+        self.btn_undo = QPushButton()
+        self.btn_undo.setIcon(QIcon(os.path.join(ICON_DIR, "undo.png")))
+        self.btn_undo.setIconSize(QSize(22, 22))
+        self.btn_undo.setFixedSize(30, 30)
+        self.btn_undo.setToolTip("Undo the last action (Ctrl+Z)")
+        self.btn_undo.setEnabled(False)
+        toolbar_layout.addWidget(self.btn_undo)
+
+        self.btn_redo = QPushButton()
+        self.btn_redo.setIcon(QIcon(os.path.join(ICON_DIR, "redo.png")))
+        self.btn_redo.setIconSize(QSize(22, 22))
+        self.btn_redo.setFixedSize(30, 30)
+        self.btn_redo.setToolTip("Redo the last undone action (Ctrl+Shift+Z)")
+        self.btn_redo.setEnabled(False)
+        toolbar_layout.addWidget(self.btn_redo)
+
+        # Compose Figure -- workspace-global (combines several open graphs),
+        # so it lives in this fixed part of the bottom toolbar rather than
+        # the shared graph toolbar slot below. Moved here from the side panel.
+        self.btn_compose_figure = QPushButton()
+        self.btn_compose_figure.setIcon(QIcon(os.path.join(ICON_DIR, "compose.png")))
+        self.btn_compose_figure.setIconSize(QSize(22, 22))
+        self.btn_compose_figure.setFixedSize(30, 30)
+        self.btn_compose_figure.setToolTip("Combine several open graphs into one multi-panel exported figure")
+        toolbar_layout.addWidget(self.btn_compose_figure)
 
         # Shared graph toolbar slot: every VGraph builds its own matplotlib
         # nav toolbar + action buttons (Replicate/Customize/Copy/Export/
         # Style) but never shows them itself -- sync_active_graph_toolbar()
         # reparents whichever graph is currently active into this one slot,
         # so all graphs visually share a single toolbar instead of each MDI
-        # window carrying its own identical copy.
+        # window carrying its own identical copy. Given stretch=1 so it
+        # fills the remaining width -- the graph's own internal stretch
+        # (see VGraph.create_plot_widget) then pushes its action buttons
+        # flush against the right edge of the whole toolbar.
         self.graph_toolbar_slot = QWidget()
         self._graph_toolbar_slot_layout = QHBoxLayout(self.graph_toolbar_slot)
         self._graph_toolbar_slot_layout.setContentsMargins(0, 0, 0, 0)
         self._graph_toolbar_slot_layout.setSpacing(0)
-        toolbar_layout.addWidget(self.graph_toolbar_slot)
-
-        toolbar_layout.addStretch()
+        toolbar_layout.addWidget(self.graph_toolbar_slot, 1)
 
         return bottom_toolbar
     
@@ -491,8 +517,18 @@ class VWorkspaceGraphs(QWidget):
     
     def _setup_action_buttons(self, parent_layout):
         """Setup action buttons."""
+        # Active plot selector -- lets the user pick which existing plot is
+        # active (equivalent to clicking its MDI window) without hunting
+        # through the MDI area; moved here from the bottom toolbar.
+        graph_list_layout = QHBoxLayout()
+        graph_list_layout.addWidget(QLabel("Active plot:"))
+        self.cbb_graph_list = QComboBox()
+        self.cbb_graph_list.setMinimumWidth(150)
+        graph_list_layout.addWidget(self.cbb_graph_list)
+        parent_layout.addLayout(graph_list_layout)
+
         action_buttons_layout = QHBoxLayout()
-        
+
         self.btn_add_plot = QPushButton("Add plot")
         self.btn_add_plot.setIconSize(QSize(20, 20))
         self.btn_add_plot.setToolTip("Add new plot with current configuration")
@@ -519,56 +555,29 @@ class VWorkspaceGraphs(QWidget):
         # Plot recipe buttons — browse/apply and save-all, second row
         template_buttons_layout = QHBoxLayout()
 
-        self.btn_apply_recipe = QPushButton("📊 Plot Recipes")
+        self.btn_apply_recipe = QPushButton("Plot Recipes")
+        self.btn_apply_recipe.setIcon(QIcon(f"{ICON_DIR}/recipe.png"))
+        self.btn_apply_recipe.setIconSize(QSize(26, 26))
         self.btn_apply_recipe.setToolTip("Browse & apply saved plot recipes")
         self.btn_apply_recipe.setMinimumHeight(25)
 
-        self.btn_save_as_recipe = QPushButton("💾 Save Plot Recipe")
+        self.btn_save_as_recipe = QPushButton("Save Plot Recipe")
+        self.btn_save_as_recipe.setIcon(QIcon(f"{ICON_DIR}/save-recipe.png"))
+        self.btn_save_as_recipe.setIconSize(QSize(26, 26))
         self.btn_save_as_recipe.setToolTip("Save all currently open plots as a Plot Recipe")
         self.btn_save_as_recipe.setMinimumHeight(25)
 
-        self.btn_export_all = QPushButton()
-        self.btn_export_all.setIcon(QIcon(os.path.join(ICON_DIR, "save-all.png")))
-        self.btn_export_all.setText(" Export All")
-        self.btn_export_all.setToolTip("Export every open graph to a folder")
-        self.btn_export_all.setMinimumHeight(25)
-
-        self.btn_compose_figure = QPushButton("🖼️ Compose Figure")
-        self.btn_compose_figure.setToolTip("Combine several open graphs into one multi-panel exported figure")
-        self.btn_compose_figure.setMinimumHeight(25)
-
         template_buttons_layout.addWidget(self.btn_apply_recipe)
         template_buttons_layout.addWidget(self.btn_save_as_recipe)
-        template_buttons_layout.addWidget(self.btn_export_all)
-        template_buttons_layout.addWidget(self.btn_compose_figure)
 
         parent_layout.addLayout(template_buttons_layout)
-
-        # Undo/Redo -- third row, own line since they're used far more
-        # often than the template/export actions above and deserve to
-        # always be visible rather than competing for space in a crowded row.
-        undo_redo_layout = QHBoxLayout()
-
-        self.btn_undo = QPushButton("↶ Undo")
-        self.btn_undo.setToolTip("Undo the last action (Ctrl+Z)")
-        self.btn_undo.setMinimumHeight(25)
-        self.btn_undo.setEnabled(False)
-
-        self.btn_redo = QPushButton("↷ Redo")
-        self.btn_redo.setToolTip("Redo the last undone action (Ctrl+Shift+Z)")
-        self.btn_redo.setMinimumHeight(25)
-        self.btn_redo.setEnabled(False)
-
-        undo_redo_layout.addWidget(self.btn_undo)
-        undo_redo_layout.addWidget(self.btn_redo)
-
-        parent_layout.addLayout(undo_redo_layout)
     
     def apply_theme(self, theme: str):
-        """Propagate theme changes to all child graphs and update sidebar icons."""
-        for graph_widget, _, _ in self.graph_widgets.values():
-            graph_widget.update_icon_colors(theme)
-        
+        """Update sidebar icon colors for the current application theme.
+
+        Every VGraph action-button icon is a fixed colorful icon (set once
+        at creation, see VGraph.create_plot_widget) -- graphs no longer need
+        to be notified of theme changes at all."""
         icon_color = "#404040" if theme != "dark" else "#F0F0F0"
         self.btn_view_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "view.png"), icon_color))
         self.btn_remove_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash.png"), icon_color))
@@ -577,7 +586,6 @@ class VWorkspaceGraphs(QWidget):
         self.btn_add_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
         self.btn_update_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "update.png"), icon_color))
         self.btn_add_multi_wafer.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
-        self.btn_export_all.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save-all.png"), icon_color))
 
         # v_data_filter buttons
         self.v_data_filter.btn_add.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
@@ -609,7 +617,6 @@ class VWorkspaceGraphs(QWidget):
         # Plot recipe buttons
         self.btn_apply_recipe.clicked.connect(self._on_apply_recipe_clicked)
         self.btn_save_as_recipe.clicked.connect(self._on_save_as_recipe_clicked)
-        self.btn_export_all.clicked.connect(self._on_export_all_clicked)
         self.btn_compose_figure.clicked.connect(self._on_compose_figure_clicked)
         self.btn_undo.clicked.connect(self._on_undo_clicked)
         self.btn_redo.clicked.connect(self._on_redo_clicked)
@@ -636,11 +643,15 @@ class VWorkspaceGraphs(QWidget):
         self._setup_keyboard_shortcuts()
 
     def _setup_keyboard_shortcuts(self):
-        """Undo/redo/copy-style/paste-style accelerators, scoped to the MDI
-        area (WidgetWithChildrenShortcut on self.mdi_area) rather than the
-        whole workspace widget -- so they fire while a graph window has
-        focus but don't shadow a side-panel QLineEdit's own native Ctrl+Z/
-        Ctrl+C/Ctrl+V while the user is typing a title/label there."""
+        """Undo/redo/copy-figure/paste-style/customize accelerators, scoped
+        to the MDI area (WidgetWithChildrenShortcut on self.mdi_area) rather
+        than the whole workspace widget -- so they fire while a graph window
+        has focus but don't shadow a side-panel QLineEdit's own native
+        Ctrl+Z/Ctrl+C/Ctrl+V/Ctrl+E while the user is typing a title/label
+        there. This context also means the shortcuts naturally only fire
+        while the Graphs tab itself is the active tab: a hidden (non-active)
+        tab's page -- and therefore self.mdi_area -- can't be part of the
+        focus chain."""
         undo_sc = QShortcut(QKeySequence("Ctrl+Z"), self.mdi_area)
         undo_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         undo_sc.activated.connect(self._on_undo_clicked)
@@ -649,13 +660,20 @@ class VWorkspaceGraphs(QWidget):
         redo_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         redo_sc.activated.connect(self._on_redo_clicked)
 
-        copy_style_sc = QShortcut(QKeySequence("Ctrl+C"), self.mdi_area)
-        copy_style_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
-        copy_style_sc.activated.connect(self._on_copy_style_shortcut)
+        # Ctrl+C copies the active graph's *figure* to the clipboard (matching
+        # the toolbar's Copy button) -- style copy/paste stays reachable via
+        # the Style menu's "Copy Style" action, just without its own shortcut.
+        copy_figure_sc = QShortcut(QKeySequence("Ctrl+C"), self.mdi_area)
+        copy_figure_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        copy_figure_sc.activated.connect(self._on_copy_figure_shortcut)
 
         paste_style_sc = QShortcut(QKeySequence("Ctrl+V"), self.mdi_area)
         paste_style_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         paste_style_sc.activated.connect(self._on_paste_style_shortcut)
+
+        customize_sc = QShortcut(QKeySequence("Ctrl+E"), self.mdi_area)
+        customize_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        customize_sc.activated.connect(self._on_customize_shortcut)
 
     def _get_active_graph_id(self) -> Optional[int]:
         """graph_id of the currently active MDI subwindow, or None if no
@@ -668,15 +686,21 @@ class VWorkspaceGraphs(QWidget):
                 return gid
         return None
 
-    def _on_copy_style_shortcut(self):
+    def _on_copy_figure_shortcut(self):
         gid = self._get_active_graph_id()
-        if gid is not None:
-            self._on_style_action_requested(gid, "copy")
+        if gid is not None and gid in self.graph_widgets:
+            graph_widget, _, _ = self.graph_widgets[gid]
+            graph_widget.copy_to_clipboard()
 
     def _on_paste_style_shortcut(self):
         gid = self._get_active_graph_id()
         if gid is not None:
             self._on_style_action_requested(gid, "paste")
+
+    def _on_customize_shortcut(self):
+        gid = self._get_active_graph_id()
+        if gid is not None:
+            self._show_or_switch_customize_dialog(gid)
 
     def _update_df_placeholder(self):
         """Update placeholder text for dataframe list based on state."""
@@ -939,6 +963,7 @@ class VWorkspaceGraphs(QWidget):
         graph_widget.replicate_requested.connect(self._on_replicate_graph)
         graph_widget.customize_requested.connect(self._show_or_switch_customize_dialog)
         graph_widget.export_requested.connect(self._on_export_graph_requested)
+        graph_widget.export_all_requested.connect(self._on_export_all_clicked)
         graph_widget.style_action_requested.connect(self._on_style_action_requested)
         graph_widget.properties_changed.connect(self._on_graph_properties_changed)
         graph_widget.notify.connect(self._show_toast_notification)
@@ -1713,10 +1738,6 @@ class VWorkspaceGraphs(QWidget):
 
         self._sync_active_graph_toolbar()
 
-        # Update plot size label
-        size = sub_window.size()
-        self.lbl_plot_size.setText(f"({size.width()}x{size.height()})")
-        
         # Sync GUI controls with graph properties
         self._sync_gui_from_graph(graph_model)
         
@@ -1915,7 +1936,6 @@ class VWorkspaceGraphs(QWidget):
         
         sub_window = MdiSubWindow(
             graph_id=model.graph_id,
-            figsize_label=self.lbl_plot_size,
             mdi_area=self.mdi_area
         )
         
@@ -2087,7 +2107,6 @@ class VWorkspaceGraphs(QWidget):
         self.edit_y3label.clear()
         self.edit_x2label.clear()
         self.v_data_filter.clear_filters()
-        self.lbl_plot_size.setText("(480x420)")
 
         self.vm.clear_workspace()
 
@@ -2095,10 +2114,9 @@ class MdiSubWindow(QMdiSubWindow):
     """Custom MDI subwindow."""
     closed = Signal(int)
 
-    def __init__(self, graph_id, figsize_label, mdi_area, *args, **kwargs):
+    def __init__(self, graph_id, mdi_area, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.graph_id = graph_id
-        self.figsize_label = figsize_label
         self.mdi_area = mdi_area  # Reference to the parent QMdiArea
         self._fixing_palette = False
         self._fix_title_shadow()
@@ -2157,12 +2175,6 @@ class MdiSubWindow(QMdiSubWindow):
         self.mdi_area.setActiveSubWindow(None)
         self.closed.emit(self.graph_id)
         super().closeEvent(event)
-
-    def resizeEvent(self, event):
-        """Override resize event."""
-        new_size = self.size()
-        self.figsize_label.setText(f"({new_size.width()}x{new_size.height()})")
-        super().resizeEvent(event)
 
     def focusInEvent(self, event):
         """Override focus event."""

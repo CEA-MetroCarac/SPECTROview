@@ -84,23 +84,6 @@ class TestBuildGraphWidget:
 
         assert ws.vm.get_graph(widget.graph_id).plot_title == 'Changed via signal'
 
-    def test_toggling_toolbar_grid_checkbox_persists_to_the_model(self, ws, excel_df):
-        """Regression test: the toolbar's grid checkbox was fully built in
-        the UI but never connected in setup_connections() -- toggling it
-        changed the visual grid but never reached the model (so it was lost
-        on the next "Update plot" and never survived a save)."""
-        graph_model = ws.vm.create_graph({
-            'df_name': 'sheet1', 'plot_style': 'scatter',
-            'x': 'x0_Si', 'y': ['ampli_Si'],
-        })
-        ws._build_graph_widget(graph_model, excel_df, lambda e: None)
-        ws._update_graph_list(ws.vm.get_graph_ids())
-
-        assert ws.vm.get_graph(graph_model.graph_id).grid is False
-        ws.cb_grid_toolbar.setChecked(True)
-
-        assert ws.vm.get_graph(graph_model.graph_id).grid is True
-
     def test_replicate_and_customize_signals_are_connected(self, ws, excel_df, monkeypatch):
         """Regression guard: both signals used to be wired identically at all
         three call sites -- confirm the shared helper still connects them.

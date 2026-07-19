@@ -859,6 +859,26 @@ class TestCustomizeMoreOptions:
         assert vg.figure_theme == "dark"
         assert received[0]["figure_theme"] == "dark"
 
+    def test_apply_xlabel_rotation_and_grid_writes_back(self, qapp, excel_df):
+        """X label rotation and Grid -- migrated here from the workspace's
+        bottom toolbar -- share the Theme row and write straight to
+        VGraph.x_rot/grid."""
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        widget = CustomizeMoreOptions(vg)
+        assert widget._spin_xlabel_rotation.value() == 0
+        assert widget._cb_grid.isChecked() is False
+
+        widget._spin_xlabel_rotation.setValue(45)
+        widget._cb_grid.setChecked(True)
+        received = []
+        vg.properties_changed.connect(lambda gid, props: received.append(props))
+        widget._apply()
+
+        assert vg.x_rot == 45
+        assert vg.grid is True
+        assert received[0]["x_rot"] == 45
+        assert received[0]["grid"] is True
+
     def test_font_sizes_show_mplstyle_defaults_and_are_settable(self, qapp, excel_df):
         """Every font-size control (Title/Subtitle/Axis label/Tick label)
         lives here now, in one row -- consolidated from the old standalone

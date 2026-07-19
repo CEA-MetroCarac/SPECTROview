@@ -92,12 +92,27 @@ class CustomizeMoreOptions(QWidget):
         layout.addWidget(self._cb_wafer_stats)
 
         # Theme selects the underlying mplstyle (background/text/grid
-        # colors as a set).
+        # colors as a set). X-label rotation and Grid live in the same row
+        # -- migrated here from the workspace's bottom toolbar, which only
+        # ever applied them as one-off new-plot defaults.
         theme_row = QHBoxLayout()
         theme_row.addWidget(QLabel("Theme:"))
         self._combo_figure_theme = QComboBox()
         self._combo_figure_theme.addItems(["Light", "Dark", "Soft Dark"])
         theme_row.addWidget(self._combo_figure_theme)
+
+        theme_row.addSpacing(12)
+        theme_row.addWidget(QLabel("X label rotation:"))
+        self._spin_xlabel_rotation = QSpinBox()
+        self._spin_xlabel_rotation.setRange(0, 90)
+        self._spin_xlabel_rotation.setSingleStep(10)
+        self._spin_xlabel_rotation.setMaximumWidth(60)
+        theme_row.addWidget(self._spin_xlabel_rotation)
+
+        theme_row.addSpacing(12)
+        self._cb_grid = QCheckBox("Grid")
+        theme_row.addWidget(self._cb_grid)
+
         theme_row.addStretch()
         layout.addLayout(theme_row)
 
@@ -343,6 +358,8 @@ class CustomizeMoreOptions(QWidget):
         self._combo_figure_theme.setCurrentText(
             _THEME_VALUE_TEXT.get(getattr(gw, 'figure_theme', 'light'), "Light")
         )
+        self._spin_xlabel_rotation.setValue(getattr(gw, 'x_rot', 0))
+        self._cb_grid.setChecked(getattr(gw, 'grid', False))
 
         # --- Font sizes section ---
         self._spin_title_fontsize.setValue(getattr(gw, 'title_fontsize', None) or _DEFAULT_TITLE_FONTSIZE)
@@ -436,6 +453,8 @@ class CustomizeMoreOptions(QWidget):
         gw.show_bar_plot_error_bar = self._cb_error_bar.isChecked()
         gw.wafer_stats = self._cb_wafer_stats.isChecked()
         gw.figure_theme = _THEME_TEXT_MAP[self._combo_figure_theme.currentText()]
+        gw.x_rot = self._spin_xlabel_rotation.value()
+        gw.grid = self._cb_grid.isChecked()
 
         gw.title_fontsize = self._spin_title_fontsize.value()
         gw.subtitle_fontsize = self._spin_subtitle_fontsize.value()
@@ -483,6 +502,8 @@ class CustomizeMoreOptions(QWidget):
             'show_bar_plot_error_bar': gw.show_bar_plot_error_bar,
             'wafer_stats': gw.wafer_stats,
             'figure_theme': gw.figure_theme,
+            'x_rot': gw.x_rot,
+            'grid': gw.grid,
             'title_fontsize': gw.title_fontsize,
             'subtitle_fontsize': gw.subtitle_fontsize,
             'axis_label_fontsize': gw.axis_label_fontsize,

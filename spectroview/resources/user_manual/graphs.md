@@ -227,6 +227,8 @@ These checkboxes are always visible, but only enabled when the corresponding plo
 | **Show error bar** | `bar` | Displays standard deviation error bars on top of each bar. |
 | **Show statistics** | `wafer` | Overlays statistical summary (mean, std, etc.) on the wafer map. |
 | **Theme** | all styles | Figure color scheme: `Light`, `Dark`, or `Soft Dark`. |
+| **X label rotation** | all styles | Rotates the X-axis tick labels (0–90°). |
+| **Grid** | all styles | Toggles the plot's background grid lines. |
 
 ##### Font Sizes (pt)
 

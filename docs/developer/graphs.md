@@ -249,7 +249,7 @@ Every control in every tab restarts a single debounced 400ms `QTimer` on change.
 
 **File**: `spectroview/view/components/graph_commit.py`
 
-`snapshot(gw)` deep-copies every `MGraph` field (except `graph_id`) off a live `VGraph` widget; `diff(gw, before)` returns a patch dict of only the fields that differ from a prior snapshot. Used both by the Customize dialog's live-preview tick (deciding restyle vs. replot) and by toolbar-level edits (e.g. the grid checkbox, or syncing a dragged legend position / resized subwindow into the model before `save_workspace()`) — in both cases the resulting patch flows through `properties_changed.emit()` → `vm.update_graph()`, which is what actually records the undo step.
+`snapshot(gw)` deep-copies every `MGraph` field (except `graph_id`) off a live `VGraph` widget; `diff(gw, before)` returns a patch dict of only the fields that differ from a prior snapshot. Used both by the Customize dialog's live-preview tick (deciding restyle vs. replot) and by toolbar-level edits (e.g. syncing a dragged legend position / resized subwindow into the model before `save_workspace()`) — in both cases the resulting patch flows through `properties_changed.emit()` → `vm.update_graph()`, which is what actually records the undo step.
 
 ### **Undo/Redo**
 
@@ -302,7 +302,7 @@ All stored as typed dicts in `MGraph.annotations`. Every type supports **drag in
 
 ### **More Options Tab**
 
-**Plot options**: the existing checkboxes (grid, join points, etc.) plus a **Theme** selector (Light/Dark/Soft Dark — re-applies `axes.facecolor`/label/tick/spine colors from `plt.rcParams` on every render so switching themes doesn't leave stale black text/spines).
+**Plot options**: style-dependent checkboxes (join/dodge points, error bars, wafer stats), plus one row shared by three global controls: a **Theme** selector (Light/Dark/Soft Dark — re-applies `axes.facecolor`/label/tick/spine colors from `plt.rcParams` on every render so switching themes doesn't leave stale black text/spines), an **X label rotation** spinbox (`MGraph.x_rot`), and a **Grid** checkbox (`MGraph.grid`) — the latter two migrated here from the workspace's bottom toolbar.
 
 **Font sizes (pt)**: Title, Subtitle, Axis label, and Tick label spinboxes in a single row (defaults 12/10/12/9, matching the active Matplotlib style). The Subtitle *text* itself (what it says, not its size) lives in the workspace side panel (`VWorkspaceGraphs`), not in this dialog — the old "Figure style" groupbox's redundant Subtitle text field was removed for that reason. Background color, Show-spines, and Margins controls that used to live in "Figure style" are still respected if set programmatically via `MGraph.figure_facecolor`/`figure_margins`, just without a dedicated picker (Show-spines moved to the Axis tab).
 
@@ -351,7 +351,7 @@ graph LR
 ```
 
 - Each plot is wrapped in a `QMdiSubWindow` for independent sizing, minimizing, and arranging.
-- The bottom toolbar provides global controls: graph selector combobox, X-label rotation, grid toggle. (A DPI spinbox used to live here too — removed: it only ever set the *default* DPI for the next newly-created plot, silently doing nothing when changed with an existing graph selected despite visually syncing to show that graph's DPI, which read as a live edit control but wasn't one. `MGraph.dpi` still defaults to 100 and can be set via script/AI-agent; on-screen rendering resolution isn't something users need to hand-tune day to day, and export resolution has its own explicit control in `VExportDialog`.)
+- The bottom toolbar provides global controls: graph selector combobox, minimize/delete-all, undo/redo. X-label rotation and the grid toggle used to live here too — moved into the Customize dialog's More Options tab (same row as Theme) since they're per-graph style, not workspace-global, and the toolbar versions only ever applied as one-off new-plot defaults with no live-preview. (A DPI spinbox used to live here too — removed: it only ever set the *default* DPI for the next newly-created plot, silently doing nothing when changed with an existing graph selected despite visually syncing to show that graph's DPI, which read as a live edit control but wasn't one. `MGraph.dpi` still defaults to 100 and can be set via script/AI-agent; on-screen rendering resolution isn't something users need to hand-tune day to day, and export resolution has its own explicit control in `VExportDialog`.)
 - "Minimize All" collapses all windows for a clean workspace.
 - Graph selection in the combobox activates the corresponding subwindow and syncs the right panel controls.
 

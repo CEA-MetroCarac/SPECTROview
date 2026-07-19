@@ -4,7 +4,7 @@ import copy
 from typing import Optional
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
-    QComboBox, QSpinBox, QCheckBox, QLineEdit, QSplitter,
+    QComboBox, QCheckBox, QLineEdit, QSplitter,
     QMdiArea, QMdiSubWindow, QTabWidget, QGroupBox, QMessageBox, QFrame, QScrollArea,
     QDialog, QGridLayout, QApplication, QListWidgetItem, QCompleter, QInputDialog
 )
@@ -131,19 +131,6 @@ class VWorkspaceGraphs(QWidget):
         self.lbl_plot_size = QLabel("(480x420)")
         self.lbl_plot_size.setMinimumWidth(70)
         toolbar_layout.addWidget(self.lbl_plot_size)
-        
-        # X label rotation
-        toolbar_layout.addWidget(QLabel("X label rotation:"))
-        self.spin_xlabel_rotation = QSpinBox()
-        self.spin_xlabel_rotation.setRange(0, 90)
-        self.spin_xlabel_rotation.setValue(0)
-        self.spin_xlabel_rotation.setSingleStep(10)
-        self.spin_xlabel_rotation.setMaximumWidth(60)
-        toolbar_layout.addWidget(self.spin_xlabel_rotation)
-        
-        # Grid checkbox
-        self.cb_grid_toolbar = QCheckBox("Grid")
-        toolbar_layout.addWidget(self.cb_grid_toolbar)
         
         toolbar_layout.addStretch()
         
@@ -622,7 +609,6 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_graph_list.currentIndexChanged.connect(self._on_graph_selected_toolbar)
         self.btn_minimize_all.clicked.connect(self._on_minimize_all)
         self.btn_delete_all.clicked.connect(self._on_delete_all)
-        self.cb_grid_toolbar.stateChanged.connect(self._on_grid_changed_toolbar)
 
         # MDI area connections
         self.mdi_area.subWindowActivated.connect(self._on_subwindow_activated)
@@ -1699,9 +1685,6 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_z.blockSignals(True)
         self.df_listbox.blockSignals(True)
         
-        # Block checkbox signals to prevent expensive signal handlers during sync
-        self.cb_grid_toolbar.blockSignals(True)
-        
         try:
             # Dataframe selection
             if model.df_name:
@@ -1733,18 +1716,12 @@ class VWorkspaceGraphs(QWidget):
                 if idx >= 0:
                     self.cbb_colormap.setCurrentIndex(idx)
             
-            # Checkboxes
-            self.cb_grid_toolbar.setChecked(model.grid)
-            
             # Text inputs
             self.edit_plot_title.setText(model.plot_title or "")
             self.edit_plot_subtitle.setText(getattr(model, 'plot_subtitle', None) or "")
             self.edit_xlabel.setText(model.xlabel or "")
             self.edit_ylabel.setText(model.ylabel or "")
             self.edit_zlabel.setText(model.zlabel or "")
-            
-            # Toolbar controls
-            self.spin_xlabel_rotation.setValue(model.x_rot)
             
             # Filters
             self.v_data_filter.set_filters(model.filters)
@@ -1778,9 +1755,6 @@ class VWorkspaceGraphs(QWidget):
             self.cbb_y.blockSignals(False)
             self.cbb_z.blockSignals(False)
             self.df_listbox.blockSignals(False)
-            
-            # Unblock checkbox signals
-            self.cb_grid_toolbar.blockSignals(False)
     
     # ═════════════════════════════════════════════════════════════════════
     # Plotting Helper Methods
@@ -1814,9 +1788,7 @@ class VWorkspaceGraphs(QWidget):
             'zlabel': (self.edit_zlabel.text() or None) if include_labels else None,
             'color_palette': self.cbb_colormap.currentText() if use_palette else 'jet',
             'wafer_size': float(self.cbb_wafer_size.currentText()),
-            'x_rot': self.spin_xlabel_rotation.value(),
             'legend_visible': True,
-            'grid': self.cb_grid_toolbar.isChecked(),
             'filters': self.v_data_filter.get_filters(),
             # Multiple axes
             'y2': self.cbb_y2.currentText() if self.cbb_y2.currentText() != "None" else None,
@@ -1906,25 +1878,6 @@ class VWorkspaceGraphs(QWidget):
         sub_window.closed.connect(lambda gid=model.graph_id: self._on_graph_closed(gid))
         
         return sub_window
-    
-    def _on_grid_changed_toolbar(self, state: int):
-        """Handle grid checkbox change."""
-        graph_id = self.cbb_graph_list.currentData()
-        if graph_id is not None and graph_id in self.graph_widgets:
-            graph_widget, _, _ = self.graph_widgets[graph_id]
-            before = snapshot(graph_widget)
-            # bool(state), not `state == Qt.Checked`: the stateChanged
-            # signal carries a plain int (0/2), not the CheckState enum.
-            graph_widget.grid = bool(state)
-            # Replot from the widget's own already-filtered df, not a fresh
-            # fetch keyed on the side list's current selection.
-            if graph_widget.df is not None:
-                graph_widget.plot(graph_widget.df)
-            # Commit through the same path every customize-dialog tab uses,
-            # so this persists to the model and survives a save.
-            graph_widget.properties_changed.emit(
-                graph_widget.graph_id, diff(graph_widget, before)
-            )
     
     def _on_graph_closed(self, graph_id: int):
         """Handle graph closing."""

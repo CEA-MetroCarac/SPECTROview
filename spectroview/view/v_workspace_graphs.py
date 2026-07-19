@@ -131,9 +131,21 @@ class VWorkspaceGraphs(QWidget):
         self.lbl_plot_size = QLabel("(480x420)")
         self.lbl_plot_size.setMinimumWidth(70)
         toolbar_layout.addWidget(self.lbl_plot_size)
-        
+
+        # Shared graph toolbar slot: every VGraph builds its own matplotlib
+        # nav toolbar + action buttons (Replicate/Customize/Copy/Export/
+        # Style) but never shows them itself -- sync_active_graph_toolbar()
+        # reparents whichever graph is currently active into this one slot,
+        # so all graphs visually share a single toolbar instead of each MDI
+        # window carrying its own identical copy.
+        self.graph_toolbar_slot = QWidget()
+        self._graph_toolbar_slot_layout = QHBoxLayout(self.graph_toolbar_slot)
+        self._graph_toolbar_slot_layout.setContentsMargins(0, 0, 0, 0)
+        self._graph_toolbar_slot_layout.setSpacing(0)
+        toolbar_layout.addWidget(self.graph_toolbar_slot)
+
         toolbar_layout.addStretch()
-        
+
         return bottom_toolbar
     
     def _setup_right_panel(self):
@@ -952,6 +964,11 @@ class VWorkspaceGraphs(QWidget):
         self.graph_widgets[graph_model.graph_id] = (graph_widget, graph_dialog, sub_window)
         self.mdi_area.addSubWindow(sub_window)
         sub_window.show()
+        # addSubWindow()/show() normally auto-activates the new subwindow
+        # (firing subWindowActivated -> _sync_active_graph_toolbar()), but
+        # this stays cheap and idempotent to call directly too, so a new
+        # graph's toolbar is never left showing the previous one's.
+        self._sync_active_graph_toolbar()
 
         return graph_widget
 
@@ -1369,6 +1386,11 @@ class VWorkspaceGraphs(QWidget):
             if graph_model.z:
                 title += f" - [{graph_model.z}]"
             active_subwindow.setWindowTitle(title)
+
+            # create_plot_widget() rebuilt this graph's toolbar_container --
+            # no subWindowActivated fires here since it's already active, so
+            # re-sync the shared slot to the freshly rebuilt one explicitly.
+            self._sync_active_graph_toolbar()
         finally:
             self.vm.end_undo_batch()
     
@@ -1634,14 +1656,49 @@ class VWorkspaceGraphs(QWidget):
 
             # Update graph list combobox
             self._update_graph_list([])
+            self._sync_active_graph_toolbar()
     
 
     
+    def _sync_active_graph_toolbar(self):
+        """Reparent the active MDI subwindow's graph toolbar/action-button
+        row into the shared toolbar slot; every other graph's row stays
+        hidden and parentless until it becomes active. Safe to call any
+        time (no active subwindow, an unknown graph, or a since-deleted
+        toolbar_container all just leave the slot empty)."""
+        while self._graph_toolbar_slot_layout.count():
+            item = self._graph_toolbar_slot_layout.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.setParent(None)
+
+        active_subwindow = self.mdi_area.activeSubWindow()
+        if active_subwindow is None:
+            return
+
+        graph_widget = None
+        for gw, gd, sw in self.graph_widgets.values():
+            if sw == active_subwindow:
+                graph_widget = gw
+                break
+        if graph_widget is None:
+            return
+
+        container = getattr(graph_widget, 'toolbar_container', None)
+        if container is None:
+            return
+        try:
+            self._graph_toolbar_slot_layout.addWidget(container)
+            container.show()
+        except RuntimeError:
+            pass
+
     def _on_subwindow_activated(self, sub_window):
         """Handle subwindow activation."""
         if not sub_window:
+            self._sync_active_graph_toolbar()
             return
-        
+
         # Find the corresponding graph
         graph_widget = None
         graph_model = None
@@ -1650,10 +1707,12 @@ class VWorkspaceGraphs(QWidget):
                 graph_widget = gw
                 graph_model = self.vm.get_graph(gid)
                 break
-        
+
         if not graph_widget or not graph_model:
             return
-        
+
+        self._sync_active_graph_toolbar()
+
         # Update plot size label
         size = sub_window.size()
         self.lbl_plot_size.setText(f"({size.width()}x{size.height()})")
@@ -1889,12 +1948,13 @@ class VWorkspaceGraphs(QWidget):
         # Remove from storage
         if graph_id in self.graph_widgets:
             del self.graph_widgets[graph_id]
-        
+
         # Remove from ViewModel
         self.vm.delete_graph(graph_id)
-        
+
         # Update graph list
         self._update_graph_list(self.vm.get_graph_ids())
+        self._sync_active_graph_toolbar()
     
     # ═════════════════════════════════════════════════════════════════════
     # Workspace Management
@@ -1971,6 +2031,7 @@ class VWorkspaceGraphs(QWidget):
             self._build_graph_widget(graph_model, filtered_df, _on_render_error)
 
         self._update_graph_list(self.vm.get_graph_ids())
+        self._sync_active_graph_toolbar()
 
     def _on_undo_clicked(self):
         """Revert the last undo-tracked action (see
@@ -2006,8 +2067,9 @@ class VWorkspaceGraphs(QWidget):
             sub_window.closed.disconnect()
             sub_window.close()
             self.mdi_area.removeSubWindow(sub_window)
-        
+
         self.graph_widgets.clear()
+        self._sync_active_graph_toolbar()
         self.df_listbox.clear()
         self.cbb_x.clear()
         self.cbb_y.clear()

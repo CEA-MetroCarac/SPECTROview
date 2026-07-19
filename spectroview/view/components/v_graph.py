@@ -231,13 +231,23 @@ class VGraph(QWidget):
                     self.clear_layout(item.layout())
     
     def create_plot_widget(self, dpi, layout=None):
-        """Creates matplotlib figure canvas and adds it to layout."""
+        """Creates matplotlib figure canvas and adds it to layout.
+
+        The toolbar/action-button row (self.toolbar_container) is built here
+        but deliberately never added to this widget's own layout -- it's a
+        parentless, hidden widget until VWorkspaceGraphs reparents it into
+        the workspace's single shared toolbar slot for whichever graph is
+        currently active. clear_layout(self.graph_layout) only tears down
+        the canvas on a rebuild, so the previous toolbar_container (if any)
+        is torn down explicitly below.
+        """
         if dpi:
             self.dpi = dpi
         else:
             self.dpi = 100
-        
+
         self.clear_layout(self.graph_layout)
+        old_toolbar_container = getattr(self, 'toolbar_container', None)
 
         # OO Figure API (not plt.figure()): keeps this widget's figures out
         # of pyplot's global manager, so plt.close('all') elsewhere can't
@@ -363,18 +373,22 @@ class VGraph(QWidget):
         toolbar_layout.addWidget(self.btn_export)
         toolbar_layout.addWidget(self.btn_style_menu)
         
-        # Create container widget for toolbar layout
+        # Create container widget for toolbar layout -- kept parentless and
+        # hidden here; VWorkspaceGraphs.sync_active_graph_toolbar() reparents
+        # it into the shared toolbar slot when this graph is the active one.
         toolbar_container = QWidget()
         toolbar_container.setLayout(toolbar_layout)
         toolbar_container.setFixedHeight(35)
-        
+        toolbar_container.hide()
+        self.toolbar_container = toolbar_container
+        if old_toolbar_container is not None:
+            old_toolbar_container.deleteLater()
+
         if layout:
             layout.addWidget(self.canvas)
-            layout.addWidget(toolbar_container)
         else:
             self.graph_layout.addWidget(self.canvas)
-            self.graph_layout.addWidget(toolbar_container)
-        
+
         # Connect pick event for legend customization
         self.canvas.mpl_connect('pick_event', self._on_legend_pick)
         

@@ -84,7 +84,7 @@ Note: style templates, plot recipes, and the working-folder setting are **not** 
 
 **File**: `spectroview/view/components/v_graph.py`
 
-Each plot in the MDI area is a `VGraph` instance. It holds a Matplotlib `Figure` + `FigureCanvas` and acts as the UI wrapper. It manages interactions, context menus, and toolbar actions (Style menu, Export, Replicate), but delegates the actual drawing algorithms to `PlotRenderer`.
+Each plot in the MDI area is a `VGraph` instance. It holds a Matplotlib `Figure` + `FigureCanvas` and acts as the UI wrapper. It manages interactions, context menus, and toolbar actions (Style menu, Export, Replicate), but delegates the actual drawing algorithms to `PlotRenderer`. `create_plot_widget()` still builds each `VGraph`'s own matplotlib nav toolbar + action-button row (`self.toolbar_container`), but never adds it to the graph's own layout — see [the bottom toolbar](#mdi-area-management) for where it's actually shown.
 
 Two rendering paths:
 - **`plot(df)`** — full replot: clears and rebuilds the Axes from scratch. Required whenever artists themselves change (series data, colors/markers per point, colormap, secondary/twin axes, annotations, insets) or a broken axis is active/toggled.
@@ -351,7 +351,7 @@ graph LR
 ```
 
 - Each plot is wrapped in a `QMdiSubWindow` for independent sizing, minimizing, and arranging.
-- The bottom toolbar provides global controls: graph selector combobox, minimize/delete-all, undo/redo. X-label rotation and the grid toggle used to live here too — moved into the Customize dialog's More Options tab (same row as Theme) since they're per-graph style, not workspace-global, and the toolbar versions only ever applied as one-off new-plot defaults with no live-preview. (A DPI spinbox used to live here too — removed: it only ever set the *default* DPI for the next newly-created plot, silently doing nothing when changed with an existing graph selected despite visually syncing to show that graph's DPI, which read as a live edit control but wasn't one. `MGraph.dpi` still defaults to 100 and can be set via script/AI-agent; on-screen rendering resolution isn't something users need to hand-tune day to day, and export resolution has its own explicit control in `VExportDialog`.)
+- The bottom toolbar provides global controls: graph selector combobox, minimize/delete-all, undo/redo, and one shared **graph toolbar slot** (`self.graph_toolbar_slot` / `self._graph_toolbar_slot_layout`). Every `VGraph` builds its own matplotlib nav toolbar (Home/Pan/Zoom/Subplots) + action-button row (Replicate/Customize/Copy/Export/Style menu) in `create_plot_widget()`, but keeps it parentless and hidden (`self.toolbar_container`) instead of showing it inside its own MDI window — each MDI window shows only its plot canvas. `VWorkspaceGraphs._sync_active_graph_toolbar()` reparents whichever graph's `toolbar_container` belongs to the currently active MDI subwindow into the shared slot (detaching the previous one first), so every graph visually shares one toolbar instead of each carrying an identical copy. It's called from every place the active graph can change or a graph's toolbar gets rebuilt: `_on_subwindow_activated` (covers subwindow clicks, the graph-list combobox, and the "no subwindows left" `None` case), `_build_graph_widget` (new graph), `_on_update_plot`/the AI-agent's graph-update path in `main.py` (`create_plot_widget()` rebuilds `toolbar_container` from scratch, so the slot must re-sync to the new instance), and `_on_graph_closed`/`_on_delete_all`/`clear_workspace`/`_rebuild_all_graph_widgets` (teardown/rebuild paths, so the slot never dangles a reference to a deleted widget). X-label rotation and the grid toggle used to live in this toolbar too — moved into the Customize dialog's More Options tab (same row as Theme) since they're per-graph style, not workspace-global, and the toolbar versions only ever applied as one-off new-plot defaults with no live-preview. (A DPI spinbox used to live here too — removed: it only ever set the *default* DPI for the next newly-created plot, silently doing nothing when changed with an existing graph selected despite visually syncing to show that graph's DPI, which read as a live edit control but wasn't one. `MGraph.dpi` still defaults to 100 and can be set via script/AI-agent; on-screen rendering resolution isn't something users need to hand-tune day to day, and export resolution has its own explicit control in `VExportDialog`.)
 - "Minimize All" collapses all windows for a clean workspace.
 - Graph selection in the combobox activates the corresponding subwindow and syncs the right panel controls.
 
@@ -426,7 +426,7 @@ Each entry in `metadata["plots"]` is a full `MGraph.save()` dict keyed by `graph
 
 ## **Plot Replication**
 
-The "Replicate" button on each graph toolbar creates a deep copy of the plot:
+The "Replicate" button (in the shared graph toolbar, acting on whichever graph is active) creates a deep copy of the plot:
 
 1. Serializes the current `MGraph` via `save()`.
 2. Removes `graph_id` (the ViewModel assigns a new one).

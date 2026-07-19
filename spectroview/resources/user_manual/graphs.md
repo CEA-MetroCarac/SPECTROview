@@ -43,7 +43,23 @@ ________
 ______
 
 
-### **3. Customizing a Plot**
+### **3. The Shared Graph Toolbar**
+
+Every plot window shares one toolbar, shown in the bottom bar of the workspace and always acting on whichever plot window is currently active (click a plot, or pick it from the graph selector dropdown, to make it active):
+
+| Control | Description |
+|---|---|
+| **Home / Pan / Zoom / Subplots** | Standard Matplotlib navigation: reset the view, pan, zoom to a rectangle, or adjust subplot margins. |
+| **Replicate** | Creates a duplicate of the active plot. |
+| **Customize** | Opens the Customize Graph Dialog for the active plot (see below). |
+| **Copy** | Copies the active plot's figure to the clipboard as an image. |
+| **Export** | Opens the export dialog for the active plot. |
+| **Style menu (🎨)** | Save/apply a style, copy/paste style, reset to default, or set the current style as the default for new plots. |
+
+______
+
+
+### **4. Customizing a Plot**
 
 You can quickly modify the **labels** of the axes and the **title** of the plot via the `Right Panel`. Click the **Update Plot** button to apply the changes instantly:
 
@@ -60,7 +76,7 @@ All changes across tabs are applied together via the unified **Apply** button at
 
 ---
 
-#### 3.1 Axis Tab
+#### 4.1 Axis Tab
 
 <div align="center">
   <img src="../user_manual_images/Graphs/Customize_Axis.png" alt="Axis Tab" width="450"><br>
@@ -134,7 +150,7 @@ Plot additional Y-columns (or a second X-column) against independent scales, one
 
 ---
 
-#### 3.2 Legend / Color Tab
+#### 4.2 Legend / Color Tab
 
 <div align="center">
   <img src="../user_manual_images/Graphs/Customize_LegendBox.png" alt="Legend / Color Tab" width="450"><br>
@@ -171,7 +187,7 @@ The **Legend / Color** tab lets you customize the appearance and placement of th
 
 ---
 
-#### 3.3 Annotations Tab
+#### 4.3 Annotations Tab
 
 <div align="center">
   <img src="../user_manual_images/Graphs/Customize_Annotation.png" alt="Annotations Tab" width="450"><br>
@@ -206,7 +222,7 @@ All current annotations are listed below the buttons. Select an annotation to **
 
 ---
 
-#### 3.4 More Options Tab
+#### 4.4 More Options Tab
 
 <div align="center">
   <img src="../user_manual_images/Graphs/Customize_MoreOptions.png" alt="More Options Tab" width="450"><br>
@@ -278,7 +294,7 @@ Visible only for `wafer` and `2Dmap` styles — controls how data values map to 
 
 _____
 
-### **4. Data Filtering**
+### **5. Data Filtering**
 
 You can dynamically filter the plotted data by applying boolean logic expressions in the **Filter** field using the format: `(column_name) (operator) (value)`.
 > **Note**: String values must be enclosed in double quotes (`"text"`). Column headers containing spaces must be enclosed in backticks (`` `column name` ``).
@@ -297,18 +313,18 @@ You can dynamically filter the plotted data by applying boolean logic expression
 
 _____
 
-### **5. Statistical Calculations & Fitting Details**
+### **6. Statistical Calculations & Fitting Details**
 
 For statistical plot styles (`point`, `bar`, `box`, and `trendline`), SPECTROview automatically calculates essential metrics and visualizes the distribution of your data.
 
-#### 5.1 **Point and Bar Plots**
+#### 6.1 **Point and Bar Plots**
 
 - **Central Value (Mean):** The primary data point (the circle marker in a `point` plot or the top of the bar in a `bar` plot) represents the **arithmetic mean** of all Y-values for a given X-category.
 - **Error Bars (95% CI):** The error bars extending from the mean represent the **95% Confidence Interval** of the mean. This is calculated using the Standard Error of the Mean (SEM):
   `Error Bar = ± (1.96 × SEM)`
   where `SEM = Standard Deviation / sqrt(N)`.
 
-#### 5.2 **Box Plot**
+#### 6.2 **Box Plot**
 
 The `box` plot natively displays the statistical distribution of the dataset based on standard five-number summaries:
 - **Box Bounds (Q1 to Q3):** The main body of the box spans from the first quartile (25th percentile) to the third quartile (75th percentile), known as the Interquartile Range (IQR).
@@ -316,7 +332,7 @@ The `box` plot natively displays the statistical distribution of the dataset bas
 - **Whiskers:** The whiskers extend to the furthest data points that are still within `1.5 × IQR` of the box edges.
 - **Fliers (Outliers):** Any data points falling beyond the whiskers are explicitly drawn as individual outlier points.
 
-#### 5.3 **Trendline Estimation**
+#### 6.3 **Trendline Estimation**
 
 - **Standard Fit (No Anchor):** The trendline is calculated using an Ordinary Least Squares (OLS) linear regression to fit a polynomial of the specified degree:
   `y = p₀·xᵈ + p₁·xᵈ⁻¹ + ... + p_d`
@@ -328,7 +344,7 @@ The `box` plot natively displays the statistical distribution of the dataset bas
   - **For Higher orders (>1):** The shifted data is fitted with a zero intercept using a linear least squares solver.
   The fitted curve is then translated back to the original coordinate space.
 
-#### 5.4 **Trendline Confidence Intervals**
+#### 6.4 **Trendline Confidence Intervals**
 
 - **Confidence Level:** The shaded band around standard trendlines represents a **95% confidence interval** (estimated by Seaborn's regression plot module).
 - **Estimation Method:** The confidence interval is estimated using a non-parametric bootstrapping procedure (resampling data points with replacement 1000 times, fitting a regression model to each bootstrap sample, and calculating the 2.5th and 97.5th percentiles of the predictions).

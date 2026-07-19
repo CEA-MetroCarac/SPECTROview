@@ -111,6 +111,78 @@ class TestBuildGraphWidget:
         assert customize_calls == [widget.graph_id]
 
 
+class TestSharedGraphToolbar:
+    """Every VGraph builds its own matplotlib nav toolbar + action-button
+    row (toolbar_container) but never shows it itself -- only the currently
+    active graph's row is reparented into the workspace's one shared
+    toolbar slot (_sync_active_graph_toolbar), so all MDI windows visually
+    share a single toolbar instead of each carrying an identical copy."""
+
+    def _make_graph(self, ws, excel_df, **overrides):
+        """Build a graph and explicitly activate its subwindow: the `ws`
+        fixture is never .show()'n, so QMdiArea doesn't auto-activate a
+        newly added subwindow the way it does in the real, on-screen app
+        (matches the pattern already used by _on_update_plot()'s tests)."""
+        cfg = {'df_name': 'sheet1', 'plot_style': 'scatter', 'x': 'x0_Si', 'y': ['ampli_Si']}
+        cfg.update(overrides)
+        graph_model = ws.vm.create_graph(cfg)
+        widget = ws._build_graph_widget(graph_model, excel_df, lambda e: None)
+        sub_window = ws.graph_widgets[widget.graph_id][2]
+        ws.mdi_area.setActiveSubWindow(sub_window)
+        return widget
+
+    def test_new_graph_toolbar_is_not_shown_inside_its_own_window(self, ws, excel_df):
+        widget = self._make_graph(ws, excel_df)
+        assert widget.toolbar_container.parent() is not widget
+        assert widget.toolbar_container.isVisible() is False
+
+    def test_newly_added_graph_becomes_the_one_shown_in_the_shared_slot(self, ws, excel_df):
+        widget = self._make_graph(ws, excel_df)
+        assert widget.toolbar_container.parent() is ws.graph_toolbar_slot
+        assert ws._graph_toolbar_slot_layout.count() == 1
+
+    def test_switching_active_subwindow_moves_the_toolbar_to_the_new_graph(self, ws, excel_df):
+        first = self._make_graph(ws, excel_df)
+        second = self._make_graph(ws, excel_df, y=['fwhm_Si'])
+        _, _, sw_first = ws.graph_widgets[first.graph_id]
+        _, _, sw_second = ws.graph_widgets[second.graph_id]
+
+        # Second graph was added last, so it's the active one by default.
+        assert second.toolbar_container.parent() is ws.graph_toolbar_slot
+        assert first.toolbar_container.parent() is not ws.graph_toolbar_slot
+
+        ws.mdi_area.setActiveSubWindow(sw_first)
+
+        assert first.toolbar_container.parent() is ws.graph_toolbar_slot
+        assert second.toolbar_container.parent() is not ws.graph_toolbar_slot
+        assert ws._graph_toolbar_slot_layout.count() == 1
+
+    def test_closing_the_active_graph_clears_the_slot(self, ws, excel_df):
+        widget = self._make_graph(ws, excel_df)
+        graph_id = widget.graph_id
+        assert ws._graph_toolbar_slot_layout.count() == 1
+
+        ws._on_graph_closed(graph_id)
+
+        assert ws._graph_toolbar_slot_layout.count() == 0
+
+    def test_update_plot_rebuilds_and_resyncs_the_active_graphs_toolbar(self, ws, excel_df):
+        """create_plot_widget() (called again by Update Plot) builds a brand
+        new toolbar_container -- the shared slot must pick up the new one,
+        not keep displaying the stale, about-to-be-deleted instance."""
+        widget = self._make_graph(ws, excel_df)
+        old_container = widget.toolbar_container
+        ws.vm.add_dataframe('sheet1', excel_df)
+
+        ws.cbb_x.setCurrentText('x0_Si')
+        ws.cbb_y.setCurrentText('fwhm_Si')
+        ws._on_update_plot()
+
+        assert widget.toolbar_container is not old_container
+        assert widget.toolbar_container.parent() is ws.graph_toolbar_slot
+        assert ws._graph_toolbar_slot_layout.count() == 1
+
+
 class TestLoadWorkspaceSkipsUnrenderableGraphs:
     def test_one_bad_graph_does_not_abort_loading_the_rest(self, ws, excel_df, monkeypatch):
         """Regression test for a real bug: load_workspace's per-graph loop had

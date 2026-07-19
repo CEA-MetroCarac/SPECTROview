@@ -540,6 +540,9 @@ class Main(QMainWindow):
                 ws._render_plot(graph_widget, filtered_df, updated_model)
             except Exception as e:
                 QMessageBox.warning(self, "Graph Update Error", f"Could not re-render graph {graph_id}:\n{e}")
+            # create_plot_widget() rebuilt this graph's toolbar_container --
+            # re-sync in case this graph happens to be the active one.
+            ws._sync_active_graph_toolbar()
 
         # Switch to Graphs tab to show the result
         self.tabWidget.setCurrentWidget(ws)

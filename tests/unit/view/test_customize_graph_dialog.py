@@ -1120,6 +1120,187 @@ class TestCustomizeAnnotations:
         assert vg.annotations == []
         assert widget.annotation_list.count() == 0
 
+    def test_double_click_list_row_opens_edit_dialog(self, qapp, excel_df, monkeypatch):
+        """Double-clicking a list item routes to _edit_annotation for that row."""
+        vg = _plotted_graph(qapp, excel_df)
+        widget = CustomizeAnnotations(vg)
+        widget._add_box()
+
+        edited = []
+        monkeypatch.setattr(widget, "_edit_annotation", lambda: edited.append(True))
+        widget._on_item_double_clicked(widget.annotation_list.item(0))
+
+        assert widget.annotation_list.currentItem() is widget.annotation_list.item(0)
+        assert edited == [True]
+
+
+def _event_at(px, py):
+    """A minimal stand-in for a matplotlib MouseEvent: the handle/resize
+    logic only reads .x/.y (display pixels)."""
+    import types
+    return types.SimpleNamespace(x=px, y=py)
+
+
+def _artist_for(vg, ann_id):
+    for a in vg.ax.findobj():
+        data = getattr(a, "_annotation_data", None)
+        if data and data.get("id") == ann_id:
+            return a
+    return None
+
+
+def _view_box(vg):
+    """(cx, cy, wx, wy) from the graph's current axis view -- annotations
+    must be sized as a real fraction of the visible data so their edges land
+    well apart in pixels (the real dataset is only ~1 x-unit wide)."""
+    x0, x1 = vg.ax.get_xlim()
+    y0, y1 = vg.ax.get_ylim()
+    return (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0), (y1 - y0)
+
+
+class TestAnnotationCanvasResize:
+    """Part A: border/endpoint grabbing so spans/boxes resize, arrow
+    endpoints and the callout anchor move, instead of only whole-shape drags."""
+
+    def test_box_border_handles_and_resize(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        cx, cy, wx, wy = _view_box(vg)
+        x0, y0, w, h = cx - 0.2 * wx, cy - 0.2 * wy, 0.4 * wx, 0.4 * wy
+        box = {"id": "b", "type": "box", "x": x0, "y": y0, "width": w, "height": h,
+               "facecolor": "yellow", "edgecolor": "black", "linewidth": 1.5, "alpha": 0.3}
+        vg.annotations = [box]
+        vg.ax.clear(); vg.plot(vg.df)
+
+        t = vg.ax.transData.transform
+        left, bottom = t((x0, y0)); right, top = t((x0 + w, y0 + h))
+        artist = _artist_for(vg, "b")
+        assert vg._annotation_handle_at(artist, box, _event_at(right, (bottom + top) / 2)) == "resize-r"
+        assert vg._annotation_handle_at(artist, box, _event_at(left, top)) == "resize-tl"
+        assert vg._annotation_handle_at(artist, box, _event_at((left + right) / 2, (bottom + top) / 2)) == "move"
+
+        vg._drag_handle = "resize-r"
+        vg._resize_dragged_annotation(artist, box, x0 + 2 * w, 0.0)
+        assert box["x"] == x0 and abs(box["width"] - 2 * w) < 1e-6
+
+    def test_box_resize_cannot_collapse_below_min_extent(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        cx, cy, wx, wy = _view_box(vg)
+        box = {"id": "b", "type": "box", "x": cx - 0.2 * wx, "y": cy - 0.2 * wy,
+               "width": 0.4 * wx, "height": 0.4 * wy, "facecolor": "yellow",
+               "edgecolor": "black", "linewidth": 1.5, "alpha": 0.3}
+        vg.annotations = [box]
+        vg.ax.clear(); vg.plot(vg.df)
+        # Drag the right edge far to the left, past the left edge.
+        vg._drag_handle = "resize-r"
+        vg._resize_dragged_annotation(_artist_for(vg, "b"), box, cx - 100 * wx, 0.0)
+        assert box["width"] > 0  # clamped, not inverted/collapsed
+
+    def test_vspan_edge_handles_and_resize(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        cx, cy, wx, wy = _view_box(vg)
+        x1v, x2v = cx - 0.2 * wx, cx + 0.2 * wx
+        vs = {"id": "v", "type": "vspan", "x1": x1v, "x2": x2v, "color": "orange", "alpha": 0.3}
+        vg.annotations = [vs]
+        vg.ax.clear(); vg.plot(vg.df)
+        t = vg.ax.transData.transform
+        py = t((0, vg.ax.get_ylim()[0]))[1]
+        artist = _artist_for(vg, "v")
+        assert vg._annotation_handle_at(artist, vs, _event_at(t((x1v, 0))[0], py)) == "resize-x1"
+        assert vg._annotation_handle_at(artist, vs, _event_at(t((x2v, 0))[0], py)) == "resize-x2"
+
+        vg._drag_handle = "resize-x2"
+        new_x2 = cx + 0.35 * wx
+        vg._resize_dragged_annotation(artist, vs, new_x2, 0.0)
+        assert abs(vs["x2"] - new_x2) < 1e-6 and vs["x1"] == x1v
+
+    def test_arrow_endpoint_and_callout_anchor_move(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df)
+        cx, cy, wx, wy = _view_box(vg)
+        p1 = (cx - 0.2 * wx, cy - 0.2 * wy)
+        p2 = (cx + 0.2 * wx, cy + 0.2 * wy)
+        anchor = (cx, cy)
+        text = (cx + 0.3 * wx, cy + 0.3 * wy)
+        ar = {"id": "a", "type": "arrow", "x1": p1[0], "y1": p1[1], "x2": p2[0], "y2": p2[1],
+              "color": "black", "linewidth": 1.5, "linestyle": "-"}
+        co = {"id": "c", "type": "callout", "x": anchor[0], "y": anchor[1],
+              "tx": text[0], "ty": text[1], "text": "hi", "fontsize": 11,
+              "color": "black", "arrowcolor": "black"}
+        vg.annotations = [ar, co]
+        vg.ax.clear(); vg.plot(vg.df)
+        t = vg.ax.transData.transform
+
+        assert vg._annotation_handle_at(_artist_for(vg, "a"), ar, _event_at(*t(p2))) == "p2"
+        vg._drag_handle = "p2"
+        new_p2 = (cx + 0.4 * wx, cy + 0.4 * wy)
+        vg._resize_dragged_annotation(_artist_for(vg, "a"), ar, new_p2[0], new_p2[1])
+        assert (ar["x2"], ar["y2"]) == new_p2 and (ar["x1"], ar["y1"]) == p1
+
+        assert vg._annotation_handle_at(_artist_for(vg, "c"), co, _event_at(*t(anchor))) == "anchor"
+        vg._drag_handle = "anchor"
+        new_anchor = (cx + 0.1 * wx, cy + 0.1 * wy)
+        vg._resize_dragged_annotation(_artist_for(vg, "c"), co, new_anchor[0], new_anchor[1])
+        assert (co["x"], co["y"]) == new_anchor and (co["tx"], co["ty"]) == text
+
+
+class TestAnnotationLivePreview:
+    """Part C: edit dialogs preview live and restore on Cancel, coordinate
+    spinboxes take an axis-derived range, spans get a synced range slider."""
+
+    def _span(self):
+        return {"id": "v", "type": "vspan", "x1": 3.0, "x2": 6.0, "color": "orange", "alpha": 0.3}
+
+    def test_span_dialog_has_axis_range_and_synced_slider(self, qapp, excel_df):
+        from spectroview.view.components.customize_graph.customize_annotation_dialogs import EditSpanDialog
+        vg = _plotted_graph(qapp, excel_df)
+        span = self._span()
+        vg.annotations = [span]; vg.ax.clear(); vg.plot(vg.df)
+        d = EditSpanDialog(span, vg, None)
+
+        assert d.start_spin.minimum() > -999999  # data-relative, not the raw wide range
+        assert d.range_slider is not None
+        # Slider drag mirrors into the spinboxes.
+        d._on_slider_changed((4.0, 5.5))
+        assert d.start_spin.value() == 4.0 and d.end_spin.value() == 5.5
+
+    def test_preview_mutates_then_cancel_restores(self, qapp, excel_df):
+        from spectroview.view.components.customize_graph.customize_annotation_dialogs import EditSpanDialog
+        vg = _plotted_graph(qapp, excel_df)
+        span = self._span()
+        vg.annotations = [span]; vg.ax.clear(); vg.plot(vg.df)
+        d = EditSpanDialog(span, vg, None)
+
+        d.start_spin.setValue(3.5)
+        d._apply_preview()
+        assert span["x1"] == 3.5  # previewed onto the live annotation dict
+
+        d.reject()
+        assert span["x1"] == 3.0  # original restored on Cancel
+
+    def test_accept_keeps_edited_values(self, qapp, excel_df, monkeypatch):
+        from PySide6.QtWidgets import QDialog
+        from spectroview.view.components.customize_graph.customize_annotation_dialogs import EditSpanDialog
+        vg = _plotted_graph(qapp, excel_df)
+        span = self._span()
+        vg.annotations = [span]; vg.ax.clear(); vg.plot(vg.df)
+        widget = CustomizeAnnotations(vg)
+        widget.load_annotations()
+
+        monkeypatch.setattr(EditSpanDialog, "exec", lambda self: (self.start_spin.setValue(4.2), QDialog.Accepted)[1])
+        widget.annotation_list.setCurrentRow(0)
+        widget._edit_annotation()
+        assert span["x1"] == 4.2
+
+    def test_dialog_without_graph_widget_is_apply_only(self, qapp):
+        """No graph attached -> no live preview, no crash (backward compat)."""
+        from spectroview.view.components.customize_graph.customize_annotation_dialogs import EditBoxDialog
+        box = {"id": "b", "type": "box", "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0,
+               "facecolor": "yellow", "edgecolor": "black", "linewidth": 1.5, "alpha": 0.3}
+        d = EditBoxDialog(box, None, None)
+        d.width_spin.setValue(3.0)
+        d._schedule_preview()  # must be a no-op without a graph widget
+        assert box["width"] == 1.0  # unchanged until explicit get_properties()
+        assert d.get_properties()["width"] == 3.0
+
 
 class TestCustomizeGraphDialogTopLevel:
     def test_apply_all_delegates_to_every_tab(self, qapp, excel_df):

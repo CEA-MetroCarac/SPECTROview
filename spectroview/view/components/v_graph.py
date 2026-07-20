@@ -1460,9 +1460,91 @@ class VGraph(QWidget):
         """
         return self.ax.transData.inverted().transform((event.x, event.y))
 
+    # Pixel proximity for grabbing a resize border/endpoint instead of
+    # moving the whole annotation.
+    _HANDLE_TOL_PX = 8
+
+    _HANDLE_CURSORS = {
+        'resize-x1': Qt.CursorShape.SizeHorCursor, 'resize-x2': Qt.CursorShape.SizeHorCursor,
+        'resize-l': Qt.CursorShape.SizeHorCursor, 'resize-r': Qt.CursorShape.SizeHorCursor,
+        'resize-y1': Qt.CursorShape.SizeVerCursor, 'resize-y2': Qt.CursorShape.SizeVerCursor,
+        'resize-t': Qt.CursorShape.SizeVerCursor, 'resize-b': Qt.CursorShape.SizeVerCursor,
+        'resize-tl': Qt.CursorShape.SizeFDiagCursor, 'resize-br': Qt.CursorShape.SizeFDiagCursor,
+        'resize-tr': Qt.CursorShape.SizeBDiagCursor, 'resize-bl': Qt.CursorShape.SizeBDiagCursor,
+    }
+
+    def _annotation_handle_at(self, artist, ann_data, event):
+        """Which draggable handle of `artist` the mouse is over, or 'move'.
+
+        Spans/boxes expose their borders as resize handles, arrows their two
+        endpoints, callouts their pointed-at anchor; anything else is a
+        whole-annotation move. Measured in pixels so grabbing feels the same
+        at any data scale (via self.ax.transData, not event.xdata -- see
+        _ax_data_coords for the twin-axis reason)."""
+        t = self.ax.transData.transform
+        tol = self._HANDLE_TOL_PX
+        ann_type = ann_data['type']
+
+        if ann_type == 'vspan':
+            px1, px2 = t((ann_data['x1'], 0))[0], t((ann_data['x2'], 0))[0]
+            if abs(event.x - px1) <= tol:
+                return 'resize-x1'
+            if abs(event.x - px2) <= tol:
+                return 'resize-x2'
+        elif ann_type == 'hspan':
+            py1, py2 = t((0, ann_data['y1']))[1], t((0, ann_data['y2']))[1]
+            if abs(event.y - py1) <= tol:
+                return 'resize-y1'
+            if abs(event.y - py2) <= tol:
+                return 'resize-y2'
+        elif ann_type == 'box':
+            left, bottom = t((ann_data['x'], ann_data['y']))
+            right, top = t((ann_data['x'] + ann_data['width'],
+                            ann_data['y'] + ann_data['height']))
+            horiz = 'l' if abs(event.x - left) <= tol else ('r' if abs(event.x - right) <= tol else '')
+            vert = 't' if abs(event.y - top) <= tol else ('b' if abs(event.y - bottom) <= tol else '')
+            within_x = min(left, right) - tol <= event.x <= max(left, right) + tol
+            within_y = min(bottom, top) - tol <= event.y <= max(bottom, top) + tol
+            if vert and horiz and within_x and within_y:
+                return f'resize-{vert}{horiz}'
+            if horiz and within_y:
+                return f'resize-{horiz}'
+            if vert and within_x:
+                return f'resize-{vert}'
+        elif ann_type == 'arrow':
+            p1, p2 = t((ann_data['x1'], ann_data['y1'])), t((ann_data['x2'], ann_data['y2']))
+            if abs(event.x - p1[0]) <= tol and abs(event.y - p1[1]) <= tol:
+                return 'p1'
+            if abs(event.x - p2[0]) <= tol and abs(event.y - p2[1]) <= tol:
+                return 'p2'
+        elif ann_type == 'callout':
+            anchor = t((ann_data['x'], ann_data['y']))
+            if abs(event.x - anchor[0]) <= tol and abs(event.y - anchor[1]) <= tol:
+                return 'anchor'
+        return 'move'
+
+    def _update_hover_cursor(self, event):
+        """Show a resize/move cursor while hovering an annotation handle so
+        the grab affordance is discoverable. Skipped while a matplotlib
+        pan/zoom mode owns the cursor."""
+        if not self.annotations or str(getattr(self.toolbar, 'mode', '')):
+            return
+        shape = None
+        for artist in self.ax.findobj():
+            data = getattr(artist, '_annotation_data', None)
+            if data is not None and artist.contains(event)[0]:
+                handle = self._annotation_handle_at(artist, data, event)
+                shape = self._HANDLE_CURSORS.get(handle, Qt.CursorShape.SizeAllCursor)
+                break
+        # Only touch the cursor when the state changes -- avoids fighting
+        # other widgets for the cursor on every idle mouse move.
+        if shape != getattr(self, '_hover_cursor_shape', None):
+            self._hover_cursor_shape = shape
+            self.canvas.setCursor(shape if shape is not None else Qt.CursorShape.ArrowCursor)
+
     def _on_annotation_click(self, event):
         """Handle a press on the canvas: a single click on an annotation
-        starts a potential drag, a double-click opens its edit dialog.
+        starts a potential drag/resize, a double-click opens its edit dialog.
 
         Hit-testing is done manually against self.ax's own annotation
         artists (self.ax.findobj() + artist.contains(event)) rather than
@@ -1493,76 +1575,37 @@ class VGraph(QWidget):
                     else:
                         # Record as drag candidate -- actual drag starts on
                         # mouse move past a small threshold (see
-                        # _on_annotation_drag).
+                        # _on_annotation_drag). The handle under the press
+                        # decides move-vs-resize for the whole gesture.
                         self._drag_candidate = ann
+                        self._drag_handle = self._annotation_handle_at(ann, ann._annotation_data, event)
                         self._drag_start_x, self._drag_start_y = self._ax_data_coords(event)
                     return
                     
+    # Annotation type -> its modal edit dialog (double-click on canvas).
+    _EDIT_DIALOGS = {
+        'vline': EditLineDialog, 'hline': EditLineDialog,
+        'text': EditTextDialog, 'arrow': EditArrowDialog,
+        'vspan': EditSpanDialog, 'hspan': EditSpanDialog,
+        'box': EditBoxDialog, 'callout': EditCalloutDialog,
+    }
+
     def _edit_annotation_direct(self, annotation):
-        """Open edit dialog for annotation (called from double-click)."""
-        
-        # Open appropriate edit dialog based on type
-        if annotation['type'] in ['vline', 'hline']:
-            dialog = EditLineDialog(annotation, None)
-            if dialog.exec() == QDialog.Accepted:
-                # Update annotation properties
-                props = dialog.get_properties()
-                annotation.update(props)
-                
-                # Update label
-                if annotation['type'] == 'vline':
-                    annotation['label'] = f"V-Line at x={annotation['x']:.2f}"
-                else:
-                    annotation['label'] = f"H-Line at y={annotation['y']:.2f}"
-                
-                # Refresh plot
-                self.ax.clear()
-                if self.df is not None:
-                    self.plot(self.df)
-        
-        elif annotation['type'] == 'text':
-            dialog = EditTextDialog(annotation, None)
-            if dialog.exec() == QDialog.Accepted:
-                # Update annotation properties
-                props = dialog.get_properties()
-                annotation.update(props)
-
-                # Refresh plot
-                self.ax.clear()
-                if self.df is not None:
-                    self.plot(self.df)
-
-        elif annotation['type'] == 'arrow':
-            dialog = EditArrowDialog(annotation, None)
-            if dialog.exec() == QDialog.Accepted:
-                annotation.update(dialog.get_properties())
-                self.ax.clear()
-                if self.df is not None:
-                    self.plot(self.df)
-
-        elif annotation['type'] in ('vspan', 'hspan'):
-            dialog = EditSpanDialog(annotation, None)
-            if dialog.exec() == QDialog.Accepted:
-                annotation.update(dialog.get_properties())
-                self.ax.clear()
-                if self.df is not None:
-                    self.plot(self.df)
-
-        elif annotation['type'] == 'box':
-            dialog = EditBoxDialog(annotation, None)
-            if dialog.exec() == QDialog.Accepted:
-                annotation.update(dialog.get_properties())
-                self.ax.clear()
-                if self.df is not None:
-                    self.plot(self.df)
-
-        elif annotation['type'] == 'callout':
-            dialog = EditCalloutDialog(annotation, None)
-            if dialog.exec() == QDialog.Accepted:
-                annotation.update(dialog.get_properties())
-                self.ax.clear()
-                if self.df is not None:
-                    self.plot(self.df)
+        """Open the edit dialog for an annotation (double-click on canvas).
+        The dialog previews live against this graph and restores on Cancel."""
+        dialog_cls = self._EDIT_DIALOGS.get(annotation['type'])
+        if dialog_cls is None:
+            return
+        dialog = dialog_cls(annotation, self, None)
+        if dialog.exec() == QDialog.Accepted:
+            annotation.update(dialog.get_properties())
+            if annotation['type'] == 'vline':
+                annotation['label'] = f"V-Line at x={annotation['x']:.2f}"
+            elif annotation['type'] == 'hline':
+                annotation['label'] = f"H-Line at y={annotation['y']:.2f}"
+            self.ax.clear()
+            if self.df is not None:
+                self.plot(self.df)
 
     def _on_annotation_drag(self, event):
         """Handle annotation drag (mouse move while dragging).
@@ -1574,6 +1617,11 @@ class VGraph(QWidget):
         if event.x is None or event.y is None:
             return
         xdata, ydata = self._ax_data_coords(event)
+
+        # Idle hover (no active/pending drag): show the grab affordance.
+        if not hasattr(self, '_drag_candidate') and not hasattr(self, '_dragged_annotation'):
+            self._update_hover_cursor(event)
+            return
 
         # Promote drag candidate to actual drag once mouse moves
         if hasattr(self, '_drag_candidate') and not hasattr(self, '_dragged_annotation'):
@@ -1599,6 +1647,12 @@ class VGraph(QWidget):
 
         ann_data = ann._annotation_data
         ann_type = ann_data['type']
+
+        # A border/endpoint grab resizes; anything else moves the whole shape.
+        if getattr(self, '_drag_handle', 'move') != 'move':
+            self._resize_dragged_annotation(ann, ann_data, xdata, ydata)
+            self.canvas.draw_idle()
+            return
 
         # Update visual position based on annotation type
         if ann_type == 'vline':
@@ -1649,6 +1703,61 @@ class VGraph(QWidget):
 
         self.canvas.draw_idle()
     
+    def _resize_dragged_annotation(self, ann, ann_data, xdata, ydata):
+        """Move the grabbed border/endpoint (self._drag_handle) to the mouse,
+        updating both the artist and ann_data. Span/box edges are clamped to
+        a small minimum extent so a shape can't collapse to zero and become
+        un-grabbable."""
+        handle = self._drag_handle
+        ann_type = ann_data['type']
+        min_dx = abs(self.ax.get_xlim()[1] - self.ax.get_xlim()[0]) * 0.01
+        min_dy = abs(self.ax.get_ylim()[1] - self.ax.get_ylim()[0]) * 0.01
+
+        if ann_type == 'vspan':
+            x1, x2 = ann_data['x1'], ann_data['x2']
+            if handle == 'resize-x1':
+                x1 = min(xdata, x2 - min_dx)
+            else:
+                x2 = max(xdata, x1 + min_dx)
+            ann_data['x1'], ann_data['x2'] = x1, x2
+            ann.set_x(min(x1, x2))
+            ann.set_width(abs(x2 - x1))
+        elif ann_type == 'hspan':
+            y1, y2 = ann_data['y1'], ann_data['y2']
+            if handle == 'resize-y1':
+                y1 = min(ydata, y2 - min_dy)
+            else:
+                y2 = max(ydata, y1 + min_dy)
+            ann_data['y1'], ann_data['y2'] = y1, y2
+            ann.set_y(min(y1, y2))
+            ann.set_height(abs(y2 - y1))
+        elif ann_type == 'box':
+            suffix = handle.split('-', 1)[1]  # e.g. 'tl', 'r', 'b'
+            x, y = ann_data['x'], ann_data['y']
+            right, top = x + ann_data['width'], y + ann_data['height']
+            if 'l' in suffix:
+                x = min(xdata, right - min_dx)
+            if 'r' in suffix:
+                right = max(xdata, x + min_dx)
+            if 'b' in suffix:
+                y = min(ydata, top - min_dy)
+            if 't' in suffix:
+                top = max(ydata, y + min_dy)
+            ann_data['x'], ann_data['y'] = x, y
+            ann_data['width'], ann_data['height'] = right - x, top - y
+            ann.set_bounds(x, y, right - x, top - y)
+        elif ann_type == 'arrow':
+            if handle == 'p1':
+                ann_data['x1'], ann_data['y1'] = xdata, ydata
+            else:
+                ann_data['x2'], ann_data['y2'] = xdata, ydata
+            ann.set_positions((ann_data['x1'], ann_data['y1']),
+                              (ann_data['x2'], ann_data['y2']))
+        elif ann_type == 'callout':
+            # Move the pointed-at anchor; the text (xytext) stays put.
+            ann_data['x'], ann_data['y'] = xdata, ydata
+            ann.xy = (xdata, ydata)
+
     def _on_annotation_release(self, event):
         """Handle mouse release (finish dragging)."""
         # Clean up drag candidate if no drag occurred
@@ -1699,5 +1808,8 @@ class VGraph(QWidget):
         del self._dragged_annotation
         if hasattr(self, '_drag_start_coords'):
             del self._drag_start_coords
+        self._drag_handle = 'move'
+        # Force the next hover move to re-evaluate the cursor.
+        self._hover_cursor_shape = None
         self.canvas.draw_idle()
     

@@ -136,6 +136,8 @@ class CustomizeAnnotations(QWidget):
         self.btn_add_callout.clicked.connect(self._add_callout)
         self.btn_edit.clicked.connect(self._edit_annotation)
         self.btn_delete.clicked.connect(self._delete_annotation)
+        # Double-click a row to edit it directly (in addition to the Edit button).
+        self.annotation_list.itemDoubleClicked.connect(self._on_item_double_clicked)
 
     def _on_annotation_dragged(self, graph_id, ann_id, new_x, new_y):
         """Handle annotation position change from dragging - refresh the list widget."""
@@ -266,85 +268,45 @@ class CustomizeAnnotations(QWidget):
             'text': 'Callout', 'fontsize': 11, 'color': 'black', 'arrowcolor': 'black',
         })
 
+    def _on_item_double_clicked(self, item):
+        """Double-click a list row to open its edit dialog."""
+        self.annotation_list.setCurrentItem(item)
+        self._edit_annotation()
+
+    # Annotation type -> its modal edit dialog.
+    _EDIT_DIALOGS = {
+        'vline': EditLineDialog, 'hline': EditLineDialog,
+        'text': EditTextDialog, 'arrow': EditArrowDialog,
+        'vspan': EditSpanDialog, 'hspan': EditSpanDialog,
+        'box': EditBoxDialog, 'callout': EditCalloutDialog,
+    }
+
     def _edit_annotation(self):
-        """Edit selected annotation."""
+        """Open the edit dialog for the selected annotation. The dialog
+        previews live (Cancel restores); on OK we commit and refresh."""
         selected = self.annotation_list.currentItem()
         if not selected:
             QMessageBox.warning(self, "No Selection", "Please select an annotation to edit.")
             return
 
         ann_id = selected.data(Qt.UserRole)
-
-        # Find the annotation
-        annotation = None
-        for ann in self.graph_widget.annotations:
-            if ann.get('id') == ann_id:
-                annotation = ann
-                break
-
-        if not annotation:
+        annotation = next(
+            (a for a in self.graph_widget.annotations if a.get('id') == ann_id), None
+        )
+        dialog_cls = self._EDIT_DIALOGS.get(annotation['type']) if annotation else None
+        if dialog_cls is None:
             return
 
-        # Open appropriate edit dialog based on type
-        if annotation['type'] in ['vline', 'hline']:
-            dialog = EditLineDialog(annotation, self)
-            if dialog.exec() == QDialog.Accepted:
-                # Update annotation properties
-                props = dialog.get_properties()
-                annotation.update(props)
-
-                # Update label
-                if annotation['type'] == 'vline':
-                    annotation['label'] = f"V-Line at x={annotation['x']:.2f}"
-                else:
-                    annotation['label'] = f"H-Line at y={annotation['y']:.2f}"
-
-                self._notify_annotations_changed()
-                self._refresh_plot()
-                self.load_annotations()
-
-        elif annotation['type'] == 'text':
-            dialog = EditTextDialog(annotation, self)
-            if dialog.exec() == QDialog.Accepted:
-                # Update annotation properties
-                props = dialog.get_properties()
-                annotation.update(props)
-
-                self._notify_annotations_changed()
-                self._refresh_plot()
-                self.load_annotations()
-
-        elif annotation['type'] == 'arrow':
-            dialog = EditArrowDialog(annotation, self)
-            if dialog.exec() == QDialog.Accepted:
-                annotation.update(dialog.get_properties())
-                self._notify_annotations_changed()
-                self._refresh_plot()
-                self.load_annotations()
-
-        elif annotation['type'] in ('vspan', 'hspan'):
-            dialog = EditSpanDialog(annotation, self)
-            if dialog.exec() == QDialog.Accepted:
-                annotation.update(dialog.get_properties())
-                self._notify_annotations_changed()
-                self._refresh_plot()
-                self.load_annotations()
-
-        elif annotation['type'] == 'box':
-            dialog = EditBoxDialog(annotation, self)
-            if dialog.exec() == QDialog.Accepted:
-                annotation.update(dialog.get_properties())
-                self._notify_annotations_changed()
-                self._refresh_plot()
-                self.load_annotations()
-
-        elif annotation['type'] == 'callout':
-            dialog = EditCalloutDialog(annotation, self)
-            if dialog.exec() == QDialog.Accepted:
-                annotation.update(dialog.get_properties())
-                self._notify_annotations_changed()
-                self._refresh_plot()
-                self.load_annotations()
+        dialog = dialog_cls(annotation, self.graph_widget, self)
+        if dialog.exec() == QDialog.Accepted:
+            annotation.update(dialog.get_properties())
+            if annotation['type'] == 'vline':
+                annotation['label'] = f"V-Line at x={annotation['x']:.2f}"
+            elif annotation['type'] == 'hline':
+                annotation['label'] = f"H-Line at y={annotation['y']:.2f}"
+            self._notify_annotations_changed()
+            self._refresh_plot()
+            self.load_annotations()
 
     def _delete_annotation(self):
         """Delete selected annotation."""

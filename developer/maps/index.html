@@ -2221,7 +2221,7 @@ When a new developer is confused about "where is the data?", the answer is: <str
 <li>Extract coordinates from fnames: parse between <code>(</code> and <code>)</code>.</li>
 <li>Match <code>SpectraStore</code> entries back to <code>DataFrame</code> rows for heatmap rendering.</li>
 </ul>
-<p>If you change this convention, update <code>_extract_coords_from_fname()</code> in <code>VWorkspaceMaps</code> and <code>_extract_coords_for_spectra()</code> in <code>VMWorkspaceMaps</code>.</p>
+<p>Coordinate parsing is centralized in <code>parse_coords_from_fname()</code> (<code>viewmodel/utils.py</code>); <code>VWorkspaceMaps._extract_coords_from_fname()</code> and <code>VMWorkspaceMaps._extract_coords_for_spectra()</code> both delegate to it. If you change the fname convention, update that single helper (and keep the <code>float()</code> formatting identical on the write side in <code>_extract_spectra_from_map()</code>).</p>
 <hr />
 <h2 id="data-flow">Data Flow<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h2>
 <h3 id="loading-a-hyperspectral-map">Loading a Hyperspectral Map<a class="headerlink" href="#loading-a-hyperspectral-map" title="Permanent link">&para;</a></h3>
@@ -2399,7 +2399,7 @@ When a new developer is confused about "where is the data?", the answer is: <str
 <p>For each selected spectrum:
 1. Builds a <strong>deep-copied</strong> payload dict (raw <code>x0</code>, <code>Y0</code>, <code>baseline_config</code>, <code>fit_model</code>, <code>range_min/max</code>, <code>is_subtracted</code>).
 2. Emits <code>send_spectra_to_workspace(payloads)</code>.
-3. <code>VWorkspaceMaps._receive_spectra_from_maps()</code> registers each payload as a new N=1 <code>MapData</code> block in the <strong>Spectra</strong> workspace's <code>SpectraStore</code>.</p>
+3. <code>main.py</code> connects that signal to the Spectra ViewModel's <code>receive_spectra()</code>, which registers each payload as a new N=1 <code>MapData</code> block in the <strong>Spectra</strong> workspace's <code>SpectraStore</code>.</p>
 <p>Deep copying prevents cross-workspace state pollution — editing the spectrum in the Spectra tab does not affect the original map.</p>
 <h3 id="maps-graphs-workspace-profile-extraction">Maps → Graphs Workspace (Profile Extraction)<a class="headerlink" href="#maps-graphs-workspace-profile-extraction" title="Permanent link">&para;</a></h3>
 <p>When the user selects exactly 2 points in 2D map mode and clicks "Extract profile":</p>
@@ -2499,7 +2499,7 @@ When a new developer is confused about "where is the data?", the answer is: <str
 <p><strong>Fitting a large map freezes the UI briefly at start</strong>
 - Task construction (<code>_run_fit_thread()</code>) happens on the main thread before <code>VBFthread.start()</code>. For very large maps, the <code>np.arange(md.n_spectra)</code> index build is fast, but the <code>vstack</code> of Y matrices can be slow. Profile the <code>_run_fit_thread()</code> call with <code>cProfile</code> if this becomes a bottleneck.</p>
 <p><strong>Send to Spectra creates duplicate spectra</strong>
-- <code>_receive_spectra_from_maps()</code> checks <code>name in target_store.map_names</code> before adding. If duplicates appear, check that the fname format is consistent (watch for floating-point rounding in <code>(x_pos, y_pos)</code> string representations).</p>
+- The Spectra ViewModel's <code>receive_spectra()</code> checks <code>name in self.store.map_names</code> before adding. If duplicates appear, check that the fname format is consistent (watch for floating-point rounding in <code>(x_pos, y_pos)</code> string representations).</p>
 <p><strong>Wafer griddata is slow on every redraw</strong>
 - Ensure <code>clear_map_cache_requested</code> is only emitted when necessary (after fitting, not on every selection change). Check that the <code>cache_key</code> tuple is hashable and stable — if any element changes inadvertently between renders, the cache will never hit.</p>
 <p><strong>Memory spike when loading many large maps</strong>

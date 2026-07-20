@@ -1187,6 +1187,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="PlotRenderer — The Plotting Engine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#colormap-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Colormap Normalization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -1335,10 +1352,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#legend-customization" class="md-nav__link">
+  <a href="#live-preview-restyle-fast-path" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend Customization
+        Live Preview &amp; Restyle Fast Path
       
     </span>
   </a>
@@ -1346,10 +1363,87 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#annotation-system" class="md-nav__link">
+  <a href="#graph_stylepy-the-styledata-field-partition" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Annotation System
+        graph_style.py — the style/data field partition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph_commitpy-change-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_commit.py — change tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#undoredo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Undo/Redo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keyboard-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keyboard Shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#axis-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Axis Tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#legend-color-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legend / Color Tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotations-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations Tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#more-options-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        More Options Tab
       
     </span>
   </a>
@@ -1358,6 +1452,28 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#style-templates-plot-recipes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style Templates &amp; Plot Recipes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#export-multi-panel-composer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Export &amp; Multi-Panel Composer
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1400,6 +1516,17 @@
   
     <nav class="md-nav" aria-label="Persistence">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spectroview-working-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SPECTROview Working Folder
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#save-format-graphs" class="md-nav__link">
@@ -1830,16 +1957,24 @@
     MDI --&gt; VG["VGraph"]
     VG --&gt; PR["PlotRenderer"]
     VWG --&gt; DF["DataFilter"]
-    VWG --&gt; CGD["CustomizeDialog"]
+    VWG --&gt; CGD["CustomizeGraphDialog"]
+    CGD --&gt; GC["graph_commit (snapshot/diff)"]
+    CGD --&gt; GS["graph_style (style/restyle partition)"]
+
+    VWG --&gt; RS["MPlotRecipeStore"]
+    VWG --&gt; STS["MStyleTemplateStore"]
+    VWG --&gt; EXP["VExportDialog / VBatchExportDialog"]
+    VWG --&gt; MP["VMultiPanelDialog"]
 
     VWG --&gt;|"calls"| VMWG["VMWorkspaceGraphs"]
     VMWG --&gt;|"signals"| VWG
-    VMWG --&gt; MG["MGraph"]</code></pre>
+    VMWG --&gt; MG["MGraph"]
+    VMWG --&gt; UNDO["Undo/redo stacks"]</code></pre>
 <hr />
 <h2 id="key-classes"><strong>Key Classes</strong><a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
 <h3 id="vmworkspacegraphs-the-viewmodel"><strong><code>VMWorkspaceGraphs</code> — The ViewModel</strong><a class="headerlink" href="#vmworkspacegraphs-the-viewmodel" title="Permanent link">&para;</a></h3>
-<p><strong>File</strong>: <code>spectroview/viewmodel/vm_workspace_graphs.py</code> (~438 lines)</p>
-<p>Manages DataFrames and graph models. Unlike the <code>Spectra</code>/<code>Maps</code> ViewModels, this ViewModel is relatively lightweight — the heavy rendering logic lives in the <code>VGraph</code> widget.</p>
+<p><strong>File</strong>: <code>spectroview/viewmodel/vm_workspace_graphs.py</code></p>
+<p>Manages DataFrames, graph models, and the workspace's undo/redo history. Unlike the <code>Spectra</code>/<code>Maps</code> ViewModels, this ViewModel is relatively lightweight — the heavy rendering logic lives in the <code>VGraph</code> widget.</p>
 <table>
 <thead>
 <tr>
@@ -1869,6 +2004,10 @@
 <td><code>create_multi_wafer_graphs()</code> — Batch-creates one wafer plot per slot</td>
 </tr>
 <tr>
+<td><strong>Undo/redo</strong></td>
+<td><code>undo()</code>, <code>redo()</code>, <code>begin_undo_batch()</code>/<code>end_undo_batch()</code>, <code>can_undo</code>/<code>can_redo</code></td>
+</tr>
+<tr>
 <td><strong>Persistence</strong></td>
 <td><code>save_workspace()</code>, <code>load_workspace()</code>, <code>clear_workspace()</code></td>
 </tr>
@@ -1878,186 +2017,98 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">dataframes_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>           <span class="c1"># List of DataFrame names updated</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">dataframe_columns_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>    <span class="c1"># Column names of selected DataFrame</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">graphs_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>               <span class="c1"># List of graph IDs updated</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">notify</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>                        <span class="c1"># Toast notification</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">undo_state_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>               <span class="c1"># can_undo/can_redo changed -- sync toolbar buttons</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">notify</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>                        <span class="c1"># Toast notification</span>
 </code></pre></div>
 <h3 id="mgraph-the-plot-configuration-model"><strong><code>MGraph</code> — The Plot Configuration Model</strong><a class="headerlink" href="#mgraph-the-plot-configuration-model" title="Permanent link">&para;</a></h3>
-<p><strong>File</strong>: <code>spectroview/model/m_graph.py</code> (~157 lines)</p>
-<p>A pure data class that stores everything needed to recreate a plot:</p>
+<p><strong>File</strong>: <code>spectroview/model/m_graph.py</code></p>
+<p>A pure dataclass (113 fields) that stores everything needed to recreate a plot. <code>save()</code>/<code>load(data)</code> provide complete serialization; <code>get_display_name()</code> builds the MDI subwindow title. Rather than enumerate every field here (see <code>m_graph.py</code> for the exhaustive, authoritative list), fields group into:</p>
 <table>
 <thead>
 <tr>
-<th>Property</th>
-<th>Type</th>
-<th>Purpose</th>
+<th>Category</th>
+<th>Examples</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>graph_id</code></td>
-<td><code>int</code></td>
-<td>Unique identifier</td>
+<td>Identity / data source</td>
+<td><code>graph_id</code>, <code>df_name</code>, <code>plot_style</code>, <code>x</code>/<code>y</code>/<code>z</code>, <code>filters</code></td>
 </tr>
 <tr>
-<td><code>df_name</code></td>
-<td><code>str</code></td>
-<td>Source DataFrame name</td>
-</tr>
-<tr>
-<td><code>plot_style</code></td>
-<td><code>str</code></td>
-<td>One of <code>PLOT_STYLES</code> (<code>point</code>, <code>scatter</code>, <code>box</code>, <code>bar</code>, <code>line</code>, <code>wafer</code>, <code>2Dmap</code>, <code>trendline</code>, <code>histogram</code>)</td>
-</tr>
-<tr>
-<td><code>x</code>, <code>y</code>, <code>z</code></td>
-<td><code>str</code> / <code>list[str]</code> / <code>str</code></td>
-<td>Column mappings for axes</td>
-</tr>
-<tr>
-<td><code>filters</code></td>
-<td><code>list[dict]</code></td>
-<td>Saved filter state</td>
-</tr>
-<tr>
-<td><code>plot_title</code>, <code>xlabel</code>, <code>ylabel</code>, <code>zlabel</code></td>
-<td><code>str</code></td>
-<td>Label overrides</td>
-</tr>
-<tr>
+<td>Primary axis limits</td>
 <td><code>xmin</code>/<code>xmax</code>, <code>ymin</code>/<code>ymax</code>, <code>zmin</code>/<code>zmax</code></td>
-<td><code>float</code></td>
-<td>Axis limits</td>
 </tr>
 <tr>
-<td><code>xlogscale</code>, <code>ylogscale</code></td>
-<td><code>bool</code></td>
-<td>Log scale toggles</td>
+<td>Axis scale/orientation</td>
+<td><code>xlogscale</code>/<code>ylogscale</code>, <code>xscale_mode</code>/<code>yscale_mode</code>, <code>x_inverted</code>/<code>y_inverted</code></td>
 </tr>
 <tr>
-<td><code>y2</code>, <code>y3</code></td>
-<td><code>str</code></td>
-<td>Secondary/tertiary Y-axis columns</td>
+<td>Secondary axes (Y2/Y3/X2)</td>
+<td>per-axis column, <code>color</code>, <code>marker</code>, <code>min</code>/<code>max</code>, <code>logscale</code>, <code>label</code></td>
 </tr>
 <tr>
-<td><code>color_palette</code></td>
-<td><code>str</code></td>
-<td>Matplotlib colormap name</td>
+<td>Labels/titles</td>
+<td><code>plot_title</code>, <code>plot_subtitle</code>, <code>xlabel</code>/<code>ylabel</code>/<code>zlabel</code></td>
 </tr>
 <tr>
-<td><code>wafer_size</code></td>
-<td><code>int</code></td>
-<td>Wafer diameter (300, 200, 150, 100)</td>
+<td>Style/appearance</td>
+<td><code>grid</code>, <code>tick_direction</code>, <code>tick_label_format</code>, font sizes, <code>figure_facecolor</code>, <code>figure_margins</code>, <code>spines_visible</code>, <code>figure_theme</code>, minor-tick toggles</td>
 </tr>
 <tr>
-<td><code>wafer_stats</code></td>
-<td><code>bool</code></td>
-<td>Toggle statistics on wafer plots</td>
+<td>Legend</td>
+<td><code>legend_visible</code>, <code>legend_outside</code>, <code>legend_properties</code>, <code>legend_bbox</code>, <code>legend_ncol</code>, <code>legend_frame</code>, <code>legend_title</code>, <code>legend_fontsize</code>, <code>legend_alpha</code>, <code>legend_loc</code></td>
 </tr>
 <tr>
-<td><code>join_for_point_plot</code></td>
-<td><code>bool</code></td>
-<td>Toggle connecting lines on point plots</td>
+<td>Plot-style-specific</td>
+<td>wafer/2Dmap colormap (<code>color_palette</code>, <code>colormap_norm</code>, <code>colormap_center</code>), trendline fit/anchor, error bars, point/scatter (<code>scatter_size</code>, <code>scatter_edgecolor</code>, <code>unify_marker_style</code>), histogram, sort order</td>
 </tr>
 <tr>
-<td><code>show_bar_plot_error_bar</code></td>
-<td><code>bool</code></td>
-<td>Toggle standard deviation error bars on bar plots</td>
+<td>Annotations</td>
+<td><code>annotations</code> (list of typed dicts, see <a href="#annotations-tab">Annotations Tab</a>)</td>
 </tr>
 <tr>
-<td><code>scatter_size</code></td>
-<td><code>int</code></td>
-<td>Marker size (default 50)</td>
+<td>Broken axis</td>
+<td><code>axis_breaks</code></td>
 </tr>
 <tr>
-<td><code>scatter_edgecolor</code></td>
-<td><code>str</code></td>
-<td>Marker edge color (default 'black')</td>
+<td>Inset (zoom) axes</td>
+<td><code>inset_enabled</code>, <code>inset_bounds</code>, <code>inset_xmin</code>/<code>xmax</code>/<code>ymin</code>/<code>ymax</code>, <code>inset_show_zoom_indicator</code></td>
 </tr>
 <tr>
-<td><code>trendline_order</code></td>
-<td><code>int</code></td>
-<td>Order of polynomial regression fit</td>
-</tr>
-<tr>
-<td><code>show_trendline_eq</code></td>
-<td><code>bool</code></td>
-<td>Toggle visibility of fit equation list</td>
-</tr>
-<tr>
-<td><code>trendline_anchor_enabled</code></td>
-<td><code>bool</code></td>
-<td>Force fit to pass through a specific point</td>
-</tr>
-<tr>
-<td><code>trendline_anchor_origin</code></td>
-<td><code>bool</code></td>
-<td>Force anchor through origin (0, 0) vs. custom coordinate</td>
-</tr>
-<tr>
-<td><code>trendline_anchor_x</code>/<code>y</code></td>
-<td><code>float</code></td>
-<td>Coordinates of the custom anchor point</td>
-</tr>
-<tr>
-<td><code>hist_bins</code></td>
-<td><code>int</code></td>
-<td>Number of histogram bins (2–500, default 20)</td>
-</tr>
-<tr>
-<td><code>hist_kde</code></td>
-<td><code>bool</code></td>
-<td>Overlay Kernel Density Estimate line</td>
-</tr>
-<tr>
-<td><code>hist_step</code></td>
-<td><code>bool</code></td>
-<td>Draw outline-only step histogram vs. filled bars</td>
-</tr>
-<tr>
-<td><code>legend_properties</code></td>
-<td><code>list[dict]</code></td>
-<td>Per-series label, color, marker overrides</td>
-</tr>
-<tr>
-<td><code>legend_bbox</code></td>
-<td><code>list[float]</code></td>
-<td>Dragged coordinates of the legend box</td>
-</tr>
-<tr>
-<td><code>annotations</code></td>
-<td><code>list[dict]</code></td>
-<td>Vertical lines, horizontal lines, text annotations</td>
-</tr>
-<tr>
-<td><code>dpi</code></td>
-<td><code>int</code></td>
-<td>Figure DPI</td>
-</tr>
-<tr>
-<td><code>plot_width</code>/<code>height</code></td>
-<td><code>int</code></td>
-<td>Window dimensions</td>
+<td>Export/window geometry</td>
+<td><code>plot_width</code>/<code>height</code>, <code>dpi</code>, <code>export_width_mm</code>/<code>height_mm</code></td>
 </tr>
 </tbody>
 </table>
-<p><code>MGraph</code> provides <code>save()</code> and <code>load(data)</code> methods for complete serialization.</p>
+<p>Note: style templates, plot recipes, and the working-folder setting are <strong>not</strong> <code>MGraph</code> fields — they're separate systems built around subsets of these fields (see <a href="#style-templates-plot-recipes">Style Templates &amp; Plot Recipes</a>).</p>
 <h3 id="vgraph-the-rendering-widget"><strong><code>VGraph</code> — The Rendering Widget</strong><a class="headerlink" href="#vgraph-the-rendering-widget" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/view/components/v_graph.py</code></p>
-<p>Each plot in the MDI area is a <code>VGraph</code> instance. It holds a Matplotlib <code>Figure</code> + <code>FigureCanvas</code> and acts as the UI wrapper. It manages interactions, context menus, and toolbar actions, but delegates the actual drawing algorithms to the <code>PlotRenderer</code>.</p>
+<p>Each plot in the MDI area is a <code>VGraph</code> instance. It holds a Matplotlib <code>Figure</code> + <code>FigureCanvas</code> and acts as the UI wrapper. It manages interactions, context menus, and toolbar actions (Style menu, Export, Replicate), but delegates the actual drawing algorithms to <code>PlotRenderer</code>. <code>create_plot_widget()</code> still builds each <code>VGraph</code>'s own matplotlib nav toolbar + action-button row (<code>self.toolbar_container</code>), but never adds it to the graph's own layout — see <a href="#mdi-area-management">the bottom toolbar</a> for where it's actually shown.</p>
+<p>Two rendering paths:
+- <strong><code>plot(df)</code></strong> — full replot: clears and rebuilds the Axes from scratch. Required whenever artists themselves change (series data, colors/markers per point, colormap, secondary/twin axes, annotations, insets) or a broken axis is active/toggled.
+- <strong><code>restyle()</code></strong> — fast path that repaints an already-rendered Axes in place (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling) without touching plotted data. Returns <code>False</code> (forcing a full replot instead) whenever a broken axis is active. See <a href="#live-preview-restyle-fast-path">Live Preview &amp; Restyle Fast Path</a> for how the Customize dialog decides which path to use.</p>
+<p><code>_set_figure_style()</code> re-applies <code>axes.facecolor</code>/<code>figure.facecolor</code>/<code>axes.labelcolor</code>/<code>text.color</code>/<code>xtick.color</code>/<code>ytick.color</code>/<code>axes.edgecolor</code> from <code>plt.rcParams</code> on every render — necessary because <code>ax.clear()</code> does not retroactively repaint an Axes built under a different Matplotlib style/theme context, which previously left tick/label/spine colors stuck black after switching to a dark theme.</p>
 <h3 id="plotrenderer-the-plotting-engine"><strong><code>PlotRenderer</code> — The Plotting Engine</strong><a class="headerlink" href="#plotrenderer-the-plotting-engine" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/view/components/v_plot_renderer.py</code></p>
-<p>Separated from <code>VGraph</code> for maintainability, this class encapsulates the pure Matplotlib rendering logic for all plot styles (e.g., <code>plot_scatter</code>, <code>plot_histogram</code>, and the <code>WaferPlot</code> class). It receives a reference to the <code>VGraph</code> instance (<code>self.vg</code>) to access configuration state (<code>self.vg.x</code>, <code>self.vg.plot_style</code>, etc.) and draws directly onto the Matplotlib <code>Axes</code>.</p>
+<p>Separated from <code>VGraph</code> for maintainability, this class encapsulates the pure Matplotlib rendering logic for all plot styles (e.g., <code>_plot_scatter</code>, <code>_plot_histogram</code>, and the <code>WaferPlot</code> class). It receives a reference to the <code>VGraph</code> instance (<code>self.vg</code>) to access configuration state (<code>self.vg.x</code>, <code>self.vg.plot_style</code>, etc.) and draws directly onto the Matplotlib <code>Axes</code>.</p>
+<h4 id="colormap-normalization">Colormap Normalization<a class="headerlink" href="#colormap-normalization" title="Permanent link">&para;</a></h4>
+<p><code>_build_color_norm(vmin, vmax, norm_kind, center)</code> builds the color-scale mapping for wafer/2Dmap heatmaps from <code>MGraph.colormap_norm</code> (<code>"linear"</code>/<code>"log"</code>/<code>"centered"</code>) and <code>MGraph.colormap_center</code>, editable from the More Options tab's "Colormap scale" group (only shown for <code>wafer</code>/<code>2Dmap</code>). <code>"log"</code> uses <code>LogNorm</code>, <code>"centered"</code> uses <code>CenteredNorm</code> (useful for diverging data like stress/strain centered at 0), and both degrade gracefully back to plain linear <code>vmin</code>/<code>vmax</code> if the requested norm is invalid for the actual data range (e.g. log norm on non-positive data).</p>
+<p>Both <code>_plot_wafer</code>/<code>_plot_2dmap</code> resolve <code>vmin</code>/<code>vmax</code> through <code>_clear_degenerate_zlim(zmin, zmax)</code> first, which treats an explicit <code>zmin == zmax</code> (both set, equal) the same as unset, falling back to the data-derived range. A handful of pre-existing saved <code>.graphs</code> files carry an explicit <code>zmin == zmax == 0.0</code> (from an old, since-fixed default) — honoring that literally collapses <code>matplotlib.colors.Normalize(vmin=0, vmax=0)</code> to mapping every value to the same color, which is what actually broke color mapping when reopening those files, not the colormap-normalization feature itself.</p>
+<p><code>_resolve_marker_size(style, fallback)</code> / <code>_resolve_edge_color(style, fallback)</code> centralize the "Unify Marker size / Edge color" behavior (see <a href="#legend-color-tab">Legend / Color Tab</a>): when <code>VGraph.unify_marker_style</code> is <code>True</code>, every series uses the graph-wide <code>scatter_size</code>/<code>scatter_edgecolor</code>; when <code>False</code>, each series' <code>legend_properties[i]</code> override (if any) wins.</p>
 <hr />
 <h2 id="data-flow-creating-a-plot"><strong>Data Flow: Creating a Plot</strong><a class="headerlink" href="#data-flow-creating-a-plot" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>User Action</strong>: The user selects a DataFrame, configures the X/Y/Z axes, and clicks "Add plot" in the <code>VWorkspaceGraphs</code> UI.</li>
-<li><strong>Configuration Capture</strong>: The View calls <code>_collect_plot_config()</code> to gather all UI settings into a configuration dictionary.</li>
-<li><strong>Model Creation</strong>: The View calls <code>vm.create_graph(plot_config)</code>. The ViewModel instantiates an <code>MGraph(graph_id)</code>, applies the configuration, and returns the graph model.</li>
+<li><strong>Configuration Capture</strong>: The View calls <code>_collect_plot_config()</code> to gather all UI settings into a configuration dictionary, then merges in <code>MSettings.get_default_graph_style()</code> (the user's "Set as Default Style" baseline, if any — see <a href="#style-templates-plot-recipes">Style Templates &amp; Plot Recipes</a>) via <code>_apply_default_style_to_config()</code>. The collected config's data-identity fields (<code>x</code>/<code>y</code>/<code>z</code>/<code>df_name</code>/<code>plot_style</code>) always win over the default style, since the default only ever contains appearance fields.</li>
+<li><strong>Model Creation</strong>: The View calls <code>vm.create_graph(plot_config)</code>. The ViewModel instantiates an <code>MGraph(graph_id)</code>, applies the configuration, records an undo point, and returns the graph model.</li>
 <li><strong>Widget Initialization</strong>: The View instantiates a <code>VGraph(graph_id)</code> widget and calls <code>create_plot_widget(dpi)</code> to set up the Matplotlib canvas.</li>
 <li><strong>Data Filtering</strong>: The View requests the <code>filtered_df</code> from the ViewModel by calling <code>vm.apply_filters(df_name, filters)</code>.</li>
-<li><strong>Rendering</strong>: The View calls <code>VGraph.plot(filtered_df)</code>. </li>
+<li><strong>Rendering</strong>: The View calls <code>VGraph.plot(filtered_df)</code>.</li>
 <li><strong>Plot Execution</strong>: <code>VGraph</code> calls <code>_plot_primary_axis()</code>, which instantiates a <code>PlotRenderer(self)</code> and delegates the drawing logic (e.g., <code>self.renderer._plot_scatter()</code>), then applies limits, labels, and legends before returning the rendered canvas.</li>
 <li><strong>UI Integration</strong>: The View wraps the new <code>VGraph</code> widget in a <code>QMdiSubWindow</code> and adds it to the MDI area.</li>
 </ol>
+<p>This same default-style merge applies to <code>_on_plot_multi_wafer()</code>; it deliberately does <strong>not</strong> apply when applying a Plot Recipe or replicating an existing graph, since those already carry a fully-specified, intentional style.</p>
 <hr />
 <h2 id="plot-styles"><strong>Plot Styles</strong><a class="headerlink" href="#plot-styles" title="Permanent link">&para;</a></h2>
 <p>Each plot style maps to a specific Seaborn or custom rendering function:</p>
@@ -2075,13 +2126,13 @@
 <td><code>point</code></td>
 <td><code>sns.pointplot()</code></td>
 <td>✓ Z column</td>
-<td>Supports "join" toggle for connecting points</td>
+<td>"Join" toggle for connecting points; only style with a per-series Marker column</td>
 </tr>
 <tr>
 <td><code>scatter</code></td>
 <td><code>sns.scatterplot()</code></td>
 <td>✓ Z column</td>
-<td>Edgecolor black, 50pt markers</td>
+<td>Marker size/edge color unified across series by default (see Unify checkbox)</td>
 </tr>
 <tr>
 <td><code>box</code></td>
@@ -2093,7 +2144,7 @@
 <td><code>bar</code></td>
 <td><code>sns.barplot()</code></td>
 <td>✓ Z column</td>
-<td>Optional error bars (sd)</td>
+<td>Optional error bars (sd/95% CI)</td>
 </tr>
 <tr>
 <td><code>line</code></td>
@@ -2117,24 +2168,25 @@
 <td><code>wafer</code></td>
 <td>Custom <code>WaferPlot</code></td>
 <td>—</td>
-<td>Circular wafer visualization with die sites</td>
+<td>Circular wafer visualization with die sites; colormap normalization (linear/log/centered)</td>
 </tr>
 <tr>
 <td><code>2Dmap</code></td>
 <td><code>ax.imshow()</code></td>
 <td>—</td>
-<td>Rectangular heatmap via <code>pivot()</code></td>
+<td>Rectangular heatmap via <code>pivot()</code>; same colormap normalization options as wafer</td>
 </tr>
 </tbody>
 </table>
 <h3 id="multi-axis-support"><strong>Multi-Axis Support</strong><a class="headerlink" href="#multi-axis-support" title="Permanent link">&para;</a></h3>
-<p><code>VGraph</code> supports up to <strong>3 Y-axes</strong>:</p>
+<p><code>VGraph</code> supports up to <strong>3 Y-axes</strong>, plus a secondary X-axis:</p>
 <ul>
 <li><strong>Primary Y</strong> (<code>self.ax</code>): Standard left axis</li>
-<li><strong>Secondary Y</strong> (<code>self.ax2</code>): Right axis, red color, created via <code>ax.twinx()</code></li>
-<li><strong>Tertiary Y</strong> (<code>self.ax3</code>): Far-right axis, green color, offset by 100 points</li>
+<li><strong>Secondary Y</strong> (<code>self.ax2</code>): Right axis, created via <code>ax.twinx()</code></li>
+<li><strong>Tertiary Y</strong> (<code>self.ax3</code>): Far-right axis, offset outward</li>
+<li><strong>Secondary X</strong> (<code>x2</code>): created via <code>ax.twiny()</code></li>
 </ul>
-<p>Each axis can use a different column and plot style.</p>
+<p>Each secondary axis can use a different column and has its own label, min/max limits, log-scale toggle, color, and marker — all editable from the <strong>Secondary axes</strong> section at the bottom of the Customize dialog's Axis tab (previously only settable via script or hardcoded). A row is enabled only once that axis has a column assigned.</p>
 <hr />
 <h2 id="dataframe-management"><strong>DataFrame Management</strong><a class="headerlink" href="#dataframe-management" title="Permanent link">&para;</a></h2>
 <h3 id="loading"><strong>Loading</strong><a class="headerlink" href="#loading" title="Permanent link">&para;</a></h3>
@@ -2182,58 +2234,173 @@
 <hr />
 <h2 id="graph-customization"><strong>Graph Customization</strong><a class="headerlink" href="#graph-customization" title="Permanent link">&para;</a></h2>
 <h3 id="customizegraphdialog-singleton"><strong><code>CustomizeGraphDialog</code> (Singleton)</strong><a class="headerlink" href="#customizegraphdialog-singleton" title="Permanent link">&para;</a></h3>
-<p><strong>Package</strong>: <code>spectroview/view/components/customize_graph/</code> — <code>CustomizeGraphDialog</code> (in <code>customize_graph_dialog.py</code>) hosts four tab widgets, each in its own module: <code>customize_legend.py</code>, <code>customize_axis.py</code>, <code>customize_annotations.py</code>, <code>customize_more_options.py</code>, plus the small shared <code>customize_annotation_dialogs.py</code> (line/text edit dialogs, color delegate).</p>
-<p>A workspace-level singleton dialog that auto-switches context when the user activates a different MDI subwindow. Features:</p>
+<p><strong>Package</strong>: <code>spectroview/view/components/customize_graph/</code> — <code>CustomizeGraphDialog</code> (in <code>customize_graph_dialog.py</code>) hosts four tab widgets, each in its own module, plus the small shared <code>customize_annotation_dialogs.py</code> (per-annotation-type edit dialogs, color delegate):</p>
 <table>
 <thead>
 <tr>
-<th>Feature</th>
-<th>Description</th>
+<th>Tab</th>
+<th>Class</th>
+<th>Module</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Legend editor</strong></td>
-<td>Rename labels, change colors and markers per series</td>
+<td>Axis</td>
+<td><code>CustomizeAxis</code></td>
+<td><code>customize_axis.py</code></td>
 </tr>
 <tr>
-<td><strong>Axis limits</strong></td>
-<td>Set exact min/max for all axes</td>
+<td>Legend / Color</td>
+<td><code>CustomizeLegend</code></td>
+<td><code>customize_legend.py</code></td>
 </tr>
 <tr>
-<td><strong>Annotations</strong></td>
-<td>Add vertical/horizontal lines and text labels</td>
+<td>Annotations</td>
+<td><code>CustomizeAnnotations</code></td>
+<td><code>customize_annotations.py</code></td>
 </tr>
 <tr>
-<td><strong>Axis breaks</strong></td>
-<td>Insert break markers at specified positions</td>
-</tr>
-<tr>
-<td><strong>Export</strong></td>
-<td>Copy to clipboard, save as image</td>
+<td>More options</td>
+<td><code>CustomizeMoreOptions</code></td>
+<td><code>customize_more_options.py</code></td>
 </tr>
 </tbody>
 </table>
-<h3 id="legend-customization"><strong>Legend Customization</strong><a class="headerlink" href="#legend-customization" title="Permanent link">&para;</a></h3>
-<p>Legend properties are stored in <code>VGraph.legend_properties</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">[</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Group A&quot;</span><span class="p">,</span> <span class="s2">&quot;marker&quot;</span><span class="p">:</span> <span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;#1f77b4&quot;</span><span class="p">,</span> <span class="s2">&quot;rgba&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.12</span><span class="p">,</span> <span class="mf">0.47</span><span class="p">,</span> <span class="mf">0.71</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)},</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Group B&quot;</span><span class="p">,</span> <span class="s2">&quot;marker&quot;</span><span class="p">:</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;#ff7f0e&quot;</span><span class="p">,</span> <span class="s2">&quot;rgba&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.50</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)},</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">]</span>
-</code></pre></div>
-<p>These are synchronized to <code>MGraph.legend_properties</code> via the <code>properties_changed</code> signal, ensuring they persist across save/load cycles.</p>
-<h3 id="annotation-system"><strong>Annotation System</strong><a class="headerlink" href="#annotation-system" title="Permanent link">&para;</a></h3>
-<p>Annotations are stored as dicts in <code>MGraph.annotations</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Vertical line</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;vline&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;vl_1&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mf">520.7</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;linestyle&quot;</span><span class="p">:</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="s2">&quot;linewidth&quot;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">}</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># Horizontal line</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;hline&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;hl_1&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="s2">&quot;linestyle&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;linewidth&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">}</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># Text</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;txt_1&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;Peak A&quot;</span><span class="p">,</span> <span class="s2">&quot;fontsize&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">}</span>
-</code></pre></div>
-<p>Annotations support <strong>drag interaction</strong> — clicking and dragging a vertical/horizontal line updates its position in real time and emits <code>annotation_position_changed</code>.</p>
+<p><code>CustomizeAxis</code> also owns the Inset (zoom) axes and Secondary axes (Y2/Y3/X2) sections — these used to be their own tabs, but were folded back into the Axis tab since axis-shaped controls belong together and a 7-tab dialog wasn't actually easier to navigate. Given how much that adds, the tab wraps its content in a <code>QScrollArea</code> (matching <code>CustomizeMoreOptions</code>'s own pattern) so the dialog's minimum height stays reasonable on smaller screens. <code>CustomizeMoreOptions</code> similarly owns Font sizes (Title/Subtitle/Axis label/Tick label, one row) and the figure Theme selector (folded into "Plot options:"), consolidated from a former standalone Text Size tab and a since-removed "Figure style" groupbox.</p>
+<p>A workspace-level singleton dialog that auto-switches context when the user activates a different MDI subwindow. Its initial size (560×760) is a starting point only — Qt's layout system clamps both dimensions upward as needed for whichever tab's content is largest (e.g. the Legend tab's per-series columns when Unify is unchecked), so the literal numbers don't need to be exact.</p>
+<h3 id="live-preview-restyle-fast-path"><strong>Live Preview &amp; Restyle Fast Path</strong><a class="headerlink" href="#live-preview-restyle-fast-path" title="Permanent link">&para;</a></h3>
+<p>Every control in every tab restarts a single debounced 400ms <code>QTimer</code> on change. On timeout, each tab's apply method runs with <code>replot=False</code> against the live widget, and <code>graph_commit.snapshot()</code>/<code>diff()</code> (see below) determine exactly which fields changed. If the changed fields are a subset of <code>graph_style.RESTYLE_SAFE_FIELDS</code>, the dialog calls <code>VGraph.restyle()</code> (fast in-place repaint); otherwise it does a full <code>VGraph.plot(df)</code>. This preview never touches the undo stack or <code>vm.update_graph()</code> — it's purely visual until the user clicks <strong>Apply</strong>, which wraps every tab's changes in one <code>vm.begin_undo_batch()</code>/<code>end_undo_batch()</code> pair (one undo step per Apply, regardless of how many tabs were edited). <strong>Cancel</strong> reverts the widget from a snapshot taken when the dialog opened, without ever having touched the ViewModel.</p>
+<h3 id="graph_stylepy-the-styledata-field-partition"><strong><code>graph_style.py</code> — the style/data field partition</strong><a class="headerlink" href="#graph_stylepy-the-styledata-field-partition" title="Permanent link">&para;</a></h3>
+<p><strong>File</strong>: <code>spectroview/model/graph_style.py</code></p>
+<ul>
+<li><strong><code>STYLE_FIELD_NAMES</code></strong> — every <code>MGraph</code> field <em>except</em> identity/data columns, data-coordinate limits, annotations, and window/output geometry (computed by excluding <code>_NON_STYLE_FIELDS</code>). This is "how a graph looks," portable from one graph to another regardless of its data.</li>
+<li><strong><code>RESTYLE_SAFE_FIELDS</code></strong> — a narrower subset of <code>STYLE_FIELD_NAMES</code>: fields safe for <code>VGraph.restyle()</code>'s fast repaint path (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling). Excludes anything that requires artists to be recreated (per-series color/marker/size, colormap, secondary axes, annotations, insets).</li>
+<li><strong><code>extract_style(source_dict)</code></strong> / <strong><code>apply_style_dict(graph_widget, style_dict)</code></strong> / <strong><code>default_style()</code></strong> — pull the style subset out of a graph, write a style dict onto a widget (resetting <code>legend_properties</code> so per-series colors re-derive), and produce the hardcoded factory-default style respectively.</li>
+<li><strong><code>can_restyle_without_replot(changed_fields)</code></strong> — <code>True</code> iff every changed field is in <code>RESTYLE_SAFE_FIELDS</code>.</li>
+</ul>
+<h3 id="graph_commitpy-change-tracking"><strong><code>graph_commit.py</code> — change tracking</strong><a class="headerlink" href="#graph_commitpy-change-tracking" title="Permanent link">&para;</a></h3>
+<p><strong>File</strong>: <code>spectroview/view/components/graph_commit.py</code></p>
+<p><code>snapshot(gw)</code> deep-copies every <code>MGraph</code> field (except <code>graph_id</code>) off a live <code>VGraph</code> widget; <code>diff(gw, before)</code> returns a patch dict of only the fields that differ from a prior snapshot. Used both by the Customize dialog's live-preview tick (deciding restyle vs. replot) and by toolbar-level edits (e.g. syncing a dragged legend position / resized subwindow into the model before <code>save_workspace()</code>) — in both cases the resulting patch flows through <code>properties_changed.emit()</code> → <code>vm.update_graph()</code>, which is what actually records the undo step.</p>
+<h3 id="undoredo"><strong>Undo/Redo</strong><a class="headerlink" href="#undoredo" title="Permanent link">&para;</a></h3>
+<p>The undo/redo stack lives in <code>VMWorkspaceGraphs</code>, not the View: <code>_undo_stack</code>/<code>_redo_stack</code> hold whole-workspace snapshots (<code>{graph_id: MGraph.save()-dict}</code>), capped at 50 entries. Every <code>create_graph()</code>/<code>update_graph()</code>/<code>delete_graph()</code> call records one undo point unless it's inside a <code>begin_undo_batch()</code>/<code>end_undo_batch()</code> pair, in which case the whole batch collapses into a single step — used by the Customize dialog's Apply button (one step for all four tabs) and by Plot Recipe application (one step for the whole recipe, not one per plot). <code>undo_state_changed</code> keeps the toolbar's Undo/Redo buttons in sync via <code>can_undo</code>/<code>can_redo</code>.</p>
+<h3 id="keyboard-shortcuts"><strong>Keyboard Shortcuts</strong><a class="headerlink" href="#keyboard-shortcuts" title="Permanent link">&para;</a></h3>
+<p>Registered on <code>self.mdi_area</code> (not the whole workspace widget, so they don't shadow a side-panel <code>QLineEdit</code>'s native shortcuts while typing) and act on the active MDI subwindow's graph. This <code>WidgetWithChildrenShortcut</code> context also means they're implicitly scoped to the Graphs tab itself: <code>self.mdi_area</code> (and everything in it) isn't part of the focus chain while a different tab is active, so the shortcuts simply don't fire.</p>
+<table>
+<thead>
+<tr>
+<th>Shortcut</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Ctrl+Z</code></td>
+<td>Undo</td>
+</tr>
+<tr>
+<td><code>Ctrl+Shift+Z</code></td>
+<td>Redo</td>
+</tr>
+<tr>
+<td><code>Ctrl+C</code></td>
+<td>Copy the active graph's <em>figure</em> to the clipboard (<code>VGraph.copy_to_clipboard()</code>, matching the toolbar's Copy button)</td>
+</tr>
+<tr>
+<td><code>Ctrl+V</code></td>
+<td>Paste the copied <em>style</em> onto the active graph</td>
+</tr>
+<tr>
+<td><code>Ctrl+E</code></td>
+<td>Open the Customize Graph Dialog for the active graph (matching the toolbar's Customize button)</td>
+</tr>
+</tbody>
+</table>
+<p>Style copy/paste no longer has its own Ctrl+C shortcut (<code>_on_copy_style_shortcut()</code> was removed) — Ctrl+C copies the figure instead, since that's the far more common action. Style copy is still one click away via the Style menu's "Copy Style" action; Ctrl+V still pastes whatever style was last copied that way.</p>
+<h3 id="axis-tab"><strong>Axis Tab</strong><a class="headerlink" href="#axis-tab" title="Permanent link">&para;</a></h3>
+<p>The tab wraps its content in a <code>QScrollArea</code> (like More Options) since it now covers every axis-shaped concern in one place — content is tall enough on smaller screens to need scrolling.</p>
+<ul>
+<li><strong>Axis properties</strong>: per-axis (X/Y) scale (Linear/Logarithmic/Symlog), data type (Auto/Category/Numerical), and Inverted toggle.</li>
+<li><strong>Axis Appearance</strong>: minor ticks (independently for X-Bottom/X-Top/Y-Left/Y-Right), <strong>Show spines</strong> (Top/Right/Bottom/Left), tick direction (Default/In/Out/In &amp; Out), and tick label format (Auto/Integer/1-decimal/2-decimal/Scientific).</li>
+<li><strong>Set Axis Limits</strong>: one spinbox-slider row per X/Y/Z axis (X/Y hidden for <code>wafer</code>/<code>2Dmap</code>, where Z is the color-scale control instead). Each min/max spinbox is paired with a double-range slider whose drag bounds derive from the actual data range (padded 10%). When a limit is unset, the spinbox shows the plot's real current rendered value grayed out — not a generic "default" placeholder — so the displayed number is always meaningful; this same real-value-placeholder pattern applies to every optional spinbox in this dialog (inset limits, per-series legend overrides).</li>
+<li><strong>Broken axis</strong>: X-axis break and Y-axis break are mutually exclusive (enabling one disables the other, since the renderer only supports one break axis at a time). Rendering splits the Axes into two panels via <code>gridspec</code> — side-by-side sharing the Y axis for an X-break, stacked sharing the X axis for a Y-break — each panel clipped to its half of the range with the facing spines hidden and standard diagonal "//" break marks drawn on the real spine boundaries. A broken axis always forces a full replot (<code>VGraph.restyle()</code> returns <code>False</code> while one is active) and is mutually exclusive with inset axes.</li>
+<li><strong>Inset (zoom) axes</strong>: a checkable group with Position (x0, y0) and Size (w, h) in axes-fraction coordinates, independent X/Y limits, and a "Show zoom indicator" toggle that draws the connector lines from the inset box back to the region it zooms into on the main plot (<code>ax.indicate_inset_zoom()</code>). The inset Axes itself is never persisted — it's rebuilt on every render from <code>MGraph.inset_bounds</code>. Mutually exclusive with a broken axis.</li>
+<li><strong>Secondary axes</strong> (bottom of the tab): one row per Y2/Y3/X2 axis (each disabled until that axis has a column assigned), exposing Label, Min/Max, Log toggle, Color, and Marker — see <a href="#multi-axis-support">Multi-Axis Support</a>.</li>
+</ul>
+<p>Font sizes (Title/Axis label/Tick label) live in the <strong>More Options</strong> tab, not here.</p>
+<h3 id="legend-color-tab"><strong>Legend / Color Tab</strong><a class="headerlink" href="#legend-color-tab" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Legends box</strong>: an optional <strong>"Unify marker size / edge color"</strong> checkbox (checked by default). While checked, a single Marker size / Edge color row at the top of the box applies to every series, and the per-series Marker size/Edge color table columns are hidden. Unchecking it reveals those per-series columns (for <code>point</code>/<code>scatter</code>-family styles only) so each series can override marker size and edge color independently — <code>PlotRenderer._resolve_marker_size()</code>/<code>_resolve_edge_color()</code> implement the fallback. Per-series Label, Color, and Alpha are always editable individually; Marker is point-style-only, and Line width only shows for styles that actually draw a line (<code>line</code>/<code>trendline</code>, or <code>point</code> with "Join" enabled) — a bare scatter/box/bar has nothing for a line width to describe. Unset per-series linewidth/alpha spinboxes show the real value that will actually be used (e.g. "1.50"), grayed out, rather than a generic placeholder.</li>
+<li><strong>Legend style</strong>: columns, frame, title, font size, alpha, position.</li>
+<li><strong>Error bars</strong>: type (95% CI / SD / None, style-dependent options) and cap size.</li>
+</ul>
+<h3 id="annotations-tab"><strong>Annotations Tab</strong><a class="headerlink" href="#annotations-tab" title="Permanent link">&para;</a></h3>
+<p>Eight annotation types, each an "Add" button plus a dedicated edit dialog in <code>customize_annotation_dialogs.py</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Purpose</th>
+<th>Edit dialog</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vline</code> / <code>hline</code></td>
+<td>Vertical/horizontal reference line</td>
+<td><code>EditLineDialog</code></td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td>Free text label with optional background box</td>
+<td><code>EditTextDialog</code></td>
+</tr>
+<tr>
+<td><code>arrow</code></td>
+<td>Point-to-point arrow</td>
+<td><code>EditArrowDialog</code></td>
+</tr>
+<tr>
+<td><code>vspan</code> / <code>hspan</code></td>
+<td>Shaded vertical/horizontal band</td>
+<td><code>EditSpanDialog</code></td>
+</tr>
+<tr>
+<td><code>box</code></td>
+<td>Filled/outlined rectangle</td>
+<td><code>EditBoxDialog</code></td>
+</tr>
+<tr>
+<td><code>callout</code></td>
+<td>Text label with a pointer arrow to a data point</td>
+<td><code>EditCalloutDialog</code></td>
+</tr>
+</tbody>
+</table>
+<p>All stored as typed dicts in <code>MGraph.annotations</code>. Every type supports <strong>drag interaction</strong> — clicking and dragging updates position in real time and emits <code>annotation_position_changed</code> — implemented by <code>VGraph._on_annotation_click()</code>/<code>_on_annotation_drag()</code>/<code>_on_annotation_release()</code> in <code>v_graph.py</code>. Hit-testing is done manually (<code>self.ax.findobj()</code> + <code>artist.contains(event)</code>) rather than via matplotlib's <code>pick_event</code>: <code>Figure.pick()</code> only delivers a pick event to an artist when <code>event.inaxes</code> equals that artist's own Axes, which silently never happens for an annotation on the primary Axes whenever a secondary Y-axis is also present (it fully overlaps the primary Axes and has higher z-order, so <code>event.inaxes</code> resolves to it instead) — this used to make every annotation on a graph with <code>y2</code>/<code>y3</code> configured completely undraggable. <code>VGraph._ax_data_coords(event)</code> resolves the drag position from the event's own pixel coordinates through <code>self.ax.transData</code> directly, sidestepping the same <code>event.inaxes</code> ambiguity for the position itself.</p>
+<h3 id="more-options-tab"><strong>More Options Tab</strong><a class="headerlink" href="#more-options-tab" title="Permanent link">&para;</a></h3>
+<p><strong>Plot options</strong>: style-dependent checkboxes (join/dodge points, error bars, wafer stats), plus one row shared by three global controls: a <strong>Theme</strong> selector (Light/Dark/Soft Dark — re-applies <code>axes.facecolor</code>/label/tick/spine colors from <code>plt.rcParams</code> on every render so switching themes doesn't leave stale black text/spines), an <strong>X label rotation</strong> spinbox (<code>MGraph.x_rot</code>), and a <strong>Grid</strong> checkbox (<code>MGraph.grid</code>) — the latter two migrated here from the workspace's bottom toolbar.</p>
+<p><strong>Font sizes (pt)</strong>: Title, Subtitle, Axis label, and Tick label spinboxes in a single row (defaults 12/10/12/9, matching the active Matplotlib style). The Subtitle <em>text</em> itself (what it says, not its size) lives in the workspace side panel (<code>VWorkspaceGraphs</code>), not in this dialog — the old "Figure style" groupbox's redundant Subtitle text field was removed for that reason. Background color, Show-spines, and Margins controls that used to live in "Figure style" are still respected if set programmatically via <code>MGraph.figure_facecolor</code>/<code>figure_margins</code>, just without a dedicated picker (Show-spines moved to the Axis tab).</p>
+<p><strong>Colormap scale</strong> (wafer/2Dmap only): Normalization (Linear/Log/Centered) and, for Centered, a Center value — see <a href="#colormap-normalization">Colormap Normalization</a> below.</p>
+<hr />
+<h2 id="style-templates-plot-recipes"><strong>Style Templates &amp; Plot Recipes</strong><a class="headerlink" href="#style-templates-plot-recipes" title="Permanent link">&para;</a></h2>
+<p>Two conceptually distinct, previously-conflated features:</p>
+<ul>
+<li><strong>Plot Recipe</strong> (<code>MPlotRecipeStore</code> / <code>VPlotRecipeDialog</code>, folder: <code>&lt;working folder&gt;/plot_recipe/</code>) — a saved <strong>set of full plot configurations</strong> (data bindings <em>and</em> style: <code>df_name</code>, <code>x</code>/<code>y</code>/<code>z</code>, <code>filters</code>, plus every style field), one JSON file per recipe. Applying a recipe <strong>creates new plots</strong>: <code>_on_recipe_applied()</code> re-targets each saved config's <code>df_name</code> at the <em>currently selected</em> DataFrame (not each plot's originally-saved one) and skips + reports any plot whose required columns are missing, rather than aborting the whole batch. The whole recipe applies as one undo step. The dialog supports browse/search/apply/rename/<strong>duplicate</strong>/delete.</li>
+<li><strong>Style Template</strong> (<code>MStyleTemplateStore</code> / <code>VStyleTemplateDialog</code>, folder: <code>&lt;working folder&gt;/plot_style/</code>) — a saved <strong>appearance-only</strong> style dict (<code>graph_style.extract_style()</code>), one JSON file per template. Applying one (<code>_apply_style_to_graph()</code>) writes onto an <strong>existing</strong> graph via <code>graph_style.apply_style_dict()</code> — data bindings are never touched. A leaner sibling of <code>VPlotRecipeDialog</code>: no graph-count or Duplicate, since a style template is always exactly one style dict.</li>
+</ul>
+<p>Both stores are deliberately <strong>rebuilt from the current Working Folder setting at the point of use</strong> (<code>VWorkspaceGraphs._refresh_recipe_and_style_stores()</code>, called at the top of every apply/save handler, including the AI Chat panel's own recipe-save flow via <code>VMChat.refresh_recipe_store()</code>) rather than built once at startup — fixing a bug where a Working Folder configured after the workspace tab already existed silently never took effect until an app restart.</p>
+<p>Each <code>VGraph</code>'s toolbar <strong>Style menu</strong> ties these together: <strong>Save Style…</strong> / <strong>Apply Style…</strong> (open the respective dialog), <strong>Copy Style</strong> / <strong>Paste Style</strong> (in-memory, <code>Ctrl+C</code>/<code>Ctrl+V</code>), <strong>Reset to Default</strong> (always the hardcoded factory <code>graph_style.default_style()</code>), and <strong>Set as Default Style</strong> (saves the current graph's style, via <code>MSettings.set_default_graph_style()</code>, as the baseline new graphs start from — see <a href="#data-flow-creating-a-plot">Data Flow: Creating a Plot</a>). These are two independent, non-overlapping concepts: <strong>Reset to Default</strong> always restores the factory style regardless of what's been set as default; <strong>Set as Default Style</strong> only changes what <em>newly created</em> plots start with, is persisted across restarts, and never affects existing graphs or Reset-to-Default's behavior.</p>
+<hr />
+<h2 id="export-multi-panel-composer"><strong>Export &amp; Multi-Panel Composer</strong><a class="headerlink" href="#export-multi-panel-composer" title="Permanent link">&para;</a></h2>
+<p><strong>File</strong>: <code>spectroview/view/components/v_export_dialog.py</code></p>
+<ul>
+<li><strong><code>VExportDialog(graph_widget, parent=None)</code></strong> — exports a single graph to PNG/TIFF/SVG/PDF/EPS with format/DPI/transparency/export-time-theme-override controls, plus a physical-size section (journal presets, mm/inch toggle, blank = current on-screen size) that persists back onto the graph's <code>export_width_mm</code>/<code>export_height_mm</code> fields.</li>
+<li><strong><code>VBatchExportDialog(graph_widgets: dict, parent=None)</code></strong> — exports every currently-open graph to a chosen folder in one pass, each at its own already-persisted physical size, reporting per-graph failures in a summary dialog.</li>
+</ul>
+<p><strong>File</strong>: <code>spectroview/view/components/v_multipanel_dialog.py</code></p>
+<ul>
+<li><strong><code>VMultiPanelDialog(graph_widgets: dict, parent=None)</code></strong> — composes several checked/reordered open graphs into one throwaway <code>matplotlib.figure.Figure</code> grid (auto-suggested rows/cols, constrained layout, shared-axis-label collapsing on interior panels, lettered/numbered panel labels). Each panel is rendered by temporarily repointing the source <code>VGraph</code>'s <code>.ax</code>/<code>.figure</code> onto the composed figure's subplot and calling its normal render path, then restoring the source widget so the live workspace is never mutated. Graphs with an active broken axis render via a simplified single-panel path in the composed figure (a documented scope limit).</li>
+</ul>
 <hr />
 <h2 id="mdi-area-management"><strong>MDI Area Management</strong><a class="headerlink" href="#mdi-area-management" title="Permanent link">&para;</a></h2>
 <p>The <code>Graphs</code> workspace uses a <code>QMdiArea</code> to display multiple plots simultaneously:</p>
@@ -2245,16 +2412,17 @@
     SW2 --&gt; VG2["VGraph"]
     SW3 --&gt; VG3["VGraph"]</code></pre>
 <ul>
-<li>Each plot is wrapped in a <code>QMdiSubWindow</code> for independent sizing, minimizing, and arranging.</li>
-<li>The bottom toolbar provides global controls: graph selector combobox, DPI, X-label rotation, grid toggle.</li>
+<li>Each plot is wrapped in a <code>QMdiSubWindow</code> for independent sizing, minimizing, and arranging. Fusion's native subwindow frame is fairly thick and heavily beveled; <code>self.mdi_area.setStyleSheet(...)</code> adds a <code>QMdiSubWindow { border: 1px solid ... }</code> rule to flatten it to a thin 1px line (setting any border property via QSS switches a widget from native to CSS-based border rendering).</li>
+<li>The bottom toolbar provides global controls: minimize/delete-all, Undo/Redo, Compose Figure (icon-only buttons, moved here from the side panel since they're workspace-global and used more often than the recipe buttons that stayed there), and one shared <strong>graph toolbar slot</strong> (<code>self.graph_toolbar_slot</code> / <code>self._graph_toolbar_slot_layout</code>, given stretch factor 1 so it fills the remaining width). Every <code>VGraph</code> builds its own matplotlib nav toolbar (Home/Pan/Zoom/Subplots) + a <code>QFrame.VLine</code> separator + action-button row (Replicate/Customize/Copy/Export/Style menu, pushed flush against the right edge via a <code>QHBoxLayout.addStretch()</code> between the separator and the buttons) in <code>create_plot_widget()</code>, but keeps it parentless and hidden (<code>self.toolbar_container</code>) instead of showing it inside its own MDI window — each MDI window shows only its plot canvas. The Export button does double duty (<code>VGraph._on_export_clicked()</code>, mirroring <code>VSpectraViewer</code>'s Copy button): a plain click emits <code>export_requested(graph_id)</code> (single-graph export dialog); Ctrl+Click (checked via <code>QApplication.keyboardModifiers() &amp; Qt.ControlModifier</code> inside the click handler) emits <code>export_all_requested</code> instead, wired to the same <code>VWorkspaceGraphs._on_export_all_clicked()</code> the old side-panel "Export All" button used to call — that button was removed outright once this made it redundant. Every action-button icon is a fixed colorful icon set once at creation; <code>VGraph.update_icon_colors()</code> and <code>VWorkspaceGraphs</code>'s per-theme retinting of it were removed since nothing on a graph needs to track the app theme anymore. <code>VWorkspaceGraphs._sync_active_graph_toolbar()</code> reparents whichever graph's <code>toolbar_container</code> belongs to the currently active MDI subwindow into the shared slot (detaching the previous one first), so every graph visually shares one toolbar instead of each carrying an identical copy. It's called from every place the active graph can change or a graph's toolbar gets rebuilt: <code>_on_subwindow_activated</code> (covers subwindow clicks, the graph-list combobox, and the "no subwindows left" <code>None</code> case), <code>_build_graph_widget</code> (new graph), <code>_on_update_plot</code>/the AI-agent's graph-update path in <code>main.py</code> (<code>create_plot_widget()</code> rebuilds <code>toolbar_container</code> from scratch, so the slot must re-sync to the new instance), and <code>_on_graph_closed</code>/<code>_on_delete_all</code>/<code>clear_workspace</code>/<code>_rebuild_all_graph_widgets</code> (teardown/rebuild paths, so the slot never dangles a reference to a deleted widget). X-label rotation and the grid toggle used to live in this toolbar too — moved into the Customize dialog's More Options tab (same row as Theme) since they're per-graph style, not workspace-global, and the toolbar versions only ever applied as one-off new-plot defaults with no live-preview. (A DPI spinbox used to live here too — removed: it only ever set the <em>default</em> DPI for the next newly-created plot, silently doing nothing when changed with an existing graph selected despite visually syncing to show that graph's DPI, which read as a live edit control but wasn't one. <code>MGraph.dpi</code> still defaults to 100 and can be set via script/AI-agent; on-screen rendering resolution isn't something users need to hand-tune day to day, and export resolution has its own explicit control in <code>VExportDialog</code>.)</li>
+<li>The graph selector combobox ("Active plot:") and the live plot-size label both moved out of the bottom toolbar: the selector now lives in the side panel, right above Add/Update Plot (<code>VWorkspaceGraphs._setup_action_buttons()</code>), and the plot-size label was removed entirely (along with <code>MdiSubWindow</code>'s <code>figsize_label</code> param and its now-pointless <code>resizeEvent</code> override).</li>
 <li>"Minimize All" collapses all windows for a clean workspace.</li>
 <li>Graph selection in the combobox activates the corresponding subwindow and syncs the right panel controls.</li>
 </ul>
 <h3 id="graph-storage"><strong>Graph Storage</strong><a class="headerlink" href="#graph-storage" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># VWorkspaceGraphs maintains a lookup:</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">graph_widgets</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">graph_id</span><span class="p">:</span> <span class="p">(</span><span class="n">VGraph</span><span class="p">,</span> <span class="n">QDialog</span><span class="p">,</span> <span class="n">QMdiSubWindow</span><span class="p">)</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># VWorkspaceGraphs maintains a lookup:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">graph_widgets</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">graph_id</span><span class="p">:</span> <span class="p">(</span><span class="n">VGraph</span><span class="p">,</span> <span class="n">QDialog</span><span class="p">,</span> <span class="n">QMdiSubWindow</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
 </code></pre></div>
 <p>When a graph is selected via the combobox or by clicking its subwindow:
 1. <code>_on_subwindow_activated()</code> identifies the <code>graph_id</code>.
@@ -2262,46 +2430,74 @@
 3. The right panel controls (X/Y/Z comboboxes, labels, style) are synced to match.</p>
 <hr />
 <h2 id="persistence"><strong>Persistence</strong><a class="headerlink" href="#persistence" title="Permanent link">&para;</a></h2>
+<h3 id="spectroview-working-folder"><strong>SPECTROview Working Folder</strong><a class="headerlink" href="#spectroview-working-folder" title="Permanent link">&para;</a></h3>
+<p>A single user-configured root folder (Settings panel) with three subfolders auto-created under it (<code>os.makedirs(..., exist_ok=True)</code>) on first configuration:</p>
+<table>
+<thead>
+<tr>
+<th>Subfolder</th>
+<th>Purpose</th>
+<th><code>MSettings</code> getter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fit_model/</code></td>
+<td>Fit-model JSON templates (Spectra/Maps workspaces)</td>
+<td><code>get_fit_model_folder()</code></td>
+</tr>
+<tr>
+<td><code>plot_recipe/</code></td>
+<td>Plot Recipes</td>
+<td><code>get_plot_recipe_folder()</code></td>
+</tr>
+<tr>
+<td><code>plot_style/</code></td>
+<td>Style Templates</td>
+<td><code>get_plot_style_folder()</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>get_working_folder()</code> one-time-migrates from the older, separate "Fit model folder"/"Plot template folder" settings if either was previously configured, so existing setups aren't orphaned. A separate setting, <code>get_default_graph_style()</code>/<code>set_default_graph_style()</code>, stores the "Set as Default Style" baseline (see <a href="#style-templates-plot-recipes">Style Templates &amp; Plot Recipes</a>) — unrelated to the working folder, but persisted the same way (<code>QSettings</code>, disk-backed, survives restarts).</p>
 <h3 id="save-format-graphs"><strong>Save Format (<code>.graphs</code>)</strong><a class="headerlink" href="#save-format-graphs" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="nt">&quot;plots&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">        </span><span class="nt">&quot;1&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">            </span><span class="nt">&quot;graph_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">            </span><span class="nt">&quot;df_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fit_results&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">            </span><span class="nt">&quot;plot_style&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;point&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">            </span><span class="nt">&quot;x&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Slot&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">            </span><span class="nt">&quot;y&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Si_center&quot;</span><span class="p">],</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">            </span><span class="nt">&quot;z&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Zone&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">            </span><span class="nt">&quot;filters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;expression&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;R² &gt; 0.95&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}],</span>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">            </span><span class="nt">&quot;legend_properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">            </span><span class="nt">&quot;annotations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">            </span><span class="nt">&quot;plot_width&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">480</span><span class="p">,</span>
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">            </span><span class="nt">&quot;plot_height&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">400</span><span class="p">,</span>
-<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">            </span><span class="nt">&quot;dpi&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span>
-<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">        </span><span class="p">}</span>
-<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="w">    </span><span class="nt">&quot;original_dfs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="w">        </span><span class="nt">&quot;fit_results&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1f8b0800...&quot;</span>
-<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="w">    </span><span class="nt">&quot;dataframe_sources&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="w">        </span><span class="nt">&quot;fit_results&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/path/to/original.xlsx&quot;</span>
-<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a><span class="p">}</span>
+<p>Current format (<code>format_version: 3</code>) is a <strong>ZIP archive</strong>, written by <code>WorkspaceIO.save_workspace()</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>metadata.json                          # {&quot;format_version&quot;: 3, &quot;plots&quot;: {...}, &quot;dataframe_sources&quot;: {...}}
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>dataframes/&lt;name&gt;.parquet              # one Parquet file per DataFrame, streamed directly into the zip
 </code></pre></div>
-<p>DataFrames are stored as gzip-compressed CSV encoded as hex strings. On load, they are decompressed and reconstructed:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">csv_data</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span><span class="n">hex_string</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="n">csv_data</span><span class="p">))</span>
+<p>Each entry in <code>metadata["plots"]</code> is a full <code>MGraph.save()</code> dict keyed by <code>graph_id</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="nt">&quot;plots&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">        </span><span class="nt">&quot;1&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">            </span><span class="nt">&quot;graph_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">            </span><span class="nt">&quot;df_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fit_results&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">            </span><span class="nt">&quot;plot_style&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;point&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">            </span><span class="nt">&quot;x&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Slot&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">            </span><span class="nt">&quot;y&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Si_center&quot;</span><span class="p">],</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">            </span><span class="nt">&quot;z&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Zone&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">            </span><span class="nt">&quot;filters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;expression&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;R² &gt; 0.95&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}],</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">            </span><span class="nt">&quot;legend_properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">            </span><span class="nt">&quot;annotations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">            </span><span class="nt">&quot;plot_width&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">480</span><span class="p">,</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">            </span><span class="nt">&quot;plot_height&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">400</span><span class="p">,</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">            </span><span class="nt">&quot;dpi&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">    </span><span class="nt">&quot;dataframe_sources&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">        </span><span class="nt">&quot;fit_results&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/path/to/original.xlsx&quot;</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="p">}</span>
 </code></pre></div>
+<p><code>WorkspaceIO.load_workspace()</code> sniffs the ZIP magic number; files that predate this format (raw JSON, DataFrames embedded as gzip-compressed CSV hex strings under an <code>original_dfs</code> key) are detected as legacy and loaded via a dedicated fallback path — kept only for opening old files, never used for saving.</p>
 <hr />
 <h2 id="plot-replication"><strong>Plot Replication</strong><a class="headerlink" href="#plot-replication" title="Permanent link">&para;</a></h2>
-<p>The "Replicate" button on each graph toolbar creates a deep copy of the plot:</p>
+<p>The "Replicate" button (in the shared graph toolbar, acting on whichever graph is active) creates a deep copy of the plot:</p>
 <ol>
 <li>Serializes the current <code>MGraph</code> via <code>save()</code>.</li>
 <li>Removes <code>graph_id</code> (the ViewModel assigns a new one).</li>
 <li>Captures the current subwindow size for the replica.</li>
 <li>Calls <code>_create_and_display_plot()</code> with the cloned config.</li>
 </ol>
-<p>This enables rapid A/B comparison of the same data with different visual settings.</p>
+<p>This enables rapid A/B comparison of the same data with different visual settings. Unlike newly-created plots (Add Plot / Add Multi-Wafer), a replicated graph's style is <strong>not</strong> overridden by the "Set as Default Style" baseline, since it already carries a fully-specified, intentional style.</p>
 
 
 

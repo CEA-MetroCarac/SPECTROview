@@ -1465,10 +1465,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#plot-templates" class="md-nav__link">
+  <a href="#plot-recipes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Plot Templates
+        Plot Recipes
       
     </span>
   </a>
@@ -1699,22 +1699,22 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">graphs</span><span class="o">.</span><span class="n">plot_wafer</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s2">&quot;ampli_Si&quot;</span><span class="p">,</span> <span class="n">wafer_size</span><span class="o">=</span><span class="mf">300.0</span><span class="p">,</span> <span class="n">show_stats</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<h2 id="plot-templates">Plot Templates<a class="headerlink" href="#plot-templates" title="Permanent link">&para;</a></h2>
-<p>A plot template is a named, reusable set of plot configurations (each shaped like the dict <code>MGraph.save()</code> produces in the GUI) saved as a JSON file in a folder — the same mechanism the GUI's "Save as Template" feature uses.</p>
+<h2 id="plot-recipes">Plot Recipes<a class="headerlink" href="#plot-recipes" title="Permanent link">&para;</a></h2>
+<p>A plot recipe is a named, reusable set of plot configurations (each shaped like the dict <code>MGraph.save()</code> produces in the GUI) saved as a JSON file in a folder — the same mechanism the GUI's "Save Plot Recipe" feature uses. (Not to be confused with a <em>style template</em>, which saves only appearance, not data bindings — see <code>spectroview/model/m_style_template_store.py</code>.)</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">graphs</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">configs</span> <span class="o">=</span> <span class="p">[</span>
 <a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="p">{</span><span class="s2">&quot;plot_style&quot;</span><span class="p">:</span> <span class="s2">&quot;scatter&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;peak_1_ampli&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;peak_2_ampli&quot;</span><span class="p">],</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="s2">&quot;Condition&quot;</span><span class="p">},</span>
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="p">{</span><span class="s2">&quot;plot_style&quot;</span><span class="p">:</span> <span class="s2">&quot;box&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;Sample&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;peak_1_fwhm&quot;</span><span class="p">],</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="s2">&quot;Condition&quot;</span><span class="p">},</span>
 <a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">]</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">template_id</span> <span class="o">=</span> <span class="n">graphs</span><span class="o">.</span><span class="n">save_plot_template</span><span class="p">(</span><span class="s2">&quot;./templates&quot;</span><span class="p">,</span> <span class="s2">&quot;Standard QC Plots&quot;</span><span class="p">,</span> <span class="n">configs</span><span class="p">)</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">recipe_id</span> <span class="o">=</span> <span class="n">graphs</span><span class="o">.</span><span class="n">save_plot_recipe</span><span class="p">(</span><span class="s2">&quot;./recipes&quot;</span><span class="p">,</span> <span class="s2">&quot;Standard QC Plots&quot;</span><span class="p">,</span> <span class="n">configs</span><span class="p">)</span>
 <a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
 <a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="c1"># List and reload later</span>
-<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="k">for</span> <span class="n">summary</span> <span class="ow">in</span> <span class="n">graphs</span><span class="o">.</span><span class="n">list_plot_templates</span><span class="p">(</span><span class="s2">&quot;./templates&quot;</span><span class="p">):</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="k">for</span> <span class="n">summary</span> <span class="ow">in</span> <span class="n">graphs</span><span class="o">.</span><span class="n">list_plot_recipes</span><span class="p">(</span><span class="s2">&quot;./recipes&quot;</span><span class="p">):</span>
 <a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">summary</span><span class="p">[</span><span class="s2">&quot;graph_count&quot;</span><span class="p">])</span>
 <a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>
-<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">configs</span> <span class="o">=</span> <span class="n">graphs</span><span class="o">.</span><span class="n">load_plot_template</span><span class="p">(</span><span class="s2">&quot;./templates&quot;</span><span class="p">,</span> <span class="n">template_id</span><span class="p">)</span>
-<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="n">graphs</span><span class="o">.</span><span class="n">delete_plot_template</span><span class="p">(</span><span class="s2">&quot;./templates&quot;</span><span class="p">,</span> <span class="n">template_id</span><span class="p">)</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">configs</span> <span class="o">=</span> <span class="n">graphs</span><span class="o">.</span><span class="n">load_plot_recipe</span><span class="p">(</span><span class="s2">&quot;./recipes&quot;</span><span class="p">,</span> <span class="n">recipe_id</span><span class="p">)</span>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="n">graphs</span><span class="o">.</span><span class="n">delete_plot_recipe</span><span class="p">(</span><span class="s2">&quot;./recipes&quot;</span><span class="p">,</span> <span class="n">recipe_id</span><span class="p">)</span>
 </code></pre></div>
 
 

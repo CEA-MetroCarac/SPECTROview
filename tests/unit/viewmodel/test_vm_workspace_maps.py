@@ -276,3 +276,20 @@ class TestPersistence:
             pytest.skip("example .maps file not present")
         vm.load_work(str(zip_maps_workspace))
         assert len(vm.store.map_names) > 0
+
+
+class TestParseCoordsFromFname:
+    def test_parses_standard_fname(self):
+        from spectroview.viewmodel.utils import parse_coords_from_fname
+        assert parse_coords_from_fname("map1_(1.5, -2.0)") == (1.5, -2.0)
+
+    def test_roundtrips_extract_spectra_format(self):
+        from spectroview.viewmodel.utils import parse_coords_from_fname
+        # Matches _extract_spectra_from_map's f"{name}_({float(x)}, {float(y)})"
+        fname = f"wafer_({float(3)}, {float(-4)})"
+        assert parse_coords_from_fname(fname) == (3.0, -4.0)
+
+    def test_returns_none_without_coords(self):
+        from spectroview.viewmodel.utils import parse_coords_from_fname
+        assert parse_coords_from_fname("plain_name") is None
+        assert parse_coords_from_fname("bad_(1.0)") is None

@@ -77,3 +77,18 @@ ________
 
 
 **Spatial Profile Extraction**: While inside the `Maps` workspace, if you select exactly two distinct spatial points on the `MapViewer` heatmap, **SPECTROview** will automatically extract and plot an interpolated intensity profile between those two coordinates.
+
+________
+
+### **4. Keyboard Shortcuts in the `Graphs` Workspace**
+
+When a graph window is active in the `Graphs` workspace, the following keyboard shortcuts are available (on macOS, use `Cmd` in place of `Ctrl`):
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl + Z` | Undo the last change to the active graph |
+| `Ctrl + Shift + Z` | Redo the last undone change |
+| `Ctrl + C` | Copy the active graph's figure to the clipboard (as an image) |
+| `Ctrl + V` | Paste a previously copied style onto the active graph |
+| `Ctrl + E` | Open the **Customize Graph** dialog for the active graph |
+| `Ctrl + R` | Rescale the active graph to fit its data |

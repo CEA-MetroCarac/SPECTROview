@@ -100,6 +100,16 @@ class MapData:
     def has_fit_results(self) -> bool:
         return self.peak_params is not None and len(self.param_names) > 0
 
+    @property
+    def x_axis(self) -> Optional[np.ndarray]:
+        """Processed wavenumber axis if present, else the raw x0 axis."""
+        return self.x if self.x is not None else self.x0
+
+    @property
+    def y_matrix(self) -> Optional[np.ndarray]:
+        """Processed intensity matrix if present, else the raw Y0 matrix."""
+        return self.Y if self.Y is not None else self.Y0
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SpectraStore

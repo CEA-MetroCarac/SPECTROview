@@ -193,7 +193,7 @@ This convention is used throughout the codebase to:
 - Extract coordinates from fnames: parse between `(` and `)`.
 - Match `SpectraStore` entries back to `DataFrame` rows for heatmap rendering.
 
-If you change this convention, update `_extract_coords_from_fname()` in `VWorkspaceMaps` and `_extract_coords_for_spectra()` in `VMWorkspaceMaps`.
+Coordinate parsing is centralized in `parse_coords_from_fname()` (`viewmodel/utils.py`); `VWorkspaceMaps._extract_coords_from_fname()` and `VMWorkspaceMaps._extract_coords_for_spectra()` both delegate to it. If you change the fname convention, update that single helper (and keep the `float()` formatting identical on the write side in `_extract_spectra_from_map()`).
 
 ---
 
@@ -371,7 +371,7 @@ vm.send_selected_spectra_to_spectra_workspace()
 For each selected spectrum:
 1. Builds a **deep-copied** payload dict (raw `x0`, `Y0`, `baseline_config`, `fit_model`, `range_min/max`, `is_subtracted`).
 2. Emits `send_spectra_to_workspace(payloads)`.
-3. `VWorkspaceMaps._receive_spectra_from_maps()` registers each payload as a new N=1 `MapData` block in the **Spectra** workspace's `SpectraStore`.
+3. `main.py` connects that signal to the Spectra ViewModel's `receive_spectra()`, which registers each payload as a new N=1 `MapData` block in the **Spectra** workspace's `SpectraStore`.
 
 Deep copying prevents cross-workspace state pollution — editing the spectrum in the Spectra tab does not affect the original map.
 
@@ -483,7 +483,7 @@ New spatial layouts require:
 - Task construction (`_run_fit_thread()`) happens on the main thread before `VBFthread.start()`. For very large maps, the `np.arange(md.n_spectra)` index build is fast, but the `vstack` of Y matrices can be slow. Profile the `_run_fit_thread()` call with `cProfile` if this becomes a bottleneck.
 
 **Send to Spectra creates duplicate spectra**
-- `_receive_spectra_from_maps()` checks `name in target_store.map_names` before adding. If duplicates appear, check that the fname format is consistent (watch for floating-point rounding in `(x_pos, y_pos)` string representations).
+- The Spectra ViewModel's `receive_spectra()` checks `name in self.store.map_names` before adding. If duplicates appear, check that the fname format is consistent (watch for floating-point rounding in `(x_pos, y_pos)` string representations).
 
 **Wafer griddata is slow on every redraw**
 - Ensure `clear_map_cache_requested` is only emitted when necessary (after fitting, not on every selection change). Check that the `cache_key` tuple is hashable and stable — if any element changes inadvertently between renders, the cache will never hit.

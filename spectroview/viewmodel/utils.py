@@ -377,6 +377,23 @@ def closest_index(array, value):
     return int(np.abs(array - value).argmin())
 
 
+def parse_coords_from_fname(fname: str) -> tuple[float, float] | None:
+    """Parse (x, y) spatial coordinates from a map spectrum fname.
+
+    Spectra are named ``"{map_name}_({x}, {y})"`` (see
+    ``VMWorkspaceMaps._extract_spectra_from_map``). Returns the coordinates as a
+    float tuple, or None if the fname carries no parseable ``(x, y)`` suffix.
+    """
+    if '(' not in fname or ')' not in fname:
+        return None
+    coords_str = fname[fname.rfind('(') + 1:fname.rfind(')')]
+    try:
+        x_str, y_str = coords_str.split(',')
+        return (float(x_str.strip()), float(y_str.strip()))
+    except (ValueError, AttributeError):
+        return None
+
+
 def fano_display_amplitude(internal_ampli, q):
     """Convert a Fano peak's internal fit amplitude to its displayed peak height.
 

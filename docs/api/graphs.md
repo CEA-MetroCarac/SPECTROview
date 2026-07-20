@@ -99,7 +99,7 @@ graphs.plot_wafer(df, x="X", y="Y", z="ampli_Si", wafer_size=300.0, show_stats=T
 
 ## Plot Recipes
 
-A plot recipe is a named, reusable set of plot configurations (each shaped like the dict `MGraph.save()` produces in the GUI) saved as a JSON file in a folder — the same mechanism the GUI's "Save Plot Recipe" feature uses. (Not to be confused with a *style template*, which saves only appearance, not data bindings — see [`spectroview/model/m_style_template_store.py`](../../spectroview/model/m_style_template_store.py).)
+A plot recipe is a named, reusable set of plot configurations (each shaped like the dict `MGraph.save()` produces in the GUI) saved as a JSON file in a folder — the same mechanism the GUI's "Save Plot Recipe" feature uses. (Not to be confused with a *style template*, which saves only appearance, not data bindings — see `spectroview/model/m_style_template_store.py`.)
 
 ```python
 from spectroview.api import graphs

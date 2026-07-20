@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -13,7 +12,7 @@ from spectroview.view.components.v_map_viewer import VMapViewer
 from spectroview.view.components.v_map_viewer_dialog import VMapViewerDialog
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
-from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon
+from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon, parse_coords_from_fname
 import os
 from spectroview import ICON_DIR
 
@@ -58,15 +57,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     
     @staticmethod
     def _extract_coords_from_fname(fname: str) -> tuple[float, float] | None:
-        """Extract (x, y) coordinates from spectrum fname."""
-        if '(' in fname and ')' in fname:
-            coords_str = fname[fname.rfind('(')+1:fname.rfind(')')]
-            try:
-                x_str, y_str = coords_str.split(',')
-                return (float(x_str.strip()), float(y_str.strip()))
-            except (ValueError, AttributeError):
-                pass
-        return None
+        """Extract (x, y) coordinates from a spectrum fname."""
+        return parse_coords_from_fname(fname)
     
     def setup_connections(self):
         """Override to prevent double connection during parent init, then connect properly."""
@@ -253,9 +245,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Clear griddata cache when map data changes (after fitting)
         self.vm.clear_map_cache_requested.connect(self.v_map_viewer.clear_cache_for_map)
-        
-        # Connect send spectra to workspace
-        self.vm.send_spectra_to_workspace.connect(self._receive_spectra_from_maps)
+
+        # Note: send_spectra_to_workspace → Spectra VM.receive_spectra is wired
+        # in main.py::setup_connections() (cross-workspace links live there).
 
         # ── ViewModel → VMapViewer connections ──
         # Note: map_selected signal removed to avoid duplicate calls to _on_map_data_changed
@@ -267,41 +259,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Connect spectra selection to viewer (inherited from parent)
         self.vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
 
-    def _receive_spectra_from_maps(self, spectra_data: list):
-        """Receive signal that spectra were sent to Spectra workspace and refresh its view."""
-        parent_window = self.window()
-        if hasattr(parent_window, 'v_spectra_workspace'):
-            target_store = parent_window.v_spectra_workspace.vm.store
-            added_count = 0
-            for data in spectra_data:
-                name = data['name']
-                if name in target_store.map_names:
-                    continue
-                
-                target_store.add_map(
-                    name=name,
-                    x0=data['x0'],
-                    Y0=data['Y0'],
-                    coords=np.array([[0.0, 0.0]], dtype=np.float64),
-                    fnames=[name],
-                    is_active=np.array([True], dtype=bool)
-                )
-                
-                new_md = target_store.get_map_data(name)
-                if new_md:
-                    new_md.baseline_config = data['baseline_config']
-                    new_md.fit_model = data['fit_model']
-                    new_md.range_min = data['range_min']
-                    new_md.range_max = data['range_max']
-                    if data['is_subtracted']:
-                        new_md.is_baseline_subtracted = True
-                    
-                    target_store.batch_preprocess(name, new_md.baseline_config, new_md.range_min, new_md.range_max)
-                added_count += 1
-                
-            if added_count > 0:
-                parent_window.v_spectra_workspace.vm._emit_list_update()
-    
     def _on_map_viewer_selection(self, selected_points: list):
         """Handle spectrum selection from map viewer."""
         if not selected_points:
@@ -315,11 +272,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         ]
         
         # Get list of current map's fnames from SpectraStore
-        fname_prefix = f"{self.vm.current_map_name}_("
         md = self.vm.store.get_map_data(self.vm.current_map_name)
-        current_map_fnames = list(md.fnames) if md else [
-            s.fname for s in self.vm.spectra if s.fname.startswith(fname_prefix)
-        ]
+        current_map_fnames = list(md.fnames) if md else []
         
         # Find list indices
         list_indices = [
@@ -440,11 +394,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             return
         
         # Get list of current map's fnames from SpectraStore
-        fname_prefix = f"{self.vm.current_map_name}_("
         md = self.vm.store.get_map_data(self.vm.current_map_name)
-        current_map_fnames = list(md.fnames) if md else [
-            s.fname for s in self.vm.spectra if s.fname.startswith(fname_prefix)
-        ]
+        current_map_fnames = list(md.fnames) if md else []
         
         # Convert list indices to fnames
         selected_fnames = [
@@ -549,10 +500,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         else:
             # Fallback: build coords from fnames (slower path)
             md_fb = self.vm.store.get_map_data(self.vm.current_map_name)
-            fname_prefix = f"{self.vm.current_map_name}_("
-            current_map_fnames = list(md_fb.fnames) if md_fb else [
-                s.fname for s in self.vm.spectra if s.fname.startswith(fname_prefix)
-            ]
+            current_map_fnames = list(md_fb.fnames) if md_fb else []
             for idx in selected_indices:
                 if 0 <= idx < len(current_map_fnames):
                     coords = self._extract_coords_from_fname(current_map_fnames[idx])

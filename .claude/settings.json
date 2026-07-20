@@ -14,7 +14,11 @@
       "Bash(python3 -m py_compile spectroview/model/m_plot_template.py spectroview/model/m_plot_template_store.py)",
       "Bash(python3 -m py_compile spectroview/view/components/v_plot_template_dialog.py)",
       "Bash(python -m pytest tests/unit/model/test_m_graph.py -q)",
-      "Bash(QT_QPA_PLATFORM=offscreen python3 -c ' *)"
+      "Bash(QT_QPA_PLATFORM=offscreen python3 -c ' *)",
+      "Bash(python -m pyflakes spectroview/model/spectra_store.py spectroview/viewmodel/utils.py spectroview/viewmodel/vm_workspace_spectra.py spectroview/viewmodel/vm_workspace_maps.py spectroview/view/v_workspace_spectra.py spectroview/view/v_workspace_maps.py spectroview/main.py)",
+      "Bash(python -m pyflakes -)",
+      "Bash(python -m pytest tests/unit/viewmodel/test_vm_workspace_spectra.py tests/unit/viewmodel/test_vm_workspace_maps.py -q)",
+      "Bash(python -m pytest tests/integration/test_spectra_workflow.py tests/integration/test_maps_workflow.py tests/integration/test_vbf_thread_integration.py -q)"
     ],
     "additionalDirectories": [
       "/private/tmp"

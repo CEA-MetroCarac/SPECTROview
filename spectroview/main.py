@@ -124,7 +124,12 @@ class Main(QMainWindow):
         
         # Inject Graphs workspace into Maps ViewModel for cross-workspace communication
         self.v_maps_workspace.vm.set_graphs_workspace(self.v_graphs_workspace)
-        
+
+        # Maps → Spectra: ingest spectra sent from the Maps workspace
+        self.v_maps_workspace.vm.send_spectra_to_workspace.connect(
+            self.v_spectra_workspace.vm.receive_spectra
+        )
+
         # Connect Maps to Main: tab switching
         self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
             lambda: self.tabWidget.setCurrentWidget(self.v_graphs_workspace)

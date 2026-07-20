@@ -47,7 +47,7 @@ Views and ViewModels communicate **exclusively via Qt signals and slots**. A Vie
 # ── ViewModel defines signals ──
 class VMWorkspaceSpectra(QObject):
     spectra_list_changed = Signal(list)       # ViewModel → View
-    fit_progress_updated = Signal(int, int, int, float)
+    fit_progress_updated = Signal(int, int, int, float, int)
 
 # ── View connects in __init__ ──
 class VWorkspaceSpectra(QWidget):
@@ -87,11 +87,13 @@ spectroview/
 │   ├── vm_settings.py            # Settings persistence
 │   └── utils.py                  # Helpers, toast notifications
 │
-├── llm/                    # AI Chat module (optional, requires ollama)
+├── ai_agent/               # AI Data Chat module (optional, requires ollama)
 │   ├── __init__.py              # Module docstring, keeps import optional
 │   ├── m_llm_client.py          # Ollama connection manager + QThread worker
-│   ├── vm_chat.py               # Chat ViewModel (system prompt, parsing)
-│   └── v_chat_panel.py          # Floating chat dialog (QDialog)
+│   ├── m_conversation.py        # Conversation model (+ m_conversation_store.py: history)
+│   ├── m_prompt_manager.py      # System-prompt / rules / knowledge assembly
+│   ├── vm_chat.py               # Chat ViewModel (prompt-tier selection, agentic loop)
+│   └── v_chat_panel.py          # Floating chat dialog (+ v_history_dialog.py)
 │
 ├── view/                   # Qt widgets and UI layout
 │   ├── v_workspace_spectra.py    # Spectra workspace View
@@ -163,7 +165,7 @@ graph LR
 The `setup_connections()` method in `main.py` wires cross-workspace dependencies:
 
 - **Maps → Graphs**: `VMWorkspaceMaps.set_graphs_workspace(v_graphs)` injects a reference so `Maps` can send profiles and DataFrames directly to the `Graphs` workspace.
-- **Maps → Spectra**: The `send_spectra_to_workspace` signal passes deep copies of selected map spectra to the `Spectra` tab.
+- **Maps → Spectra**: `main.py` connects `send_spectra_to_workspace` to the Spectra ViewModel's `receive_spectra()`, which ingests deep copies of the selected map spectra into the `Spectra` tab's `SpectraStore`.
 - **Fit Results → Graphs**: Both `Spectra` and `Maps` emit `fit_results_updated` with a `pd.DataFrame` that can be forwarded to the `Graphs` workspace for statistical plotting.
 
 ---
@@ -264,30 +266,29 @@ Workspaces are composed from **shared components** that follow the same signal-b
 
 | Workspace | File Extension | Key Strategy |
 |-----------|---------------|-------------|
-| `Spectra` | `.spectra` | ZIP archive with metadata JSON, NPZ arrays per spectrum (v5+). Handled by `WorkspaceIO.save_spectra_workspace()`. |
-| `Maps` | `.maps` | ZIP archive with metadata JSON, NPZ arrays, and pickled DataFrames (v5+). Handled by `WorkspaceIO.save_maps_workspace()`. |
-| `Graphs` | `.graphs` | JSON with `gzip+hex` compressed DataFrames and `MGraph.save()` serialized plots. |
+| `Spectra` | `.spectra` | ZIP archive (`format_version: 2`): `metadata.json` (`store_meta` per map) + per-map NPZ arrays. Written by the unified `WorkspaceIO.save_workspace()`. |
+| `Maps` | `.maps` | Same unified ZIP format as `.spectra` (`WorkspaceIO.save_workspace()`), whose metadata additionally carries `maps_metadata`, `map_type`, and the fit-results DataFrame. |
+| `Graphs` | `.graphs` | ZIP archive (`format_version: 3`) via `WorkspaceIO.save_workspace()`: `metadata.json` (plots + DataFrame sources) + compressed DataFrames. |
 
 ### **Spectrum Serialization Flow**
 
 ```python
-# Save (v4+): SpectraStore → ZIP archive (metadata.json + arrays.npz)
+# Save (format_version 2): SpectraStore → ZIP archive (metadata.json + NPZ arrays)
 metadata = {
-    "format_version": 5,
-    "spectrums_meta": {
-        "0": {
-            "fname": "sample_001",
+    "format_version": 2,
+    "store_meta": {                 # keyed by map name (== fname for single spectra)
+        "sample_001": {
+            "fnames": ["sample_001"],
             "is_active": [True],
             "baseline_config": {...},
             "peak_params": [...],
-            ...
+            "range_min": None, "range_max": None,
+            # ...
         }
     }
 }
-arrays = {
-    "x0_0": x0_array, # float64 axis
-    "y0_0": y0_array  # float32 raw intensities
-}
+# arrays: per-map NPZ blocks produced by SpectraStore.to_npz_dict(map_name)
+# (raw x0 float64 axis + Y0 float32 intensities, plus any processed/fit arrays)
 ```
 
 ---
@@ -301,7 +302,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 |-------------|----------|---------|
 | `VBFthread` | `fit_engine/vbf_thread.py` | Batched fitting (primary engine) |
 | `UpdateCheckerWorker` | `model/m_update_checker.py` | Background GitHub release check at startup |
-| `LLMWorker` | `llm/m_llm_client.py` | Streaming Ollama chat requests for AI Data Chat |
+| `LLMWorker` | `ai_agent/m_llm_client.py` | Streaming Ollama chat requests for AI Data Chat |
 
 **Thread lifecycle**:
 
@@ -321,13 +322,15 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 # 1. Inject reference: Maps VM can call Graphs workspace methods
 self.v_maps_workspace.vm.set_graphs_workspace(self.v_graphs_workspace)
 
-# 2. Signal: Maps requests tab switch after sending profile
+# 2. Maps → Spectra: ingest spectra sent from the Maps workspace
+self.v_maps_workspace.vm.send_spectra_to_workspace.connect(
+    self.v_spectra_workspace.vm.receive_spectra
+)
+
+# 3. Signal: Maps requests tab switch after sending profile
 self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
     lambda: self.tabWidget.setCurrentWidget(self.v_graphs_workspace)
 )
-
-# VWorkspaceMaps.__init__ connects the spectra transfer internally:
-# self.vm.send_spectra_to_workspace.connect(self._receive_spectra_from_maps)
 ```
 
 ---

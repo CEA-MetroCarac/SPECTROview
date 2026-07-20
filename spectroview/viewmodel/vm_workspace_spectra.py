@@ -198,7 +198,52 @@ class VMWorkspaceSpectra(QObject):
         # Store fnames (ensure uniqueness while preserving order)
         self.selected_fnames = list(dict.fromkeys(fnames))
         self._emit_selected_spectra()
-    
+
+    def set_spectrum_active(self, fname: str, is_active: bool):
+        """Toggle one spectrum's checked/active state (Spectra: N=1 per block)."""
+        md = self.store.get_map_data(fname)
+        if md is not None:
+            md.is_active[0] = is_active
+
+    def set_all_spectra_active(self, is_active: bool):
+        """Check/uncheck every loaded spectrum."""
+        for name in self.store.map_names:
+            md = self.store.get_map_data(name)
+            if md is not None:
+                md.is_active[0] = is_active
+
+    def receive_spectra(self, payloads: list):
+        """Ingest spectra payloads sent from another workspace into this store.
+
+        Wired in main.py to VMWorkspaceMaps.send_spectra_to_workspace so the
+        Maps → Spectra transfer stays within the ViewModel layer.
+        """
+        added = 0
+        for data in payloads:
+            name = data['name']
+            if name in self.store.map_names:
+                continue
+            self.store.add_map(
+                name=name,
+                x0=data['x0'],
+                Y0=data['Y0'],
+                coords=np.array([[0.0, 0.0]], dtype=np.float64),
+                fnames=[name],
+                is_active=np.array([True], dtype=bool),
+            )
+            md = self.store.get_map_data(name)
+            if md:
+                md.baseline_config = data['baseline_config']
+                md.fit_model = data['fit_model']
+                md.range_min = data['range_min']
+                md.range_max = data['range_max']
+                if data['is_subtracted']:
+                    md.is_baseline_subtracted = True
+                self.store.batch_preprocess(name, md.baseline_config, md.range_min, md.range_max)
+            added += 1
+        if added:
+            self._emit_list_update()
+
     def _get_active_spectra(self) -> list:
         """Get list of active spectra fnames (where is_active is True)."""
         active = []
@@ -216,7 +261,7 @@ class VMWorkspaceSpectra(QObject):
             self.spectra_selection_changed.emit([])
             return
 
-        # Build tensor batch for SpectraViewer
+        # Build tensor batch for SpectraViewer (one store fetch per spectrum)
         x_list = []
         Y_list = []
         x0_list = []
@@ -229,15 +274,17 @@ class VMWorkspaceSpectra(QObject):
         y_peaks_list = []
         y_baseline_list = []
         fit_model_list = []
-        
+        fit_r2_list = []
+        proxies = []
+
         for fname in active_fnames:
             md = self.store.get_map_data(fname)
             if not md: continue
-            
+
             self._update_fit_model_from_params(md, 0)
-            
-            x_list.append(md.x if md.x is not None else md.x0)
-            Y_list.append(md.Y[0] if md.Y is not None else md.Y0[0])
+
+            x_list.append(md.x_axis)
+            Y_list.append(md.y_matrix[0])
             x0_list.append(md.x0)
             Y0_list.append(md.Y0[0])
             colors.append(md.colors[0])
@@ -248,12 +295,8 @@ class VMWorkspaceSpectra(QObject):
             y_peaks_list.append([p[0] for p in md.Y_peaks] if md.Y_peaks is not None else None)
             y_baseline_list.append(md.Y_baseline[0] if md.Y_baseline is not None else None)
             fit_model_list.append(md.fit_model)
-
-        proxies = []
-        for fname in active_fnames:
-            md = self.store.get_map_data(fname)
-            if md:
-                proxies.append(SpectrumProxy(md, 0, fname))
+            fit_r2_list.append(md.fit_r2[0] if md.fit_r2 is not None else 0.0)
+            proxies.append(SpectrumProxy(md, 0, fname))
 
         # In Spectra Workspace, different spectra might have different x axes.
         # VSpectraViewer will need to handle a list of arrays for x, y, x0, y0.
@@ -273,7 +316,7 @@ class VMWorkspaceSpectra(QObject):
             "y_peaks": y_peaks_list,
             "y_baseline": y_baseline_list,
             "fit_models": fit_model_list,
-            "fit_r2": [md.fit_r2[0] if md.fit_r2 is not None else 0.0 for md in (self.store.get_map_data(fname) for fname in active_fnames) if md]
+            "fit_r2": fit_r2_list,
         }
 
         # emit list of the selected spectra to plot in View
@@ -286,7 +329,7 @@ class VMWorkspaceSpectra(QObject):
 
         # emit spectral range of first selected spectrum to show in GUI
         if md0:
-            x_axis = md0.x if md0.x is not None else md0.x0
+            x_axis = md0.x_axis
             xmin = float(x_axis[0])
             xmax = float(x_axis[-1])
             self.spectral_range_changed.emit(xmin, xmax)
@@ -334,8 +377,8 @@ class VMWorkspaceSpectra(QObject):
             md.Y_peaks = None
             return
         
-        x_arr = md.x if md.x is not None else md.x0
-        N = md.Y.shape[0] if md.Y is not None else md.Y0.shape[0]
+        x_arr = md.x_axis
+        N = md.y_matrix.shape[0]
         M = len(x_arr)
         
         peak_models = list(md.fit_model["peak_models"].values())
@@ -636,8 +679,8 @@ class VMWorkspaceSpectra(QObject):
             spec_idx = md.fnames.index(self.selected_fnames[0])
 
         # Determine y value
-        idx = closest_index(md.x if md.x is not None else md.x0, x)
-        y_arr = md.Y[spec_idx] if md.Y is not None else md.Y0[spec_idx]
+        idx = closest_index(md.x_axis, x)
+        y_arr = md.y_matrix[spec_idx]
         y_val = float(y_arr[idx])
         if y_val <= 0: y_val = 1e-10
 
@@ -662,14 +705,14 @@ class VMWorkspaceSpectra(QObject):
         md.fit_model["peak_models"][peak_idx] = {peak_shape: peak_model}
 
         # Quickly evaluate and append to Y_peaks for instant preview
-        x_arr = md.x if md.x is not None else md.x0
+        x_arr = md.x_axis
         y_curve = eval_peak_initial(x_arr, {peak_shape: peak_model})
         
         if md.Y_peaks is None:
             md.Y_peaks = []
         
         # md.Y_peaks expects a list of arrays (one per peak), shape (N, M_proc)
-        N = md.Y.shape[0] if md.Y is not None else md.Y0.shape[0]
+        N = md.y_matrix.shape[0]
         md.Y_peaks.append(np.tile(y_curve, (N, 1)))
 
         self._emit_selected_spectra()
@@ -736,8 +779,8 @@ class VMWorkspaceSpectra(QObject):
         md.baseline_config["points"] = [list(t) for t in zip(*sorted_pts)] if sorted_pts else [[], []]
         
         # Dynamically evaluate the baseline curve
-        x_arr = md.x if md.x is not None else md.x0
-        y_arr = md.Y if md.Y is not None else md.Y0
+        x_arr = md.x_axis
+        y_arr = md.y_matrix
         md.Y_baseline = eval_baseline_batch(x_arr, y_arr, md.baseline_config)
 
         self._emit_selected_spectra()
@@ -759,8 +802,8 @@ class VMWorkspaceSpectra(QObject):
         md.baseline_config["points"] = [xs, ys]
         
         # Dynamically evaluate the baseline curve
-        x_arr = md.x if md.x is not None else md.x0
-        y_arr = md.Y if md.Y is not None else md.Y0
+        x_arr = md.x_axis
+        y_arr = md.y_matrix
         md.Y_baseline = eval_baseline_batch(x_arr, y_arr, md.baseline_config)
 
         self._emit_selected_spectra()
@@ -772,9 +815,10 @@ class VMWorkspaceSpectra(QObject):
 
         fnames = self._get_selected_spectra()
         SI_REF = 520.7
-        delta_x = SI_REF - measured_peak 
+        delta_x = SI_REF - measured_peak
 
-        for md in self._get_unique_map_data(fnames):
+        mds = self._get_unique_map_data(fnames)
+        for md in mds:
             prev_delta = md.xcorrection_value
             if prev_delta != 0.0:
                 if md.x is not None:
@@ -785,13 +829,12 @@ class VMWorkspaceSpectra(QObject):
                 md.x = md.x + delta_x
             md.x0 = md.x0 + delta_x
             md.xcorrection_value = delta_x
-            
+
             if 'xcorrection_value' in md.map_metadata:
                 del md.map_metadata['xcorrection_value']
 
         # Trigger plot refresh
-        md0 = self._get_unique_map_data(fnames)[0]
-        self.show_xcorrection_value.emit(md0.xcorrection_value)
+        self.show_xcorrection_value.emit(mds[0].xcorrection_value)
         self._emit_selected_spectra()
 
 
@@ -952,8 +995,8 @@ class VMWorkspaceSpectra(QObject):
         for md in mds:
             md.baseline_config = deepcopy(baseline_data)
             
-            x_arr = md.x if md.x is not None else md.x0
-            y_arr = md.Y if md.Y is not None else md.Y0
+            x_arr = md.x_axis
+            y_arr = md.y_matrix
             md.Y_baseline = eval_baseline_batch(x_arr, y_arr, md.baseline_config)
             self._on_map_data_changed(md, "paste_baseline")
 
@@ -1053,8 +1096,8 @@ class VMWorkspaceSpectra(QObject):
             bl["sigma"]     = sigma
             bl["attached"]  = attached
             
-            x_arr = md.x if md.x is not None else md.x0
-            y_arr = md.Y if md.Y is not None else md.Y0
+            x_arr = md.x_axis
+            y_arr = md.y_matrix
             md.Y_baseline = eval_baseline_batch(x_arr, y_arr, md.baseline_config)
 
     def set_baseline_settings(self, settings: dict):
@@ -1105,8 +1148,8 @@ class VMWorkspaceSpectra(QObject):
                 
                 # Dynamically reconstruct Y_peaks for instant preview
                 md.Y_peaks = []
-                x_arr = md.x if md.x is not None else md.x0
-                N = md.Y.shape[0] if md.Y is not None else md.Y0.shape[0]
+                x_arr = md.x_axis
+                N = md.y_matrix.shape[0]
                 
                 for p_model in md.fit_model.get("peak_models", {}).values():
                     y_curve = eval_peak_initial(x_arr, p_model)
@@ -1185,8 +1228,8 @@ class VMWorkspaceSpectra(QObject):
         if xmin is not None and xmax is not None:
             if xmin > xmax:
                 xmin, xmax = xmax, xmin
-            curr_x = md.x if md.x is not None else md.x0
-            curr_y = md.Y if md.Y is not None else md.Y0
+            curr_x = md.x_axis
+            curr_y = md.y_matrix
             
             i_min = closest_index(curr_x, xmin)
             i_max = closest_index(curr_x, xmax)
@@ -1205,8 +1248,8 @@ class VMWorkspaceSpectra(QObject):
         bl_info = fit_model.get("baseline")
         if bl_info and bl_info.get("mode"):
             md.baseline_config = deepcopy(bl_info)
-            x_arr = md.x if md.x is not None else md.x0
-            y_arr = md.Y if md.Y is not None else md.Y0
+            x_arr = md.x_axis
+            y_arr = md.y_matrix
             
             if indices is None:
                 md.Y_baseline = eval_baseline_batch(x_arr, y_arr, md.baseline_config)
@@ -1233,6 +1276,23 @@ class VMWorkspaceSpectra(QObject):
         # 5. Reconstruct peak curves for preview
         self._reconstruct_y_peaks(md, indices=indices)
 
+    def _sync_fit_model_metadata(self, md):
+        """Write current crop range, baseline state, and fit settings into md.fit_model.
+
+        Called before copying/saving a fit model so the serialized model carries
+        the spectrum's full preprocessing context.
+        """
+        md.fit_model["range_min"] = md.range_min
+        md.fit_model["range_max"] = md.range_max
+        if md.baseline_config:
+            is_sub = getattr(md, "is_baseline_subtracted", False)
+            is_sub_val = bool(is_sub[0]) if isinstance(is_sub, np.ndarray) else bool(is_sub)
+            md.fit_model["baseline"] = deepcopy(md.baseline_config)
+            md.fit_model["baseline"]["is_subtracted"] = is_sub_val
+        else:
+            md.fit_model["baseline"] = None
+        md.fit_model["fit_params"] = self.settings.load_fit_settings()
+
     def copy_fit_model(self):
         if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
@@ -1245,21 +1305,7 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No fit results to copy.")
             return
 
-        # Ensure current crop range and baseline config are written into fit_model before copy
-        md.fit_model["range_min"] = md.range_min
-        md.fit_model["range_max"] = md.range_max
-        if md.baseline_config:
-            bl = md.baseline_config
-            is_sub = getattr(md, "is_baseline_subtracted", False)
-            is_sub_val = bool(is_sub[0]) if isinstance(is_sub, np.ndarray) else bool(is_sub)
-            
-            md.fit_model["baseline"] = deepcopy(bl)
-            md.fit_model["baseline"]["is_subtracted"] = is_sub_val
-        else:
-            md.fit_model["baseline"] = None
-
-        # Inject current fit settings
-        md.fit_model["fit_params"] = self.settings.load_fit_settings()
+        self._sync_fit_model_metadata(md)
 
         self._fitmodel_clipboard = deepcopy(build_clean_fit_model(md.fit_model))
         self.notify.emit("Fit model copied to clipboard.")
@@ -1296,21 +1342,7 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No fit model to save.")
             return
 
-        # Ensure current crop range and baseline config are written into fit_model before save
-        md.fit_model["range_min"] = md.range_min
-        md.fit_model["range_max"] = md.range_max
-        if md.baseline_config:
-            bl = md.baseline_config
-            is_sub = getattr(md, "is_baseline_subtracted", False)
-            is_sub_val = bool(is_sub[0]) if isinstance(is_sub, np.ndarray) else bool(is_sub)
-            
-            md.fit_model["baseline"] = deepcopy(bl)
-            md.fit_model["baseline"]["is_subtracted"] = is_sub_val
-        else:
-            md.fit_model["baseline"] = None
-
-        # Inject current fit settings
-        md.fit_model["fit_params"] = self.settings.load_fit_settings()
+        self._sync_fit_model_metadata(md)
 
         default_dir = ""
         if hasattr(self, "_vm_fit_model_builder") and self._vm_fit_model_builder is not None:
@@ -1400,19 +1432,7 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No peaks to fit.")
             return
 
-        # Cancel any existing thread
-        if self._fit_thread and self._fit_thread.isRunning():
-            self._fit_thread.terminate()
-            self._fit_thread.wait()
-
-        self._is_fitting = True
-        self.fit_in_progress.emit(True)
-
-        self._fit_thread = VBFthread(self.store, tasks)
-        self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
-        self._fit_thread.timings_ready.connect(self.fit_timings_ready.emit)
-        self._fit_thread.finished.connect(self._on_fit_finished)
-        self._fit_thread.start()
+        self._launch_fit_thread(tasks)
 
 
     def _run_fit_thread(self, fit_model: dict, fnames):
@@ -1435,14 +1455,33 @@ class VMWorkspaceSpectra(QObject):
             "fit_model": fit_model
         }]
 
-        # Cancel any existing thread
-        if self._fit_thread and self._fit_thread.isRunning():
-            self._fit_thread.terminate()
-            self._fit_thread.wait()
+        self._launch_fit_thread(tasks)
 
+    def _cancel_fit_thread(self):
+        """Gracefully stop and dispose of the active fit thread, if any.
+
+        Disconnects `finished` first so a late signal from the cancelled thread
+        can't clobber a freshly started one. Safer than QThread.terminate(),
+        which could kill the worker mid-write into the store.
+        """
+        thread = self._fit_thread
+        if thread is None:
+            return
+        self._fit_thread = None
+        try:
+            thread.finished.disconnect(self._on_fit_finished)
+        except (RuntimeError, TypeError):
+            pass
+        if thread.isRunning():
+            thread.stop()
+            thread.wait()
+        thread.deleteLater()
+
+    def _launch_fit_thread(self, tasks: list):
+        """Cancel any running fit, then start a VBFthread for `tasks`."""
+        self._cancel_fit_thread()
         self._is_fitting = True
         self.fit_in_progress.emit(True)
-
         self._fit_thread = VBFthread(self.store, tasks)
         self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
         self._fit_thread.timings_ready.connect(self.fit_timings_ready.emit)
@@ -1526,7 +1565,7 @@ class VMWorkspaceSpectra(QObject):
         if self.selected_fnames and self.selected_fnames[0] in md.fnames:
             spec_idx = md.fnames.index(self.selected_fnames[0])
             
-        y_arr = md.Y[spec_idx] if md.Y is not None else md.Y0[spec_idx]
+        y_arr = md.y_matrix[spec_idx]
         self._initialize_peak_params(new_params, model_name, x0, ampli, minfwhm, maxfwhm, maxshift, y_arr)
 
         md.fit_model["peak_models"][str(index)] = {model_name: new_params}
@@ -1608,10 +1647,6 @@ class VMWorkspaceSpectra(QObject):
 
     def copy_spectrum_data_to_clipboard(self):
         """Copy X, Y, and peak model data of the first selected spectrum to clipboard as DataFrame."""
-        self._copy_spectrum_data()
-
-    def _copy_spectrum_data(self):
-        """Copy X, Y, and peak model data of the first selected spectrum to clipboard as DataFrame."""
         if not self.selected_fnames:
             return
 
@@ -1625,8 +1660,8 @@ class VMWorkspaceSpectra(QObject):
         
         md = unique_mds[0]
         local_idx = md.fnames.index(fnames[0])
-        x_values = md.x if md.x is not None else md.x0
-        y_values = md.Y[local_idx] if md.Y is not None else md.Y0[local_idx]
+        x_values = md.x_axis
+        y_values = md.y_matrix[local_idx]
 
         data = {
             "X values": pd.Series(x_values),
@@ -1937,11 +1972,7 @@ class VMWorkspaceSpectra(QObject):
         self._loaded_fit_model = None
         
         # Stop any running fit thread
-        if self._fit_thread and self._fit_thread.isRunning():
-            self._fit_thread.terminate()
-            self._fit_thread.wait()
-            self._fit_thread = None
-        
+        self._cancel_fit_thread()
         self._is_fitting = False
         
         # Emit updates to View
@@ -2309,8 +2340,8 @@ class VMWorkspaceSpectra(QObject):
                 md = self.store.get_map_data(fname)
                 if md:
                     local_idx = md.fnames.index(fname)
-                    x = md.x if md.x is not None else md.x0
-                    y = md.Y[local_idx] if md.Y is not None else md.Y0[local_idx]
+                    x = md.x_axis
+                    y = md.y_matrix[local_idx]
                     data = np.column_stack((x, y))
                     np.savetxt(file_path, data, fmt='%.6f', delimiter='\t', comments='')
                     saved_count += 1

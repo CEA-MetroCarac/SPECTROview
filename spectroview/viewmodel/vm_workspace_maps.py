@@ -16,7 +16,7 @@ from spectroview.model.m_settings import MSettings
 from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
 from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
-from spectroview.fit_engine.vbf_thread import VBFthread
+from spectroview.viewmodel.utils import parse_coords_from_fname
 
 
 
@@ -298,21 +298,15 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             }
         else:
             active_fnames = set()
-        # Filter DataFrame to only include active spectra
-        # Match based on fname format: "map_name_(x, y)"
+        # Build set of (X, Y) tuples from active fnames of this map only
+        # (fname format: "map_name_(x, y)")
         fname_prefix = f"{self.current_map_name}_("
-        
-        # Build set of (X, Y) tuples from active fnames
         active_coords = set()
         for fname in active_fnames:
             if fname.startswith(fname_prefix):
-                # Extract coordinates from fname
-                coords_str = fname[fname.rfind('(')+1:fname.rfind(')')]
-                try:
-                    x_str, y_str = coords_str.split(',')
-                    active_coords.add((float(x_str.strip()), float(y_str.strip())))
-                except (ValueError, AttributeError):
-                    continue
+                xy = parse_coords_from_fname(fname)
+                if xy is not None:
+                    active_coords.add(xy)
         
         if not active_coords:
             # No active spectra for this map, return empty DataFrame with same structure
@@ -336,14 +330,12 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 return
 
             # Use processed data if available, otherwise raw data
-            x_axis = md.x if md.x is not None else md.x0
-            y_matrix = md.Y if md.Y is not None else md.Y0
+            x_axis = md.x_axis
+            y_matrix = md.y_matrix
             
             # Build DataFrame with X, Y columns followed by wavenumber columns
             col_names = ['X', 'Y'] + [str(float(w)) for w in x_axis]
-            
-            import numpy as np
-            import pandas as pd
+
             data = np.hstack([md.coords, y_matrix.astype(np.float64)])
             df = pd.DataFrame(data, columns=col_names)
             
@@ -358,7 +350,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             
             self.notify.emit(f"Map '{self.current_map_name}' saved to CSV.")
         except Exception as e:
-            from PySide6.QtWidgets import QMessageBox
             QMessageBox.critical(None, "Error", f"Error saving map: {e}")
     
     def delete_current_map(self):
@@ -584,14 +575,11 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         """
         coords = []
         for spectrum in spectra:
-            fname = spectrum.fname
-            try:
-                coord_str = fname[fname.rfind('(') + 1:fname.rfind(')')]
-                x_str, y_str = coord_str.split(',')
-                coords.append([float(x_str.strip()), float(y_str.strip())])
-            except (ValueError, AttributeError, IndexError):
+            xy = parse_coords_from_fname(spectrum.fname)
+            if xy is None:
                 # If any spectrum has unparseable coords, disable propagation
                 return None
+            coords.append(list(xy))
 
         return np.array(coords, dtype=np.float64) if coords else None
 
@@ -710,13 +698,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if not tasks:
             return
 
-        self._is_fitting = True
-        self.fit_in_progress.emit(True)
-        self._fit_thread = VBFthread(self.store, tasks)
-        self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
-        self._fit_thread.timings_ready.connect(self.fit_timings_ready.emit)
-        self._fit_thread.finished.connect(self._on_fit_finished)
-        self._fit_thread.start()
+        self._launch_fit_thread(tasks)
 
     def _run_fit_thread(self, fit_model: dict, fnames: list[str], apply_all: bool = False):
         """Override: Run fit thread for Maps workspace loaded fit models.
@@ -742,8 +724,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             for map_name in self.store.map_names:
                 md = self.store.get_map_data(map_name)
                 if md:
-                    x_arr = md.x if md.x is not None else md.x0
-                    x_len = len(x_arr)
+                    x_len = len(md.x_axis)
                     if x_len not in groups:
                         groups[x_len] = []
                     groups[x_len].append((map_name, md))
@@ -780,13 +761,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if not tasks:
             return
 
-        self._is_fitting = True
-        self.fit_in_progress.emit(True)
-        self._fit_thread = VBFthread(self.store, tasks)
-        self._fit_thread.progress_changed.connect(self.fit_progress_updated.emit)
-        self._fit_thread.timings_ready.connect(self.fit_timings_ready.emit)
-        self._fit_thread.finished.connect(self._on_fit_finished)
-        self._fit_thread.start()
+        self._launch_fit_thread(tasks)
 
     def get_fit_results_dataframe(self):
         """Get fit results DataFrame for the current map.

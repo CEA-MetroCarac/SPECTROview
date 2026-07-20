@@ -174,36 +174,21 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_list.set_spectra_names(spectra)
     
     def _on_checkbox_changed(self, item):
-        """Update spectrum.is_active when checkbox state changes."""
+        """Notify the ViewModel when a spectrum's checkbox state changes."""
         if item is None:
             return
-        
         fname = item.data(Qt.UserRole + 1)
         if fname:
-            is_checked = item.checkState() == Qt.Checked
-            md = self.vm.store.get_map_data(fname)
-            if md:
-                md.is_active[0] = is_checked
-    
+            self.vm.set_spectrum_active(fname, item.checkState() == Qt.Checked)
+
     def _on_check_all_toggled(self, checked: bool):
         """Handle check all checkbox toggle."""
-        # Block signals temporarily to avoid triggering individual checkbox handlers
+        # Block signals to avoid triggering per-item checkbox handlers
         self.v_spectra_list.blockSignals(True)
-        
-        # Update all checkboxes in the list
         for i in range(self.v_spectra_list.count()):
-            item = self.v_spectra_list.item(i)
-            item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
-            
-            # Update store
-            fname = item.data(Qt.UserRole + 1)
-            if fname:
-                md = self.vm.store.get_map_data(fname)
-                if md:
-                    md.is_active[0] = checked
-                    
-        # Restore signals
+            self.v_spectra_list.item(i).setCheckState(Qt.Checked if checked else Qt.Unchecked)
         self.v_spectra_list.blockSignals(False)
+        self.vm.set_all_spectra_active(checked)
 
     def setup_connections(self):
         """Connect ViewModel signals and slots to the View components."""

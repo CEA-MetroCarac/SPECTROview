@@ -572,3 +572,56 @@ class TestErrorHandling:
         vm.apply_x_correction(500.0)
         vm.undo_x_correction()
         vm.fit(apply_all=False)  # nothing selected -> no-op, must not raise
+
+
+class TestActiveState:
+    def test_set_spectrum_active_toggles_flag(self, vm):
+        x, y = _synthetic_lorentzian()
+        _add_spectrum(vm, "s1", x, y)
+        vm.set_spectrum_active("s1", False)
+        assert not vm.store.get_map_data("s1").is_active[0]
+        vm.set_spectrum_active("s1", True)
+        assert vm.store.get_map_data("s1").is_active[0]
+
+    def test_set_all_spectra_active(self, vm):
+        x, y = _synthetic_lorentzian()
+        _add_spectrum(vm, "s1", x, y)
+        _add_spectrum(vm, "s2", x, y)
+        vm.set_all_spectra_active(False)
+        assert not any(vm.store.get_map_data(n).is_active[0] for n in vm.store.map_names)
+        vm.set_all_spectra_active(True)
+        assert all(vm.store.get_map_data(n).is_active[0] for n in vm.store.map_names)
+
+    def test_set_spectrum_active_unknown_fname_is_noop(self, vm):
+        vm.set_spectrum_active("missing", False)  # must not raise
+
+
+class TestReceiveSpectra:
+    def test_receive_spectra_ingests_payloads_into_store(self, vm, qapp):
+        x, y = _synthetic_lorentzian()
+        payloads = [{
+            'name': "from_maps_1",
+            'x0': x.astype(np.float64),
+            'Y0': y[None, :].astype(np.float32),
+            'baseline_config': None,
+            'fit_model': None,
+            'range_min': None,
+            'range_max': None,
+            'is_subtracted': False,
+        }]
+        emitted = []
+        vm.spectra_list_changed.connect(lambda info: emitted.append(info))
+        vm.receive_spectra(payloads)
+        assert "from_maps_1" in vm.store.map_names
+        assert emitted, "receive_spectra should refresh the spectra list"
+
+    def test_receive_spectra_skips_duplicate_names(self, vm):
+        x, y = _synthetic_lorentzian()
+        _add_spectrum(vm, "dup", x, y)
+        before = len(vm.store.map_names)
+        vm.receive_spectra([{
+            'name': "dup", 'x0': x.astype(np.float64), 'Y0': y[None, :].astype(np.float32),
+            'baseline_config': None, 'fit_model': None,
+            'range_min': None, 'range_max': None, 'is_subtracted': False,
+        }])
+        assert len(vm.store.map_names) == before

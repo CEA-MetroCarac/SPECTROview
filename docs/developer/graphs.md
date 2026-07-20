@@ -78,7 +78,7 @@ A pure dataclass (113 fields) that stores everything needed to recreate a plot. 
 | Inset (zoom) axes | `inset_enabled`, `inset_bounds`, `inset_xmin`/`xmax`/`ymin`/`ymax`, `inset_show_zoom_indicator` |
 | Export/window geometry | `plot_width`/`height`, `dpi`, `export_width_mm`/`height_mm` |
 
-Note: style templates, plot recipes, and the working-folder setting are **not** `MGraph` fields — they're separate systems built around subsets of these fields (see [Style Templates & Plot Recipes](#style-templates--plot-recipes)).
+Note: style templates, plot recipes, and the working-folder setting are **not** `MGraph` fields — they're separate systems built around subsets of these fields (see [Style Templates & Plot Recipes](#style-templates-plot-recipes)).
 
 ### **`VGraph` — The Rendering Widget**
 
@@ -88,7 +88,7 @@ Each plot in the MDI area is a `VGraph` instance. It holds a Matplotlib `Figure`
 
 Two rendering paths:
 - **`plot(df)`** — full replot: clears and rebuilds the Axes from scratch. Required whenever artists themselves change (series data, colors/markers per point, colormap, secondary/twin axes, annotations, insets) or a broken axis is active/toggled.
-- **`restyle()`** — fast path that repaints an already-rendered Axes in place (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling) without touching plotted data. Returns `False` (forcing a full replot instead) whenever a broken axis is active. See [Live Preview & Restyle Fast Path](#live-preview--restyle-fast-path) for how the Customize dialog decides which path to use.
+- **`restyle()`** — fast path that repaints an already-rendered Axes in place (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling) without touching plotted data. Returns `False` (forcing a full replot instead) whenever a broken axis is active. See [Live Preview & Restyle Fast Path](#live-preview-restyle-fast-path) for how the Customize dialog decides which path to use.
 
 `_set_figure_style()` re-applies `axes.facecolor`/`figure.facecolor`/`axes.labelcolor`/`text.color`/`xtick.color`/`ytick.color`/`axes.edgecolor` from `plt.rcParams` on every render — necessary because `ax.clear()` does not retroactively repaint an Axes built under a different Matplotlib style/theme context, which previously left tick/label/spine colors stuck black after switching to a dark theme.
 
@@ -104,14 +104,14 @@ Separated from `VGraph` for maintainability, this class encapsulates the pure Ma
 
 Both `_plot_wafer`/`_plot_2dmap` resolve `vmin`/`vmax` through `_clear_degenerate_zlim(zmin, zmax)` first, which treats an explicit `zmin == zmax` (both set, equal) the same as unset, falling back to the data-derived range. A handful of pre-existing saved `.graphs` files carry an explicit `zmin == zmax == 0.0` (from an old, since-fixed default) — honoring that literally collapses `matplotlib.colors.Normalize(vmin=0, vmax=0)` to mapping every value to the same color, which is what actually broke color mapping when reopening those files, not the colormap-normalization feature itself.
 
-`_resolve_marker_size(style, fallback)` / `_resolve_edge_color(style, fallback)` centralize the "Unify Marker size / Edge color" behavior (see [Legend / Color Tab](#legend--color-tab)): when `VGraph.unify_marker_style` is `True`, every series uses the graph-wide `scatter_size`/`scatter_edgecolor`; when `False`, each series' `legend_properties[i]` override (if any) wins.
+`_resolve_marker_size(style, fallback)` / `_resolve_edge_color(style, fallback)` centralize the "Unify Marker size / Edge color" behavior (see [Legend / Color Tab](#legend-color-tab)): when `VGraph.unify_marker_style` is `True`, every series uses the graph-wide `scatter_size`/`scatter_edgecolor`; when `False`, each series' `legend_properties[i]` override (if any) wins.
 
 ---
 
 ## **Data Flow: Creating a Plot**
 
 1. **User Action**: The user selects a DataFrame, configures the X/Y/Z axes, and clicks "Add plot" in the `VWorkspaceGraphs` UI.
-2. **Configuration Capture**: The View calls `_collect_plot_config()` to gather all UI settings into a configuration dictionary, then merges in `MSettings.get_default_graph_style()` (the user's "Set as Default Style" baseline, if any — see [Style Templates & Plot Recipes](#style-templates--plot-recipes)) via `_apply_default_style_to_config()`. The collected config's data-identity fields (`x`/`y`/`z`/`df_name`/`plot_style`) always win over the default style, since the default only ever contains appearance fields.
+2. **Configuration Capture**: The View calls `_collect_plot_config()` to gather all UI settings into a configuration dictionary, then merges in `MSettings.get_default_graph_style()` (the user's "Set as Default Style" baseline, if any — see [Style Templates & Plot Recipes](#style-templates-plot-recipes)) via `_apply_default_style_to_config()`. The collected config's data-identity fields (`x`/`y`/`z`/`df_name`/`plot_style`) always win over the default style, since the default only ever contains appearance fields.
 3. **Model Creation**: The View calls `vm.create_graph(plot_config)`. The ViewModel instantiates an `MGraph(graph_id)`, applies the configuration, records an undo point, and returns the graph model.
 4. **Widget Initialization**: The View instantiates a `VGraph(graph_id)` widget and calls `create_plot_widget(dpi)` to set up the Matplotlib canvas.
 5. **Data Filtering**: The View requests the `filtered_df` from the ViewModel by calling `vm.apply_filters(df_name, filters)`.
@@ -387,7 +387,7 @@ A single user-configured root folder (Settings panel) with three subfolders auto
 | `plot_recipe/` | Plot Recipes | `get_plot_recipe_folder()` |
 | `plot_style/` | Style Templates | `get_plot_style_folder()` |
 
-`get_working_folder()` one-time-migrates from the older, separate "Fit model folder"/"Plot template folder" settings if either was previously configured, so existing setups aren't orphaned. A separate setting, `get_default_graph_style()`/`set_default_graph_style()`, stores the "Set as Default Style" baseline (see [Style Templates & Plot Recipes](#style-templates--plot-recipes)) — unrelated to the working folder, but persisted the same way (`QSettings`, disk-backed, survives restarts).
+`get_working_folder()` one-time-migrates from the older, separate "Fit model folder"/"Plot template folder" settings if either was previously configured, so existing setups aren't orphaned. A separate setting, `get_default_graph_style()`/`set_default_graph_style()`, stores the "Set as Default Style" baseline (see [Style Templates & Plot Recipes](#style-templates-plot-recipes)) — unrelated to the working folder, but persisted the same way (`QSettings`, disk-backed, survives restarts).
 
 ### **Save Format (`.graphs`)**
 

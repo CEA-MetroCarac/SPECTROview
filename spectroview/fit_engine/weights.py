@@ -1,6 +1,8 @@
 """Fit-weight computation shared by the GUI's VBFthread and the headless API."""
 import numpy as np
 
+from spectroview.fit_engine.noise import mad_noise, moving_average_5
+
 
 def compute_fit_weights(Y: np.ndarray, fit_params: dict) -> np.ndarray:
     """Compute per-point fit weights the same way the GUI does before every fit.
@@ -27,11 +29,8 @@ def compute_fit_weights(Y: np.ndarray, fit_params: dict) -> np.ndarray:
 
     coef_noise = float(fit_params.get("coef_noise", 0))
     if coef_noise > 0:
-        dy = np.diff(Y, axis=1)
-        ampli_noise = np.median(np.abs(dy), axis=1) / 0.6745 * np.sqrt(2)
-        Y_padded = np.pad(Y, ((0, 0), (2, 2)), mode='edge')
-        ymean = (Y_padded[:, 0:-4] + Y_padded[:, 1:-3] + Y_padded[:, 2:-2] + Y_padded[:, 3:-1] + Y_padded[:, 4:]) / 5.0
-        noise_level = coef_noise * ampli_noise
+        noise_level = coef_noise * mad_noise(Y, axis=1)
+        ymean = moving_average_5(Y)
         weights[ymean < noise_level[:, None]] = 0.0
 
     return weights

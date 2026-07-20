@@ -11,6 +11,7 @@ Handles:
 import numpy as np
 from spectroview.fit_engine.scalar_models import PEAK_MODEL_REGISTRY
 from spectroview.fit_engine.models import BATCHED_MODELS, numerical_jacobian
+from spectroview.fit_engine.noise import mad_noise, moving_average_5
 
 
 class VBFevaluator:
@@ -266,11 +267,16 @@ class VBFevaluator:
         """
         N = p_opt.shape[0]
 
-        # ── One batched evaluation for all spectra ──
-        best_fits = self.evaluate(x, p_opt)  # (N, M)
-
         # ── Build full parameter matrix once ──
         p_full = self._to_full(p_opt)  # (N, K_total)
+
+        # ── Evaluate each peak once; best_fit is their sum (avoids a second
+        #    pass over every peak that a separate evaluate() call would cost) ──
+        M = x.shape[-1] if hasattr(x, "shape") else len(x)
+        Y_peaks = [eval_fn(x, p_full[:, slc]) for _, slc, eval_fn, _, _ in self._peaks]
+        best_fits = np.zeros((N, M))
+        for Y_p in Y_peaks:
+            best_fits += Y_p
 
         # ── Vectorized R² ──
         if weights is not None:
@@ -290,12 +296,6 @@ class VBFevaluator:
             ss_tot = np.sum((Y_data - y_mean[:, None])**2, axis=1)
 
         rsquared = np.where(ss_tot > 0, 1.0 - ss_res / np.maximum(ss_tot, 1e-30), 0.0)
-
-        # ── Evaluate individual peaks ──
-        Y_peaks = []
-        for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
-            Y_p = eval_fn(x, p_full[:, slc] if p_full.ndim == 2 else p_full[slc][None, :])
-            Y_peaks.append(Y_p)
 
         return p_full, success, rsquared, best_fits, Y_peaks
 
@@ -376,17 +376,8 @@ class VBFevaluator:
         it in via the `noise_stats` argument instead of paying for the
         median/smoothing pass twice.
         """
-        if Y.ndim == 2:
-            dy = np.diff(Y, axis=1)
-            ampli_noise = np.median(np.abs(dy), axis=1) / 0.6745 * np.sqrt(2) # (N,)
-            Y_padded = np.pad(Y, ((0, 0), (2, 2)), mode='edge')
-            ymean = (Y_padded[:, 0:-4] + Y_padded[:, 1:-3] + Y_padded[:, 2:-2] + Y_padded[:, 3:-1] + Y_padded[:, 4:]) / 5.0
-        else:
-            dy = np.diff(Y)
-            ampli_noise = np.median(np.abs(dy)) / 0.6745 * np.sqrt(2)
-            ymean = np.convolve(Y, np.ones(5, dtype=np.float64) / 5.0, mode='same')
-
-        return ymean, coef_noise * ampli_noise # noise_level: (N,) or float
+        ymean = moving_average_5(Y)
+        return ymean, coef_noise * mad_noise(Y)  # noise_level: (N,) or scalar
 
     def apply_noise_threshold(self, x: np.ndarray, Y: np.ndarray, p_matrix: np.ndarray, fit_params: dict, p0_matrix=None, noise_stats=None):
         """Force ampli=0 and fwhm=0 for peaks located in noisy areas (highly vectorized)."""

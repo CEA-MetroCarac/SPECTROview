@@ -1,5 +1,4 @@
-# spectroview/core2/__init__.py
-"""Tensor-based high-performance fitting engine (core2).
+"""Tensor-based high-performance fitting engine.
 
 Fits all spectra in a hyperspectral map simultaneously using a custom
 Batched Levenberg-Marquardt optimizer with analytical Jacobians.

@@ -1,4 +1,3 @@
-# spectroview/core2/optimizer.py
 """Batched Levenberg-Marquardt optimizer.
 
 Solves N independent least-squares problems simultaneously using
@@ -11,6 +10,7 @@ Bound handling uses simple projection (clipping) after each step.
 """
 
 import numpy as np
+from scipy.linalg import cho_factor, cho_solve
 
 
 def _finite_or_clean(arr):
@@ -58,7 +58,6 @@ def _batched_solve(A, b):
     x = np.empty_like(b)
     for i in range(Na):
         try:
-            from scipy.linalg import cho_factor, cho_solve
             c, low = cho_factor(A[i])
             x[i] = cho_solve((c, low), b[i])
         except np.linalg.LinAlgError:

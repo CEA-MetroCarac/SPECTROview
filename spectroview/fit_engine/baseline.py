@@ -111,8 +111,6 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
                 val = config.get("coef", 5.0)
                 if meta.get("coef_kwarg") == "lam":
                     val = 10 ** val
-                elif mode == "sonneveld_vesser":
-                    val = int(val * 10)  # simple scaling for niter
                 kwargs[meta["coef_kwarg"]] = val
             if meta.get("order_kwarg"):
                 kwargs[meta["order_kwarg"]] = config.get("order_max", 3)

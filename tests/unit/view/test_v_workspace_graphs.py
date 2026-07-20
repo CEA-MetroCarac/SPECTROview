@@ -136,6 +136,15 @@ class TestSharedGraphToolbar:
         assert widget.toolbar_container.parent() is not widget
         assert widget.toolbar_container.isVisible() is False
 
+    def test_subwindow_has_no_default_qt_window_icon(self, ws, excel_df):
+        """A transparent icon overrides Fusion's default app-logo fallback
+        (a null icon alone still paints the generic Qt logo)."""
+        widget = self._make_graph(ws, excel_df)
+        sub_window = ws.graph_widgets[widget.graph_id][2]
+        icon = sub_window.windowIcon()
+        assert not icon.isNull()
+        assert icon.pixmap(16, 16).toImage().pixelColor(8, 8).alpha() == 0
+
     def test_newly_added_graph_becomes_the_one_shown_in_the_shared_slot(self, ws, excel_df):
         widget = self._make_graph(ws, excel_df)
         assert widget.toolbar_container.parent() is ws.graph_toolbar_slot
@@ -853,7 +862,7 @@ class TestKeyboardShortcuts:
         shortcuts = ws.mdi_area.findChildren(QShortcut)
         by_key = {sc.key().toString(): sc for sc in shortcuts}
 
-        for key in ("Ctrl+Z", "Ctrl+Shift+Z", "Ctrl+C", "Ctrl+V", "Ctrl+E"):
+        for key in ("Ctrl+Z", "Ctrl+Shift+Z", "Ctrl+C", "Ctrl+V", "Ctrl+E", "Ctrl+R"):
             assert key in by_key, f"{key} not registered on mdi_area"
             assert by_key[key].context() == Qt.ShortcutContext.WidgetWithChildrenShortcut
 
@@ -910,6 +919,22 @@ class TestKeyboardShortcuts:
         monkeypatch.setattr(ws, '_show_or_switch_customize_dialog', lambda gid: calls.append(gid))
 
         ws._on_customize_shortcut()
+
+        assert calls == [gw.graph_id]
+
+    def test_rescale_shortcut_is_noop_with_no_active_graph(self, ws):
+        ws._on_rescale_shortcut()  # must not raise
+
+    def test_rescale_shortcut_rescales_the_active_graph(self, ws, excel_df, monkeypatch):
+        """Ctrl+R rescales the active graph (matplotlib Home), like the
+        Spectra/Maps workspaces' rescale shortcut."""
+        gw = self._graph(ws, excel_df)
+        sub_window = ws.graph_widgets[gw.graph_id][2]
+        ws.mdi_area.setActiveSubWindow(sub_window)
+        calls = []
+        monkeypatch.setattr(gw, '_rescale', lambda: calls.append(gw.graph_id))
+
+        ws._on_rescale_shortcut()
 
         assert calls == [gw.graph_id]
 

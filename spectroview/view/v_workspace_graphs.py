@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QDialog, QGridLayout, QApplication, QListWidgetItem, QCompleter, QInputDialog
 )
 from PySide6.QtCore import Qt, Signal, QSize, QUrl
-from PySide6.QtGui import QIcon, QDesktopServices, QBrush, QFont, QShortcut, QKeySequence, QPalette
+from PySide6.QtGui import QIcon, QDesktopServices, QBrush, QFont, QShortcut, QKeySequence, QPalette, QPixmap
 
 from spectroview import ICON_DIR, PLOT_STYLES, AXIS_LABELS
 from spectroview.model.m_settings import MSettings
@@ -114,6 +114,7 @@ class VWorkspaceGraphs(QWidget):
         # Delete all button
         self.btn_delete_all = QPushButton()
         self.btn_delete_all.setIcon(QIcon(os.path.join(ICON_DIR, "trash3.png")))    
+        self.btn_delete_all.setIconSize(QSize(26, 26))
         self.btn_delete_all.setToolTip("Delete all graphs from workspace")
         
         self.btn_delete_all.setMaximumWidth(100)
@@ -122,7 +123,7 @@ class VWorkspaceGraphs(QWidget):
         # Minimize all button -- icon only, no label.
         self.btn_minimize_all = QPushButton()
         self.btn_minimize_all.setIcon(QIcon(os.path.join(ICON_DIR, "minimize_windows.png")))
-        self.btn_minimize_all.setIconSize(QSize(22, 22))
+        self.btn_minimize_all.setIconSize(QSize(26, 26))
         self.btn_minimize_all.setFixedSize(30, 30)
         self.btn_minimize_all.setToolTip("Minimize All")
         toolbar_layout.addWidget(self.btn_minimize_all)
@@ -133,7 +134,7 @@ class VWorkspaceGraphs(QWidget):
         # below (which gets swapped out per active graph).
         self.btn_undo = QPushButton()
         self.btn_undo.setIcon(QIcon(os.path.join(ICON_DIR, "undo.png")))
-        self.btn_undo.setIconSize(QSize(22, 22))
+        self.btn_undo.setIconSize(QSize(26, 26))
         self.btn_undo.setFixedSize(30, 30)
         self.btn_undo.setToolTip("Undo the last action (Ctrl+Z)")
         self.btn_undo.setEnabled(False)
@@ -141,7 +142,7 @@ class VWorkspaceGraphs(QWidget):
 
         self.btn_redo = QPushButton()
         self.btn_redo.setIcon(QIcon(os.path.join(ICON_DIR, "redo.png")))
-        self.btn_redo.setIconSize(QSize(22, 22))
+        self.btn_redo.setIconSize(QSize(26, 26))
         self.btn_redo.setFixedSize(30, 30)
         self.btn_redo.setToolTip("Redo the last undone action (Ctrl+Shift+Z)")
         self.btn_redo.setEnabled(False)
@@ -152,7 +153,7 @@ class VWorkspaceGraphs(QWidget):
         # the shared graph toolbar slot below. Moved here from the side panel.
         self.btn_compose_figure = QPushButton()
         self.btn_compose_figure.setIcon(QIcon(os.path.join(ICON_DIR, "compose.png")))
-        self.btn_compose_figure.setIconSize(QSize(22, 22))
+        self.btn_compose_figure.setIconSize(QSize(26, 26))
         self.btn_compose_figure.setFixedSize(30, 30)
         self.btn_compose_figure.setToolTip("Combine several open graphs into one multi-panel exported figure")
         toolbar_layout.addWidget(self.btn_compose_figure)
@@ -623,6 +624,12 @@ class VWorkspaceGraphs(QWidget):
         customize_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         customize_sc.activated.connect(self._on_customize_shortcut)
 
+        # Ctrl+R rescales the active graph (matplotlib Home), matching the
+        # Spectra/Maps workspaces' rescale shortcut.
+        rescale_sc = QShortcut(QKeySequence("Ctrl+R"), self.mdi_area)
+        rescale_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        rescale_sc.activated.connect(self._on_rescale_shortcut)
+
     def _graph_id_for_subwindow(self, sub_window) -> Optional[int]:
         """graph_id owning `sub_window`, or None if it's not a graph window."""
         for gid, (_gw, _gd, sw) in self.graph_widgets.items():
@@ -653,6 +660,12 @@ class VWorkspaceGraphs(QWidget):
         gid = self._get_active_graph_id()
         if gid is not None:
             self._show_or_switch_customize_dialog(gid)
+
+    def _on_rescale_shortcut(self):
+        gid = self._get_active_graph_id()
+        if gid is not None and gid in self.graph_widgets:
+            graph_widget, _, _ = self.graph_widgets[gid]
+            graph_widget._rescale()
 
     def _update_df_placeholder(self):
         """Update placeholder text for dataframe list based on state."""
@@ -2008,6 +2021,12 @@ class MdiSubWindow(QMdiSubWindow):
         super().__init__(*args, **kwargs)
         self.graph_id = graph_id
         self.mdi_area = mdi_area  # Reference to the parent QMdiArea
+        # Drop the default Qt window icon from the title bar. A null icon is
+        # not enough -- Fusion then falls back to the generic app logo -- so
+        # set a fully transparent pixmap, which paints nothing.
+        _blank = QPixmap(16, 16)
+        _blank.fill(Qt.transparent)
+        self.setWindowIcon(QIcon(_blank))
         self._fixing_palette = False
         self._fix_title_shadow()
 

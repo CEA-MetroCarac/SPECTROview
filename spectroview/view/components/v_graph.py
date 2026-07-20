@@ -31,6 +31,10 @@ _THEME_STYLE_MAP = {
     "dark": PLOT_POLICY_DARK,
     "soft_dark": PLOT_POLICY_SOFT_DARK,
 }
+
+# matplotlib nav-toolbar action text -> our own colorful icon (theme-independent,
+# so it needs no tinting), mirroring the Spectra viewer's rescale/zoom buttons.
+_CUSTOM_TOOLBAR_ICONS = {"Home": "rescale2.png", "Zoom": "magnify2.png", "Pan": "pan2.png"}
 from spectroview.view.components.customize_graph.customize_graph_dialog import (
     EditLineDialog, EditTextDialog, EditArrowDialog, EditSpanDialog,
     EditBoxDialog, EditCalloutDialog,
@@ -147,20 +151,30 @@ class VGraph(QWidget):
                 except RuntimeError:
                     return  # toolbar's C++ object already deleted
                 for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
-                    if text in action_dict and image_file is not None:
+                    if text not in action_dict:
+                        continue
+                    # Our custom icons are colorful and theme-independent, so
+                    # re-assert them here instead of re-tinting matplotlib's.
+                    if text in _CUSTOM_TOOLBAR_ICONS:
+                        action_dict[text].setIcon(QIcon(f"{ICON_DIR}/{_CUSTOM_TOOLBAR_ICONS[text]}"))
+                    elif image_file is not None:
                         try:
-                            icon = self.toolbar._icon(image_file + '.png')
-                            action_dict[text].setIcon(icon)
+                            action_dict[text].setIcon(self.toolbar._icon(image_file + '.png'))
                         except Exception:
                             pass
-                
+
         self.toolbar_filter = ToolbarEventFilter(self.toolbar)
         self.toolbar.installEventFilter(self.toolbar_filter)
 
         self.toolbar.setIconSize(QSize(30, 30))  # Set larger icon size
         for action in self.toolbar.actions():
-            if action.text() in ['Save', 'Back', 'Forward', 'Subplots', 'Customize']:
+            text = action.text()
+            if text in ['Save', 'Back', 'Forward', 'Subplots', 'Customize']:
                 action.setVisible(False)
+            elif text in _CUSTOM_TOOLBAR_ICONS:
+                action.setIcon(QIcon(f"{ICON_DIR}/{_CUSTOM_TOOLBAR_ICONS[text]}"))
+            if text == 'Home':
+                action.setToolTip("Rescale plot to fit data (Ctrl+R)")
         
         # Create Replicate button
         self.btn_replicate = QPushButton()
@@ -223,22 +237,21 @@ class VGraph(QWidget):
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
         toolbar_layout.setSpacing(8)
-        toolbar_layout.addWidget(self.toolbar)
-
-        # Vertical separator between the matplotlib nav buttons and our own
-        # action buttons, which then get pushed flush against the right
-        # edge of the (now workspace-wide, see VWorkspaceGraphs) toolbar.
-        separator = QFrame()
-        separator.setFrameShape(QFrame.VLine)
-        separator.setFrameShadow(QFrame.Sunken)
-        toolbar_layout.addWidget(separator)
-
-        toolbar_layout.addStretch()
         toolbar_layout.addWidget(self.btn_replicate)
         toolbar_layout.addWidget(self.btn_customize)
         toolbar_layout.addWidget(self.btn_copy_figure)
         toolbar_layout.addWidget(self.btn_export)
         toolbar_layout.addWidget(self.btn_style_menu)
+
+        toolbar_layout.addStretch()
+
+        # Vertical separator between our own action buttons and the matplotlib nav buttons
+        separator = QFrame()
+        separator.setFrameShape(QFrame.VLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        toolbar_layout.addWidget(separator)
+
+        toolbar_layout.addWidget(self.toolbar)
         
         # Create container widget for toolbar layout -- kept parentless and
         # hidden here; VWorkspaceGraphs.sync_active_graph_toolbar() reparents
@@ -266,6 +279,12 @@ class VGraph(QWidget):
     def copy_to_clipboard(self):
         """Copy the current figure to clipboard."""
         copy_fig_to_clb(self.canvas)
+
+    def _rescale(self):
+        """Reset the plot to its original auto-scaled view -- the matplotlib
+        toolbar's Home action, exposed for the Ctrl+R shortcut."""
+        if getattr(self, 'toolbar', None) is not None:
+            self.toolbar.home()
 
     def _on_export_clicked(self):
         """Export button: plain click exports just this graph; Ctrl+Click

@@ -26,3 +26,9 @@ site/
 docs/user_manual/
 docs/user_manual_images/
 .cache/
+
+# Claude Code: personal/machine-specific config stays out of the shared repo.
+# Committed & team-shared: CLAUDE.md, .claude/settings.json, .claude/rules/*
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/scheduled_tasks.lock

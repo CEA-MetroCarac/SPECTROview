@@ -1430,14 +1430,16 @@ class TestExportButtonModifierClick:
 
 
 class TestToolbarIconsAndRescale:
-    """Home/Zoom nav-toolbar buttons wear our colorful icons (theme-agnostic,
-    like the Spectra viewer's rescale/zoom), and _rescale() drives matplotlib
-    Home for the Ctrl+R shortcut."""
+    """Home/Pan/Zoom nav-toolbar buttons wear our colorful icons (theme-
+    agnostic, like the Spectra viewer's rescale/zoom), and _rescale() drives
+    matplotlib Home for the Ctrl+R shortcut."""
 
-    def test_home_and_zoom_have_custom_icons_and_home_advertises_ctrl_r(self, vg):
+    def test_mapped_buttons_have_custom_icons_and_home_advertises_ctrl_r(self, vg):
+        from spectroview.view.components.v_graph import _CUSTOM_TOOLBAR_ICONS
         actions = {a.text(): a for a in vg.toolbar.actions() if a.text()}
-        assert not actions["Home"].icon().isNull()
-        assert not actions["Zoom"].icon().isNull()
+        for name in _CUSTOM_TOOLBAR_ICONS:
+            assert name in actions, name
+            assert not actions[name].icon().isNull(), name
         assert "Ctrl+R" in actions["Home"].toolTip()
 
     def test_rescale_delegates_to_toolbar_home(self, vg, monkeypatch):
@@ -1449,7 +1451,8 @@ class TestToolbarIconsAndRescale:
     def test_custom_icons_survive_a_palette_change(self, vg):
         """The theme-change icon refresh must re-assert our custom icons, not
         overwrite them with matplotlib's tinted defaults."""
+        from spectroview.view.components.v_graph import _CUSTOM_TOOLBAR_ICONS
         vg.toolbar_filter._update_icons()
         actions = {a.text(): a for a in vg.toolbar.actions() if a.text()}
-        assert not actions["Home"].icon().isNull()
-        assert not actions["Zoom"].icon().isNull()
+        for name in _CUSTOM_TOOLBAR_ICONS:
+            assert not actions[name].icon().isNull(), name

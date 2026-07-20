@@ -153,11 +153,8 @@ class CustomizeAxis(QWidget):
                     data_min, data_max = float(series.min()), float(series.max())
                     pad = (data_max - data_min) * 0.1 or 1.0
                     lo, hi = data_min - pad, data_max + pad
-            # Blocked: setRange() alone can clamp a stale slider value into
-            # the new bounds and fire valueChanged, stomping an unset
-            # spinbox with a real number via _on_range_slider_changed.
-            # _update_range_slider_from_spins() below is the single source
-            # of truth for repositioning the slider from the spinboxes.
+            # Blocked: setRange() can clamp a stale slider value and fire
+            # valueChanged, stomping an unset spinbox via _on_range_slider_changed.
             slider.blockSignals(True)
             slider.setRange(lo, hi)
             slider.blockSignals(False)

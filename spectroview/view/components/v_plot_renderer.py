@@ -1,26 +1,16 @@
 import numpy as np
 import pandas as pd
-from scipy import stats
 import matplotlib.patches as patches
 from matplotlib.colors import LogNorm, CenteredNorm
-
-from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS
-from spectroview.viewmodel.utils import show_alert
 
 
 def _clear_degenerate_zlim(zmin, zmax):
     """Treat an explicit zmin == zmax (both set, equal) as unset (None, None).
 
-    A handful of pre-existing saved .graphs files carry an explicit
-    zmin == zmax == 0.0 (apparently from an old, since-fixed default) --
-    honoring that literally collapses the wafer/2Dmap color scale to a
-    single flat color (matplotlib.colors.Normalize(vmin=0, vmax=0) maps
-    every value to the same 0.0), which is what actually broke color
-    mapping when reopening those files, not the colormap-normalization
-    feature itself. A genuinely degenerate range never carries useful
-    information, so fall back to the data-derived range the same way an
-    unset limit already does, rather than rendering a flat, uninformative
-    heatmap/wafer.
+    Old saved .graphs files can carry zmin == zmax == 0.0; honoring that
+    collapses the wafer/2Dmap color scale to a single flat color
+    (Normalize(vmin=0, vmax=0)). A degenerate range never carries useful
+    information, so fall back to the data-derived range like an unset limit.
     """
     if zmin is not None and zmax is not None and zmin == zmax:
         return None, None
@@ -314,7 +304,6 @@ class PlotRenderer:
             sub_width = box_width / n_hue
             offsets = np.linspace(-(box_width - sub_width) / 2,
                                   (box_width - sub_width) / 2, n_hue)
-            legend_handles = []
             for h_idx, cat in enumerate(hue_cats):
                 subset = plot_df[plot_df[self.vg.z] == cat]
                 color = colors[h_idx % len(colors)]

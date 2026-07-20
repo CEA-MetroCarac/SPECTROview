@@ -45,14 +45,8 @@ class VMWorkspaceGraphs(QObject):
         self._undo_stack: List[Dict[int, dict]] = []
         self._redo_stack: List[Dict[int, dict]] = []
         self._max_undo_depth = 50
-        # begin_undo_batch()/end_undo_batch() let a View handler that makes
-        # several create_graph()/update_graph()/delete_graph() calls for
-        # ONE logical user action (e.g. "Update plot" syncs legend
-        # properties in a follow-up call after the main property update)
-        # collapse them into a single undo step instead of one per call.
-        # Depth-counted so nested batches (e.g. applying a template loops
-        # _create_and_display_plot(), which is itself batch-wrapped)
-        # compose correctly -- only the outermost begin/end pair matters.
+        # begin/end_undo_batch() collapse several graph calls from one user
+        # action into a single undo step; depth-counted so nested batches compose.
         self._undo_batch_depth = 0
         self._undo_batch_pending = False
 
@@ -191,7 +185,7 @@ class VMWorkspaceGraphs(QObject):
                 self.notify.emit(f"Error loading {Path(file_path).name}: {e}")
         
         if skipped:
-            self.notify.emit(f"Already loaded and skipped:\n" + "\n".join(skipped))
+            self.notify.emit("Already loaded and skipped:\n" + "\n".join(skipped))
         
         self._emit_dataframes_list()
         

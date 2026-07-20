@@ -167,169 +167,104 @@ class CustomizeAnnotations(QWidget):
             self.graph_widget.graph_id, {'annotations': self.graph_widget.annotations}
         )
 
-    def _add_vline(self):
-        """Add vertical line at plot center."""
-        center_x, _ = self._get_plot_center()
-
-        ann_id = f"vline_{int(time.time() * 1000000)}"
-        annotation = {
-            'id': ann_id,
-            'type': 'vline',
-            'x': center_x,
-            'color': 'red',
-            'linestyle': '--',
-            'linewidth': 1.5,
-            'label': f'V-Line at x={center_x:.2f}'
-        }
-
+    def _commit_new_annotation(self, annotation: dict):
+        """Assign a unique id, append to the graph, and sync model/plot/list."""
+        annotation['id'] = f"{annotation['type']}_{int(time.time() * 1000000)}"
         self.graph_widget.annotations.append(annotation)
         self._notify_annotations_changed()
         self._refresh_plot()
         self.load_annotations()
+
+    def _add_vline(self):
+        """Add vertical line at plot center."""
+        center_x, _ = self._get_plot_center()
+        self._commit_new_annotation({
+            'type': 'vline',
+            'x': center_x,
+            'color': 'red', 'linestyle': '--', 'linewidth': 1.5,
+            'label': f'V-Line at x={center_x:.2f}',
+        })
 
     def _add_hline(self):
         """Add horizontal line at plot center."""
         _, center_y = self._get_plot_center()
-
-        ann_id = f"hline_{int(time.time() * 1000000)}"
-        annotation = {
-            'id': ann_id,
+        self._commit_new_annotation({
             'type': 'hline',
             'y': center_y,
-            'color': 'blue',
-            'linestyle': '--',
-            'linewidth': 1.5,
-            'label': f'H-Line at y={center_y:.2f}'
-        }
-
-        self.graph_widget.annotations.append(annotation)
-        self._notify_annotations_changed()
-        self._refresh_plot()
-        self.load_annotations()
+            'color': 'blue', 'linestyle': '--', 'linewidth': 1.5,
+            'label': f'H-Line at y={center_y:.2f}',
+        })
 
     def _add_text(self):
         """Add text annotation at plot center."""
         center_x, center_y = self._get_plot_center()
-
-        ann_id = f"text_{int(time.time() * 1000000)}"
-        annotation = {
-            'id': ann_id,
+        self._commit_new_annotation({
             'type': 'text',
-            'x': center_x,
-            'y': center_y,
-            'text': 'Text',
-            'fontsize': 11,
-            'color': 'black',
-            'ha': 'center',
-            'va': 'center',
+            'x': center_x, 'y': center_y,
+            'text': 'Text', 'fontsize': 11, 'color': 'black',
+            'ha': 'center', 'va': 'center',
             'bbox': {
                 'facecolor': 'yellow',
                 'edgecolor': 'black',
                 'boxstyle': 'round,pad=0.3',
                 'alpha': 0.7
-            }
-        }
-
-        self.graph_widget.annotations.append(annotation)
-
-        self._notify_annotations_changed()
-        self._refresh_plot()
-        self.load_annotations()
+            },
+        })
 
     def _add_arrow(self):
         """Add a short diagonal arrow centered on the plot view."""
         center_x, center_y = self._get_plot_center()
         x_range, y_range = self._get_plot_extent()
-
-        ann_id = f"arrow_{int(time.time() * 1000000)}"
-        annotation = {
-            'id': ann_id,
+        self._commit_new_annotation({
             'type': 'arrow',
             'x1': center_x - x_range * 0.1, 'y1': center_y - y_range * 0.1,
             'x2': center_x + x_range * 0.1, 'y2': center_y + y_range * 0.1,
             'color': 'black', 'linewidth': 1.5, 'linestyle': '-',
-        }
-
-        self.graph_widget.annotations.append(annotation)
-        self._notify_annotations_changed()
-        self._refresh_plot()
-        self.load_annotations()
+        })
 
     def _add_vspan(self):
         """Add a vertical shaded span, 20% of the X range, centered."""
         center_x, _ = self._get_plot_center()
         x_range, _ = self._get_plot_extent()
-
-        ann_id = f"vspan_{int(time.time() * 1000000)}"
-        annotation = {
-            'id': ann_id,
+        self._commit_new_annotation({
             'type': 'vspan',
             'x1': center_x - x_range * 0.1, 'x2': center_x + x_range * 0.1,
             'color': 'orange', 'alpha': 0.3,
-        }
-
-        self.graph_widget.annotations.append(annotation)
-        self._notify_annotations_changed()
-        self._refresh_plot()
-        self.load_annotations()
+        })
 
     def _add_hspan(self):
         """Add a horizontal shaded span, 20% of the Y range, centered."""
         _, center_y = self._get_plot_center()
         _, y_range = self._get_plot_extent()
-
-        ann_id = f"hspan_{int(time.time() * 1000000)}"
-        annotation = {
-            'id': ann_id,
+        self._commit_new_annotation({
             'type': 'hspan',
             'y1': center_y - y_range * 0.1, 'y2': center_y + y_range * 0.1,
             'color': 'orange', 'alpha': 0.3,
-        }
-
-        self.graph_widget.annotations.append(annotation)
-        self._notify_annotations_changed()
-        self._refresh_plot()
-        self.load_annotations()
+        })
 
     def _add_box(self):
         """Add a rectangle box, 20%x20% of the plot view, centered."""
         center_x, center_y = self._get_plot_center()
         x_range, y_range = self._get_plot_extent()
         width, height = x_range * 0.2, y_range * 0.2
-
-        ann_id = f"box_{int(time.time() * 1000000)}"
-        annotation = {
-            'id': ann_id,
+        self._commit_new_annotation({
             'type': 'box',
             'x': center_x - width / 2, 'y': center_y - height / 2,
             'width': width, 'height': height,
             'facecolor': 'yellow', 'edgecolor': 'black', 'linewidth': 1.5, 'alpha': 0.3,
-        }
-
-        self.graph_widget.annotations.append(annotation)
-        self._notify_annotations_changed()
-        self._refresh_plot()
-        self.load_annotations()
+        })
 
     def _add_callout(self):
         """Add a callout: text offset up-right from a point at plot center,
         connected by an arrow."""
         center_x, center_y = self._get_plot_center()
         x_range, y_range = self._get_plot_extent()
-
-        ann_id = f"callout_{int(time.time() * 1000000)}"
-        annotation = {
-            'id': ann_id,
+        self._commit_new_annotation({
             'type': 'callout',
             'x': center_x, 'y': center_y,
             'tx': center_x + x_range * 0.15, 'ty': center_y + y_range * 0.15,
             'text': 'Callout', 'fontsize': 11, 'color': 'black', 'arrowcolor': 'black',
-        }
-
-        self.graph_widget.annotations.append(annotation)
-        self._notify_annotations_changed()
-        self._refresh_plot()
-        self.load_annotations()
+        })
 
     def _edit_annotation(self):
         """Edit selected annotation."""

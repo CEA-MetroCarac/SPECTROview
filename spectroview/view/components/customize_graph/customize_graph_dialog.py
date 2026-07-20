@@ -241,21 +241,6 @@ class CustomizeGraphDialog(QDialog):
         layout.addWidget(self.axis_widget)
         return tab
 
-    def open_legend_tab(self):
-        """Open the dialog and switch to the Legend tab."""
-        self.legend_widget.load_legend_properties()
-        self.tabs.setCurrentIndex(self.tabs.indexOf(self.legend_widget.parent()))
-        self.show()
-        self.raise_()
-        self.activateWindow()
-
-    def open_axis_tab(self):
-        """Open the dialog and switch to the AXIS tab."""
-        self.tabs.setCurrentIndex(self.tabs.indexOf(self.axis_widget.parent()))
-        self.show()
-        self.raise_()
-        self.activateWindow()
-
     def switch_graph(self, graph_widget, graph_id):
         """Switch the dialog to a different graph widget.
 

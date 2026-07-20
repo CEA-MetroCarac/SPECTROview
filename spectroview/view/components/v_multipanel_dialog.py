@@ -227,15 +227,9 @@ class VMultiPanelDialog(QDialog):
         the live workspace is never left mutated.
 
         A graph with an active broken axis is composed as a single
-        simplified (unbroken) panel via _render_series_on() instead of the
-        normal plot() -- a broken axis fundamentally needs two Axes, but a
-        composed grid cell is only one; reusing the live graph's own
-        two-panel layout here would mean removing/redrawing onto the
-        *live* secondary panel while composing, corrupting the on-screen
-        graph. Documented scope limit (see graph_workspace_review.md
-        Phase 4) -- _render_series_on() draws series+annotations directly
-        without going through _setup_broken_axes()/ax_break_secondary at
-        all, so it cannot disturb the live layout.
+        simplified (unbroken) panel via _render_series_on(): a broken axis
+        needs two Axes but a grid cell is only one, and reusing the live
+        graph's own two-panel layout would corrupt the on-screen graph.
         """
         original_ax = gw.ax
         original_figure = gw.figure

@@ -5,7 +5,7 @@ from typing import Optional
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
     QComboBox, QCheckBox, QLineEdit, QSplitter,
-    QMdiArea, QMdiSubWindow, QTabWidget, QGroupBox, QMessageBox, QFrame, QScrollArea,
+    QMdiArea, QMdiSubWindow, QTabWidget, QGroupBox, QMessageBox, QFrame,
     QDialog, QGridLayout, QApplication, QListWidgetItem, QCompleter, QInputDialog
 )
 from PySide6.QtCore import Qt, Signal, QSize, QUrl
@@ -157,15 +157,8 @@ class VWorkspaceGraphs(QWidget):
         self.btn_compose_figure.setToolTip("Combine several open graphs into one multi-panel exported figure")
         toolbar_layout.addWidget(self.btn_compose_figure)
 
-        # Shared graph toolbar slot: every VGraph builds its own matplotlib
-        # nav toolbar + action buttons (Replicate/Customize/Copy/Export/
-        # Style) but never shows them itself -- sync_active_graph_toolbar()
-        # reparents whichever graph is currently active into this one slot,
-        # so all graphs visually share a single toolbar instead of each MDI
-        # window carrying its own identical copy. Given stretch=1 so it
-        # fills the remaining width -- the graph's own internal stretch
-        # (see VGraph.create_plot_widget) then pushes its action buttons
-        # flush against the right edge of the whole toolbar.
+        # Shared slot the active graph's toolbar_container is reparented into
+        # (see _sync_active_graph_toolbar); stretch=1 fills the remaining width.
         self.graph_toolbar_slot = QWidget()
         self._graph_toolbar_slot_layout = QHBoxLayout(self.graph_toolbar_slot)
         self._graph_toolbar_slot_layout.setContentsMargins(0, 0, 0, 0)
@@ -413,106 +406,61 @@ class VWorkspaceGraphs(QWidget):
     
 
     
+    def _build_secondary_axis_group(self, key: str, title: str) -> QGroupBox:
+        """One secondary-axis group box (column combo + log toggle + label
+        edit); creates self.cbb_<key>, self.cb_<key>log, self.edit_<key>label."""
+        name = key.upper()
+        group = QGroupBox(title)
+        layout = QVBoxLayout(group)
+        layout.setContentsMargins(5, 2, 5, 2)
+        layout.setSpacing(2)
+
+        col_layout = QHBoxLayout()
+        col_layout.addWidget(QLabel(f"{name}:"))
+        combo = QComboBox()
+        combo.setFixedWidth(200)
+        setattr(self, f'cbb_{key}', combo)
+        col_layout.addWidget(combo)
+        log_cb = QCheckBox("Log scale")
+        setattr(self, f'cb_{key}log', log_cb)
+        col_layout.addWidget(log_cb)
+        col_layout.addStretch()
+        layout.addLayout(col_layout)
+
+        label_layout = QHBoxLayout()
+        label_layout.addWidget(QLabel(f"{name} label:"))
+        edit = QLineEdit()
+        edit.setPlaceholderText(f"{name} axis label")
+        completer = QCompleter(AXIS_LABELS)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        completer.setCompletionMode(QCompleter.PopupCompletion)
+        edit.setCompleter(completer)
+        setattr(self, f'edit_{key}label', edit)
+        label_layout.addWidget(edit)
+        layout.addLayout(label_layout)
+
+        return group
+
     def _create_more_options_tab(self):
         """Create the 'Plot multiple Axes' tab with Y2, Y3, and X2 controls."""
         tab_more = QWidget()
         tab_more_layout = QVBoxLayout(tab_more)
         tab_more_layout.setContentsMargins(4, 4, 4, 4)
         tab_more_layout.setSpacing(6)
-        
-        # ── Secondary Y axis ──
-        y2_group = QGroupBox("Secondary Y axis (right, red):")
-        y2_layout = QVBoxLayout(y2_group)
-        y2_layout.setContentsMargins(5, 2, 5, 2)
-        y2_layout.setSpacing(2)
-        
-        y2_col_layout = QHBoxLayout()
-        y2_col_layout.addWidget(QLabel("Y2:"))
-        self.cbb_y2 = QComboBox()
-        self.cbb_y2.setFixedWidth(200)
-        y2_col_layout.addWidget(self.cbb_y2)
-        self.cb_y2log = QCheckBox("Log scale")
-        y2_col_layout.addWidget(self.cb_y2log)
-        y2_col_layout.addStretch()
-        y2_layout.addLayout(y2_col_layout)
-        
-        y2_label_layout = QHBoxLayout()
-        y2_label_layout.addWidget(QLabel("Y2 label:"))
-        self.edit_y2label = QLineEdit()
-        self.edit_y2label.setPlaceholderText("Y2 axis label")
-        completer_y2 = QCompleter(AXIS_LABELS)
-        completer_y2.setCaseSensitivity(Qt.CaseInsensitive)
-        completer_y2.setCompletionMode(QCompleter.PopupCompletion)
-        self.edit_y2label.setCompleter(completer_y2)
-        y2_label_layout.addWidget(self.edit_y2label)
-        y2_layout.addLayout(y2_label_layout)
-        
-        tab_more_layout.addWidget(y2_group)
-        
-        # ── Tertiary Y axis ──
-        y3_group = QGroupBox("Tertiary Y axis (right offset, green):")
-        y3_layout = QVBoxLayout(y3_group)
-        y3_layout.setContentsMargins(5, 2, 5, 2)
-        y3_layout.setSpacing(2)
-        
-        y3_col_layout = QHBoxLayout()
-        y3_col_layout.addWidget(QLabel("Y3:"))
-        self.cbb_y3 = QComboBox()
-        self.cbb_y3.setFixedWidth(200)
-        y3_col_layout.addWidget(self.cbb_y3)
-        self.cb_y3log = QCheckBox("Log scale")
-        y3_col_layout.addWidget(self.cb_y3log)
-        y3_col_layout.addStretch()
-        y3_layout.addLayout(y3_col_layout)
-        
-        y3_label_layout = QHBoxLayout()
-        y3_label_layout.addWidget(QLabel("Y3 label:"))
-        self.edit_y3label = QLineEdit()
-        self.edit_y3label.setPlaceholderText("Y3 axis label")
-        completer_y3 = QCompleter(AXIS_LABELS)
-        completer_y3.setCaseSensitivity(Qt.CaseInsensitive)
-        completer_y3.setCompletionMode(QCompleter.PopupCompletion)
-        self.edit_y3label.setCompleter(completer_y3)
-        y3_label_layout.addWidget(self.edit_y3label)
-        y3_layout.addLayout(y3_label_layout)
-        
-        tab_more_layout.addWidget(y3_group)
-        
-        # ── Secondary X axis ──
-        x2_group = QGroupBox("Secondary X axis (top, purple):")
-        x2_layout = QVBoxLayout(x2_group)
-        x2_layout.setContentsMargins(5, 2, 5, 2)
-        x2_layout.setSpacing(2)
-        
-        x2_col_layout = QHBoxLayout()
-        x2_col_layout.addWidget(QLabel("X2:"))
-        self.cbb_x2 = QComboBox()
-        self.cbb_x2.setFixedWidth(200)
-        x2_col_layout.addWidget(self.cbb_x2)
-        self.cb_x2log = QCheckBox("Log scale")
-        x2_col_layout.addWidget(self.cb_x2log)
-        x2_col_layout.addStretch()
-        x2_layout.addLayout(x2_col_layout)
-        
-        x2_label_layout = QHBoxLayout()
-        x2_label_layout.addWidget(QLabel("X2 label:"))
-        self.edit_x2label = QLineEdit()
-        self.edit_x2label.setPlaceholderText("X2 axis label")
-        completer_x2 = QCompleter(AXIS_LABELS)
-        completer_x2.setCaseSensitivity(Qt.CaseInsensitive)
-        completer_x2.setCompletionMode(QCompleter.PopupCompletion)
-        self.edit_x2label.setCompleter(completer_x2)
-        x2_label_layout.addWidget(self.edit_x2label)
-        x2_layout.addLayout(x2_label_layout)
-        
+
+        tab_more_layout.addWidget(
+            self._build_secondary_axis_group("y2", "Secondary Y axis (right, red):"))
+        tab_more_layout.addWidget(
+            self._build_secondary_axis_group("y3", "Tertiary Y axis (right offset, green):"))
+
+        x2_group = self._build_secondary_axis_group("x2", "Secondary X axis (top, purple):")
         info_x2 = QLabel("Applicable plot styles: point, scatter, line")
         info_x2.setStyleSheet("color: gray; font-style: italic; font-size: 10px;")
-        x2_layout.addWidget(info_x2)
-        
+        x2_group.layout().addWidget(info_x2)
         tab_more_layout.addWidget(x2_group)
-        
+
         tab_more_layout.addStretch()
-        
+
         return tab_more
     
     def _setup_action_buttons(self, parent_layout):
@@ -675,16 +623,20 @@ class VWorkspaceGraphs(QWidget):
         customize_sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         customize_sc.activated.connect(self._on_customize_shortcut)
 
+    def _graph_id_for_subwindow(self, sub_window) -> Optional[int]:
+        """graph_id owning `sub_window`, or None if it's not a graph window."""
+        for gid, (_gw, _gd, sw) in self.graph_widgets.items():
+            if sw == sub_window:
+                return gid
+        return None
+
     def _get_active_graph_id(self) -> Optional[int]:
         """graph_id of the currently active MDI subwindow, or None if no
         graph window is active."""
         active_subwindow = self.mdi_area.activeSubWindow()
         if not active_subwindow:
             return None
-        for gid, (_gw, _gd, sw) in self.graph_widgets.items():
-            if sw == active_subwindow:
-                return gid
-        return None
+        return self._graph_id_for_subwindow(active_subwindow)
 
     def _on_copy_figure_shortcut(self):
         gid = self._get_active_graph_id()
@@ -907,16 +859,11 @@ class VWorkspaceGraphs(QWidget):
         self._create_and_display_plot(plot_config, filters=current_filters)
 
     def _apply_default_style_to_config(self, plot_config: dict) -> None:
-        """Merge the user's "Set as Default Style" baseline (if any) under
-        a freshly-collected plot_config, for a graph being built from
-        scratch (Add Plot / Add Multi-Wafer) -- never for
-        _on_replicate_graph() or recipe-apply, whose configs already carry
-        an intentional, fully-specified style that must not be silently
-        overwritten. plot_config's own keys always win: the default style
-        only ever contains graph_style.STYLE_FIELD_NAMES keys, so there's
-        no collision with plot_config's data-identity fields (x/y/z/
-        df_name/plot_style) in practice, but `update` (not overwrite)
-        keeps that guarantee explicit rather than assumed."""
+        """Merge the "Set as Default Style" baseline (if any) under a
+        freshly-collected plot_config, for graphs built from scratch (Add
+        Plot / Add Multi-Wafer) only -- never for replicate/recipe-apply,
+        whose configs already carry an intentional, fully-specified style.
+        plot_config's own keys always win over the default style."""
         default_style = self.m_settings.get_default_graph_style()
         if default_style:
             # Prevent the default style from forcing top/right/bottom spines onto a wafer plot
@@ -982,7 +929,7 @@ class VWorkspaceGraphs(QWidget):
         # bookkeeping, not a user edit, so it must never be undo-tracked.
         graph_model.legend_properties = graph_widget.legend_properties
 
-        sub_window = self._create_mdi_subwindow(graph_widget, graph_model)
+        sub_window = self._create_mdi_subwindow(graph_model)
         graph_dialog = self._wrap_graph_in_dialog(graph_widget)
         sub_window.setWidget(graph_dialog)
 
@@ -1047,15 +994,10 @@ class VWorkspaceGraphs(QWidget):
     def _refresh_recipe_and_style_stores(self) -> None:
         """Rebuild both stores from the *current* Working Folder setting.
 
-        Fixes a real bug: self.recipe_store/self.style_template_store used
-        to be built once in __init__ and never touched again, so a Working
-        Folder configured (or changed) after this widget already existed
-        -- i.e. almost always, since it's built at app startup -- silently
-        never took effect until restart, even though the setting itself
-        saved correctly. Reconstructing here (cheap: the constructor is
-        just a folder scan) guarantees correctness at the point of use
-        without needing a signal connection from VMSettings all the way
-        back to this unrelated ViewModel/View."""
+        Called at the top of every apply/save handler (cheap: just a folder
+        scan) so a Working Folder configured after startup takes effect
+        immediately -- built-once-in-__init__ stores silently ignored the
+        setting until an app restart."""
         self.recipe_store = MPlotRecipeStore(self.m_settings.get_plot_recipe_folder())
         self.style_template_store = MStyleTemplateStore(self.m_settings.get_plot_style_folder())
 
@@ -1311,17 +1253,11 @@ class VWorkspaceGraphs(QWidget):
                 QMessageBox.warning(self, "No Plot Selected", "Please select a plot to update.")
                 return
 
-            # Find the corresponding graph
-            graph_widget = None
-            graph_model = None
-            for gid, (gw, gd, sw) in self.graph_widgets.items():
-                if sw == active_subwindow:
-                    graph_widget = gw
-                    graph_model = self.vm.get_graph(gid)
-                    break
-
-            if not graph_widget or not graph_model:
+            gid = self._graph_id_for_subwindow(active_subwindow)
+            graph_model = self.vm.get_graph(gid) if gid is not None else None
+            if not graph_model:
                 return
+            graph_widget = self.graph_widgets[gid][0]
 
             # Collect updated plot properties from GUI
             plot_config = self._collect_plot_config()
@@ -1406,11 +1342,7 @@ class VWorkspaceGraphs(QWidget):
                 if self._customize_dialog.graph_id == graph_model.graph_id:
                     self._customize_dialog.legend_widget.load_legend_properties()
 
-            # Update window title
-            title = f"{graph_model.graph_id}-{graph_model.plot_style}: [{graph_model.x}] vs [{graph_model.y[0] if graph_model.y else 'None'}]"
-            if graph_model.z:
-                title += f" - [{graph_model.z}]"
-            active_subwindow.setWindowTitle(title)
+            active_subwindow.setWindowTitle(self._graph_window_title(graph_model))
 
             # create_plot_widget() rebuilt this graph's toolbar_container --
             # no subWindowActivated fires here since it's already active, so
@@ -1655,31 +1587,17 @@ class VWorkspaceGraphs(QWidget):
         )
         
         if reply == QMessageBox.Yes:
-            # Close singleton customize dialog if open
-            if self._customize_dialog is not None:
-                self._customize_dialog.close()
-                self._customize_dialog = None
-
-            # Disconnect `closed` first: a programmatic batch teardown must
-            # not cascade into _on_graph_closed()'s per-window delete_graph()
-            # (which would push one undo step per graph instead of one).
-            for sub_window in self.mdi_area.subWindowList():
-                sub_window.closed.disconnect()
-                self.mdi_area.removeSubWindow(sub_window)
-                sub_window.close()
+            graph_ids = list(self.graph_widgets.keys())
+            self._teardown_all_graph_windows()
 
             # Delete graphs from ViewModel (one undo step for the whole batch)
             self.vm.begin_undo_batch()
             try:
-                for graph_id in list(self.graph_widgets.keys()):
+                for graph_id in graph_ids:
                     self.vm.delete_graph(graph_id)
             finally:
                 self.vm.end_undo_batch()
 
-            # Clear graph widgets storage
-            self.graph_widgets.clear()
-
-            # Update graph list combobox
             self._update_graph_list([])
             self._sync_active_graph_toolbar()
     
@@ -1697,17 +1615,10 @@ class VWorkspaceGraphs(QWidget):
             if w is not None:
                 w.setParent(None)
 
-        active_subwindow = self.mdi_area.activeSubWindow()
-        if active_subwindow is None:
+        gid = self._get_active_graph_id()
+        if gid is None:
             return
-
-        graph_widget = None
-        for gw, gd, sw in self.graph_widgets.values():
-            if sw == active_subwindow:
-                graph_widget = gw
-                break
-        if graph_widget is None:
-            return
+        graph_widget = self.graph_widgets[gid][0]
 
         container = getattr(graph_widget, 'toolbar_container', None)
         if container is None:
@@ -1724,34 +1635,25 @@ class VWorkspaceGraphs(QWidget):
             self._sync_active_graph_toolbar()
             return
 
-        # Find the corresponding graph
-        graph_widget = None
-        graph_model = None
-        for gid, (gw, gd, sw) in self.graph_widgets.items():
-            if sw == sub_window:
-                graph_widget = gw
-                graph_model = self.vm.get_graph(gid)
-                break
-
-        if not graph_widget or not graph_model:
+        gid = self._graph_id_for_subwindow(sub_window)
+        graph_model = self.vm.get_graph(gid) if gid is not None else None
+        if not graph_model:
             return
+        graph_widget = self.graph_widgets[gid][0]
 
         self._sync_active_graph_toolbar()
 
         # Sync GUI controls with graph properties
         self._sync_gui_from_graph(graph_model)
-        
+
         # Auto-switch the singleton customize dialog if it's open
         if self._customize_dialog is not None and self._customize_dialog.isVisible():
-            graph_id = graph_model.graph_id
-            if graph_id in self.graph_widgets:
-                gw, _, _ = self.graph_widgets[graph_id]
-                self._customize_dialog.switch_graph(gw, graph_id)
-        
+            self._customize_dialog.switch_graph(graph_widget, gid)
+
         # Update graph list combobox selection (block signals to prevent conflicts)
         self.cbb_graph_list.blockSignals(True)
         for i in range(self.cbb_graph_list.count()):
-            if self.cbb_graph_list.itemData(i) == graph_model.graph_id:
+            if self.cbb_graph_list.itemData(i) == gid:
                 self.cbb_graph_list.setCurrentIndex(i)
                 break
         self.cbb_graph_list.blockSignals(False)
@@ -1883,23 +1785,14 @@ class VWorkspaceGraphs(QWidget):
         }
     
     def _configure_graph_from_model(self, graph_widget: VGraph, model):
-        """Configure a graph widget from its model's fields.
+        """Copy every MGraph field onto the widget generically.
 
-        Copies every MGraph field onto the widget generically: `model` is
-        always a real MGraph instance (from vm.create_graph()/
-        vm.get_graph()), so every field declared in MGraph.__init__ always
-        exists on it -- the getattr(..., default)/hasattr(...) guards this
-        used to have per-field were vestigial. A short list of fields need
-        real transformation instead of a plain copy (independent-copy
-        safety for mutable containers, stale-value sanitization); those are
-        applied as overrides below.
-
-        Fixes a real bug found while collapsing this method: `axis_breaks`
-        was never copied model -> widget at all (only ever the other way,
-        widget -> model, in _on_update_plot/save_workspace) -- so a graph
-        with a configured axis break silently lost it whenever a *new*
-        widget was built from its model, i.e. on workspace reload or
-        "Replicate graph".
+        `model` is always a real MGraph, so every declared field exists --
+        no per-field guards needed. A few fields need transformation
+        instead of a plain copy (deep-copy safety for mutable containers,
+        stale-value sanitization); those are applied as overrides below.
+        The generic loop is deliberate: a hand-picked field list once
+        silently dropped `axis_breaks` on reload/replicate.
         """
         for key, value in vars(model).items():
             if key == 'graph_id':
@@ -1931,19 +1824,23 @@ class VWorkspaceGraphs(QWidget):
         # The Graph class has a single plot() method that handles all plot types
         graph_widget.plot(filtered_df)
     
-    def _create_mdi_subwindow(self, graph_widget: VGraph, model) -> QMdiSubWindow:
+    @staticmethod
+    def _graph_window_title(model) -> str:
+        """Window title for a graph: 'id-style: [x] vs [y] - [z]'."""
+        title = f"{model.graph_id}-{model.plot_style}: [{model.x}] vs [{model.y[0] if model.y else 'None'}]"
+        if model.z:
+            title += f" - [{model.z}]"
+        return title
+
+    def _create_mdi_subwindow(self, model) -> QMdiSubWindow:
         """Create MDI subwindow."""
-        
+
         sub_window = MdiSubWindow(
             graph_id=model.graph_id,
             mdi_area=self.mdi_area
         )
-        
-        # Set window title
-        title = f"{model.graph_id}-{model.plot_style}: [{model.x}] vs [{model.y[0] if model.y else 'None'}]"
-        if model.z:
-            title += f" - [{model.z}]"
-        sub_window.setWindowTitle(title)
+
+        sub_window.setWindowTitle(self._graph_window_title(model))
         
         # Set size
         sub_window.resize(model.plot_width, model.plot_height)
@@ -1975,7 +1872,24 @@ class VWorkspaceGraphs(QWidget):
         # Update graph list
         self._update_graph_list(self.vm.get_graph_ids())
         self._sync_active_graph_toolbar()
-    
+
+    def _teardown_all_graph_windows(self):
+        """Close the customize dialog and every graph subwindow, then clear
+        `graph_widgets` -- shared by delete-all, undo/redo rebuild, and
+        clear_workspace. `closed` is disconnected first so this programmatic
+        batch teardown never cascades into _on_graph_closed()'s per-window
+        delete_graph() (which would push one undo step per graph)."""
+        if self._customize_dialog is not None:
+            self._customize_dialog.close()
+            self._customize_dialog = None
+
+        for sub_window in self.mdi_area.subWindowList():
+            sub_window.closed.disconnect()
+            self.mdi_area.removeSubWindow(sub_window)
+            sub_window.close()
+
+        self.graph_widgets.clear()
+
     # ═════════════════════════════════════════════════════════════════════
     # Workspace Management
     # ═════════════════════════════════════════════════════════════════════
@@ -2023,18 +1937,7 @@ class VWorkspaceGraphs(QWidget):
         (e.g. a stale column reference) is skipped with a toast rather
         than aborting the rest of the rebuild.
         """
-        if self._customize_dialog is not None:
-            self._customize_dialog.close()
-            self._customize_dialog = None
-
-        for sub_window in self.mdi_area.subWindowList():
-            # Disconnect first: a programmatic teardown must not cascade
-            # into _on_graph_closed()'s delete_graph(), which would delete
-            # the very graphs this method is about to rebuild.
-            sub_window.closed.disconnect()
-            self.mdi_area.removeSubWindow(sub_window)
-            sub_window.close()
-        self.graph_widgets.clear()
+        self._teardown_all_graph_windows()
 
         for graph_id in self.vm.get_graph_ids():
             graph_model = self.vm.get_graph(graph_id)
@@ -2075,20 +1978,7 @@ class VWorkspaceGraphs(QWidget):
 
     def clear_workspace(self):
         """Clear workspace."""
-        # Close singleton customize dialog
-        if self._customize_dialog is not None:
-            self._customize_dialog.close()
-            self._customize_dialog = None
-        
-        # Disconnect `closed` first so this programmatic teardown doesn't
-        # cascade into _on_graph_closed()'s delete_graph() (harmless here
-        # since clear_workspace() below wipes everything anyway).
-        for sub_window in self.mdi_area.subWindowList():
-            sub_window.closed.disconnect()
-            sub_window.close()
-            self.mdi_area.removeSubWindow(sub_window)
-
-        self.graph_widgets.clear()
+        self._teardown_all_graph_windows()
         self._sync_active_graph_toolbar()
         self.df_listbox.clear()
         self.cbb_x.clear()

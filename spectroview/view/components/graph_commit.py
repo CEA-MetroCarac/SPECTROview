@@ -1,13 +1,11 @@
 """Generic snapshot/diff helper for committing a VGraph widget's current
 state back to its MGraph model.
 
-Several call sites in v_workspace_graphs.py (the toolbar's grid checkbox,
-save_workspace) need to sync "whatever changed on the widget" back to the
-ViewModel. Historically each site hand-picked its own field list, which is
-exactly how bugs like a missing annotations/filters sync happened: it's easy
-to add a new widget-mutable field and forget to add it to every hand-picked
-list. This module derives the field list once, from MGraph's own dataclass
-schema, so there is nothing left to keep in sync by hand.
+Call sites in v_workspace_graphs.py (save_workspace, drag/resize syncs) and
+the Customize dialog need to sync "whatever changed on the widget" back to
+the ViewModel. Hand-picked field lists kept drifting out of sync with MGraph;
+this module derives the field list once from MGraph's own dataclass schema,
+so there is nothing left to maintain by hand.
 """
 import copy
 import dataclasses

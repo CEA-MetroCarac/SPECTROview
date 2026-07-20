@@ -1365,6 +1365,32 @@ class TestRestyle:
         assert vg.ax.xaxis_inverted() == False  # noqa: E712 -- xaxis_inverted() returns numpy.bool_, not bool
 
 
+class TestModelSchemaSync:
+    """VGraph seeds its model-field defaults from MGraph's own dataclass
+    schema (single source of truth) -- a hand-written copy once silently
+    drifted (minor_ticks_* were missing on bare widgets)."""
+
+    def test_bare_vgraph_carries_every_mgraph_field_with_model_defaults(self, qapp):
+        from spectroview.model.m_graph import MGraph
+        model_defaults = {k: v for k, v in vars(MGraph()).items() if k != 'graph_id'}
+        vg = VGraph(graph_id=1)
+
+        missing = [k for k in model_defaults if not hasattr(vg, k)]
+        assert missing == []
+        differing = {k: (v, getattr(vg, k)) for k, v in model_defaults.items()
+                     if getattr(vg, k) != v}
+        assert differing == {}
+
+    def test_seeded_mutable_defaults_are_not_shared_between_widgets(self, qapp):
+        vg1 = VGraph(graph_id=1)
+        vg2 = VGraph(graph_id=2)
+        vg1.annotations.append({'type': 'vline'})
+        vg1.spines_visible['top'] = False
+
+        assert vg2.annotations == []
+        assert vg2.spines_visible['top'] is True
+
+
 class TestExportButtonModifierClick:
     """The toolbar's Export button, like VSpectraViewer's Copy button, does
     double duty based on the Ctrl modifier at click time: a plain click

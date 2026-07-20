@@ -35,7 +35,8 @@ from spectroview.view.components.customize_graph.customize_graph_dialog import (
     EditLineDialog, EditTextDialog, EditArrowDialog, EditSpanDialog,
     EditBoxDialog, EditCalloutDialog,
 )
-from spectroview.viewmodel.utils import rgba_to_default_color, show_alert, copy_fig_to_clb
+from spectroview.model.m_graph import MGraph
+from spectroview.viewmodel.utils import show_alert, copy_fig_to_clb
 from spectroview.view.components.v_plot_renderer import PlotRenderer
 
 
@@ -53,150 +54,21 @@ class VGraph(QWidget):
     def __init__(self, graph_id=None):
         super().__init__()
         self.graph_id = graph_id
-        
-        # Data source
-        self.df_name = None
-        self.filters = []
-        # Store DataFrame for replotting
-        self.df = None
 
-        # Plot dimensions
-        self.plot_width = 480
-        self.plot_height = 385
-        self.dpi = 100
-        
-        # Plot type and axes
-        self.plot_style = "point"
-        self.x = None
-        self.y = []
-        self.z = None
-        
-        # Axis limits
-        self.xmin = None
-        self.xmax = None
-        self.ymin = None
-        self.ymax = None
-        self.zmin = None
-        self.zmax = None
-        
-        # Labels
-        self.plot_title = None
-        self.plot_subtitle = None
-        self.subtitle_fontsize = 10  # matches the pre-existing hardcoded fallback; only rendered once plot_subtitle is set
-        self.xlabel = None
-        self.ylabel = None
-        self.zlabel = None
-        
-        # Axis scales
-        self.xlogscale = False
-        self.ylogscale = False
-        self.y2logscale = False
-        self.y3logscale = False
-        self.xscale_mode = "log"  # log/symlog -- which scale xlogscale switches to when True
-        self.yscale_mode = "log"  # log/symlog -- which scale ylogscale switches to when True
-        
-        # Secondary/tertiary axes
-        self.y2 = None
-        self.y3 = None
-        self.y2min = None
-        self.y2max = None
-        self.y3min = None
-        self.y3max = None
-        self.y2label = None
-        self.y3label = None
-        self.y2color = "red"      # matches the pre-existing hardcoded color in _plot_secondary_axis
-        self.y2marker = "s"
-        self.y3color = "green"    # matches the pre-existing hardcoded color in _plot_tertiary_axis
-        self.y3marker = "s"
+        # Model fields: seed every MGraph field with its dataclass default.
+        # Single source of truth -- a hand-written copy here once silently
+        # drifted from the model (minor_ticks_* were missing entirely).
+        for key, value in vars(MGraph()).items():
+            if key != 'graph_id':
+                setattr(self, key, value)
 
-        # Secondary X axis
-        self.x2 = None
-        self.x2label = None
-        self.x2min = None
-        self.x2max = None
-        self.x2logscale = False
-        self.x2color = "purple"   # matches the pre-existing hardcoded color in _plot_secondary_x_axis
-        self.x2marker = "D"
-        
-        # Visual properties
-        self.x_rot = 0
-        self.grid = False
-        self.tick_direction = None   # in/out/inout; None = matplotlib's own default
-        self.tick_label_format = None  # e.g. "%.2f"; None = default ScalarFormatter
-        self.x_inverted = False
-        self.y_inverted = False
-        self.title_fontsize = 12       # matches mplstyle's axes.titlesize
-        self.axis_label_fontsize = 12  # matches mplstyle's axes.labelsize
-        self.tick_label_fontsize = 9   # matches mplstyle's x/ytick.labelsize
-        self.figure_facecolor = None     # None = mplstyle's figure/axes facecolor
-        self.figure_margins = [0.05, 0.05]  # [x_margin, y_margin]; matches matplotlib's own default
-        self.spines_visible = {'top': True, 'right': True, 'bottom': True, 'left': True}
-        self.figure_theme = "light"  # light/dark/soft_dark -- selects the mplstyle used to render this graph
-        self.export_width_mm = None   # None = use the current on-screen figure size at export time
-        self.export_height_mm = None
-        self.legend_visible = True
-        self.legend_outside = False
-        self.legend_properties = []
-        self.legend_bbox = None  # (x, y) in axes coords for dragged position
-        self.legend_ncol = 1
-        self.legend_frame = True
-        self.legend_title = None
-        self.legend_fontsize = 10  # matches mplstyle's legend.fontsize
-        self.legend_alpha = 0.7  # matches the pre-existing hardcoded framealpha=0.7
-        self.legend_loc = "best"   # inside-legend position; ignored when legend_outside is True
-        
-        # Plot-specific settings
-        self.color_palette = "jet"
-        self.colormap_norm = "linear"  # linear/log/centered
-        self.colormap_center = 0.0
-        self.wafer_size = 300
-        self.wafer_stats = True
-        self.trendline_order = 1
-        self.show_trendline_eq = True
-        self.trendline_anchor_enabled = False
-        self.trendline_anchor_origin = True   # True = through (0,0), False = custom point
-        self.trendline_anchor_x = 0.0
-        self.trendline_anchor_y = 0.0
-        self.trendline_equations = []  # List of dicts: {label, equation, r2} per hue group
-        self.show_bar_plot_error_bar = False
-        self.error_bar_type = "ci95"       # none/sd/sem/ci95 -- point & line, shown unconditionally
-        self.bar_error_bar_type = "sd"     # none/sd/sem/ci95 -- bar, only used when show_bar_plot_error_bar
-        self.error_bar_capsize = 3.0
-        self.join_for_point_plot = False
-        self.dodge_point_plot = True
-        self.dodge_scatter_plot = False
-        self.scatter_size = 70  # Marker size for scatter plots
-        self.scatter_edgecolor = 'black'  # Edge color for scatter plot markers
-        self.unify_marker_style = True  # True: every series uses scatter_size/scatter_edgecolor; False: per-series legend_properties overrides apply
-        self.x_as_numeric = None  # None=Auto, True=Numerical, False=Category
-        self.y_as_numeric = None  # None=Auto, True=Numerical, False=Category
-        # Histogram-specific
-        self.hist_bins = 20
-        self.hist_kde = False
-        self.hist_step = False
-        
-        # Data sorting
-        self.sort_data_enabled = True   # Enable intelligent sorting
-        self.sort_data_by = "Z"          # Sort by: "Z" (hue), "X", or "Y"
-        
-        # Annotations
-        self.annotations = []
-        
-        # Axis breaks storage
-        self.axis_breaks = {'x': None, 'y': None}
+        # Runtime-only state (not part of the model schema, never persisted)
+        self.df = None  # DataFrame kept for replotting
+        self.trendline_equations = []  # {label, equation, r2} per hue group
         self.ax_break_secondary = None  # second panel of a broken axis, if active
-        self._current_break_mode = None  # None/'x'/'y' -- tracks which Axes layout is currently built
-        self._subtitle_artist = None  # the Text artist _set_figure_style() draws plot_subtitle onto
-
-        # Inset (zoom) axes -- one optional inset per graph
-        self.inset_enabled = False
-        self.inset_bounds = [0.55, 0.55, 0.35, 0.35]  # [x0, y0, width, height] in axes-fraction
-        self.inset_xmin = None
-        self.inset_xmax = None
-        self.inset_ymin = None
-        self.inset_ymax = None
-        self.inset_show_zoom_indicator = True
-        self.inset_ax = None  # the rendered inset Axes, if any (not persisted)
+        self._current_break_mode = None  # None/'x'/'y' -- current Axes layout
+        self._subtitle_artist = None  # Text artist _set_figure_style() draws the subtitle onto
+        self.inset_ax = None  # the rendered inset Axes, if any
 
         # Matplotlib objects
         self.figure = None
@@ -205,7 +77,7 @@ class VGraph(QWidget):
         self.ax3 = None
         self.ax_x2 = None
         self.canvas = None
-        
+
         # Layout setup
         self.graph_layout = QVBoxLayout()
         self.setLayout(self.graph_layout)
@@ -223,12 +95,10 @@ class VGraph(QWidget):
                 else:
                     self.clear_layout(item.layout())
     
-    def create_plot_widget(self, dpi, layout=None):
-        """Creates matplotlib figure canvas and adds it to layout."""
-        if dpi:
-            self.dpi = dpi
-        else:
-            self.dpi = 100
+    def create_plot_widget(self, dpi):
+        """Create the matplotlib figure/canvas and this graph's (hidden)
+        toolbar_container. Must be called before plot()."""
+        self.dpi = dpi or 100
 
         self.clear_layout(self.graph_layout)
         old_toolbar_container = getattr(self, 'toolbar_container', None)
@@ -256,7 +126,10 @@ class VGraph(QWidget):
 
         class ToolbarEventFilter(QObject):
             def __init__(self, toolbar):
-                super().__init__()
+                # Parented to `toolbar` so Qt cancels the pending single-shot
+                # timer on teardown -- unparented, it could fire 100ms later
+                # against an already-deleted toolbar (real segfault).
+                super().__init__(toolbar)
                 self.toolbar = toolbar
                 self._timer = QTimer(self)
                 self._timer.setSingleShot(True)
@@ -269,7 +142,10 @@ class VGraph(QWidget):
                 return False
 
             def _update_icons(self):
-                action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                try:
+                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                except RuntimeError:
+                    return  # toolbar's C++ object already deleted
                 for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
                     if text in action_dict and image_file is not None:
                         try:
@@ -375,10 +251,7 @@ class VGraph(QWidget):
         if old_toolbar_container is not None:
             old_toolbar_container.deleteLater()
 
-        if layout:
-            layout.addWidget(self.canvas)
-        else:
-            self.graph_layout.addWidget(self.canvas)
+        self.graph_layout.addWidget(self.canvas)
 
         # Connect pick event for legend customization
         self.canvas.mpl_connect('pick_event', self._on_legend_pick)
@@ -1131,15 +1004,10 @@ class VGraph(QWidget):
         """Invert X/Y axes if requested. Must run after _set_limits(), since
         it flips whatever the current limits happen to be.
 
-        Axes.invert_xaxis()/invert_yaxis() *toggle* the current inverted
-        state rather than setting it absolutely, so this compares against
-        xaxis_inverted()/yaxis_inverted() first rather than calling them
-        unconditionally whenever self.x_inverted/y_inverted is True --
-        that used to be safe only because self.ax.clear() (earlier in
-        _plot_internal) always resets inversion to False first on every
-        full replot. restyle()'s fast path (Phase 5E) calls this repeatedly
-        *without* a clear in between, where an unconditional toggle would
-        flip-flop the axis back to normal on every other call."""
+        invert_xaxis()/invert_yaxis() *toggle* rather than set, so compare
+        against xaxis_inverted()/yaxis_inverted() first -- restyle() calls
+        this repeatedly without an ax.clear() in between, where an
+        unconditional toggle would flip-flop the axis on every other call."""
         if self.x_inverted != self.ax.xaxis_inverted():
             self.ax.invert_xaxis()
         if self.y_inverted != self.ax.yaxis_inverted():
@@ -1581,20 +1449,14 @@ class VGraph(QWidget):
         return callout
 
     def _ax_data_coords(self, event):
-        """(x, y) of a mouse event in self.ax's own data-coordinate system,
-        computed directly from the event's pixel position rather than
-        trusting event.xdata/event.ydata.
+        """(x, y) of a mouse event in self.ax's data coordinates, computed
+        from the raw pixel position -- not event.xdata/ydata.
 
-        event.xdata/ydata are derived from event.inaxes, which matplotlib
-        resolves to whichever overlapping Axes is topmost in z-order --
-        e.g. a secondary Y-axis created via ax.twinx() shares self.ax's
-        entire bounding box and is added later (higher z-order), so
-        event.inaxes resolves to it instead of self.ax for clicks anywhere
-        on the plot, not just near the twin axis. That silently broke both
-        annotation picking (see _on_annotation_click) and drag position
-        updates for any graph with a secondary/tertiary axis configured.
-        Transforming the raw pixel position through self.ax.transData
-        ourselves sidesteps the ambiguity entirely.
+        event.xdata/ydata come from event.inaxes, which resolves to the
+        topmost overlapping Axes: a twinx() secondary axis covers self.ax
+        entirely, so relying on them broke annotation picking/dragging on
+        any graph with a secondary axis. Transforming through
+        self.ax.transData directly sidesteps the ambiguity.
         """
         return self.ax.transData.inverted().transform((event.x, event.y))
 

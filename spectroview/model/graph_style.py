@@ -88,11 +88,9 @@ def apply_style_dict(graph_widget, style_dict: Dict[str, Any]) -> Dict[str, Any]
     return applied
 
 
-# A narrower cut than STYLE_FIELD_NAMES: only fields VGraph.restyle() can
-# repaint on existing artists without a full replot (chrome, not what an
-# artist looks like or which artists exist). legend_properties is excluded
-# even though _set_legend() reads it, since it never recolors the actual
-# series artists.
+# Narrower cut than STYLE_FIELD_NAMES: only fields VGraph.restyle() can
+# repaint without a full replot (chrome, not artists). legend_properties
+# is excluded: _set_legend() reads it but never recolors series artists.
 RESTYLE_SAFE_FIELDS = frozenset({
     # Titles / labels
     'plot_title', 'plot_subtitle', 'xlabel', 'ylabel',

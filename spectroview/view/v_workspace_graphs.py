@@ -926,7 +926,8 @@ class VWorkspaceGraphs(QWidget):
             return False
         return True
     
-    def _build_graph_widget(self, graph_model, filtered_df, on_render_error) -> Optional[VGraph]:
+    def _build_graph_widget(self, graph_model, filtered_df, on_render_error,
+                            sync_toolbar: bool = True) -> Optional[VGraph]:
         """Instantiate a VGraph for `graph_model`, wire its signals, render
         it, and register it into `graph_widgets` + the MDI area.
 
@@ -937,6 +938,10 @@ class VWorkspaceGraphs(QWidget):
 
         Shared by _create_and_display_plot, _on_plot_multi_wafer, and
         load_workspace, which previously duplicated this exact sequence.
+
+        `sync_toolbar=False` skips the per-graph shared-toolbar re-sync — a
+        batch builder (workspace load / undo-redo rebuild) syncs once at the
+        end instead, avoiding N redundant reparent cycles while loading.
         """
         graph_widget = VGraph(graph_id=graph_model.graph_id)
         graph_widget.replicate_requested.connect(self._on_replicate_graph)
@@ -971,8 +976,10 @@ class VWorkspaceGraphs(QWidget):
         # addSubWindow()/show() normally auto-activates the new subwindow
         # (firing subWindowActivated -> _sync_active_graph_toolbar()), but
         # this stays cheap and idempotent to call directly too, so a new
-        # graph's toolbar is never left showing the previous one's.
-        self._sync_active_graph_toolbar()
+        # graph's toolbar is never left showing the previous one's. A batch
+        # builder passes sync_toolbar=False and syncs once when it's done.
+        if sync_toolbar:
+            self._sync_active_graph_toolbar()
 
         return graph_widget
 
@@ -1648,6 +1655,15 @@ class VWorkspaceGraphs(QWidget):
             item = self._graph_toolbar_slot_layout.takeAt(0)
             w = item.widget()
             if w is not None:
+                # Hide *before* unparenting. On Windows, reparenting a
+                # currently-visible widget to None turns it into a visible
+                # top-level window instead of hiding it (the offscreen test
+                # platform hides it, which is why no test caught this): a
+                # multi-graph load then left one stray floating toolbar
+                # window per inactive graph. An explicit hide() first sets
+                # WA_WState_ExplicitShowHide, so the container stays hidden
+                # across the reparent on every platform.
+                w.hide()
                 w.setParent(None)
 
         gid = self._get_active_graph_id()
@@ -1986,7 +2002,8 @@ class VWorkspaceGraphs(QWidget):
                     f"Skipped graph {graph_model.graph_id} ({graph_model.plot_style}): could not render ({e})"
                 )
 
-            self._build_graph_widget(graph_model, filtered_df, _on_render_error)
+            self._build_graph_widget(graph_model, filtered_df, _on_render_error,
+                                     sync_toolbar=False)
 
         self._update_graph_list(self.vm.get_graph_ids())
         self._sync_active_graph_toolbar()

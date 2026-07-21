@@ -166,6 +166,23 @@ class TestSharedGraphToolbar:
         assert second.toolbar_container.parent() is not ws.graph_toolbar_slot
         assert ws._graph_toolbar_slot_layout.count() == 1
 
+    def test_deactivated_toolbar_is_explicitly_hidden_not_a_stray_window(self, ws, excel_df):
+        """Regression: a deactivated toolbar_container must be *explicitly*
+        hidden when it leaves the shared slot. Reparenting a visible widget
+        to None only implicitly hides it, and on Windows that implicit hide
+        does not survive the reparent -- the widget becomes a visible
+        top-level window, so a multi-graph load spawned one stray floating
+        toolbar window per inactive graph. WA_WState_ExplicitShowHide being
+        set is what guarantees it stays hidden on every platform (the
+        offscreen test platform hides it either way, so this attribute is the
+        only cross-platform witness of the bug)."""
+        first = self._make_graph(ws, excel_df)
+        self._make_graph(ws, excel_df, y=['fwhm_Si'])  # deactivates `first`
+
+        assert first.toolbar_container.parent() is None
+        assert first.toolbar_container.isVisible() is False
+        assert first.toolbar_container.testAttribute(Qt.WA_WState_ExplicitShowHide) is True
+
     def test_closing_the_active_graph_clears_the_slot(self, ws, excel_df):
         widget = self._make_graph(ws, excel_df)
         graph_id = widget.graph_id

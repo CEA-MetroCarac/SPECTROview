@@ -235,7 +235,7 @@ AI:   (creates scatter plot with FWHM > 5 filter applied)
 - **Start simple** — ask for a basic plot first, then refine it in follow-up messages.
 - **Multiple plots at once** — request several styles in one prompt: *"Create a box and scatter plot of X vs Y"*.
 - **Check the status bar** — a 🔴 red indicator means the connection is not working. Check your API key in Settings or verify Ollama is running.
-- **Struggling local model?** — try forcing **Simplified prompt** (see [section 4](#4-prompt-tier-for-local-models-auto--full--simplified)), keep requests to one or two plots per message, and prefer models that are explicitly documented as supporting tool/function calling.
+- **Struggling local model?** — try forcing **Simplified prompt** (see [section 4](#4-prompt-tier-for-local-models-auto-full-simplified)), keep requests to one or two plots per message, and prefer models that are explicitly documented as supporting tool/function calling.
 
 ---
 

@@ -561,7 +561,7 @@ With **MCP Tool Calling**, response parsing has no free-text JSON to parse at al
 |---------|-------------|
 | **Natural language plot creation** | Ask for any of the 9 supported plot styles (point, scatter, box, bar, line, trendline, histogram, wafer, 2Dmap) with column, filter, and style options |
 | **Multi-plot generation** | A single query can create multiple plots simultaneously (parallel tool calls, or several turns of the agentic loop) |
-| **Data filtering** | Filter DataFrames using natural language (translated to a validated pandas expression, see [Safety & Validation](#safety--validation)) |
+| **Data filtering** | Filter DataFrames using natural language (translated to a validated pandas expression, see [Safety & Validation](#safety-validation)) |
 | **Descriptive statistics** | Request `describe()` statistics on specific columns |
 | **Graph modification** | Update existing graph properties (axis limits, title, style, filters, palette) by graph ID |
 | **Graph deletion** | Delete specific graphs or all graphs by natural language instruction |

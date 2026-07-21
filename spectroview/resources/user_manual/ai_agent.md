@@ -35,13 +35,14 @@ The AI Agent supports multiple LLM backends:
 ### **3. Configuring a Provider**
 
 1. Select a **Provider** from the dropdown on the top-left of the chat panel.
-2. For cloud providers (OpenAI, DeepSeek, Gemini, Anthropic, Custom):
-   - Enter your **API key** in the **Settings** panel (`Ctrl + Shift + S` → **AI** tab).
-   - For the **Custom** provider, also fill in the **Custom Base URL** (the endpoint's OpenAI-compatible URL).
+2. For cloud providers, enter your **API key** in the **Settings** panel (`Ctrl + Shift + S` → **AI** tab):
+   - The **Custom** provider's **Custom API Key**, **Base URL**, and **Model Name** fields are shown by default.
+   - OpenAI, Anthropic, Gemini, DeepSeek, and Mistral keys are tucked under the collapsed **▸ Provider Presets** section — click it to expand.
+   - For the **Custom** provider, fill in the **Base URL** (the endpoint's OpenAI-compatible URL).
 3. Choose a **Model** from the model dropdown next to the provider. The dropdown is **editable** — if the model you want is not listed, just type its name in.
 4. Click the **⟳ refresh** icon to verify the connection. A green status indicator confirms it is working.
 
-> **Custom Models:** Some endpoints (custom ones especially) do not expose a model-listing API, so the dropdown starts empty. Enter the model names you use in **Settings** → **AI** tab → **Custom Models** as a comma-separated list (e.g. `model-a, model-b`). They then appear in the dropdown for the **Custom** provider and are remembered between sessions.
+> **Model Name:** Some endpoints (custom ones especially) do not expose a model-listing API, so the dropdown starts empty. Enter the model names you use in **Settings** → **AI** tab → **Model Name** as a comma-separated list (e.g. `model-a, model-b`). They then appear in the dropdown for the **Custom** provider and are remembered between sessions.
 
 ---
 
@@ -242,7 +243,7 @@ AI:   (creates scatter plot with FWHM > 5 filter applied)
 
 If a cloud/custom provider replies with **"Connection error."**, the app couldn't establish the network connection at all (it is *not* a wrong model name or an expired key — those report differently). Common causes:
 
-- **Wrong Base URL** — for a **Custom** provider, double-check the **Custom Base URL** in Settings. It must be the endpoint's OpenAI-compatible root (e.g. `https://host/v1` or `https://host/openai/`), **not** the full `.../chat/completions` path.
+- **Wrong Base URL** — for a **Custom** provider, double-check the **Base URL** in Settings. It must be the endpoint's OpenAI-compatible root (e.g. `https://host/v1` or `https://host/openai/`), **not** the full `.../chat/completions` path.
 - **Corporate / internal endpoint with a private certificate** — an on-premise endpoint (e.g. `https://…intra.company…/`) is often secured by a company certificate authority that Python doesn't trust by default, producing a hidden *certificate verify failed* error. SPECTROview handles this automatically by trusting your **operating system's certificate store** (via the `truststore` package, installed with the AI extras). If it still fails, point the app at your organization's certificate bundle by setting the environment variable **`SSL_CERT_FILE`** to your `.pem` file (e.g. `chain_bundle.pem`) before launching.
 - **Off the network / VPN** — an internal endpoint is only reachable from the corporate network or VPN.
 

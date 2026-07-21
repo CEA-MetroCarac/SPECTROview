@@ -64,7 +64,7 @@ class VMenuBar(QToolBar):
         self.actionAIChat.setShortcut("Ctrl+Shift+A")
         self.actionAIChat.setToolTip(
             "Open SPECTROview AI Agent\n"
-            "Query your fit results using natural language (requires Ollama)"
+            "Query your fit results using natural language and get instant answers.\n"
         )
         self.actionAIChat.triggered.connect(self.ai_chat_requested.emit)
         self.actionAIChat.setVisible(False)  # hidden until unlocked via Settings > AI (feature not yet publicly released)

@@ -2,9 +2,10 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QCheckBox, QSpinBox, QDoubleSpinBox, QLineEdit, QDialogButtonBox,
-    QSpacerItem, QSizePolicy, QFrame, QGroupBox, QTabWidget, QWidget
+    QSpacerItem, QSizePolicy, QFrame, QGroupBox, QTabWidget, QWidget, QToolButton
 )
 from PySide6.QtGui import QFont
+from PySide6.QtCore import Qt
 
 from spectroview.viewmodel.vm_settings import VMSettings
 
@@ -189,6 +190,19 @@ class VSettingsDialog(QDialog):
         api_layout.setContentsMargins(4, 4, 4, 4)
         api_layout.setSpacing(8)
 
+        # Commonly used fields — shown by default
+        self.edit_custom = QLineEdit()
+        self.edit_custom.setEchoMode(QLineEdit.Password)
+        self.edit_custom_url = QLineEdit()
+        self.edit_custom_models = QLineEdit()
+        self.edit_custom_models.setPlaceholderText("model-a, model-b, model-c")
+        self.edit_custom_models.setToolTip(
+            "Comma-separated model names.\n"
+            "They populate the model dropdown in the AI chat panel — useful "
+            "when the endpoint does not expose a model-listing API."
+        )
+
+        # Provider presets — tucked away in the collapsible section below
         self.edit_openai = QLineEdit()
         self.edit_openai.setEchoMode(QLineEdit.Password)
         self.edit_anthropic = QLineEdit()
@@ -199,33 +213,39 @@ class VSettingsDialog(QDialog):
         self.edit_deepseek.setEchoMode(QLineEdit.Password)
         self.edit_mistral = QLineEdit()
         self.edit_mistral.setEchoMode(QLineEdit.Password)
-        self.edit_custom = QLineEdit()
-        self.edit_custom.setEchoMode(QLineEdit.Password)
-        self.edit_custom_url = QLineEdit()
-        self.edit_custom_models = QLineEdit()
-        self.edit_custom_models.setPlaceholderText("model-a, model-b, model-c")
-        self.edit_custom_models.setToolTip(
-            "Comma-separated model names for the Custom provider.\n"
-            "They populate the model dropdown in the AI chat panel — useful "
-            "when the endpoint does not expose a model-listing API."
-        )
 
-        def add_api_row(label, widget):
+        def add_api_row(layout, label, widget):
             row = QHBoxLayout()
             lbl = QLabel(label)
             lbl.setFixedWidth(120)
             row.addWidget(lbl)
             row.addWidget(widget)
-            api_layout.addLayout(row)
-            
-        add_api_row("OpenAI API Key:", self.edit_openai)
-        add_api_row("Anthropic API Key:", self.edit_anthropic)
-        add_api_row("Gemini API Key:", self.edit_gemini)
-        add_api_row("DeepSeek API Key:", self.edit_deepseek)
-        add_api_row("Mistral API Key:", self.edit_mistral)
-        add_api_row("Custom API Key:", self.edit_custom)
-        add_api_row("Custom Base URL:", self.edit_custom_url)
-        add_api_row("Custom Models:", self.edit_custom_models)
+            layout.addLayout(row)
+
+        add_api_row(api_layout, "Custom API Key:", self.edit_custom)
+        add_api_row(api_layout, "Base URL:", self.edit_custom_url)
+        add_api_row(api_layout, "Model Name:", self.edit_custom_models)
+
+        # ── Collapsible "Provider Presets" section (collapsed by default) ──
+        self.btn_toggle_providers = QToolButton()
+        self.btn_toggle_providers.setCheckable(True)
+        self.btn_toggle_providers.setChecked(False)
+        self.btn_toggle_providers.setText("▸ Other cloud providers:")
+        self.btn_toggle_providers.setCursor(Qt.PointingHandCursor)
+        self.btn_toggle_providers.toggled.connect(self._on_toggle_providers)
+        api_layout.addWidget(self.btn_toggle_providers, alignment=Qt.AlignLeft)
+
+        self.frame_provider_presets = QFrame()
+        provider_layout = QVBoxLayout(self.frame_provider_presets)
+        provider_layout.setContentsMargins(4, 4, 4, 4)
+        provider_layout.setSpacing(8)
+        add_api_row(provider_layout, "OpenAI API Key:", self.edit_openai)
+        add_api_row(provider_layout, "Anthropic API Key:", self.edit_anthropic)
+        add_api_row(provider_layout, "Gemini API Key:", self.edit_gemini)
+        add_api_row(provider_layout, "DeepSeek API Key:", self.edit_deepseek)
+        add_api_row(provider_layout, "Mistral API Key:", self.edit_mistral)
+        self.frame_provider_presets.setVisible(False)
+        api_layout.addWidget(self.frame_provider_presets)
 
         ai_tab_layout.addWidget(grp_api)
 
@@ -321,6 +341,11 @@ class VSettingsDialog(QDialog):
         self.edit_custom_url.setText(data.get("custom_base_url", ""))
         self.edit_custom_models.setText(data.get("custom_models", ""))
         self.le_history_folder.setText(data.get("history_folder", ""))
+
+    def _on_toggle_providers(self, checked: bool):
+        self.frame_provider_presets.setVisible(checked)
+        arrow = "▾" if checked else "▸"
+        self.btn_toggle_providers.setText(f"{arrow} Other provider ")
 
     def _on_ai_agent_code_entered(self):
         result = self.vm.try_ai_agent_code(self.edit_ai_agent_code.text())

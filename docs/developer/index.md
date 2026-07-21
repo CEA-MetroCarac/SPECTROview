@@ -87,11 +87,13 @@ spectroview/
 │   ├── vm_settings.py            # Settings persistence
 │   └── utils.py                  # Helpers, toast notifications
 │
-├── ai_agent/               # AI Data Chat module (optional, requires ollama)
-│   ├── __init__.py              # Module docstring, keeps import optional
-│   ├── m_llm_client.py          # Ollama connection manager + QThread worker
+├── ai_agent/               # AI Data Chat module (multi-provider; runtime-optional)
+│   ├── __init__.py              # Module docstring, keeps import guarded
+│   ├── m_llm_client.py          # Multi-provider LLM clients (Ollama/OpenAI/Anthropic) + QThread workers
 │   ├── m_conversation.py        # Conversation model (+ m_conversation_store.py: history)
 │   ├── m_prompt_manager.py      # System-prompt / rules / knowledge assembly
+│   ├── mcp/server.py            # FastMCP server exposing the AI tools (plot_graph, query_dataframe, …)
+│   ├── config/, prompts/, rules/, knowledge/, examples/, utils/  # Prompt assets + helpers (see ai_agent.md)
 │   ├── vm_chat.py               # Chat ViewModel (prompt-tier selection, agentic loop)
 │   └── v_chat_panel.py          # Floating chat dialog (+ v_history_dialog.py)
 │
@@ -107,7 +109,7 @@ spectroview/
 │       ├── v_map_viewer.py            # Heatmap / wafer canvas
 │       ├── v_map_viewer_dialog.py     # Detachable map viewer window
 │       ├── v_map_list.py              # Loaded maps list panel
-│       ├── v_graph.py                 # Single graph widget (seaborn/mpl)
+│       ├── v_graph.py                 # Single graph widget (matplotlib)
 │       ├── v_mva.py                   # PCA/NMF controls and plots
 │       ├── v_fit_results.py           # Fit results DataFrame table
 │       ├── v_data_filter.py           # Dynamic query filter panel
@@ -125,7 +127,7 @@ spectroview/
 │           ├── customize_legend.py           # Legend/Color tab
 │           ├── customize_axis.py             # Axis (scale/limits/breaks) tab
 │           ├── customize_annotations.py      # Annotations tab
-│           ├── customize_more_options.py     # Trendline/histogram/sorting tab
+│           ├── customize_more_options.py     # More Options tab (plot options, theme, fonts, sorting, trendline/histogram/colormap)
 │           └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
 │
 ├── fit_engine/             # High-performance batch fitting
@@ -252,7 +254,7 @@ Workspaces are composed from **shared components** that follow the same signal-b
 | `VPeakTable` | `v_peak_table.py` | Editable table of peak parameters (center, FWHM, amplitude, bounds) |
 | `VMapViewer` | `v_map_viewer.py` | Heatmap/wafer canvas with Z/X range sliders, mask, profile extraction |
 | `VMapViewerDialog` | `v_map_viewer_dialog.py` | Detachable always-on-top window wrapping `VMapViewer` |
-| `VGraph` | `v_graph.py` | Seaborn/Matplotlib graph widget supporting 10+ plot styles |
+| `VGraph` | `v_graph.py` | Matplotlib graph widget supporting 10+ plot styles |
 | `VDataFilter` | `v_data_filter.py` | Dynamic `pandas` `.query()` filter builder |
 | `VFitResults` | `v_fit_results.py` | Color-coded fit results table |
 | `VMVA` | `v_mva.py` | PCA/NMF controls and embedded plotting |
@@ -302,7 +304,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 |-------------|----------|---------|
 | `VBFthread` | `fit_engine/vbf_thread.py` | Batched fitting (primary engine) |
 | `UpdateCheckerWorker` | `model/m_update_checker.py` | Background GitHub release check at startup |
-| `LLMWorker` | `ai_agent/m_llm_client.py` | Streaming Ollama chat requests for AI Data Chat |
+| `LLMWorker` / `APIWorker` / `AnthropicWorker` | `ai_agent/m_llm_client.py` | Streaming chat requests for AI Data Chat — one worker per backend (Ollama / OpenAI-compatible / Anthropic) |
 
 **Thread lifecycle**:
 
@@ -419,9 +421,7 @@ To add a "disable updates" toggle to the Settings dialog, bind `MSettings.set_ch
 | **Graphs Workspace** | [graphs.md](graphs.md) | `VMWorkspaceGraphs`, DataFrame management, plot creation, `VGraph` rendering |
 | **Vectorized Batch Fit Engine (`VBF Engine`)** | [vbf_engine.md](vbf_engine.md) | Batched LM optimizer, analytical Jacobians, adding new peak models |
 | **Multivariate Analysis** | [mva.md](mva.md) | PCA/NMF implementation, data pipeline, export to `Graphs` |
-<!-- AI Data Chat row hidden until the AI Agent feature is publicly released; see mkdocs.yml exclude_docs.
-| **AI Data Chat** | [ai_agent.md](ai_agent.md) | Local LLM chatbot (Ollama), system prompt, Graphs workspace integration |
--->
+| **AI Data Chat** | [ai_agent.md](ai_agent.md) | Multi-provider LLM chat (Ollama/OpenAI/Anthropic/…), MCP tool calling, system prompt, Graphs workspace integration |
 
 
 ---
@@ -453,7 +453,7 @@ mkdocs serve
 | `numpy` | `< 2.0.0` | Numerical array operations |
 | `scipy` | — | Interpolation, KDTree, SVD |
 | `pandas` | — | DataFrame management |
-| `seaborn` | — | Statistical plotting in `Graphs` workspace |
 | `renishawWiRE` | — | Renishaw `.wdf` file reader |
 | `superqt` | — | Enhanced Qt widgets (range sliders) |
-| `ollama` | `≥ 0.4` *(optional)* | Local LLM integration for AI Data Chat (`pip install -e ".[ai]"`) |
+| `ollama` / `openai` / `anthropic` / `mcp` | `ollama ≥ 0.4`, `mcp ≥ 1.28` | LLM backends + Model Context Protocol for AI Data Chat. **Core dependencies** (no `[ai]` extras group) — a plain `pip install` includes them; the feature is only *optional to use* at runtime. |
+| `truststore` | `≥ 0.9` (Python ≥ 3.10) | Routes TLS verification through the OS trust store (corporate/internal CAs) for cloud AI providers; import is guarded |

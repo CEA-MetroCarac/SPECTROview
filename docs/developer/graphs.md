@@ -1,6 +1,6 @@
 # **Workspace: Graphs**
 
-The `Graphs` workspace is a standalone statistical plotting environment. It manages DataFrames (from file or cross-workspace injection), applies dynamic filters, and creates publication-quality plots using `Seaborn` and `Matplotlib` inside an MDI (Multiple Document Interface) area.
+The `Graphs` workspace is a standalone statistical plotting environment. It manages DataFrames (from file or cross-workspace injection), applies dynamic filters, and creates publication-quality plots using pure `Matplotlib` (plus `scipy` for statistics) inside an MDI (Multiple Document Interface) area. It no longer depends on Seaborn — every plot style is drawn directly with Matplotlib primitives in `PlotRenderer`.
 
 ---
 
@@ -125,18 +125,18 @@ This same default-style merge applies to `_on_plot_multi_wafer()`; it deliberate
 
 ## **Plot Styles**
 
-Each plot style maps to a specific Seaborn or custom rendering function:
+Each plot style maps to a `PlotRenderer._plot_*` method that draws directly with Matplotlib primitives (no Seaborn):
 
-| Style | Seaborn Function | Hue Support | Notes |
-|-------|-----------------|-------------|-------|
-| `point` | `sns.pointplot()` | ✓ Z column | "Join" toggle for connecting points; only style with a per-series Marker column |
-| `scatter` | `sns.scatterplot()` | ✓ Z column | Marker size/edge color unified across series by default (see Unify checkbox) |
-| `box` | `sns.boxplot()` | ✓ Z column | Width 0.4, palette support |
-| `bar` | `sns.barplot()` | ✓ Z column | Optional error bars (sd/95% CI) |
-| `line` | `sns.lineplot()` | ✓ Z column | Standard line plot |
-| `trendline` | `sns.regplot()` / `ax.scatter()` / `ax.plot()` | ✓ Z column | Polynomial regression with custom zero-intercept anchoring and equation table export |
-| `histogram` | `sns.histplot()` | ✓ Z column | Bins customization, KDE overlay, step outline vs. filled bars |
-| `wafer` | Custom `WaferPlot` | — | Circular wafer visualization with die sites; colormap normalization (linear/log/centered) |
+| Style | Matplotlib primitive | Hue Support | Notes |
+|-------|---------------------|-------------|-------|
+| `point` | `ax.errorbar()` | ✓ Z column | Plots per-category means with error bars; "Join" toggle connects them with a line; only style with a per-series Marker column |
+| `scatter` | `ax.scatter()` | ✓ Z column | Marker size/edge color unified across series by default (see Unify checkbox) |
+| `box` | `ax.boxplot()` | ✓ Z column | Palette support; box width derived from category spacing |
+| `bar` | `ax.bar()` | ✓ Z column | Optional error bars (sd/95% CI) |
+| `line` | `ax.plot()` | ✓ Z column | Standard line plot |
+| `trendline` | `np.poly1d` fit + `ax.scatter()` / `ax.plot()` / `ax.fill_between()` | ✓ Z column | Polynomial regression with custom zero-intercept anchoring, an analytical 95% CI band, and equation table export |
+| `histogram` | `ax.hist()` (+ `scipy.stats.gaussian_kde`) | ✓ Z column | Bins customization, optional KDE overlay, step outline vs. filled bars |
+| `wafer` | Custom `WaferPlot` (`ax.scatter()`) | — | Circular wafer visualization with die sites; colormap normalization (linear/log/centered) |
 | `2Dmap` | `ax.imshow()` | — | Rectangular heatmap via `pivot()`; same colormap normalization options as wafer |
 
 ### **Multi-Axis Support**

@@ -1,6 +1,6 @@
 ## **Settings & Preferences**
 
-Access the **Settings** menu via the gear icon in the main toolbar.
+Access the **Settings** menu via the gear icon in the main toolbar (or press `Ctrl + Shift + S`).
 
 <div align="center">
   <img src="../user_manual_images/Settings/settings.png" alt="Settings Panel" width="380"><br>
@@ -8,11 +8,14 @@ Access the **Settings** menu via the gear icon in the main toolbar.
 
 <br>
 
-The `Settings Panel` is organized into three sections: **`Fit Parameters`**, **`Global Peak Limits`**, and **`Fit Model Path`**.
+The `Settings Panel` is organized into two tabs:
+
+- **General** — fitting behavior and file locations: **`Fit Parameters`**, **`Global Peak Limits`**, and the **`SPECTROview Working Folder`** (sections 1–3 below).
+- **AI** — API keys and the chat-history folder for the AI Chat Agent (section 4 below).
 
 ---
 
-### **1. Fit Parameters**
+### **1. Fit Parameters** *(General tab)*
 
 These parameters control the behavior of the **Vectorized Batch Fit (`VBF`) engine** — the mathematical optimizer that performs curve fitting on your spectra. Adjusting these values directly affects fitting speed, precision, and convergence.
 
@@ -28,7 +31,7 @@ These parameters control the behavior of the **Vectorized Batch Fit (`VBF`) engi
 
 ---
 
-### **2. Global Peak Limits**
+### **2. Global Peak Limits** *(General tab)*
 
 These parameters define **absolute boundary conditions** that are applied globally to all peaks across the application. When you add a new peak to a fit model, these limits are used to set the initial parameter bounds automatically.
 
@@ -45,8 +48,40 @@ These parameters define **absolute boundary conditions** that are applied global
 
 ---
 
-### **3. Fit Model Path**
+### **3. SPECTROview Working Folder** *(General tab)*
 
-Specify the default storage directory for your custom fit models (saved in JSON format). The application will automatically scan this folder and load all available models for easy selection in the `Fit Model Builder` interface.
+Specify a single root folder for all of SPECTROview's saved templates. When you set it, three subfolders are created automatically inside it:
+
+| Subfolder | Contents |
+|-----------|----------|
+| `fit_model/` | Custom fit models (JSON). The `Fit Model Builder` scans this folder and lists every model here for one-click reuse. |
+| `plot_recipe/` | Plot Recipes — saved sets of full plot configurations (data bindings + style) for the `Graphs` workspace. |
+| `plot_style/` | Style Templates — saved appearance-only styles that can be applied to any existing graph. |
 
 Click **Browse** to select a folder, or type the path directly.
+
+> **Note**: This single Working Folder replaces the older separate "Fit model folder" / "Plot template folder" settings. If you had one of those configured previously, it is migrated automatically the first time the Working Folder is read.
+
+---
+
+### **4. AI Settings** *(AI tab)*
+
+The **AI** tab configures the [AI Chat Agent](ai_agent.md). Nothing here is required to use the rest of SPECTROview.
+
+#### **API Keys**
+
+The fields for a **Custom** (OpenAI-compatible) endpoint are shown by default:
+
+| Field | Description |
+|-------|-------------|
+| **Custom API Key** | The API key for your custom / internal endpoint. |
+| **Base URL** | The endpoint's OpenAI-compatible root URL (e.g. `https://host/v1`). |
+| **Model Name** | A comma-separated list of model names (e.g. `model-a, model-b`). These populate the model dropdown in the chat panel — handy for endpoints that don't expose a model-listing API. |
+
+Keys for the built-in cloud providers are tucked under the collapsible **▸ Other cloud providers** section (click to expand): **OpenAI**, **Anthropic**, **Gemini**, **DeepSeek**, and **Mistral**. All keys are stored masked and remembered between sessions.
+
+#### **Chat History**
+
+| Field | Description |
+|-------|-------------|
+| **History Folder** | Where AI chat conversations are saved (as JSON). Click **Browse** to choose a folder. |

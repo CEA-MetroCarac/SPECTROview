@@ -9,11 +9,16 @@ A horizontal toolbar located at the top of the application provides quick access
 | ![Save](../user_manual_images/menu_bar/save.png) | **Save**: Saves the active workspace to a dedicated file (`.maps`, `.spectra`, or `.graphs`), allowing you to pause and resume your work effortlessly. |
 | ![Clear](../user_manual_images/menu_bar/clear.png) | **Clear**: Clears the currently active workspace, removing all loaded data to start a fresh session. |
 | ![Convert](../user_manual_images/menu_bar/convert.png) | **Convert**: Opens the `Hyperspectral Data Converter` tool (see below for details). |
-| ![Calculation](../user_manual_images/menu_bar/quick_calculation.png) | **Calculators**: Opens the `Quick Calculators` tool (see below for details). |
-| ![Settings](../user_manual_images/menu_bar/settings.png) | **Settings**: Opens the `Settings Panel` (see below for details). |
-| ![Theme](../user_manual_images/menu_bar/theme.png) | **Theme Toggle**: Instantly switches the application interface between Dark and Light modes. |
-| ![User Manual](../user_manual_images/menu_bar/manual.png) | **User Manual**: Opens the integrated User Manual documentation viewer. |
+| ![Calculation](../user_manual_images/menu_bar/quick_calculation.png) | **Calculators**: Opens the `Quick Calculators` tool (`Ctrl + Shift + C`, see below for details). |
+| 🤖 | **SPECTROview AI Agent**: Opens the AI Chat Agent panel (`Ctrl + Shift + A`) to query, filter, and plot your data in natural language. See the "AI Chat Agent" section. |
+| ![Settings](../user_manual_images/menu_bar/settings.png) | **Settings**: Opens the `Settings Panel` (`Ctrl + Shift + S`, see below for details). |
+| 🔄 | **Check for updates**: Manually checks the GitHub Releases page for a newer version. |
+| ![Theme](../user_manual_images/menu_bar/theme.png) | **Theme**: Opens a dropdown to choose the interface theme — **Dark**, **Soft Dark**, **Light**, **Classic Dark**, or **Classic Light**. |
+| ![User Manual](../user_manual_images/menu_bar/manual.png) | **User Manual**: Opens the integrated User Manual viewer (`Ctrl + Shift + M`; Ctrl+Click opens the online web manual). |
+| ![GitHub](../user_manual_images/menu_bar/github.png) | **GitHub**: Opens the SPECTROview GitHub repository in your browser. |
 | ![About](../user_manual_images/menu_bar/about.png) | **About**: Displays version information, licensing, and details about the **SPECTROview** application. |
+
+> A greyed **version label** (e.g. `v26.29.0`) sits at the far right of the toolbar — click it to view the latest release notes.
 
 
 ### **2. Settings Panel**

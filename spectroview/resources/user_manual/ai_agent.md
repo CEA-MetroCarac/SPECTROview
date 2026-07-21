@@ -25,6 +25,7 @@ The AI Agent supports multiple LLM backends out of the box — no extra packages
 | **OpenAI** | GPT-4o, GPT-4o-mini, etc. | API key |
 | **DeepSeek** | Cost-effective, high-quality reasoning | DeepSeek API key |
 | **Gemini** | Google Gemini models | Gemini API key |
+| **Mistral** | Mistral AI models | Mistral API key |
 | **Anthropic** | Claude models | Anthropic API key |
 | **Custom** | Any OpenAI-compatible endpoint (e.g. an internal/institutional server) | Base URL + API key |
 
@@ -37,7 +38,7 @@ The AI Agent supports multiple LLM backends out of the box — no extra packages
 1. Select a **Provider** from the dropdown on the top-left of the chat panel.
 2. For cloud providers, enter your **API key** in the **Settings** panel (`Ctrl + Shift + S` → **AI** tab):
    - The **Custom** provider's **Custom API Key**, **Base URL**, and **Model Name** fields are shown by default.
-   - OpenAI, Anthropic, Gemini, DeepSeek, and Mistral keys are tucked under the collapsed **▸ Provider Presets** section — click it to expand.
+   - OpenAI, Anthropic, Gemini, DeepSeek, and Mistral keys are tucked under the collapsed **▸ Other cloud providers** section — click it to expand.
    - For the **Custom** provider, fill in the **Base URL** (the endpoint's OpenAI-compatible URL).
 3. Choose a **Model** from the model dropdown next to the provider. The dropdown is **editable** — if the model you want is not listed, just type its name in.
 4. Click the **⟳ refresh** icon to verify the connection. A green status indicator confirms it is working.

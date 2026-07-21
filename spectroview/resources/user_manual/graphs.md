@@ -357,6 +357,6 @@ The `box` plot natively displays the statistical distribution of the dataset bas
 
 #### 6.4 **Trendline Confidence Intervals**
 
-- **Confidence Level:** The shaded band around standard trendlines represents a **95% confidence interval** (estimated by Seaborn's regression plot module).
-- **Estimation Method:** The confidence interval is estimated using a non-parametric bootstrapping procedure (resampling data points with replacement 1000 times, fitting a regression model to each bootstrap sample, and calculating the 2.5th and 97.5th percentiles of the predictions).
-- **Anchored Fits:** Please note that confidence intervals are only computed and displayed for standard, unconstrained fits. If an anchor is enabled, the confidence interval band is omitted.
+- **Confidence Level:** The shaded band around standard trendlines represents a **95% confidence interval** for the fitted mean response.
+- **Estimation Method:** The interval is computed **analytically** from the regression residuals: the standard error of the estimate `SE = sqrt(Σ(yᵢ − ŷᵢ)² / (N − 2))` is combined with the standard mean-response formula `± 1.96 · SE · sqrt(1/N + (x − x̄)² / Σ(xᵢ − x̄)²)`, so the band widens away from the center of the data. (This replaces an earlier Seaborn-based bootstrap estimate; the Graphs workspace no longer uses Seaborn.)
+- **Anchored Fits:** Confidence intervals are only computed and displayed for standard, unconstrained fits. If an anchor is enabled, the confidence interval band is omitted.

@@ -238,7 +238,19 @@ AI:   (creates scatter plot with FWHM > 5 filter applied)
 
 ---
 
-### **10. Keyboard Shortcuts**
+### **10. Troubleshooting a "Connection error."**
+
+If a cloud/custom provider replies with **"Connection error."**, the app couldn't establish the network connection at all (it is *not* a wrong model name or an expired key — those report differently). Common causes:
+
+- **Wrong Base URL** — for a **Custom** provider, double-check the **Custom Base URL** in Settings. It must be the endpoint's OpenAI-compatible root (e.g. `https://host/v1` or `https://host/openai/`), **not** the full `.../chat/completions` path.
+- **Corporate / internal endpoint with a private certificate** — an on-premise endpoint (e.g. `https://…intra.company…/`) is often secured by a company certificate authority that Python doesn't trust by default, producing a hidden *certificate verify failed* error. SPECTROview handles this automatically by trusting your **operating system's certificate store** (via the `truststore` package, installed with the AI extras). If it still fails, point the app at your organization's certificate bundle by setting the environment variable **`SSL_CERT_FILE`** to your `.pem` file (e.g. `chain_bundle.pem`) before launching.
+- **Off the network / VPN** — an internal endpoint is only reachable from the corporate network or VPN.
+
+The error card now shows the underlying cause (e.g. `CERTIFICATE_VERIFY_FAILED`, `getaddrinfo failed`) beneath the summary, which tells you which of the above applies.
+
+---
+
+### **11. Keyboard Shortcuts**
 
 | Shortcut | Action |
 |----------|--------|

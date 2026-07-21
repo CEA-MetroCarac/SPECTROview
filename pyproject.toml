@@ -82,6 +82,14 @@ Homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
 dev = ["pytest", "pytest-qt", "black", "flake8"]
 test = ["pytest", "pytest-qt"]
 
+ai = [
+    "ollama>=0.4.0",
+    "openai>=1.0.0",
+    "anthropic>=0.30.0",
+    "mcp>=1.28.1",
+    "truststore>=0.9.0; python_version >= '3.10'",
+]
+
 
 [tool.setuptools.dynamic]
 version = { attr = "spectroview.VERSION" }

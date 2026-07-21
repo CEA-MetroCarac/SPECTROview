@@ -891,9 +891,28 @@ class VWorkspaceGraphs(QWidget):
         # Default wafer plot spines to left-only if not explicitly set by a saved default style
         if 'spines_visible' not in plot_config:
             if plot_config.get('plot_style') == 'wafer':
-                plot_config['spines_visible'] = {'top': False, 'right': False, 'bottom': False, 'left': True}
+                self._ensure_wafer_spines(plot_config)
             else:
                 plot_config['spines_visible'] = {'top': True, 'right': True, 'bottom': True, 'left': True}
+
+    @staticmethod
+    def _ensure_wafer_spines(plot_config: dict) -> None:
+        """Force the wafer convention of showing only the left spine.
+
+        The ``WaferPlot`` renderer hides the top/right/bottom spines, but
+        ``MGraph``'s default enables all four — so a wafer config that arrives
+        without an explicit ``spines_visible`` renders with all four borders.
+        The GUI "Add Plot" path guards against this via
+        ``_apply_default_style_to_config``; this helper applies the same
+        default on the paths that bypass it (AI agent, Maps profiles). A
+        config that already carries ``spines_visible`` (e.g. a saved recipe)
+        is left untouched.
+        """
+        if (plot_config.get('plot_style') == 'wafer'
+                and 'spines_visible' not in plot_config):
+            plot_config['spines_visible'] = {
+                'top': False, 'right': False, 'bottom': False, 'left': True
+            }
 
     def _validate_plot_request(self) -> bool:
         """Validate DataFrame selection."""
@@ -998,6 +1017,9 @@ class VWorkspaceGraphs(QWidget):
     def create_plot_from_config(self, df_name: str, plot_config: dict) -> bool:
         """API to create a plot directly from a configuration dict."""
         self.vm.select_dataframe(df_name)
+        # This path bypasses the GUI "Add Plot" default-style step, so apply
+        # the wafer left-only spine convention here (see _ensure_wafer_spines).
+        self._ensure_wafer_spines(plot_config)
         filters = plot_config.get('filters', [])
         if filters is None:
             filters = []

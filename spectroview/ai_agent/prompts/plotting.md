@@ -53,6 +53,8 @@ If the user requests multiple **distinct items** for spatial plots (e.g., "plot 
 - Tool Call 2: `filters: ["Slot == 6"]`, `plot_style: "wafer"`
 - Tool Call 3: `filters: ["Slot == 8"]`, `plot_style: "wafer"`
 
+Do NOT set `spines_visible` (or any spine/border styling) for a `wafer` plot. A wafer plot shows only the **left** spine by convention — the top/right/bottom borders are intentionally hidden and the application applies this automatically. Passing `spines_visible` yourself risks re-enabling all four borders and producing an incorrect wafer plot.
+
 ## Updating Existing Graphs
 
 When the user wants to **modify** an existing graph (change axis limits, title, style, filters, color palette), call the `update_graph` tool. Do NOT use `plot_graph`.

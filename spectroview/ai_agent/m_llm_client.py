@@ -22,9 +22,75 @@ Typical usage
 
 from __future__ import annotations
 
+import os
 from typing import Callable, List, Dict, Optional, Any
 
 from PySide6.QtCore import QThread, Signal, QObject
+
+# ---------------------------------------------------------------------------
+# Corporate / internal CA support
+# ---------------------------------------------------------------------------
+# openai/anthropic verify TLS through httpx, whose default trust store is
+# certifi's bundle — it omits private corporate CAs. An internal HTTPS endpoint
+# (e.g. an on-prem LLM gateway) then fails with the opaque "Connection error."
+# the SDKs raise for an underlying SSL CERTIFICATE_VERIFY_FAILED. Two escape
+# hatches, in priority order:
+#   1. SSL_CERT_FILE / REQUESTS_CA_BUNDLE env var → the explicit PEM bundle it
+#      points at is passed as httpx's `verify` (see _make_http_client).
+#   2. Otherwise `truststore` routes verification through the OS trust store
+#      (e.g. the Windows certificate store), where such CAs are usually
+#      already installed. Optional — no-op if the package isn't present.
+_CA_BUNDLE_ENV = (
+    os.environ.get("SSL_CERT_FILE") or os.environ.get("REQUESTS_CA_BUNDLE") or ""
+)
+
+if not _CA_BUNDLE_ENV:
+    try:
+        import truststore as _truststore
+        _truststore.inject_into_ssl()
+    except Exception:           # noqa: BLE001 - optional; certifi stays the default
+        pass
+
+
+def _make_http_client() -> Optional[Any]:
+    """Return an ``httpx.Client`` verifying against the env-configured CA
+    bundle, or ``None`` to use the SDK's default verification.
+
+    Non-``None`` only when ``SSL_CERT_FILE``/``REQUESTS_CA_BUNDLE`` points at an
+    existing file — the escape hatch for a private CA that isn't in the OS
+    trust store (so ``truststore`` alone wouldn't help), such as a frozen build
+    or a non-Windows host.
+    """
+    if not _CA_BUNDLE_ENV or not os.path.isfile(_CA_BUNDLE_ENV):
+        return None
+    try:
+        import httpx
+        return httpx.Client(verify=_CA_BUNDLE_ENV)
+    except Exception:           # noqa: BLE001
+        return None
+
+
+def _format_exception(exc: BaseException) -> str:
+    """Build an error string that includes the underlying cause chain.
+
+    The openai/anthropic SDKs collapse low-level TLS/socket failures into a
+    terse ``"Connection error."`` whose ``str()`` hides the real reason (bad
+    URL, DNS failure, SSL/proxy issue). Walking ``__cause__``/``__context__``
+    surfaces it (e.g. ``CERTIFICATE_VERIFY_FAILED``) so the message is
+    actionable instead of a dead end.
+    """
+    messages: List[str] = []
+    seen: set[int] = set()
+    cur: Optional[BaseException] = exc
+    while cur is not None and id(cur) not in seen:
+        seen.add(id(cur))
+        text = str(cur).strip()
+        entry = f"{type(cur).__name__}: {text}" if text else type(cur).__name__
+        if entry not in messages:
+            messages.append(entry)
+        cur = cur.__cause__ or cur.__context__
+    return "\n  Caused by: ".join(messages)
+
 
 # ---------------------------------------------------------------------------
 # Optional import guards — the rest of the app works fine if either is absent
@@ -205,7 +271,7 @@ class LLMWorker(QThread):
             self.response_ready.emit(self._full_response, tool_calls)
 
         except Exception as exc:               # noqa: BLE001
-            self.error_occurred.emit(str(exc))
+            self.error_occurred.emit(_format_exception(exc))
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -277,6 +343,7 @@ class APIWorker(QThread):
                 api_key=self._api_key,
                 base_url=self._base_url or None,
                 timeout=self._timeout,
+                http_client=_make_http_client(),
             )
             kwargs = {}
             if self._tools:
@@ -324,7 +391,7 @@ class APIWorker(QThread):
             self.response_ready.emit(self._full_response, tool_calls)
 
         except Exception as exc:               # noqa: BLE001
-            self.error_occurred.emit(str(exc))
+            self.error_occurred.emit(_format_exception(exc))
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -403,6 +470,9 @@ class AnthropicWorker(QThread):
             client_args = {"api_key": self._api_key, "timeout": self._timeout}
             if self._base_url:
                 client_args["base_url"] = self._base_url
+            http_client = _make_http_client()
+            if http_client is not None:
+                client_args["http_client"] = http_client
 
             client = _anthropic.Anthropic(**client_args)
 
@@ -448,7 +518,7 @@ class AnthropicWorker(QThread):
                 self.response_ready.emit(self._full_response, [])
 
         except Exception as exc:               # noqa: BLE001
-            self.error_occurred.emit(str(exc))
+            self.error_occurred.emit(_format_exception(exc))
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -590,6 +660,7 @@ class LLMClient:
             client = _openai.OpenAI(
                 api_key=self._api_key,
                 base_url=self._base_url or None,
+                http_client=_make_http_client(),
             )
             models_resp = client.models.list()
             names = sorted(m.id for m in models_resp.data)

@@ -603,6 +603,46 @@ class TestApplyDefaultStyleToConfig:
         assert cfg['color_palette'] == 'viridis'
 
 
+class TestEnsureWaferSpines:
+    """The AI-agent / Maps-profile plot path (create_plot_from_config) bypasses
+    the GUI 'Add Plot' default-style step, so it must apply the wafer left-only
+    spine convention itself -- otherwise a wafer config with no spines_visible
+    falls back to MGraph's all-four default and renders with four borders."""
+
+    WAFER_LEFT_ONLY = {'top': False, 'right': False, 'bottom': False, 'left': True}
+
+    def test_wafer_without_spines_gets_left_only(self, ws):
+        cfg = {'plot_style': 'wafer', 'x': 'X', 'y': ['Y'], 'z': 'Strain (GPa)'}
+        ws._ensure_wafer_spines(cfg)
+        assert cfg['spines_visible'] == self.WAFER_LEFT_ONLY
+
+    def test_non_wafer_is_untouched(self, ws):
+        cfg = {'plot_style': 'scatter', 'x': 'X', 'y': ['Y']}
+        ws._ensure_wafer_spines(cfg)
+        assert 'spines_visible' not in cfg
+
+    def test_explicit_spines_are_preserved(self, ws):
+        # A saved recipe carries its own spines_visible -- don't override it.
+        explicit = {'top': True, 'right': True, 'bottom': True, 'left': True}
+        cfg = {'plot_style': 'wafer', 'x': 'X', 'y': ['Y'], 'spines_visible': explicit}
+        ws._ensure_wafer_spines(cfg)
+        assert cfg['spines_visible'] == explicit
+
+    def test_create_plot_from_config_applies_wafer_default(self, ws, monkeypatch):
+        # The AI/Maps entry point must apply the wafer default before building
+        # the plot. Stub the render step so this stays focused and headless-safe
+        # (a real wafer render needs coordinate columns and would pop a dialog
+        # on failure); _ensure_wafer_spines mutates the config in place.
+        monkeypatch.setattr(ws.vm, 'select_dataframe', lambda name: None)
+        monkeypatch.setattr(ws, '_create_and_display_plot', lambda cfg, **kw: None)
+        cfg = {
+            'df_name': 'sheet1', 'plot_style': 'wafer',
+            'x': 'X', 'y': ['Y'], 'z': 'Strain (GPa)',
+        }
+        ws.create_plot_from_config('sheet1', cfg)
+        assert cfg['spines_visible'] == self.WAFER_LEFT_ONLY
+
+
 class TestUpdatePlotPreservesDfName:
     """Regression coverage for a bug found while fixing B11: activating a
     plot's window correctly resyncs the side panel to that plot's own

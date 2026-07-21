@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.patches as patches
 from matplotlib.colors import LogNorm, CenteredNorm
+from scipy import stats
+from scipy.interpolate import griddata
 
 
 def _clear_degenerate_zlim(zmin, zmax):
@@ -553,7 +555,6 @@ class PlotRenderer:
             })
 
     def _plot_histogram(self, df, colors):
-        from scipy import stats
         plot_df = df.dropna(subset=[self.vg.x])
         bins = self.vg.hist_bins
         hist_step = getattr(self.vg, 'hist_step', False)
@@ -810,7 +811,6 @@ class WaferPlot:
               norm_kind='linear', norm_center=0.0):
         """Plot wafer map with interpolated data."""
         xi, yi = np.meshgrid(np.linspace(-r, r, 600), np.linspace(-r, r, 600))
-        from scipy.interpolate import griddata
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
 
         norm = None

@@ -209,6 +209,26 @@ class TestSharedGraphToolbar:
         assert ws._graph_toolbar_slot_layout.count() == 1
 
 
+class TestRendererHeavyImportsAreEager:
+    """Perf-regression guard. scipy.stats and scipy.interpolate are heavy
+    (~1.5 s cold). They must be imported when v_plot_renderer is imported
+    (i.e. while the Graphs workspace is built at startup), NOT lazily inside
+    _plot_histogram / WaferPlot.plot -- a lazy import made the first
+    histogram/wafer render pay the whole scipy import mid-load, so opening a
+    saved .graphs workspace containing one was ~1.5 s slower than it should
+    be. If either is moved back to a function-local import, the module-level
+    name disappears and this fails."""
+
+    def test_scipy_submodules_are_module_level_imports(self):
+        import sys
+        import spectroview.view.components.v_plot_renderer as renderer
+
+        assert hasattr(renderer, 'stats'), "scipy.stats must be a module-level import"
+        assert hasattr(renderer, 'griddata'), "scipy.interpolate.griddata must be a module-level import"
+        assert 'scipy.stats' in sys.modules
+        assert 'scipy.interpolate' in sys.modules
+
+
 class TestLoadWorkspaceSkipsUnrenderableGraphs:
     def test_one_bad_graph_does_not_abort_loading_the_rest(self, ws, excel_df, monkeypatch):
         """Regression test for a real bug: load_workspace's per-graph loop had

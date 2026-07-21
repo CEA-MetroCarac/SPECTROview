@@ -63,7 +63,7 @@ class VMenuBar(QToolBar):
         self.actionAIChat = self.addAction(QIcon(os.path.join(ICON_DIR, "llm_ai.png")), "SPECTROview AI Agent")
         self.actionAIChat.setShortcut("Ctrl+Shift+A")
         self.actionAIChat.setToolTip(
-            "Open SPECTROview AI Agent\n"
+            "Open SPECTROview AI Agent (Ctrl + Shift+ A)\n"
             "Query your fit results using natural language and get instant answers.\n"
         )
         self.actionAIChat.triggered.connect(self.ai_chat_requested.emit)

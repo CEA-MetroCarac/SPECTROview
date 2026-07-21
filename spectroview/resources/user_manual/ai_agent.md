@@ -10,23 +10,23 @@ The **SPECTROview AI Agent** is a built-in AI assistant that lets you query, fil
 
 You can open the AI Chat panel in two ways:
 
-- Click the 🤖 **AI Chat Agent** button in the top menu bar.
+- Click the **AI Chat Agent** button in the top menu bar.
 - Use the keyboard shortcut **`Ctrl + Shift + A`**.
 
 ---
 
 ### **2. Supported Providers**
 
-The AI Agent supports multiple LLM backends:
+The AI Agent supports multiple LLM backends out of the box — no extra packages to install:
 
 | Provider | Description | Requires |
 |----------|-------------|----------|
-| **Ollama (local)** | Fully local, no internet, no API key | `pip install ollama mcp` + Ollama installed |
-| **OpenAI** | GPT-4o, GPT-4o-mini, etc. | `pip install openai mcp` + API key |
-| **DeepSeek** | Cost-effective, high-quality reasoning | `pip install openai mcp` + DeepSeek API key |
-| **Gemini** | Google Gemini models | `pip install openai mcp` + Gemini API key |
-| **Anthropic** | Claude models | `pip install anthropic mcp` + Anthropic API key |
-| **Custom** | Any OpenAI-compatible endpoint | `pip install openai mcp` + custom URL + API key |
+| **Ollama (local)** | Fully local, no internet, no API key | [Ollama](https://ollama.com) installed and running |
+| **OpenAI** | GPT-4o, GPT-4o-mini, etc. | API key |
+| **DeepSeek** | Cost-effective, high-quality reasoning | DeepSeek API key |
+| **Gemini** | Google Gemini models | Gemini API key |
+| **Anthropic** | Claude models | Anthropic API key |
+| **Custom** | Any OpenAI-compatible endpoint (e.g. an internal/institutional server) | Base URL + API key |
 
 > **Note:** DeepSeek, Gemini, and other OpenAI-compatible providers all use the `openai` Python package as a generic networking client. You are **not** sending data to OpenAI — only the package is reused as a universal API tool.
 
@@ -244,7 +244,7 @@ AI:   (creates scatter plot with FWHM > 5 filter applied)
 If a cloud/custom provider replies with **"Connection error."**, the app couldn't establish the network connection at all (it is *not* a wrong model name or an expired key — those report differently). Common causes:
 
 - **Wrong Base URL** — for a **Custom** provider, double-check the **Base URL** in Settings. It must be the endpoint's OpenAI-compatible root (e.g. `https://host/v1` or `https://host/openai/`), **not** the full `.../chat/completions` path.
-- **Corporate / internal endpoint with a private certificate** — an on-premise endpoint (e.g. `https://…intra.company…/`) is often secured by a company certificate authority that Python doesn't trust by default, producing a hidden *certificate verify failed* error. SPECTROview handles this automatically by trusting your **operating system's certificate store** (via the `truststore` package, installed with the AI extras). If it still fails, point the app at your organization's certificate bundle by setting the environment variable **`SSL_CERT_FILE`** to your `.pem` file (e.g. `chain_bundle.pem`) before launching.
+- **Corporate / internal endpoint with a private certificate** — an on-premise endpoint (e.g. `https://…intra.company…/`) is often secured by a company certificate authority that Python doesn't trust by default, producing a hidden *certificate verify failed* error. SPECTROview handles this automatically by trusting your **operating system's certificate store** (via the `truststore` package, installed by default). If it still fails, point the app at your organization's certificate bundle by setting the environment variable **`SSL_CERT_FILE`** to your `.pem` file (e.g. `chain_bundle.pem`) before launching.
 - **Off the network / VPN** — an internal endpoint is only reachable from the corporate network or VPN.
 
 The error card now shows the underlying cause (e.g. `CERTIFICATE_VERIFY_FAILED`, `getaddrinfo failed`) beneath the summary, which tells you which of the above applies.

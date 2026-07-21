@@ -64,12 +64,7 @@ nav:
     - Settings: user_manual/settings.md
     - Save & Load: user_manual/save_load.md
     - Shortcuts & Tips: user_manual/shortcuts.md
-  # Agentic AI section hidden until the feature is publicly released.
-  # Also excluded from the build via `exclude_docs` below — re-enable both
-  # together when the AI Agent feature is ready to ship.
-  # - Agentic AI:
-  #   - User Guide: user_manual/ai_agent.md
-  #   - Architecture & Development: developer/ai_agent.md
+  - AI Agent: user_manual/ai_agent.md
   - Developer Guide:
     - Architecture: developer/index.md
     - File Loading Pipeline: developer/file_loading.md
@@ -79,6 +74,8 @@ nav:
     - Workspace Graphs: developer/graphs.md
     - Vectorized Batch Fit Engine (VBF): developer/vbf_engine.md
     - Multivariate Analysis (MVA): developer/mva.md
+    - AI Agent: developer/ai_agent.md
+  
   - API:
     - Home: api/index.md
     - Spectra Workspace (load, preprocess, fit): api/spectra.md
@@ -90,14 +87,6 @@ nav:
 
 hooks:
   - docs/docs_hooks.py
-
-# Pages excluded from the built site (not just hidden from nav) so they are
-# not reachable by direct URL, indexed by search, or listed in the sitemap.
-# Remove alongside the commented-out "Agentic AI" nav section above when
-# the AI Agent feature is ready to be publicly released.
-exclude_docs: |
-  user_manual/ai_agent.md
-  developer/ai_agent.md
 
 markdown_extensions:
   - admonition

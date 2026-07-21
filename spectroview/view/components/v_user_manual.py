@@ -225,6 +225,7 @@ MANUAL_SECTIONS = [
     ("spectra_maps.md",     "Workspaces Spectra & Maps"),
     ("graphs.md",           "Workspaces Graphs"),
     ("mva.md",              "Multivariate Analysis (MVA)"),
+    ("ai_agent.md",         "AI Agent"),  
     ("calculators.md",      "Quick Calculators"),
     ("settings.md",         "Settings"),
     ("save_load.md",        "Save & Load"),

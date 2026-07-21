@@ -34,15 +34,13 @@ pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git
 
 ---
 
-### **3. Optional Dependencies (AI Agent & Voice Dictation)**
+### **3. AI Chat Agent & Optional Voice Dictation**
 
-SPECTROview includes an optional **AI Chat Agent** that allows you to query and visualize data using natural language. To use these features, you may need to install additional dependencies:
+SPECTROview includes a built-in **AI Chat Agent** that allows you to query and visualize data using natural language. All the packages it needs (`ollama`, `openai`, `anthropic`, `mcp`, `truststore`) are installed automatically as part of the standard `pip install spectroview` — no extra step is required.
 
-- **For local AI (Ollama):** `pip install ollama` (plus installing Ollama on your system)
-- **For Cloud AI (OpenAI, DeepSeek, Gemini, etc.):** `pip install openai`
-- **For Voice Dictation (Microphone button):** `pip install SpeechRecognition pyaudio`
-
-*(Note: These are not installed by default to keep the base installation lightweight.)*
+- **For local AI (Ollama):** also install [Ollama](https://ollama.com) itself on your system (the Python `ollama` package alone only talks to a running Ollama service).
+- **For Cloud AI (OpenAI, DeepSeek, Gemini, Anthropic, or a custom OpenAI-compatible endpoint):** just configure your API key / base URL in **Settings → AI**.
+- **For Voice Dictation (Microphone button):** this remains optional — `pip install SpeechRecognition pyaudio`. If these are not installed, the microphone button still appears but shows an install instruction when clicked.
 
 ---
 

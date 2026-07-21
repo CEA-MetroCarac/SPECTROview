@@ -451,7 +451,12 @@ class VChatPanel(QDialog):
 
         self.cbb_model = QComboBox()
         self.cbb_model.setMinimumWidth(110)
-        self.cbb_model.setToolTip("Select the model to use")
+        # Editable so a model name can be typed directly — some endpoints
+        # (custom OpenAI-compatible ones especially) don't expose a
+        # model-listing API, so the dropdown would otherwise be empty.
+        self.cbb_model.setEditable(True)
+        self.cbb_model.setInsertPolicy(QComboBox.NoInsert)
+        self.cbb_model.setToolTip("Select or type a model name")
         row1_layout.addWidget(self.cbb_model, stretch=1)
 
         self.cbb_prompt_tier = QComboBox()
@@ -727,6 +732,21 @@ class VChatPanel(QDialog):
 
         s.endGroup()
 
+    def _custom_model_names(self, provider_key: str) -> list[str]:
+        """User-defined model names for the Custom provider.
+
+        Stored (Settings ▸ AI ▸ Custom Models) as a comma-separated string;
+        only applied for the Custom provider, whose endpoint often lacks a
+        model-listing API. Returns an empty list for every other provider.
+        """
+        if provider_key != "Custom":
+            return []
+        s = QSettings("SPECTROview", "AIChat")
+        s.beginGroup(self._SETTINGS_GROUP)
+        raw = str(s.value("custom_models", ""))
+        s.endGroup()
+        return [m.strip() for m in raw.split(",") if m.strip()]
+
     def _on_prompt_tier_changed(self, index: int) -> None:
         """Apply the manual prompt-tier override (or resume auto-detection)."""
         self.vm.set_small_model_mode({0: None, 1: False, 2: True}.get(index))
@@ -804,7 +824,12 @@ class VChatPanel(QDialog):
         available = self.vm.is_available()
 
         if available:
-            models = self.vm.get_models()
+            models = list(self.vm.get_models())
+            # Merge in user-defined Custom Models (Settings ▸ AI) so they are
+            # always selectable even when the endpoint has no listing API.
+            for name in self._custom_model_names(provider_key):
+                if name not in models:
+                    models.append(name)
             self.cbb_model.blockSignals(True)
             current = self.cbb_model.currentText()
             self.cbb_model.clear()
@@ -824,11 +849,15 @@ class VChatPanel(QDialog):
             s.beginGroup(self._SETTINGS_GROUP)
             saved_model = str(s.value(f"model_{provider_key}", ""))
             s.endGroup()
-            
+
             target_model = saved_model if saved_model else current
             idx = self.cbb_model.findText(target_model)
             if idx >= 0:
                 self.cbb_model.setCurrentIndex(idx)
+            elif target_model:
+                # Editable combobox: keep a typed/saved model the provider
+                # didn't list rather than silently dropping it.
+                self.cbb_model.setCurrentText(target_model)
             elif self.cbb_model.findText(current) >= 0:
                 self.cbb_model.setCurrentIndex(self.cbb_model.findText(current))
             if self.cbb_model.currentText():

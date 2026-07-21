@@ -189,6 +189,15 @@ class TestAiSettings:
         assert reloaded["api_key_Anthropic"] == "sk-test-123"
         assert reloaded["history_folder"] == "/tmp/hist"
 
+    def test_round_trip_custom_provider(self, settings):
+        settings.save_ai_settings({
+            "custom_base_url": "https://llm.example.com/v1",
+            "custom_models": "model-a, model-b",
+        })
+        reloaded = MSettings().load_ai_settings()
+        assert reloaded["custom_base_url"] == "https://llm.example.com/v1"
+        assert reloaded["custom_models"] == "model-a, model-b"
+
     def test_unknown_keys_are_ignored(self, settings):
         settings.save_ai_settings({"not_a_real_key": "value"})
         reloaded = MSettings().load_ai_settings()

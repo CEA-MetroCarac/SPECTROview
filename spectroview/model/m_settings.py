@@ -197,6 +197,7 @@ class MSettings:
             "api_key_Mistral": s.value("api_key_Mistral", "", str),
             "api_key_Custom": s.value("api_key_Custom", "", str),
             "custom_base_url": s.value("custom_base_url", "", str),
+            "custom_models": s.value("custom_models", "", str),
             "history_folder": s.value("history_folder", "", str),
         }
         s.endGroup()
@@ -206,7 +207,7 @@ class MSettings:
         s = QSettings("SPECTROview", "AIChat")
         s.beginGroup("ai_chat")
         for key, value in data.items():
-            if key in ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini", "api_key_DeepSeek", "api_key_Mistral", "api_key_Custom", "custom_base_url", "history_folder"]:
+            if key in ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini", "api_key_DeepSeek", "api_key_Mistral", "api_key_Custom", "custom_base_url", "custom_models", "history_folder"]:
                 s.setValue(key, value)
         s.endGroup()
 

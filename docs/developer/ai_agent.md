@@ -138,7 +138,7 @@ spectroview/ai_agent/
 | `utils/df_summary.py` | **Model** | Compacts a DataFrame's column listing in the system prompt once it exceeds `column_detail_threshold` columns, without ever hiding a column name. |
 | `utils/plot_utils.py` | **Model** | `normalize_plot_config()`/`expand_comma_styles()` — post-processes accumulated plot configs (type coercion, comma-separated multi-style expansion) before they reach the Graphs workspace. |
 | `vm_chat.py` | **ViewModel** | Detects small-vs-full model tier, builds the tier-appropriate system prompt, assembles Ollama/timeout/max-token request options, manages conversation history, and runs the tool-calling agentic loop (up to 5 turns). |
-| `v_chat_panel.py` | **View** | Floating `QDialog` with chat bubbles, provider/model selector, the prompt-tier selector, timestamp display, status bar, and input field. Emits `plot_requested(dict)` when the AI creates/updates/deletes a graph. |
+| `v_chat_panel.py` | **View** | Floating `QDialog` with chat bubbles, provider/model selector, the prompt-tier selector, timestamp display, status bar, and input field. Emits `plot_requested(dict)` when the AI creates/updates/deletes a graph. The model selector is an **editable** `QComboBox` (a model name can be typed directly); for the **Custom** provider its list is seeded from the comma-separated `custom_models` setting (Settings ▸ AI) via `_custom_model_names()`, so endpoints without a model-listing API are still usable. |
 | `v_history_dialog.py` | **View** | Browsable list of saved conversations sorted by most-recent-first. Supports open, rename, duplicate, and delete. |
 
 ---

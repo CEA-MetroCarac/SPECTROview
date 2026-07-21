@@ -37,8 +37,11 @@ The AI Agent supports multiple LLM backends:
 1. Select a **Provider** from the dropdown on the top-left of the chat panel.
 2. For cloud providers (OpenAI, DeepSeek, Gemini, Anthropic, Custom):
    - Enter your **API key** in the **Settings** panel (`Ctrl + Shift + S` → **AI** tab).
-3. Select a **Model** from the model dropdown next to the provider.
+   - For the **Custom** provider, also fill in the **Custom Base URL** (the endpoint's OpenAI-compatible URL).
+3. Choose a **Model** from the model dropdown next to the provider. The dropdown is **editable** — if the model you want is not listed, just type its name in.
 4. Click the **⟳ refresh** icon to verify the connection. A green status indicator confirms it is working.
+
+> **Custom Models:** Some endpoints (custom ones especially) do not expose a model-listing API, so the dropdown starts empty. Enter the model names you use in **Settings** → **AI** tab → **Custom Models** as a comma-separated list (e.g. `model-a, model-b`). They then appear in the dropdown for the **Custom** provider and are remembered between sessions.
 
 ---
 

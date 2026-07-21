@@ -202,6 +202,13 @@ class VSettingsDialog(QDialog):
         self.edit_custom = QLineEdit()
         self.edit_custom.setEchoMode(QLineEdit.Password)
         self.edit_custom_url = QLineEdit()
+        self.edit_custom_models = QLineEdit()
+        self.edit_custom_models.setPlaceholderText("model-a, model-b, model-c")
+        self.edit_custom_models.setToolTip(
+            "Comma-separated model names for the Custom provider.\n"
+            "They populate the model dropdown in the AI chat panel — useful "
+            "when the endpoint does not expose a model-listing API."
+        )
 
         def add_api_row(label, widget):
             row = QHBoxLayout()
@@ -218,6 +225,7 @@ class VSettingsDialog(QDialog):
         add_api_row("Mistral API Key:", self.edit_mistral)
         add_api_row("Custom API Key:", self.edit_custom)
         add_api_row("Custom Base URL:", self.edit_custom_url)
+        add_api_row("Custom Models:", self.edit_custom_models)
 
         ai_tab_layout.addWidget(grp_api)
 
@@ -311,6 +319,7 @@ class VSettingsDialog(QDialog):
         self.edit_mistral.setText(data.get("api_key_Mistral", ""))
         self.edit_custom.setText(data.get("api_key_Custom", ""))
         self.edit_custom_url.setText(data.get("custom_base_url", ""))
+        self.edit_custom_models.setText(data.get("custom_models", ""))
         self.le_history_folder.setText(data.get("history_folder", ""))
 
     def _on_ai_agent_code_entered(self):
@@ -342,6 +351,7 @@ class VSettingsDialog(QDialog):
             "api_key_Mistral": self.edit_mistral.text(),
             "api_key_Custom": self.edit_custom.text(),
             "custom_base_url": self.edit_custom_url.text(),
+            "custom_models": self.edit_custom_models.text(),
             "history_folder": self.le_history_folder.text(),
         })
 

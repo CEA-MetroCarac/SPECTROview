@@ -295,6 +295,25 @@
   
   
   
+    <li class="md-tabs__item">
+      <a href="../ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI Agent
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
     
     
       <li class="md-tabs__item">
@@ -540,10 +559,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-optional-dependencies-ai-agent-voice-dictation" class="md-nav__link">
+  <a href="#3-ai-chat-agent-optional-voice-dictation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Optional Dependencies (AI Agent &amp; Voice Dictation)
+        3. AI Chat Agent &amp; Optional Voice Dictation
       
     </span>
   </a>
@@ -1017,11 +1036,40 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
       
         
           
+        
+      
         
       
         
@@ -1053,7 +1101,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1075,14 +1123,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1290,6 +1338,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1335,7 +1411,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1357,14 +1433,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1605,14 +1681,13 @@
 <p>This installs the most recent code from the <code>main</code> branch, which may include features and fixes not yet published on PyPI.</p>
 </blockquote>
 <hr />
-<h3 id="3-optional-dependencies-ai-agent-voice-dictation"><strong>3. Optional Dependencies (AI Agent &amp; Voice Dictation)</strong><a class="headerlink" href="#3-optional-dependencies-ai-agent-voice-dictation" title="Permanent link">&para;</a></h3>
-<p>SPECTROview includes an optional <strong>AI Chat Agent</strong> that allows you to query and visualize data using natural language. To use these features, you may need to install additional dependencies:</p>
+<h3 id="3-ai-chat-agent-optional-voice-dictation"><strong>3. AI Chat Agent &amp; Optional Voice Dictation</strong><a class="headerlink" href="#3-ai-chat-agent-optional-voice-dictation" title="Permanent link">&para;</a></h3>
+<p>SPECTROview includes a built-in <strong>AI Chat Agent</strong> that allows you to query and visualize data using natural language. All the packages it needs (<code>ollama</code>, <code>openai</code>, <code>anthropic</code>, <code>mcp</code>, <code>truststore</code>) are installed automatically as part of the standard <code>pip install spectroview</code> — no extra step is required.</p>
 <ul>
-<li><strong>For local AI (Ollama):</strong> <code>pip install ollama</code> (plus installing Ollama on your system)</li>
-<li><strong>For Cloud AI (OpenAI, DeepSeek, Gemini, etc.):</strong> <code>pip install openai</code></li>
-<li><strong>For Voice Dictation (Microphone button):</strong> <code>pip install SpeechRecognition pyaudio</code></li>
+<li><strong>For local AI (Ollama):</strong> also install <a href="https://ollama.com">Ollama</a> itself on your system (the Python <code>ollama</code> package alone only talks to a running Ollama service).</li>
+<li><strong>For Cloud AI (OpenAI, DeepSeek, Gemini, Anthropic, or a custom OpenAI-compatible endpoint):</strong> just configure your API key / base URL in <strong>Settings → AI</strong>.</li>
+<li><strong>For Voice Dictation (Microphone button):</strong> this remains optional — <code>pip install SpeechRecognition pyaudio</code>. If these are not installed, the microphone button still appears but shows an install instruction when clicked.</li>
 </ul>
-<p><em>(Note: These are not installed by default to keep the base installation lightweight.)</em></p>
 <hr />
 <h3 id="4-launch-spectroview"><strong>4. Launch </strong>SPECTROview****<a class="headerlink" href="#4-launch-spectroview" title="Permanent link">&para;</a></h3>
 <p>Once installed, open your terminal or command prompt and run:</p>

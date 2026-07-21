@@ -292,6 +292,25 @@
   
   
   
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI Agent
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
     
   
   
@@ -845,6 +864,33 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -854,6 +900,8 @@
       
         
           
+        
+      
         
       
         
@@ -886,7 +934,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -908,14 +956,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="">
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1665,6 +1713,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1710,7 +1786,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1732,14 +1808,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2366,7 +2442,7 @@ When a new developer is confused about "where is the data?", the answer is: <str
 <h3 id="_on_map_data_changedmd-action"><code>_on_map_data_changed(md, action)</code><a class="headerlink" href="#_on_map_data_changedmd-action" title="Permanent link">&para;</a></h3>
 <p>Called <strong>after each individual <code>MapData</code> is modified</strong> within a bulk loop.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Maps workspace override:</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">def</span> <span class="nf">_on_map_data_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">md</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">_on_map_data_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">md</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;reinit_spectra&quot;</span><span class="p">:</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">clear_preprocess</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="k">elif</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;delete_baseline&quot;</span><span class="p">,</span> <span class="s2">&quot;subtract_baseline&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_spectral_range&quot;</span><span class="p">):</span>

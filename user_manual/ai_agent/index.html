@@ -1,0 +1,2158 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A Tool for Spectroscopic Data Processing and Visualization">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/ai_agent/">
+      
+      
+        <link rel="prev" href="../shortcuts/">
+      
+      
+        <link rel="next" href="../../developer/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>AI Agent - SPECTROview Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ai-chat-agent" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SPECTROview Documentation" class="md-header__button md-logo" aria-label="SPECTROview Documentation" data-md-component="logo">
+      
+  <img src="../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SPECTROview Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              AI Agent
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  User Manual
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI Agent
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../developer/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Developer Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+  
+  
+    <style>
+      /* Hide the default H1 title injected by MkDocs */
+      .md-content h1 { display: none !important; }
+    </style>
+  
+  
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SPECTROview Documentation" class="md-nav__button md-logo" aria-label="SPECTROview Documentation" data-md-component="logo">
+      
+  <img src="../../assets/icon.png" alt="logo">
+
+    </a>
+    SPECTROview Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Manual
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Manual
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Menu Bar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Spectra & Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multivariate Analysis (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Calculators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Save & Load
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shortcuts & Tips
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ai-chat-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI Chat Agent
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AI Chat Agent">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-opening-the-ai-chat-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Opening the AI Chat Agent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-supported-providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Supported Providers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-configuring-a-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Configuring a Provider
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-prompt-tier-for-local-models-auto-full-simplified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Prompt Tier for Local Models (Auto / Full / Simplified)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-chat-interface-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Chat Interface Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Chat Interface Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#voice-dictation-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎤 Voice Dictation (Optional)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-what-the-ai-agent-can-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. What the AI Agent Can Do
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-prompt-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Prompt Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Prompt Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔍 Data Filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📊 Statistics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-plots" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📈 Creating Plots
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modifying-graphs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✏️ Modifying Graphs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleting-graphs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🗑️ Deleting Graphs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        💬 General Questions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-conversation-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Conversation History
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-tips-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Tips &amp; Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#10-troubleshooting-a-connection-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Troubleshooting a "Connection error."
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#11-keyboard-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Keyboard Shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Guide
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File Loading Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Architecture SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Spectra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vectorized Batch Fit Engine (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multivariate Analysis (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spectra Workspace (load, preprocess, fit)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maps Workspace (hyperspectral, heatmaps)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Visualization (Graphs)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Calculators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extending SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>AI Agent</h1>
+
+<h2 id="ai-chat-agent"><strong>AI Chat Agent</strong><a class="headerlink" href="#ai-chat-agent" title="Permanent link">&para;</a></h2>
+<p>The <strong>SPECTROview AI Agent</strong> is a built-in AI assistant that lets you query, filter, visualize, and modify your data using plain natural language — no coding required.</p>
+<blockquote>
+<p>The AI Chat Agent is <strong>optional</strong>. SPECTROview works fully without it. You only need to set it up if you want to use AI-powered features.</p>
+</blockquote>
+<hr />
+<h3 id="1-opening-the-ai-chat-agent"><strong>1. Opening the AI Chat Agent</strong><a class="headerlink" href="#1-opening-the-ai-chat-agent" title="Permanent link">&para;</a></h3>
+<p>You can open the AI Chat panel in two ways:</p>
+<ul>
+<li>Click the <strong>AI Chat Agent</strong> button in the top menu bar.</li>
+<li>Use the keyboard shortcut <strong><code>Ctrl + Shift + A</code></strong>.</li>
+</ul>
+<hr />
+<h3 id="2-supported-providers"><strong>2. Supported Providers</strong><a class="headerlink" href="#2-supported-providers" title="Permanent link">&para;</a></h3>
+<p>The AI Agent supports multiple LLM backends out of the box — no extra packages to install:</p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Description</th>
+<th>Requires</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ollama (local)</strong></td>
+<td>Fully local, no internet, no API key</td>
+<td><a href="https://ollama.com">Ollama</a> installed and running</td>
+</tr>
+<tr>
+<td><strong>OpenAI</strong></td>
+<td>GPT-4o, GPT-4o-mini, etc.</td>
+<td>API key</td>
+</tr>
+<tr>
+<td><strong>DeepSeek</strong></td>
+<td>Cost-effective, high-quality reasoning</td>
+<td>DeepSeek API key</td>
+</tr>
+<tr>
+<td><strong>Gemini</strong></td>
+<td>Google Gemini models</td>
+<td>Gemini API key</td>
+</tr>
+<tr>
+<td><strong>Anthropic</strong></td>
+<td>Claude models</td>
+<td>Anthropic API key</td>
+</tr>
+<tr>
+<td><strong>Custom</strong></td>
+<td>Any OpenAI-compatible endpoint (e.g. an internal/institutional server)</td>
+<td>Base URL + API key</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note:</strong> DeepSeek, Gemini, and other OpenAI-compatible providers all use the <code>openai</code> Python package as a generic networking client. You are <strong>not</strong> sending data to OpenAI — only the package is reused as a universal API tool.</p>
+</blockquote>
+<hr />
+<h3 id="3-configuring-a-provider"><strong>3. Configuring a Provider</strong><a class="headerlink" href="#3-configuring-a-provider" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Select a <strong>Provider</strong> from the dropdown on the top-left of the chat panel.</li>
+<li>For cloud providers, enter your <strong>API key</strong> in the <strong>Settings</strong> panel (<code>Ctrl + Shift + S</code> → <strong>AI</strong> tab):</li>
+<li>The <strong>Custom</strong> provider's <strong>Custom API Key</strong>, <strong>Base URL</strong>, and <strong>Model Name</strong> fields are shown by default.</li>
+<li>OpenAI, Anthropic, Gemini, DeepSeek, and Mistral keys are tucked under the collapsed <strong>▸ Provider Presets</strong> section — click it to expand.</li>
+<li>For the <strong>Custom</strong> provider, fill in the <strong>Base URL</strong> (the endpoint's OpenAI-compatible URL).</li>
+<li>Choose a <strong>Model</strong> from the model dropdown next to the provider. The dropdown is <strong>editable</strong> — if the model you want is not listed, just type its name in.</li>
+<li>Click the <strong>⟳ refresh</strong> icon to verify the connection. A green status indicator confirms it is working.</li>
+</ol>
+<blockquote>
+<p><strong>Model Name:</strong> Some endpoints (custom ones especially) do not expose a model-listing API, so the dropdown starts empty. Enter the model names you use in <strong>Settings</strong> → <strong>AI</strong> tab → <strong>Model Name</strong> as a comma-separated list (e.g. <code>model-a, model-b</code>). They then appear in the dropdown for the <strong>Custom</strong> provider and are remembered between sessions.</p>
+</blockquote>
+<hr />
+<h3 id="4-prompt-tier-for-local-models-auto-full-simplified"><strong>4. Prompt Tier for Local Models (Auto / Full / Simplified)</strong><a class="headerlink" href="#4-prompt-tier-for-local-models-auto-full-simplified" title="Permanent link">&para;</a></h3>
+<p>Next to the model dropdown is a small <strong>prompt tier</strong> selector: <strong>Auto</strong>, <strong>Full prompt</strong>, or <strong>Simplified prompt</strong>. It only affects local <strong>Ollama</strong> models.</p>
+<p>Small local models (roughly under ~10 billion parameters — things like <code>qwen3:8b</code>, <code>gemma3:4b</code>, <code>phi3:mini</code>) are noticeably less reliable with a long, information-dense prompt than a large cloud model is. To compensate, SPECTROview can automatically give small models a shorter, more focused prompt, a smaller conversation-history window, and tuned generation settings — while leaving larger models completely untouched.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Auto</strong> (default)</td>
+<td>SPECTROview checks the size of the selected Ollama model and automatically picks the right prompt for it. No action needed — this is the recommended setting for almost everyone.</td>
+</tr>
+<tr>
+<td><strong>Full prompt</strong></td>
+<td>Always use the full, detailed prompt, even for a small model. Useful for comparing behavior, or if a "small" model is actually working fine as-is.</td>
+</tr>
+<tr>
+<td><strong>Simplified prompt</strong></td>
+<td>Always use the shorter, small-model-optimized prompt, even for a large model. Useful if a specific model is struggling despite being large, or if you want faster responses.</td>
+</tr>
+</tbody>
+</table>
+<p>When Simplified mode is active, the status bar shows <strong><code>· Simplified prompts</code></strong> next to the connection indicator, so you can always tell which mode you're in.</p>
+<p><strong>If a local model isn't calling tools correctly</strong> (e.g. it describes what it <em>would</em> plot instead of actually creating the plot, or drops a setting like grid lines), try switching this selector to <strong>Simplified prompt</strong> — even if Auto didn't pick it automatically for that model — before assuming the model can't do the task at all.</p>
+<hr />
+<h3 id="5-chat-interface-overview"><strong>5. Chat Interface Overview</strong><a class="headerlink" href="#5-chat-interface-overview" title="Permanent link">&para;</a></h3>
+<p>The chat panel shows messages in chronological order with clear color-coded bubbles:</p>
+<ul>
+<li>🔵 <strong>Blue bubble</strong> — Your messages (User)</li>
+<li>🟢 <strong>Green bubble</strong> — AI Agent replies</li>
+<li>🔴 <strong>Red bubble</strong> — Error messages</li>
+</ul>
+<p>Each bubble shows the <strong>timestamp</strong> (<code>YY-MM-DD HH:MM</code>) and action buttons:
+- <strong>📋 Copy</strong> — Copy the message text to clipboard
+- <strong>↩ Reply</strong> (AI messages only) — Reply specifically to that AI message</p>
+<h4 id="voice-dictation-optional">🎤 Voice Dictation (Optional)<a class="headerlink" href="#voice-dictation-optional" title="Permanent link">&para;</a></h4>
+<p>You can use the microphone button in the input bar to dictate your queries instead of typing them. This feature requires optional dependencies:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>SpeechRecognition<span class="w"> </span>pyaudio
+</code></pre></div>
+If these are not installed, the microphone button will still appear but will show an error message when clicked instructing you to install them.</p>
+<hr />
+<h3 id="6-what-the-ai-agent-can-do"><strong>6. What the AI Agent Can Do</strong><a class="headerlink" href="#6-what-the-ai-agent-can-do" title="Permanent link">&para;</a></h3>
+<p>The AI Agent has full awareness of your loaded DataFrames and open graphs. It can:</p>
+<ul>
+<li><strong>Filter data</strong>: Show rows matching any condition</li>
+<li><strong>Compute statistics</strong>: Mean, std, min, max, percentiles</li>
+<li><strong>Create plots</strong>: Generate any of the 9 supported plot styles</li>
+<li><strong>Modify graphs</strong>: Update axis ranges, titles, colors, filters</li>
+<li><strong>Delete graphs</strong>: Remove specific or all open graphs</li>
+<li><strong>Answer questions</strong>: Explain column contents, suggest analysis steps</li>
+</ul>
+<hr />
+<h3 id="7-prompt-examples"><strong>7. Prompt Examples</strong><a class="headerlink" href="#7-prompt-examples" title="Permanent link">&para;</a></h3>
+<h4 id="data-filtering">🔍 Data Filtering<a class="headerlink" href="#data-filtering" title="Permanent link">&para;</a></h4>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Show rows where FWHM_Si &gt; 5
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Filter data where Zone == &quot;center&quot; and Slot &lt; 10
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Find samples where both R_squared &gt; 0.95 and fwhm &lt; 4
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Show me all outliers where peak_intensity is more than 2 standard deviations above the mean
+</code></pre></div></p>
+<hr />
+<h4 id="statistics">📊 Statistics<a class="headerlink" href="#statistics" title="Permanent link">&para;</a></h4>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Give me statistics for peak center and FWHM columns
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>What is the average FWHM by Zone?
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Compare the mean and standard deviation of center_Si across all zones
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>How many unique samples are in the dataset?
+</code></pre></div></p>
+<hr />
+<h4 id="creating-plots">📈 Creating Plots<a class="headerlink" href="#creating-plots" title="Permanent link">&para;</a></h4>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Create a scatter plot of Slot vs center_Si colored by Zone
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Plot a box chart of FWHM grouped by wafer
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Generate a point plot and a bar plot of peak_intensity vs Slot
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Create a 2D map of center_Si with Slot on X and Zone on Y
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Plot a wafer map of fwhm_Si for Slot 11
+</code></pre></div>
+<em>(Note: Wafer and 2Dmap plots require your dataset to have spatial X and Y coordinate columns).</em>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Plot a histogram of FWHM values with 30 bins
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>Show a trendline of center_Si vs temperature
+</code></pre></div></p>
+<hr />
+<h4 id="modifying-graphs">✏️ Modifying Graphs<a class="headerlink" href="#modifying-graphs" title="Permanent link">&para;</a></h4>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>Set the Y-axis range of graph 3 to [3.5, 4.2]
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>Change the title of graph 1 to &quot;FWHM Overview&quot;
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>Update graph 5 to use the viridis color palette
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>Add a filter to graph 2: only show Zone == &quot;edge&quot;
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>Change the plot style of graph 4 to scatter
+</code></pre></div></p>
+<hr />
+<h4 id="deleting-graphs">🗑️ Deleting Graphs<a class="headerlink" href="#deleting-graphs" title="Permanent link">&para;</a></h4>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>Delete graph 3
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>Remove all graphs except graph 1
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>Close all open graphs
+</code></pre></div></p>
+<hr />
+<h4 id="general-questions">💬 General Questions<a class="headerlink" href="#general-questions" title="Permanent link">&para;</a></h4>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>What columns are available in my data?
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>Which columns contain numeric values?
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>What is the data type of the Zone column?
+</code></pre></div></p>
+<hr />
+<h3 id="8-conversation-history"><strong>8. Conversation History</strong><a class="headerlink" href="#8-conversation-history" title="Permanent link">&para;</a></h3>
+<p>The AI Agent <strong>remembers your conversation</strong> across multiple turns:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>User: Show rows where FWHM &gt; 5
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>AI:   Found 42 rows...
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
+<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>User: Now create a scatter plot of Slot vs center_Si for those rows
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>AI:   (creates scatter plot with FWHM &gt; 5 filter applied)
+</code></pre></div>
+<ul>
+<li>The chat history is <strong>preserved</strong> when you load new files or switch datasets — it only resets when you click <strong>➕ New Chat</strong>.</li>
+<li>Past conversations are automatically saved and can be reopened from the <strong>History</strong> panel (📋 button).</li>
+<li>Use <strong>↩ Reply</strong> on any AI message to specifically respond to that turn.</li>
+</ul>
+<hr />
+<h3 id="9-tips-best-practices"><strong>9. Tips &amp; Best Practices</strong><a class="headerlink" href="#9-tips-best-practices" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Be specific about column names</strong> — the AI knows your column names, but using the exact name avoids confusion.</li>
+<li><strong>Reference graph IDs</strong> — when modifying or deleting graphs, check the graph ID shown in its title bar.</li>
+<li><strong>Start simple</strong> — ask for a basic plot first, then refine it in follow-up messages.</li>
+<li><strong>Multiple plots at once</strong> — request several styles in one prompt: <em>"Create a box and scatter plot of X vs Y"</em>.</li>
+<li><strong>Check the status bar</strong> — a 🔴 red indicator means the connection is not working. Check your API key in Settings or verify Ollama is running.</li>
+<li><strong>Struggling local model?</strong> — try forcing <strong>Simplified prompt</strong> (see <a href="#4-prompt-tier-for-local-models-auto--full--simplified">section 4</a>), keep requests to one or two plots per message, and prefer models that are explicitly documented as supporting tool/function calling.</li>
+</ul>
+<hr />
+<h3 id="10-troubleshooting-a-connection-error"><strong>10. Troubleshooting a "Connection error."</strong><a class="headerlink" href="#10-troubleshooting-a-connection-error" title="Permanent link">&para;</a></h3>
+<p>If a cloud/custom provider replies with <strong>"Connection error."</strong>, the app couldn't establish the network connection at all (it is <em>not</em> a wrong model name or an expired key — those report differently). Common causes:</p>
+<ul>
+<li><strong>Wrong Base URL</strong> — for a <strong>Custom</strong> provider, double-check the <strong>Base URL</strong> in Settings. It must be the endpoint's OpenAI-compatible root (e.g. <code>https://host/v1</code> or <code>https://host/openai/</code>), <strong>not</strong> the full <code>.../chat/completions</code> path.</li>
+<li><strong>Corporate / internal endpoint with a private certificate</strong> — an on-premise endpoint (e.g. <code>https://…intra.company…/</code>) is often secured by a company certificate authority that Python doesn't trust by default, producing a hidden <em>certificate verify failed</em> error. SPECTROview handles this automatically by trusting your <strong>operating system's certificate store</strong> (via the <code>truststore</code> package, installed by default). If it still fails, point the app at your organization's certificate bundle by setting the environment variable <strong><code>SSL_CERT_FILE</code></strong> to your <code>.pem</code> file (e.g. <code>chain_bundle.pem</code>) before launching.</li>
+<li><strong>Off the network / VPN</strong> — an internal endpoint is only reachable from the corporate network or VPN.</li>
+</ul>
+<p>The error card now shows the underlying cause (e.g. <code>CERTIFICATE_VERIFY_FAILED</code>, <code>getaddrinfo failed</code>) beneath the summary, which tells you which of the above applies.</p>
+<hr />
+<h3 id="11-keyboard-shortcuts"><strong>11. Keyboard Shortcuts</strong><a class="headerlink" href="#11-keyboard-shortcuts" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Shortcut</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Ctrl + Shift + A</code></td>
+<td>Open AI Chat Agent</td>
+</tr>
+<tr>
+<td><code>Enter</code></td>
+<td>Send message</td>
+</tr>
+<tr>
+<td><code>Shift + Enter</code></td>
+<td>New line in input box</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../shortcuts/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Shortcuts &amp; Tips">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Shortcuts & Tips
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../developer/" class="md-footer__link md-footer__link--next" aria-label="Next: Architecture">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Architecture
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

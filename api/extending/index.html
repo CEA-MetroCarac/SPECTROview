@@ -293,6 +293,25 @@
   
   
   
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI Agent
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
     
     
       <li class="md-tabs__item">
@@ -847,11 +866,40 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
       
         
           
+        
+      
         
       
         
@@ -883,7 +931,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -905,14 +953,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1120,6 +1168,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1168,7 +1244,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -1190,14 +1266,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1536,7 +1612,7 @@
 <hr />
 <h2 id="custom-baseline-methods">Custom Baseline Methods<a class="headerlink" href="#custom-baseline-methods" title="Permanent link">&para;</a></h2>
 <p>Baseline evaluation (<code>spectroview.api.preprocessing.subtract_baseline</code>, and every workspace's <code>set_baseline</code>) dispatches on <code>config["mode"]</code> by string name. Beyond the built-in <code>None</code>, <code>"Linear"</code>, <code>"Polynomial"</code>, and <code>"arpls"</code> modes, <strong>any <a href="https://pybaselines.readthedocs.io/">pybaselines</a> <code>Baseline</code> method name works out of the box</strong> — no registration step:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">preprocessing</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">preprocessing</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># &quot;asls&quot;, &quot;airpls&quot;, &quot;modpoly&quot;, &quot;snip&quot;, ... any pybaselines.Baseline method name</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">Y_corrected</span><span class="p">,</span> <span class="n">Y_baseline</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">subtract_baseline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;asls&quot;</span><span class="p">,</span> <span class="s2">&quot;lam&quot;</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">})</span>
@@ -1545,7 +1621,7 @@
 <hr />
 <h2 id="fit-model-plot-templates">Fit-Model &amp; Plot Templates<a class="headerlink" href="#fit-model-plot-templates" title="Permanent link">&para;</a></h2>
 <p>Both fit models and plot configurations are plain JSON files in a folder you control — SPECTROview (GUI or API) just scans that folder. This means any external tool, script, or version-controlled repository of templates can populate them:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">fitting</span><span class="p">,</span> <span class="n">graphs</span><span class="p">,</span> <span class="n">settings</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">fitting</span><span class="p">,</span> <span class="n">graphs</span><span class="p">,</span> <span class="n">settings</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Fit-model templates live under the SPECTROview Working Folder. Point it at a</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># shared location — set_working_folder() creates fit_model/plot_recipe/plot_style</span>

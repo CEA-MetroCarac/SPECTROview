@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/">
       
       
-        <link rel="prev" href="../user_manual/shortcuts/">
+        <link rel="prev" href="../user_manual/ai_agent/">
       
       
         <link rel="next" href="file_loading/">
@@ -285,6 +285,25 @@
         </a>
       </li>
     
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI Agent
+
+      </a>
+    </li>
   
 
       
@@ -845,6 +864,33 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -854,6 +900,8 @@
       
         
           
+        
+      
         
       
         
@@ -886,7 +934,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -908,14 +956,14 @@
             </a>
             
               
-              <label class="md-nav__link md-nav__link--active" for="__nav_4" id="__nav_4_label" tabindex="">
+              <label class="md-nav__link md-nav__link--active" for="__nav_5" id="__nav_5_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1123,6 +1171,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1168,7 +1244,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1190,14 +1266,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1526,13 +1602,13 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <h3 id="signalslot-communication"><strong>Signal/Slot Communication</strong><a class="headerlink" href="#signalslot-communication" title="Permanent link">&para;</a></h3>
 <p>Views and ViewModels communicate <strong>exclusively via Qt signals and slots</strong>. A ViewModel must never call View methods directly, and a View must never modify Model state without going through its ViewModel.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># ── ViewModel defines signals ──</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">class</span> <span class="nc">VMWorkspaceSpectra</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">VMWorkspaceSpectra</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">spectra_list_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>       <span class="c1"># ViewModel → View</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">fit_progress_updated</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># ── View connects in __init__ ──</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">class</span> <span class="nc">VWorkspaceSpectra</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">class</span><span class="w"> </span><span class="nc">VWorkspaceSpectra</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">spectra_list_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_list</span><span class="p">)</span>
 </code></pre></div>
 <hr />
@@ -2145,7 +2221,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../user_manual/shortcuts/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Shortcuts &amp; Tips">
+          <a href="../user_manual/ai_agent/" class="md-footer__link md-footer__link--prev" aria-label="Previous: AI Agent">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -2155,7 +2231,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
                 Previous
               </span>
               <div class="md-ellipsis">
-                Shortcuts & Tips
+                AI Agent
               </div>
             </div>
           </a>

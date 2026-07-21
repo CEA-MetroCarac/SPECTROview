@@ -293,6 +293,25 @@
   
   
   
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI Agent
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
     
     
       <li class="md-tabs__item">
@@ -847,11 +866,40 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
       
         
           
+        
+      
         
       
         
@@ -883,7 +931,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -905,14 +953,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1120,6 +1168,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1168,7 +1244,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -1190,14 +1266,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1586,7 +1662,7 @@
 <hr />
 <h2 id="stateful-workspaces">Stateful Workspaces<a class="headerlink" href="#stateful-workspaces" title="Permanent link">&para;</a></h2>
 <p><code>spectroview.api.workspace.MapsWorkspace</code> mirrors the GUI's own Maps Workspace: one map per loaded file, all of whose pixels share a fit model, with pixel identifiers named <code>f"{map_name}_({x}, {y})"</code> exactly like the GUI. It reads/writes the same <code>.maps</code> file format the GUI's "Save work" produces.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">workspace</span><span class="p">,</span> <span class="n">fitting</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">workspace</span><span class="p">,</span> <span class="n">fitting</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">ws</span> <span class="o">=</span> <span class="n">workspace</span><span class="o">.</span><span class="n">MapsWorkspace</span><span class="p">()</span>          <span class="c1"># or MapsWorkspace(map_type=&quot;wafer_300mm&quot;) for wafer maps</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">[</span><span class="n">map_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">load_files</span><span class="p">([</span><span class="s2">&quot;2Dmap_Si.txt&quot;</span><span class="p">])</span>
@@ -1601,7 +1677,7 @@
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1"># Build a heatmap of a fitted parameter</span>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">zi</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">get_heatmap</span><span class="p">(</span><span class="n">map_name</span><span class="p">,</span> <span class="s2">&quot;ampli_Si&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">zi</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="n">xi</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">xi</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">max</span><span class="p">()],</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Amplitude&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;heatmap.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
@@ -1621,8 +1697,8 @@
 <hr />
 <h2 id="loading-map-data-directly">Loading Map Data Directly<a class="headerlink" href="#loading-map-data-directly" title="Permanent link">&para;</a></h2>
 <p>For array-level control without a <code>MapsWorkspace</code>, <code>spectroview.api.io.load_map()</code> returns the raw map DataFrame (this is what <code>MapsWorkspace.load_files()</code> uses internally):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">io</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">io</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># WDF and SPC files return (DataFrame, metadata_dict); TXT/CSV return a DataFrame only.</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">load_map</span><span class="p">(</span><span class="s2">&quot;my_wafer_map.wdf&quot;</span><span class="p">)</span>
@@ -1641,7 +1717,7 @@
 <h2 id="multivariate-analysis-mva">Multivariate Analysis (MVA)<a class="headerlink" href="#multivariate-analysis-mva" title="Permanent link">&para;</a></h2>
 <p>Multivariate Analysis explores large, complex datasets without requiring prior knowledge of peak positions. <code>spectroview.api.analysis</code> provides PCA and NMF, operating on any <code>(n_spectra, n_wavenumbers)</code> matrix — e.g. the <code>Y_matrix</code> above, or <code>Y0</code> from a <code>MapsWorkspace</code>'s underlying store.</p>
 <h3 id="principal-component-analysis-pca">Principal Component Analysis (PCA)<a class="headerlink" href="#principal-component-analysis-pca" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">analysis</span><span class="p">,</span> <span class="n">preprocessing</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">analysis</span><span class="p">,</span> <span class="n">preprocessing</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">Y_norm</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">normalize_spectra</span><span class="p">(</span><span class="n">Y_matrix</span><span class="p">)</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">pca_result</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">Y_norm</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1661,7 +1737,7 @@
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># errors: (n_spectra,) per-spectrum L2 residual -- useful for flagging outlier spectra</span>
 </code></pre></div>
 <h3 id="exporting-mva-results">Exporting MVA Results<a class="headerlink" href="#exporting-mva-results" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">df_pca</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;X&quot;</span><span class="p">:</span> <span class="n">x_coords</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">:</span> <span class="n">y_coords</span><span class="p">})</span>
 <a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pca_result</span><span class="o">.</span><span class="n">n_components</span><span class="p">):</span>

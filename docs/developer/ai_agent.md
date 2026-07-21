@@ -270,7 +270,7 @@ Manages one chat session linked to the loaded DataFrames. Follows the MVVM contr
 | `chunk_received` | `str` | Streaming token fragments for typing animation |
 | `result_ready` | `ChatResult` | Final result once the agentic loop stops issuing tool calls |
 | `error_occurred` | `str` | Human-readable error message |
-| `tool_execution_received` | `(str, str)` | Tool name + its result text, emitted for every tool call in the loop (including intermediate ones) |
+| `tool_execution_received` | `(str, str)` | Tool name + its result text, emitted for every tool call in the loop (including intermediate ones). The View uses it only to update the transient "thinking" status — intermediate tool steps are no longer rendered as chips in the conversation |
 | `conversation_changed` | `str` | New/loaded conversation's title |
 
 #### **Public API**
@@ -341,6 +341,7 @@ A floating `QDialog`. Header row 1: provider selector, model selector, **prompt-
 Two things previously on this panel have since moved or been removed:
 - The **"Show model reasoning" toggle** is gone entirely (see the note under `LLMWorker`/`APIWorker`/`AnthropicWorker` above) — reasoning is never surfaced in the chat UI now.
 - **General plot-template management** (browse/apply/rename/duplicate/delete, save-all-open-graphs) now lives entirely in the Graphs workspace (`VWorkspaceGraphs`, next to Add/Update plot), not here. `VChatPanel.prompt_and_save_template()` survives only as the inline "Save N plot(s) as Template" shortcut offered after the AI creates plots (see `_on_result_ready`).
+- **Intermediate tool-step chips** (`🔧 query_dataframe`, `🔧 plot_graph`, …) are no longer shown in the conversation. `_on_tool_execution` now only updates the transient "thinking" status so the finished chat stays clean.
 
 Helper widgets:
 - **`_MessageCard`** / AI/user card variants: styled message bubbles with role-dependent colors

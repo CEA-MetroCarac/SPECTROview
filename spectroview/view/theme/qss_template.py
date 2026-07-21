@@ -714,20 +714,6 @@ _QSS_TEMPLATE = r"""
         padding: 4px 2px;
     }}
 
-    #toolCallChip {{
-        background: {surface_card};
-        border: 1px solid {surface_card_border};
-        border-radius: 9px;
-        color: {text_secondary};
-        font-size: 10px;
-        padding: 2px 8px;
-    }}
-    #toolCallChip[error="true"] {{
-        background: rgba(220, 53, 69, 0.10);
-        border: 1px solid rgba(220, 53, 69, 0.35);
-        color: rgba(220, 53, 69, 0.95);
-    }}
-
     #scrollToBottomBtn {{
         background: {accent};
         color: white;

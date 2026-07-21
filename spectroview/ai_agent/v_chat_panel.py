@@ -1143,18 +1143,10 @@ class VChatPanel(QDialog):
         self._scroll_to_bottom()
 
     def _on_tool_execution(self, name: str, result_text: str) -> None:
-        # Update the thinking status
+        # Surface progress only through the transient "thinking" status.
+        # Intermediate tool steps are intentionally NOT rendered as chips in
+        # the conversation — they added noise without helping the user.
         self._on_thinking_changed(True, f"Executed tool '{name}'...")
-
-        is_error = result_text.strip().lower().startswith("error")
-        chip = QLabel(f"{'⚠' if is_error else '🔧'} {name}")
-        chip.setObjectName("toolCallChip")
-        chip.setProperty("error", "true" if is_error else "false")
-        chip.setToolTip(result_text[:300])
-        chip.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self._insert_before_stretch(chip)
-
-        self._scroll_to_bottom()
 
     # ------------------------------------------------------------------
     # Internal helpers

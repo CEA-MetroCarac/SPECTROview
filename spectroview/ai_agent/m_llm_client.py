@@ -30,16 +30,6 @@ from PySide6.QtCore import QThread, Signal, QObject
 # ---------------------------------------------------------------------------
 # Corporate / internal CA support
 # ---------------------------------------------------------------------------
-# openai/anthropic verify TLS through httpx, whose default trust store is
-# certifi's bundle — it omits private corporate CAs. An internal HTTPS endpoint
-# (e.g. an on-prem LLM gateway) then fails with the opaque "Connection error."
-# the SDKs raise for an underlying SSL CERTIFICATE_VERIFY_FAILED. Two escape
-# hatches, in priority order:
-#   1. SSL_CERT_FILE / REQUESTS_CA_BUNDLE env var → the explicit PEM bundle it
-#      points at is passed as httpx's `verify` (see _make_http_client).
-#   2. Otherwise `truststore` routes verification through the OS trust store
-#      (e.g. the Windows certificate store), where such CAs are usually
-#      already installed. Optional — no-op if the package isn't present.
 _CA_BUNDLE_ENV = (
     os.environ.get("SSL_CERT_FILE") or os.environ.get("REQUESTS_CA_BUNDLE") or ""
 )
@@ -246,19 +236,8 @@ class LLMWorker(QThread):
                 # Handle tool calls
                 if "tool_calls" in message:
                     for tc in message["tool_calls"]:
-                        # Ollama returns tool_calls as pydantic models (e.g.
-                        # ollama._types.Message.ToolCall), not plain dicts —
-                        # normalize to a plain dict so downstream JSON
-                        # persistence (MConversation.save()) doesn't choke on
-                        # a non-serializable object, matching the plain-dict
-                        # shape APIWorker already produces for other providers.
                         tool_calls.append(tc.model_dump() if hasattr(tc, "model_dump") else tc)
 
-                # qwen3-style "thinking" content (message["thinking"]) is
-                # intentionally kept on its own signal, never appended to
-                # _full_response/chunk_received. Merging a hidden-reasoning
-                # channel into the visible answer is exactly how unmanaged
-                # deliberation can substitute for actually calling a tool.
                 thinking_fragment = message.get("thinking") or ""
                 if thinking_fragment:
                     self.thinking_chunk_received.emit(thinking_fragment)

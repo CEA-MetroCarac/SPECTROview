@@ -2025,7 +2025,7 @@
 
 
 <h1 id="workspace-graphs"><strong>Workspace: Graphs</strong><a class="headerlink" href="#workspace-graphs" title="Permanent link">&para;</a></h1>
-<p>The <code>Graphs</code> workspace is a standalone statistical plotting environment. It manages DataFrames (from file or cross-workspace injection), applies dynamic filters, and creates publication-quality plots using <code>Seaborn</code> and <code>Matplotlib</code> inside an MDI (Multiple Document Interface) area.</p>
+<p>The <code>Graphs</code> workspace is a standalone statistical plotting environment. It manages DataFrames (from file or cross-workspace injection), applies dynamic filters, and creates publication-quality plots using pure <code>Matplotlib</code> (plus <code>scipy</code> for statistics) inside an MDI (Multiple Document Interface) area. It no longer depends on Seaborn — every plot style is drawn directly with Matplotlib primitives in <code>PlotRenderer</code>.</p>
 <hr />
 <h2 id="architecture-overview"><strong>Architecture Overview</strong><a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>graph TD
@@ -2187,12 +2187,12 @@
 <p>This same default-style merge applies to <code>_on_plot_multi_wafer()</code>; it deliberately does <strong>not</strong> apply when applying a Plot Recipe or replicating an existing graph, since those already carry a fully-specified, intentional style.</p>
 <hr />
 <h2 id="plot-styles"><strong>Plot Styles</strong><a class="headerlink" href="#plot-styles" title="Permanent link">&para;</a></h2>
-<p>Each plot style maps to a specific Seaborn or custom rendering function:</p>
+<p>Each plot style maps to a <code>PlotRenderer._plot_*</code> method that draws directly with Matplotlib primitives (no Seaborn):</p>
 <table>
 <thead>
 <tr>
 <th>Style</th>
-<th>Seaborn Function</th>
+<th>Matplotlib primitive</th>
 <th>Hue Support</th>
 <th>Notes</th>
 </tr>
@@ -2200,49 +2200,49 @@
 <tbody>
 <tr>
 <td><code>point</code></td>
-<td><code>sns.pointplot()</code></td>
+<td><code>ax.errorbar()</code></td>
 <td>✓ Z column</td>
-<td>"Join" toggle for connecting points; only style with a per-series Marker column</td>
+<td>Plots per-category means with error bars; "Join" toggle connects them with a line; only style with a per-series Marker column</td>
 </tr>
 <tr>
 <td><code>scatter</code></td>
-<td><code>sns.scatterplot()</code></td>
+<td><code>ax.scatter()</code></td>
 <td>✓ Z column</td>
 <td>Marker size/edge color unified across series by default (see Unify checkbox)</td>
 </tr>
 <tr>
 <td><code>box</code></td>
-<td><code>sns.boxplot()</code></td>
+<td><code>ax.boxplot()</code></td>
 <td>✓ Z column</td>
-<td>Width 0.4, palette support</td>
+<td>Palette support; box width derived from category spacing</td>
 </tr>
 <tr>
 <td><code>bar</code></td>
-<td><code>sns.barplot()</code></td>
+<td><code>ax.bar()</code></td>
 <td>✓ Z column</td>
 <td>Optional error bars (sd/95% CI)</td>
 </tr>
 <tr>
 <td><code>line</code></td>
-<td><code>sns.lineplot()</code></td>
+<td><code>ax.plot()</code></td>
 <td>✓ Z column</td>
 <td>Standard line plot</td>
 </tr>
 <tr>
 <td><code>trendline</code></td>
-<td><code>sns.regplot()</code> / <code>ax.scatter()</code> / <code>ax.plot()</code></td>
+<td><code>np.poly1d</code> fit + <code>ax.scatter()</code> / <code>ax.plot()</code> / <code>ax.fill_between()</code></td>
 <td>✓ Z column</td>
-<td>Polynomial regression with custom zero-intercept anchoring and equation table export</td>
+<td>Polynomial regression with custom zero-intercept anchoring, an analytical 95% CI band, and equation table export</td>
 </tr>
 <tr>
 <td><code>histogram</code></td>
-<td><code>sns.histplot()</code></td>
+<td><code>ax.hist()</code> (+ <code>scipy.stats.gaussian_kde</code>)</td>
 <td>✓ Z column</td>
-<td>Bins customization, KDE overlay, step outline vs. filled bars</td>
+<td>Bins customization, optional KDE overlay, step outline vs. filled bars</td>
 </tr>
 <tr>
 <td><code>wafer</code></td>
-<td>Custom <code>WaferPlot</code></td>
+<td>Custom <code>WaferPlot</code> (<code>ax.scatter()</code>)</td>
 <td>—</td>
 <td>Circular wafer visualization with die sites; colormap normalization (linear/log/centered)</td>
 </tr>

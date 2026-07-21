@@ -2365,9 +2365,9 @@ The four available utility buttons allow you to:</p>
 </ul>
 <h4 id="64-trendline-confidence-intervals">6.4 <strong>Trendline Confidence Intervals</strong><a class="headerlink" href="#64-trendline-confidence-intervals" title="Permanent link">&para;</a></h4>
 <ul>
-<li><strong>Confidence Level:</strong> The shaded band around standard trendlines represents a <strong>95% confidence interval</strong> (estimated by Seaborn's regression plot module).</li>
-<li><strong>Estimation Method:</strong> The confidence interval is estimated using a non-parametric bootstrapping procedure (resampling data points with replacement 1000 times, fitting a regression model to each bootstrap sample, and calculating the 2.5th and 97.5th percentiles of the predictions).</li>
-<li><strong>Anchored Fits:</strong> Please note that confidence intervals are only computed and displayed for standard, unconstrained fits. If an anchor is enabled, the confidence interval band is omitted.</li>
+<li><strong>Confidence Level:</strong> The shaded band around standard trendlines represents a <strong>95% confidence interval</strong> for the fitted mean response.</li>
+<li><strong>Estimation Method:</strong> The interval is computed <strong>analytically</strong> from the regression residuals: the standard error of the estimate <code>SE = sqrt(Σ(yᵢ − ŷᵢ)² / (N − 2))</code> is combined with the standard mean-response formula <code>± 1.96 · SE · sqrt(1/N + (x − x̄)² / Σ(xᵢ − x̄)²)</code>, so the band widens away from the center of the data. (This replaces an earlier Seaborn-based bootstrap estimate; the Graphs workspace no longer uses Seaborn.)</li>
+<li><strong>Anchored Fits:</strong> Confidence intervals are only computed and displayed for standard, unconstrained fits. If an anchor is enabled, the confidence interval band is omitted.</li>
 </ul>
 
 

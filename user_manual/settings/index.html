@@ -852,10 +852,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-fit-parameters" class="md-nav__link">
+  <a href="#1-fit-parameters-general-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Fit Parameters
+        1. Fit Parameters (General tab)
       
     </span>
   </a>
@@ -863,10 +863,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-global-peak-limits" class="md-nav__link">
+  <a href="#2-global-peak-limits-general-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Global Peak Limits
+        2. Global Peak Limits (General tab)
       
     </span>
   </a>
@@ -874,13 +874,52 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-fit-model-path" class="md-nav__link">
+  <a href="#3-spectroview-working-folder-general-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Fit Model Path
+        3. SPECTROview Working Folder (General tab)
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-ai-settings-ai-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. AI Settings (AI tab)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. AI Settings (AI tab)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API Keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chat-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat History
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1628,15 +1667,19 @@
   <h1>Settings</h1>
 
 <h2 id="settings-preferences"><strong>Settings &amp; Preferences</strong><a class="headerlink" href="#settings-preferences" title="Permanent link">&para;</a></h2>
-<p>Access the <strong>Settings</strong> menu via the gear icon in the main toolbar.</p>
+<p>Access the <strong>Settings</strong> menu via the gear icon in the main toolbar (or press <code>Ctrl + Shift + S</code>).</p>
 <div align="center">
   <img src="../../user_manual_images/Settings/settings.png" alt="Settings Panel" width="380"><br>
 </div>
 
 <p><br></p>
-<p>The <code>Settings Panel</code> is organized into three sections: <strong><code>Fit Parameters</code></strong>, <strong><code>Global Peak Limits</code></strong>, and <strong><code>Fit Model Path</code></strong>.</p>
+<p>The <code>Settings Panel</code> is organized into two tabs:</p>
+<ul>
+<li><strong>General</strong> — fitting behavior and file locations: <strong><code>Fit Parameters</code></strong>, <strong><code>Global Peak Limits</code></strong>, and the <strong><code>SPECTROview Working Folder</code></strong> (sections 1–3 below).</li>
+<li><strong>AI</strong> — API keys and the chat-history folder for the AI Chat Agent (section 4 below).</li>
+</ul>
 <hr />
-<h3 id="1-fit-parameters"><strong>1. Fit Parameters</strong><a class="headerlink" href="#1-fit-parameters" title="Permanent link">&para;</a></h3>
+<h3 id="1-fit-parameters-general-tab"><strong>1. Fit Parameters</strong> <em>(General tab)</em><a class="headerlink" href="#1-fit-parameters-general-tab" title="Permanent link">&para;</a></h3>
 <p>These parameters control the behavior of the <strong>Vectorized Batch Fit (<code>VBF</code>) engine</strong> — the mathematical optimizer that performs curve fitting on your spectra. Adjusting these values directly affects fitting speed, precision, and convergence.</p>
 <table>
 <thead>
@@ -1690,7 +1733,7 @@
 <p><strong>Note</strong>: A spectrum is considered converged only when <strong>both</strong> <code>xtol</code> and <code>ftol</code> criteria are simultaneously satisfied.</p>
 </blockquote>
 <hr />
-<h3 id="2-global-peak-limits"><strong>2. Global Peak Limits</strong><a class="headerlink" href="#2-global-peak-limits" title="Permanent link">&para;</a></h3>
+<h3 id="2-global-peak-limits-general-tab"><strong>2. Global Peak Limits</strong> <em>(General tab)</em><a class="headerlink" href="#2-global-peak-limits-general-tab" title="Permanent link">&para;</a></h3>
 <p>These parameters define <strong>absolute boundary conditions</strong> that are applied globally to all peaks across the application. When you add a new peak to a fit model, these limits are used to set the initial parameter bounds automatically.</p>
 <blockquote>
 <p><strong>Note</strong>: You can check the "Limits" checkbox under the <code>PeakTable</code> to display the actual bounds of each peak.</p>
@@ -1732,9 +1775,77 @@
 </tbody>
 </table>
 <hr />
-<h3 id="3-fit-model-path"><strong>3. Fit Model Path</strong><a class="headerlink" href="#3-fit-model-path" title="Permanent link">&para;</a></h3>
-<p>Specify the default storage directory for your custom fit models (saved in JSON format). The application will automatically scan this folder and load all available models for easy selection in the <code>Fit Model Builder</code> interface.</p>
+<h3 id="3-spectroview-working-folder-general-tab"><strong>3. SPECTROview Working Folder</strong> <em>(General tab)</em><a class="headerlink" href="#3-spectroview-working-folder-general-tab" title="Permanent link">&para;</a></h3>
+<p>Specify a single root folder for all of SPECTROview's saved templates. When you set it, three subfolders are created automatically inside it:</p>
+<table>
+<thead>
+<tr>
+<th>Subfolder</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fit_model/</code></td>
+<td>Custom fit models (JSON). The <code>Fit Model Builder</code> scans this folder and lists every model here for one-click reuse.</td>
+</tr>
+<tr>
+<td><code>plot_recipe/</code></td>
+<td>Plot Recipes — saved sets of full plot configurations (data bindings + style) for the <code>Graphs</code> workspace.</td>
+</tr>
+<tr>
+<td><code>plot_style/</code></td>
+<td>Style Templates — saved appearance-only styles that can be applied to any existing graph.</td>
+</tr>
+</tbody>
+</table>
 <p>Click <strong>Browse</strong> to select a folder, or type the path directly.</p>
+<blockquote>
+<p><strong>Note</strong>: This single Working Folder replaces the older separate "Fit model folder" / "Plot template folder" settings. If you had one of those configured previously, it is migrated automatically the first time the Working Folder is read.</p>
+</blockquote>
+<hr />
+<h3 id="4-ai-settings-ai-tab"><strong>4. AI Settings</strong> <em>(AI tab)</em><a class="headerlink" href="#4-ai-settings-ai-tab" title="Permanent link">&para;</a></h3>
+<p>The <strong>AI</strong> tab configures the <a href="../ai_agent/">AI Chat Agent</a>. Nothing here is required to use the rest of SPECTROview.</p>
+<h4 id="api-keys"><strong>API Keys</strong><a class="headerlink" href="#api-keys" title="Permanent link">&para;</a></h4>
+<p>The fields for a <strong>Custom</strong> (OpenAI-compatible) endpoint are shown by default:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Custom API Key</strong></td>
+<td>The API key for your custom / internal endpoint.</td>
+</tr>
+<tr>
+<td><strong>Base URL</strong></td>
+<td>The endpoint's OpenAI-compatible root URL (e.g. <code>https://host/v1</code>).</td>
+</tr>
+<tr>
+<td><strong>Model Name</strong></td>
+<td>A comma-separated list of model names (e.g. <code>model-a, model-b</code>). These populate the model dropdown in the chat panel — handy for endpoints that don't expose a model-listing API.</td>
+</tr>
+</tbody>
+</table>
+<p>Keys for the built-in cloud providers are tucked under the collapsible <strong>▸ Other cloud providers</strong> section (click to expand): <strong>OpenAI</strong>, <strong>Anthropic</strong>, <strong>Gemini</strong>, <strong>DeepSeek</strong>, and <strong>Mistral</strong>. All keys are stored masked and remembered between sessions.</p>
+<h4 id="chat-history"><strong>Chat History</strong><a class="headerlink" href="#chat-history" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>History Folder</strong></td>
+<td>Where AI chat conversations are saved (as JSON). Click <strong>Browse</strong> to choose a folder.</td>
+</tr>
+</tbody>
+</table>
 
 
 

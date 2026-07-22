@@ -1790,15 +1790,15 @@
 </tbody>
 </table>
 <pre class="mermaid"><code>flowchart TD
-    FILE["File on disk\n(.wdf / .spc / .txt / .csv / .dat / .xlsx)"]
+    FILE["File on disk&lt;br/&gt;(.wdf / .spc / .txt / .csv / .dat / .xlsx)"]
 
-    FILE --&gt; MIO["m_io.py\nuniversal file reader"]
+    FILE --&gt; MIO["m_io.py&lt;br/&gt;universal file reader"]
 
-    MIO --&gt;|"Spectra dict\n{type, items}"| VMSPECTRA["VMWorkspaceSpectra\n.load_files()"]
-    MIO --&gt;|"DataFrame + metadata"| VMMAPS["VMWorkspaceMaps\n.load_map_files()"]
-    MIO --&gt;|"dict[str, DataFrame]"| VMGRAPHS["VMWorkspaceGraphs\n.add_dataframe()"]
+    MIO --&gt;|"Spectra dict&lt;br/&gt;{type, items}"| VMSPECTRA["VMWorkspaceSpectra&lt;br/&gt;.load_files()"]
+    MIO --&gt;|"DataFrame + metadata"| VMMAPS["VMWorkspaceMaps&lt;br/&gt;.load_map_files()"]
+    MIO --&gt;|"dict[str, DataFrame]"| VMGRAPHS["VMWorkspaceGraphs&lt;br/&gt;.add_dataframe()"]
 
-    VMSPECTRA --&gt; STORE["SpectraStore\n.add_map()"]
+    VMSPECTRA --&gt; STORE["SpectraStore&lt;br/&gt;.add_map()"]
     VMMAPS --&gt; STORE
 
     STORE --&gt; SPECTRA_WS["Spectra Workspace"]

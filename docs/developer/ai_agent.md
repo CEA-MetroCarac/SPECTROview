@@ -426,7 +426,7 @@ sequenceDiagram
     alt tool_calls non-empty (agentic loop, up to 5 iterations)
         VMC-->>VCP: thinking_changed(True, "Executing tools...")
         VMC->>MCPS: call_tool(name, args) for each call
-        MCPS-->>VMC: result text (validated; error if filter/style invalid)
+        MCPS-->>VMC: result text (validated, error if filter/style invalid)
         VMC-->>VCP: tool_execution_received(name, result)
         VMC->>LLC: chat(...) again with updated history
         Note over VMC,LLC: repeats until no more tool_calls, or 5-turn cap

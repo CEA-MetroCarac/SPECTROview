@@ -18,15 +18,15 @@
 
 ```mermaid
 flowchart TD
-    FILE["File on disk\n(.wdf / .spc / .txt / .csv / .dat / .xlsx)"]
+    FILE["File on disk<br/>(.wdf / .spc / .txt / .csv / .dat / .xlsx)"]
 
-    FILE --> MIO["m_io.py\nuniversal file reader"]
+    FILE --> MIO["m_io.py<br/>universal file reader"]
 
-    MIO -->|"Spectra dict\n{type, items}"| VMSPECTRA["VMWorkspaceSpectra\n.load_files()"]
-    MIO -->|"DataFrame + metadata"| VMMAPS["VMWorkspaceMaps\n.load_map_files()"]
-    MIO -->|"dict[str, DataFrame]"| VMGRAPHS["VMWorkspaceGraphs\n.add_dataframe()"]
+    MIO -->|"Spectra dict<br/>{type, items}"| VMSPECTRA["VMWorkspaceSpectra<br/>.load_files()"]
+    MIO -->|"DataFrame + metadata"| VMMAPS["VMWorkspaceMaps<br/>.load_map_files()"]
+    MIO -->|"dict[str, DataFrame]"| VMGRAPHS["VMWorkspaceGraphs<br/>.add_dataframe()"]
 
-    VMSPECTRA --> STORE["SpectraStore\n.add_map()"]
+    VMSPECTRA --> STORE["SpectraStore<br/>.add_map()"]
     VMMAPS --> STORE
 
     STORE --> SPECTRA_WS["Spectra Workspace"]

@@ -9,23 +9,36 @@ import asyncio
 
 from mcp.shared.memory import create_connected_server_and_client_session
 
-from spectroview.ai_agent.mcp.server import create_mcp_server
-
-
-class _StubVMChat:
-    _active_df_name = ""
-    _dfs = {}
-    _graphs = {}
+from spectroview import PLOT_STYLES
+from spectroview.ai_agent.agent.ports import RecordingContext
+from spectroview.ai_agent.mcp.server import VALID_PLOT_STYLES, create_mcp_server
+from spectroview.ai_agent.utils.plot_utils import VALID_PLOT_STYLES as PLOT_UTILS_STYLES
 
 
 def _list_tools():
     async def _run():
-        server = create_mcp_server(_StubVMChat())
+        server = create_mcp_server(RecordingContext())
         async with create_connected_server_and_client_session(server._mcp_server) as session:
             await session.initialize()
             res = await session.list_tools()
             return {t.name: t.inputSchema for t in res.tools}
     return asyncio.run(_run())
+
+
+class TestPlotStyleSingleSourceOfTruth:
+    """The tool schema, the server's validator, and the app's own PLOT_STYLES
+    must agree. The Literal in server.py is spelled out (MCP needs it static),
+    so only a test can catch drift after a new plot style is added."""
+
+    def test_tool_schema_enum_matches_app_plot_styles(self):
+        schema = _list_tools()["plot_graph"]
+        assert set(schema["properties"]["plot_style"]["enum"]) == set(PLOT_STYLES)
+
+    def test_server_validator_matches_app_plot_styles(self):
+        assert VALID_PLOT_STYLES == frozenset(PLOT_STYLES)
+
+    def test_plot_utils_validator_matches_app_plot_styles(self):
+        assert PLOT_UTILS_STYLES == frozenset(PLOT_STYLES)
 
 
 class TestPlotGraphSchema:

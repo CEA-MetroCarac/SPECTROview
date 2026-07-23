@@ -10,6 +10,7 @@ class MSettings:
 
     def __init__(self):
         self.settings = QSettings("CEA-Leti", "SPECTROview")
+        self._migrate_legacy_ai_settings()
 
     # ---------- Fit settings ----------
     def load_fit_settings(self) -> dict:
@@ -186,27 +187,69 @@ class MSettings:
         self.settings.sync()
 
     # ---------- AI Settings ----------
+    #
+    # Everything the AI agent persists lives under the "ai_chat/" prefix of the
+    # single application store. It used to sit in a second, separate
+    # QSettings("SPECTROview", "AIChat") pair, which meant the agent's settings
+    # were invisible to the rest of the app and, in tests, escaped the QSettings
+    # isolation fixture and read/wrote the developer's real configuration.
+    # _migrate_legacy_ai_settings() carries the old values over once.
+
+    AI_GROUP = "ai_chat"
+
+    #: The pre-unification store, kept readable for the one-time migration.
+    _LEGACY_AI_STORE = ("SPECTROview", "AIChat")
+    _AI_MIGRATED_KEY = "ai_chat/_migrated_from_legacy_store"
+
+    #: Keys the Settings dialog (AI tab) owns.
+    AI_SETTING_KEYS = (
+        "api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini",
+        "api_key_DeepSeek", "api_key_Mistral", "api_key_Custom",
+        "custom_base_url", "custom_models", "history_folder",
+    )
+
+    def _migrate_legacy_ai_settings(self):
+        """Copy the old QSettings("SPECTROview", "AIChat") values over once.
+
+        Runs at most once per installation (guarded by a marker key) and never
+        overwrites a value already present in the unified store, so it cannot
+        undo a change made after the upgrade. The legacy store is left in place
+        rather than deleted — harmless, and it keeps an older build working.
+        """
+        if self.settings.value(self._AI_MIGRATED_KEY, False, bool):
+            return
+
+        legacy = QSettings(*self._LEGACY_AI_STORE)
+        legacy.beginGroup(self.AI_GROUP)
+        for key in legacy.allKeys():
+            target = f"{self.AI_GROUP}/{key}"
+            if not self.settings.contains(target):
+                self.settings.setValue(target, legacy.value(key))
+        legacy.endGroup()
+
+        self.settings.setValue(self._AI_MIGRATED_KEY, True)
+        self.settings.sync()
+
+    def get_ai_value(self, key: str, default=None, value_type=None):
+        """Read one ``ai_chat/<key>`` setting.
+
+        Keys are partly dynamic (``api_key_<provider>``, ``model_<provider>``),
+        so this stays generic rather than growing a getter per provider.
+        """
+        path = f"{self.AI_GROUP}/{key}"
+        if value_type is not None:
+            return self.settings.value(path, default, value_type)
+        return self.settings.value(path, default)
+
+    def set_ai_value(self, key: str, value):
+        """Write one ``ai_chat/<key>`` setting."""
+        self.settings.setValue(f"{self.AI_GROUP}/{key}", value)
+        self.settings.sync()
+
     def load_ai_settings(self) -> dict:
-        s = QSettings("SPECTROview", "AIChat")
-        s.beginGroup("ai_chat")
-        data = {
-            "api_key_OpenAI": s.value("api_key_OpenAI", "", str),
-            "api_key_Anthropic": s.value("api_key_Anthropic", "", str),
-            "api_key_Gemini": s.value("api_key_Gemini", "", str),
-            "api_key_DeepSeek": s.value("api_key_DeepSeek", "", str),
-            "api_key_Mistral": s.value("api_key_Mistral", "", str),
-            "api_key_Custom": s.value("api_key_Custom", "", str),
-            "custom_base_url": s.value("custom_base_url", "", str),
-            "custom_models": s.value("custom_models", "", str),
-            "history_folder": s.value("history_folder", "", str),
-        }
-        s.endGroup()
-        return data
+        return {key: self.get_ai_value(key, "", str) for key in self.AI_SETTING_KEYS}
 
     def save_ai_settings(self, data: dict):
-        s = QSettings("SPECTROview", "AIChat")
-        s.beginGroup("ai_chat")
         for key, value in data.items():
-            if key in ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini", "api_key_DeepSeek", "api_key_Mistral", "api_key_Custom", "custom_base_url", "custom_models", "history_folder"]:
-                s.setValue(key, value)
-        s.endGroup()
+            if key in self.AI_SETTING_KEYS:
+                self.set_ai_value(key, value)

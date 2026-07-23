@@ -133,13 +133,21 @@ class MConversation:
     def to_llm_messages(self, max_context_messages: Optional[int] = None) -> List[Dict[str, str]]:
         """Convert to [{"role": ..., "content": ...}] format for the LLM API, including reply context."""
         llm_messages = []
-        
+
         msgs_to_process = self.messages
         if max_context_messages is not None and max_context_messages > 0:
             # We want the last N messages
-            msgs_to_process = self.messages[-max_context_messages:]
-            
-        for i, msg in enumerate(msgs_to_process):
+            start = max(0, len(self.messages) - max_context_messages)
+            # ...but never starting on an orphan tool result. A "tool" message
+            # is only valid immediately after the assistant message carrying
+            # the matching tool_calls; slicing between them makes providers
+            # reject the request. Widen the window backwards until the pair
+            # is intact.
+            while start > 0 and self.messages[start].get("role") == "tool":
+                start -= 1
+            msgs_to_process = self.messages[start:]
+
+        for msg in msgs_to_process:
             role = msg.get("role")
             content = msg.get("content", "")
             
@@ -163,6 +171,13 @@ class MConversation:
             msg_dict = {"role": role, "content": content}
             if "tool_calls" in msg:
                 msg_dict["tool_calls"] = msg["tool_calls"]
+                if not content:
+                    # Gemini's OpenAI-compatibility endpoint rejects an
+                    # empty-string content on an assistant message that carries
+                    # tool_calls (HTTP 400) — the field is optional there per
+                    # the OpenAI schema. OpenAI/DeepSeek tolerate "", which is
+                    # why only Gemini failed, and only from the second turn on.
+                    msg_dict.pop("content")
             if "tool_call_id" in msg:
                 msg_dict["tool_call_id"] = msg["tool_call_id"]
                 

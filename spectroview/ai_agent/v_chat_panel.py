@@ -24,16 +24,18 @@ import pandas as pd
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QScrollArea, QFrame, QComboBox, QSizePolicy,
-    QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QApplication,
-    QTextBrowser, QInputDialog, QMessageBox
+    QTextEdit, QApplication, QTextBrowser, QInputDialog, QMessageBox
 )
 import markdown
-from PySide6.QtCore import Qt, Signal, QTimer, QSize, QSettings, QThread, QObject
+from PySide6.QtCore import Qt, Signal, QTimer, QSize, QThread, QObject
 from PySide6.QtGui import QFont, QIcon, QKeyEvent, QTextCursor
 
 from spectroview import ICON_DIR
+from spectroview.model.m_settings import MSettings
 from spectroview.ai_agent.vm_chat import VMChat, ChatResult
-from spectroview.ai_agent.m_llm_client import API_PROVIDERS, OPENAI_AVAILABLE, OLLAMA_AVAILABLE
+from spectroview.ai_agent.m_llm_client import (
+    API_PROVIDERS, LLMClient, OPENAI_AVAILABLE, OLLAMA_AVAILABLE,
+)
 from spectroview.ai_agent.v_history_dialog import VHistoryDialog
 
 
@@ -53,6 +55,12 @@ _MARKDOWN_CSS = """
     pre { background-color: rgba(128, 128, 128, 0.10); padding: 10px; border-radius: 5px; overflow-x: auto; }
 </style>
 """
+
+
+def _preview(text: str, limit: int = 80) -> str:
+    """One-line, length-capped excerpt used in reply banners."""
+    flat = text.replace("\n", " ")
+    return flat[:limit] + "..." if len(flat) > limit else flat
 
 
 class _MessageCard(QFrame):
@@ -183,57 +191,6 @@ class _ThinkingDots(QLabel):
         self.setText(f"🤖  {self._text_prefix} {'.' * self._dots}")
 
 
-class _DataFramePreview(QWidget):
-    """Compact table widget to display a filtered DataFrame inline."""
-
-    MAX_ROWS = 50      # cap displayed rows for performance
-    MAX_COLS = 15      # cap columns for readability
-
-    def __init__(self, df: pd.DataFrame, parent=None) -> None:
-        super().__init__(parent)
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 4, 0, 0)
-        layout.setSpacing(2)
-
-        display_df = df.iloc[: self.MAX_ROWS, : self.MAX_COLS]
-
-        info = QLabel(
-            f"Showing {len(display_df)} of {len(df)} row(s), "
-            f"{len(df.columns)} column(s)"
-        )
-        info.setStyleSheet("color: gray; font-size: 10px;")
-        layout.addWidget(info)
-
-        table = QTableWidget(len(display_df), len(display_df.columns))
-        table.setHorizontalHeaderLabels([str(c) for c in display_df.columns])
-        table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        table.verticalHeader().setVisible(False)
-        table.setAlternatingRowColors(True)
-        table.setEditTriggers(QTableWidget.NoEditTriggers)
-        table.setSelectionBehavior(QTableWidget.SelectRows)
-        table.setMaximumHeight(220)
-
-        for r, (_, row) in enumerate(display_df.iterrows()):
-            for c, val in enumerate(row):
-                cell_text = f"{val:.4g}" if isinstance(val, float) else str(val)
-                item = QTableWidgetItem(cell_text)
-                item.setTextAlignment(Qt.AlignCenter)
-                table.setItem(r, c, item)
-
-        # Copy button
-        btn_copy = QPushButton("📋 Copy table")
-        btn_copy.setMaximumWidth(110)
-        btn_copy.setStyleSheet("font-size: 10px;")
-        btn_copy.clicked.connect(lambda: self._copy_to_clipboard(df))
-
-        layout.addWidget(table)
-        layout.addWidget(btn_copy)
-
-    @staticmethod
-    def _copy_to_clipboard(df: pd.DataFrame):
-        QApplication.clipboard().setText(df.to_csv(sep="\t", index=False))
-
-
 # ═══════════════════════════════════════════════════════════════════════════
 # Voice dictation — optional, graceful degradation if deps not installed
 # ═══════════════════════════════════════════════════════════════════════════
@@ -328,8 +285,6 @@ class VChatPanel(QDialog):
 
     plot_requested = Signal(dict)
 
-    _SETTINGS_GROUP = "ai_chat"
-
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("SPECTROview AI Agent")
@@ -340,6 +295,7 @@ class VChatPanel(QDialog):
         self.resize(450, 740)
 
         self.vm = VMChat(self)
+        self._settings = MSettings()
         self._active_card: Optional[_MessageCard] = None  # streaming target
         self._reply_to_index: Optional[int] = None
         self._voice_worker: Optional[VoiceWorker] = None
@@ -443,31 +399,33 @@ class VChatPanel(QDialog):
         self.lbl_provider.setStyleSheet("color: gray; font-weight: bold; font-size: 11px;")
         row1_layout.addWidget(self.lbl_provider)
 
+        # Row-1 widths: model names are the longest and most-read value here
+
         self.cbb_provider = QComboBox()
         for display in _DISPLAY_TO_PROVIDER.keys():
             self.cbb_provider.addItem(display)
-        self.cbb_provider.setMinimumWidth(90)
+        self.cbb_provider.setMinimumWidth(80)
         row1_layout.addWidget(self.cbb_provider, stretch=1)
 
         self.cbb_model = QComboBox()
-        self.cbb_model.setMinimumWidth(110)
+        self.cbb_model.setMinimumWidth(130)
         # Editable so a model name can be typed directly — some endpoints
         # (custom OpenAI-compatible ones especially) don't expose a
-        # model-listing API, so the dropdown would otherwise be empty.
         self.cbb_model.setEditable(True)
         self.cbb_model.setInsertPolicy(QComboBox.NoInsert)
         self.cbb_model.setToolTip("Select or type a model name")
-        row1_layout.addWidget(self.cbb_model, stretch=1)
+        row1_layout.addWidget(self.cbb_model, stretch=3)
 
         self.cbb_prompt_tier = QComboBox()
-        self.cbb_prompt_tier.addItems(["Auto", "Full prompt", "Simplified prompt"])
-        self.cbb_prompt_tier.setMinimumWidth(80)
+        self.cbb_prompt_tier.addItems(["Auto", "Full", "Small"])
+        self.cbb_prompt_tier.setFixedWidth(90)
         self.cbb_prompt_tier.setToolTip(
             "Prompt tier for local Ollama models.\n"
-            "Auto: detected automatically from the model's size.\n"
-            "Full / Simplified: force a tier regardless of detection."
+            "Auto: chosen from the model's parameter count.\n"
+            "Full: always send the full prompt.\n"
+            "Small: always send the simplified prompt."
         )
-        row1_layout.addWidget(self.cbb_prompt_tier, stretch=1)
+        row1_layout.addWidget(self.cbb_prompt_tier)   # no stretch: fixed width
 
         self.btn_refresh_models = QPushButton("")
         self.btn_refresh_models.setObjectName("btn_refresh_models")
@@ -692,45 +650,48 @@ class VChatPanel(QDialog):
     # ------------------------------------------------------------------
 
     def _load_settings(self) -> None:
-        """Restore provider, API keys, and model from QSettings."""
-        s = QSettings("SPECTROview", "AIChat")
-        s.beginGroup(self._SETTINGS_GROUP)
-
-        saved_provider = s.value("provider", "Ollama (local)")
+        """Restore provider, prompt tier, and model from the app settings."""
+        saved_provider = self._settings.get_ai_value("provider", "Ollama (local)", str)
         idx = self.cbb_provider.findText(saved_provider)
         if idx >= 0:
             self.cbb_provider.blockSignals(True)
             self.cbb_provider.setCurrentIndex(idx)
             self.cbb_provider.blockSignals(False)
 
-        saved_tier_idx = int(s.value("prompt_tier_index", 0))
+        saved_tier_idx = self._settings.get_ai_value("prompt_tier_index", 0, int)
         if 0 <= saved_tier_idx < self.cbb_prompt_tier.count():
             self.cbb_prompt_tier.blockSignals(True)
             self.cbb_prompt_tier.setCurrentIndex(saved_tier_idx)
             self.cbb_prompt_tier.blockSignals(False)
         self.vm.set_small_model_mode({0: None, 1: False, 2: True}.get(saved_tier_idx))
 
-        s.endGroup()
-
         # Apply the loaded provider
-        self._on_provider_changed(saved_provider, restore=True)
+        self._on_provider_changed(saved_provider)
 
     def _save_settings(self) -> None:
-        """Persist current provider, API key, and model to QSettings."""
-        s = QSettings("SPECTROview", "AIChat")
-        s.beginGroup(self._SETTINGS_GROUP)
-
+        """Persist current provider, prompt tier, and model."""
         provider_display = self.cbb_provider.currentText()
         provider_key = _DISPLAY_TO_PROVIDER.get(provider_display, "Ollama")
 
-        s.setValue("provider", provider_display)
-        s.setValue("prompt_tier_index", self.cbb_prompt_tier.currentIndex())
+        self._settings.set_ai_value("provider", provider_display)
+        self._settings.set_ai_value("prompt_tier_index", self.cbb_prompt_tier.currentIndex())
 
         current_model = self.cbb_model.currentText()
         if current_model:
-            s.setValue(f"model_{provider_key}", current_model)
+            self._settings.set_ai_value(f"model_{provider_key}", current_model)
 
-        s.endGroup()
+    def _fit_model_popup_width(self) -> None:
+        """Widen the model dropdown to fit its longest entry"""
+        count = self.cbb_model.count()
+        if not count:
+            return
+        fm = self.cbb_model.view().fontMetrics()
+        longest = max(fm.horizontalAdvance(self.cbb_model.itemText(i)) for i in range(count))
+        # + frame, item padding and a possible vertical scrollbar
+        self.cbb_model.view().setMinimumWidth(min(longest + 44, 640))
+
+        for i in range(count):
+            self.cbb_model.setItemData(i, self.cbb_model.itemText(i), Qt.ToolTipRole)
 
     def _custom_model_names(self, provider_key: str) -> list[str]:
         """User-defined model names for the Custom provider.
@@ -741,10 +702,7 @@ class VChatPanel(QDialog):
         """
         if provider_key != "Custom":
             return []
-        s = QSettings("SPECTROview", "AIChat")
-        s.beginGroup(self._SETTINGS_GROUP)
-        raw = str(s.value("custom_models", ""))
-        s.endGroup()
+        raw = self._settings.get_ai_value("custom_models", "", str)
         return [m.strip() for m in raw.split(",") if m.strip()]
 
     def _on_prompt_tier_changed(self, index: int) -> None:
@@ -757,12 +715,11 @@ class VChatPanel(QDialog):
     # Provider change handler
     # ------------------------------------------------------------------
 
-    def _on_provider_changed(self, display_name: str, restore: bool = False) -> None:
+    def _on_provider_changed(self, display_name: str) -> None:
         """Update the ViewModel provider."""
         provider_key = _DISPLAY_TO_PROVIDER.get(display_name, "Ollama")
-        is_ollama = (provider_key == "Ollama")
 
-        if is_ollama:
+        if provider_key == "Ollama":
             self.vm.set_provider("Ollama")
             self._refresh_status()
         else:
@@ -770,12 +727,9 @@ class VChatPanel(QDialog):
 
     def _apply_cloud_provider(self, provider_key: str) -> None:
         """Push provider config to ViewModel and refresh the model list."""
-        s = QSettings("SPECTROview", "AIChat")
-        s.beginGroup(self._SETTINGS_GROUP)
-        api_key = s.value(f"api_key_{provider_key}", "")
-        base_url = s.value("custom_base_url", "") if provider_key == "Custom" else ""
-        s.endGroup()
-        
+        api_key = self._settings.get_ai_value(f"api_key_{provider_key}", "", str)
+        base_url = (self._settings.get_ai_value("custom_base_url", "", str)
+                    if provider_key == "Custom" else "")
         model = self.cbb_model.currentText()
 
         self.vm.set_provider(provider_key, api_key=api_key, base_url=base_url, model=model)
@@ -809,10 +763,7 @@ class VChatPanel(QDialog):
             return
 
         # ── API key missing ─────────────────────────────────────
-        s = QSettings("SPECTROview", "AIChat")
-        s.beginGroup(self._SETTINGS_GROUP)
-        has_key = bool(s.value(f"api_key_{provider_key}", ""))
-        s.endGroup()
+        has_key = bool(self._settings.get_ai_value(f"api_key_{provider_key}", "", str))
         if not is_ollama and not has_key:
             self.lbl_status.setText(f"⚪  {provider_key} — configure API key in Settings (AI Tab)")
             self.lbl_status.setStyleSheet("color: #FFA726; font-size: 11px;")
@@ -845,11 +796,7 @@ class VChatPanel(QDialog):
                     self.cbb_model.addItem(fallback)
 
             # Restore previous selection if still present
-            s = QSettings("SPECTROview", "AIChat")
-            s.beginGroup(self._SETTINGS_GROUP)
-            saved_model = str(s.value(f"model_{provider_key}", ""))
-            s.endGroup()
-
+            saved_model = self._settings.get_ai_value(f"model_{provider_key}", "", str)
             target_model = saved_model if saved_model else current
             idx = self.cbb_model.findText(target_model)
             if idx >= 0:
@@ -862,7 +809,11 @@ class VChatPanel(QDialog):
                 self.cbb_model.setCurrentIndex(self.cbb_model.findText(current))
             if self.cbb_model.currentText():
                 self.vm.set_model(self.cbb_model.currentText())
+                # The combo is too narrow for a long id; show it all on hover.
+                self.cbb_model.setToolTip(
+                    f"{self.cbb_model.currentText()}\n\nSelect or type a model name")
             self.cbb_model.blockSignals(False)
+            self._fit_model_popup_width()
 
             if is_ollama:
                 status_text = "🟢  Ollama connected"
@@ -903,7 +854,7 @@ class VChatPanel(QDialog):
         self._active_card = self._add_ai_card("", timestamp=datetime.now().isoformat())  # placeholder for streaming
         
         # The AI message will be added to the conversation at this index once done
-        ai_msg_idx = self.vm._conversation.message_count + 1 
+        ai_msg_idx = self.vm.message_count + 1
         self._active_card.reply_clicked.connect(lambda text, idx=ai_msg_idx: self._on_reply_clicked(idx, text))
         
         self.vm.process_query(text, reply_to_index=reply_idx)
@@ -963,14 +914,18 @@ class VChatPanel(QDialog):
         # Auto-remove after 5 seconds
         QTimer.singleShot(5000, card.deleteLater)
 
-    def _on_clear(self) -> None:
-        self.vm.cancel()
-        self.vm.clear_history()
-        while self.messages_layout.count() > 1: # preserve the stretch
+    def _clear_message_cards(self) -> None:
+        """Remove every message widget, preserving the trailing stretch."""
+        while self.messages_layout.count() > 1:
             item = self.messages_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
         self._active_card = None
+
+    def _on_clear(self) -> None:
+        self.vm.cancel()
+        self.vm.clear_history()
+        self._clear_message_cards()
 
     def _on_history_clicked(self) -> None:
         dialog = VHistoryDialog(self.vm.conversation_store, self)
@@ -987,25 +942,16 @@ class VChatPanel(QDialog):
             
     def _on_title_edited(self):
         new_title = self.edit_title.text().strip()
-        if new_title and new_title != self.vm._conversation.title:
-            self.vm._conversation.rename(new_title)
-            self.vm._conversation.save()
-            
+        if new_title and new_title != self.vm.conversation_title:
+            self.vm.rename_conversation(new_title)
+
     def _on_conversation_changed(self, title: str) -> None:
         self.edit_title.setText(title)
-        # Clear UI
-        while self.messages_layout.count() > 1: # preserve the stretch
-            item = self.messages_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-        self._active_card = None
-                
+        self._clear_message_cards()
+
         # Rebuild from vm conversation
         current_ai_card = None
-        for i, msg in enumerate(self.vm._conversation.messages):
-            if msg.get("is_hidden"):
-                continue
-
+        for i, msg in self.vm.visible_messages():
             if msg["role"] == "user":
                 self._add_user_card(msg["content"], msg.get("reply_to_index"), timestamp=msg.get("timestamp"))
                 current_ai_card = None
@@ -1029,8 +975,7 @@ class VChatPanel(QDialog):
 
     def _on_reply_clicked(self, idx: int, raw_text: str) -> None:
         self._reply_to_index = idx
-        preview = raw_text[:80].replace("\n", " ") + "..." if len(raw_text) > 80 else raw_text.replace("\n", " ")
-        self.lbl_reply_text.setText(f"Replying to: \"{preview}\"")
+        self.lbl_reply_text.setText(f"Replying to: \"{_preview(raw_text)}\"")
         self.reply_preview.show()
         self.edit_input.setFocus()
         
@@ -1075,23 +1020,10 @@ class VChatPanel(QDialog):
         self._stream_buffer = ""
 
         if self._active_card:
-            # Set the explanation as the main text
             self._active_card.set_text(result.explanation or result.text_summary)
 
-        # If a DataFrame was returned, attach a preview table below the bubble
-        if result.dataframe is not None and not result.dataframe.empty:
-            preview = _DataFramePreview(result.dataframe)
-            self._insert_widget_after_card(preview)
-
-        # If statistics / answer text, show in a text box
-        elif result.text_summary and result.action in ("statistics", "answer"):
-            if self._active_card:
-                self._active_card.set_text(
-                    (result.explanation or "") + "\n\n" + result.text_summary
-                )
-
         # If a plot was suggested, update requested, or delete requested, automatically apply it
-        if result.plot_config and result.action in ("plot", "update", "delete"):
+        if result.plot_config and result.action == "plot":
             cfgs = result.plot_config if isinstance(result.plot_config, list) else [result.plot_config]
 
             for cfg in cfgs:
@@ -1107,7 +1039,7 @@ class VChatPanel(QDialog):
                 btn.setObjectName("btnRowPrimary")
                 btn.setMaximumWidth(220)
                 btn.clicked.connect(lambda: self.prompt_and_save_recipe(plot_only_cfgs))
-                self._insert_widget_after_card(btn)
+                self._insert_before_stretch(btn)
 
         self._active_card = None
         self._scroll_to_bottom()
@@ -1152,57 +1084,40 @@ class VChatPanel(QDialog):
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _add_user_card(self, text: str, reply_to_index: Optional[int] = None, timestamp: Optional[str] = None) -> _MessageCard:
-        if reply_to_index is not None and 0 <= reply_to_index < len(self.vm._conversation.messages):
-            replied_msg = self.vm._conversation.messages[reply_to_index]
-            replied_content = replied_msg.get("content", "")
-            preview = replied_content[:80].replace("\n", " ") + "..." if len(replied_content) > 80 else replied_content.replace("\n", " ")
-            text = f"Replying to:\n\"{preview}\"\n\n{text}"
-            
-        formatted_ts = ""
-        if timestamp:
-            try:
-                dt = datetime.fromisoformat(timestamp)
-                formatted_ts = dt.strftime("%y-%m-%d %H:%M")
-            except Exception:
-                formatted_ts = timestamp
-                
-        card = _MessageCard(text, "user", timestamp=formatted_ts)
+    @staticmethod
+    def _format_timestamp(timestamp: Optional[str]) -> str:
+        if not timestamp:
+            return ""
+        try:
+            return datetime.fromisoformat(timestamp).strftime("%y-%m-%d %H:%M")
+        except ValueError:
+            return timestamp
+
+    def _add_card(self, text: str, role: str, timestamp: Optional[str] = None) -> _MessageCard:
+        """Add a message card, indented on the side matching *role*."""
+        card = _MessageCard(text, role, timestamp=self._format_timestamp(timestamp))
         wrapper = QWidget()
-        l = QHBoxLayout(wrapper)
-        l.setContentsMargins(40, 0, 4, 0)
-        l.addWidget(card)
+        layout = QHBoxLayout(wrapper)
+        # Asymmetric margins are what visually separates the two speakers.
+        layout.setContentsMargins(*((40, 0, 4, 0) if role == "user" else (4, 0, 40, 0)))
+        layout.addWidget(card)
         self._insert_before_stretch(wrapper)
         self._scroll_to_bottom()
         return card
 
+    def _add_user_card(self, text: str, reply_to_index: Optional[int] = None, timestamp: Optional[str] = None) -> _MessageCard:
+        if reply_to_index is not None:
+            replied_content = self.vm.get_message_content(reply_to_index)
+            if replied_content is not None:
+                text = f"Replying to:\n\"{_preview(replied_content)}\"\n\n{text}"
+        return self._add_card(text, "user", timestamp)
+
     def _add_ai_card(self, text: str, timestamp: Optional[str] = None) -> _MessageCard:
-        formatted_ts = ""
-        if timestamp:
-            try:
-                dt = datetime.fromisoformat(timestamp)
-                formatted_ts = dt.strftime("%y-%m-%d %H:%M")
-            except Exception:
-                formatted_ts = timestamp
-                
-        card = _MessageCard(text, "assistant", timestamp=formatted_ts)
-        wrapper = QWidget()
-        l = QHBoxLayout(wrapper)
-        l.setContentsMargins(4, 0, 40, 0)
-        l.addWidget(card)
-        self._insert_before_stretch(wrapper)
-        self._scroll_to_bottom()
-        return card
+        return self._add_card(text, "assistant", timestamp)
 
     def _insert_before_stretch(self, widget: QWidget) -> None:
         """Insert a widget just before the trailing stretch."""
-        count = self.messages_layout.count()
-        self.messages_layout.insertWidget(count - 1, widget)
-
-    def _insert_widget_after_card(self, widget: QWidget) -> None:
-        """Insert a widget just after the last _MessageCard."""
-        count = self.messages_layout.count()
-        self.messages_layout.insertWidget(count - 1, widget)
+        self.messages_layout.insertWidget(self.messages_layout.count() - 1, widget)
 
     def _scroll_to_bottom(self) -> None:
         QTimer.singleShot(
@@ -1234,6 +1149,8 @@ class VChatPanel(QDialog):
     # ------------------------------------------------------------------
 
     def closeEvent(self, event) -> None:
+        # The panel is hidden, not destroyed, so the MCP hub thread and its
+        # sessions stay up for the next open; main.py shuts them down on exit.
         self._save_settings()
         self._stop_voice_recording()
         self.vm.cancel()
@@ -1275,10 +1192,3 @@ class _ChatLineEdit(QTextEdit):
                 self.send_requested.emit()
         else:
             super().keyPressEvent(event)
-
-
-
-# ─────────────────────────────────────────────────────────────────────────
-# Re-export LLMClient so main.py can reference it easily
-# ─────────────────────────────────────────────────────────────────────────
-from spectroview.ai_agent.m_llm_client import LLMClient  # noqa: E402

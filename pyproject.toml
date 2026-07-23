@@ -70,7 +70,10 @@ spectroview = [
     "ai_agent/rules/*.md",
     "ai_agent/knowledge/*.md",
     "ai_agent/examples/*.md",
-    "ai_agent/TEMPLATE/*.json"
+    # NOTE: ai_agent/TEMPLATE/ and ai_agent/CHATLOG/ are deliberately NOT
+    # packaged. Both are gitignored user data (saved recipes and chat history)
+    # written at runtime, so a glob here could only bundle whoever built the
+    # wheel's own files into a published release.
 ]
 
 [project.scripts]

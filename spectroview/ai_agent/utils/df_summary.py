@@ -18,6 +18,18 @@ from typing import Any, List
 import pandas as pd
 
 
+def compact_dataframe_schema(df: pd.DataFrame) -> str:
+    """Return every column name with its dtype, and nothing else.
+
+    This is the block pushed into *every* system prompt. Column names must
+    always be present — a model that has never seen a name will invent one —
+    but sample values and row previews are bulky and only occasionally needed,
+    so they live behind the ``spectroview://dataframes/detail`` resource
+    instead. See :func:`summarize_dataframe_columns` for that fuller view.
+    """
+    return ", ".join(f"{col} ({df[col].dtype})" for col in df.columns)
+
+
 def _column_line(df: pd.DataFrame, col: Any, samples_per_column: int) -> str:
     dtype = str(df[col].dtype)
     sample_vals = df[col].dropna().unique()[:samples_per_column].tolist()

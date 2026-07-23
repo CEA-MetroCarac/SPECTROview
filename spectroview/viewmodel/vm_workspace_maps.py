@@ -1092,9 +1092,8 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             'y': ['values'],
             'z': None,
             'filters': [],
-            'plot_width': 480,
-            'plot_height': 385,
-            'dpi': 100
+            # Size/dpi intentionally omitted: MGraph's defaults apply, so a
+            # profile plot stays in step with every other new graph.
         }
         
         # Create plot using Graphs workspace method

@@ -80,6 +80,14 @@ The fields for a **Custom** (OpenAI-compatible) endpoint are shown by default:
 
 Keys for the built-in cloud providers are tucked under the collapsible **▸ Other cloud providers** section (click to expand): **OpenAI**, **Anthropic**, **Gemini**, **DeepSeek**, and **Mistral**. All keys are stored masked and remembered between sessions.
 
+> **Where your keys are stored.** API keys go into your operating system's
+> per-user settings store — the registry (`HKEY_CURRENT_USER\Software\CEA-Leti\SPECTROview`)
+> on Windows, `~/Library/Preferences` on macOS. They are **never** written to a
+> file inside the SPECTROview project folder, are not included in an exported
+> workspace, and cannot be committed to a Git repository by accident. They are
+> stored in plain text there, so treat them like any other saved credential:
+> they are readable by anything running under your user account.
+
 #### **Chat History**
 
 | Field | Description |

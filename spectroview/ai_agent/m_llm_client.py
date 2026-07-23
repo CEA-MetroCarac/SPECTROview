@@ -22,6 +22,7 @@ Typical usage
 
 from __future__ import annotations
 
+import json
 import os
 from typing import Callable, List, Dict, Optional, Any
 
@@ -60,6 +61,16 @@ def _make_http_client() -> Optional[Any]:
         return None
 
 
+#: Provider-side HTTP statuses that mean "not your fault, try again".
+_TRANSIENT_STATUS: Dict[int, str] = {
+    429: "⏳ Rate limited — too many requests for this model right now.",
+    500: "⚠ The provider hit an internal error.",
+    502: "⚠ The provider's gateway returned a bad response.",
+    503: "⏳ The model is temporarily unavailable (high demand).",
+    504: "⏳ The provider timed out.",
+}
+
+
 def _format_exception(exc: BaseException) -> str:
     """Build an error string that includes the underlying cause chain.
 
@@ -79,7 +90,19 @@ def _format_exception(exc: BaseException) -> str:
         if entry not in messages:
             messages.append(entry)
         cur = cur.__cause__ or cur.__context__
-    return "\n  Caused by: ".join(messages)
+
+    detail = "\n  Caused by: ".join(messages)
+
+    # A transient provider-side status buried under an SDK traceback reads as
+    # "SPECTROview is broken". Say plainly whose problem it is.
+    status = getattr(exc, "status_code", None)
+    if status in _TRANSIENT_STATUS:
+        return (
+            f"{_TRANSIENT_STATUS[status]}\n"
+            f"This is on the provider's side, not SPECTROview — retry in a moment, "
+            f"or switch model/provider.\n\n{detail}"
+        )
+    return detail
 
 
 # ---------------------------------------------------------------------------
@@ -373,6 +396,98 @@ class APIWorker(QThread):
             self.error_occurred.emit(_format_exception(exc))
 
 
+# ---------------------------------------------------------------------------
+# Anthropic translation — its tool protocol differs from OpenAI's
+# ---------------------------------------------------------------------------
+#
+# The rest of the app speaks OpenAI's dialect: tools are
+# {"type": "function", "function": {...}}, a tool call is an assistant message
+# with `tool_calls`, and its result is a separate {"role": "tool"} message.
+# Anthropic instead takes {"name", "description", "input_schema"} tools, and
+# carries calls/results as `tool_use`/`tool_result` content blocks. Passing the
+# OpenAI shapes straight through makes the API reject the request, so both are
+# translated here — as pure functions, so the mapping is testable without a key.
+
+def anthropic_tools(tools: Optional[List[Dict[str, Any]]]) -> Optional[List[Dict[str, Any]]]:
+    """Convert OpenAI-style tool schemas to Anthropic's ``input_schema`` form."""
+    if not tools:
+        return None
+    converted: List[Dict[str, Any]] = []
+    for tool in tools:
+        fn = tool.get("function", tool)
+        converted.append({
+            "name": fn.get("name", ""),
+            "description": fn.get("description", "") or "",
+            "input_schema": fn.get("parameters") or {"type": "object", "properties": {}},
+        })
+    return converted
+
+
+def _tool_use_input(raw_arguments: Any) -> Dict[str, Any]:
+    """Coerce a recorded tool call's arguments back into a dict."""
+    if isinstance(raw_arguments, dict):
+        return raw_arguments
+    try:
+        parsed = json.loads(raw_arguments or "{}")
+    except (TypeError, ValueError):
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def anthropic_messages(messages: List[Dict[str, Any]]) -> tuple[str, List[Dict[str, Any]]]:
+    """Split *messages* into ``(system_prompt, anthropic_messages)``.
+
+    System messages are concatenated out into the top-level ``system``
+    parameter. Assistant messages carrying ``tool_calls`` become ``tool_use``
+    content blocks, and the ``{"role": "tool"}`` results answering them are
+    merged into a single following user message of ``tool_result`` blocks —
+    Anthropic requires every result for one assistant turn in one user message.
+    """
+    system_parts: List[str] = []
+    converted: List[Dict[str, Any]] = []
+
+    for msg in messages:
+        role, content = msg.get("role"), msg.get("content") or ""
+
+        if role == "system":
+            system_parts.append(content)
+
+        elif role == "tool":
+            block = {
+                "type": "tool_result",
+                "tool_use_id": msg.get("tool_call_id") or "",
+                "content": content,
+            }
+            # Append to the previous user message when it is already a
+            # tool_result batch, otherwise start a new one.
+            if (converted and converted[-1]["role"] == "user"
+                    and isinstance(converted[-1]["content"], list)
+                    and converted[-1]["content"][0].get("type") == "tool_result"):
+                converted[-1]["content"].append(block)
+            else:
+                converted.append({"role": "user", "content": [block]})
+
+        elif role == "assistant" and msg.get("tool_calls"):
+            blocks: List[Dict[str, Any]] = []
+            if content:
+                blocks.append({"type": "text", "text": content})
+            for call in msg["tool_calls"]:
+                fn = call.get("function", {})
+                blocks.append({
+                    "type": "tool_use",
+                    "id": call.get("id") or "",
+                    "name": fn.get("name", ""),
+                    "input": _tool_use_input(fn.get("arguments")),
+                })
+            converted.append({"role": "assistant", "content": blocks})
+
+        elif content:
+            # Anthropic rejects empty-content messages outright.
+            converted.append({"role": role, "content": content})
+
+    return "\n".join(system_parts), converted
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Worker 3 — Anthropic backend
 # ═══════════════════════════════════════════════════════════════════════════
@@ -434,15 +549,7 @@ class AnthropicWorker(QThread):
             )
             return
 
-        # Separate system messages from user/assistant messages
-        system_prompt = ""
-        filtered_messages = []
-        for msg in self._messages:
-            if msg["role"] == "system":
-                system_prompt += msg["content"] + "\n"
-            else:
-                filtered_messages.append(msg)
-
+        system_prompt, messages = anthropic_messages(self._messages)
         max_tokens = self._max_tokens or 4096
 
         try:
@@ -455,46 +562,37 @@ class AnthropicWorker(QThread):
 
             client = _anthropic.Anthropic(**client_args)
 
-            kwargs = {}
-            if self._tools:
-                kwargs["tools"] = self._tools
+            kwargs: Dict[str, Any] = {
+                "model": self._model,
+                "max_tokens": max_tokens,
+                "messages": messages,
+            }
+            if system_prompt:
+                kwargs["system"] = system_prompt
+            tools = anthropic_tools(self._tools)
+            if tools:
+                kwargs["tools"] = tools
 
-            # Note: with Anthropic API, streaming with tools can be complex.
-            # For simplicity, if tools are provided, we just use messages.create.
-            if self._tools:
-                resp = client.messages.create(
-                    max_tokens=max_tokens,
-                    system=system_prompt,
-                    messages=filtered_messages, # type: ignore
-                    model=self._model,
-                    tools=self._tools
-                )
-                tool_calls = []
-                for content_block in resp.content:
-                    if content_block.type == 'text':
-                        self._full_response += content_block.text
-                        self.chunk_received.emit(content_block.text)
-                    elif content_block.type == 'tool_use':
-                        tool_calls.append({
-                            "function": {
-                                "name": content_block.name,
-                                "arguments": content_block.input
-                            }
-                        })
-                self.response_ready.emit(self._full_response, tool_calls)
-            else:
-                with client.messages.stream(
-                    max_tokens=max_tokens,
-                    system=system_prompt,
-                    messages=filtered_messages, # type: ignore
-                    model=self._model,
-                ) as stream:
-                    for text in stream.text_stream:
-                        if self._is_cancelled:
-                            break
-                        self._full_response += text
-                        self.chunk_received.emit(text)
-                self.response_ready.emit(self._full_response, [])
+            with client.messages.stream(**kwargs) as stream:
+                for text in stream.text_stream:
+                    if self._is_cancelled:
+                        break
+                    self._full_response += text
+                    self.chunk_received.emit(text)
+                final = stream.get_final_message()
+
+            # Tool calls are only complete once the stream is; read them off
+            # the assembled message and re-emit in the OpenAI shape the rest
+            # of the app consumes.
+            tool_calls = [
+                {
+                    "id": block.id,
+                    "type": "function",
+                    "function": {"name": block.name, "arguments": block.input},
+                }
+                for block in final.content if block.type == "tool_use"
+            ]
+            self.response_ready.emit(self._full_response, tool_calls)
 
         except Exception as exc:               # noqa: BLE001
             self.error_occurred.emit(_format_exception(exc))
@@ -744,19 +842,26 @@ class LLMClient:
 
     def cancel(self) -> None:
         """Abort the current worker thread if one is running."""
-        if getattr(self, "_worker", None):
-            if hasattr(self._worker, "cancel"):
-                self._worker.cancel()
-            
-            # Safely orphan the thread by disconnecting callbacks so they don't affect UI
-            for signal_name in ("chunk_received", "thinking_chunk_received", "response_ready", "error_occurred"):
-                signal = getattr(self._worker, signal_name, None)
-                if signal:
-                    try:
-                        signal.disconnect()
-                    except RuntimeError:
-                        pass
-            self._worker = None
+        worker = self._worker
+        self._worker = None
+        if worker is None:
+            return
+
+        if hasattr(worker, "cancel"):
+            worker.cancel()
+        for signal_name in ("chunk_received", "thinking_chunk_received",
+                            "response_ready", "error_occurred"):
+            signal = getattr(worker, signal_name, None)
+            if signal:
+                try:
+                    signal.disconnect()
+                except RuntimeError:
+                    pass
+
+        if worker.isRunning():
+            worker.finished.connect(worker.deleteLater)
+        else:
+            worker.deleteLater()
 
     def is_busy(self) -> bool:
         """Return ``True`` while a worker thread is running."""

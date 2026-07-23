@@ -1,7 +1,6 @@
 import os
 import glob
 import json
-from datetime import datetime
 from typing import List, Dict, Optional
 
 from spectroview.ai_agent.m_conversation import MConversation
@@ -131,72 +130,3 @@ class MConversationStore:
         )
         return conv
 
-    def import_legacy_md(self, filepath: str) -> Optional[MConversation]:
-        """Parse an existing .md file into JSON format."""
-        if not os.path.exists(filepath):
-            return None
-            
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                content = f.read()
-                
-            conv = MConversation()
-            
-            # Extract timestamp from filename or content
-            filename = os.path.basename(filepath)
-            # Format: 26-07-12_12-13-44.md
-            try:
-                date_str = filename.replace(".md", "")
-                dt = datetime.strptime(date_str, "%y-%m-%d_%H-%M-%S")
-                iso_time = dt.isoformat()
-                conv.created_at = iso_time
-                conv.modified_at = iso_time
-            except ValueError:
-                pass # Use current time as fallback
-                
-            # Naive parsing of markdown chunks
-            # Example: ### User\nadd scatter plot\n\n### AI\n{...}
-            import re
-            parts = re.split(r'### (User|AI)\n', content)
-            
-            if len(parts) > 1:
-                # First part is header "# AI Chat Session - ..."
-                header = parts[0]
-                title_match = re.search(r'# AI Chat Session - (.*)', header)
-                if title_match:
-                    conv.title = f"Legacy: {title_match.group(1).strip()}"
-                else:
-                    conv.title = f"Legacy: {filename}"
-                    
-                # Pair the roles and contents
-                # parts looks like: [header, 'User', 'content...', 'AI', 'content...', ...]
-                for i in range(1, len(parts) - 1, 2):
-                    role_str = parts[i]
-                    msg_content = parts[i+1].strip()
-                    
-                    role = "user" if role_str == "User" else "assistant"
-                    # Add without triggering auto-title
-                    conv.messages.append({
-                        "role": role,
-                        "content": msg_content,
-                        "timestamp": conv.created_at, # Use conversation time since we don't have message times
-                        "reply_to_index": None
-                    })
-                    
-            if len(conv.messages) > 0:
-                conv.save(self.folder_path)
-                
-                self._index[conv.id] = ConversationSummary(
-                    id=conv.id,
-                    title=conv.title,
-                    created_at=conv.created_at,
-                    modified_at=conv.modified_at,
-                    message_count=conv.message_count,
-                    filepath=conv._filepath or ""
-                )
-                return conv
-                
-        except Exception as e:
-            print(f"Error importing legacy {filepath}: {e}")
-            
-        return None

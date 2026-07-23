@@ -63,7 +63,6 @@ A second, distinct axis of "optional" matters here too: **small local models get
 ## **Architecture Overview**
 
 The AI feature follows the same strict **MVVM** pattern as the rest of the application. All AI-related code lives in the `spectroview/ai_agent/` package, isolated from the core workspaces.
-
 ```mermaid
 graph TD
     TB["VMenuBar (toolbar button)"] -->|"ai_chat_requested"| Main["main.py"]
@@ -72,7 +71,6 @@ graph TD
     VMC -->|"detect small model?"| DET["ollama show + name patterns"]
     DET -->|"tier decision"| VMC
     VMC -->|"builds prompt (tier-dependent)"| PM["PromptManager"]
-    VMC -->|"starts"| MCP["FastMCP Server (mcp/server.py)"]
     PM -->|"loads .md"| FS["File System (prompts/, rules/, ...)"]
     VMC -->|"chat(..., request_options)"| LLC["LLMClient (Model)"]
     LLC -->|"spawns (with MCP tools + options)"| LLW["LLMWorker (QThread)"]
@@ -80,12 +78,57 @@ graph TD
     OLL -->|"tool calls / text chunks"| LLW
     LLW -->|"signals"| LLC
     LLC -->|"signals"| VMC
-    VMC -->|"executes tool calls via MCP session"| MCP
-    MCP -->|"tool result (validated)"| VMC
+    VMC -->|"call_tool / read_resource"| HUB["MCPHub (mcp/hub.py)"]
+    HUB -->|"persistent sessions"| SRV["SPECTROview server + any external MCP servers"]
+    SRV -->|"reads data / submits commands"| CTX["AppContext (agent/ports.py)"]
+    CTX -->|"queued AgentCommands"| VMC
     VMC -->|"result_ready (ChatResult)"| VCP
     VCP -->|"plot_requested"| Main
     Main -->|"create / update / delete"| VWG["VWorkspaceGraphs"]
 ```
+
+### **The AppContext boundary**
+
+The MCP server does **not** import `VMChat`. It is handed an `AppContext`
+(`agent/ports.py`) — a five-method protocol: list DataFrames, get one, get the
+active name, list graphs, submit a command. `VMChat` supplies a `VMChatContext`
+adapter; tests supply `RecordingContext`.
+
+This is what makes the tool layer independently testable (no Qt, no LLM, no
+application) and what would let the same server run out-of-process. Tools never
+mutate the ViewModel; they submit typed commands (`agent/commands.py`:
+`CreatePlot`, `UpdatePlot`, `DeletePlots`), which `VMChat` drains and normalises
+once when the turn ends.
+
+### **MCPHub — one loop, many servers**
+
+`MCPHub` (`mcp/hub.py`) owns a single asyncio event loop on a background thread
+and keeps an initialised session open for every server listed in
+`config/servers.yaml` (`in-process`, `stdio`, or `http`). Qt-thread callers use
+plain synchronous methods; the hub marshals each call onto its loop.
+
+Previously the ViewModel called `asyncio.run()` directly on the GUI thread and
+rebuilt the server session for every tool batch — which blocked the UI and only
+worked because the single server was in-process.
+
+Tool names stay unqualified while unique across servers (so `plot_graph` keeps
+working everywhere it is documented); a name offered by two servers becomes
+`<server_id>__<tool>` for both. A per-server `tools:` allowlist keeps the
+offered set small — tool schemas are prompt tokens on every turn, and small
+local models degrade quickly past roughly a dozen tools.
+
+### **Pushed vs pulled context**
+
+The system prompt always carries DataFrame names, shapes, and every column name
+with its dtype — a model that has never seen a column name will invent one, so
+this half is non-negotiable. Sample values, row previews, and full graph configs
+are bulky and rarely decisive, so they live behind MCP **resources**
+(`spectroview://dataframes/detail`, `spectroview://graphs/detail`).
+
+No LLM API has a native notion of a resource, so the hub exposes reading one as
+a synthetic `get_context(uri)` tool whose `uri` enum lists exactly the resources
+currently available — which also constrains grammar-guided local models to a
+real URI. Resources added by any server appear there with no client change.
 
 ---
 
@@ -94,32 +137,36 @@ graph TD
 ```
 spectroview/ai_agent/
 ├── __init__.py              # Docstring only — keeps the module optional
-├── config/                  # YAML configuration files (model.yaml, settings.yaml)
+├── config/                  # YAML configuration (model.yaml, settings.yaml, servers.yaml)
 ├── examples/                # Few-shot conversation examples (Markdown)
 │   ├── plotting_examples.md #   Full-tier: 13 examples, tool-call style
-│   ├── filtering_examples.md#   query_dataframe/get_statistics examples
 │   └── examples_small.md    #   Simplified-tier: ~8 tight examples covering all 5 tools
 ├── knowledge/                # Static domain facts (Markdown; full tier only)
-├── prompts/                  # Core identity + per-intent instructions (Markdown)
+├── prompts/                  # Core identity + per-topic instructions (Markdown)
 │   ├── system.md, chat.md, plotting.md   # Full tier (default; also used by cloud providers)
 │   └── system_small.md      #   Simplified tier — single consolidated file for detected small models
 ├── rules/                   # Behavioural constraints (Markdown)
-├── templates/                # Reusable Markdown output formats
+├── agent/                   # Qt-free core
+│   ├── commands.py          #   CreatePlot / UpdatePlot / DeletePlots dataclasses
+│   └── ports.py             #   AppContext protocol + RecordingContext (the test fake)
 ├── utils/
 │   ├── plot_utils.py        # normalize_plot_config / expand_comma_styles — type coercion for plot configs
 │   ├── safe_eval.py         # evaluate_pandas_expression() — df.query() first, sandboxed eval() fallback
-│   └── df_summary.py        # summarize_dataframe_columns() — compacts wide DataFrames in the prompt
+│   └── df_summary.py        # compact_dataframe_schema() for the prompt; summarize_dataframe_columns() for the resource
 ├── m_llm_client.py          # Model layer: LLM connections + QThread workers
 │                            #   - LLMWorker (Ollama)
 │                            #   - APIWorker (OpenAI-compatible)
 │                            #   - AnthropicWorker (Anthropic SDK)
+│                            #   - anthropic_tools()/anthropic_messages() — protocol translation
 │                            #   - LLMClient (unified facade)
 │                            #   - get_ollama_model_info() — `ollama show` wrapper for size detection
 ├── m_conversation.py        # Data model: single conversation (messages, save/load JSON)
 ├── m_conversation_store.py  # Conversation store: scan/list/load saved conversations
 ├── mcp/
-│   └── server.py            # FastMCP server defining the 5 AI tools (plot_graph, query_dataframe, etc.)
-├── m_prompt_manager.py      # Prompt caching and assembly: loads and merges Markdown files based on intent/tier
+│   ├── server.py            # SPECTROview's FastMCP server: 5 tools + 2 resources
+│   ├── hub.py               # MCP client: one loop thread, one session per server
+│   └── config.py            # servers.yaml -> validated ServerSpec list
+├── m_prompt_manager.py      # Prompt caching and assembly: loads and merges the Markdown fragments
 ├── vm_chat.py               # ViewModel: prompt-tier selection, small-model detection, request tuning, agentic loop
 ├── v_chat_panel.py          # View: floating chat dialog (QDialog), incl. the Auto/Full/Simplified selector
 └── v_history_dialog.py      # View: history browser dialog (QDialog)
@@ -129,13 +176,17 @@ spectroview/ai_agent/
 
 | File | Layer | Responsibility |
 |------|-------|---------------|
-| `m_prompt_manager.py` | **Model** | Loads, caches, and assembles Markdown files into a system prompt for a given set of `prompts=`/`rules=`/`knowledge=`/`examples=` lists. Also parses `config/model.yaml`/`config/settings.yaml` (`.model_config`/`.settings` properties). |
-| `m_llm_client.py` | **Model** | Wraps Ollama, OpenAI SDK, and Anthropic SDK. Checks availability, lists models, looks up a model's parameter count (`get_ollama_model_info`), and spawns one of three background `QThread` workers depending on the selected provider. |
-| `m_conversation.py` | **Model** | Represents a single conversation: add messages (including `tool_calls`/`tool_call_id`), auto-title, save/load as JSON, slice to the last N messages. Skips saving empty conversations. |
+| `m_prompt_manager.py` | **Model** | Loads, caches, and assembles Markdown files into a system prompt for a given set of `prompts=`/`rules=`/`knowledge=`/`examples=` lists. Also parses `config/model.yaml`/`config/settings.yaml` (`.model_config`). |
+| `m_llm_client.py` | **Model** | Wraps Ollama, OpenAI SDK, and Anthropic SDK. Checks availability, lists models, looks up a model's parameter count (`get_ollama_model_info`), translates the OpenAI tool dialect to Anthropic's, and spawns one of three background `QThread` workers depending on the selected provider. |
+| `m_conversation.py` | **Model** | Represents a single conversation: add messages (including `tool_calls`/`tool_call_id`), auto-title, save/load as JSON, cap to the last N messages **without splitting a tool call from its result**. Skips saving empty conversations. |
 | `m_conversation_store.py` | **Model** | Scans the history folder, lists saved conversations as lightweight summaries, loads conversations by ID. |
-| `mcp/server.py` | **Model** | FastMCP server exposing SPECTROview's 5 AI tools to the LLM, with request-time filter/plot-style validation. |
+| `agent/ports.py` | **Model** | `AppContext` — the only thing the MCP tools know about the application. `RecordingContext` is the in-memory implementation used by every tool test. |
+| `agent/commands.py` | **Model** | `CreatePlot`/`UpdatePlot`/`DeletePlots` — what a tool asks the application to do, instead of raw dicts keyed by `_graph_update`/`_graph_delete`. |
+| `mcp/server.py` | **Model** | FastMCP server exposing SPECTROview's 5 tools and 2 resources, with request-time filter/plot-style validation. Depends only on `AppContext`. |
+| `mcp/hub.py` | **Model** | MCP client: background event loop, one persistent session per configured server, tool-name qualification, allowlists, and the synthetic `get_context` resource tool. |
+| `mcp/config.py` | **Model** | Parses and validates `config/servers.yaml`; skips (with a warning) any entry that is malformed, disabled, or a duplicate id. |
 | `utils/safe_eval.py` | **Model** | Shared, sandboxed pandas-expression evaluator used by both `query_dataframe` and the filter-validation step in `plot_graph`/`update_graph`. |
-| `utils/df_summary.py` | **Model** | Compacts a DataFrame's column listing in the system prompt once it exceeds `column_detail_threshold` columns, without ever hiding a column name. |
+| `utils/df_summary.py` | **Model** | `compact_dataframe_schema()` builds the always-pushed names+dtypes block; `summarize_dataframe_columns()` builds the detailed listing served by the `dataframes/detail` resource, compacting by prefix past `column_detail_threshold` columns without ever hiding a column name. |
 | `utils/plot_utils.py` | **Model** | `normalize_plot_config()`/`expand_comma_styles()` — post-processes accumulated plot configs (type coercion, comma-separated multi-style expansion) before they reach the Graphs workspace. |
 | `vm_chat.py` | **ViewModel** | Detects small-vs-full model tier, builds the tier-appropriate system prompt, assembles Ollama/timeout/max-token request options, manages conversation history, and runs the tool-calling agentic loop (up to 5 turns). |
 | `v_chat_panel.py` | **View** | Floating `QDialog` with chat bubbles, provider/model selector, the prompt-tier selector, timestamp display, status bar, and input field. Emits `plot_requested(dict)` when the AI creates/updates/deletes a graph. The model selector is an **editable** `QComboBox` (a model name can be typed directly); for the **Custom** provider its list is seeded from the comma-separated `custom_models` setting (Settings ▸ AI) via `_custom_model_names()`, so endpoints without a model-listing API are still usable. |
@@ -151,7 +202,27 @@ Small local models (roughly, anything under ~10B parameters) get a measurably di
 
 `VMChat._auto_detect_small_model()` resolves in this order:
 
-1. **Manual override** — `VMChat.set_small_model_mode(True | False | None)`. `None` (the default) means "keep auto-detecting." Exposed in the UI as the **Auto / Full prompt / Simplified prompt** combo box in `v_chat_panel.py`'s header, persisted via `QSettings`.
+1. **Manual override** — `VMChat.set_small_model_mode(True | False | None)`. `None` (the default) means "keep auto-detecting." Exposed in the UI as the **Auto / Full / Small** combo box in `v_chat_panel.py`'s header, persisted via `MSettings`.
+
+### **Persisted settings**
+
+Everything the agent stores — provider, selected model per provider, prompt
+tier, API keys, chat-history folder — lives under the `ai_chat/` prefix of the
+single application store, reached through `MSettings.get_ai_value()` /
+`set_ai_value()`. The AI module imports no `QSettings` of its own.
+
+It used to keep a second `QSettings("SPECTROview", "AIChat")` pair. That made
+the agent's configuration invisible to the rest of the app and, worse, slipped
+past the `_isolate_qsettings` test fixture — so any test constructing a `VMChat`
+read the developer's real settings and wrote chat history into their real
+history folder. `MSettings._migrate_legacy_ai_settings()` copies the old values
+across once (guarded by a marker key, never overwriting a newer value) and
+leaves the legacy store in place so an older build still runs.
+
+> **Secrets**: API keys are written to the per-user OS settings store (Windows
+> registry / macOS defaults) — never to a file inside the project, so they
+> cannot be committed. `config/servers.yaml` *is* committed: never put a token
+> in it, use `${VAR}` (expanded by `mcp/config.py`) instead.
 2. **Parameter-count check** (Ollama only) — `get_ollama_model_info(model)` calls `ollama show <model>`, parses `details.parameter_size` (e.g. `"8.2B"`) via `_parse_param_size_to_billions()`, and compares it against `config/model.yaml`'s `small_model_param_threshold_b` (default **10.0**). Cached per model name for the life of the `VMChat` instance.
 3. **Name-pattern fallback** — if the parameter count can't be determined (cloud model, or `ollama show` fails), the model name is matched against `VMChat._SMALL_MODEL_PATTERNS`, a list of known small model tags (`qwen3:8b`, `gemma3:4b`, `phi3:mini`, `deepseek-r1:8b`, etc.).
 4. **Default: full tier.** If nothing resolves, the model is treated as large. An unrecognized model getting the full prompt is the safer failure mode than an unrecognized *large* model being needlessly handicapped.
@@ -251,12 +322,10 @@ A caching manager that reads Markdown sections from disk and concatenates them i
 | Method | Purpose |
 |--------|---------|
 | `load_prompt(name)` / `load_rule(name)` / `load_knowledge(name)` / `load_example(name)` | Load one Markdown file by stem, cached in memory (auto-invalidated on mtime change if `auto_reload: true`) |
-| `build_prompt(intent, user_message, prompts, rules, knowledge, examples)` | Assembles a complete system prompt. When explicit lists are passed (which `vm_chat.py` always does), they override the per-`intent` defaults entirely. |
+| `build_prompt(prompts, rules, knowledge, examples)` | Assembles a complete system prompt from the named fragments. Missing files are skipped with a warning rather than raising. |
 | `.model_config` | Parsed `config/model.yaml` as a dict |
-| `.settings` | Parsed `config/settings.yaml` as a dict |
-| `clear_cache()` | Clears the file-content cache |
 
-> **Gotcha for future changes**: `_INTENT_DEFAULTS` (per-intent default file lists for `"plotting"`/`"fitting"`/`"coding"`) and `_detect_intent()` (keyword-based intent sniffing) exist but are **currently inert** — `vm_chat.py` always calls `build_prompt()` with explicit `prompts=`/`rules=`/`knowledge=`/`examples=` lists (one set for the full tier, one for the simplified tier — see [Small-Model Support](#small-model-support)), which unconditionally short-circuits the intent-based defaults regardless of `config/settings.yaml`'s `enable_intent_detection` flag. `prompts/fitting.md`, `prompts/coding.md`, `rules/fitting.md`, `rules/python.md`, and `examples/filtering_examples.md` are fully written but never loaded under the current call pattern.
+> **Which fragments load is decided in code**, by `VMChat._build_system_prompt()` — one list for the full tier, one for the simplified tier (see [Small-Model Support](#small-model-support)). There is no intent router. An earlier keyword-based one (`_detect_intent()`, `_INTENT_DEFAULTS`, `enable_intent_detection`) was inert — the explicit lists always short-circuited it — and has been removed along with the five prompt fragments only it could have loaded (`prompts/fitting.md`, `prompts/coding.md`, `rules/fitting.md`, `rules/python.md`, `examples/filtering_examples.md`). Recover them from git history if intent routing is ever built for real.
 
 ### **`VMChat` — ViewModel**
 
@@ -292,10 +361,14 @@ Manages one chat session linked to the loaded DataFrames. Follows the MVVM contr
 
 `process_query()` → `LLMClient.chat()` → `_on_done(full_text, tool_calls)`:
 
-- If `tool_calls` is non-empty: each call's `arguments` (parsed if it arrived as a JSON string; a parse failure produces an actionable "please retry with valid JSON" tool-result message instead of silently substituting `{}`) is dispatched via an in-process MCP client session (`session.call_tool(name, args)`). Every tool result — success or a validation error — is appended to conversation history as a `role="tool"` message, and `_on_done` recursively calls `LLMClient.chat()` again with the updated history. Capped at **5 iterations** (`error_occurred` fires past that).
-- If `tool_calls` is empty: any `plot_graph`/`update_graph`/`delete_graph` calls made during the loop have accumulated into `self._pending_plots`. If non-empty, they're normalized/expanded (`utils/plot_utils.py`) into a `ChatResult(action="plot", plot_config=[...])`. Otherwise, `ChatResult(action="answer", text_summary=full_text)`.
+- If `tool_calls` is non-empty: each call's `arguments` (parsed if it arrived as a JSON string; a parse failure produces an actionable "please retry with valid JSON" tool-result message instead of silently substituting `{}`) is dispatched through `MCPHub.call_tool(name, args)`, which routes it to whichever server owns that tool. Every tool result — success, a validation error, or an unknown-tool message — is appended to conversation history as a `role="tool"` message, and `_on_done` calls `LLMClient.chat()` again with the updated history. Capped at `VMChat.MAX_AGENT_TURNS` (**5**).
+- If `tool_calls` is empty: the turn ends via `_emit_final_result()`.
 
-**In the current tool-calling architecture, `ChatResult.action` is only ever `"plot"` or `"answer"`** — there is no code path that constructs it with `"filter"`/`"statistics"`/`"update"`/`"delete"`/`"query"` (those were meaningful values under the pre-MCP JSON-protocol architecture; `query_dataframe`/`get_statistics` results now surface only as tool-result text feeding into the LLM's final natural-language answer, not as a separate structured result). `ChatResult.dataframe` is consequently never populated either — `v_chat_panel.py`'s `_DataFramePreview` inline-table widget, which only renders when `result.dataframe is not None`, is effectively dead code today. This isn't something introduced by the small-model work; it's been true since the MCP migration and just hadn't been documented.
+`_emit_final_result()` drains the commands queued on the context during the turn, renders them to configs (normalising once, in `_commands_to_configs`), and emits `ChatResult(action="plot", plot_config=[...])` — or `ChatResult(action="answer", text_summary=...)` when nothing was queued.
+
+It runs on **every** terminating path, including the turn cap and a tool-execution exception. Previously those two paths returned early, so a model that queued three plots and then kept calling tools until the cap left the user with an error and no graphs, after being told the graphs were created.
+
+**`ChatResult.action` is only ever `"plot"` or `"answer"`.** The pre-MCP JSON-protocol values (`"filter"`/`"statistics"`/`"update"`/`"delete"`/`"query"`) have no code path; `query_dataframe`/`get_statistics` results reach the user as the model's final prose answer, not as a separate structured result. The vestigial `dataframe`/`raw_response`/`query`/`target_dataframe` fields and the `_DataFramePreview` widget that only rendered for them have been removed.
 
 #### **Request Options**
 
@@ -312,25 +385,23 @@ Conversations are saved automatically as JSON files in the user-configured histo
 
 The context actually sent to the LLM is capped via `max_context_messages` — unlimited for the full tier, the last 6 messages for the simplified tier (see [Small-Model Support](#small-model-support); this replaces a `MAX_HISTORY_PAIRS = 6` class constant that used to exist but was never actually wired to anything).
 
+`to_llm_messages()` **widens** that window rather than cutting blindly: a `role="tool"` message is only valid immediately after the assistant message carrying its `tool_calls`, so if the cap would land between them the window is extended backwards until the pair is intact. Slicing between them made providers reject the request — and because the cap is only active in simplified mode, it hit exactly the small local models least able to recover from an API error.
+
 ### **`ChatResult` — Parsed Response**
 
 **File**: `spectroview/ai_agent/vm_chat.py`
 
 ```python
 class ChatResult:
-    __slots__ = ("action", "explanation", "dataframe", "text_summary",
-                 "plot_config", "raw_response", "query", "target_dataframe")
+    __slots__ = ("action", "explanation", "text_summary", "plot_config")
 ```
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| `action` | `str` | `"plot"` or `"answer"` in current usage (see above) |
-| `explanation` | `str` | Rarely populated in current usage |
-| `dataframe` | `pd.DataFrame` \| `None` | **Always `None`** in current usage — vestigial, see above |
+| `action` | `str` | `"plot"` or `"answer"` — the only two values (see above) |
+| `explanation` | `str` | Text shown on the message card when graph commands ran |
 | `text_summary` | `str` | The LLM's final natural-language text |
 | `plot_config` | `list[dict]` \| `None` | Accumulated plot/update/delete configs for the Graphs workspace |
-| `raw_response` | `str` | Full LLM text for debugging |
-| `query` / `target_dataframe` | `str` | **Always `""`** in current usage — vestigial fields from the pre-MCP JSON-action protocol |
 
 ### **`VChatPanel` — View Dialog**
 
@@ -344,8 +415,7 @@ Two things previously on this panel have since moved or been removed:
 - **Intermediate tool-step chips** (`🔧 query_dataframe`, `🔧 plot_graph`, …) are no longer shown in the conversation. `_on_tool_execution` now only updates the transient "thinking" status so the finished chat stays clean.
 
 Helper widgets:
-- **`_MessageCard`** / AI/user card variants: styled message bubbles with role-dependent colors
-- **`_DataFramePreview`**: inline `QTableWidget` for filtered DataFrames — see the `ChatResult.dataframe` note above regarding current reachability
+- **`_MessageCard`**: styled message bubble; `_add_card(text, role, timestamp)` indents it on the side matching the speaker
 - **`_ChatLineEdit`** / input area: emits `send_requested` on Enter key
 
 ---
@@ -425,13 +495,13 @@ sequenceDiagram
 
     alt tool_calls non-empty (agentic loop, up to 5 iterations)
         VMC-->>VCP: thinking_changed(True, "Executing tools...")
-        VMC->>MCPS: call_tool(name, args) for each call
+        VMC->>MCPS: MCPHub.call_tool(name, args) for each call
         MCPS-->>VMC: result text (validated, error if filter/style invalid)
         VMC-->>VCP: tool_execution_received(name, result)
         VMC->>LLC: chat(...) again with updated history
-        Note over VMC,LLC: repeats until no more tool_calls, or 5-turn cap
+        Note over VMC,LLC: repeats until no more tool_calls, or the 5-turn cap
     else no tool_calls
-        VMC->>VMC: build ChatResult (action="plot" if _pending_plots, else "answer")
+        VMC->>VMC: _emit_final_result() — drain queued AgentCommands
         VMC-->>VCP: result_ready(ChatResult)
         VMC-->>VCP: thinking_changed(False, "Thinking")
     end
@@ -474,7 +544,7 @@ Each time the panel is shown, a forced sync is performed to ensure current data 
 
 ### **Plot Config Normalization**
 
-Accumulated plot configs are normalized by `utils/plot_utils.py::expand_all_plot_configs()` before being emitted to `main.py`:
+Queued commands are normalized **once**, in `VMChat._commands_to_configs()`, before being emitted to `main.py`. (Both `VMChat` and `main.py` used to normalize the same dict; the `main.py` pass has been removed.)
 
 | Field | Normalization |
 |-------|--------------|
@@ -484,13 +554,14 @@ Accumulated plot configs are normalized by `utils/plot_utils.py::expand_all_plot
 | `filters` | `["expr1", "expr2"]` → `[{"expression": "expr1", "state": True}, ...]` |
 | `plot_style` | Comma-separated (`"box, scatter"`) → one config per style |
 
+`utils/plot_utils.py` derives its valid plot styles and palettes from `spectroview.PLOT_STYLES`/`PALETTE`, as does `mcp/server.py`'s validator. The tool schema's `Literal` must stay statically analysable, so it is spelled out — `test_ai_agent_schema.py::TestPlotStyleSingleSourceOfTruth` fails if the lists ever drift.
+
 ### **Graph Update / Delete Flow**
 
-For entries wrapped as `{"_graph_update": {...}}` / `{"_graph_delete": {...}}` (produced by the `update_graph`/`delete_graph` MCP tools), `main.py`:
+`UpdatePlot`/`DeletePlots` commands are rendered to `{"_graph_update": {...}}` / `{"_graph_delete": {...}}` entries for the existing `plot_requested` signal, and `main.py`:
 
 1. Retrieves the existing `MGraph` model(s) by ID (or resolves `"all"`).
-2. Normalizes property types (same rules as above).
-3. Calls `vm.update_graph(...)` or closes the corresponding `QMdiSubWindow`(s).
+2. Calls `vm.update_graph(...)` or closes the corresponding `QMdiSubWindow`(s).
 
 ---
 
@@ -571,6 +642,40 @@ With **MCP Tool Calling**, response parsing has no free-text JSON to parse at al
 | **Conversation memory** | Multi-turn conversations; full history for large/cloud models, last 6 messages for detected small models |
 | **Conversation persistence** | Conversations survive file loads and tab switches. Only **+ New Chat** resets the history |
 | **Conversation history browser** | Browse, search, open, rename, duplicate, and delete past conversations via the History dialog |
-| **Streaming responses** | Token-by-token display with live typing animation (non-streaming for Anthropic when tools are involved) |
+| **Streaming responses** | Token-by-token display with live typing animation, on every provider including Anthropic with tools |
 | **Model & prompt-tier selection** | Switch between locally downloaded Ollama models or cloud providers; independently force the prompt tier |
-| **Context-aware prompts** | System prompt includes DataFrame schemas (compacted for wide tables), sample values, and open graph configurations |
+| **Context-aware prompts** | System prompt carries DataFrame names, shapes, and every column with its dtype; sample values, row previews, and full graph configs are fetched on demand via `get_context` |
+| **External MCP servers** | Any `stdio` or `http` MCP server listed in `config/servers.yaml` is connected at startup and its tools offered to the model, with an optional per-server allowlist |
+
+---
+
+## **Connecting Another MCP Server**
+
+Add a block to `spectroview/ai_agent/config/servers.yaml` and restart:
+
+```yaml
+servers:
+  - id: spectroview          # SPECTROview's own tools — keep this one
+    transport: in-process
+    factory: spectroview.ai_agent.mcp.server:create_mcp_server
+    enabled: true
+
+  - id: filesystem
+    transport: stdio
+    command: [npx, -y, "@modelcontextprotocol/server-filesystem", "~/data"]
+    enabled: true
+    tools: [read_file, list_directory]     # optional allowlist
+```
+
+`${VARS}` and `~` are expanded in `command`, `env`, and `url`. A server that
+fails to start is logged and skipped — the chat keeps working with whatever
+connected.
+
+Two things to keep in mind:
+
+- **Tool count is a cost.** Every tool's schema is in the prompt on every turn,
+  and small local models lose accuracy quickly past roughly a dozen tools. Use
+  `tools:` to expose only what you need.
+- **An external server's tool descriptions are untrusted text** written by
+  someone else and passed to the model verbatim. Only enable servers you trust,
+  and prefer an allowlist for anything that can write.

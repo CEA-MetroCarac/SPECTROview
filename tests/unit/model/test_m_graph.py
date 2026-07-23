@@ -120,8 +120,8 @@ class TestMGraphInitialization:
         assert graph.df_name is None
         assert graph.filters == []
         assert graph.plot_style == "point"
-        assert graph.plot_width == 480
-        assert graph.plot_height == 385
+        assert graph.plot_width == 408
+        assert graph.plot_height == 327
         assert graph.dpi == 100
 
         assert graph.x is None

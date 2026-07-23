@@ -15,31 +15,34 @@ import asyncio
 import pandas as pd
 from mcp.shared.memory import create_connected_server_and_client_session
 
+from spectroview.ai_agent.agent.ports import RecordingContext
 from spectroview.ai_agent.mcp.server import create_mcp_server
 
 
-class _StubVMChat:
-    def __init__(self):
-        self._active_df_name = "fit_results"
-        self._dfs = {
+def _context(graphs=None) -> RecordingContext:
+    return RecordingContext(
+        dataframes={
             "fit_results": pd.DataFrame({
                 "Slot": [1, 2, 3, 5, 6, 7, 8, 10],
                 "Zone": ["Edge", "Center", "Edge", "Center", "Edge", "Center", "Edge", "Center"],
                 "fwhm_Si": [1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8],
             })
-        }
-        self._graphs = {}
+        },
+        active_name="fit_results",
+        graphs=graphs or {},
+    )
 
 
-def _call_tool(name, args):
+def _call_tool(name, args, graphs=None):
+    """Call one tool; return (response text, commands the tool submitted)."""
     async def _run():
-        vm = _StubVMChat()
-        server = create_mcp_server(vm)
+        context = _context(graphs)
+        server = create_mcp_server(context)
         async with create_connected_server_and_client_session(server._mcp_server) as session:
             await session.initialize()
             res = await session.call_tool(name, args)
             text = res.content[0].text if res.content and hasattr(res.content[0], "text") else str(res)
-            return text, getattr(vm, "_pending_plots", [])
+            return text, context.commands
     return asyncio.run(_run())
 
 
@@ -59,7 +62,7 @@ class TestFilterValidation:
             "filters": ["Zone == 'Edge'"],
         })
         assert "successfully" in text.lower()
-        assert len(pending) == 1
+        assert [type(c).__name__ for c in pending] == ["CreatePlot"]
 
     def test_invalid_plot_style_rejected_before_queuing(self):
         text, pending = _call_tool("plot_graph", {
@@ -78,37 +81,29 @@ class TestMergePrecedence:
             "filters": ["Zone == 'Edge'"], "grid": True,
         })
         assert "successfully" in text.lower()
-        assert pending[0]["grid"] is True
+        assert pending[0].config["grid"] is True
 
     def test_named_param_wins_over_other_properties_duplicate(self):
         text, pending = _call_tool("plot_graph", {
             "x": "Slot", "y": "fwhm_Si", "plot_style": "point",
             "grid": True, "other_properties": {"grid": False},
         })
-        assert pending[0]["grid"] is True
+        assert pending[0].config["grid"] is True
 
     def test_other_properties_catchall_key_still_works(self):
         text, pending = _call_tool("plot_graph", {
             "x": "Slot", "y": "fwhm_Si", "plot_style": "point",
             "other_properties": {"x_rot": 45},
         })
-        assert pending[0]["x_rot"] == 45
+        assert pending[0].config["x_rot"] == 45
 
 
 class TestUpdateGraphFilterValidation:
     def test_invalid_filter_on_known_graph_is_rejected(self):
-        async def _run():
-            vm = _StubVMChat()
-            vm._graphs = {1: {"df": "fit_results"}}
-            server = create_mcp_server(vm)
-            async with create_connected_server_and_client_session(server._mcp_server) as session:
-                await session.initialize()
-                res = await session.call_tool("update_graph", {
-                    "graph_id": "1", "filters": ["Zone == Edge"],
-                })
-                text = res.content[0].text if res.content else str(res)
-                return text, getattr(vm, "_pending_plots", [])
-        text, pending = asyncio.run(_run())
+        text, pending = _call_tool(
+            "update_graph", {"graph_id": "1", "filters": ["Zone == Edge"]},
+            graphs={1: {"df": "fit_results"}},
+        )
         assert "NOT applied" in text
         assert pending == []
 
@@ -120,4 +115,4 @@ class TestUpdateGraphFilterValidation:
             "graph_id": "all", "filters": ["Zone == 'Edge'"],
         })
         assert "successfully" in text.lower()
-        assert len(pending) == 1
+        assert pending[0].graph_id == "all"

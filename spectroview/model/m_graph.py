@@ -25,8 +25,9 @@ class MGraph:
 
     # Plot configuration
     plot_style: str = "point"  # point, line, bar, wafer, 2Dmap, etc.
-    plot_width: int = 480
-    plot_height: int = 385  # 420 minus the per-window toolbar row, now shared across all graphs
+    
+    plot_width: int = 408
+    plot_height: int = 327
     dpi: int = 100
 
     # Axes

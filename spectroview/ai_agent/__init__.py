@@ -5,35 +5,34 @@ AI-powered data chat and analysis assistant for SPECTROview.
 
 Architecture
 ------------
-This module implements a modular Prompt Engineering architecture.
-All prompts, rules, knowledge, and examples are stored as Markdown
-files in subdirectories and loaded at runtime by ``PromptManager``.
+A tool-calling agent. The LLM is offered a set of MCP tools describing what it
+may do to the user's data; the ViewModel runs the request/tool/response loop
+and forwards the resulting graph commands to the Graphs workspace.
 
-    prompts/        – Core identity, JSON schema, per-intent instructions
-    rules/          – Behavioural constraints (general, plotting, etc.)
-    knowledge/      – Static domain facts (features, terminology, etc.)
+    mcp/            – In-process MCP server exposing the SPECTROview tools
+    prompts/        – Core identity and per-topic instructions
+    rules/          – Behavioural constraints
+    knowledge/      – Static domain facts
     examples/       – Few-shot conversation examples
-    templates/      – Reusable Markdown output formats
-    tools/          – Reusable Python helper functions
-    config/         – YAML configuration files
+    config/         – YAML configuration (model.yaml, settings.yaml)
+    utils/          – Sandboxed pandas eval, DataFrame summaries, plot configs
 
 Key classes
 -----------
-VMChat          – ViewModel for the chat session (MVVM pattern)
-LLMClient       – LLM backend abstraction (Ollama / cloud APIs)
-MConversation   – Conversation data model with persistence
-PromptManager   – Loads, caches, and assembles Markdown prompt files
+VMChat          – ViewModel: prompt assembly, the agent loop, tool dispatch
+LLMClient       – LLM backend abstraction (Ollama / OpenAI-compatible / Anthropic)
+MConversation   – Conversation data model with JSON persistence
+PromptManager   – Loads, caches, and assembles the Markdown prompt fragments
 
 Optional dependency
 -------------------
-All AI-related classes are optional.  If no LLM package is installed
-(``ollama``, ``openai``, or ``anthropic``), the rest of the application
-remains completely unaffected.  The VChatPanel view handles the
-ImportError gracefully by disabling the AI menu item.
+``main.py`` guards the import of this package: if ``mcp``, ``ollama``,
+``openai``, or ``anthropic`` is missing, the AI panel is disabled and the rest
+of SPECTROview is unaffected.
 
 Extending the AI
 ----------------
-To customise AI behaviour, edit the Markdown files under this package.
-No Python source changes are required for prompt engineering.
-See ``README.md`` in this directory for detailed instructions.
+Prompt wording lives in the Markdown files under this package and needs no
+Python change. Adding a *capability* means adding a tool in ``mcp/server.py``.
+See ``README.md`` in this directory.
 """

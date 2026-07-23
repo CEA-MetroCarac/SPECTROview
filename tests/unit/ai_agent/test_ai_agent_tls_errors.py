@@ -49,3 +49,37 @@ class TestMakeHttpClient:
     def test_returns_none_for_missing_bundle_file(self, monkeypatch):
         monkeypatch.setattr(m, "_CA_BUNDLE_ENV", "/no/such/ca-bundle.pem")
         assert m._make_http_client() is None
+
+
+class TestTransientProviderErrors:
+    """A 503 buried under an SDK traceback reads as "SPECTROview is broken".
+    Observed with Gemini: "This model is currently experiencing high demand."
+    """
+
+    class _StatusError(Exception):
+        def __init__(self, message, status_code):
+            super().__init__(message)
+            self.status_code = status_code
+
+    def test_503_is_labelled_as_a_provider_side_problem(self):
+        out = m._format_exception(
+            self._StatusError("Error code: 503 - high demand", 503))
+        assert "temporarily unavailable" in out
+        assert "provider's side" in out
+
+    def test_429_is_labelled_as_rate_limiting(self):
+        out = m._format_exception(self._StatusError("Error code: 429", 429))
+        assert "Rate limited" in out
+
+    def test_underlying_detail_is_still_included(self):
+        out = m._format_exception(
+            self._StatusError("Error code: 503 - high demand", 503))
+        assert "high demand" in out
+
+    def test_non_transient_status_is_left_alone(self):
+        """A 400 is our bug, not theirs — it must not be excused as transient."""
+        out = m._format_exception(self._StatusError("Error code: 400", 400))
+        assert "provider's side" not in out
+
+    def test_plain_exception_is_unaffected(self):
+        assert m._format_exception(ValueError("bad")) == "ValueError: bad"

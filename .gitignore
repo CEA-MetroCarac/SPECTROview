@@ -27,6 +27,19 @@ docs/user_manual/
 docs/user_manual_images/
 .cache/
 
+# Secrets. LLM provider API keys are stored in the OS settings store (Windows
+# registry / macOS defaults) via MSettings, never in a project file -- these
+# patterns are a safety net for anything hand-written or exported.
+.env
+.env.*
+*.secrets.yaml
+*.secrets.yml
+secrets.yaml
+secrets.yml
+*.pem
+*.key
+QSettings_*.ini
+
 # Claude Code: personal/machine-specific config stays out of the shared repo.
 # Committed & team-shared: CLAUDE.md, .claude/settings.json, .claude/rules/*
 CLAUDE.local.md

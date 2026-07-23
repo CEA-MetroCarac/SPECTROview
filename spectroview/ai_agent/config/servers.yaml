@@ -1,0 +1,65 @@
+# SPECTROview AI Agent — MCP server registry
+#
+# Every server listed here is connected at chat-panel startup, and its tools are
+# offered to the model. Adding a server needs no Python change.
+#
+# Fields
+#   id          Required. Unique. Used to disambiguate colliding tool names.
+#   transport   in-process | stdio | http
+#   enabled     Skip the entry when false.
+#   tools       Optional allowlist. When present, only these tool names are
+#               offered to the model — useful to keep the prompt small and to
+#               limit what an external server may do.
+#
+#   in-process: factory  "module:function", called with the AppContext.
+#   stdio:      command  argv list; env  extra environment variables.
+#   http:       url      endpoint of a streamable-HTTP MCP server.
+#
+# ${VARS} and ~ are expanded in command, env, and url.
+#
+# Tool names stay unqualified while unique. If two servers expose the same tool
+# name, both are qualified as <id>__<tool> so the model can tell them apart.
+#
+# NOTE: an external server's tool descriptions are text written by someone else
+# and reach the model verbatim. Only enable servers you trust, and prefer a
+# `tools:` allowlist for anything that can write.
+#
+# ┌───────────────────────────────────────────────────────────────────────────┐
+# │ NEVER put a secret in this file. It is committed to the repository.        │
+# │ Tokens, API keys and passwords belong in your environment; reference them  │
+# │ with ${VAR}, which is expanded at load time and keeps the value out of     │
+# │ git:                                                                       │
+# │     env:                                                                   │
+# │       GITHUB_TOKEN: "${GITHUB_TOKEN}"      # good — resolved from the env  │
+# │       GITHUB_TOKEN: "ghp_realtokenhere"    # BAD  — would be committed     │
+# │                                                                            │
+# │ SPECTROview's own LLM provider API keys are NOT configured here. They are  │
+# │ entered in Settings ▸ AI and stored in the OS settings store (Windows      │
+# │ registry / macOS defaults), never in a file inside this project.           │
+# └───────────────────────────────────────────────────────────────────────────┘
+
+servers:
+  # SPECTROview's own tools: plot_graph, update_graph, delete_graph,
+  # query_dataframe, get_statistics. Disabling this leaves the agent unable to
+  # touch the application at all.
+  - id: spectroview
+    transport: in-process
+    factory: spectroview.ai_agent.mcp.server:create_mcp_server
+    enabled: true
+
+  # ---------------------------------------------------------------------
+  # Examples — copy, adjust, and set enabled: true
+  # ---------------------------------------------------------------------
+
+  # Read-only filesystem access, scoped to one directory.
+  # - id: filesystem
+  #   transport: stdio
+  #   command: [npx, -y, "@modelcontextprotocol/server-filesystem", "~/data"]
+  #   enabled: false
+  #   tools: [read_file, list_directory]
+
+  # A remote MCP server over HTTP.
+  # - id: lab-inventory
+  #   transport: http
+  #   url: "https://mcp.internal.example/mcp"
+  #   enabled: false

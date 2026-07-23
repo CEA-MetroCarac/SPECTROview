@@ -19,6 +19,16 @@ real tool-calling mechanism — never write these out as JSON or Python text.
 
 ---
 
+**User:** Plot 1: group the data by Zone, exclude slots 10 and 11, rotate the x tick labels by 30°.
+
+(Graph 1 is currently `x="Slot"`, `y="fwhm_Si"`, point plot.)
+
+**Call tool:** `update_graph` with: `graph_id="1"`, `z="Zone"`, `filters=["Slot != 10", "Slot != 11"]`, `other_properties={"x_rot": 30}`
+
+(Note: "group by Zone" is `z`, NOT `x`. No `x`, `y` or `plot_style` is sent — the user did not ask to change them, and omitted arguments keep their current value.)
+
+---
+
 **User:** Create a box and scatter plot of Strain vs Slot.
 
 **Call tool:** `plot_graph` with: `x="Slot"`, `y="Strain (GPa)"`, `plot_style="box, scatter"` (comma-separated styles in one call create both graphs)

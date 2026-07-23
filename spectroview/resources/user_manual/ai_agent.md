@@ -98,6 +98,10 @@ The AI Agent has full awareness of your loaded DataFrames and open graphs. It ca
 - **Delete graphs**: Remove specific or all open graphs
 - **Answer questions**: Explain column contents, suggest analysis steps
 
+The agent always knows your DataFrame names and every column name and type. It
+looks up the rest — example values from a column, or a graph's exact current
+settings — only when a question needs them, so ordinary requests stay fast.
+
 ---
 
 ### **7. Prompt Examples**

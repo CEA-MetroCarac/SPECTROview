@@ -32,6 +32,24 @@ All of the following are **optional, top-level tool arguments** — do NOT nest 
 
 For any property without a dedicated argument above (e.g. `x_rot`, `plot_width`, `plot_height`, `dpi`, `hist_kde`, `colormap_norm`/`colormap_center` for wafer/2Dmap, `axis_breaks`, `inset_enabled` and the other `inset_*` fields), pass it inside the `other_properties` dict instead.
 
+## Grouping and Colour Encoding (`z`)
+
+`z` is the **grouping / hue** column for every style except `wafer` and `2Dmap`. Setting it splits the plot into one coloured series per distinct value of `z`; **`x` and `y` keep their meaning and are not touched**.
+
+Use `z` — **never** `x` — whenever the user says any of:
+
+> "group by …", "grouped by …", "colour/color by …", "split by …", "separate by …", "one series per …", "per …", "for each …", "hue by …", "compare … across …", "distinguish by …"
+
+| User says | Correct | Wrong |
+|---|---|---|
+| "Point plot of fwhm_Si vs Slot, grouped by Zone" | `x="Slot"`, `y="fwhm_Si"`, `z="Zone"` | `x="Zone"` |
+| "Box plot of Strain per Zone" (no other axis given) | `x="Zone"`, `y="Strain"` | — |
+| "Plot 1: group the data by Zone" (updating a graph) | `update_graph(graph_id="1", z="Zone")` | `update_graph(graph_id="1", x="Zone")` |
+
+The distinction: if the user names a column to group/colour **an existing or otherwise-specified plot** by, it is `z`. Only when the categorical column is the *only* candidate for the horizontal axis does it become `x`.
+
+`z` is normally a low-cardinality categorical column (a zone, a type, a condition). If you are unsure whether a column is categorical, call `get_context` with `spectroview://dataframes/detail` to see its sample values before choosing.
+
 ## Multi-Style Plots
 
 If the user requests multiple plot styles with **identical** axis columns and parameters (e.g., "create a box and scatter plot of X vs Y"), you can pass a comma-separated string to the `plot_style` argument in a **single** `plot_graph` tool call:
@@ -60,8 +78,10 @@ Do NOT set `spines_visible` (or any spine/border styling) for a `wafer` plot. A 
 When the user wants to **modify** an existing graph (change axis limits, title, style, filters, color palette), call the `update_graph` tool. Do NOT use `plot_graph`.
 
 - Set `graph_id` to the specific integer ID (as a string), or `"all"` to apply to all open graphs.
-- Only include the properties the user explicitly wants to change.
+- **Pass ONLY the properties the user asked to change.** Every argument you omit keeps its current value. Do NOT re-send `x`, `y`, or `plot_style` "for completeness" — re-sending an axis the user never mentioned silently rebuilds their plot around the wrong column.
+- In particular, "group / colour / split this plot by `<column>`" sets **`z`** only. Leave `x` and `y` alone.
 - When **adding** a filter to an existing graph, preserve the existing filters by including them in the new filters list.
+- If you need the graph's current configuration before editing it, call `get_context` with `spectroview://graphs/detail`.
 
 ## Filters
 

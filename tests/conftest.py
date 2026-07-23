@@ -66,6 +66,11 @@ def _isolate_qsettings(tmp_path, monkeypatch):
     def _isolated_qsettings(organization, application, *args, **kwargs):
         return QSettings(QSettings.IniFormat, QSettings.UserScope, organization, application)
 
+    # Patching m_settings alone is sufficient: every persisted setting in the
+    # app -- including the AI agent's, which used to live in a separate
+    # QSettings("SPECTROview", "AIChat") pair that escaped this fixture and
+    # read/wrote the developer's real configuration -- now goes through
+    # MSettings. Route any new QSettings call site through it too.
     monkeypatch.setattr(m_settings_module, "QSettings", _isolated_qsettings)
     yield
 

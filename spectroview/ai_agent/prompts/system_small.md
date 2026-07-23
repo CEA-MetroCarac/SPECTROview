@@ -16,7 +16,9 @@ scientific data by calling tools — you never write JSON or Python by hand.
 3. In `filters`, string values MUST be quoted: `"Zone == 'Edge'"`, not
    `"Zone == Edge"`.
 4. To find a max/min/groupby value before plotting, call `query_dataframe`
-   first and use its result — never guess a value from the preview below.
+   first and use its result — never guess a value.
+   To see how a column's values are actually spelled, call `get_context` with
+   `spectroview://dataframes/detail`.
 5. Only call one tool per graph you want to create. To create 3 graphs,
    call `plot_graph` 3 times.
 
@@ -57,6 +59,24 @@ inside `other_properties`:
 Leave all of them unset unless the user explicitly asks for that option.
 Default: no grid, no title, no custom labels, `color_palette = "jet"`.
 Anything else (e.g. `dpi`, `plot_width`) goes in `other_properties` instead.
+
+# Grouping / colouring by a column  →  use `z`, never `x`
+
+"group by Zone", "colour by Zone", "split by Zone", "per Zone", "for each
+Zone", "one colour per Zone" all mean the SAME thing: `z = "Zone"`.
+`x` and `y` stay exactly as they are.
+
+- Point plot of fwhm_Si vs Slot grouped by Zone
+  → `x="Slot"`, `y="fwhm_Si"`, `z="Zone"`   (NOT `x="Zone"`)
+- "Plot 1: group the data by Zone"
+  → `update_graph` with `graph_id="1"`, `z="Zone"` and NOTHING else about
+    the axes. Do not send `x`.
+
+# Updating a graph
+
+`update_graph` changes only the arguments you pass; anything you omit keeps
+its current value. Send ONLY what the user asked to change — never re-send
+`x`, `y` or `plot_style` "to be safe".
 
 # wafer / 2Dmap
 

@@ -11,10 +11,14 @@ Responsibilities
   hard-coded here.
 * Manage the multi-turn conversation history.
 * Delegate the actual LLM call to ``LLMClient`` (Ollama or cloud API).
-* Parse the LLM response and emit strongly-typed result signals so the
-  View never has to inspect raw JSON.
-* Execute *only* safe pandas operations (``df.query()`` and
-  ``df.describe()``); never ``eval()`` or ``exec()``.
+* Run the tool-calling loop against the in-process MCP server and emit a
+  strongly-typed :class:`ChatResult` so the View never inspects raw JSON.
+
+Pandas expressions requested by the model go through
+``utils.safe_eval.evaluate_pandas_expression``, which prefers
+``DataFrame.query()`` and only falls back to a namespace-restricted
+``eval()`` for expressions ``.query()`` cannot represent (aggregations,
+``groupby``). Builtins are stripped in that fallback.
 
 MVVM contract
 -------------
@@ -31,11 +35,12 @@ without touching this Python file.
 
 from __future__ import annotations
 
+import json
 import re
 from typing import Optional, List, Dict, Any
 
 import pandas as pd
-from PySide6.QtCore import QObject, Signal, QSettings
+from PySide6.QtCore import QObject, Signal
 
 from spectroview.ai_agent.m_llm_client import LLMClient, get_ollama_model_info
 from spectroview.ai_agent.m_conversation import MConversation
@@ -43,11 +48,13 @@ from spectroview.ai_agent.m_conversation_store import MConversationStore
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_plot_recipe_store import MPlotRecipeStore
 from spectroview.ai_agent.m_prompt_manager import PromptManager
-from spectroview.ai_agent.utils.plot_utils import expand_all_plot_configs
-from spectroview.ai_agent.utils.df_summary import summarize_dataframe_columns
-import asyncio
-from spectroview.ai_agent.mcp.server import create_mcp_server
-from mcp.shared.memory import create_connected_server_and_client_session
+from spectroview.ai_agent.agent.commands import (
+    AgentCommand, CreatePlot, DeletePlots, UpdatePlot,
+)
+from spectroview.ai_agent.agent.ports import RecordingContext
+from spectroview.ai_agent.utils.plot_utils import expand_all_plot_configs, normalize_plot_config
+from spectroview.ai_agent.utils.df_summary import compact_dataframe_schema
+from spectroview.ai_agent.mcp.hub import MCPHub
 
 
 def _parse_param_size_to_billions(size_str: str) -> Optional[float]:
@@ -65,29 +72,45 @@ def _parse_param_size_to_billions(size_str: str) -> Optional[float]:
 # ═══════════════════════════════════════════════════════════════════════════
 
 class ChatResult:
-    """Carries the parsed LLM response back to the View."""
-    __slots__ = ("action", "explanation", "dataframe", "text_summary",
-                 "plot_config", "raw_response", "query", "target_dataframe")
+    """Carries the outcome of one completed agent turn back to the View."""
+    __slots__ = ("action", "explanation", "text_summary", "plot_config")
 
     def __init__(
         self,
-        action: str                         = "unknown",
-        explanation: str                    = "",
-        dataframe: Optional[pd.DataFrame]  = None,
-        text_summary: str                   = "",
-        plot_config: Optional[dict]         = None,
-        raw_response: str                   = "",
-        query: str                          = "",
-        target_dataframe: str               = "",
+        action: str                 = "answer",
+        explanation: str            = "",
+        text_summary: str           = "",
+        plot_config: Optional[list] = None,
     ) -> None:
-        self.action       = action          # "filter" | "statistics" | "plot" | "answer" | "query"
+        self.action       = action          # "plot" | "answer"
         self.explanation  = explanation     # human-readable explanation shown in the UI
-        self.dataframe    = dataframe       # filtered DataFrame (Tier 1)
-        self.text_summary = text_summary    # statistics / answer text (Tier 2)
-        self.plot_config  = plot_config     # {x, y, z, plot_style} suggestion (Tier 3)
-        self.raw_response = raw_response    # full LLM text (for debugging)
-        self.query        = query           # query string
-        self.target_dataframe = target_dataframe # target dataframe name
+        self.text_summary = text_summary    # the model's final prose answer
+        self.plot_config  = plot_config     # list of graph create/update/delete configs
+
+
+class VMChatContext(RecordingContext):
+    """Exposes a live :class:`VMChat` to the MCP tools as an ``AppContext``.
+
+    Reads are delegated to the ViewModel so the tools always see the current
+    DataFrames and graphs; submitted commands are recorded (the inherited
+    behaviour) until :meth:`VMChat._emit_final_result` drains them.
+    """
+
+    def __init__(self, vm: "VMChat") -> None:
+        super().__init__()
+        self._vm = vm
+
+    def list_dataframes(self) -> List[str]:
+        return list(self._vm._dfs)
+
+    def active_dataframe_name(self) -> str:
+        return self._vm._active_df_name
+
+    def get_dataframe(self, name: str = "") -> Optional[pd.DataFrame]:
+        return self._vm._dfs.get(name or self._vm._active_df_name)
+
+    def list_graphs(self) -> Dict[int, Dict[str, Any]]:
+        return self._vm._graphs
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -115,6 +138,10 @@ class VMChat(QObject):
     error_occurred   = Signal(str)
     conversation_changed = Signal(str)
     tool_execution_received = Signal(str, str) # name, result text
+
+    #: Hard stop on the tool-calling loop, so a model that keeps requesting
+    #: tools instead of answering cannot spin forever.
+    MAX_AGENT_TURNS = 5
 
     # Ollama model-name substrings that trigger small-model mode when the
     # parameter-count check (via `ollama show`) is unavailable/inconclusive.
@@ -145,13 +172,15 @@ class VMChat(QObject):
         # Track open graphs so the AI knows their IDs
         self._graphs: Dict[int, Dict[str, Any]] = {}   # {graph_id: {"style": ..., "x": ..., "y": ...}}
 
-        # Load history folder
-        s = QSettings("SPECTROview", "AIChat")
-        s.beginGroup("ai_chat")
-        self._history_folder = str(s.value("history_folder", ""))
-        s.endGroup()
+        # What the MCP tools see of this application, and where they queue the
+        # commands drained at the end of each agent turn.
+        self._context = VMChatContext(self)
+        self._pending_response: str = ""
+        self._loop_count: int = 0
 
-        self._recipe_folder = MSettings().get_plot_recipe_folder()
+        self._settings = MSettings()
+        self._history_folder = self._settings.get_ai_value("history_folder", "", str)
+        self._recipe_folder = self._settings.get_plot_recipe_folder()
 
         self.conversation_store = MConversationStore(self._history_folder)
         self._conversation = self.conversation_store.create_conversation()
@@ -172,31 +201,22 @@ class VMChat(QObject):
         # once a real model/provider is known, to avoid a network call
         # (ollama show) racing construction against a placeholder model.
 
-        # ── MCP Server ───────────────────────────────────────────────────
-        self._mcp_server = create_mcp_server(self)
-        self._mcp_tools_cache = []
-        self._fetch_mcp_tools()
-        
-    def _fetch_mcp_tools(self) -> None:
-        async def fetch():
-            async with create_connected_server_and_client_session(self._mcp_server._mcp_server) as session:
-                await session.initialize()
-                res = await session.list_tools()
-                return res.tools
-        
-        try:
-            tools = asyncio.run(fetch())
-            for t in tools:
-                self._mcp_tools_cache.append({
-                    "type": "function",
-                    "function": {
-                        "name": t.name,
-                        "description": t.description,
-                        "parameters": t.inputSchema
-                    }
-                })
-        except Exception as e:
-            print("Failed to initialize MCP tools:", e)
+        # ── MCP ──────────────────────────────────────────────────────────
+        # One hub, one background event loop, sessions held open for every
+        # server in config/servers.yaml (SPECTROview's own plus any external
+        # ones the user enabled). It connects lazily on first tool use, so
+        # opening the panel costs nothing until the user actually chats.
+        self._hub = MCPHub(self._context)
+
+    @property
+    def _mcp_tools_cache(self) -> List[Dict[str, Any]]:
+        """Tool schemas offered to the model, across every connected server."""
+        return self._hub.list_tools()
+
+    def shutdown(self) -> None:
+        """Close the MCP sessions and stop the hub thread."""
+        self._client.cancel()
+        self._hub.stop()
 
 
 
@@ -210,7 +230,7 @@ class VMChat(QObject):
         for the same bug (a store built once in __init__ never saw a
         Working Folder configured afterward). Call before every save, same
         as the Graphs workspace does."""
-        self._recipe_folder = MSettings().get_plot_recipe_folder()
+        self._recipe_folder = self._settings.get_plot_recipe_folder()
         self.recipe_store = MPlotRecipeStore(self._recipe_folder)
 
     def set_dataframes(self, dfs: Dict[str, pd.DataFrame], active_name: str = "") -> None:
@@ -393,7 +413,7 @@ class VMChat(QObject):
         self._loop_count = 0
 
         # Build the full message list for this request
-        messages = self._build_messages(user_text)
+        messages = self._build_messages()
 
         self.thinking_changed.emit(True, "Thinking")
 
@@ -428,6 +448,38 @@ class VMChat(QObject):
         self._conversation = self.conversation_store.create_conversation()
         self.conversation_changed.emit(self._conversation.title)
 
+    # -- Conversation accessors (the View must not reach into _conversation) --
+
+    @property
+    def message_count(self) -> int:
+        """Number of messages recorded in the active conversation."""
+        return self._conversation.message_count
+
+    @property
+    def conversation_title(self) -> str:
+        return self._conversation.title
+
+    def visible_messages(self) -> List[tuple[int, Dict[str, Any]]]:
+        """``(index, message)`` pairs the UI should render, tool traffic excluded.
+
+        The index is into the *full* history, not the filtered list, because
+        ``reply_to_index`` refers to full-history positions.
+        """
+        return [(i, m) for i, m in enumerate(self._conversation.messages)
+                if not m.get("is_hidden")]
+
+    def get_message_content(self, index: int) -> Optional[str]:
+        """Content of message *index*, or ``None`` if out of range."""
+        messages = self._conversation.messages
+        if 0 <= index < len(messages):
+            return messages[index].get("content", "")
+        return None
+
+    def rename_conversation(self, title: str) -> None:
+        """Rename the active conversation and persist it."""
+        self._conversation.rename(title)
+        self._save_history_to_file()
+
     def is_busy(self) -> bool:
         return self._client.is_busy()
 
@@ -447,22 +499,19 @@ class VMChat(QObject):
         if self._conversation.message_count > 0:
             self._conversation.save(self._history_folder)
 
-    def _build_messages(self, user_text: str) -> List[Dict[str, str]]:
+    def _build_messages(self) -> List[Dict[str, str]]:
         """Assemble the full message list = system prompt + conversation history."""
-        system_prompt = self._build_system_prompt(user_message=user_text)
-        messages = [{"role": "system", "content": system_prompt}]
-
+        messages = [{"role": "system", "content": self._build_system_prompt()}]
         messages += self._conversation.to_llm_messages(self.max_context_messages)
-
         return messages
 
-    def _build_system_prompt(self, user_message: str = "") -> str:
+    def _build_system_prompt(self) -> str:
         """Assemble the system prompt from modular Markdown files + dynamic DataFrame/graph context.
 
-        The static portions (identity, JSON schema, rules, knowledge) are loaded
-        from the ``ai_agent/`` subdirectories by :class:`PromptManager`.  Only the
-        dynamic sections — DataFrame schemas and open-graph summaries — are
-        computed here at request time and injected via ``str.format()``.
+        The static portions (identity, tool guidance, rules, knowledge) are
+        loaded from the ``ai_agent/`` subdirectories by :class:`PromptManager`.
+        Only the dynamic sections — DataFrame schemas and open-graph summaries —
+        are computed here at request time and substituted into the placeholders.
 
         To change AI behaviour, edit the Markdown files in::
 
@@ -470,26 +519,13 @@ class VMChat(QObject):
             spectroview/ai_agent/rules/
             spectroview/ai_agent/knowledge/
             spectroview/ai_agent/examples/
-
-        Parameters
-        ----------
-        user_message:
-            The latest user message (used for optional intent detection).
         """
         # ── 1. Build dynamic context from live DataFrames and open graphs ─
-        column_detail_threshold = self._prompt_mgr.model_config.get("column_detail_threshold", 30)
-        dfs_info_parts: list[str] = []
-        for name, df in self._dfs.items():
-            col_info = summarize_dataframe_columns(df, max_ungrouped_columns=column_detail_threshold)
-            try:
-                preview = df.head(3).to_string(max_cols=8)
-            except Exception:
-                preview = "(preview unavailable)"
-            dfs_info_parts.append(
-                f"DATAFRAME: {name!r} ({len(df)} rows, {len(df.columns)} columns)\n"
-                f"  Columns:\n{col_info}\n"
-                f"  Preview:\n{preview}"
-            )
+        dfs_info_parts: list[str] = [
+            f"DATAFRAME: {name!r} ({len(df)} rows, {len(df.columns)} columns)\n"
+            f"  Columns: {compact_dataframe_schema(df)}"
+            for name, df in self._dfs.items()
+        ]
 
         dataframes_section = "\n\n".join(dfs_info_parts) if dfs_info_parts else "No DataFrames are currently loaded."
         active_df_info = (
@@ -513,26 +549,15 @@ class VMChat(QObject):
         else:
             graphs_info = "No graphs are currently open.\n"
 
-        # ── 2. Assemble static prompt from Markdown files ─────────────────
-        # Small-model mode swaps in a single, much shorter prompt file (see
-        # prompts/system_small.md) instead of the full 3-prompt/3-rules/
-        # knowledge/examples bundle — cuts fixed per-request overhead from
-        # ~6,600 tokens to roughly a third of that for detected small local
-        # models, while leaving the full tier (used by everything else,
-        # including all cloud providers) completely unchanged.
+        # ── 2. Assemble static prompt from Markdown files ────────────
         if self._is_small_model:
             static_prompt = self._prompt_mgr.build_prompt(
-                intent="chat",
-                user_message=user_message,
                 prompts=["system_small"],
                 rules=["general"],
-                knowledge=[],
                 examples=["examples_small"],
             )
         else:
             static_prompt = self._prompt_mgr.build_prompt(
-                intent="chat",
-                user_message=user_message,
                 prompts=["system", "chat", "plotting"],
                 rules=["general", "plotting", "spectroview"],
                 knowledge=["features"],
@@ -540,11 +565,6 @@ class VMChat(QObject):
             )
 
         # ── 3. Inject dynamic context into the static prompt ──────────────
-        # The static prompt contains {dataframes_section}, {active_df_info},
-        # and {graphs_info} placeholders defined in prompts/system.md.
-        # We use plain str.replace() rather than str.format() so that JSON
-        # examples in other .md files (which contain literal { } braces)
-        # do not cause KeyError exceptions.
         return (
             static_prompt
             .replace("{dataframes_section}", dataframes_section)
@@ -568,9 +588,86 @@ class VMChat(QObject):
         visible-answer stream, even for a model that emits it unrequested."""
         pass
 
-    def _on_done(self, full_text: str, tool_calls: list) -> None:
+    def _emit_final_result(self, full_text: str) -> None:
+        """End the turn: drain any queued graph commands and emit a ChatResult.
+        """
         self.thinking_changed.emit(False, "Thinking")
+        commands = self._context.drain()
 
+        if commands:
+            result = ChatResult(
+                action="plot",
+                explanation=full_text or "Executing graph commands...",
+                plot_config=self._commands_to_configs(commands),
+                text_summary=full_text,
+            )
+        else:
+            result = ChatResult(action="answer", text_summary=full_text)
+        self.result_ready.emit(result)
+
+    @staticmethod
+    def _commands_to_configs(commands: List[AgentCommand]) -> List[Dict[str, Any]]:
+        """Render queued commands as the config dicts the Graphs workspace takes.
+        """
+        configs: List[Dict[str, Any]] = []
+        for cmd in commands:
+            if isinstance(cmd, CreatePlot):
+                # Also expands multi-style configs ("plot_style": "box, scatter")
+                configs.extend(expand_all_plot_configs([cmd.config]))
+            elif isinstance(cmd, UpdatePlot):
+                configs.append({"_graph_update": {
+                    "graph_id": cmd.graph_id,
+                    "properties": normalize_plot_config(dict(cmd.properties)),
+                }})
+            elif isinstance(cmd, DeletePlots):
+                configs.append({"_graph_delete": {
+                    "delete_all": cmd.delete_all,
+                    "graph_ids": cmd.graph_ids,
+                }})
+        return configs
+
+    @staticmethod
+    def _parse_tool_arguments(raw: Any) -> tuple[Optional[Dict[str, Any]], Optional[str]]:
+        """Coerce a tool call's arguments to a dict.
+
+        Returns ``(arguments, None)`` or ``(None, reason)``. Providers send
+        either a JSON string (OpenAI, Ollama) or an already-decoded dict
+        (Anthropic), and a weak model sometimes sends malformed JSON.
+        """
+        if isinstance(raw, dict):
+            return raw, None
+        if isinstance(raw, str):
+            try:
+                parsed = json.loads(raw) if raw.strip() else {}
+            except ValueError as exc:
+                return None, str(exc)
+            if not isinstance(parsed, dict):
+                return None, f"arguments parsed to a {type(parsed).__name__}, not a JSON object"
+            return parsed, None
+        return None, f"arguments were a {type(raw).__name__}, not a JSON object"
+
+    def _run_tool_call(self, tool_call: Dict[str, Any]) -> tuple[Any, str, str]:
+        """Execute one tool call; return ``(call_id, name, result_text)``.
+
+        Never raises — a failure is described in the result text so the model
+        can correct itself while it still has turns left.
+        """
+        function = tool_call.get("function", {})
+        name = function.get("name", "")
+        arguments, error = self._parse_tool_arguments(function.get("arguments", {}))
+
+        if error is not None:
+            text = (
+                f"Error: the arguments for '{name}' were not valid JSON ({error}). "
+                f"Raw arguments received: {function.get('arguments')!r}. "
+                f"Please retry this tool call with a single, well-formed JSON object."
+            )
+        else:
+            text = self._hub.call_tool(name, arguments)
+
+        return tool_call.get("id"), name, text
+
+    def _on_done(self, full_text: str, tool_calls: list) -> None:
         # Record assistant turn in history
         if full_text or tool_calls:
             self._conversation.add_message(
@@ -582,50 +679,17 @@ class VMChat(QObject):
 
         if tool_calls:
             self._loop_count += 1
-            if self._loop_count > 5:
-                self.error_occurred.emit("Agent loop exceeded maximum turns (5).")
+            if self._loop_count > self.MAX_AGENT_TURNS:
+                self.error_occurred.emit(
+                    f"Agent loop exceeded maximum turns ({self.MAX_AGENT_TURNS})."
+                )
+                self._emit_final_result(full_text)
                 return
-                
-            async def run_tools():
-                results = []
-                async with create_connected_server_and_client_session(self._mcp_server._mcp_server) as session:
-                    await session.initialize()
-                    for tc in tool_calls:
-                        func_name = tc.get("function", {}).get("name")
-                        raw_args = tc.get("function", {}).get("arguments", {})
-                        func_args, parse_error = raw_args, None
-                        if isinstance(raw_args, str):
-                            try:
-                                import json
-                                func_args = json.loads(raw_args) if raw_args.strip() else {}
-                            except Exception as exc:
-                                parse_error = str(exc)
-                        if parse_error is None and not isinstance(func_args, dict):
-                            parse_error = f"arguments parsed to a {type(func_args).__name__}, not a JSON object"
-
-                        if parse_error is not None:
-                            # Surface a retry-inducing message instead of silently
-                            # dropping the arguments — gives the agentic loop below
-                            # a real chance to self-correct on the next turn.
-                            res_text = (
-                                f"Error: the arguments for '{func_name}' were not valid JSON "
-                                f"({parse_error}). Raw arguments received: {raw_args!r}. "
-                                f"Please retry this tool call with a single, well-formed JSON object."
-                            )
-                        else:
-                            try:
-                                res = await session.call_tool(func_name, func_args)
-                                # Convert result to string
-                                res_text = res.content[0].text if res.content and hasattr(res.content[0], 'text') else str(res)
-                            except Exception as e:
-                                res_text = f"Error executing tool {func_name}: {e}"
-                        results.append((tc.get("id"), func_name, res_text))
-                return results
 
             self.thinking_changed.emit(True, "Executing tools...")
             try:
-                results = asyncio.run(run_tools())
-                
+                results = [self._run_tool_call(tc) for tc in tool_calls]
+
                 # Append tool results to conversation
                 for tc_id, name, res_text in results:
                     self._conversation.add_message(
@@ -639,7 +703,7 @@ class VMChat(QObject):
                 
                 # Trigger the next turn
                 self._pending_response = ""
-                messages = self._build_messages("")
+                messages = self._build_messages()
                 self._client.chat(
                     model=self._model,
                     messages=messages,
@@ -653,35 +717,10 @@ class VMChat(QObject):
                 )
             except Exception as e:
                 self.error_occurred.emit(f"Error calling MCP tools: {e}")
+                self._emit_final_result(full_text)
             return
-            
-        # If no tool calls, output text answer.
-        # Check if there are any pending plot configs from tool executions
-        plot_configs = getattr(self, '_pending_plots', [])
-        self._pending_plots = []
-        
-        if plot_configs:
-            # We need to expand any multi-style plot configs (e.g. "plot_style": "box, scatter")
-            expanded_configs = []
-            for cfg in plot_configs:
-                if "_graph_update" in cfg or "_graph_delete" in cfg:
-                    expanded_configs.append(cfg)
-                else:
-                    expanded_configs.extend(expand_all_plot_configs([cfg]))
 
-            result = ChatResult(
-                action="plot",
-                explanation=full_text or "Executing graph commands...",
-                plot_config=expanded_configs,
-                text_summary=full_text,
-            )
-        else:
-            result = ChatResult(
-                action="answer",
-                text_summary=full_text,
-                raw_response=full_text,
-            )
-        self.result_ready.emit(result)
+        self._emit_final_result(full_text)
 
     def _on_error(self, message: str) -> None:
         self.thinking_changed.emit(False, "Thinking")

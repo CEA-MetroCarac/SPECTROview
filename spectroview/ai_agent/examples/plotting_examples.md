@@ -195,3 +195,34 @@ For this request, make **three separate calls** to `plot_graph` — one per slot
 - `df_name` = `"fit_results"`
 
 (`dpi` has no dedicated parameter, so it goes inside `other_properties`. Compare to Example 4, where `hist_bins` *does* have a dedicated parameter and is passed directly.)
+
+---
+
+## Example 15: Group an Existing Graph by a Categorical Column
+
+**User:** Plot 1: group the data by Zone, exclude slots 10, 11 and 12, increase the axis label font size, move the legend outside the plot, and rotate the x tick labels by 30°.
+
+Graph 1 is currently `x="Slot"`, `y="fwhm_Si"`, `plot_style="point"`.
+
+**Call tool:** `update_graph` with:
+- `graph_id` = `"1"`
+- `z` = `"Zone"`
+- `filters` = `["Slot != 10", "Slot != 11", "Slot != 12"]`
+- `other_properties` = `{"axis_label_fontsize": 14, "legend_outside": true, "x_rot": 30}`
+
+Note what is **absent**: no `x`, no `y`, no `plot_style`. "Group by Zone" is the hue, so it is `z`; the X axis stays `"Slot"` because the user never asked to change it. Passing `x="Zone"` here would be wrong — it would replace the slot-by-slot view the user is looking at.
+
+---
+
+## Example 16: Group a New Plot by a Categorical Column
+
+**User:** Point plot of Strain vs Slot, one colour per Zone.
+
+**Call tool:** `plot_graph` with:
+- `x` = `"Slot"`
+- `y` = `"Strain (GPa)"`
+- `z` = `"Zone"`
+- `plot_style` = `"point"`
+- `df_name` = `"fit_results"`
+
+"one colour per Zone" / "grouped by Zone" / "split by Zone" all mean the same thing: `z="Zone"`, with `x` unchanged.

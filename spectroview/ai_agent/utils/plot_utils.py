@@ -12,22 +12,12 @@ import copy
 import logging
 from typing import Any
 
+from spectroview import PALETTE, PLOT_STYLES
+
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Constants mirroring spectroview/__init__.py values
-# (duplicated here to avoid a circular import — kept in sync manually)
-# ---------------------------------------------------------------------------
-
-VALID_PLOT_STYLES: frozenset[str] = frozenset({
-    "point", "scatter", "box", "bar",
-    "line", "trendline", "histogram", "wafer", "2Dmap",
-})
-
-VALID_PALETTES: frozenset[str] = frozenset({
-    "jet", "viridis", "plasma", "magma",
-    "cividis", "cool", "hot", "YlGnBu", "YlOrRd",
-    "seismic", "bwr", "Spectral",
+VALID_PLOT_STYLES: frozenset[str] = frozenset(PLOT_STYLES)
+VALID_PALETTES: frozenset[str] = frozenset(PALETTE) | frozenset({
     "tab10", "Set2", "Set3", "coolwarm", "RdBu", "inferno",
 })
 

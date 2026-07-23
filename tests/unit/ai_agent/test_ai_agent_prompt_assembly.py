@@ -27,13 +27,13 @@ def _full_tier_prompt(vm, monkeypatch):
     monkeypatch.setattr("spectroview.ai_agent.vm_chat.get_ollama_model_info", lambda model: None)
     vm.set_provider("Ollama")
     vm.set_small_model_mode(False)
-    return vm._build_system_prompt("hello")
+    return vm._build_system_prompt()
 
 
 def _small_tier_prompt(vm):
     vm.set_provider("Ollama")
     vm.set_small_model_mode(True)
-    return vm._build_system_prompt("hello")
+    return vm._build_system_prompt()
 
 
 class TestFullTierContradictionRemoved:

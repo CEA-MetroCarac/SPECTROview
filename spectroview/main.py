@@ -482,16 +482,9 @@ class Main(QMainWindow):
         if not df_name:
             return
 
-        # Deep copy so we don't mutate the original
+        # Deep copy so we don't mutate the original. Types/structures were
+        # already normalised by VMChat before the config was emitted.
         cfg = copy.deepcopy(plot_config)
-
-        # ── Normalise types and structures ───────────────────────────
-        # Use the single source of truth from plot_tool to ensure
-        # filters (list of dicts), lists, and numeric types are correct.
-        from spectroview.ai_agent.utils.plot_utils import normalize_plot_config
-        normalize_plot_config(cfg)
-
-        # ── Ensure df_name is set ────────────────────────────────────
         cfg['df_name'] = df_name
 
         # Create the plot directly via the workspace API
@@ -524,13 +517,8 @@ class Main(QMainWindow):
         if model is None:
             return
 
-        # Normalize types using single source of truth
-        props = copy.deepcopy(properties)
-        from spectroview.ai_agent.utils.plot_utils import normalize_plot_config
-        normalize_plot_config(props)
-
-        # Apply to model
-        ws.vm.update_graph(graph_id, props)
+        # Already normalised by VMChat; copy so the model can't alias the payload.
+        ws.vm.update_graph(graph_id, copy.deepcopy(properties))
 
         # Re-render the existing graph widget
         if graph_id in ws.graph_widgets:
@@ -752,6 +740,13 @@ class Main(QMainWindow):
             plt.close('all')
         except Exception:
             pass
+        # Close the AI agent's MCP sessions and stop its event-loop thread —
+        # a stdio server would otherwise leave an orphaned child process.
+        if self._chat_panel is not None:
+            try:
+                self._chat_panel.vm.shutdown()
+            except Exception:
+                pass
         event.accept()
 
 def launcher():

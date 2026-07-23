@@ -57,11 +57,11 @@ hide:
 
     Dedicated workspace for generating fast, publication-ready data visualizations.
 
--   :material-gesture-tap-button: __Optimized User Interface__
+-   :material-robot-happy-outline: __AI Chat Agent__
 
     ---
 
-    Designed for quick inspection, filtering, and comparison of large spectral datasets.
+    Talk to SPECTROview in plain language to filter data, run analyses, and create or customize multiple plots — powered by your own local (Ollama) or cloud LLM.
 
 </div>
 
@@ -91,6 +91,14 @@ hide:
 
     <div align="center" markdown>
     ![Plotting and visualization demo](assets/graphs.gif){ loading=lazy width="90%" }
+    </div>
+
+=== ":material-robot-happy-outline: AI Chat Agent"
+
+    <p align="center">Talk to SPECTROview in plain language to filter data and create or customize plots.</p>
+
+    <div align="center" markdown>
+    ![AI Chat Agent demo](assets/ai_agent.gif){ loading=lazy width="90%" }
     </div>
 
 ---

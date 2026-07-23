@@ -1035,10 +1035,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#data-filtering" class="md-nav__link">
+  <a href="#complex-combined-prompts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🔍 Data Filtering
+        🚀 Complex / Combined Prompts
       
     </span>
   </a>
@@ -1046,54 +1046,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#statistics" class="md-nav__link">
+  <a href="#simple-single-action-prompts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📊 Statistics
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#creating-plots" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        📈 Creating Plots
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#modifying-graphs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ✏️ Modifying Graphs
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#deleting-graphs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        🗑️ Deleting Graphs
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#general-questions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        💬 General Questions
+        🧩 Simple / Single-Action Prompts
       
     </span>
   </a>
@@ -1766,6 +1722,11 @@
 <blockquote>
 <p>The AI Chat Agent is <strong>optional</strong>. SPECTROview works fully without it. You only need to set it up if you want to use AI-powered features.</p>
 </blockquote>
+<div align="center">
+  <img src="../../user_manual_images/AI-agent/demo_ai_agent.gif" alt="AI Chat Agent demo" width="900"><br>
+  <em>Talk to SPECTROview in plain language to filter data and create or customize plots.</em>
+</div>
+
 <hr />
 <h3 id="1-opening-the-ai-chat-agent"><strong>1. Opening the AI Chat Agent</strong><a class="headerlink" href="#1-opening-the-ai-chat-agent" title="Permanent link">&para;</a></h3>
 <p>You can open the AI Chat panel in two ways:</p>
@@ -1894,80 +1855,69 @@ If these are not installed, the microphone button will still appear but will sho
 <li><strong>Delete graphs</strong>: Remove specific or all open graphs</li>
 <li><strong>Answer questions</strong>: Explain column contents, suggest analysis steps</li>
 </ul>
+<p>The agent always knows your DataFrame names and every column name and type. It
+looks up the rest — example values from a column, or a graph's exact current
+settings — only when a question needs them, so ordinary requests stay fast.</p>
 <hr />
 <h3 id="7-prompt-examples"><strong>7. Prompt Examples</strong><a class="headerlink" href="#7-prompt-examples" title="Permanent link">&para;</a></h3>
-<h4 id="data-filtering">🔍 Data Filtering<a class="headerlink" href="#data-filtering" title="Permanent link">&para;</a></h4>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Show rows where FWHM_Si &gt; 5
+<h4 id="complex-combined-prompts">🚀 Complex / Combined Prompts<a class="headerlink" href="#complex-combined-prompts" title="Permanent link">&para;</a></h4>
+<p>The real strength of the agent is handling rich, multi-step requests in a
+<strong>single message</strong> — analyze the data, create several graphs, and fine-tune
+their appearance all at once.</p>
+<p><strong>Analyze, then plot:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Compute the mean and std of center_Si per Zone, then create a bar plot of the
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>per-Zone mean with error bars from the std, sorted from highest to lowest.
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Filter data where Zone == &quot;center&quot; and Slot &lt; 10
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Find the wafer with the highest average FWHM_Si, filter to just that wafer, and
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>plot a wafer map of its FWHM_Si.
+</code></pre></div></p>
+<p><strong>Multiple graphs in one prompt:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Create three graphs: a scatter of Slot vs center_Si colored by Zone, a box plot
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>of center_Si grouped by Zone, and a histogram of center_Si with 40 bins.
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Find samples where both R_squared &gt; 0.95 and fwhm &lt; 4
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>For each of FWHM_Si, center_Si and intensity_Si, plot a point plot vs Slot
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>colored by wafer.
+</code></pre></div></p>
+<p><strong>Plot and customize in the same request:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Make a scatter plot of Slot vs center_Si colored by Zone, set the title to
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>&quot;Si peak position&quot;, label the Y-axis &quot;Raman shift (cm⁻¹)&quot;, set the Y range to
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>[520, 522], use the viridis palette, and turn on the grid.
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Show me all outliers where peak_intensity is more than 2 standard deviations above the mean
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Plot FWHM_Si vs temperature as a trendline, filter to Zone == &quot;center&quot;, move the
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>legend to the upper right, and use a log scale on the X-axis.
+</code></pre></div></p>
+<p><strong>Everything together:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Filter the data to R_squared &gt; 0.95, then create a scatter plot and a box plot
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>of center_Si vs Zone side by side, colored by wafer, both with the title
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>&quot;High-quality fits only&quot; and the grid enabled.
 </code></pre></div></p>
 <hr />
-<h4 id="statistics">📊 Statistics<a class="headerlink" href="#statistics" title="Permanent link">&para;</a></h4>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Give me statistics for peak center and FWHM columns
+<h4 id="simple-single-action-prompts">🧩 Simple / Single-Action Prompts<a class="headerlink" href="#simple-single-action-prompts" title="Permanent link">&para;</a></h4>
+<p>Good starting points that each do one thing — filter, summarize, plot, tweak, or
+ask. Combine them freely into the complex prompts above.</p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Show rows where FWHM_Si &gt; 5 and R_squared &gt; 0.95
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>What is the average FWHM by Zone?
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Give me statistics for center_Si and FWHM_Si by Zone
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Compare the mean and standard deviation of center_Si across all zones
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Create a scatter plot of Slot vs center_Si colored by Zone
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>How many unique samples are in the dataset?
-</code></pre></div></p>
-<hr />
-<h4 id="creating-plots">📈 Creating Plots<a class="headerlink" href="#creating-plots" title="Permanent link">&para;</a></h4>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Create a scatter plot of Slot vs center_Si colored by Zone
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Plot a box chart of FWHM grouped by wafer
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Generate a point plot and a bar plot of peak_intensity vs Slot
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Create a 2D map of center_Si with Slot on X and Zone on Y
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Plot a wafer map of fwhm_Si for Slot 11
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Plot a wafer map of fwhm_Si for Slot 11
 </code></pre></div>
 <em>(Note: Wafer and 2Dmap plots require your dataset to have spatial X and Y coordinate columns).</em>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Plot a histogram of FWHM values with 30 bins
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Set the Y-axis range of graph 3 to [3.5, 4.2] and use the viridis palette
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>Show a trendline of center_Si vs temperature
-</code></pre></div></p>
-<hr />
-<h4 id="modifying-graphs">✏️ Modifying Graphs<a class="headerlink" href="#modifying-graphs" title="Permanent link">&para;</a></h4>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>Set the Y-axis range of graph 3 to [3.5, 4.2]
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Delete graph 3
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>Change the title of graph 1 to &quot;FWHM Overview&quot;
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>Update graph 5 to use the viridis color palette
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>Add a filter to graph 2: only show Zone == &quot;edge&quot;
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>Change the plot style of graph 4 to scatter
-</code></pre></div></p>
-<hr />
-<h4 id="deleting-graphs">🗑️ Deleting Graphs<a class="headerlink" href="#deleting-graphs" title="Permanent link">&para;</a></h4>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>Delete graph 3
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>Remove all graphs except graph 1
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>Close all open graphs
-</code></pre></div></p>
-<hr />
-<h4 id="general-questions">💬 General Questions<a class="headerlink" href="#general-questions" title="Permanent link">&para;</a></h4>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>What columns are available in my data?
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>Which columns contain numeric values?
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>What is the data type of the Zone column?
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>What columns are available in my data?
 </code></pre></div></p>
 <hr />
 <h3 id="8-conversation-history"><strong>8. Conversation History</strong><a class="headerlink" href="#8-conversation-history" title="Permanent link">&para;</a></h3>
 <p>The AI Agent <strong>remembers your conversation</strong> across multiple turns:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>User: Show rows where FWHM &gt; 5
-<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>AI:   Found 42 rows...
-<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
-<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>User: Now create a scatter plot of Slot vs center_Si for those rows
-<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>AI:   (creates scatter plot with FWHM &gt; 5 filter applied)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>User: Show rows where FWHM &gt; 5
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>AI:   Found 42 rows...
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>User: Now create a scatter plot of Slot vs center_Si for those rows
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>AI:   (creates scatter plot with FWHM &gt; 5 filter applied)
 </code></pre></div>
 <ul>
 <li>The chat history is <strong>preserved</strong> when you load new files or switch datasets — it only resets when you click <strong>➕ New Chat</strong>.</li>

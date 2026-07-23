@@ -1296,6 +1296,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Architecture Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-appcontext-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The AppContext boundary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mcphub-one-loop-many-servers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCPHub — one loop, many servers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pushed-vs-pulled-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pushed vs pulled context
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1343,6 +1382,17 @@
     <span class="md-ellipsis">
       
         Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#persisted-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persisted settings
       
     </span>
   </a>
@@ -1675,6 +1725,17 @@
     <span class="md-ellipsis">
       
         Current Features (Graph Workspace)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connecting-another-mcp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connecting Another MCP Server
       
     </span>
   </a>
@@ -2080,7 +2141,7 @@
 </ol>
 <hr />
 <h2 id="architecture-overview"><strong>Architecture Overview</strong><a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
-<p>The AI feature follows the same strict <strong>MVVM</strong> pattern as the rest of the application. All AI-related code lives in the <code>spectroview/ai_agent/</code> package, isolated from the core workspaces.</p>
+<p>The AI feature follows the same strict <strong>MVVM</strong> pattern as the rest of the application. All AI-related code lives in the <code>spectroview/ai_agent/</code> package, isolated from the core workspaces.
 <pre class="mermaid"><code>graph TD
     TB["VMenuBar (toolbar button)"] --&gt;|"ai_chat_requested"| Main["main.py"]
     Main --&gt;|"lazy creation"| VCP["VChatPanel (View)"]
@@ -2088,7 +2149,6 @@
     VMC --&gt;|"detect small model?"| DET["ollama show + name patterns"]
     DET --&gt;|"tier decision"| VMC
     VMC --&gt;|"builds prompt (tier-dependent)"| PM["PromptManager"]
-    VMC --&gt;|"starts"| MCP["FastMCP Server (mcp/server.py)"]
     PM --&gt;|"loads .md"| FS["File System (prompts/, rules/, ...)"]
     VMC --&gt;|"chat(..., request_options)"| LLC["LLMClient (Model)"]
     LLC --&gt;|"spawns (with MCP tools + options)"| LLW["LLMWorker (QThread)"]
@@ -2096,44 +2156,83 @@
     OLL --&gt;|"tool calls / text chunks"| LLW
     LLW --&gt;|"signals"| LLC
     LLC --&gt;|"signals"| VMC
-    VMC --&gt;|"executes tool calls via MCP session"| MCP
-    MCP --&gt;|"tool result (validated)"| VMC
+    VMC --&gt;|"call_tool / read_resource"| HUB["MCPHub (mcp/hub.py)"]
+    HUB --&gt;|"persistent sessions"| SRV["SPECTROview server + any external MCP servers"]
+    SRV --&gt;|"reads data / submits commands"| CTX["AppContext (agent/ports.py)"]
+    CTX --&gt;|"queued AgentCommands"| VMC
     VMC --&gt;|"result_ready (ChatResult)"| VCP
     VCP --&gt;|"plot_requested"| Main
-    Main --&gt;|"create / update / delete"| VWG["VWorkspaceGraphs"]</code></pre>
+    Main --&gt;|"create / update / delete"| VWG["VWorkspaceGraphs"]</code></pre></p>
+<h3 id="the-appcontext-boundary"><strong>The AppContext boundary</strong><a class="headerlink" href="#the-appcontext-boundary" title="Permanent link">&para;</a></h3>
+<p>The MCP server does <strong>not</strong> import <code>VMChat</code>. It is handed an <code>AppContext</code>
+(<code>agent/ports.py</code>) — a five-method protocol: list DataFrames, get one, get the
+active name, list graphs, submit a command. <code>VMChat</code> supplies a <code>VMChatContext</code>
+adapter; tests supply <code>RecordingContext</code>.</p>
+<p>This is what makes the tool layer independently testable (no Qt, no LLM, no
+application) and what would let the same server run out-of-process. Tools never
+mutate the ViewModel; they submit typed commands (<code>agent/commands.py</code>:
+<code>CreatePlot</code>, <code>UpdatePlot</code>, <code>DeletePlots</code>), which <code>VMChat</code> drains and normalises
+once when the turn ends.</p>
+<h3 id="mcphub-one-loop-many-servers"><strong>MCPHub — one loop, many servers</strong><a class="headerlink" href="#mcphub-one-loop-many-servers" title="Permanent link">&para;</a></h3>
+<p><code>MCPHub</code> (<code>mcp/hub.py</code>) owns a single asyncio event loop on a background thread
+and keeps an initialised session open for every server listed in
+<code>config/servers.yaml</code> (<code>in-process</code>, <code>stdio</code>, or <code>http</code>). Qt-thread callers use
+plain synchronous methods; the hub marshals each call onto its loop.</p>
+<p>Previously the ViewModel called <code>asyncio.run()</code> directly on the GUI thread and
+rebuilt the server session for every tool batch — which blocked the UI and only
+worked because the single server was in-process.</p>
+<p>Tool names stay unqualified while unique across servers (so <code>plot_graph</code> keeps
+working everywhere it is documented); a name offered by two servers becomes
+<code>&lt;server_id&gt;__&lt;tool&gt;</code> for both. A per-server <code>tools:</code> allowlist keeps the
+offered set small — tool schemas are prompt tokens on every turn, and small
+local models degrade quickly past roughly a dozen tools.</p>
+<h3 id="pushed-vs-pulled-context"><strong>Pushed vs pulled context</strong><a class="headerlink" href="#pushed-vs-pulled-context" title="Permanent link">&para;</a></h3>
+<p>The system prompt always carries DataFrame names, shapes, and every column name
+with its dtype — a model that has never seen a column name will invent one, so
+this half is non-negotiable. Sample values, row previews, and full graph configs
+are bulky and rarely decisive, so they live behind MCP <strong>resources</strong>
+(<code>spectroview://dataframes/detail</code>, <code>spectroview://graphs/detail</code>).</p>
+<p>No LLM API has a native notion of a resource, so the hub exposes reading one as
+a synthetic <code>get_context(uri)</code> tool whose <code>uri</code> enum lists exactly the resources
+currently available — which also constrains grammar-guided local models to a
+real URI. Resources added by any server appear there with no client change.</p>
 <hr />
 <h2 id="module-structure"><strong>Module Structure</strong><a class="headerlink" href="#module-structure" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>spectroview/ai_agent/
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>├── __init__.py              # Docstring only — keeps the module optional
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>├── config/                  # YAML configuration files (model.yaml, settings.yaml)
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>├── config/                  # YAML configuration (model.yaml, settings.yaml, servers.yaml)
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>├── examples/                # Few-shot conversation examples (Markdown)
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>│   ├── plotting_examples.md #   Full-tier: 13 examples, tool-call style
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>│   ├── filtering_examples.md#   query_dataframe/get_statistics examples
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>│   └── examples_small.md    #   Simplified-tier: ~8 tight examples covering all 5 tools
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>├── knowledge/                # Static domain facts (Markdown; full tier only)
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>├── prompts/                  # Core identity + per-intent instructions (Markdown)
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>│   ├── system.md, chat.md, plotting.md   # Full tier (default; also used by cloud providers)
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>│   └── system_small.md      #   Simplified tier — single consolidated file for detected small models
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>├── rules/                   # Behavioural constraints (Markdown)
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>├── templates/                # Reusable Markdown output formats
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>├── utils/
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>│   ├── plot_utils.py        # normalize_plot_config / expand_comma_styles — type coercion for plot configs
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>│   ├── safe_eval.py         # evaluate_pandas_expression() — df.query() first, sandboxed eval() fallback
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>│   └── df_summary.py        # summarize_dataframe_columns() — compacts wide DataFrames in the prompt
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>├── m_llm_client.py          # Model layer: LLM connections + QThread workers
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>│                            #   - LLMWorker (Ollama)
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>│                            #   - APIWorker (OpenAI-compatible)
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>│                            #   - AnthropicWorker (Anthropic SDK)
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>│                            #   - LLMClient (unified facade)
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>│                            #   - get_ollama_model_info() — `ollama show` wrapper for size detection
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>├── m_conversation.py        # Data model: single conversation (messages, save/load JSON)
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>├── m_conversation_store.py  # Conversation store: scan/list/load saved conversations
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>├── mcp/
-<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>│   └── server.py            # FastMCP server defining the 5 AI tools (plot_graph, query_dataframe, etc.)
-<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>├── m_prompt_manager.py      # Prompt caching and assembly: loads and merges Markdown files based on intent/tier
-<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>├── vm_chat.py               # ViewModel: prompt-tier selection, small-model detection, request tuning, agentic loop
-<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>├── v_chat_panel.py          # View: floating chat dialog (QDialog), incl. the Auto/Full/Simplified selector
-<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>└── v_history_dialog.py      # View: history browser dialog (QDialog)
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>│   └── examples_small.md    #   Simplified-tier: ~8 tight examples covering all 5 tools
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>├── knowledge/                # Static domain facts (Markdown; full tier only)
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>├── prompts/                  # Core identity + per-topic instructions (Markdown)
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>│   ├── system.md, chat.md, plotting.md   # Full tier (default; also used by cloud providers)
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>│   └── system_small.md      #   Simplified tier — single consolidated file for detected small models
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>├── rules/                   # Behavioural constraints (Markdown)
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>├── agent/                   # Qt-free core
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>│   ├── commands.py          #   CreatePlot / UpdatePlot / DeletePlots dataclasses
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>│   └── ports.py             #   AppContext protocol + RecordingContext (the test fake)
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>├── utils/
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>│   ├── plot_utils.py        # normalize_plot_config / expand_comma_styles — type coercion for plot configs
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>│   ├── safe_eval.py         # evaluate_pandas_expression() — df.query() first, sandboxed eval() fallback
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>│   └── df_summary.py        # compact_dataframe_schema() for the prompt; summarize_dataframe_columns() for the resource
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>├── m_llm_client.py          # Model layer: LLM connections + QThread workers
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>│                            #   - LLMWorker (Ollama)
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>│                            #   - APIWorker (OpenAI-compatible)
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>│                            #   - AnthropicWorker (Anthropic SDK)
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>│                            #   - anthropic_tools()/anthropic_messages() — protocol translation
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>│                            #   - LLMClient (unified facade)
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>│                            #   - get_ollama_model_info() — `ollama show` wrapper for size detection
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>├── m_conversation.py        # Data model: single conversation (messages, save/load JSON)
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>├── m_conversation_store.py  # Conversation store: scan/list/load saved conversations
+<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>├── mcp/
+<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>│   ├── server.py            # SPECTROview&#39;s FastMCP server: 5 tools + 2 resources
+<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>│   ├── hub.py               # MCP client: one loop thread, one session per server
+<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>│   └── config.py            # servers.yaml -&gt; validated ServerSpec list
+<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>├── m_prompt_manager.py      # Prompt caching and assembly: loads and merges the Markdown fragments
+<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>├── vm_chat.py               # ViewModel: prompt-tier selection, small-model detection, request tuning, agentic loop
+<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>├── v_chat_panel.py          # View: floating chat dialog (QDialog), incl. the Auto/Full/Simplified selector
+<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>└── v_history_dialog.py      # View: history browser dialog (QDialog)
 </code></pre></div>
 <h3 id="file-roles"><strong>File Roles</strong><a class="headerlink" href="#file-roles" title="Permanent link">&para;</a></h3>
 <table>
@@ -2148,17 +2247,17 @@
 <tr>
 <td><code>m_prompt_manager.py</code></td>
 <td><strong>Model</strong></td>
-<td>Loads, caches, and assembles Markdown files into a system prompt for a given set of <code>prompts=</code>/<code>rules=</code>/<code>knowledge=</code>/<code>examples=</code> lists. Also parses <code>config/model.yaml</code>/<code>config/settings.yaml</code> (<code>.model_config</code>/<code>.settings</code> properties).</td>
+<td>Loads, caches, and assembles Markdown files into a system prompt for a given set of <code>prompts=</code>/<code>rules=</code>/<code>knowledge=</code>/<code>examples=</code> lists. Also parses <code>config/model.yaml</code>/<code>config/settings.yaml</code> (<code>.model_config</code>).</td>
 </tr>
 <tr>
 <td><code>m_llm_client.py</code></td>
 <td><strong>Model</strong></td>
-<td>Wraps Ollama, OpenAI SDK, and Anthropic SDK. Checks availability, lists models, looks up a model's parameter count (<code>get_ollama_model_info</code>), and spawns one of three background <code>QThread</code> workers depending on the selected provider.</td>
+<td>Wraps Ollama, OpenAI SDK, and Anthropic SDK. Checks availability, lists models, looks up a model's parameter count (<code>get_ollama_model_info</code>), translates the OpenAI tool dialect to Anthropic's, and spawns one of three background <code>QThread</code> workers depending on the selected provider.</td>
 </tr>
 <tr>
 <td><code>m_conversation.py</code></td>
 <td><strong>Model</strong></td>
-<td>Represents a single conversation: add messages (including <code>tool_calls</code>/<code>tool_call_id</code>), auto-title, save/load as JSON, slice to the last N messages. Skips saving empty conversations.</td>
+<td>Represents a single conversation: add messages (including <code>tool_calls</code>/<code>tool_call_id</code>), auto-title, save/load as JSON, cap to the last N messages <strong>without splitting a tool call from its result</strong>. Skips saving empty conversations.</td>
 </tr>
 <tr>
 <td><code>m_conversation_store.py</code></td>
@@ -2166,9 +2265,29 @@
 <td>Scans the history folder, lists saved conversations as lightweight summaries, loads conversations by ID.</td>
 </tr>
 <tr>
+<td><code>agent/ports.py</code></td>
+<td><strong>Model</strong></td>
+<td><code>AppContext</code> — the only thing the MCP tools know about the application. <code>RecordingContext</code> is the in-memory implementation used by every tool test.</td>
+</tr>
+<tr>
+<td><code>agent/commands.py</code></td>
+<td><strong>Model</strong></td>
+<td><code>CreatePlot</code>/<code>UpdatePlot</code>/<code>DeletePlots</code> — what a tool asks the application to do, instead of raw dicts keyed by <code>_graph_update</code>/<code>_graph_delete</code>.</td>
+</tr>
+<tr>
 <td><code>mcp/server.py</code></td>
 <td><strong>Model</strong></td>
-<td>FastMCP server exposing SPECTROview's 5 AI tools to the LLM, with request-time filter/plot-style validation.</td>
+<td>FastMCP server exposing SPECTROview's 5 tools and 2 resources, with request-time filter/plot-style validation. Depends only on <code>AppContext</code>.</td>
+</tr>
+<tr>
+<td><code>mcp/hub.py</code></td>
+<td><strong>Model</strong></td>
+<td>MCP client: background event loop, one persistent session per configured server, tool-name qualification, allowlists, and the synthetic <code>get_context</code> resource tool.</td>
+</tr>
+<tr>
+<td><code>mcp/config.py</code></td>
+<td><strong>Model</strong></td>
+<td>Parses and validates <code>config/servers.yaml</code>; skips (with a warning) any entry that is malformed, disabled, or a duplicate id.</td>
 </tr>
 <tr>
 <td><code>utils/safe_eval.py</code></td>
@@ -2178,7 +2297,7 @@
 <tr>
 <td><code>utils/df_summary.py</code></td>
 <td><strong>Model</strong></td>
-<td>Compacts a DataFrame's column listing in the system prompt once it exceeds <code>column_detail_threshold</code> columns, without ever hiding a column name.</td>
+<td><code>compact_dataframe_schema()</code> builds the always-pushed names+dtypes block; <code>summarize_dataframe_columns()</code> builds the detailed listing served by the <code>dataframes/detail</code> resource, compacting by prefix past <code>column_detail_threshold</code> columns without ever hiding a column name.</td>
 </tr>
 <tr>
 <td><code>utils/plot_utils.py</code></td>
@@ -2208,11 +2327,29 @@
 <h3 id="detection">Detection<a class="headerlink" href="#detection" title="Permanent link">&para;</a></h3>
 <p><code>VMChat._auto_detect_small_model()</code> resolves in this order:</p>
 <ol>
-<li><strong>Manual override</strong> — <code>VMChat.set_small_model_mode(True | False | None)</code>. <code>None</code> (the default) means "keep auto-detecting." Exposed in the UI as the <strong>Auto / Full prompt / Simplified prompt</strong> combo box in <code>v_chat_panel.py</code>'s header, persisted via <code>QSettings</code>.</li>
-<li><strong>Parameter-count check</strong> (Ollama only) — <code>get_ollama_model_info(model)</code> calls <code>ollama show &lt;model&gt;</code>, parses <code>details.parameter_size</code> (e.g. <code>"8.2B"</code>) via <code>_parse_param_size_to_billions()</code>, and compares it against <code>config/model.yaml</code>'s <code>small_model_param_threshold_b</code> (default <strong>10.0</strong>). Cached per model name for the life of the <code>VMChat</code> instance.</li>
-<li><strong>Name-pattern fallback</strong> — if the parameter count can't be determined (cloud model, or <code>ollama show</code> fails), the model name is matched against <code>VMChat._SMALL_MODEL_PATTERNS</code>, a list of known small model tags (<code>qwen3:8b</code>, <code>gemma3:4b</code>, <code>phi3:mini</code>, <code>deepseek-r1:8b</code>, etc.).</li>
-<li><strong>Default: full tier.</strong> If nothing resolves, the model is treated as large. An unrecognized model getting the full prompt is the safer failure mode than an unrecognized <em>large</em> model being needlessly handicapped.</li>
+<li><strong>Manual override</strong> — <code>VMChat.set_small_model_mode(True | False | None)</code>. <code>None</code> (the default) means "keep auto-detecting." Exposed in the UI as the <strong>Auto / Full / Small</strong> combo box in <code>v_chat_panel.py</code>'s header, persisted via <code>MSettings</code>.</li>
 </ol>
+<h3 id="persisted-settings"><strong>Persisted settings</strong><a class="headerlink" href="#persisted-settings" title="Permanent link">&para;</a></h3>
+<p>Everything the agent stores — provider, selected model per provider, prompt
+tier, API keys, chat-history folder — lives under the <code>ai_chat/</code> prefix of the
+single application store, reached through <code>MSettings.get_ai_value()</code> /
+<code>set_ai_value()</code>. The AI module imports no <code>QSettings</code> of its own.</p>
+<p>It used to keep a second <code>QSettings("SPECTROview", "AIChat")</code> pair. That made
+the agent's configuration invisible to the rest of the app and, worse, slipped
+past the <code>_isolate_qsettings</code> test fixture — so any test constructing a <code>VMChat</code>
+read the developer's real settings and wrote chat history into their real
+history folder. <code>MSettings._migrate_legacy_ai_settings()</code> copies the old values
+across once (guarded by a marker key, never overwriting a newer value) and
+leaves the legacy store in place so an older build still runs.</p>
+<blockquote>
+<p><strong>Secrets</strong>: API keys are written to the per-user OS settings store (Windows
+registry / macOS defaults) — never to a file inside the project, so they
+cannot be committed. <code>config/servers.yaml</code> <em>is</em> committed: never put a token
+in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
+2. <strong>Parameter-count check</strong> (Ollama only) — <code>get_ollama_model_info(model)</code> calls <code>ollama show &lt;model&gt;</code>, parses <code>details.parameter_size</code> (e.g. <code>"8.2B"</code>) via <code>_parse_param_size_to_billions()</code>, and compares it against <code>config/model.yaml</code>'s <code>small_model_param_threshold_b</code> (default <strong>10.0</strong>). Cached per model name for the life of the <code>VMChat</code> instance.
+3. <strong>Name-pattern fallback</strong> — if the parameter count can't be determined (cloud model, or <code>ollama show</code> fails), the model name is matched against <code>VMChat._SMALL_MODEL_PATTERNS</code>, a list of known small model tags (<code>qwen3:8b</code>, <code>gemma3:4b</code>, <code>phi3:mini</code>, <code>deepseek-r1:8b</code>, etc.).
+4. <strong>Default: full tier.</strong> If nothing resolves, the model is treated as large. An unrecognized model getting the full prompt is the safer failure mode than an unrecognized <em>large</em> model being needlessly handicapped.</p>
+</blockquote>
 <p>Detection is hard-gated to <code>provider == "Ollama"</code> for steps 2–3 — cloud providers always resolve to the full tier unless a manual override forces otherwise. Detection re-runs on <code>set_model()</code>/<code>set_provider()</code>, never during <code>__init__</code> (an <code>ollama show</code> network call shouldn't race object construction).</p>
 <h3 id="what-changes-in-simplified-mode">What changes in Simplified mode<a class="headerlink" href="#what-changes-in-simplified-mode" title="Permanent link">&para;</a></h3>
 <p>All four of the following are computed in <code>vm_chat.py</code> and read from <code>config/model.yaml</code>:</p>
@@ -2393,25 +2530,17 @@
 <td>Load one Markdown file by stem, cached in memory (auto-invalidated on mtime change if <code>auto_reload: true</code>)</td>
 </tr>
 <tr>
-<td><code>build_prompt(intent, user_message, prompts, rules, knowledge, examples)</code></td>
-<td>Assembles a complete system prompt. When explicit lists are passed (which <code>vm_chat.py</code> always does), they override the per-<code>intent</code> defaults entirely.</td>
+<td><code>build_prompt(prompts, rules, knowledge, examples)</code></td>
+<td>Assembles a complete system prompt from the named fragments. Missing files are skipped with a warning rather than raising.</td>
 </tr>
 <tr>
 <td><code>.model_config</code></td>
 <td>Parsed <code>config/model.yaml</code> as a dict</td>
 </tr>
-<tr>
-<td><code>.settings</code></td>
-<td>Parsed <code>config/settings.yaml</code> as a dict</td>
-</tr>
-<tr>
-<td><code>clear_cache()</code></td>
-<td>Clears the file-content cache</td>
-</tr>
 </tbody>
 </table>
 <blockquote>
-<p><strong>Gotcha for future changes</strong>: <code>_INTENT_DEFAULTS</code> (per-intent default file lists for <code>"plotting"</code>/<code>"fitting"</code>/<code>"coding"</code>) and <code>_detect_intent()</code> (keyword-based intent sniffing) exist but are <strong>currently inert</strong> — <code>vm_chat.py</code> always calls <code>build_prompt()</code> with explicit <code>prompts=</code>/<code>rules=</code>/<code>knowledge=</code>/<code>examples=</code> lists (one set for the full tier, one for the simplified tier — see <a href="#small-model-support">Small-Model Support</a>), which unconditionally short-circuits the intent-based defaults regardless of <code>config/settings.yaml</code>'s <code>enable_intent_detection</code> flag. <code>prompts/fitting.md</code>, <code>prompts/coding.md</code>, <code>rules/fitting.md</code>, <code>rules/python.md</code>, and <code>examples/filtering_examples.md</code> are fully written but never loaded under the current call pattern.</p>
+<p><strong>Which fragments load is decided in code</strong>, by <code>VMChat._build_system_prompt()</code> — one list for the full tier, one for the simplified tier (see <a href="#small-model-support">Small-Model Support</a>). There is no intent router. An earlier keyword-based one (<code>_detect_intent()</code>, <code>_INTENT_DEFAULTS</code>, <code>enable_intent_detection</code>) was inert — the explicit lists always short-circuited it — and has been removed along with the five prompt fragments only it could have loaded (<code>prompts/fitting.md</code>, <code>prompts/coding.md</code>, <code>rules/fitting.md</code>, <code>rules/python.md</code>, <code>examples/filtering_examples.md</code>). Recover them from git history if intent routing is ever built for real.</p>
 </blockquote>
 <h3 id="vmchat-viewmodel"><strong><code>VMChat</code> — ViewModel</strong><a class="headerlink" href="#vmchat-viewmodel" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/ai_agent/vm_chat.py</code></p>
@@ -2511,10 +2640,12 @@
 <h4 id="the-agentic-tool-calling-loop"><strong>The Agentic Tool-Calling Loop</strong><a class="headerlink" href="#the-agentic-tool-calling-loop" title="Permanent link">&para;</a></h4>
 <p><code>process_query()</code> → <code>LLMClient.chat()</code> → <code>_on_done(full_text, tool_calls)</code>:</p>
 <ul>
-<li>If <code>tool_calls</code> is non-empty: each call's <code>arguments</code> (parsed if it arrived as a JSON string; a parse failure produces an actionable "please retry with valid JSON" tool-result message instead of silently substituting <code>{}</code>) is dispatched via an in-process MCP client session (<code>session.call_tool(name, args)</code>). Every tool result — success or a validation error — is appended to conversation history as a <code>role="tool"</code> message, and <code>_on_done</code> recursively calls <code>LLMClient.chat()</code> again with the updated history. Capped at <strong>5 iterations</strong> (<code>error_occurred</code> fires past that).</li>
-<li>If <code>tool_calls</code> is empty: any <code>plot_graph</code>/<code>update_graph</code>/<code>delete_graph</code> calls made during the loop have accumulated into <code>self._pending_plots</code>. If non-empty, they're normalized/expanded (<code>utils/plot_utils.py</code>) into a <code>ChatResult(action="plot", plot_config=[...])</code>. Otherwise, <code>ChatResult(action="answer", text_summary=full_text)</code>.</li>
+<li>If <code>tool_calls</code> is non-empty: each call's <code>arguments</code> (parsed if it arrived as a JSON string; a parse failure produces an actionable "please retry with valid JSON" tool-result message instead of silently substituting <code>{}</code>) is dispatched through <code>MCPHub.call_tool(name, args)</code>, which routes it to whichever server owns that tool. Every tool result — success, a validation error, or an unknown-tool message — is appended to conversation history as a <code>role="tool"</code> message, and <code>_on_done</code> calls <code>LLMClient.chat()</code> again with the updated history. Capped at <code>VMChat.MAX_AGENT_TURNS</code> (<strong>5</strong>).</li>
+<li>If <code>tool_calls</code> is empty: the turn ends via <code>_emit_final_result()</code>.</li>
 </ul>
-<p><strong>In the current tool-calling architecture, <code>ChatResult.action</code> is only ever <code>"plot"</code> or <code>"answer"</code></strong> — there is no code path that constructs it with <code>"filter"</code>/<code>"statistics"</code>/<code>"update"</code>/<code>"delete"</code>/<code>"query"</code> (those were meaningful values under the pre-MCP JSON-protocol architecture; <code>query_dataframe</code>/<code>get_statistics</code> results now surface only as tool-result text feeding into the LLM's final natural-language answer, not as a separate structured result). <code>ChatResult.dataframe</code> is consequently never populated either — <code>v_chat_panel.py</code>'s <code>_DataFramePreview</code> inline-table widget, which only renders when <code>result.dataframe is not None</code>, is effectively dead code today. This isn't something introduced by the small-model work; it's been true since the MCP migration and just hadn't been documented.</p>
+<p><code>_emit_final_result()</code> drains the commands queued on the context during the turn, renders them to configs (normalising once, in <code>_commands_to_configs</code>), and emits <code>ChatResult(action="plot", plot_config=[...])</code> — or <code>ChatResult(action="answer", text_summary=...)</code> when nothing was queued.</p>
+<p>It runs on <strong>every</strong> terminating path, including the turn cap and a tool-execution exception. Previously those two paths returned early, so a model that queued three plots and then kept calling tools until the cap left the user with an error and no graphs, after being told the graphs were created.</p>
+<p><strong><code>ChatResult.action</code> is only ever <code>"plot"</code> or <code>"answer"</code>.</strong> The pre-MCP JSON-protocol values (<code>"filter"</code>/<code>"statistics"</code>/<code>"update"</code>/<code>"delete"</code>/<code>"query"</code>) have no code path; <code>query_dataframe</code>/<code>get_statistics</code> results reach the user as the model's final prose answer, not as a separate structured result. The vestigial <code>dataframe</code>/<code>raw_response</code>/<code>query</code>/<code>target_dataframe</code> fields and the <code>_DataFramePreview</code> widget that only rendered for them have been removed.</p>
 <h4 id="request-options"><strong>Request Options</strong><a class="headerlink" href="#request-options" title="Permanent link">&para;</a></h4>
 <p><code>_build_request_options()</code> reads <code>config/model.yaml</code> and returns the <code>num_ctx</code>/<code>think</code>/<code>timeout</code>/<code>max_tokens</code> dict passed as <code>request_options=</code> to every <code>LLMClient.chat()</code> call — see <a href="#small-model-support">Small-Model Support</a> for the full table of full-vs-simplified values.</p>
 <h4 id="conversation-history-persistence"><strong>Conversation History &amp; Persistence</strong><a class="headerlink" href="#conversation-history-persistence" title="Permanent link">&para;</a></h4>
@@ -2526,11 +2657,11 @@
 <li>Is <strong>not cleared</strong> when the user loads a new workspace file or switches DataFrames — only <strong>+ New Chat</strong> resets it.</li>
 </ul>
 <p>The context actually sent to the LLM is capped via <code>max_context_messages</code> — unlimited for the full tier, the last 6 messages for the simplified tier (see <a href="#small-model-support">Small-Model Support</a>; this replaces a <code>MAX_HISTORY_PAIRS = 6</code> class constant that used to exist but was never actually wired to anything).</p>
+<p><code>to_llm_messages()</code> <strong>widens</strong> that window rather than cutting blindly: a <code>role="tool"</code> message is only valid immediately after the assistant message carrying its <code>tool_calls</code>, so if the cap would land between them the window is extended backwards until the pair is intact. Slicing between them made providers reject the request — and because the cap is only active in simplified mode, it hit exactly the small local models least able to recover from an API error.</p>
 <h3 id="chatresult-parsed-response"><strong><code>ChatResult</code> — Parsed Response</strong><a class="headerlink" href="#chatresult-parsed-response" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/ai_agent/vm_chat.py</code></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">ChatResult</span><span class="p">:</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="s2">&quot;explanation&quot;</span><span class="p">,</span> <span class="s2">&quot;dataframe&quot;</span><span class="p">,</span> <span class="s2">&quot;text_summary&quot;</span><span class="p">,</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>                 <span class="s2">&quot;plot_config&quot;</span><span class="p">,</span> <span class="s2">&quot;raw_response&quot;</span><span class="p">,</span> <span class="s2">&quot;query&quot;</span><span class="p">,</span> <span class="s2">&quot;target_dataframe&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span> <span class="nc">ChatResult</span><span class="p">:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="s2">&quot;explanation&quot;</span><span class="p">,</span> <span class="s2">&quot;text_summary&quot;</span><span class="p">,</span> <span class="s2">&quot;plot_config&quot;</span><span class="p">)</span>
 </code></pre></div>
 <table>
 <thead>
@@ -2544,17 +2675,12 @@
 <tr>
 <td><code>action</code></td>
 <td><code>str</code></td>
-<td><code>"plot"</code> or <code>"answer"</code> in current usage (see above)</td>
+<td><code>"plot"</code> or <code>"answer"</code> — the only two values (see above)</td>
 </tr>
 <tr>
 <td><code>explanation</code></td>
 <td><code>str</code></td>
-<td>Rarely populated in current usage</td>
-</tr>
-<tr>
-<td><code>dataframe</code></td>
-<td><code>pd.DataFrame</code> | <code>None</code></td>
-<td><strong>Always <code>None</code></strong> in current usage — vestigial, see above</td>
+<td>Text shown on the message card when graph commands ran</td>
 </tr>
 <tr>
 <td><code>text_summary</code></td>
@@ -2566,16 +2692,6 @@
 <td><code>list[dict]</code> | <code>None</code></td>
 <td>Accumulated plot/update/delete configs for the Graphs workspace</td>
 </tr>
-<tr>
-<td><code>raw_response</code></td>
-<td><code>str</code></td>
-<td>Full LLM text for debugging</td>
-</tr>
-<tr>
-<td><code>query</code> / <code>target_dataframe</code></td>
-<td><code>str</code></td>
-<td><strong>Always <code>""</code></strong> in current usage — vestigial fields from the pre-MCP JSON-action protocol</td>
-</tr>
 </tbody>
 </table>
 <h3 id="vchatpanel-view-dialog"><strong><code>VChatPanel</code> — View Dialog</strong><a class="headerlink" href="#vchatpanel-view-dialog" title="Permanent link">&para;</a></h3>
@@ -2586,8 +2702,7 @@
 - <strong>General plot-template management</strong> (browse/apply/rename/duplicate/delete, save-all-open-graphs) now lives entirely in the Graphs workspace (<code>VWorkspaceGraphs</code>, next to Add/Update plot), not here. <code>VChatPanel.prompt_and_save_template()</code> survives only as the inline "Save N plot(s) as Template" shortcut offered after the AI creates plots (see <code>_on_result_ready</code>).
 - <strong>Intermediate tool-step chips</strong> (<code>🔧 query_dataframe</code>, <code>🔧 plot_graph</code>, …) are no longer shown in the conversation. <code>_on_tool_execution</code> now only updates the transient "thinking" status so the finished chat stays clean.</p>
 <p>Helper widgets:
-- <strong><code>_MessageCard</code></strong> / AI/user card variants: styled message bubbles with role-dependent colors
-- <strong><code>_DataFramePreview</code></strong>: inline <code>QTableWidget</code> for filtered DataFrames — see the <code>ChatResult.dataframe</code> note above regarding current reachability
+- <strong><code>_MessageCard</code></strong>: styled message bubble; <code>_add_card(text, role, timestamp)</code> indents it on the side matching the speaker
 - <strong><code>_ChatLineEdit</code></strong> / input area: emits <code>send_requested</code> on Enter key</p>
 <hr />
 <h2 id="system-prompt-llm-contract"><strong>System Prompt &amp; LLM Contract</strong><a class="headerlink" href="#system-prompt-llm-contract" title="Permanent link">&para;</a></h2>
@@ -2653,13 +2768,13 @@
 
     alt tool_calls non-empty (agentic loop, up to 5 iterations)
         VMC--&gt;&gt;VCP: thinking_changed(True, "Executing tools...")
-        VMC-&gt;&gt;MCPS: call_tool(name, args) for each call
+        VMC-&gt;&gt;MCPS: MCPHub.call_tool(name, args) for each call
         MCPS--&gt;&gt;VMC: result text (validated, error if filter/style invalid)
         VMC--&gt;&gt;VCP: tool_execution_received(name, result)
         VMC-&gt;&gt;LLC: chat(...) again with updated history
-        Note over VMC,LLC: repeats until no more tool_calls, or 5-turn cap
+        Note over VMC,LLC: repeats until no more tool_calls, or the 5-turn cap
     else no tool_calls
-        VMC-&gt;&gt;VMC: build ChatResult (action="plot" if _pending_plots, else "answer")
+        VMC-&gt;&gt;VMC: _emit_final_result() — drain queued AgentCommands
         VMC--&gt;&gt;VCP: result_ready(ChatResult)
         VMC--&gt;&gt;VCP: thinking_changed(False, "Thinking")
     end
@@ -2674,12 +2789,17 @@
 <hr />
 <h2 id="integration-with-graphs-workspace"><strong>Integration with Graphs Workspace</strong><a class="headerlink" href="#integration-with-graphs-workspace" title="Permanent link">&para;</a></h2>
 <h3 id="lazy-initialization"><strong>Lazy Initialization</strong><a class="headerlink" href="#lazy-initialization" title="Permanent link">&para;</a></h3>
-<p>The chat panel is created on first use in <code>Main.open_ai_chat()</code>. This avoids importing the <code>ollama</code>/<code>openai</code>/<code>anthropic</code>/<code>mcp</code> packages or building the UI at startup.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># main.py</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span> <span class="o">=</span> <span class="n">VChatPanel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span><span class="o">.</span><span class="n">plot_requested</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_chat_plot_requested</span><span class="p">)</span>
+<p>Both the <strong>import</strong> and the <strong>widget</strong> are deferred to <code>Main.open_ai_chat()</code>. The provider SDKs cost ~4.5 s to import, which is why <code>main.py</code> only probes for the module at startup (<code>importlib.util.find_spec</code>, no execution) and does the real import when the user first opens the panel.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># main.py — module level: probe only, nothing is executed</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">LLM_AVAILABLE</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;spectroview.ai_agent.v_chat_panel&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># main.py — inside open_ai_chat()</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="kn">from</span> <span class="nn">spectroview.ai_agent.v_chat_panel</span> <span class="kn">import</span> <span class="n">VChatPanel</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span> <span class="o">=</span> <span class="n">VChatPanel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span><span class="o">.</span><span class="n">plot_requested</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_chat_plot_requested</span><span class="p">)</span>
 </code></pre></div>
+<p>The same principle applies one level down: <code>mcp</code> is imported inside <code>MCPHub._open_session()</code> rather than at <code>hub.py</code> module level.</p>
 <h3 id="dataframe-synchronization"><strong>DataFrame Synchronization</strong><a class="headerlink" href="#dataframe-synchronization" title="Permanent link">&para;</a></h3>
 <p>The chat panel stays in sync with the Graphs workspace through three signal connections set up in <code>main.py</code>:</p>
 <table>
@@ -2710,7 +2830,7 @@
 </table>
 <p>Each time the panel is shown, a forced sync is performed to ensure current data is available.</p>
 <h3 id="plot-config-normalization"><strong>Plot Config Normalization</strong><a class="headerlink" href="#plot-config-normalization" title="Permanent link">&para;</a></h3>
-<p>Accumulated plot configs are normalized by <code>utils/plot_utils.py::expand_all_plot_configs()</code> before being emitted to <code>main.py</code>:</p>
+<p>Queued commands are normalized <strong>once</strong>, in <code>VMChat._commands_to_configs()</code>, before being emitted to <code>main.py</code>. (Both <code>VMChat</code> and <code>main.py</code> used to normalize the same dict; the <code>main.py</code> pass has been removed.)</p>
 <table>
 <thead>
 <tr>
@@ -2741,11 +2861,11 @@
 </tr>
 </tbody>
 </table>
+<p><code>utils/plot_utils.py</code> derives its valid plot styles and palettes from <code>spectroview.PLOT_STYLES</code>/<code>PALETTE</code>, as does <code>mcp/server.py</code>'s validator. The tool schema's <code>Literal</code> must stay statically analysable, so it is spelled out — <code>test_ai_agent_schema.py::TestPlotStyleSingleSourceOfTruth</code> fails if the lists ever drift.</p>
 <h3 id="graph-update-delete-flow"><strong>Graph Update / Delete Flow</strong><a class="headerlink" href="#graph-update-delete-flow" title="Permanent link">&para;</a></h3>
-<p>For entries wrapped as <code>{"_graph_update": {...}}</code> / <code>{"_graph_delete": {...}}</code> (produced by the <code>update_graph</code>/<code>delete_graph</code> MCP tools), <code>main.py</code>:</p>
+<p><code>UpdatePlot</code>/<code>DeletePlots</code> commands are rendered to <code>{"_graph_update": {...}}</code> / <code>{"_graph_delete": {...}}</code> entries for the existing <code>plot_requested</code> signal, and <code>main.py</code>:</p>
 <ol>
 <li>Retrieves the existing <code>MGraph</code> model(s) by ID (or resolves <code>"all"</code>).</li>
-<li>Normalizes property types (same rules as above).</li>
 <li>Calls <code>vm.update_graph(...)</code> or closes the corresponding <code>QMdiSubWindow</code>(s).</li>
 </ol>
 <hr />
@@ -2763,21 +2883,21 @@
 <h2 id="optional-dependency-management"><strong>Optional Dependency Management</strong><a class="headerlink" href="#optional-dependency-management" title="Permanent link">&para;</a></h2>
 <p><code>ollama</code>, <code>openai</code>, <code>anthropic</code>, and <code>mcp</code> are <strong>unconditional core dependencies</strong> in <code>pyproject.toml</code> — there is no separate <code>[ai]</code> extras group; a normal <code>pip install -e .</code> already includes everything the AI feature needs. What's actually optional is <em>using</em> the feature at runtime:</p>
 <h3 id="import-guard-pattern"><strong>Import Guard Pattern</strong><a class="headerlink" href="#import-guard-pattern" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># m_llm_client.py — each SDK is guarded independently</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">ollama</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_ollama</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">OLLAMA_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="n">OLLAMA_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># ... same pattern for openai, anthropic</span>
+<p>Availability is probed <strong>without importing</strong> — <code>find_spec</code> only locates the package, it never executes it — and the real import happens on first use, cached in the module global:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># m_llm_client.py — each SDK is probed and loaded independently</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">OLLAMA_AVAILABLE</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">_ollama</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">def</span> <span class="nf">_load_ollama</span><span class="p">():</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the `ollama` module (imported on first use), or None.&quot;&quot;&quot;</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="k">global</span> <span class="n">_ollama</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="k">if</span> <span class="n">_ollama</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">OLLAMA_AVAILABLE</span><span class="p">:</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>        <span class="kn">import</span> <span class="nn">ollama</span> <span class="k">as</span> <span class="nn">_mod</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>        <span class="n">_ollama</span> <span class="o">=</span> <span class="n">_mod</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>    <span class="k">return</span> <span class="n">_ollama</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="c1"># ... same pattern for openai (_load_openai), anthropic (_load_anthropic)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># main.py</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.ai_agent.v_chat_panel</span><span class="w"> </span><span class="kn">import</span> <span class="n">VChatPanel</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">LLM_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="n">LLM_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
-</code></pre></div>
+<p>Because the loader returns the module global when it is already set, tests can still swap in a fake with <code>patch.object(m_llm_client, "_ollama", fake)</code>.</p>
 <p>If a package is genuinely missing (e.g. a stripped-down environment) or Ollama isn't running / no API key is set:
 - The relevant provider reports unavailable via <code>LLMClient.is_available()</code>, surfaced as a red status message with actionable install instructions.
 - No error is raised at startup; the rest of the application is unaffected.</p>
@@ -2852,7 +2972,7 @@
 </tr>
 <tr>
 <td><strong>Streaming responses</strong></td>
-<td>Token-by-token display with live typing animation (non-streaming for Anthropic when tools are involved)</td>
+<td>Token-by-token display with live typing animation, on every provider including Anthropic with tools</td>
 </tr>
 <tr>
 <td><strong>Model &amp; prompt-tier selection</strong></td>
@@ -2860,10 +2980,41 @@
 </tr>
 <tr>
 <td><strong>Context-aware prompts</strong></td>
-<td>System prompt includes DataFrame schemas (compacted for wide tables), sample values, and open graph configurations</td>
+<td>System prompt carries DataFrame names, shapes, and every column with its dtype; sample values, row previews, and full graph configs are fetched on demand via <code>get_context</code></td>
+</tr>
+<tr>
+<td><strong>External MCP servers</strong></td>
+<td>Any <code>stdio</code> or <code>http</code> MCP server listed in <code>config/servers.yaml</code> is connected at startup and its tools offered to the model, with an optional per-server allowlist</td>
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="connecting-another-mcp-server"><strong>Connecting Another MCP Server</strong><a class="headerlink" href="#connecting-another-mcp-server" title="Permanent link">&para;</a></h2>
+<p>Add a block to <code>spectroview/ai_agent/config/servers.yaml</code> and restart:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">servers</span><span class="p">:</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spectroview</span><span class="w">          </span><span class="c1"># SPECTROview&#39;s own tools — keep this one</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">in-process</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="nt">factory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spectroview.ai_agent.mcp.server:create_mcp_server</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">filesystem</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stdio</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">npx</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-y</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;@modelcontextprotocol/server-filesystem&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;~/data&quot;</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">    </span><span class="nt">tools</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">read_file</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">list_directory</span><span class="p p-Indicator">]</span><span class="w">     </span><span class="c1"># optional allowlist</span>
+</code></pre></div>
+<p><code>${VARS}</code> and <code>~</code> are expanded in <code>command</code>, <code>env</code>, and <code>url</code>. A server that
+fails to start is logged and skipped — the chat keeps working with whatever
+connected.</p>
+<p>Two things to keep in mind:</p>
+<ul>
+<li><strong>Tool count is a cost.</strong> Every tool's schema is in the prompt on every turn,
+  and small local models lose accuracy quickly past roughly a dozen tools. Use
+  <code>tools:</code> to expose only what you need.</li>
+<li><strong>An external server's tool descriptions are untrusted text</strong> written by
+  someone else and passed to the model verbatim. Only enable servers you trust,
+  and prefer an allowlist for anything that can write.</li>
+</ul>
 
 
 

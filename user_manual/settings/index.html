@@ -1831,6 +1831,15 @@
 </tbody>
 </table>
 <p>Keys for the built-in cloud providers are tucked under the collapsible <strong>▸ Other cloud providers</strong> section (click to expand): <strong>OpenAI</strong>, <strong>Anthropic</strong>, <strong>Gemini</strong>, <strong>DeepSeek</strong>, and <strong>Mistral</strong>. All keys are stored masked and remembered between sessions.</p>
+<blockquote>
+<p><strong>Where your keys are stored.</strong> API keys go into your operating system's
+per-user settings store — the registry (<code>HKEY_CURRENT_USER\Software\CEA-Leti\SPECTROview</code>)
+on Windows, <code>~/Library/Preferences</code> on macOS. They are <strong>never</strong> written to a
+file inside the SPECTROview project folder, are not included in an exported
+workspace, and cannot be committed to a Git repository by accident. They are
+stored in plain text there, so treat them like any other saved credential:
+they are readable by anything running under your user account.</p>
+</blockquote>
 <h4 id="chat-history"><strong>Chat History</strong><a class="headerlink" href="#chat-history" title="Permanent link">&para;</a></h4>
 <table>
 <thead>

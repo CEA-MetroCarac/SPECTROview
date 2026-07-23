@@ -163,7 +163,7 @@ class CustomizeLegend(QWidget):
         self.spin_legend_fontsize = QSpinBox()
         self.spin_legend_fontsize.setRange(4, 72)
         self.spin_legend_fontsize.setSingleStep(1)
-        self.spin_legend_fontsize.setValue(10)  # matches mplstyle's legend.fontsize
+        self.spin_legend_fontsize.setValue(9)
         row2.addWidget(self.spin_legend_fontsize)
 
         row2.addSpacing(10)
@@ -234,7 +234,7 @@ class CustomizeLegend(QWidget):
         self.spin_legend_ncol.setValue(getattr(self.graph_widget, 'legend_ncol', 1))
         self.cb_legend_frame.setChecked(getattr(self.graph_widget, 'legend_frame', True))
         self.edit_legend_title.setText(getattr(self.graph_widget, 'legend_title', None) or "")
-        self.spin_legend_fontsize.setValue(getattr(self.graph_widget, 'legend_fontsize', None) or 10)
+        self.spin_legend_fontsize.setValue(getattr(self.graph_widget, 'legend_fontsize', None) or 9)
         self.spin_legend_alpha.setValue(getattr(self.graph_widget, 'legend_alpha', 0.7))
         self.combo_legend_loc.setCurrentText(getattr(self.graph_widget, 'legend_loc', 'best'))
         self.combo_legend_loc.setEnabled(not self.original_legend_outside)

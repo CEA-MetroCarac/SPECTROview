@@ -863,7 +863,7 @@ class VGraph(QWidget):
                 }
                 if getattr(self, 'legend_title', None):
                     style_kwargs['title'] = self.legend_title
-                style_kwargs['fontsize'] = getattr(self, 'legend_fontsize', None) or 10
+                style_kwargs['fontsize'] = getattr(self, 'legend_fontsize', None) or 9
 
                 if getattr(self, 'legend_outside', False):
                     legend = self.ax.legend(

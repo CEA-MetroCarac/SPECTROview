@@ -107,7 +107,7 @@ class MGraph:
     legend_ncol: int = 1
     legend_frame: bool = True
     legend_title: Optional[str] = None
-    legend_fontsize: int = 10  # matches mplstyle's legend.fontsize
+    legend_fontsize: int = 9
     legend_alpha: float = 0.7  # matches the pre-existing hardcoded framealpha=0.7
     legend_loc: str = "best"   # inside-legend position; ignored when legend_outside is True
 

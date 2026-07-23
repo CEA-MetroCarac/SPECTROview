@@ -1,6 +1,8 @@
 # main.py
 import sys
 import os
+import importlib.util
+import threading
 from pathlib import Path
 import matplotlib as mpl
 mpl.use('qtagg')
@@ -40,12 +42,13 @@ try:
 except ImportError:
     WDF_AVAILABLE = False
 
+# The AI chat module drags in the provider SDKs (~4.5 s of import time), so it is
+# only probed here (find_spec locates the module without executing it) and
+# imported for real when the user opens the panel.
 try:
-    from spectroview.ai_agent.v_chat_panel import VChatPanel
-    LLM_AVAILABLE = True
-    LLM_ERROR_MSG = ""
-except ImportError as e:
-    VChatPanel = None   # type: ignore[assignment,misc]
+    LLM_AVAILABLE = importlib.util.find_spec("spectroview.ai_agent.v_chat_panel") is not None
+    LLM_ERROR_MSG = "" if LLM_AVAILABLE else "spectroview.ai_agent.v_chat_panel not found"
+except ImportError as e:      # the ai_agent package itself is absent
     LLM_AVAILABLE = False
     LLM_ERROR_MSG = str(e)
 
@@ -402,11 +405,17 @@ class Main(QMainWindow):
         cycles.  The active DataFrame from the Graphs workspace is
         injected each time the panel is shown.
         """
-        if not LLM_AVAILABLE:
+        # Imported here rather than at module level: the provider SDKs cost
+        # several seconds to import and are only needed once the user opens the chat.
+        try:
+            if not LLM_AVAILABLE:
+                raise ImportError(LLM_ERROR_MSG)
+            from spectroview.ai_agent.v_chat_panel import VChatPanel
+        except ImportError as e:
             QMessageBox.information(
                 self,
                 "SPECTROview AI Agent — Not Available",
-                f"The AI Chat module could not be imported.\nError: {LLM_ERROR_MSG}\n\n"
+                f"The AI Chat module could not be imported.\nError: {e}\n\n"
                 "Please install the optional dependencies:\n"
                 "    pip install ollama mcp\n\n"
                 "Then restart SPECTROview.",
@@ -727,11 +736,37 @@ class Main(QMainWindow):
             )
 
     def showEvent(self, event):
-        """Start the update check after the window has been displayed."""
+        """Start the update check and the import prewarm once the window is up."""
         super().showEvent(event)
         # Use a short single-shot timer so the UI paints before the thread starts
         from PySide6.QtCore import QTimer
         QTimer.singleShot(2000, self._start_update_check)
+        QTimer.singleShot(0, self._prewarm_heavy_imports)
+
+    _prewarmed = False
+
+    def _prewarm_heavy_imports(self):
+        """Load scipy into ``sys.modules`` on a background thread.
+
+        scipy is deliberately off the startup import path — it would add ~1.3 s
+        before the first window paint. But the first histogram / wafer render
+        must not pay for it either (that made opening a saved .graphs workspace
+        noticeably slower), so it is warmed here while the user reads the UI.
+        Importing is thread-safe; the worst case is that a render arriving mid
+        prewarm simply waits for the same import it would have done itself.
+        """
+        if Main._prewarmed:
+            return
+        Main._prewarmed = True
+
+        def _warm():
+            for name in ("scipy.stats", "scipy.interpolate", "scipy.linalg"):
+                try:
+                    importlib.import_module(name)
+                except Exception:           # noqa: BLE001 - prewarm is best-effort
+                    pass
+
+        threading.Thread(target=_warm, name="prewarm-scipy", daemon=True).start()
 
     def closeEvent(self, event):
         """Clean up on application exit to prevent Matplotlib C++ threading crashes."""

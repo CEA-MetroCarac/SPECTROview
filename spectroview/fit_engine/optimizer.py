@@ -10,7 +10,6 @@ Bound handling uses simple projection (clipping) after each step.
 """
 
 import numpy as np
-from scipy.linalg import cho_factor, cho_solve
 
 
 def _finite_or_clean(arr):
@@ -54,7 +53,9 @@ def _batched_solve(A, b):
             # Fall through to per-matrix solve
             pass
 
-    # Per-matrix Cholesky solve (best for small Na, large K)
+    # Per-matrix Cholesky solve (best for small Na, large K).
+    # scipy.linalg is imported here so it stays off the app's startup path.
+    from scipy.linalg import cho_factor, cho_solve
     x = np.empty_like(b)
     for i in range(Na):
         try:

@@ -22,6 +22,7 @@ Typical usage
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 from typing import Callable, List, Dict, Optional, Any
@@ -106,28 +107,46 @@ def _format_exception(exc: BaseException) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Optional import guards — the rest of the app works fine if either is absent
+# Optional provider SDKs — the rest of the app works fine if any is absent
 # ---------------------------------------------------------------------------
-try:
-    import ollama as _ollama  # type: ignore
-    OLLAMA_AVAILABLE = True
-except ImportError:
-    _ollama = None          # type: ignore[assignment]
-    OLLAMA_AVAILABLE = False
+# Availability is probed without importing: each SDK costs 1–2 s to import and is
+# only needed once the user actually talks to that provider.  ``_load_*()`` performs
+# the real import on first use and caches it in the module global, so tests that
+# patch ``_ollama`` / ``_openai`` / ``_anthropic`` keep working unchanged.
+OLLAMA_AVAILABLE = importlib.util.find_spec("ollama") is not None
+OPENAI_AVAILABLE = importlib.util.find_spec("openai") is not None
+ANTHROPIC_AVAILABLE = importlib.util.find_spec("anthropic") is not None
 
-try:
-    import openai as _openai  # type: ignore
-    OPENAI_AVAILABLE = True
-except ImportError:
-    _openai = None          # type: ignore[assignment]
-    OPENAI_AVAILABLE = False
+_ollama = None              # type: ignore[assignment]
+_openai = None              # type: ignore[assignment]
+_anthropic = None           # type: ignore[assignment]
 
-try:
-    import anthropic as _anthropic # type: ignore
-    ANTHROPIC_AVAILABLE = True
-except ImportError:
-    _anthropic = None       # type: ignore[assignment]
-    ANTHROPIC_AVAILABLE = False
+
+def _load_ollama():
+    """Return the ``ollama`` module (imported on first use), or ``None``."""
+    global _ollama
+    if _ollama is None and OLLAMA_AVAILABLE:
+        import ollama as _mod  # type: ignore
+        _ollama = _mod
+    return _ollama
+
+
+def _load_openai():
+    """Return the ``openai`` module (imported on first use), or ``None``."""
+    global _openai
+    if _openai is None and OPENAI_AVAILABLE:
+        import openai as _mod  # type: ignore
+        _openai = _mod
+    return _openai
+
+
+def _load_anthropic():
+    """Return the ``anthropic`` module (imported on first use), or ``None``."""
+    global _anthropic
+    if _anthropic is None and ANTHROPIC_AVAILABLE:
+        import anthropic as _mod  # type: ignore
+        _anthropic = _mod
+    return _anthropic
 
 
 # ---------------------------------------------------------------------------
@@ -140,7 +159,7 @@ def get_ollama_model_info(model: str) -> Optional[Any]:
     if not OLLAMA_AVAILABLE:
         return None
     try:
-        return _ollama.show(model)
+        return _load_ollama().show(model)
     except Exception:           # noqa: BLE001
         return None
 
@@ -241,7 +260,8 @@ class LLMWorker(QThread):
             if self._think is not None:
                 kwargs["think"] = self._think
 
-            client = _ollama.Client(timeout=self._timeout) if self._timeout else _ollama
+            ollama = _load_ollama()
+            client = ollama.Client(timeout=self._timeout) if self._timeout else ollama
             stream = client.chat(
                 model=self._model,
                 messages=self._messages,
@@ -341,7 +361,7 @@ class APIWorker(QThread):
             return
 
         try:
-            client = _openai.OpenAI(
+            client = _load_openai().OpenAI(
                 api_key=self._api_key,
                 base_url=self._base_url or None,
                 timeout=self._timeout,
@@ -560,7 +580,7 @@ class AnthropicWorker(QThread):
             if http_client is not None:
                 client_args["http_client"] = http_client
 
-            client = _anthropic.Anthropic(**client_args)
+            client = _load_anthropic().Anthropic(**client_args)
 
             kwargs: Dict[str, Any] = {
                 "model": self._model,
@@ -697,7 +717,7 @@ class LLMClient:
         if not OLLAMA_AVAILABLE:
             return False
         try:
-            _ollama.list()
+            _load_ollama().list()
             return True
         except Exception:           # noqa: BLE001
             return False
@@ -714,7 +734,7 @@ class LLMClient:
         if not OLLAMA_AVAILABLE:
             return []
         try:
-            response = _ollama.list()
+            response = _load_ollama().list()
             models = getattr(response, "models", None) or response.get("models", [])
             names = []
             for m in models:
@@ -734,7 +754,7 @@ class LLMClient:
         if not OPENAI_AVAILABLE or not self._api_key:
             return self._fallback_models()
         try:
-            client = _openai.OpenAI(
+            client = _load_openai().OpenAI(
                 api_key=self._api_key,
                 base_url=self._base_url or None,
                 http_client=_make_http_client(),

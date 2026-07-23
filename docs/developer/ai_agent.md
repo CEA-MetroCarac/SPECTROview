@@ -521,14 +521,20 @@ sequenceDiagram
 
 ### **Lazy Initialization**
 
-The chat panel is created on first use in `Main.open_ai_chat()`. This avoids importing the `ollama`/`openai`/`anthropic`/`mcp` packages or building the UI at startup.
+Both the **import** and the **widget** are deferred to `Main.open_ai_chat()`. The provider SDKs cost ~4.5 s to import, which is why `main.py` only probes for the module at startup (`importlib.util.find_spec`, no execution) and does the real import when the user first opens the panel.
 
 ```python
-# main.py
+# main.py — module level: probe only, nothing is executed
+LLM_AVAILABLE = importlib.util.find_spec("spectroview.ai_agent.v_chat_panel") is not None
+
+# main.py — inside open_ai_chat()
+from spectroview.ai_agent.v_chat_panel import VChatPanel
 if self._chat_panel is None:
     self._chat_panel = VChatPanel(self)
     self._chat_panel.plot_requested.connect(self._on_chat_plot_requested)
 ```
+
+The same principle applies one level down: `mcp` is imported inside `MCPHub._open_session()` rather than at `hub.py` module level.
 
 ### **DataFrame Synchronization**
 
@@ -588,24 +594,24 @@ The `ai_chat_requested` signal is connected to `Main.open_ai_chat()` in `setup_c
 
 ### **Import Guard Pattern**
 
-```python
-# m_llm_client.py — each SDK is guarded independently
-try:
-    import ollama as _ollama
-    OLLAMA_AVAILABLE = True
-except ImportError:
-    OLLAMA_AVAILABLE = False
-# ... same pattern for openai, anthropic
-```
+Availability is probed **without importing** — `find_spec` only locates the package, it never executes it — and the real import happens on first use, cached in the module global:
 
 ```python
-# main.py
-try:
-    from spectroview.ai_agent.v_chat_panel import VChatPanel
-    LLM_AVAILABLE = True
-except ImportError:
-    LLM_AVAILABLE = False
+# m_llm_client.py — each SDK is probed and loaded independently
+OLLAMA_AVAILABLE = importlib.util.find_spec("ollama") is not None
+_ollama = None
+
+def _load_ollama():
+    """Return the `ollama` module (imported on first use), or None."""
+    global _ollama
+    if _ollama is None and OLLAMA_AVAILABLE:
+        import ollama as _mod
+        _ollama = _mod
+    return _ollama
+# ... same pattern for openai (_load_openai), anthropic (_load_anthropic)
 ```
+
+Because the loader returns the module global when it is already set, tests can still swap in a fake with `patch.object(m_llm_client, "_ollama", fake)`.
 
 If a package is genuinely missing (e.g. a stripped-down environment) or Ollama isn't running / no API key is set:
 - The relevant provider reports unavailable via `LLMClient.is_available()`, surfaced as a red status message with actionable install instructions.

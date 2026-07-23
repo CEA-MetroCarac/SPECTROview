@@ -11,6 +11,13 @@ over any general preference here.
 - Prefer vectorized numpy/pandas over Python loops on large arrays; the whole
   `fit_engine` and `spectra_store` are built that way. Avoid needless
   allocations/copies and scale to large maps/wafers.
+- Keep heavy third-party packages **off the startup import graph**: `scipy.*` and
+  the LLM SDKs (`anthropic`/`openai`/`ollama`/`mcp`) are imported inside the
+  functions that use them, not at module level. scipy is then warmed on a
+  background thread by `Main._prewarm_heavy_imports()` so the first render
+  doesn't pay for it. Check with
+  `python -X importtime -c "import spectroview.main"` before adding one;
+  `tests/performance/test_startup_imports.py` enforces it.
 - Public API (`spectroview/api/`) and positional call sites (tests, `ai_agent`)
   are contracts: don't rename/reorder/drop params, even "unused" ones, without
   an explicit instruction.

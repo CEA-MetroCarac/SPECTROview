@@ -11,7 +11,6 @@ from typing import Tuple
 
 import numpy as np
 import pandas as pd
-from scipy.interpolate import griddata
 
 
 def get_wafer_radius(map_type: str) -> float:
@@ -67,6 +66,7 @@ def build_heatmap_grid(
         zi = pivot.to_numpy(dtype=np.float64)
         return xi, yi, zi
 
+    from scipy.interpolate import griddata   # deferred: ~0.6 s of import time
     r = get_wafer_radius(map_type)
     xi = np.linspace(-r, r, grid_size)
     yi = np.linspace(-r, r, grid_size)

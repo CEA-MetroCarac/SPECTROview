@@ -209,24 +209,46 @@ class TestSharedGraphToolbar:
         assert ws._graph_toolbar_slot_layout.count() == 1
 
 
-class TestRendererHeavyImportsAreEager:
-    """Perf-regression guard. scipy.stats and scipy.interpolate are heavy
-    (~1.5 s cold). They must be imported when v_plot_renderer is imported
-    (i.e. while the Graphs workspace is built at startup), NOT lazily inside
-    _plot_histogram / WaferPlot.plot -- a lazy import made the first
-    histogram/wafer render pay the whole scipy import mid-load, so opening a
-    saved .graphs workspace containing one was ~1.5 s slower than it should
-    be. If either is moved back to a function-local import, the module-level
-    name disappears and this fails."""
+class TestRendererHeavyImportsArePrewarmed:
+    """Perf-regression guard on scipy (~1.3 s cold), which is pulled from two
+    directions that used to conflict:
 
-    def test_scipy_submodules_are_module_level_imports(self):
+    - It must NOT be on the startup import path -- that delayed the first
+      window paint by over a second (see tests/performance/test_startup_imports).
+    - The first histogram / wafer render must not pay for it either -- a purely
+      lazy import made opening a saved .graphs workspace containing one ~1.5 s
+      slower, which is the bug this class originally guarded.
+
+    Both hold because `Main.showEvent` warms scipy on a background thread, so by
+    the time any render runs the function-local imports are `sys.modules` hits.
+    If the prewarm is removed, the render path pays the import again."""
+
+    def test_main_prewarms_scipy_after_show(self):
+        """Called unbound: the prewarm needs no window state, and building a
+        real Main() here would cost seconds for nothing."""
         import sys
-        import spectroview.view.components.v_plot_renderer as renderer
+        import threading
+        import spectroview.main as main_mod
 
-        assert hasattr(renderer, 'stats'), "scipy.stats must be a module-level import"
-        assert hasattr(renderer, 'griddata'), "scipy.interpolate.griddata must be a module-level import"
+        for mod in ('scipy.stats', 'scipy.interpolate', 'scipy.linalg'):
+            sys.modules.pop(mod, None)
+
+        main_mod.Main._prewarmed = False
+        main_mod.Main._prewarm_heavy_imports(None)
+        for thread in threading.enumerate():
+            if thread.name == 'prewarm-scipy':
+                thread.join(timeout=120)
+
         assert 'scipy.stats' in sys.modules
         assert 'scipy.interpolate' in sys.modules
+        assert 'scipy.linalg' in sys.modules
+
+    def test_renderer_does_not_import_scipy_at_module_level(self):
+        """The startup path stays clean: the names live in the functions."""
+        import spectroview.view.components.v_plot_renderer as renderer
+
+        assert not hasattr(renderer, 'stats')
+        assert not hasattr(renderer, 'griddata')
 
 
 class TestLoadWorkspaceSkipsUnrenderableGraphs:

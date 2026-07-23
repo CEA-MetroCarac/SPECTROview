@@ -12,7 +12,6 @@ import pandas as pd
 from dataclasses import dataclass, field
 from typing import Optional
 
-from scipy.interpolate import interp1d
 from spectroview.fit_engine.baseline import eval_baseline, eval_baseline_batch
 
 
@@ -236,6 +235,7 @@ class SpectraStore:
 
     def batch_preprocess(self, map_name: str, baseline_config: dict, range_min: float = None, range_max: float = None):
         """Apply range cropping and baseline subtraction to the entire map using matrix operations."""
+        from scipy.interpolate import interp1d   # deferred: ~0.6 s of import time
         md = self._maps.get(map_name)
         if not md: return
 
@@ -284,7 +284,7 @@ class SpectraStore:
                         # We use scipy interp1d over the axis
                         try:
                             y_pts = Y_proc[:, pt_indices]
-                            # interpolate for each row. 
+                            # interpolate for each row.
                             func = interp1d(x_proc[pt_indices], y_pts, axis=1, fill_value="extrapolate")
                             y_baseline = func(x_proc)
                             Y_proc -= y_baseline

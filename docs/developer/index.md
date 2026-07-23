@@ -170,6 +170,19 @@ The `setup_connections()` method in `main.py` wires cross-workspace dependencies
 - **Maps → Spectra**: `main.py` connects `send_spectra_to_workspace` to the Spectra ViewModel's `receive_spectra()`, which ingests deep copies of the selected map spectra into the `Spectra` tab's `SpectraStore`.
 - **Fit Results → Graphs**: Both `Spectra` and `Maps` emit `fit_results_updated` with a `pd.DataFrame` that can be forwarded to the `Graphs` workspace for statistical plotting.
 
+### **Keeping the startup path lean**
+
+Importing `main.py` transitively imports every module reachable from it, and that import graph dominates startup time. Two families of packages are deliberately kept **off** that graph and imported at their point of use instead:
+
+| Package | Import cost | Where it is now imported |
+|---|---|---|
+| `anthropic`, `openai`, `ollama`, `mcp` | ~4.5 s combined | `Main.open_ai_chat()`, `_load_*()` in `ai_agent/m_llm_client.py`, `MCPHub._open_session()` |
+| `scipy.stats`, `scipy.interpolate`, `scipy.linalg` | ~1.3 s combined | `PlotRenderer._plot_histogram()` / `WaferPlot.plot()`, `SpectraStore.batch_preprocess()`, `VMMVA._build_from_all_maps()`, `build_heatmap_grid()`, `optimizer._batched_solve()` |
+
+scipy carries an extra constraint: a purely lazy import just moves the stall to the *first* histogram or wafer render, which made opening a saved `.graphs` workspace visibly slower. `Main.showEvent()` therefore starts a daemon thread (`_prewarm_heavy_imports`) that imports the three scipy submodules right after the first paint — the window is up at ~2 s and scipy is warm ~1 s later, so every function-local `import scipy...` is a `sys.modules` hit by the time a user can trigger one. The LLM SDKs are deliberately *not* prewarmed: most sessions never open the chat, and the panel already shows a loading state.
+
+Verify with `python -X importtime -c "import spectroview.main"` before adding a new module-level import of a heavy third-party package — if it isn't needed to paint the first window, defer it. `tests/performance/test_startup_imports.py` fails if one of these reappears on the startup path.
+
 ---
 
 ## **Data Lifecycle**

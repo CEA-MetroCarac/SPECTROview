@@ -9,7 +9,6 @@ Supports two modes:
 """
 import numpy as np
 import pandas as pd
-from scipy.interpolate import interp1d
 from PySide6.QtCore import QObject, Signal
 
 from spectroview.model.m_mva import MMVA, PCAResult, NMFResult
@@ -90,6 +89,7 @@ class VMMVA(QObject):
 
     def _build_from_all_maps(self) -> tuple[np.ndarray, np.ndarray, list[str]]:
         """Spectra-workspace mode: 1 spectrum per map, varying x-axes."""
+        from scipy.interpolate import interp1d   # deferred: ~0.6 s of import time
         rows: list[np.ndarray] = []
         fnames: list[str] = []
         x_ref: np.ndarray | None = None

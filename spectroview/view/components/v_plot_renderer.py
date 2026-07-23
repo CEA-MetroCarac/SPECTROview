@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.patches as patches
 from matplotlib.colors import LogNorm, CenteredNorm
-from scipy import stats
-from scipy.interpolate import griddata
+
+# scipy is imported where it is used: `scipy.stats` and `scipy.interpolate`
+# together cost ~1 s at import time and are only needed for KDE / wafer maps.
 
 
 def _clear_degenerate_zlim(zmin, zmax):
@@ -555,6 +556,7 @@ class PlotRenderer:
             })
 
     def _plot_histogram(self, df, colors):
+        from scipy import stats
         plot_df = df.dropna(subset=[self.vg.x])
         bins = self.vg.hist_bins
         hist_step = getattr(self.vg, 'hist_step', False)
@@ -810,6 +812,7 @@ class WaferPlot:
     def plot(self, ax, x, y, z, cmap="jet", r=100, vmax=None, vmin=None, stats=True,
               norm_kind='linear', norm_center=0.0):
         """Plot wafer map with interpolated data."""
+        from scipy.interpolate import griddata
         xi, yi = np.meshgrid(np.linspace(-r, r, 600), np.linspace(-r, r, 600))
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
 

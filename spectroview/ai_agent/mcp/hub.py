@@ -29,13 +29,14 @@ import logging
 import threading
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
-
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
-from mcp.shared.memory import create_connected_server_and_client_session
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from spectroview.ai_agent.mcp.config import ServerSpec, load_server_specs
+
+# The ``mcp`` package costs ~0.7 s to import; it is only needed once a session is
+# actually opened, so it is imported inside ``_open_session``.
+if TYPE_CHECKING:
+    from mcp import ClientSession
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +162,10 @@ class MCPHub:
 
     async def _open_session(self, stack: AsyncExitStack, spec: ServerSpec) -> ClientSession:
         """Open one server's session on the hub loop, per its transport."""
+        from mcp import ClientSession, StdioServerParameters
+        from mcp.client.stdio import stdio_client
+        from mcp.shared.memory import create_connected_server_and_client_session
+
         if spec.transport == "in-process":
             module_name, _, attr = spec.factory.partition(":")
             factory = getattr(importlib.import_module(module_name), attr)

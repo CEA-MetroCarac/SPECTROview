@@ -4,6 +4,11 @@ The **SPECTROview AI Agent** is a built-in AI assistant that lets you query, fil
 
 > The AI Chat Agent is **optional**. SPECTROview works fully without it. You only need to set it up if you want to use AI-powered features.
 
+<div align="center">
+  <img src="../user_manual_images/AI-agent/demo_ai_agent.gif" alt="AI Chat Agent demo" width="900"><br>
+  <em>Talk to SPECTROview in plain language to filter data and create or customize plots.</em>
+</div>
+
 ---
 
 ### **1. Opening the AI Chat Agent**
@@ -106,111 +111,78 @@ settings — only when a question needs them, so ordinary requests stay fast.
 
 ### **7. Prompt Examples**
 
-#### 🔍 Data Filtering
+#### 🚀 Complex / Combined Prompts
 
+The real strength of the agent is handling rich, multi-step requests in a
+**single message** — analyze the data, create several graphs, and fine-tune
+their appearance all at once.
+
+**Analyze, then plot:**
 ```
-Show rows where FWHM_Si > 5
+Compute the mean and std of center_Si per Zone, then create a bar plot of the
+per-Zone mean with error bars from the std, sorted from highest to lowest.
 ```
 ```
-Filter data where Zone == "center" and Slot < 10
+Find the wafer with the highest average FWHM_Si, filter to just that wafer, and
+plot a wafer map of its FWHM_Si.
+```
+
+**Multiple graphs in one prompt:**
+```
+Create three graphs: a scatter of Slot vs center_Si colored by Zone, a box plot
+of center_Si grouped by Zone, and a histogram of center_Si with 40 bins.
 ```
 ```
-Find samples where both R_squared > 0.95 and fwhm < 4
+For each of FWHM_Si, center_Si and intensity_Si, plot a point plot vs Slot
+colored by wafer.
+```
+
+**Plot and customize in the same request:**
+```
+Make a scatter plot of Slot vs center_Si colored by Zone, set the title to
+"Si peak position", label the Y-axis "Raman shift (cm⁻¹)", set the Y range to
+[520, 522], use the viridis palette, and turn on the grid.
 ```
 ```
-Show me all outliers where peak_intensity is more than 2 standard deviations above the mean
+Plot FWHM_Si vs temperature as a trendline, filter to Zone == "center", move the
+legend to the upper right, and use a log scale on the X-axis.
+```
+
+**Everything together:**
+```
+Filter the data to R_squared > 0.95, then create a scatter plot and a box plot
+of center_Si vs Zone side by side, colored by wafer, both with the title
+"High-quality fits only" and the grid enabled.
 ```
 
 ---
 
-#### 📊 Statistics
+#### 🧩 Simple / Single-Action Prompts
+
+Good starting points that each do one thing — filter, summarize, plot, tweak, or
+ask. Combine them freely into the complex prompts above.
 
 ```
-Give me statistics for peak center and FWHM columns
+Show rows where FWHM_Si > 5 and R_squared > 0.95
 ```
 ```
-What is the average FWHM by Zone?
+Give me statistics for center_Si and FWHM_Si by Zone
 ```
-```
-Compare the mean and standard deviation of center_Si across all zones
-```
-```
-How many unique samples are in the dataset?
-```
-
----
-
-#### 📈 Creating Plots
-
 ```
 Create a scatter plot of Slot vs center_Si colored by Zone
-```
-```
-Plot a box chart of FWHM grouped by wafer
-```
-```
-Generate a point plot and a bar plot of peak_intensity vs Slot
-```
-```
-Create a 2D map of center_Si with Slot on X and Zone on Y
 ```
 ```
 Plot a wafer map of fwhm_Si for Slot 11
 ```
 *(Note: Wafer and 2Dmap plots require your dataset to have spatial X and Y coordinate columns).*
 ```
-Plot a histogram of FWHM values with 30 bins
+Set the Y-axis range of graph 3 to [3.5, 4.2] and use the viridis palette
 ```
-```
-Show a trendline of center_Si vs temperature
-```
-
----
-
-#### ✏️ Modifying Graphs
-
-```
-Set the Y-axis range of graph 3 to [3.5, 4.2]
-```
-```
-Change the title of graph 1 to "FWHM Overview"
-```
-```
-Update graph 5 to use the viridis color palette
-```
-```
-Add a filter to graph 2: only show Zone == "edge"
-```
-```
-Change the plot style of graph 4 to scatter
-```
-
----
-
-#### 🗑️ Deleting Graphs
-
 ```
 Delete graph 3
 ```
 ```
-Remove all graphs except graph 1
-```
-```
-Close all open graphs
-```
-
----
-
-#### 💬 General Questions
-
-```
 What columns are available in my data?
-```
-```
-Which columns contain numeric values?
-```
-```
-What is the data type of the Zone column?
 ```
 
 ---

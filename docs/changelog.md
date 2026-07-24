@@ -8,12 +8,10 @@
 
 ##### 🤖 New: AI Chat Agent
 
-Interact with SPECTROview in **natural language** to **filter data, perform calculations, and create or customize one or multiple plots**—no coding required. The AI agent understands your loaded DataFrames and open graphs, remembers conversation context across multiple turns, and uses a multi-step **ReAct** workflow to complete complex requests.
+Interact with SPECTROview in **natural language** to **query and/or filter data, perform calculations, and create or customize one or multiple plots**. The AI agent understands your loaded dataset and open graphs, remembers conversation context across multiple turns, and uses a multi-step **ReAct** workflow to complete complex requests.
 
 - **Bring your own AI provider.** Use your own API key with **OpenAI, Anthropic, Gemini, DeepSeek, Mistral**, or any **OpenAI-compatible** endpoint. For complete privacy, run a **local model with Ollama** (no API key or internet required).
-- **Adaptive prompting** (Auto / Full / Simplified) automatically optimizes prompts for both cloud and local models.
-- Voice dictation, chat history, reply-to-message, and a **Stop** button.
-- Clear network and SSL diagnostics for troubleshooting connections.
+- **Adaptive prompting** (Auto / Full / Simplified) automatically optimizes prompts for both cloud and local (small) models.
 
 ![image](https://github.com/user-attachments/assets/b503a84b-b6bd-4201-8d1c-38543740060d)
 

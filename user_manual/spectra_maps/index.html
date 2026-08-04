@@ -1813,6 +1813,7 @@
 <ul>
 <li>Dual sliders allow you to quickly adjust the spectral range and the data range of the heatmap plot.</li>
 <li>You can open several <code>MapViewer</code> instances simultaneously to compare different fitted parameters.</li>
+<li>The options (<code>…</code>) menu includes a <strong>Color scale</strong> selector to switch the heatmap between <strong>Linear</strong> and <strong>Log</strong> normalization. Log is useful when values span several orders of magnitude; it automatically falls back to linear when the data range is not strictly positive.</li>
 </ul>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/mapviewer_sliders.gif" alt="MapViewer Sliders" width="600"><br>
@@ -2042,8 +2043,11 @@ If you intend to use a model frequently, you can save it as a template. Stored m
 <p>Once fitting is complete across your spectra or maps, you need to aggregate the best-fit results:</p>
 <ul>
 <li>Navigate to the <strong>Fit Results</strong> tab.</li>
-<li>Click the <strong>Collect</strong> button. <strong>SPECTROview</strong> will instantly aggregate all best-fit parameters into a unified, sortable table.</li>
+<li>Click the <strong>Collect</strong> button. <strong>SPECTROview</strong> will instantly aggregate all best-fit parameters into a unified, sortable table. Each spectrum's fit quality (<strong>R2</strong>, the coefficient of determination) is included as a column, so you can filter, sort, or plot it (e.g. an R² heatmap in the <code>Maps</code> workspace) just like any fitted parameter.</li>
 </ul>
+<blockquote>
+<p><strong>Adjusting decimal precision</strong>: the number of decimal places shown for the numeric results (x0, ampli, fwhm, area, R2, …) is controlled by the <strong>Fit results decimals</strong> spinbox in the <strong>More</strong> tab's <em>More options</em> box (default 3). Change it, then click <strong>Collect</strong> again to rebuild the table at the new precision. The X/Y coordinate columns always keep full precision.</p>
+</blockquote>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/collect_fit_results.gif" alt="Collect Fit Results" width="800"><br>
    <i>The Collect Fit Results interface and aggregated data table.</i>

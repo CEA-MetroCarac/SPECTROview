@@ -1899,6 +1899,11 @@ The four available utility buttons allow you to:</p>
 <td><code>Auto</code>, <code>Category</code>, <code>Numerical</code></td>
 <td>Controls how axis values are interpreted. <strong>Auto</strong> (default): the application auto-detects the best type — numerical if 100% of the data is numeric, otherwise categorical. <strong>Category</strong>: forces categorical indexing. <strong>Numerical</strong>: forces a continuous numeric scale.</td>
 </tr>
+<tr>
+<td><strong>Z axis Scale</strong> <em>(wafer / 2Dmap only)</em></td>
+<td><code>Linear</code>, <code>Logarithmic</code>, <code>Centered</code></td>
+<td>Sets the <strong>color-scale</strong> normalization of the heatmap. <strong>Logarithmic</strong> compresses a wide range of values (falls back to linear if the data isn't strictly positive). <strong>Centered</strong> pins the colormap midpoint to a <strong>Center value</strong> you enter — ideal for diverging data such as stress/strain around 0.</td>
+</tr>
 </tbody>
 </table>
 <blockquote>
@@ -2278,26 +2283,9 @@ The four available utility buttons allow you to:</p>
 </tr>
 </tbody>
 </table>
-<h5 id="colormap-scale">Colormap Scale<a class="headerlink" href="#colormap-scale" title="Permanent link">&para;</a></h5>
-<p>Visible only for <code>wafer</code> and <code>2Dmap</code> styles — controls how data values map to colors:</p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Normalization</strong></td>
-<td><code>Linear</code> (default), <code>Log</code>, or <code>Centered</code> (diverging scale around a reference value).</td>
-</tr>
-<tr>
-<td><strong>Center value</strong></td>
-<td>For <code>Centered</code> normalization, the data value that sits at the midpoint of the colormap.</td>
-</tr>
-</tbody>
-</table>
+<blockquote>
+<p><strong>Colormap scale (wafer / 2Dmap)</strong>: the color-scale normalization (<code>Linear</code> / <code>Logarithmic</code> / <code>Centered</code>) lives in the <strong>Axis</strong> tab as the <strong>Z axis Scale</strong> — see <a href="#axis-properties">Axis Properties</a>.</p>
+</blockquote>
 <p><br></p>
 <hr />
 <h3 id="5-data-filtering"><strong>5. Data Filtering</strong><a class="headerlink" href="#5-data-filtering" title="Permanent link">&para;</a></h3>

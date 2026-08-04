@@ -2265,6 +2265,7 @@
 <li>Z-parameter combobox (Intensity / Area / any fit result column)</li>
 <li>X-range double slider (filters which wavenumbers contribute to Z)</li>
 <li>Outlier removal toggle</li>
+<li><strong>Color-scale combobox (Linear / Log)</strong> in the options (<code>…</code>) menu — <code>_build_color_kwargs()</code> returns a <code>matplotlib.colors.LogNorm</code> for "Log" (falling back to plain linear <code>vmin</code>/<code>vmax</code> when the Z-range isn't strictly positive, since intensity/area are clipped <code>&gt;=0</code> and fit parameters can be <code>&lt;=0</code>); applies to both the 2Dmap <code>imshow</code> and the wafer griddata <code>imshow</code></li>
 <li>Interactive selection (click, rectangle drag, profile line)</li>
 <li>Multi-viewer dialog spawning</li>
 </ul>

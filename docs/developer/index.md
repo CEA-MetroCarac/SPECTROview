@@ -125,9 +125,9 @@ spectroview/
 │       └── customize_graph/           # Graph customization dialog (package)
 │           ├── customize_graph_dialog.py     # CustomizeGraphDialog (singleton, tab host)
 │           ├── customize_legend.py           # Legend/Color tab
-│           ├── customize_axis.py             # Axis (scale/limits/breaks) tab
+│           ├── customize_axis.py             # Axis tab (scale/limits/breaks; incl. wafer/2Dmap Z color-scale)
 │           ├── customize_annotations.py      # Annotations tab
-│           ├── customize_more_options.py     # More Options tab (plot options, theme, fonts, sorting, trendline/histogram/colormap)
+│           ├── customize_more_options.py     # More Options tab (plot options, theme, fonts, sorting, trendline/histogram)
 │           └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
 │
 ├── fit_engine/             # High-performance batch fitting

@@ -24,6 +24,7 @@ You can easily navigate between loaded 2D maps using the `MapList`. The selected
 
 - Dual sliders allow you to quickly adjust the spectral range and the data range of the heatmap plot.
 - You can open several `MapViewer` instances simultaneously to compare different fitted parameters.
+- The options (`…`) menu includes a **Color scale** selector to switch the heatmap between **Linear** and **Log** normalization. Log is useful when values span several orders of magnitude; it automatically falls back to linear when the data range is not strictly positive.
 
 
 <div align="center">
@@ -213,7 +214,9 @@ _______
 Once fitting is complete across your spectra or maps, you need to aggregate the best-fit results:
 
 - Navigate to the **Fit Results** tab.
-- Click the **Collect** button. **SPECTROview** will instantly aggregate all best-fit parameters into a unified, sortable table.
+- Click the **Collect** button. **SPECTROview** will instantly aggregate all best-fit parameters into a unified, sortable table. Each spectrum's fit quality (**R2**, the coefficient of determination) is included as a column, so you can filter, sort, or plot it (e.g. an R² heatmap in the `Maps` workspace) just like any fitted parameter.
+
+> **Adjusting decimal precision**: the number of decimal places shown for the numeric results (x0, ampli, fwhm, area, R2, …) is controlled by the **Fit results decimals** spinbox in the **More** tab's *More options* box (default 3). Change it, then click **Collect** again to rebuild the table at the new precision. The X/Y coordinate columns always keep full precision.
 
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/collect_fit_results.gif" alt="Collect Fit Results" width="800"><br>

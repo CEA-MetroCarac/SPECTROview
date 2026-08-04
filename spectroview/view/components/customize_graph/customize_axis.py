@@ -2,7 +2,9 @@
 direction/format, minor ticks/spines, broken axis, inset (zoom) axes, and
 secondary (Y2/Y3/X2) axes -- everything "axis-shaped" lives in one tab.
 
-Split out of customize_graph_dialog.py; no behavior changes.
+The wafer/2Dmap "Z axis" scale (colormap normalization: linear/log/centered)
+is the color-scale control for the color-mapped styles and also lives here,
+in the Axis-properties group.
 """
 import pandas as pd
 
@@ -219,8 +221,35 @@ class CustomizeAxis(QWidget):
         y_prop_layout.addWidget(self.cb_invert_y)
         y_prop_layout.addStretch()
 
+        # Z axis (color scale) row -- shown only for wafer/2Dmap (see
+        # load_axis_settings). Backs MGraph.colormap_norm/colormap_center;
+        # these are the color-mapped styles' "Z axis", hence its home here
+        # alongside the X/Y scale controls.
+        self.z_scale_widget = QWidget()
+        z_prop_layout = QHBoxLayout(self.z_scale_widget)
+        z_prop_layout.setContentsMargins(0, 0, 0, 0)
+        z_prop_layout.addWidget(QLabel("Z axis:  "))
+        z_prop_layout.addWidget(QLabel("Scale:"))
+        self.combo_z_scale = QComboBox()
+        self.combo_z_scale.addItem("Linear", "linear")
+        self.combo_z_scale.addItem("Logarithmic", "log")
+        self.combo_z_scale.addItem("Centered", "centered")
+        self.combo_z_scale.currentIndexChanged.connect(self._on_z_scale_changed)
+        z_prop_layout.addWidget(self.combo_z_scale)
+        z_prop_layout.addSpacing(10)
+        self.lbl_colormap_center = QLabel("Center value:")
+        z_prop_layout.addWidget(self.lbl_colormap_center)
+        self.spin_colormap_center = QDoubleSpinBox()
+        self.spin_colormap_center.setRange(-1e6, 1e6)
+        self.spin_colormap_center.setDecimals(2)
+        self.spin_colormap_center.setSingleStep(1.0)
+        self.spin_colormap_center.setMaximumWidth(90)
+        z_prop_layout.addWidget(self.spin_colormap_center)
+        z_prop_layout.addStretch()
+
         props_layout.addLayout(x_prop_layout)
         props_layout.addLayout(y_prop_layout)
+        props_layout.addWidget(self.z_scale_widget)
 
         # ===== Axis Appearance Section (minor ticks/spines, tick
         # direction/format -- "how the axis itself looks") =====
@@ -580,6 +609,12 @@ class CustomizeAxis(QWidget):
     #  Load / Apply
     # ------------------------------------------------------------------ #
 
+    def _on_z_scale_changed(self):
+        """Center value only means anything for the 'centered' Z scale."""
+        is_centered = self.combo_z_scale.currentData() == "centered"
+        self.lbl_colormap_center.setEnabled(is_centered)
+        self.spin_colormap_center.setEnabled(is_centered)
+
     def load_axis_settings(self):
         """Load current axis settings (limits and breaks) from graph widget."""
         gw = self.graph_widget
@@ -587,6 +622,17 @@ class CustomizeAxis(QWidget):
         # X/Y limits don't apply to wafer/2Dmap (spatial axes governed by
         # wafer_size); Z stays visible as their color-scale control.
         self.xy_limits_widget.setVisible(gw.plot_style not in ('wafer', '2Dmap'))
+
+        # Z-axis color scale (colormap normalization) applies only to the
+        # color-mapped styles.
+        is_map = gw.plot_style in ('wafer', '2Dmap')
+        self.z_scale_widget.setVisible(is_map)
+        if is_map:
+            norm_kind = getattr(gw, 'colormap_norm', 'linear')
+            idx = self.combo_z_scale.findData(norm_kind)
+            self.combo_z_scale.setCurrentIndex(idx if idx >= 0 else 0)
+            self.spin_colormap_center.setValue(getattr(gw, 'colormap_center', 0.0))
+            self._on_z_scale_changed()
 
         u = self._UNSET_LIMIT
         self.spin_xmin.setValue(gw.xmin if gw.xmin is not None else u)
@@ -805,6 +851,16 @@ class CustomizeAxis(QWidget):
         }
         self._apply_inset_settings(gw, props)
         self._apply_secondary_axis_settings(gw, props)
+
+        # Z-axis color scale (wafer/2Dmap only). Guarded so applying this tab
+        # for a non-map style doesn't clobber a saved colormap_norm/center
+        # from the hidden, stale controls.
+        if gw.plot_style in ('wafer', '2Dmap'):
+            gw.colormap_norm = self.combo_z_scale.currentData()
+            gw.colormap_center = self.spin_colormap_center.value()
+            props['colormap_norm'] = gw.colormap_norm
+            props['colormap_center'] = gw.colormap_center
+
         gw.properties_changed.emit(gw.graph_id, props)
 
         if replot:

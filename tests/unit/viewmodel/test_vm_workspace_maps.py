@@ -217,6 +217,7 @@ class TestFitResultsWithWaferColumns:
         vm.collect_fit_results()
         assert "Zone" not in vm.df_fit_results.columns
         assert "X" in vm.df_fit_results.columns  # kept for Maps (unlike Spectra)
+        assert "R2" in vm.df_fit_results.columns  # per-spectrum fit quality collected
 
 
 class TestSendSpectraToSpectraWorkspace:

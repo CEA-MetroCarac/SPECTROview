@@ -100,7 +100,7 @@ Separated from `VGraph` for maintainability, this class encapsulates the pure Ma
 
 #### Colormap Normalization
 
-`_build_color_norm(vmin, vmax, norm_kind, center)` builds the color-scale mapping for wafer/2Dmap heatmaps from `MGraph.colormap_norm` (`"linear"`/`"log"`/`"centered"`) and `MGraph.colormap_center`, editable from the More Options tab's "Colormap scale" group (only shown for `wafer`/`2Dmap`). `"log"` uses `LogNorm`, `"centered"` uses `CenteredNorm` (useful for diverging data like stress/strain centered at 0), and both degrade gracefully back to plain linear `vmin`/`vmax` if the requested norm is invalid for the actual data range (e.g. log norm on non-positive data).
+`_build_color_norm(vmin, vmax, norm_kind, center)` builds the color-scale mapping for wafer/2Dmap heatmaps from `MGraph.colormap_norm` (`"linear"`/`"log"`/`"centered"`) and `MGraph.colormap_center`, editable from the Axis tab's "Axis properties" group as the **Z axis** scale (only shown for `wafer`/`2Dmap`). `"log"` uses `LogNorm`, `"centered"` uses `CenteredNorm` (useful for diverging data like stress/strain centered at 0), and both degrade gracefully back to plain linear `vmin`/`vmax` if the requested norm is invalid for the actual data range (e.g. log norm on non-positive data).
 
 Both `_plot_wafer`/`_plot_2dmap` resolve `vmin`/`vmax` through `_clear_degenerate_zlim(zmin, zmax)` first, which treats an explicit `zmin == zmax` (both set, equal) the same as unset, falling back to the data-derived range. A handful of pre-existing saved `.graphs` files carry an explicit `zmin == zmax == 0.0` (from an old, since-fixed default) — honoring that literally collapses `matplotlib.colors.Normalize(vmin=0, vmax=0)` to mapping every value to the same color, which is what actually broke color mapping when reopening those files, not the colormap-normalization feature itself.
 
@@ -273,7 +273,7 @@ Style copy/paste no longer has its own Ctrl+C shortcut (`_on_copy_style_shortcut
 
 The tab wraps its content in a `QScrollArea` (like More Options) since it now covers every axis-shaped concern in one place — content is tall enough on smaller screens to need scrolling.
 
-- **Axis properties**: per-axis (X/Y) scale (Linear/Logarithmic/Symlog), data type (Auto/Category/Numerical), and Inverted toggle.
+- **Axis properties**: per-axis (X/Y) scale (Linear/Logarithmic/Symlog), data type (Auto/Category/Numerical), and Inverted toggle. For `wafer`/`2Dmap`, an extra **Z axis** scale row appears (Linear/Logarithmic/Centered, plus a Center value for Centered) — the color-scale normalization backing `MGraph.colormap_norm`/`colormap_center`; see [Colormap Normalization](#colormap-normalization).
 - **Axis Appearance**: minor ticks (independently for X-Bottom/X-Top/Y-Left/Y-Right), **Show spines** (Top/Right/Bottom/Left), tick direction (Default/In/Out/In & Out), and tick label format (Auto/Integer/1-decimal/2-decimal/Scientific).
 - **Set Axis Limits**: one spinbox-slider row per X/Y/Z axis (X/Y hidden for `wafer`/`2Dmap`, where Z is the color-scale control instead). Each min/max spinbox is paired with a double-range slider whose drag bounds derive from the actual data range (padded 10%). When a limit is unset, the spinbox shows the plot's real current rendered value grayed out — not a generic "default" placeholder — so the displayed number is always meaningful; this same real-value-placeholder pattern applies to every optional spinbox in this dialog (inset limits, per-series legend overrides).
 - **Broken axis**: X-axis break and Y-axis break are mutually exclusive (enabling one disables the other, since the renderer only supports one break axis at a time). Rendering splits the Axes into two panels via `gridspec` — side-by-side sharing the Y axis for an X-break, stacked sharing the X axis for a Y-break — each panel clipped to its half of the range with the facing spines hidden and standard diagonal "//" break marks drawn on the real spine boundaries. A broken axis always forces a full replot (`VGraph.restyle()` returns `False` while one is active) and is mutually exclusive with inset axes.
@@ -309,7 +309,7 @@ All stored as typed dicts in `MGraph.annotations`. Every type supports **drag in
 
 **Font sizes (pt)**: Title, Subtitle, Axis label, and Tick label spinboxes in a single row (defaults 12/10/12/9, matching the active Matplotlib style). The Subtitle *text* itself (what it says, not its size) lives in the workspace side panel (`VWorkspaceGraphs`), not in this dialog — the old "Figure style" groupbox's redundant Subtitle text field was removed for that reason. Background color, Show-spines, and Margins controls that used to live in "Figure style" are still respected if set programmatically via `MGraph.figure_facecolor`/`figure_margins`, just without a dedicated picker (Show-spines moved to the Axis tab).
 
-**Colormap scale** (wafer/2Dmap only): Normalization (Linear/Log/Centered) and, for Centered, a Center value — see [Colormap Normalization](#colormap-normalization) below.
+The wafer/2Dmap colormap-scale control (Linear/Log/Centered) is *not* here — it lives in the **Axis** tab's Axis-properties group as the Z-axis scale; see [Colormap Normalization](#colormap-normalization).
 
 ---
 

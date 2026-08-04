@@ -798,6 +798,59 @@ class TestCustomizeAxis:
         widget._pick_secondary_axis_color("y2")  # must not raise
         row["color"].click()  # exercises the actual connected lambda via a real Qt signal
 
+    # --- Z-axis color scale (wafer/2Dmap colormap normalization) ---
+
+    def test_z_scale_row_visible_only_for_wafer_and_2dmap(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, plot_style="wafer", x="X", y=["Y"], z="ampli_Si")
+        widget = CustomizeAxis(vg)
+        assert widget.z_scale_widget.isVisibleTo(widget) is True
+
+        vg2 = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        widget2 = CustomizeAxis(vg2)
+        assert widget2.z_scale_widget.isVisibleTo(widget2) is False
+
+    def test_z_scale_load_populates_from_graph(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, plot_style="wafer", x="X", y=["Y"], z="ampli_Si")
+        vg.colormap_norm = "centered"
+        vg.colormap_center = 12.5
+        widget = CustomizeAxis(vg)
+        assert widget.combo_z_scale.currentData() == "centered"
+        assert widget.spin_colormap_center.value() == 12.5
+        assert widget.spin_colormap_center.isEnabled() is True
+
+    def test_z_scale_center_spinbox_disabled_unless_centered(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, plot_style="wafer", x="X", y=["Y"], z="ampli_Si")
+        widget = CustomizeAxis(vg)
+        assert widget.combo_z_scale.currentData() == "linear"
+        assert widget.spin_colormap_center.isEnabled() is False
+
+        idx = widget.combo_z_scale.findData("centered")
+        widget.combo_z_scale.setCurrentIndex(idx)
+        assert widget.spin_colormap_center.isEnabled() is True
+
+    def test_apply_writes_z_scale_settings_and_emits_them(self, qapp, excel_df):
+        vg = _plotted_graph(qapp, excel_df, plot_style="wafer", x="X", y=["Y"], z="ampli_Si")
+        widget = CustomizeAxis(vg)
+        idx = widget.combo_z_scale.findData("log")
+        widget.combo_z_scale.setCurrentIndex(idx)
+
+        received = []
+        vg.properties_changed.connect(lambda gid, props: received.append(props))
+        widget._apply_axis_settings()
+
+        assert vg.colormap_norm == "log"
+        assert received[0]["colormap_norm"] == "log"
+
+    def test_apply_does_not_touch_z_scale_settings_for_non_map_styles(self, qapp, excel_df):
+        """Guards the plot_style in ('wafer','2Dmap') gate in
+        _apply_axis_settings(): a non-map style must not overwrite
+        colormap_norm/colormap_center from the (hidden, stale) controls."""
+        vg = _plotted_graph(qapp, excel_df, plot_style="point", x="Zone")
+        vg.colormap_norm = "centered"
+        widget = CustomizeAxis(vg)
+        widget._apply_axis_settings()
+        assert vg.colormap_norm == "centered"
+
 
 class TestCustomizeMoreOptions:
     def test_trendline_group_visible_only_for_trendline(self, qapp, excel_df):
@@ -950,61 +1003,6 @@ class TestCustomizeMoreOptions:
         widget._apply()
         assert len(received) == 1
         assert "sort_data_enabled" in received[0]
-
-    def test_colormap_group_visible_only_for_wafer_and_2dmap(self, qapp, excel_df):
-        vg = _plotted_graph(qapp, excel_df, plot_style="wafer", x="X", y=["Y"], z="ampli_Si")
-        widget = CustomizeMoreOptions(vg)
-        widget.load_settings()
-        assert widget._colormap_group.isVisibleTo(widget) is True
-
-        vg2 = _plotted_graph(qapp, excel_df, plot_style="scatter")
-        widget2 = CustomizeMoreOptions(vg2)
-        widget2.load_settings()
-        assert widget2._colormap_group.isVisibleTo(widget2) is False
-
-    def test_colormap_load_populates_from_graph(self, qapp, excel_df):
-        vg = _plotted_graph(qapp, excel_df, plot_style="wafer", x="X", y=["Y"], z="ampli_Si")
-        vg.colormap_norm = "centered"
-        vg.colormap_center = 12.5
-        widget = CustomizeMoreOptions(vg)
-        widget.load_settings()
-        assert widget._combo_colormap_norm.currentData() == "centered"
-        assert widget._spin_colormap_center.value() == 12.5
-        assert widget._spin_colormap_center.isEnabled() is True
-
-    def test_colormap_center_spinbox_disabled_unless_centered(self, qapp, excel_df):
-        vg = _plotted_graph(qapp, excel_df, plot_style="wafer", x="X", y=["Y"], z="ampli_Si")
-        widget = CustomizeMoreOptions(vg)
-        widget.load_settings()
-        assert widget._combo_colormap_norm.currentData() == "linear"
-        assert widget._spin_colormap_center.isEnabled() is False
-
-        idx = widget._combo_colormap_norm.findData("centered")
-        widget._combo_colormap_norm.setCurrentIndex(idx)
-        assert widget._spin_colormap_center.isEnabled() is True
-
-    def test_apply_writes_colormap_settings_and_emits_them(self, qapp, excel_df):
-        vg = _plotted_graph(qapp, excel_df, plot_style="wafer", x="X", y=["Y"], z="ampli_Si")
-        widget = CustomizeMoreOptions(vg)
-        idx = widget._combo_colormap_norm.findData("log")
-        widget._combo_colormap_norm.setCurrentIndex(idx)
-
-        received = []
-        vg.properties_changed.connect(lambda gid, props: received.append(props))
-        widget._apply()
-
-        assert vg.colormap_norm == "log"
-        assert received[0]["colormap_norm"] == "log"
-
-    def test_apply_does_not_touch_colormap_settings_for_non_map_styles(self, qapp, excel_df):
-        """Guards the plot_style in ('wafer','2Dmap') gate in _apply(): a
-        non-map style must not overwrite colormap_norm/colormap_center from
-        whatever the (hidden, stale) combo/spinbox happen to show."""
-        vg = _plotted_graph(qapp, excel_df, plot_style="point", x="Zone")
-        vg.colormap_norm = "centered"
-        widget = CustomizeMoreOptions(vg)
-        widget._apply()
-        assert vg.colormap_norm == "centered"
 
 
 class TestCustomizeAnnotations:

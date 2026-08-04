@@ -3,7 +3,8 @@
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QLabel, QGroupBox, QFormLayout, QDoubleSpinBox, QPushButton, QLineEdit
+    QHeaderView, QLabel, QGroupBox, QFormLayout, QDoubleSpinBox, QSpinBox,
+    QPushButton, QLineEdit
 )
 from PySide6.QtCore import Qt, Signal
 
@@ -14,6 +15,7 @@ class VMoreTab(QWidget):
     
     normalize_requested = Signal(float)
     undo_normalization_requested = Signal()
+    results_decimals_changed = Signal(int)  # decimals for the collected fit-results table
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -92,10 +94,22 @@ class VMoreTab(QWidget):
         
         main_layout.addWidget(self.group_custom, stretch=2)
         
-        # --- RIGHT: Intensity Normalization ---
+        # --- RIGHT: More options ---
         self.group_norm = QGroupBox("More options")
         layout_norm = QVBoxLayout(self.group_norm)
-        
+
+        # Fit-results display precision: decimals for the collected results table.
+        layout_norm.addWidget(QLabel("Fit results decimals:"))
+        self.spin_results_decimals = QSpinBox()
+        self.spin_results_decimals.setRange(0, 8)
+        self.spin_results_decimals.setValue(3)
+        self.spin_results_decimals.setToolTip(
+            "Number of decimal places for values (x0, ampli, fwhm, area, R2, ...) "
+            "in the collected fit-results table. Re-collect to apply."
+        )
+        self.spin_results_decimals.valueChanged.connect(self.results_decimals_changed.emit)
+        layout_norm.addWidget(self.spin_results_decimals)
+
         layout_norm.addWidget(QLabel("Normalization Factor:"))
         self.spin_norm_factor = QDoubleSpinBox()
         self.spin_norm_factor.setDecimals(4)
@@ -128,6 +142,14 @@ class VMoreTab(QWidget):
     def _on_normalize(self):
         factor = self.spin_norm_factor.value()
         self.normalize_requested.emit(factor)
+
+    def _set_normalization_enabled(self, enabled: bool):
+        """Enable/disable only the normalization controls. The 'More options'
+        group stays enabled so the fit-results decimals control remains usable
+        -- it's a global preference, not tied to a selected spectrum."""
+        self.spin_norm_factor.setEnabled(enabled)
+        self.btn_normalize.setEnabled(enabled)
+        self.btn_undo_norm.setEnabled(enabled)
         
     def show_metadata(self, item):
         """Display metadata and custom properties from a spectrum object or a dict."""
@@ -195,7 +217,7 @@ class VMoreTab(QWidget):
             
             # Enable controls
             self.group_custom.setEnabled(True)
-            self.group_norm.setEnabled(True)
+            self._set_normalization_enabled(True)
         else:
             # It's just a dict (e.g. Map selected) or None, clear custom attributes
             self.lbl_label.clear()
@@ -209,6 +231,7 @@ class VMoreTab(QWidget):
             self.lbl_baseline_subtracted.clear()
             
             self.spin_norm_factor.setValue(1.0)
+            self._set_normalization_enabled(False)
 
     def clear_metadata(self):
         """Clear all displays."""
@@ -229,4 +252,4 @@ class VMoreTab(QWidget):
         self.spin_norm_factor.setValue(1.0)
         
         self.group_custom.setEnabled(False)
-        self.group_norm.setEnabled(False)
+        self._set_normalization_enabled(False)

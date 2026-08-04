@@ -239,6 +239,40 @@ class TestBuildFitResultsDf:
         expected_area = np.pi * 100.0 * 5.0 / 2
         assert df["area_Si"].iloc[0] == pytest.approx(round(expected_area, 4))
 
+    def test_r2_column_present_and_values(self):
+        store = self._fitted_store()
+        df = store.build_fit_results_df("map1", only_converged=False)
+        assert "R2" in df.columns
+        assert df["R2"].tolist() == pytest.approx([0.9, 0.8, 0.1, 0.95])
+
+    def test_r2_column_follows_only_converged_mask(self):
+        store = self._fitted_store()
+        df = store.build_fit_results_df("map1", only_converged=True)
+        # row index 2 (success=False) excluded -> its R² (0.1) drops out too
+        assert df["R2"].tolist() == pytest.approx([0.9, 0.8, 0.95])
+
+    def test_decimals_param_controls_rounding_without_capping(self):
+        store = SpectraStore()
+        _add_simple_map(store, "map1", n=1)
+        store.get_map_data("map1").coords = np.array([[0.0, 0.0]], dtype=float)
+        fit_model = {"peak_models": {"0": {"Lorentzian": {
+            "ampli": {"value": 1}, "fwhm": {"value": 1}, "x0": {"value": 1}}}}}
+        store.set_fit_results(
+            "map1", np.arange(1),
+            peak_params=np.array([[100.123456, 5.987654, 500.555555]]),
+            success=np.array([True]),
+            r2=np.array([0.923456]),
+            param_names=["P1_ampli", "P1_fwhm", "P1_x0"],
+            fit_model=fit_model,
+        )
+        df2 = store.build_fit_results_df("map1", peak_labels=["Si"], only_converged=False, decimals=2)
+        assert df2["ampli_Si"].iloc[0] == pytest.approx(100.12)
+        assert df2["R2"].iloc[0] == pytest.approx(0.92)
+        # 5 decimals: proves values aren't capped at the old hardcoded 4
+        df5 = store.build_fit_results_df("map1", peak_labels=["Si"], only_converged=False, decimals=5)
+        assert df5["ampli_Si"].iloc[0] == pytest.approx(100.12346)
+        assert df5["R2"].iloc[0] == pytest.approx(0.92346)
+
     def test_no_fit_results_returns_none(self):
         store = SpectraStore()
         _add_simple_map(store, "map1")

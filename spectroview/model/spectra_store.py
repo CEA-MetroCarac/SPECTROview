@@ -360,10 +360,18 @@ class SpectraStore:
         map_type: str = '2Dmap',
         peak_labels: Optional[list] = None,
         only_converged: bool = True,
+        decimals: int = 4,
     ) -> Optional[pd.DataFrame]:
         """Build the full fit results DataFrame for a map (vectorized).
 
-        Columns: Filename, X, Y, [Zone, Quadrant for wafers], param0, param1, ...
+        Columns: Filename, X, Y, [Zone, Quadrant for wafers], param0, param1, ...,
+        and a trailing R2 (per-spectrum coefficient of determination) when the
+        map carries fit R² values.
+
+        `decimals` sets the rounding of every numeric fit column (parameters,
+        areas, R²); the X/Y coordinate columns are left at full precision. It's
+        the single rounding authority for the results table -- callers no longer
+        round afterwards.
 
         This replaces the per-object Python loop in collect_fit_results().
         Returns None if no fit results are available.
@@ -389,7 +397,7 @@ class SpectraStore:
             col_names = self._apply_peak_labels(col_names, peak_labels)
 
         # Add _area columns
-        area_cols = self._compute_area_columns(params, md.param_names, col_names, md.fit_model)
+        area_cols = self._compute_area_columns(params, md.param_names, col_names, md.fit_model, decimals)
 
         # Sort columns by parameter type, then by peak prefix order (P1, P2, ...)
         param_priority = {
@@ -409,7 +417,7 @@ class SpectraStore:
                 return (param_priority.get(ptype, 999), label_order.get(label, 999))
             return (999, 0)
 
-        all_param_data = {c: params[:, i].round(4) for i, c in enumerate(col_names)}
+        all_param_data = {c: params[:, i].round(decimals) for i, c in enumerate(col_names)}
         all_param_data.update(area_cols)
         sorted_param_cols = sorted(all_param_data.keys(), key=sort_key)
 
@@ -446,6 +454,12 @@ class SpectraStore:
 
         for col in sorted_param_cols:
             data[col] = all_param_data[col]
+
+        # Per-spectrum fit quality (coefficient of determination). A scalar per
+        # spectrum, not a per-peak parameter, so it's a standalone 'R2' column
+        # rather than one of the labelled peak columns above.
+        if md.fit_r2 is not None:
+            data['R2'] = md.fit_r2[mask].round(decimals)
 
         return pd.DataFrame(data)
 
@@ -634,6 +648,7 @@ class SpectraStore:
         param_names: list,
         col_names: list,
         fit_model: dict = None,
+        decimals: int = 4,
     ) -> dict:
         """Compute peak area columns for each peak based on its model shape.
 
@@ -736,7 +751,7 @@ class SpectraStore:
             else:
                 area_name = f'area_{prefix}'
 
-            area_cols[area_name] = area.round(4)
+            area_cols[area_name] = area.round(decimals)
 
         return area_cols
 

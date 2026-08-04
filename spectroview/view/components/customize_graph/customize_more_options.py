@@ -1,8 +1,9 @@
 """'More options' tab of the Customize Graph dialog: general plot options
 (incl. figure theme), font sizes, data sorting, and adaptive controls
-(trendline, histogram, colormap) shown based on the current plot_style.
+(trendline, histogram) shown based on the current plot_style.
 
-Split out of customize_graph_dialog.py; no behavior changes.
+The wafer/2Dmap color-scale (colormap normalization) control lives in the
+Axis tab's "Axis properties" group instead -- see customize_axis.py.
 """
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
@@ -64,7 +65,6 @@ class CustomizeMoreOptions(QWidget):
         self._build_sorting_section()
         self._build_trendline_section()
         self._build_histogram_section()
-        self._build_colormap_section()
 
         self._inner_layout.addStretch()
 
@@ -297,42 +297,6 @@ class CustomizeMoreOptions(QWidget):
         self._histogram_group = grp
         self._inner_layout.addWidget(grp)
 
-    # ---- Colormap normalization section (wafer/2Dmap) --------------------
-
-    def _build_colormap_section(self):
-        grp = QGroupBox("Colormap scale (wafer / 2Dmap)")
-        layout = QHBoxLayout(grp)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(8)
-
-        layout.addWidget(QLabel("Normalization:"))
-        self._combo_colormap_norm = QComboBox()
-        self._combo_colormap_norm.addItem("Linear", "linear")
-        self._combo_colormap_norm.addItem("Log", "log")
-        self._combo_colormap_norm.addItem("Centered", "centered")
-        self._combo_colormap_norm.currentIndexChanged.connect(self._on_colormap_norm_changed)
-        layout.addWidget(self._combo_colormap_norm)
-
-        layout.addSpacing(10)
-        self._lbl_colormap_center = QLabel("Center value:")
-        layout.addWidget(self._lbl_colormap_center)
-        self._spin_colormap_center = QDoubleSpinBox()
-        self._spin_colormap_center.setRange(-1e6, 1e6)
-        self._spin_colormap_center.setDecimals(2)
-        self._spin_colormap_center.setSingleStep(1.0)
-        self._spin_colormap_center.setMaximumWidth(90)
-        layout.addWidget(self._spin_colormap_center)
-        layout.addStretch()
-
-        self._colormap_group = grp
-        self._inner_layout.addWidget(grp)
-
-    def _on_colormap_norm_changed(self):
-        """Center value only means anything for the 'centered' norm."""
-        is_centered = self._combo_colormap_norm.currentData() == "centered"
-        self._lbl_colormap_center.setEnabled(is_centered)
-        self._spin_colormap_center.setEnabled(is_centered)
-
     # ------------------------------------------------------------------ #
     #  Load / Apply
     # ------------------------------------------------------------------ #
@@ -406,16 +370,6 @@ class CustomizeMoreOptions(QWidget):
             self._rb_step.setChecked(step)
             self._rb_filled.setChecked(not step)
 
-        # --- Colormap normalization section (wafer/2Dmap only) ---
-        is_map = style in ('wafer', '2Dmap')
-        self._colormap_group.setVisible(is_map)
-        if is_map:
-            norm_kind = getattr(gw, 'colormap_norm', 'linear')
-            idx = self._combo_colormap_norm.findData(norm_kind)
-            self._combo_colormap_norm.setCurrentIndex(idx if idx >= 0 else 0)
-            self._spin_colormap_center.setValue(getattr(gw, 'colormap_center', 0.0))
-            self._on_colormap_norm_changed()
-
     def _refresh_equation_table(self):
         """Populate the equation table from trendline_equations stored on the graph widget."""
         equations = getattr(self.graph_widget, 'trendline_equations', [])
@@ -485,10 +439,6 @@ class CustomizeMoreOptions(QWidget):
             gw.hist_kde = self._cb_kde.isChecked()
             gw.hist_step = self._rb_step.isChecked()
 
-        if style in ('wafer', '2Dmap'):
-            gw.colormap_norm = self._combo_colormap_norm.currentData()
-            gw.colormap_center = self._spin_colormap_center.value()
-
         if replot:
             if gw.df is not None:
                 gw.plot(gw.df)
@@ -524,11 +474,6 @@ class CustomizeMoreOptions(QWidget):
                 'hist_bins': gw.hist_bins,
                 'hist_kde': gw.hist_kde,
                 'hist_step': gw.hist_step,
-            })
-        if style in ('wafer', '2Dmap'):
-            props.update({
-                'colormap_norm': gw.colormap_norm,
-                'colormap_center': gw.colormap_center,
             })
         gw.properties_changed.emit(gw.graph_id, props)
 

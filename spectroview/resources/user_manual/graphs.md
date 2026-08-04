@@ -104,6 +104,7 @@ Configure the **scale** and **data type** for each axis independently using drop
 |---|---|---|
 | **X / Y axis Scale** | `Linear`, `Logarithmic` | Switches the axis between linear and logarithmic scale. Logarithmic scale is only applied when the underlying data is numeric. |
 | **X / Y axis Data type** | `Auto`, `Category`, `Numerical` | Controls how axis values are interpreted. **Auto** (default): the application auto-detects the best type — numerical if 100% of the data is numeric, otherwise categorical. **Category**: forces categorical indexing. **Numerical**: forces a continuous numeric scale. |
+| **Z axis Scale** *(wafer / 2Dmap only)* | `Linear`, `Logarithmic`, `Centered` | Sets the **color-scale** normalization of the heatmap. **Logarithmic** compresses a wide range of values (falls back to linear if the data isn't strictly positive). **Centered** pins the colormap midpoint to a **Center value** you enter — ideal for diverging data such as stress/strain around 0. |
 
 > **Note**: When using `Numerical` data type, the axis adopts a true mathematical scale where spacing reflects actual data values. When using `Category`, each unique value is evenly spaced regardless of its numeric magnitude.
 
@@ -292,14 +293,7 @@ Visible only when the plot style is `histogram`:
 | **Overlay KDE curve** | Superimposes a smooth Kernel Density Estimate curve on the histogram. |
 | **Fill style** | Choose **Filled** bars (default) or **Step** (outline only). |
 
-##### Colormap Scale
-
-Visible only for `wafer` and `2Dmap` styles — controls how data values map to colors:
-
-| Option | Description |
-|---|---|
-| **Normalization** | `Linear` (default), `Log`, or `Centered` (diverging scale around a reference value). |
-| **Center value** | For `Centered` normalization, the data value that sits at the midpoint of the colormap. |
+> **Colormap scale (wafer / 2Dmap)**: the color-scale normalization (`Linear` / `Logarithmic` / `Centered`) lives in the **Axis** tab as the **Z axis Scale** — see [Axis Properties](#axis-properties).
 
 <br>
 

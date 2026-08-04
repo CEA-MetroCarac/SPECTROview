@@ -263,10 +263,12 @@ The selection payload (`data_dict`) contains pre-extracted arrays keyed by `"typ
 # VMWorkspaceSpectra.collect_fit_results()
 #   → SpectraStore.build_fit_results_df()
 #   → returns pd.DataFrame with columns:
-#      Filename, [x0_Peak1, fwhm_Peak1, ampli_Peak1, area_Peak1, ...]
+#      Filename, [x0_Peak1, fwhm_Peak1, ampli_Peak1, area_Peak1, ...], R2
 ```
 
-`build_fit_results_df()` is fully vectorized — it reads `md.peak_params` directly (no Python loop over spectra), applies user peak labels, computes area columns, and returns a `pd.DataFrame`. In the Spectra workspace, `X` and `Y` columns are dropped before emitting to the results table.
+`build_fit_results_df()` is fully vectorized — it reads `md.peak_params` directly (no Python loop over spectra), applies user peak labels, computes area columns, appends the per-spectrum **`R2`** column (coefficient of determination, read straight from `md.fit_r2` — the same value the SpectraViewer shows for the selected spectrum), and returns a `pd.DataFrame`. `R2` is a single scalar per spectrum (not per-peak), so `collect_fit_results()`'s column sort leaves it at the end of the frame. In the Spectra workspace, `X` and `Y` columns are dropped before emitting to the results table.
+
+**Decimal precision** is set by `build_fit_results_df(..., decimals=…)`, which rounds every numeric fit column (parameters, areas, R²) while leaving the `X`/`Y` coordinates at full precision — it's the single rounding authority, so `collect_fit_results()` no longer rounds afterwards. `VMWorkspaceSpectra.results_decimals` (default 3) supplies the value; the **"More"** tab's *"Fit results decimals"* spinbox sets it through `set_results_decimals()` (applied on the next Collect). The public API's `build_fit_results_df` keeps its own default of 4.
 
 ---
 

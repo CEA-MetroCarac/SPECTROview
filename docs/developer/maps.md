@@ -149,6 +149,7 @@ The most complex View component (~1 300 lines). It renders both 2D rectangular m
 - Z-parameter combobox (Intensity / Area / any fit result column)
 - X-range double slider (filters which wavenumbers contribute to Z)
 - Outlier removal toggle
+- **Color-scale combobox (Linear / Log)** in the options (`…`) menu — `_build_color_kwargs()` returns a `matplotlib.colors.LogNorm` for "Log" (falling back to plain linear `vmin`/`vmax` when the Z-range isn't strictly positive, since intensity/area are clipped `>=0` and fit parameters can be `<=0`); applies to both the 2Dmap `imshow` and the wafer griddata `imshow`
 - Interactive selection (click, rectangle drag, profile line)
 - Multi-viewer dialog spawning
 

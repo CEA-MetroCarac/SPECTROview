@@ -266,6 +266,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_more_tab.undo_normalization_requested.connect(
             lambda: self._apply_with_ctrl(vm.undo_y_normalization)
         )
+        self.v_more_tab.results_decimals_changed.connect(vm.set_results_decimals)
 
         # ═════════════════════════════════════════════════════════════════
         # MVA connections

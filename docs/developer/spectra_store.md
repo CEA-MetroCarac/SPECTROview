@@ -159,7 +159,9 @@ x, Y = store.get_xy_batch(name, indices)            # (processed) arrays for sub
 
 ```python
 store.set_fit_results(name, indices, peak_params, success, r2, param_names, fit_model)
-store.build_fit_results_df(name, map_type, peak_labels, only_converged)  # → pd.DataFrame
+store.build_fit_results_df(name, map_type, peak_labels, only_converged, decimals)  # → pd.DataFrame
+#   columns: Filename, X, Y, [Zone, Quadrant], <peak params>, R2
+#   `decimals` (default 4) rounds every numeric fit column; X/Y stay full-precision.
 ```
 
 ### Preprocessing

@@ -66,6 +66,7 @@ class VMWorkspaceSpectra(QObject):
         # Fit results data
         self.df_fit_results = None
         self._fitmodel_clipboard = None
+        self.results_decimals = 3  # decimals for numeric columns in the collected results table
     
     # ═════════════════════════════════════════════════════════════════════
     # Helper methods for fname-based spectrum retrieval
@@ -1978,6 +1979,11 @@ class VMWorkspaceSpectra(QObject):
         # Emit updates to View
         self._emit_list_update()
 
+    def set_results_decimals(self, decimals: int):
+        """Set the decimal precision used to round the collected fit-results
+        table. Takes effect on the next collect_fit_results() call."""
+        self.results_decimals = max(0, int(decimals))
+
     def collect_fit_results(self, map_names: list[str] = None):
         """Collect best-fit results from target maps and create DataFrame."""
         if map_names is None:
@@ -2003,6 +2009,7 @@ class VMWorkspaceSpectra(QObject):
                 map_type=getattr(self, 'map_type', '2Dmap'),
                 peak_labels=peak_labels,
                 only_converged=False,
+                decimals=self.results_decimals,
             )
             if df is not None and not df.empty:
                 dfs.append(df)
@@ -2050,10 +2057,9 @@ class VMWorkspaceSpectra(QObject):
             for col in ['X', 'Y']:
                 if col in df_all.columns:
                     df_all.drop(columns=[col], inplace=True)
-                    
-        # Round only non-coordinate float columns to 3 decimal places to preserve precision of coordinates (X, Y)
-        cols_to_round = [col for col in df_all.columns if col not in ['Filename', 'X', 'Y', 'Quadrant', 'Zone']]
-        df_all[cols_to_round] = df_all[cols_to_round].round(3)
+
+        # Numeric fit columns are already rounded to self.results_decimals by
+        # build_fit_results_df (X/Y coords kept at full precision there).
         self.df_fit_results = df_all
         self.fit_results_updated.emit(self.df_fit_results)
     

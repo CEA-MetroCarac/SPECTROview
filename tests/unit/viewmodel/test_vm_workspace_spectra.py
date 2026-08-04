@@ -527,6 +527,26 @@ class TestResultsExtraction:
         assert len(vm.df_fit_results) == 1
         assert "Filename" in vm.df_fit_results.columns
         assert "X" not in vm.df_fit_results.columns  # dropped for Spectra workspace
+        # R² is collected per spectrum and sorted to the end of the frame
+        assert "R2" in vm.df_fit_results.columns
+        assert vm.df_fit_results.columns[-1] == "R2"
+        assert 0.0 < vm.df_fit_results["R2"].iloc[0] <= 1.0
+
+    def test_set_results_decimals_rounds_collected_values(self, vm, qapp):
+        x, y = _synthetic_lorentzian(x0=500.0, ampli=100.0, fwhm=6.0)
+        md = _add_spectrum(vm, "s1", x, y)
+        vm._apply_fit_model_to_mapdata(md, _lorentzian_fit_model(seed_offset=-1.0))
+        vm.selected_fnames = ["s1"]
+        vm.fit(apply_all=False)
+        vm._fit_thread.wait()
+        qapp.processEvents()
+
+        vm.set_results_decimals(2)
+        vm.collect_fit_results()
+        assert vm.results_decimals == 2
+        # every numeric fit column is already rounded to 2 decimals
+        numeric = vm.df_fit_results.select_dtypes("number")
+        assert numeric.equals(numeric.round(2))
 
     def test_compute_column_from_expression(self, vm, qapp, monkeypatch):
         from PySide6.QtWidgets import QMessageBox

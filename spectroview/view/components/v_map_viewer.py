@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.collections import PatchCollection
+from matplotlib.colors import LogNorm
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from superqt import QLabeledDoubleRangeSlider
@@ -397,6 +398,26 @@ class VMapViewer(QWidget):
         self.action_show_stats.setChecked(False)
         self.action_show_stats.triggered.connect(lambda: self.plot_heatmap())
         self.options_menu.addAction(self.action_show_stats)
+
+        self.options_menu.addSeparator()
+
+        # Color-scale selector: linear vs log color normalization for the heatmap.
+        scale_widget = QWidget()
+        scale_layout = QHBoxLayout(scale_widget)
+        scale_layout.setContentsMargins(5, 5, 5, 5)
+        scale_layout.addWidget(QLabel("Color scale:"))
+        self.cbb_color_scale = QComboBox()
+        self.cbb_color_scale.addItems(["Linear", "Log"])
+        self.cbb_color_scale.setToolTip(
+            "Color-scale normalization for the heatmap (log needs positive values)"
+        )
+        self.cbb_color_scale.currentTextChanged.connect(lambda: self.plot_heatmap())
+        scale_layout.addWidget(self.cbb_color_scale)
+        scale_layout.addStretch()
+
+        scale_action = QWidgetAction(self)
+        scale_action.setDefaultWidget(scale_widget)
+        self.options_menu.addAction(scale_action)
     
     # ═══ Public API (ViewModel → View) ═══
     
@@ -689,14 +710,15 @@ class VMapViewer(QWidget):
             
             interpolation = 'bilinear' if self.action_smoothing.isChecked() else 'none'
             vmin_plot, vmax_plot = self.z_range_slider.value()
-            
+            color_kwargs = self._build_color_kwargs(vmin_plot, vmax_plot)
+
             # Plot heatmap - different approaches for wafer vs 2D maps
             if map_type != '2Dmap' and grid_z is not None:
                 # Wafer maps: Use griddata result (already interpolated, smooth)
                 self.img = self.ax.imshow(grid_z, extent=extent,
-                                         vmin=vmin_plot, vmax=vmax_plot,
                                          origin='lower', aspect='equal', cmap=cmap,
-                                         interpolation='bilinear')  # Smooth the 100x100 grid
+                                         interpolation='bilinear',  # Smooth the 100x100 grid
+                                         **color_kwargs)
                                          
                 # Calculate pixel size for wafer map (grid_x is 80x80)
                 # extent = [-r-1, r+1, -r-0.5, r+0.5] roughly
@@ -707,10 +729,9 @@ class VMapViewer(QWidget):
                 
             elif not heatmap_pivot.empty:
                 # 2D maps: Use pivot table with optional smoothing
-                self.img = self.ax.imshow(heatmap_pivot, extent=extent, 
-                                         vmin=vmin_plot, vmax=vmax_plot,
-                                         origin='lower', aspect='equal', cmap=cmap, 
-                                         interpolation=interpolation)
+                self.img = self.ax.imshow(heatmap_pivot, extent=extent,
+                                         origin='lower', aspect='equal', cmap=cmap,
+                                         interpolation=interpolation, **color_kwargs)
                                          
                 # Calculate pixel size from pivot table shape and extent
                 rows, cols = heatmap_pivot.shape
@@ -781,7 +802,19 @@ class VMapViewer(QWidget):
         # Update selection overlay after plot is complete
         # (separate method handles adding/removing selection highlights)
         self._update_selection_overlay()
-    
+
+    def _build_color_kwargs(self, vmin, vmax):
+        """imshow color kwargs for the selected color scale.
+
+        Returns a LogNorm when 'Log' is chosen and the range is strictly
+        positive; otherwise plain vmin/vmax (linear). Log requires positive
+        values -- intensity/area are clipped >=0 and fit parameters can be
+        <=0 -- so fall back to linear rather than raising when vmin <= 0.
+        """
+        if self.cbb_color_scale.currentText() == "Log" and vmin is not None and vmin > 0:
+            return dict(norm=LogNorm(vmin=vmin, vmax=vmax))
+        return dict(vmin=vmin, vmax=vmax)
+
     def _get_data_for_heatmap(self):
         """Compute heatmap data from map DataFrame (with caching for wafer griddata).
         

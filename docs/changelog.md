@@ -4,6 +4,26 @@
 
 ---
 
+## [v26.32.1](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.32.1) - 2026-08-04
+
+##### ✨ New Features & Improvements
+
+##### 🗺️ Maps Workspace
+
+- **Heatmap color scale (Linear / Logarithmic).** Added a **Color scale** option to the map viewer's **⋯** menu, allowing you to switch between **Linear** and **Logarithmic** color normalization. 
+
+##### 📊 Graphs Workspace
+
+- **Z-axis color scale moved to the Axis tab.** The wafer/2D map color scale settings (**Linear**, **Logarithmic**, and **Centered** with a custom center value) are now available under **Axis → Z Axis**, alongside the X and Y axis scale controls. Previously, these options were located in the **More Options** tab.
+
+##### 📈 Fit Results
+
+- **R² column.** The collected fit results now include an **R² (coefficient of determination)** column for every fitted spectrum. You can sort, filter, export, or visualize it just like any other fitted parameter (e.g. create an R² heatmap).
+
+- **Adjustable decimal precision.** Added a new **Fit results decimals** option under **More → More Options** to control the number of decimal places displayed for fitted parameters (e.g. **x0**, **amplitude**, **FWHM**, **area**, and **R²**). 
+
+---
+
 ## [v26.30.1](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.30.1) - 2026-07-23
 
 ##### 🤖 New: AI Chat Agent

@@ -4,7 +4,7 @@
 
 ---
 
-## [v26.32.1](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.32.1) - 2026-08-04
+## [v26.32.2](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.32.2) - 2026-08-04
 
 ##### ✨ New Features & Improvements
 

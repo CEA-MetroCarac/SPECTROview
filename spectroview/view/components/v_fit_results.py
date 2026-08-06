@@ -3,7 +3,7 @@ import os
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit,
-    QLabel, QComboBox, QSplitter, QScrollArea, QCompleter
+    QLabel, QComboBox, QSplitter, QScrollArea, QCompleter, QSpinBox
 )
 from PySide6.QtCore import Qt, Signal, QSize, QStringListModel
 from PySide6.QtGui import QIcon
@@ -22,6 +22,7 @@ class VFitResults(QWidget):
     compute_column_requested = Signal(str, str)  # (column_name, expression)
     save_results_requested = Signal()
     send_to_viz_requested = Signal(str, bool)  # (dataframe_name, force_replace)
+    results_decimals_changed = Signal(int)  # decimals for the collected results table
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -38,6 +39,22 @@ class VFitResults(QWidget):
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(10)
         
+        # Row 0: Fit-results decimal precision (label + spinbox on one line)
+        decimals_layout = QHBoxLayout()
+        decimals_layout.addWidget(QLabel("Fit results decimals:"))
+        self.spin_results_decimals = QSpinBox()
+        self.spin_results_decimals.setRange(0, 8)
+        self.spin_results_decimals.setValue(3)
+        self.spin_results_decimals.setFixedWidth(60)
+        self.spin_results_decimals.setToolTip(
+            "Number of decimal places for values (x0, ampli, fwhm, area, R2, "
+            "computed columns) in the results table. Re-collect / recompute to apply."
+        )
+        self.spin_results_decimals.valueChanged.connect(self.results_decimals_changed.emit)
+        decimals_layout.addWidget(self.spin_results_decimals)
+        decimals_layout.addStretch()
+        left_layout.addLayout(decimals_layout)
+
         # Row 1: Collect Results button
         self.btn_collect = QPushButton("Collect Fit Results")
         self.btn_collect.setMinimumHeight(50)

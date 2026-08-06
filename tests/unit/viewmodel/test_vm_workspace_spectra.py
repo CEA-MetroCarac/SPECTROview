@@ -559,6 +559,18 @@ class TestResultsExtraction:
         assert "area_P1" in vm.df_fit_results.columns
         assert vm.df_fit_results["area_P1"].tolist() == [20.0, 80.0]
 
+    def test_compute_column_uses_results_decimals(self, vm, monkeypatch):
+        from PySide6.QtWidgets import QMessageBox
+        monkeypatch.setattr(QMessageBox, "information", lambda *a, **k: None)
+        monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: None)
+        monkeypatch.setattr(QMessageBox, "critical", lambda *a, **k: None)
+
+        vm.set_results_decimals(1)
+        vm.df_fit_results = pd.DataFrame({"Filename": ["s1", "s2"], "a": [1.0, 2.0], "b": [3.0, 3.0]})
+        vm.compute_column_from_expression("ratio", "a / b")
+        # a/b = 0.333.. and 0.666.. rounded to the configured 1 decimal place
+        assert vm.df_fit_results["ratio"].tolist() == pytest.approx([0.3, 0.7])
+
     def test_compute_column_duplicate_name_warns(self, vm, monkeypatch):
         from PySide6.QtWidgets import QMessageBox
         warnings = []

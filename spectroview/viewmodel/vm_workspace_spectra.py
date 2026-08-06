@@ -2162,9 +2162,9 @@ class VMWorkspaceSpectra(QObject):
             # Add the computed column to the dataframe
             self.df_fit_results[col_name] = result
             
-            # Round to 3 decimals for consistency
+            # Round to the user-selected results precision for consistency
             if pd.api.types.is_numeric_dtype(self.df_fit_results[col_name]):
-                self.df_fit_results[col_name] = self.df_fit_results[col_name].round(3)
+                self.df_fit_results[col_name] = self.df_fit_results[col_name].round(self.results_decimals)
             
             # Emit updated dataframe
             self.fit_results_updated.emit(self.df_fit_results)

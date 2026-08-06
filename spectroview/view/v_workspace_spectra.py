@@ -266,7 +266,6 @@ class VWorkspaceSpectra(QWidget):
         self.v_more_tab.undo_normalization_requested.connect(
             lambda: self._apply_with_ctrl(vm.undo_y_normalization)
         )
-        self.v_more_tab.results_decimals_changed.connect(vm.set_results_decimals)
 
         # ═════════════════════════════════════════════════════════════════
         # MVA connections
@@ -324,6 +323,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_results.split_fname_requested.connect(vm.split_filename)
         self.v_fit_results.add_column_requested.connect(vm.add_column_from_filename)
         self.v_fit_results.compute_column_requested.connect(vm.compute_column_from_expression)
+        self.v_fit_results.results_decimals_changed.connect(vm.set_results_decimals)
         self.v_fit_results.save_results_requested.connect(vm.save_fit_results)
         self.v_fit_results.send_to_viz_requested.connect(vm.send_results_to_graphs)
         

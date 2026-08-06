@@ -216,7 +216,7 @@ Once fitting is complete across your spectra or maps, you need to aggregate the 
 - Navigate to the **Fit Results** tab.
 - Click the **Collect** button. **SPECTROview** will instantly aggregate all best-fit parameters into a unified, sortable table. Each spectrum's fit quality (**R2**, the coefficient of determination) is included as a column, so you can filter, sort, or plot it (e.g. an R² heatmap in the `Maps` workspace) just like any fitted parameter.
 
-> **Adjusting decimal precision**: the number of decimal places shown for the numeric results (x0, ampli, fwhm, area, R2, …) is controlled by the **Fit results decimals** spinbox in the **More** tab's *More options* box (default 3). Change it, then click **Collect** again to rebuild the table at the new precision. The X/Y coordinate columns always keep full precision.
+> **Adjusting decimal precision**: the number of decimal places shown for the numeric results (x0, ampli, fwhm, area, R2, …) is controlled by the **Fit results decimals** spinbox at the top of the **Fit Results** tab, just above the **Collect** button (default 3). Change it, then click **Collect** again to rebuild the table at the new precision. It also applies to computed columns (see below). The X/Y coordinate columns always keep full precision.
 
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/collect_fit_results.gif" alt="Collect Fit Results" width="800"><br>
@@ -228,7 +228,7 @@ This tool allows you to automatically extract metadata embedded in your filename
 
 #### **5.2. Compute and Add New Columns**
 You can easily create new columns derived from mathematical combinations of existing fitted parameters (e.g., calculating a peak shift via `x0_p1 - x0_p2`).
-Supported mathematical operations include: `+`, `-`, `*`, `/`, `**`, `%`, and `()`.
+Supported mathematical operations include: `+`, `-`, `*`, `/`, `**`, `%`, and `()`. The computed column is rounded to the same **Fit results decimals** precision set at the top of the tab.
 > **Important Note**: If your column names contain spaces or special characters, you must enclose them in backticks. Example: `` `x0_LO(M)` ``
 
 #### **5.3. Save and Visualize**

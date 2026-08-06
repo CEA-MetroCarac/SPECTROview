@@ -629,10 +629,9 @@ class TestTrendlineCustomization:
 
 class TestFigureStyle:
     """figure_facecolor/plot_subtitle/spines_visible are optional and
-    skipped when unset; figure_margins/subtitle_fontsize are concrete
-    fields defaulting to matplotlib/mplstyle's own values -- either way, an
-    old saved graph (none of these fields set) renders identically to
-    before this feature existed."""
+    skipped when unset; figure_margins is a concrete field defaulting to
+    matplotlib's own value -- either way, an old saved graph (none of these
+    fields set) renders identically to before this feature existed."""
 
     def test_defaults_leave_all_spines_visible(self, vg, excel_df):
         _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
@@ -775,6 +774,28 @@ class TestColormapNormalization:
         vg.plot(unique_xy_df)
         im = vg.ax.get_images()[0]
         assert isinstance(im.norm, LogNorm)
+
+
+class TestFontSizes:
+    """Colorbar tick-label size (wafer/2Dmap) is user-set via
+    colorbar_fontsize; the subtitle has no size control of its own and
+    always renders 2pt smaller than the title."""
+
+    def test_colorbar_fontsize_applied_on_wafer(self, vg, excel_df):
+        _configure(vg, x="X", y=["Y"], z="ampli_Si", plot_style="wafer")
+        vg.colorbar_fontsize = 15
+        vg.plot(excel_df)
+        vg.figure.canvas.draw()
+        labels = vg.ax._wafer_colorbar.ax.get_yticklabels()
+        assert labels and all(t.get_fontsize() == 15 for t in labels)
+
+    def test_subtitle_fontsize_tracks_title_minus_two(self, vg, excel_df):
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot_subtitle = "sub"
+        vg.title_fontsize = 20
+        vg.plot(excel_df)
+        assert vg._subtitle_artist is not None
+        assert vg._subtitle_artist.get_fontsize() == 18
 
 
 class TestNewAnnotationTypes:

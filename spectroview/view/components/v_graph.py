@@ -1135,7 +1135,8 @@ class VGraph(QWidget):
             # Sits right at the axes' top edge -- the title itself floats
             # further up above this, via its own default padding, so the
             # two don't collide without needing precise pad arithmetic.
-            fontsize = self.subtitle_fontsize if self.subtitle_fontsize is not None else 10
+            # Subtitle always tracks the title size, 2pt smaller.
+            fontsize = max(1, (self.title_fontsize or 12) - 2)
             if self._subtitle_artist is not None:
                 # Update the existing artist in place -- calling ax.text()
                 # again on every restyle() tick (Phase 5E's no-clear fast

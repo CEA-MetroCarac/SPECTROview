@@ -228,7 +228,7 @@ When a DataFrame contains a `Slot` column (common in semiconductor datasets):
 | Annotations | `CustomizeAnnotations` | `customize_annotations.py` |
 | More options | `CustomizeMoreOptions` | `customize_more_options.py` |
 
-`CustomizeAxis` also owns the Inset (zoom) axes and Secondary axes (Y2/Y3/X2) sections — these used to be their own tabs, but were folded back into the Axis tab since axis-shaped controls belong together and a 7-tab dialog wasn't actually easier to navigate. Given how much that adds, the tab wraps its content in a `QScrollArea` (matching `CustomizeMoreOptions`'s own pattern) so the dialog's minimum height stays reasonable on smaller screens. `CustomizeMoreOptions` similarly owns Font sizes (Title/Subtitle/Axis label/Tick label, one row) and the figure Theme selector (folded into "Plot options:"), consolidated from a former standalone Text Size tab and a since-removed "Figure style" groupbox.
+`CustomizeAxis` also owns the Inset (zoom) axes and Secondary axes (Y2/Y3/X2) sections — these used to be their own tabs, but were folded back into the Axis tab since axis-shaped controls belong together and a 7-tab dialog wasn't actually easier to navigate. Given how much that adds, the tab wraps its content in a `QScrollArea` (matching `CustomizeMoreOptions`'s own pattern) so the dialog's minimum height stays reasonable on smaller screens. `CustomizeMoreOptions` similarly owns Font sizes (Title/Axis label/Tick label/Colorbar, one row) and the figure Theme selector (folded into "Plot options:"), consolidated from a former standalone Text Size tab and a since-removed "Figure style" groupbox.
 
 A workspace-level singleton dialog that auto-switches context when the user activates a different MDI subwindow. Its initial size (560×760) is a starting point only — Qt's layout system clamps both dimensions upward as needed for whichever tab's content is largest (e.g. the Legend tab's per-series columns when Unify is unchecked), so the literal numbers don't need to be exact.
 
@@ -280,7 +280,7 @@ The tab wraps its content in a `QScrollArea` (like More Options) since it now co
 - **Inset (zoom) axes**: a checkable group with Position (x0, y0) and Size (w, h) in axes-fraction coordinates, independent X/Y limits, and a "Show zoom indicator" toggle that draws the connector lines from the inset box back to the region it zooms into on the main plot (`ax.indicate_inset_zoom()`). The inset Axes itself is never persisted — it's rebuilt on every render from `MGraph.inset_bounds`. Mutually exclusive with a broken axis.
 - **Secondary axes** (bottom of the tab): one row per Y2/Y3/X2 axis (each disabled until that axis has a column assigned), exposing Label, Min/Max, Log toggle, Color, and Marker — see [Multi-Axis Support](#multi-axis-support).
 
-Font sizes (Title/Axis label/Tick label) live in the **More Options** tab, not here.
+Font sizes (Title/Axis label/Tick label/Colorbar) live in the **More Options** tab, not here.
 
 ### **Legend / Color Tab**
 
@@ -307,7 +307,7 @@ All stored as typed dicts in `MGraph.annotations`. Every type supports **drag in
 
 **Plot options**: style-dependent checkboxes (join/dodge points, error bars, wafer stats), plus one row shared by three global controls: a **Theme** selector (Light/Dark/Soft Dark — re-applies `axes.facecolor`/label/tick/spine colors from `plt.rcParams` on every render so switching themes doesn't leave stale black text/spines), an **X label rotation** spinbox (`MGraph.x_rot`), and a **Grid** checkbox (`MGraph.grid`) — the latter two migrated here from the workspace's bottom toolbar.
 
-**Font sizes (pt)**: Title, Subtitle, Axis label, and Tick label spinboxes in a single row (defaults 12/10/12/9, matching the active Matplotlib style). The Subtitle *text* itself (what it says, not its size) lives in the workspace side panel (`VWorkspaceGraphs`), not in this dialog — the old "Figure style" groupbox's redundant Subtitle text field was removed for that reason. Background color, Show-spines, and Margins controls that used to live in "Figure style" are still respected if set programmatically via `MGraph.figure_facecolor`/`figure_margins`, just without a dedicated picker (Show-spines moved to the Axis tab).
+**Font sizes (pt)**: Title, Axis label, Tick label, and Colorbar spinboxes in a single row (defaults 12/12/9/10, matching the active Matplotlib style). The **Colorbar** size (`MGraph.colorbar_fontsize`) sets the tick-label size on the wafer/2Dmap colorbar — `PlotRenderer._apply_colorbar_fontsize()` applies it after each colorbar is (re)created, so a change triggers a full replot (it's deliberately kept out of `RESTYLE_SAFE_FIELDS`). The **subtitle** has no size control — it always renders 2 pt smaller than the title (`title_fontsize − 2`, in `_set_figure_style`); its *text* is edited in the workspace side panel (`VWorkspaceGraphs`). Background color, Show-spines, and Margins controls that used to live in "Figure style" are still respected if set programmatically via `MGraph.figure_facecolor`/`figure_margins`, just without a dedicated picker (Show-spines moved to the Axis tab).
 
 The wafer/2Dmap colormap-scale control (Linear/Log/Centered) is *not* here — it lives in the **Axis** tab's Axis-properties group as the Z-axis scale; see [Colormap Normalization](#colormap-normalization).
 

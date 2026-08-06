@@ -94,7 +94,7 @@ def apply_style_dict(graph_widget, style_dict: Dict[str, Any]) -> Dict[str, Any]
 RESTYLE_SAFE_FIELDS = frozenset({
     # Titles / labels
     'plot_title', 'plot_subtitle', 'xlabel', 'ylabel',
-    'title_fontsize', 'axis_label_fontsize', 'subtitle_fontsize',
+    'title_fontsize', 'axis_label_fontsize',
     # Grid / ticks
     'grid', 'minor_ticks_bottom', 'minor_ticks_left', 'minor_ticks_top', 'minor_ticks_right',
     'tick_direction', 'tick_label_fontsize', 'tick_label_format',

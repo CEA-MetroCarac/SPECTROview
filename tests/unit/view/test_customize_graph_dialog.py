@@ -933,15 +933,15 @@ class TestCustomizeMoreOptions:
         assert received[0]["grid"] is True
 
     def test_font_sizes_show_mplstyle_defaults_and_are_settable(self, qapp, excel_df):
-        """Every font-size control (Title/Subtitle/Axis label/Tick label)
+        """Every font-size control (Title/Axis label/Tick label/Colorbar)
         lives here now, in one row -- consolidated from the old standalone
-        Text Size tab."""
+        Text Size tab. The subtitle has no control: it tracks the title size."""
         vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
         widget = CustomizeMoreOptions(vg)
         assert widget._spin_title_fontsize.value() == 12
-        assert widget._spin_subtitle_fontsize.value() == 10
         assert widget._spin_axis_label_fontsize.value() == 12
         assert widget._spin_tick_fontsize.value() == 9
+        assert widget._spin_colorbar_fontsize.value() == 10
 
         widget._spin_title_fontsize.setValue(18)
         received = []

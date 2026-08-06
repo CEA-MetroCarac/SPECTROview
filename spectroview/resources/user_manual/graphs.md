@@ -260,7 +260,7 @@ These checkboxes are always visible, but only enabled when the corresponding plo
 
 ##### Font Sizes (pt)
 
-Set the point size of the Title, Subtitle, Axis label, and Tick label independently (defaults: 12/10/12/9). The subtitle *text* itself is edited in the side panel, not here.
+Set the point size of the Title, Axis label, Tick label, and Colorbar independently (defaults: 12/12/9/10). The **Colorbar** size controls the tick-label text on wafer/2Dmap colorbars. The subtitle has no size control — it always renders 2 pt smaller than the title; its *text* is edited in the side panel, not here.
 
 ##### Data Sorting
 

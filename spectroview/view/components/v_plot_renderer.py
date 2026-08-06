@@ -620,6 +620,12 @@ class PlotRenderer:
                     except Exception:
                         pass
 
+    def _apply_colorbar_fontsize(self, cbar):
+        """Apply the configured tick-label size to a wafer/2Dmap colorbar."""
+        fs = getattr(self.vg, 'colorbar_fontsize', None)
+        if cbar is not None and fs:
+            cbar.ax.tick_params(labelsize=fs)
+
     def _plot_2dmap(self, df, y):
         """Plot 2D heatmap."""
         x_col = self.vg.x
@@ -664,6 +670,7 @@ class PlotRenderer:
         self.vg.ax._2dmap_colorbar = self.vg.ax.figure.colorbar(
             heatmap, ax=self.vg.ax, orientation='vertical'
         )
+        self._apply_colorbar_fontsize(self.vg.ax._2dmap_colorbar)
 
     def _fit_trendline(self, df):
         """Fit polynomial trendline with optional anchor constraint.
@@ -780,7 +787,8 @@ class PlotRenderer:
             norm_kind=getattr(self.vg, 'colormap_norm', 'linear'),
             norm_center=getattr(self.vg, 'colormap_center', 0.0),
         )
-        
+        self._apply_colorbar_fontsize(getattr(self.vg.ax, '_wafer_colorbar', None))
+
         # Annotate slot number if active filter
         if hasattr(self.vg, "filters") and isinstance(self.vg.filters, (list, dict)):
             filters_list = self.vg.filters if isinstance(self.vg.filters, list) else self.vg.filters.get("filters", [])

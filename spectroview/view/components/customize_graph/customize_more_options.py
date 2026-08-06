@@ -23,9 +23,9 @@ _THEME_VALUE_TEXT = {v: k for k, v in _THEME_TEXT_MAP.items()}
 # differ in color, not typography) so the font-size spinboxes always show a
 # concrete, meaningful number instead of a blank/sentinel value.
 _DEFAULT_TITLE_FONTSIZE = 12
-_DEFAULT_SUBTITLE_FONTSIZE = 10
 _DEFAULT_AXIS_LABEL_FONTSIZE = 12
 _DEFAULT_TICK_FONTSIZE = 9
+_DEFAULT_COLORBAR_FONTSIZE = 10
 
 
 class CustomizeMoreOptions(QWidget):
@@ -122,9 +122,9 @@ class CustomizeMoreOptions(QWidget):
     # ---- Font sizes section -----------------------------------------------
 
     def _build_font_size_section(self):
-        """Every font-size control on a graph, in one row: Title, Subtitle
-        (the subtitle text itself is edited in the workspace's side panel,
-        not duplicated here), Axis label, Tick label."""
+        """Every font-size control on a graph, in one row: Title, Axis label,
+        Tick label, and Colorbar (wafer/2Dmap tick labels). The subtitle tracks
+        the title size automatically (2pt smaller), so it has no control here."""
         grp = QGroupBox("Font sizes (pt):")
         layout = QHBoxLayout(grp)
         layout.setContentsMargins(4, 4, 4, 4)
@@ -132,9 +132,9 @@ class CustomizeMoreOptions(QWidget):
 
         for label_text, attr, default in [
             ("Title:", "_spin_title_fontsize", _DEFAULT_TITLE_FONTSIZE),
-            ("Subtitle:", "_spin_subtitle_fontsize", _DEFAULT_SUBTITLE_FONTSIZE),
             ("Axis label:", "_spin_axis_label_fontsize", _DEFAULT_AXIS_LABEL_FONTSIZE),
             ("Tick label:", "_spin_tick_fontsize", _DEFAULT_TICK_FONTSIZE),
+            ("Colorbar:", "_spin_colorbar_fontsize", _DEFAULT_COLORBAR_FONTSIZE),
         ]:
             layout.addWidget(QLabel(label_text))
             spin = QSpinBox()
@@ -327,13 +327,13 @@ class CustomizeMoreOptions(QWidget):
 
         # --- Font sizes section ---
         self._spin_title_fontsize.setValue(getattr(gw, 'title_fontsize', None) or _DEFAULT_TITLE_FONTSIZE)
-        self._spin_subtitle_fontsize.setValue(
-            getattr(gw, 'subtitle_fontsize', None) or _DEFAULT_SUBTITLE_FONTSIZE
-        )
         self._spin_axis_label_fontsize.setValue(
             getattr(gw, 'axis_label_fontsize', None) or _DEFAULT_AXIS_LABEL_FONTSIZE
         )
         self._spin_tick_fontsize.setValue(getattr(gw, 'tick_label_fontsize', None) or _DEFAULT_TICK_FONTSIZE)
+        self._spin_colorbar_fontsize.setValue(
+            getattr(gw, 'colorbar_fontsize', None) or _DEFAULT_COLORBAR_FONTSIZE
+        )
 
         # --- Data sorting section ---
         sort_enabled = getattr(gw, 'sort_data_enabled', True)
@@ -411,9 +411,9 @@ class CustomizeMoreOptions(QWidget):
         gw.grid = self._cb_grid.isChecked()
 
         gw.title_fontsize = self._spin_title_fontsize.value()
-        gw.subtitle_fontsize = self._spin_subtitle_fontsize.value()
         gw.axis_label_fontsize = self._spin_axis_label_fontsize.value()
         gw.tick_label_fontsize = self._spin_tick_fontsize.value()
+        gw.colorbar_fontsize = self._spin_colorbar_fontsize.value()
 
         # Data sorting — capture old values first to detect changes
         old_sort_enabled = getattr(gw, 'sort_data_enabled', True)
@@ -455,9 +455,9 @@ class CustomizeMoreOptions(QWidget):
             'x_rot': gw.x_rot,
             'grid': gw.grid,
             'title_fontsize': gw.title_fontsize,
-            'subtitle_fontsize': gw.subtitle_fontsize,
             'axis_label_fontsize': gw.axis_label_fontsize,
             'tick_label_fontsize': gw.tick_label_fontsize,
+            'colorbar_fontsize': gw.colorbar_fontsize,
             'sort_data_enabled': gw.sort_data_enabled,
             'sort_data_by': gw.sort_data_by,
         }

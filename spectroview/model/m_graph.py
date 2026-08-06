@@ -71,8 +71,7 @@ class MGraph:
 
     # Labels
     plot_title: Optional[str] = None
-    plot_subtitle: Optional[str] = None
-    subtitle_fontsize: int = 10  # matches the pre-existing hardcoded fallback; only rendered once plot_subtitle is set
+    plot_subtitle: Optional[str] = None  # rendered 2pt smaller than title_fontsize
     xlabel: Optional[str] = None
     ylabel: Optional[str] = None
     zlabel: Optional[str] = None
@@ -90,6 +89,7 @@ class MGraph:
     title_fontsize: int = 12       # matches mplstyle's axes.titlesize
     axis_label_fontsize: int = 12  # matches mplstyle's axes.labelsize
     tick_label_fontsize: int = 9   # matches mplstyle's x/ytick.labelsize
+    colorbar_fontsize: int = 10    # tick-label size on the wafer/2Dmap colorbar
     figure_facecolor: Optional[str] = None     # None = mplstyle's figure/axes facecolor
     figure_margins: List[float] = field(default_factory=lambda: [0.05, 0.05])  # [x_margin, y_margin]; matches matplotlib's own default
     spines_visible: Dict[str, bool] = field(

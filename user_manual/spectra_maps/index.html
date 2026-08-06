@@ -2046,7 +2046,7 @@ If you intend to use a model frequently, you can save it as a template. Stored m
 <li>Click the <strong>Collect</strong> button. <strong>SPECTROview</strong> will instantly aggregate all best-fit parameters into a unified, sortable table. Each spectrum's fit quality (<strong>R2</strong>, the coefficient of determination) is included as a column, so you can filter, sort, or plot it (e.g. an R² heatmap in the <code>Maps</code> workspace) just like any fitted parameter.</li>
 </ul>
 <blockquote>
-<p><strong>Adjusting decimal precision</strong>: the number of decimal places shown for the numeric results (x0, ampli, fwhm, area, R2, …) is controlled by the <strong>Fit results decimals</strong> spinbox in the <strong>More</strong> tab's <em>More options</em> box (default 3). Change it, then click <strong>Collect</strong> again to rebuild the table at the new precision. The X/Y coordinate columns always keep full precision.</p>
+<p><strong>Adjusting decimal precision</strong>: the number of decimal places shown for the numeric results (x0, ampli, fwhm, area, R2, …) is controlled by the <strong>Fit results decimals</strong> spinbox at the top of the <strong>Fit Results</strong> tab, just above the <strong>Collect</strong> button (default 3). Change it, then click <strong>Collect</strong> again to rebuild the table at the new precision. It also applies to computed columns (see below). The X/Y coordinate columns always keep full precision.</p>
 </blockquote>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/collect_fit_results.gif" alt="Collect Fit Results" width="800"><br>
@@ -2057,7 +2057,7 @@ If you intend to use a model frequently, you can save it as a template. Stored m
 <p>This tool allows you to automatically extract metadata embedded in your filenames. For example, if your files are named <code>Sample1_ProcessA_Temp25</code>, the tool can split the filename by underscores (<code>_</code>) and assign the extracted values into distinct new columns in your dataset (see the video above).</p>
 <h4 id="52-compute-and-add-new-columns"><strong>5.2. Compute and Add New Columns</strong><a class="headerlink" href="#52-compute-and-add-new-columns" title="Permanent link">&para;</a></h4>
 <p>You can easily create new columns derived from mathematical combinations of existing fitted parameters (e.g., calculating a peak shift via <code>x0_p1 - x0_p2</code>).
-Supported mathematical operations include: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>**</code>, <code>%</code>, and <code>()</code>.</p>
+Supported mathematical operations include: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>**</code>, <code>%</code>, and <code>()</code>. The computed column is rounded to the same <strong>Fit results decimals</strong> precision set at the top of the tab.</p>
 <blockquote>
 <p><strong>Important Note</strong>: If your column names contain spaces or special characters, you must enclose them in backticks. Example: <code>`x0_LO(M)`</code></p>
 </blockquote>

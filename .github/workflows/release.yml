@@ -58,7 +58,7 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" dist/* \
             --repo "$GITHUB_REPOSITORY" \
-            --title "SPECTROview $GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
             --notes "The installable wheel is attached below and is used by SPECTROview's automatic updater." \
             --generate-notes \
             --verify-tag

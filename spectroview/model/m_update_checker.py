@@ -17,6 +17,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 from urllib.error import URLError
+from urllib.parse import unquote, urlparse
 from urllib.request import Request, urlopen
 
 from PySide6.QtCore import QThread, Signal
@@ -77,6 +78,25 @@ def _find_wheel_asset(release: dict) -> tuple[str, str]:
     return "", ""
 
 
+def _wheel_filename_from_url(wheel_url: str) -> str:
+    """Extract and validate the published wheel filename from its release URL.
+
+    ``pip install`` validates a wheel's filename, so the downloaded file must
+    retain the PEP 427-style asset name rather than use a random temporary name.
+    """
+    filename = Path(unquote(urlparse(wheel_url).path)).name
+    parts = filename.removesuffix(".whl").split("-")
+    if (
+        filename != unquote(urlparse(wheel_url).path).rsplit("/", 1)[-1]
+        or not filename.endswith(".whl")
+        or parts[0] != "spectroview"
+        or len(parts) not in (5, 6)
+        or any(not part for part in parts)
+    ):
+        raise ValueError("The release asset does not have a valid SPECTROview wheel filename.")
+    return filename
+
+
 class UpdateCheckerWorker(QThread):
     """Check GitHub Releases for a newer version and its wheel release asset."""
 
@@ -134,6 +154,9 @@ class UpdateDownloadWorker(QThread):
     def run(self) -> None:
         wheel_path: Path | None = None
         try:
+            wheel_filename = _wheel_filename_from_url(self._wheel_url)
+            update_directory = Path(tempfile.mkdtemp(prefix="spectroview-update-"))
+            wheel_path = update_directory / wheel_filename
             request = Request(
                 self._wheel_url,
                 headers={"User-Agent": "SPECTROview-updater"},
@@ -141,10 +164,7 @@ class UpdateDownloadWorker(QThread):
             with urlopen(request, timeout=DOWNLOAD_TIMEOUT, context=_ssl_context()) as response:
                 total_bytes = int(response.headers.get("Content-Length", 0))
                 hasher = hashlib.sha256()
-                with tempfile.NamedTemporaryFile(
-                    mode="wb", prefix="spectroview-update-", suffix=".whl", delete=False
-                ) as output:
-                    wheel_path = Path(output.name)
+                with wheel_path.open("xb") as output:
                     received_bytes = 0
                     while chunk := response.read(DOWNLOAD_CHUNK_SIZE):
                         output.write(chunk)
@@ -163,6 +183,10 @@ class UpdateDownloadWorker(QThread):
         except Exception as error:  # Network and file errors are shown in the update banner.
             if wheel_path is not None:
                 wheel_path.unlink(missing_ok=True)
+                try:
+                    wheel_path.parent.rmdir()
+                except OSError:
+                    pass
             self.download_failed.emit(str(error))
 
 
@@ -224,6 +248,10 @@ if result.returncode:
     sys.exit(result.returncode)
 
 wheel_path.unlink(missing_ok=True)
+try:
+    wheel_path.parent.rmdir()
+except OSError:
+    pass
 restart_environment = os.environ.copy()
 restart_environment.pop("PYTHONPATH", None)
 restart_environment.pop("PYTHONHOME", None)

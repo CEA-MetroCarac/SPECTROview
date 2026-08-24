@@ -3,12 +3,15 @@
 import json
 from pathlib import Path
 
+import pytest
+
 import spectroview.model.m_update_checker as update_checker
 from spectroview.model.m_update_checker import (
     UpdateCheckerWorker,
     _find_wheel_asset,
     _parse_version,
     _update_script_content,
+    _wheel_filename_from_url,
 )
 
 
@@ -37,6 +40,20 @@ def test_find_wheel_asset_uses_the_release_wheel_and_digest():
 
 def test_find_wheel_asset_returns_empty_values_when_release_has_no_wheel():
     assert _find_wheel_asset({"assets": []}) == ("", "")
+
+
+def test_wheel_filename_from_url_retains_the_published_wheel_name():
+    filename = _wheel_filename_from_url(
+        "https://github.com/CEA-MetroCarac/SPECTROview/releases/download/"
+        "v26.33.0/spectroview-26.33.0-py3-none-any.whl"
+    )
+
+    assert filename == "spectroview-26.33.0-py3-none-any.whl"
+
+
+def test_wheel_filename_from_url_rejects_a_random_temporary_filename():
+    with pytest.raises(ValueError, match="valid SPECTROview wheel filename"):
+        _wheel_filename_from_url("https://example.test/spectroview-update-2pzgp50o.whl")
 
 
 def test_update_checker_emits_the_release_wheel_url(monkeypatch, qapp):
@@ -93,3 +110,4 @@ def test_update_helper_installs_the_wheel_and_relaunches_from_temp_directory():
     assert '"-m", "spectroview.main"' in content
     assert "cwd=tempfile.gettempdir()" in content
     assert 'restart_environment.pop("PYTHONPATH", None)' in content
+    assert "wheel_path.parent.rmdir()" in content

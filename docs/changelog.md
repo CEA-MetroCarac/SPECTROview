@@ -4,6 +4,30 @@
 
 ---
 
+## [v26.35.3](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.35.3) - 2026-08-24
+
+The installable wheel is attached below and is used by SPECTROview's automatic updater.
+
+**Full Changelog**: https://github.com/CEA-MetroCarac/SPECTROview/compare/v26.35.2...v26.35.3
+
+---
+
+## [v26.35.2](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.35.2) - 2026-08-24
+
+The installable wheel is attached below and is used by SPECTROview's automatic updater.
+
+**Full Changelog**: https://github.com/CEA-MetroCarac/SPECTROview/compare/v26.35.1...v26.35.2
+
+---
+
+## [v26.35.1](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.35.1) - 2026-08-24
+
+The installable wheel is attached below and is used by SPECTROview's automatic updater.
+
+**Full Changelog**: https://github.com/CEA-MetroCarac/SPECTROview/compare/v26.32.2...v26.35.1
+
+---
+
 ## [v26.32.2](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.32.2) - 2026-08-04
 
 ##### ✨ New Features & Improvements

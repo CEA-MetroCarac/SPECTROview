@@ -1713,7 +1713,7 @@
 <li><strong>On startup</strong>, a background thread silently queries the <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases">GitHub Releases page</a> for the latest version.</li>
 <li>If a newer version is available, a <strong>blue notification banner</strong> appears at the top of the window:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>🔔  A new version of SPECTROview is available:  26.29.0    [ 🔍 View changelog ]  [ Update later ]  [ Skip this version ]
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>🔔  A new version of SPECTROview is available:  26.29.0    [ ⬇ Update ]  [ 🔍 Show changelog ]  [ Update later ]  [ Skip this version ]
 </code></pre></div>
 <blockquote>
 <p><strong>Privacy Guarantee</strong>: This check only sends a standard anonymous request to the public GitHub API to fetch the latest version number. <strong>Absolutely no personal or usage data is collected or transmitted.</strong></p>
@@ -1727,6 +1727,10 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><strong>⬇ Update</strong></td>
+<td>Downloads the <code>.whl</code> attached to the announced GitHub release, verifies its SHA-256 checksum when GitHub provides one, closes SPECTROview, runs <code>pip install --upgrade</code> with that wheel, and relaunches the app.</td>
+</tr>
 <tr>
 <td><strong>🔍 View changelog</strong></td>
 <td>Opens the GitHub release page in your browser to see what's new.</td>
@@ -1743,6 +1747,7 @@
 </table>
 <blockquote>
 <p><strong>Offline users</strong>: If <strong>SPECTROview</strong> is installed on a machine without internet access, the update check fails silently — the application starts and works exactly as normal. No error is raised.</p>
+<p><strong>Standalone executable users</strong>: Automatic updates apply to SPECTROview installations made with <code>pip</code>. A standalone executable cannot install a Python wheel, so use the release page to download a newer executable instead.</p>
 </blockquote>
 <hr />
 <h3 id="7-troubleshooting"><strong>7. Troubleshooting</strong><a class="headerlink" href="#7-troubleshooting" title="Permanent link">&para;</a></h3>

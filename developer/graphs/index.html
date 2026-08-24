@@ -1216,6 +1216,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#graph_controlpy-shared-graph-statecommand-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_control.py — Shared Graph State/Command Contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#vgraph-the-rendering-widget" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1267,6 +1278,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Data Flow: Creating a Plot">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-flow-aimcp-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Flow: AI/MCP Update
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2029,6 +2057,9 @@
 <hr />
 <h2 id="architecture-overview"><strong>Architecture Overview</strong><a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>graph TD
+    GUI["Side panel / Customize dialog"] --&gt; GCL["graph_control: GraphPatch + validation"]
+    AI["AI / MCP typed commands"] --&gt; GCL
+    GCL --&gt; VMWG["VMWorkspaceGraphs"]
     VWG["VWorkspaceGraphs"] --&gt; MDI["QMdiArea"]
     MDI --&gt; VG["VGraph"]
     VG --&gt; PR["PlotRenderer"]
@@ -2042,7 +2073,7 @@
     VWG --&gt; EXP["VExportDialog / VBatchExportDialog"]
     VWG --&gt; MP["VMultiPanelDialog"]
 
-    VWG --&gt;|"calls"| VMWG["VMWorkspaceGraphs"]
+    VWG --&gt;|"calls"| GCL
     VMWG --&gt;|"signals"| VWG
     VMWG --&gt; MG["MGraph"]
     VMWG --&gt; UNDO["Undo/redo stacks"]</code></pre>
@@ -2093,12 +2124,13 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">dataframes_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>           <span class="c1"># List of DataFrame names updated</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">dataframe_columns_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>    <span class="c1"># Column names of selected DataFrame</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">graphs_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>               <span class="c1"># List of graph IDs updated</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">undo_state_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>               <span class="c1"># can_undo/can_redo changed -- sync toolbar buttons</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">notify</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>                        <span class="c1"># Toast notification</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">graph_state_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>              <span class="c1"># Any persisted graph property changed (AI context sync)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">undo_state_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>               <span class="c1"># can_undo/can_redo changed -- sync toolbar buttons</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">notify</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>                        <span class="c1"># Toast notification</span>
 </code></pre></div>
 <h3 id="mgraph-the-plot-configuration-model"><strong><code>MGraph</code> — The Plot Configuration Model</strong><a class="headerlink" href="#mgraph-the-plot-configuration-model" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/model/m_graph.py</code></p>
-<p>A pure dataclass (113 fields) that stores everything needed to recreate a plot. <code>save()</code>/<code>load(data)</code> provide complete serialization; <code>get_display_name()</code> builds the MDI subwindow title. Rather than enumerate every field here (see <code>m_graph.py</code> for the exhaustive, authoritative list), fields group into:</p>
+<p>A pure dataclass that stores everything needed to recreate a plot. <code>save()</code>/<code>load(data)</code> provide complete serialization; <code>get_display_name()</code> builds the MDI subwindow title. Rather than maintain a second field count or list here (see <code>m_graph.py</code> for the exhaustive, authoritative list), fields group into:</p>
 <table>
 <thead>
 <tr>
@@ -2158,6 +2190,23 @@
 </tbody>
 </table>
 <p>Note: style templates, plot recipes, and the working-folder setting are <strong>not</strong> <code>MGraph</code> fields — they're separate systems built around subsets of these fields (see <a href="#style-templates-plot-recipes">Style Templates &amp; Plot Recipes</a>).</p>
+<h3 id="graph_controlpy-shared-graph-statecommand-contract"><strong><code>graph_control.py</code> — Shared Graph State/Command Contract</strong><a class="headerlink" href="#graph_controlpy-shared-graph-statecommand-contract" title="Permanent link">&para;</a></h3>
+<p><strong>File</strong>: <code>spectroview/model/graph_control.py</code></p>
+<p>All GUI, AI, and MCP mutations converge on this Qt-free layer before they touch
+<code>MGraph</code>. <code>GraphPatch</code> is generated from the dataclass fields, so the MCP schema
+automatically exposes every mutable graph capability. Important nested values
+(filters, per-series styles, spines, axis breaks, and all eight annotation
+types) have strict schemas of their own.</p>
+<p><code>normalize_graph_patch()</code> validates a patch against the merged current state
+without mutation: unknown keys, nullability, ranges, enum values, columns,
+limits, inset geometry, annotation shape, and mutually exclusive axis breaks
+are checked together. <code>apply_graph_patch()</code> then commits the already-valid
+patch atomically. Omitted fields are preserved; explicit <code>null</code> clears only
+nullable properties. Changes to data/series identity reset derived
+<code>legend_properties</code> unless the caller supplied a replacement list.</p>
+<p>This contract is intentionally renderer-independent. The View still owns
+Matplotlib figure/canvas creation, filtered-data lookup, re-rendering, window
+geometry, and refresh of an open Customize dialog.</p>
 <h3 id="vgraph-the-rendering-widget"><strong><code>VGraph</code> — The Rendering Widget</strong><a class="headerlink" href="#vgraph-the-rendering-widget" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/view/components/v_graph.py</code></p>
 <p>Each plot in the MDI area is a <code>VGraph</code> instance. It holds a Matplotlib <code>Figure</code> + <code>FigureCanvas</code> and acts as the UI wrapper. It manages interactions, context menus, and toolbar actions (Style menu, Export, Replicate), but delegates the actual drawing algorithms to <code>PlotRenderer</code>. <code>create_plot_widget()</code> still builds each <code>VGraph</code>'s own matplotlib nav toolbar + action-button row (<code>self.toolbar_container</code>), but never adds it to the graph's own layout — see <a href="#mdi-area-management">the bottom toolbar</a> for where it's actually shown.</p>
@@ -2177,7 +2226,7 @@
 <ol>
 <li><strong>User Action</strong>: The user selects a DataFrame, configures the X/Y/Z axes, and clicks "Add plot" in the <code>VWorkspaceGraphs</code> UI.</li>
 <li><strong>Configuration Capture</strong>: The View calls <code>_collect_plot_config()</code> to gather all UI settings into a configuration dictionary, then merges in <code>MSettings.get_default_graph_style()</code> (the user's "Set as Default Style" baseline, if any — see <a href="#style-templates-plot-recipes">Style Templates &amp; Plot Recipes</a>) via <code>_apply_default_style_to_config()</code>. The collected config's data-identity fields (<code>x</code>/<code>y</code>/<code>z</code>/<code>df_name</code>/<code>plot_style</code>) always win over the default style, since the default only ever contains appearance fields.</li>
-<li><strong>Model Creation</strong>: The View calls <code>vm.create_graph(plot_config)</code>. The ViewModel instantiates an <code>MGraph(graph_id)</code>, applies the configuration, records an undo point, and returns the graph model.</li>
+<li><strong>Model Creation</strong>: The View calls <code>vm.create_graph(plot_config)</code>. The ViewModel validates the complete configuration through <code>graph_control</code>, then instantiates and atomically updates an <code>MGraph(graph_id)</code>, records an undo point, and returns it.</li>
 <li><strong>Widget Initialization</strong>: The View instantiates a <code>VGraph(graph_id)</code> widget and calls <code>create_plot_widget(dpi)</code> to set up the Matplotlib canvas.</li>
 <li><strong>Data Filtering</strong>: The View requests the <code>filtered_df</code> from the ViewModel by calling <code>vm.apply_filters(df_name, filters)</code>.</li>
 <li><strong>Rendering</strong>: The View calls <code>VGraph.plot(filtered_df)</code>.</li>
@@ -2185,6 +2234,21 @@
 <li><strong>UI Integration</strong>: The View wraps the new <code>VGraph</code> widget in a <code>QMdiSubWindow</code> and adds it to the MDI area.</li>
 </ol>
 <p>This same default-style merge applies to <code>_on_plot_multi_wafer()</code>; it deliberately does <strong>not</strong> apply when applying a Plot Recipe or replicating an existing graph, since those already carry a fully-specified, intentional style.</p>
+<h3 id="data-flow-aimcp-update"><strong>Data Flow: AI/MCP Update</strong><a class="headerlink" href="#data-flow-aimcp-update" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>update_graph</code> validates its typed <code>GraphPatch</code> against every target graph
+   and DataFrame. <code>graph_id="all"</code> is expanded before any mutation.</li>
+<li>The MCP server queues one typed <code>UpdatePlot</code>; it never imports Qt or mutates
+   a widget.</li>
+<li><code>VMChat</code> converts queued commands to application configs and <code>main.py</code>
+   routes the update to <code>VWorkspaceGraphs.update_graphs_from_config()</code>.</li>
+<li>The workspace prevalidates all targets, opens one undo batch, updates every
+   <code>MGraph</code>, rebuilds/replots each widget, resizes explicit geometry, and reloads
+   the open Customize dialog. A render failure restores every model/widget
+   snapshot so a batch cannot be half-applied.</li>
+<li><code>graph_state_changed</code> refreshes the AI's full serialized graph context after
+   GUI edits, AI edits, undo/redo, loads, and renderer-derived style sync.</li>
+</ol>
 <hr />
 <h2 id="plot-styles"><strong>Plot Styles</strong><a class="headerlink" href="#plot-styles" title="Permanent link">&para;</a></h2>
 <p>Each plot style maps to a <code>PlotRenderer._plot_*</code> method that draws directly with Matplotlib primitives (no Seaborn):</p>
@@ -2477,6 +2541,11 @@
 <ul>
 <li><strong><code>VMultiPanelDialog(graph_widgets: dict, parent=None)</code></strong> — composes several checked/reordered open graphs into one throwaway <code>matplotlib.figure.Figure</code> grid (auto-suggested rows/cols, constrained layout, shared-axis-label collapsing on interior panels, lettered/numbered panel labels). Each panel is rendered by temporarily repointing the source <code>VGraph</code>'s <code>.ax</code>/<code>.figure</code> onto the composed figure's subplot and calling its normal render path, then restoring the source widget so the live workspace is never mutated. Graphs with an active broken axis render via a simplified single-panel path in the composed figure (a documented scope limit).</li>
 </ul>
+<p>AI/MCP exposes the persistent per-graph export size (<code>export_width_mm</code> /
+<code>export_height_mm</code>) and on-screen geometry/DPI through <code>GraphPatch</code>. The actual
+Export/Batch Export and Multi-Panel actions remain GUI workflows: format,
+destination path, transparency, export-time theme, graph selection/order, and
+panel grid are one-off file/composition choices rather than <code>MGraph</code> state.</p>
 <hr />
 <h2 id="mdi-area-management"><strong>MDI Area Management</strong><a class="headerlink" href="#mdi-area-management" title="Permanent link">&para;</a></h2>
 <p>The <code>Graphs</code> workspace uses a <code>QMdiArea</code> to display multiple plots simultaneously:</p>
@@ -2536,8 +2605,8 @@
 </table>
 <p><code>get_working_folder()</code> one-time-migrates from the older, separate "Fit model folder"/"Plot template folder" settings if either was previously configured, so existing setups aren't orphaned. A separate setting, <code>get_default_graph_style()</code>/<code>set_default_graph_style()</code>, stores the "Set as Default Style" baseline (see <a href="#style-templates-plot-recipes">Style Templates &amp; Plot Recipes</a>) — unrelated to the working folder, but persisted the same way (<code>QSettings</code>, disk-backed, survives restarts).</p>
 <h3 id="save-format-graphs"><strong>Save Format (<code>.graphs</code>)</strong><a class="headerlink" href="#save-format-graphs" title="Permanent link">&para;</a></h3>
-<p>Current format (<code>format_version: 3</code>) is a <strong>ZIP archive</strong>, written by <code>WorkspaceIO.save_workspace()</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>metadata.json                          # {&quot;format_version&quot;: 3, &quot;plots&quot;: {...}, &quot;dataframe_sources&quot;: {...}}
+<p>Current format (<code>format_version: 4</code>) is a <strong>ZIP archive</strong>, written by <code>WorkspaceIO.save_workspace()</code>. Version 4 preserves <code>x_as_numeric=False</code> as the explicit Category selection; older versions keep their legacy False-to-Auto migration:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>metadata.json                          # {&quot;format_version&quot;: 4, &quot;plots&quot;: {...}, &quot;dataframe_sources&quot;: {...}}
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>dataframes/&lt;name&gt;.parquet              # one Parquet file per DataFrame, streamed directly into the zip
 </code></pre></div>
 <p>Each entry in <code>metadata["plots"]</code> is a full <code>MGraph.save()</code> dict keyed by <code>graph_id</code>:</p>

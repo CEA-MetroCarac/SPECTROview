@@ -1311,6 +1311,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#complete-graph-customization-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete graph customization contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#mcphub-one-loop-many-servers" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2162,7 +2173,10 @@
     CTX --&gt;|"queued AgentCommands"| VMC
     VMC --&gt;|"result_ready (ChatResult)"| VCP
     VCP --&gt;|"plot_requested"| Main
-    Main --&gt;|"create / update / delete"| VWG["VWorkspaceGraphs"]</code></pre></p>
+    Main --&gt;|"create / update / delete"| VWG["VWorkspaceGraphs"]
+    VWG --&gt; GCL["graph_control.py: validated GraphPatch"]
+    GCL --&gt; MG["MGraph"]
+    MG --&gt; RENDER["VGraph / PlotRenderer / canvas refresh"]</code></pre></p>
 <h3 id="the-appcontext-boundary"><strong>The AppContext boundary</strong><a class="headerlink" href="#the-appcontext-boundary" title="Permanent link">&para;</a></h3>
 <p>The MCP server does <strong>not</strong> import <code>VMChat</code>. It is handed an <code>AppContext</code>
 (<code>agent/ports.py</code>) — a five-method protocol: list DataFrames, get one, get the
@@ -2171,8 +2185,24 @@ adapter; tests supply <code>RecordingContext</code>.</p>
 <p>This is what makes the tool layer independently testable (no Qt, no LLM, no
 application) and what would let the same server run out-of-process. Tools never
 mutate the ViewModel; they submit typed commands (<code>agent/commands.py</code>:
-<code>CreatePlot</code>, <code>UpdatePlot</code>, <code>DeletePlots</code>), which <code>VMChat</code> drains and normalises
-once when the turn ends.</p>
+<code>CreatePlot</code>, <code>UpdatePlot</code>, <code>DeletePlots</code>). Plot and update inputs are validated
+before queuing through the shared <code>spectroview.model.graph_control</code> contract,
+and the Graph workspace applies that same contract again at the mutation
+boundary.</p>
+<h3 id="complete-graph-customization-contract"><strong>Complete graph customization contract</strong><a class="headerlink" href="#complete-graph-customization-contract" title="Permanent link">&para;</a></h3>
+<p>The MCP tools retain a few common top-level parameters for small-model
+reliability, and expose <code>other_properties: GraphPatch</code> for the exhaustive set.
+<code>GraphPatch</code> is generated from every mutable <code>MGraph</code> dataclass field with
+<code>extra="forbid"</code>; nested filter, series-style, spine, axis-break, and annotation
+records are also typed. This avoids a manually maintained allowlist drifting
+behind the GUI and makes one coherent call able to update log scale, fonts,
+legend placement, line widths, annotations, secondary axes, inset geometry,
+and any other Graph state together.</p>
+<p>Omission means preserve. Explicit <code>null</code> is accepted only for nullable fields.
+The server validates filters against the target DataFrame and validates
+<code>graph_id="all"</code> against every open graph before it queues a single atomic
+command. The tool result deliberately says "validated and queued" because only
+the GUI thread can truthfully report final rendering.</p>
 <h3 id="mcphub-one-loop-many-servers"><strong>MCPHub — one loop, many servers</strong><a class="headerlink" href="#mcphub-one-loop-many-servers" title="Permanent link">&para;</a></h3>
 <p><code>MCPHub</code> (<code>mcp/hub.py</code>) owns a single asyncio event loop on a background thread
 and keeps an initialised session open for every server listed in
@@ -2187,10 +2217,10 @@ working everywhere it is documented); a name offered by two servers becomes
 offered set small — tool schemas are prompt tokens on every turn, and small
 local models degrade quickly past roughly a dozen tools.</p>
 <h3 id="pushed-vs-pulled-context"><strong>Pushed vs pulled context</strong><a class="headerlink" href="#pushed-vs-pulled-context" title="Permanent link">&para;</a></h3>
-<p>The system prompt always carries DataFrame names, shapes, and every column name
-with its dtype — a model that has never seen a column name will invent one, so
-this half is non-negotiable. Sample values, row previews, and full graph configs
-are bulky and rarely decisive, so they live behind MCP <strong>resources</strong>
+<p>The system prompt always carries DataFrame names, shapes, every column name
+with its dtype, and a compact summary of each open graph. Sample values, row
+previews, and the actual complete <code>MGraph.save()</code> configurations are bulky and
+rarely decisive, so they live behind MCP <strong>resources</strong>
 (<code>spectroview://dataframes/detail</code>, <code>spectroview://graphs/detail</code>).</p>
 <p>No LLM API has a native notion of a resource, so the hub exposes reading one as
 a synthetic <code>get_context(uri)</code> tool whose <code>uri</code> enum lists exactly the resources

@@ -370,7 +370,7 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 
 ### Overview
 
-`SPECTROview` ships a lightweight, opt-out update notification system that queries the GitHub Releases API in the background and displays a dismissable banner when a newer version is found.
+`SPECTROview` ships a lightweight, opt-out update system that queries the GitHub Releases API in the background and displays a dismissable banner when a newer version is found. The banner can download the wheel attached to that exact release, verify its GitHub SHA-256 digest when available, close the application, install the wheel with pip, and relaunch it.
 
 No extra dependency is required — only Python's built-in `urllib`.
 
@@ -378,7 +378,7 @@ No extra dependency is required — only Python's built-in `urllib`.
 
 | File | Role |
 |------|------|
-| `model/m_update_checker.py` | `QThread` worker — performs the HTTP request and emits `update_available` |
+| `model/m_update_checker.py` | `QThread` workers for release checks and wheel downloads; creates the detached pip-install/restart helper |
 | `view/components/v_update_banner.py` | Slim 36 px banner widget inserted at position 0 of the central layout |
 | `model/m_settings.py` | Stores `enabled`, `skipped_version`, and `last_check_date` in `QSettings` |
 | `main.py` | Starts the thread via `QTimer.singleShot(2000, ...)` from `showEvent` |
@@ -392,15 +392,23 @@ sequenceDiagram
     participant Worker as UpdateCheckerWorker
     participant GitHub as api.github.com
     participant Banner as VUpdateBanner
+    participant Helper as Update helper
+    actor User
 
     Main->>Timer: showEvent → singleShot(2000)
     Timer->>Worker: _start_update_check() → worker.start()
     Worker->>GitHub: GET /repos/CEA-MetroCarac/SPECTROview/releases/latest
-    GitHub-->>Worker: JSON {tag_name, html_url, body}
+    GitHub-->>Worker: JSON {tag_name, html_url, body, assets[]}
     Worker->>Worker: compare versions
     alt newer version found
-        Worker-->>Main: update_available(tag, notes, url)
+        Worker-->>Main: update_available(tag, notes, url, wheel URL, SHA-256)
         Main->>Banner: insertWidget(0, VUpdateBanner(...))
+        User->>Banner: Update
+        Banner->>GitHub: Download release wheel in QThread
+        GitHub-->>Banner: Wheel bytes
+        Banner->>Helper: Start detached updater and close app
+        Helper->>Helper: pip install --upgrade wheel
+        Helper->>Main: Relaunch installed SPECTROview
     end
     Worker-->>Main: check_finished → set_last_check_date(today)
 ```
@@ -412,13 +420,21 @@ sequenceDiagram
 | **`QThread` instead of `QNetworkAccessManager`** | Pure Python `urllib` avoids Qt networking module complexity; thread is simpler to test |
 | **2-second startup delay** | Ensures the UI is fully painted before the network request starts |
 | **Once-per-day throttle** | Avoids redundant requests; the date is persisted via `QSettings` |
-| **Silent failure** | `URLError`, `OSError`, `json.JSONDecodeError` are all caught — offline machines see no error |
+| **Silent check failure** | `URLError`, `OSError`, `json.JSONDecodeError` are caught — offline machines see no error |
 | **Version comparison via tuples** | `_parse_version('v26.29.0') → (26, 29, 0)` handles `v`-prefixed tags and non-numeric parts gracefully |
+| **Release asset source** | GitHub provides the version, release notes, wheel URL, and integrity digest in one public API response; PyPI remains the normal package-install channel |
+| **Detached helper** | The helper waits for Qt to exit, installs with the launching interpreter, then clears `PYTHONPATH`/`PYTHONHOME` and restarts from a temporary working directory so a checkout cannot shadow the freshly installed package |
 | **Skip vs Dismiss** | *Skip* persists the exact tag — the banner re-appears for the next release. *Dismiss* hides only for the session |
 
 ### Adding / Modifying the Checker
 
-To change the API endpoint (e.g., to query PyPI instead), edit `GITHUB_API_URL` in `m_update_checker.py` and adjust the JSON key extraction in `UpdateCheckerWorker.run()`.
+Release automation lives in `.github/workflows/release.yml`. Pushing a `vMAJOR.MINOR.PATCH` tag whose value matches `spectroview.VERSION` builds the wheel and source distribution, attaches them to a GitHub release, and publishes them to PyPI through the `pypi` environment's Trusted Publisher.
+
+Before the first automated PyPI publication, register a Trusted Publisher for
+`CEA-MetroCarac/SPECTROview` in the PyPI project's **Publishing** settings with
+workflow filename `release.yml` and environment `pypi`. This lets GitHub Actions
+obtain a short-lived publishing token without storing a long-lived PyPI API token
+in the repository.
 
 To add a "disable updates" toggle to the Settings dialog, bind `MSettings.set_check_for_updates()` to a `QCheckBox` in `v_settings.py` — the `_start_update_check()` method in `main.py` already reads this flag before starting the thread.
 

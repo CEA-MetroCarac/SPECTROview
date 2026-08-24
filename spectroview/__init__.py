@@ -6,7 +6,7 @@ from pathlib import Path
 # The app uses PySide6 throughout, but superqt (used for QLabeledDoubleRangeSlider)
 os.environ.setdefault("QT_API", "pyside6")
 
-VERSION = "26.32.2"
+VERSION = "26.35.1"
 
 
 TEXT_EXPIRE = (

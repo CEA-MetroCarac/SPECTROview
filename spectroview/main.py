@@ -19,7 +19,13 @@ from PySide6.QtGui import QIcon, QDesktopServices
 from spectroview.model.m_file_converter import MFileConverter
 from spectroview.model.m_spc import SpcReader
 from spectroview.model.m_settings import MSettings
-from spectroview.model.m_update_checker import UpdateCheckerWorker
+from spectroview.model.m_update_checker import (
+    UpdateCheckerWorker,
+    UpdateDownloadWorker,
+    UpdateInstallationError,
+    get_update_python_executable,
+    install_update_and_restart,
+)
 
 from spectroview.viewmodel.vm_settings import VMSettings
 
@@ -86,6 +92,7 @@ class Main(QMainWindow):
 
         # ── Update notification banner (created lazily when an update is detected) ──
         self._update_banner = None
+        self._update_download_worker = None
 
         # Main Tab Widget
         self.tabWidget = QTabWidget(central)
@@ -671,7 +678,9 @@ class Main(QMainWindow):
         self._checker.update_available.connect(self._on_update_available)
         self._checker.start()
 
-    def _on_update_available(self, tag: str, notes: str, html_url: str):
+    def _on_update_available(
+        self, tag: str, notes: str, html_url: str, wheel_url: str, wheel_sha256: str
+    ):
         """Show the update banner when a newer version is found on GitHub."""
         # Never show if the user already skipped this exact version
         if self.settings.get_skipped_version() == tag:
@@ -680,23 +689,33 @@ class Main(QMainWindow):
         if self._update_banner is not None:
             return   # already showing
 
+        self._show_update_banner(tag, html_url, wheel_url, wheel_sha256)
+
+    def _show_update_banner(
+        self, tag: str, html_url: str, wheel_url: str, wheel_sha256: str
+    ) -> None:
+        """Create and insert the single update banner above the workspace tabs."""
         banner = VUpdateBanner(
             tag=tag,
             html_url=html_url,
             on_skip=self.settings.set_skipped_version,
             on_dismiss=self._hide_banner,
+            on_update=self._download_and_install_update,
+            wheel_url=wheel_url,
+            wheel_sha256=wheel_sha256,
             parent=self.centralWidget(),
         )
-        # Apply current theme
         banner.apply_theme(self.settings.get_theme())
-
-        # Insert banner into the layout at position 0 (above tab widget)
         self.centralWidget().layout().insertWidget(0, banner)
         self._update_banner = banner
 
     def _hide_banner(self):
-        """Reset the banner reference (the widget removes itself via deleteLater)."""
+        """Remove and dispose of the current update banner."""
+        banner = self._update_banner
         self._update_banner = None
+        if banner is not None:
+            self.centralWidget().layout().removeWidget(banner)
+            banner.deleteLater()
 
     def _manual_update_check(self):
         """User clicked 'Check for updates' in the menu bar — always runs (no throttle)."""
@@ -707,23 +726,71 @@ class Main(QMainWindow):
         self._manual_checker.check_finished.connect(self._on_manual_check_done)
         self._manual_checker.start()
 
-    def _on_manual_update_found(self, tag: str, notes: str, html_url: str):
+    def _on_manual_update_found(
+        self, tag: str, notes: str, html_url: str, wheel_url: str, wheel_sha256: str
+    ):
         """A newer version was found during a user-initiated check."""
         self._manual_check_found_update = True
         # Show banner even if user previously skipped this version
         if self._update_banner is not None:
             return
 
-        banner = VUpdateBanner(
-            tag=tag,
-            html_url=html_url,
-            on_skip=self.settings.set_skipped_version,
-            on_dismiss=self._hide_banner,
-            parent=self.centralWidget(),
+        self._show_update_banner(tag, html_url, wheel_url, wheel_sha256)
+
+    def _download_and_install_update(
+        self, _tag: str, wheel_url: str, wheel_sha256: str
+    ) -> None:
+        """Download the announced release wheel, then hand installation to the helper."""
+        if self._update_download_worker is not None:
+            return
+        try:
+            get_update_python_executable()
+        except UpdateInstallationError as error:
+            QMessageBox.warning(self, "Automatic update unavailable", str(error))
+            return
+
+        if self._update_banner is not None:
+            self._update_banner.set_download_progress(-1)
+        worker = UpdateDownloadWorker(wheel_url, wheel_sha256, self)
+        worker.progress_changed.connect(self._on_update_download_progress)
+        worker.download_finished.connect(self._on_update_download_finished)
+        worker.download_failed.connect(self._on_update_download_failed)
+        self._update_download_worker = worker
+        worker.start()
+
+    def _on_update_download_progress(self, percent: int) -> None:
+        if self._update_banner is not None:
+            self._update_banner.set_download_progress(percent)
+
+    def _on_update_download_finished(self, wheel_path: str) -> None:
+        """Schedule installation after the Qt process exits, then close this instance."""
+        self._release_update_download_worker()
+        try:
+            install_update_and_restart(Path(wheel_path))
+        except (OSError, UpdateInstallationError) as error:
+            Path(wheel_path).unlink(missing_ok=True)
+            self._show_update_download_error(str(error))
+            return
+        self.close()
+
+    def _on_update_download_failed(self, error: str) -> None:
+        self._release_update_download_worker()
+        self._show_update_download_error(error)
+
+    def _release_update_download_worker(self) -> None:
+        worker = self._update_download_worker
+        self._update_download_worker = None
+        if worker is not None:
+            worker.deleteLater()
+
+    def _show_update_download_error(self, error: str) -> None:
+        if self._update_banner is not None:
+            self._update_banner.set_update_error()
+        QMessageBox.warning(
+            self,
+            "Update download failed",
+            f"SPECTROview could not download the update. Please try again or install it manually.\n\n{error}",
         )
-        banner.apply_theme(self.settings.get_theme())
-        self.centralWidget().layout().insertWidget(0, banner)
-        self._update_banner = banner
 
     def _on_manual_check_done(self):
         """Show 'up to date' message if the manual check found nothing new."""

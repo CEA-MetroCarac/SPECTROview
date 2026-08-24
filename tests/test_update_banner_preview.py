@@ -99,6 +99,10 @@ class BannerPreviewWindow(QMainWindow):
             html_url=self.FAKE_URL,
             on_skip=lambda tag: self._log(f"[{theme}] Skipped version: {tag}"),
             on_dismiss=lambda: self._log(f"[{theme}] Banner dismissed"),
+            on_update=lambda tag, url, digest: self._log(
+                f"[{theme}] Automatic update requested for {tag}"
+            ),
+            wheel_url="https://example.invalid/spectroview-99.99.99-py3-none-any.whl",
         )
         banner.apply_theme(theme)
         return banner
@@ -138,9 +142,10 @@ def _run_real_check():
 
     worker = UpdateCheckerWorker(current_version=VERSION)
 
-    def on_update(tag, notes, url):
+    def on_update(tag, notes, url, wheel_url, wheel_sha256):
         print(f"  ✅ UPDATE AVAILABLE  →  {tag}")
         print(f"     URL  : {url}")
+        print(f"     Wheel: {wheel_url or '(not attached to this release)'}")
         preview = notes[:200].replace("\n", " ") if notes else "(no release notes)"
         print(f"     Notes: {preview}")
 

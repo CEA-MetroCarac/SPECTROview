@@ -88,7 +88,7 @@ pip show spectroview
 - If a newer version is available, a **blue notification banner** appears at the top of the window:
 
 ```
-🔔  A new version of SPECTROview is available:  26.29.0    [ 🔍 View changelog ]  [ Update later ]  [ Skip this version ]
+🔔  A new version of SPECTROview is available:  26.29.0    [ ⬇ Update ]  [ 🔍 Show changelog ]  [ Update later ]  [ Skip this version ]
 ```
 
 > **Privacy Guarantee**: This check only sends a standard anonymous request to the public GitHub API to fetch the latest version number. **Absolutely no personal or usage data is collected or transmitted.**
@@ -97,11 +97,14 @@ pip show spectroview
 
 | Button | Behaviour |
 |--------|-----------|
+| **⬇ Update** | Downloads the `.whl` attached to the announced GitHub release, verifies its SHA-256 checksum when GitHub provides one, closes SPECTROview, runs `pip install --upgrade` with that wheel, and relaunches the app. |
 | **🔍 View changelog** | Opens the GitHub release page in your browser to see what's new. |
 | **Update later** | Hides the banner for the current session only. It will reappear on the next launch if the update is still available. |
 | **Skip this version** | Hides the banner permanently for that specific version. It will not show again until an even newer version is released. |
 
 > **Offline users**: If **SPECTROview** is installed on a machine without internet access, the update check fails silently — the application starts and works exactly as normal. No error is raised.
+
+> **Standalone executable users**: Automatic updates apply to SPECTROview installations made with `pip`. A standalone executable cannot install a Python wheel, so use the release page to download a newer executable instead.
 
 ---
 

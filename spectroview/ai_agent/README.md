@@ -93,15 +93,24 @@ process_query(text)
                                → chat() again (up to VMChat.MAX_AGENT_TURNS)
 ```
 
-Graph tools do **not** draw anything. They submit a typed command
-(`agent/commands.py`) to the context; `_emit_final_result()` drains the queue,
-normalises it once (`utils/plot_utils.py`), and emits a `ChatResult`. The View
-re-emits each config as `plot_requested`, and `main.py` applies it to the Graphs
-workspace.
+Graph tools do **not** draw anything. They validate inputs through the shared,
+Qt-free `spectroview.model.graph_control` contract and submit a typed command
+(`agent/commands.py`) to the context. `_emit_final_result()` drains the queue
+and emits a `ChatResult`; the View re-emits each config as `plot_requested`, and
+`main.py` routes it through the Graph workspace's atomic update/render path.
 
-`_emit_final_result()` runs on **every** exit path — normal completion, the turn
-cap, and a tool failure — so commands the model already queued are never lost
-after it told the user they succeeded.
+Normal completion and the turn cap preserve already-queued commands. Explicit
+cancel and provider/tool failure clear the queue so an operation from an
+aborted request cannot execute during a later request. A new request also
+starts by discarding any stale commands as a defensive boundary.
+
+`GraphPatch` is dynamically generated from every mutable `MGraph` field and
+forbids unknown keys. Its nested filters, per-series styles, spines, axis
+breaks, and annotations are strongly typed. Common plot options remain named
+top-level MCP arguments for weak models; `other_properties: GraphPatch` is the
+complete customization surface. One update call can therefore change any
+combination of graph properties, and `graph_id="all"` is prevalidated for all
+targets before one command is queued.
 
 Conversation history is OpenAI-shaped everywhere. A `role="tool"` message is
 only valid directly after the assistant message carrying its `tool_calls`, so
@@ -137,10 +146,11 @@ what the per-server `tools:` allowlist is for.
 
 ## Context: pushed vs pulled
 
-The system prompt always carries the cheap half — DataFrame names, shapes, and
-every column name with its dtype — because a model that has not seen a column
-name will invent one. The bulky half (sample values, row previews, full graph
-configs) lives behind MCP **resources** and is fetched only when needed.
+The system prompt always carries the cheap half — DataFrame names, shapes,
+every column name with its dtype, and compact open-graph summaries — because a
+model that has not seen a column or graph ID will invent one. The bulky half
+(sample values, row previews, complete `MGraph.save()` configurations) lives
+behind MCP **resources** and is fetched only when needed.
 
 Since no LLM API has a native notion of a resource, the hub exposes reading one
 as a synthetic `get_context(uri)` tool whose `uri` enum lists exactly the
@@ -154,7 +164,7 @@ resources currently available. Any server's resources appear there automatically
 
 ```
 1.  Dynamic context (computed fresh each turn)
-    ├── DataFrame schemas (columns, dtypes, sample values, head(3) preview)
+    ├── DataFrame schemas (names, shapes, columns, dtypes)
     ├── Active DataFrame name
     └── Open graphs (ID, style, x, y, z, filters, df)
 

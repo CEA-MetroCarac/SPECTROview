@@ -25,11 +25,8 @@ This file contains representative plotting examples that demonstrate how the AI 
 
 **User:** Plot a box plot and a scatter plot of FWHM_Si vs Slot.
 
-**Call tool:** `plot_graph` with:
-- `x` = `"Slot"`
-- `y` = `"FWHM_Si"`
-- `plot_style` = `"box, scatter"`
-- `df_name` = `"fit_results"`
+Make two `plot_graph` calls with the same `x`, `y`, and `df_name`: the first
+with `plot_style="box"`, the second with `plot_style="scatter"`.
 
 ---
 
@@ -194,7 +191,28 @@ For this request, make **three separate calls** to `plot_graph` — one per slot
 - `other_properties` = `{"dpi": 300}`
 - `df_name` = `"fit_results"`
 
-(`dpi` has no dedicated parameter, so it goes inside `other_properties`. Compare to Example 4, where `hist_bins` *does* have a dedicated parameter and is passed directly.)
+(`dpi` has no dedicated parameter, so it goes inside the typed
+`other_properties` patch. Compare to Example 4, where `hist_bins` has a common
+top-level parameter.)
+
+---
+
+## Example 14b: Coherent Multi-Property Customization
+
+**User:** Change graph 1's X axis to log scale, make the title 16 pt, move the
+legend to the upper left, and make every plotted line 3 pt wide.
+
+First call `get_context` with `spectroview://graphs/detail` so the current
+`legend_properties` entries can be preserved. Then make **one** `update_graph`
+call with:
+
+- `graph_id` = `"1"`
+- `xlogscale` = `true`
+- `other_properties` = `{"title_fontsize": 16, "legend_loc": "upper left", "legend_properties": [...]}`
+
+In `legend_properties`, copy every current entry and change only its
+`linewidth` to `3.0`. Do not resend `x`, `y`, `z`, `plot_style`, or unrelated
+style fields.
 
 ---
 

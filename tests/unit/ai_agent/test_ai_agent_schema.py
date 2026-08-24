@@ -6,6 +6,7 @@ tool-calling LLM, including local models via Ollama's grammar-constrained
 decoding, sees and is constrained by) rather than just the Python source.
 """
 import asyncio
+import dataclasses
 
 from mcp.shared.memory import create_connected_server_and_client_session
 
@@ -13,6 +14,7 @@ from spectroview import PLOT_STYLES
 from spectroview.ai_agent.agent.ports import RecordingContext
 from spectroview.ai_agent.mcp.server import VALID_PLOT_STYLES, create_mcp_server
 from spectroview.ai_agent.utils.plot_utils import VALID_PLOT_STYLES as PLOT_UTILS_STYLES
+from spectroview.model.m_graph import MGraph
 
 
 def _list_tools():
@@ -75,6 +77,19 @@ class TestPlotGraphSchema:
     def test_other_properties_still_present_as_catchall(self):
         schema = _list_tools()["plot_graph"]
         assert "other_properties" in schema["properties"]
+
+    def test_advanced_patch_is_typed_and_exhaustive(self):
+        """Every MGraph customization is discoverable in the real schema."""
+        schema = _list_tools()["plot_graph"]
+        advanced = schema["properties"]["other_properties"]
+        ref = next(branch["$ref"] for branch in advanced["anyOf"] if "$ref" in branch)
+        definition = schema
+        for part in ref.removeprefix("#/").split("/"):
+            definition = definition[part]
+        expected = {field.name for field in dataclasses.fields(MGraph)} - {"graph_id"}
+        assert set(definition["properties"]) == expected
+        assert definition.get("additionalProperties") is False
+        assert "description" in definition["properties"]["legend_properties"]
 
 
 class TestUpdateGraphSchema:

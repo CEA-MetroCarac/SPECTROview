@@ -13,6 +13,7 @@ import pytest
 
 from spectroview.model.m_graph import MGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
+from spectroview.model.graph_control import GraphValidationError
 
 
 @pytest.fixture
@@ -311,6 +312,19 @@ class TestGraphManagement:
     def test_create_graph_ignores_unknown_config_keys(self, vm):
         graph = vm.create_graph({"totally_bogus_field": 123})
         assert not hasattr(graph, "totally_bogus_field")
+
+    def test_update_graph_rejects_unknown_property_without_mutation(self, vm):
+        graph = vm.create_graph({"plot_title": "Before"})
+        before = graph.save()
+        with pytest.raises(GraphValidationError):
+            vm.update_graph(graph.graph_id, {"totally_bogus_field": 123})
+        assert graph.save() == before
+
+    def test_property_update_emits_graph_state_changed(self, vm, qtbot):
+        graph = vm.create_graph()
+        with qtbot.waitSignal(vm.graph_state_changed):
+            vm.update_graph(graph.graph_id, {"title_fontsize": 16})
+        assert graph.title_fontsize == 16
 
     def test_graph_ids_increase_monotonically(self, vm):
         g1 = vm.create_graph()

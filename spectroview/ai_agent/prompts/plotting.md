@@ -30,7 +30,14 @@ All of the following are **optional, top-level tool arguments** — do NOT nest 
 - `hist_bins` — number of bins, for `histogram` style
 - `trendline_order` — polynomial order, for `trendline` style
 
-For any property without a dedicated argument above (e.g. `x_rot`, `plot_width`, `plot_height`, `dpi`, `hist_kde`, `colormap_norm`/`colormap_center` for wafer/2Dmap, `axis_breaks`, `inset_enabled` and the other `inset_*` fields), pass it inside the `other_properties` dict instead.
+For any property without a dedicated argument above, use `other_properties`.
+This is a **typed partial Graph patch**, not an arbitrary catch-all: its schema
+contains every mutable Graph workspace field and rejects unknown names. It can
+update several advanced settings in the same call, including secondary axes,
+ticks/spines, fonts/theme/background/margins, legend box and per-series styles,
+plot-specific options, annotations, broken axes, insets, and export geometry.
+Supply only fields the user requested. Explicit `null` clears nullable labels,
+limits, optional axes, positions, and export sizes.
 
 ## Grouping and Colour Encoding (`z`)
 
@@ -52,11 +59,9 @@ The distinction: if the user names a column to group/colour **an existing or oth
 
 ## Multi-Style Plots
 
-If the user requests multiple plot styles with **identical** axis columns and parameters (e.g., "create a box and scatter plot of X vs Y"), you can pass a comma-separated string to the `plot_style` argument in a **single** `plot_graph` tool call:
-
-`plot_style: "box, scatter"`
-
-This is the preferred compact form. The application will expand it into separate graphs automatically.
+If the user requests multiple plot styles with identical axes (for example a
+box plot and a scatter plot), make one `plot_graph` call per style. The
+`plot_style` schema accepts exactly one of the nine renderer styles per call.
 
 ## Spatial Plots
 
@@ -82,6 +87,10 @@ When the user wants to **modify** an existing graph (change axis limits, title, 
 - In particular, "group / colour / split this plot by `<column>`" sets **`z`** only. Leave `x` and `y` alone.
 - When **adding** a filter to an existing graph, preserve the existing filters by including them in the new filters list.
 - If you need the graph's current configuration before editing it, call `get_context` with `spectroview://graphs/detail`.
+- `other_properties` can combine every advanced customization in this same
+  update call. For a blanket line-width request, first read the full graph
+  state, then preserve each `legend_properties` entry while changing its
+  `linewidth`; do not discard its label/color/marker or unrelated settings.
 
 ## Filters
 

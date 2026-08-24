@@ -455,7 +455,7 @@ class Main(QMainWindow):
 
             self.v_graphs_workspace.vm.dataframes_changed.connect(sync_chat_dfs_full)
             self.v_graphs_workspace.vm.dataframe_columns_changed.connect(sync_chat_active)
-            self.v_graphs_workspace.vm.graphs_changed.connect(sync_chat_graphs)
+            self.v_graphs_workspace.vm.graph_state_changed.connect(sync_chat_graphs)
 
         # Toggle: clicking the toolbar button again while the panel is
         # already open closes it, instead of just re-focusing it.
@@ -519,8 +519,7 @@ class Main(QMainWindow):
         if hasattr(ws, 'cbb_plot_style'): _set_combo(ws.cbb_plot_style, plot_config.get("plot_style"))
 
     def _apply_graph_update(self, update_payload: dict):
-        """Update an existing graph by ID with new properties from the AI."""
-        import copy
+        """Apply one validated AI/MCP patch through the Graph workspace API."""
         ws = self.v_graphs_workspace
         graph_id = update_payload.get("graph_id")
         properties = update_payload.get("properties", {})
@@ -528,28 +527,7 @@ class Main(QMainWindow):
         if graph_id is None or not isinstance(properties, dict):
             return
 
-        graph_id = int(graph_id)
-        model = ws.vm.get_graph(graph_id)
-        if model is None:
-            return
-
-        # Already normalised by VMChat; copy so the model can't alias the payload.
-        ws.vm.update_graph(graph_id, copy.deepcopy(properties))
-
-        # Re-render the existing graph widget
-        if graph_id in ws.graph_widgets:
-            graph_widget, _, sub_window = ws.graph_widgets[graph_id]
-            updated_model = ws.vm.get_graph(graph_id)
-            filtered_df = ws.vm.apply_filters(updated_model.df_name, updated_model.filters)
-            ws._configure_graph_from_model(graph_widget, updated_model)
-            graph_widget.create_plot_widget(updated_model.dpi)
-            try:
-                ws._render_plot(graph_widget, filtered_df, updated_model)
-            except Exception as e:
-                QMessageBox.warning(self, "Graph Update Error", f"Could not re-render graph {graph_id}:\n{e}")
-            # create_plot_widget() rebuilt this graph's toolbar_container --
-            # re-sync in case this graph happens to be the active one.
-            ws._sync_active_graph_toolbar()
+        ws.update_graphs_from_config(graph_id, properties)
 
         # Switch to Graphs tab to show the result
         self.tabWidget.setCurrentWidget(ws)

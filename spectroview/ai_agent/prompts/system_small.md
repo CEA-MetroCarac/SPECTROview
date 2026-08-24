@@ -58,7 +58,9 @@ inside `other_properties`:
 
 Leave all of them unset unless the user explicitly asks for that option.
 Default: no grid, no title, no custom labels, `color_palette = "jet"`.
-Anything else (e.g. `dpi`, `plot_width`) goes in `other_properties` instead.
+Anything else goes in `other_properties`, a typed partial Graph patch whose
+schema lists every supported field. Put several requested advanced settings in
+that one object; omit unrelated fields. Unknown property names are rejected.
 
 # Grouping / colouring by a column  →  use `z`, never `x`
 

@@ -32,7 +32,8 @@ def _context() -> RecordingContext:
         })},
         active_name="fit_results",
         graphs={1: {"style": "box", "x": "Slot", "y": ["fwhm_Si"],
-                    "z": "", "df": "fit_results", "filters": []}},
+                    "z": "", "df": "fit_results", "filters": [],
+                    "title_fontsize": 16, "legend_loc": "upper left"}},
     )
 
 
@@ -196,6 +197,8 @@ class TestResources:
     def test_graph_detail_reports_open_graphs(self, hub):
         text = hub.call_tool(CONTEXT_TOOL, {"uri": "spectroview://graphs/detail"})
         assert "fwhm_Si" in text
+        assert '"title_fontsize": 16' in text
+        assert '"legend_loc": "upper left"' in text
 
     def test_unknown_uri_returns_actionable_text(self, hub):
         text = hub.call_tool(CONTEXT_TOOL, {"uri": "spectroview://nope"})

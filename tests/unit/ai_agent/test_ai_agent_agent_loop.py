@@ -16,6 +16,7 @@ import pandas as pd
 import pytest
 
 from spectroview.ai_agent.vm_chat import VMChat
+from spectroview.ai_agent.agent.commands import CreatePlot
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -255,3 +256,24 @@ class TestCancel:
         vm.cancel()
         assert fake.cancelled >= 1
         assert states[-1] is False
+
+    def test_cancel_discards_queued_commands(self, vm):
+        vm._context.submit(CreatePlot(dict(PLOT_ARGS)))
+        vm.cancel()
+        assert vm._context.drain() == []
+
+
+class TestGeneralChatWithoutData:
+    def test_plain_question_is_not_blocked_when_no_dataframe_is_loaded(self, qapp):
+        vm = VMChat()
+        try:
+            fake = FakeLLMClient([("SPECTROview can load several formats.", [])])
+            vm._client = fake
+            results, errors = [], []
+            vm.result_ready.connect(results.append)
+            vm.error_occurred.connect(errors.append)
+            vm.process_query("What can this app do?")
+            assert not errors
+            assert results[0].action == "answer"
+        finally:
+            vm.shutdown()

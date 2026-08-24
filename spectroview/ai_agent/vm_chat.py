@@ -35,6 +35,7 @@ without touching this Python file.
 
 from __future__ import annotations
 
+import copy
 import json
 import re
 from typing import Optional, List, Dict, Any
@@ -247,18 +248,21 @@ class VMChat(QObject):
         self._active_df_name = name
 
     def set_graphs(self, graphs: Dict[int, Any]) -> None:
-        """Update the known open graphs (for inclusion in system prompt)."""
-        self._graphs = {
-            gid: {
-                "style":   getattr(g, 'plot_style', ''),
-                "x":       getattr(g, 'x', ''),
-                "y":       getattr(g, 'y', []),
-                "z":       getattr(g, 'z', ''),
-                "df":      getattr(g, 'df_name', ''),
-                "filters": getattr(g, 'filters', []),
-            }
-            for gid, g in graphs.items()
-        }
+        """Snapshot complete live graph state for prompts and MCP resources.
+
+        The system prompt renders only a compact subset, but
+        ``spectroview://graphs/detail`` must actually expose every MGraph
+        customization so an update can preserve unrelated settings.
+        """
+        snapshots = {}
+        for gid, graph in graphs.items():
+            if hasattr(graph, "save"):
+                snapshots[gid] = graph.save()
+            elif isinstance(graph, dict):
+                snapshots[gid] = copy.deepcopy(graph)
+            else:
+                snapshots[gid] = copy.deepcopy(vars(graph))
+        self._graphs = snapshots
 
     def set_model(self, model: str) -> None:
         self._model = model
@@ -386,12 +390,6 @@ class VMChat(QObject):
         if not user_text.strip():
             return
 
-        if not self._dfs:
-            self.error_occurred.emit(
-                "No DataFrames loaded. Please load data in the Graphs workspace first."
-            )
-            return
-
         if not self._client.is_available():
             if self._provider == "Ollama":
                 self.error_occurred.emit(
@@ -406,6 +404,11 @@ class VMChat(QObject):
                     "Please enter your API key in the provider settings above."
                 )
             return
+
+        # A prior cancelled/provider-failed turn must never leak queued write
+        # commands into this one.  Normally the queue is empty because a
+        # completed turn drains it in _emit_final_result().
+        self._context.drain()
 
         # Track the user turn now; assistant turn added after response
         self._conversation.add_message("user", user_text, reply_to_index=reply_to_index)
@@ -432,6 +435,7 @@ class VMChat(QObject):
     def cancel(self) -> None:
         """Abort any in-progress LLM request."""
         self._client.cancel()
+        self._context.drain()
         self.thinking_changed.emit(False, "Thinking")
         self._save_history_to_file()
 
@@ -537,13 +541,15 @@ class VMChat(QObject):
         if self._graphs:
             graph_lines: list[str] = []
             for gid, info in sorted(self._graphs.items()):
-                y_str = info['y'][0] if isinstance(info['y'], list) and info['y'] else info['y']
-                z_str = f", z={info['z']!r}" if info['z'] else ""
+                y = info.get('y', [])
+                y_str = y[0] if isinstance(y, list) and y else y
+                z = info.get('z', '')
+                z_str = f", z={z!r}" if z else ""
                 filt_str = f", filters={info['filters']!r}" if info.get('filters') else ""
                 graph_lines.append(
-                    f"  Graph ID {gid}: style={info['style']!r}, "
-                    f"x={info['x']!r}, y={y_str!r}{z_str}{filt_str}, "
-                    f"df={info['df']!r}"
+                    f"  Graph ID {gid}: style={info.get('plot_style', info.get('style', ''))!r}, "
+                    f"x={info.get('x', '')!r}, y={y_str!r}{z_str}{filt_str}, "
+                    f"df={info.get('df_name', info.get('df', ''))!r}"
                 )
             graphs_info = "CURRENTLY OPEN GRAPHS:\n" + "\n".join(graph_lines) + "\n"
         else:
@@ -716,6 +722,7 @@ class VMChat(QObject):
                     on_thinking_chunk=self._on_thinking_chunk,
                 )
             except Exception as e:
+                self._context.drain()
                 self.error_occurred.emit(f"Error calling MCP tools: {e}")
                 self._emit_final_result(full_text)
             return
@@ -723,6 +730,10 @@ class VMChat(QObject):
         self._emit_final_result(full_text)
 
     def _on_error(self, message: str) -> None:
+        # Commands are applied only after a completed agent turn.  Discard
+        # anything queued before this provider/tool error so it cannot be
+        # executed by an unrelated future request.
+        self._context.drain()
         self.thinking_changed.emit(False, "Thinking")
         self.error_occurred.emit(message)
 

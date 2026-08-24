@@ -261,9 +261,14 @@ class TestMGraphSaveLoad:
         assert not hasattr(graph, 'not_a_real_field')
         assert graph.x == 'X'
 
-    def test_load_x_as_numeric_false_becomes_none_for_backward_compat(self):
+    def test_current_load_preserves_explicit_x_category_selection(self):
         graph = MGraph()
         graph.load({'x_as_numeric': False})
+        assert graph.x_as_numeric is False
+
+    def test_legacy_load_converts_old_false_axis_type_to_auto(self):
+        graph = MGraph()
+        graph.load({'x_as_numeric': False}, legacy_x_as_numeric_false=True)
         assert graph.x_as_numeric is None
 
     def test_load_missing_annotations_still_ends_up_a_list(self):

@@ -283,7 +283,7 @@ Workspaces are composed from **shared components** that follow the same signal-b
 |-----------|---------------|-------------|
 | `Spectra` | `.spectra` | ZIP archive (`format_version: 2`): `metadata.json` (`store_meta` per map) + per-map NPZ arrays. Written by the unified `WorkspaceIO.save_workspace()`. |
 | `Maps` | `.maps` | Same unified ZIP format as `.spectra` (`WorkspaceIO.save_workspace()`), whose metadata additionally carries `maps_metadata`, `map_type`, and the fit-results DataFrame. |
-| `Graphs` | `.graphs` | ZIP archive (`format_version: 3`) via `WorkspaceIO.save_workspace()`: `metadata.json` (plots + DataFrame sources) + compressed DataFrames. |
+| `Graphs` | `.graphs` | ZIP archive (`format_version: 4`) via `WorkspaceIO.save_workspace()`: `metadata.json` (plots + DataFrame sources) + compressed DataFrames. |
 
 ### **Spectrum Serialization Flow**
 

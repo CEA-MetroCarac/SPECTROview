@@ -21,6 +21,12 @@ from spectroview.ai_agent.agent.commands import CreatePlot, DeletePlots, UpdateP
 from spectroview.ai_agent.agent.ports import AppContext
 from spectroview.ai_agent.utils.df_summary import summarize_dataframe_columns
 from spectroview.ai_agent.utils.safe_eval import evaluate_pandas_expression, format_query_result
+from spectroview.model.graph_control import (
+    GraphPatch,
+    GraphValidationError,
+    graph_patch_to_dict,
+    normalize_graph_patch,
+)
 
 # Spelled out rather than derived from spectroview.PLOT_STYLES: MCP builds each
 # tool's JSON Schema from these annotations, so the literal must be statically
@@ -56,15 +62,29 @@ def create_mcp_server(context: AppContext) -> FastMCP:
         """
         return {k: v for k, v in values.items() if v is not None}
 
-    def _validate_filters(filters: Optional[List[str]], df: Optional[Any]) -> Optional[str]:
+    def _merge_properties(advanced: Optional[Any], **named: Any) -> dict:
+        """Merge the schema-complete advanced patch with common arguments.
+
+        Named arguments win when both forms contain a field.  This keeps the
+        original public MCP API backward compatible while replacing its old
+        unstructured catch-all dict with the MGraph-derived ``GraphPatch``.
+        """
+        merged = graph_patch_to_dict(advanced)
+        merged.update(_named_props(**named))
+        return merged
+
+    def _validate_filters(filters: Optional[List[Any]], df: Optional[Any]) -> Optional[str]:
         """Dry-run each filter against *df*. Returns an error message, or None if all valid."""
         if not filters or df is None:
             return None
         for f in filters:
-            _, error = evaluate_pandas_expression(df, f)
+            expression = f.get("expression", "") if isinstance(f, dict) else f
+            if isinstance(f, dict) and not f.get("state", True):
+                continue
+            _, error = evaluate_pandas_expression(df, expression)
             if error is not None:
                 return (
-                    f"Error: filter {f!r} is invalid ({error}). Common cause: string values must be "
+                    f"Error: filter {expression!r} is invalid ({error}). Common cause: string values must be "
                     f"quoted, e.g. \"Zone == 'Edge'\" not \"Zone == Edge\"."
                 )
         return None
@@ -171,7 +191,13 @@ def create_mcp_server(context: AppContext) -> FastMCP:
         scatter_size: Annotated[Optional[int], Field(description="Marker size for scatter/point plots.")] = None,
         hist_bins: Annotated[Optional[int], Field(description="Number of histogram bins.")] = None,
         trendline_order: Annotated[Optional[int], Field(description="Polynomial order for trendline plots.")] = None,
-        other_properties: Annotated[Optional[dict], Field(description="Catch-all for properties without a dedicated parameter above (e.g. 'x_rot', 'plot_width', 'plot_height', 'dpi', 'hist_kde'). Prefer the named parameters above when available.")] = None,
+        other_properties: Annotated[Optional[GraphPatch], Field(description=(
+            "Typed advanced graph patch. It exposes every mutable MGraph customization, including "
+            "secondary axes, ticks/spines, font and figure settings, per-series legend_properties, "
+            "error bars, histogram/wafer/trendline options, annotations, axis breaks, insets, and "
+            "export geometry. Supply only requested fields; explicit null clears nullable fields. "
+            "Prefer the common named parameters above when one exists."
+        ))] = None,
     ) -> str:
         """Create a new graph from a loaded DataFrame. One tool call = one graph window.
 
@@ -185,32 +211,40 @@ def create_mcp_server(context: AppContext) -> FastMCP:
         """
         target_df_name = df_name or context.active_dataframe_name()
 
+        target_df = context.get_dataframe(target_df_name)
+        if target_df is None:
+            return f"Error: DataFrame {target_df_name!r} not found. This plot was NOT created."
+
         if plot_style not in VALID_PLOT_STYLES:
             return _invalid_style_message(plot_style) + " This plot was NOT created; please retry."
 
-        filter_error = _validate_filters(filters, context.get_dataframe(target_df_name))
+        filter_error = _validate_filters(filters, target_df)
         if filter_error is not None:
             return filter_error + " This plot was NOT created; please fix the filter and retry."
 
-        config = {
+        config = _merge_properties(
+            other_properties,
+            grid=grid, plot_title=plot_title, xlabel=xlabel, ylabel=ylabel, zlabel=zlabel,
+            xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, zmin=zmin, zmax=zmax,
+            color_palette=color_palette, xlogscale=xlogscale, ylogscale=ylogscale,
+            scatter_size=scatter_size, hist_bins=hist_bins, trendline_order=trendline_order,
+        )
+        config.update({
             "x": x,
             "y": y if isinstance(y, list) else [y],
             "plot_style": plot_style,
             "z": z,
             "filters": filters or [],
             "df_name": target_df_name,
-        }
-        if other_properties:
-            config.update(other_properties)
-        config.update(_named_props(
-            grid=grid, plot_title=plot_title, xlabel=xlabel, ylabel=ylabel, zlabel=zlabel,
-            xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, zmin=zmin, zmax=zmax,
-            color_palette=color_palette, xlogscale=xlogscale, ylogscale=ylogscale,
-            scatter_size=scatter_size, hist_bins=hist_bins, trendline_order=trendline_order,
-        ))
+        })
+
+        try:
+            config = normalize_graph_patch(config, dataframe=target_df)
+        except GraphValidationError as exc:
+            return f"Error: invalid graph configuration ({exc}). This plot was NOT created; please retry."
 
         context.submit(CreatePlot(config))
-        return "Plot command sent to UI successfully."
+        return "Plot configuration successfully validated and queued for the Graphs workspace."
 
     @mcp.tool()
     def get_statistics(columns: List[str], df_name: str = "") -> str:
@@ -232,19 +266,6 @@ def create_mcp_server(context: AppContext) -> FastMCP:
             return f"Statistics:\n{df[valid_cols].describe().to_string()}"
         except Exception as e:
             return f"Error computing statistics: {e}"
-
-    def _resolve_graph_df(graph_id: str) -> Optional[Any]:
-        """Best-effort lookup of the DataFrame backing an open graph, for filter validation."""
-        if str(graph_id).strip().lower() == "all":
-            return None  # could span multiple DataFrames — validating against one would mislead
-        try:
-            gid_int = int(graph_id)
-        except (TypeError, ValueError):
-            return None
-        info = context.list_graphs().get(gid_int)
-        if not info:
-            return None
-        return context.get_dataframe(info.get("df", ""))
 
     @mcp.tool()
     def update_graph(
@@ -276,7 +297,11 @@ def create_mcp_server(context: AppContext) -> FastMCP:
         scatter_size: Annotated[Optional[int], Field(description="Marker size for scatter/point plots.")] = None,
         hist_bins: Annotated[Optional[int], Field(description="Number of histogram bins.")] = None,
         trendline_order: Annotated[Optional[int], Field(description="Polynomial order for trendline plots.")] = None,
-        other_properties: Annotated[Optional[dict], Field(description="Catch-all for properties without a dedicated parameter above. Prefer the named parameters above when available.")] = None,
+        other_properties: Annotated[Optional[GraphPatch], Field(description=(
+            "Typed partial graph patch exposing every mutable Graph workspace property. Use it for "
+            "advanced or multi-property changes; omitted fields are preserved and explicit null clears "
+            "nullable values. Prefer common named parameters when available."
+        ))] = None,
     ) -> str:
         """Update an existing graph by ID.
 
@@ -295,27 +320,63 @@ def create_mcp_server(context: AppContext) -> FastMCP:
         if plot_style is not None and plot_style not in VALID_PLOT_STYLES:
             return _invalid_style_message(plot_style) + " This update was NOT applied; please retry."
 
-        filter_error = _validate_filters(filters, _resolve_graph_df(graph_id))
-        if filter_error is not None:
-            return filter_error + " This update was NOT applied; please fix the filter and retry."
-
-        update_props: dict = {}
+        update_props = _merge_properties(
+            other_properties,
+            grid=grid, plot_title=plot_title, xlabel=xlabel, ylabel=ylabel, zlabel=zlabel,
+            xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, zmin=zmin, zmax=zmax,
+            color_palette=color_palette, xlogscale=xlogscale, ylogscale=ylogscale,
+            scatter_size=scatter_size, hist_bins=hist_bins, trendline_order=trendline_order,
+        )
         if x is not None: update_props["x"] = x
         if y is not None: update_props["y"] = y if isinstance(y, list) else [y]
         if plot_style is not None: update_props["plot_style"] = plot_style
         if z is not None: update_props["z"] = z
         if filters is not None: update_props["filters"] = filters
-        if other_properties:
-            update_props.update(other_properties)
-        update_props.update(_named_props(
-            grid=grid, plot_title=plot_title, xlabel=xlabel, ylabel=ylabel, zlabel=zlabel,
-            xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, zmin=zmin, zmax=zmax,
-            color_palette=color_palette, xlogscale=xlogscale, ylogscale=ylogscale,
-            scatter_size=scatter_size, hist_bins=hist_bins, trendline_order=trendline_order,
-        ))
+
+        if not update_props:
+            return "Error: no graph properties were supplied; nothing was queued."
+
+        graph_key = str(graph_id).strip().lower()
+        graphs = context.list_graphs()
+        if graph_key == "all":
+            targets = sorted(graphs.items())
+            if not targets:
+                return "Error: no graphs are currently open; nothing was queued."
+        else:
+            try:
+                graph_number = int(graph_id)
+            except (TypeError, ValueError):
+                return "Error: graph_id must be a numeric graph ID or 'all'; nothing was queued."
+            if graph_number not in graphs:
+                return f"Error: graph {graph_number} is not open; nothing was queued."
+            targets = [(graph_number, graphs[graph_number])]
+
+        normalized_by_target = []
+        for target_id, current in targets:
+            df_key = current.get("df_name", current.get("df", ""))
+            target_df = context.get_dataframe(df_key)
+            filter_error = _validate_filters(update_props.get("filters"), target_df)
+            if filter_error is not None:
+                return f"{filter_error} This update was NOT applied; please fix the filter and retry."
+            try:
+                normalized_by_target.append(normalize_graph_patch(
+                    update_props,
+                    current=current,
+                    dataframe=target_df,
+                ))
+            except GraphValidationError as exc:
+                return (
+                    f"Error: update is invalid for graph {target_id} ({exc}). "
+                    "No graphs were updated; please correct the properties and retry."
+                )
+
+        # One queued patch is sufficient when every target normalized to the
+        # same values (the usual case).  Context-specific legend resets are
+        # deterministic and have the same shape across targets.
+        update_props = normalized_by_target[0]
 
         context.submit(UpdatePlot(graph_id=graph_id, properties=update_props))
-        return f"Update command for graph {graph_id} sent to UI successfully."
+        return f"Update for graph {graph_id} successfully validated and queued for the Graphs workspace."
 
     @mcp.tool()
     def delete_graph(delete_all: bool = False, graph_ids: Optional[List[int]] = None) -> str:

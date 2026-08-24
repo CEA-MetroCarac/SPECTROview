@@ -9,36 +9,15 @@ comma-separated multi-style plot configs into individual entries.
 from __future__ import annotations
 
 import copy
-import logging
 from typing import Any
 
 from spectroview import PALETTE, PLOT_STYLES
-
-logger = logging.getLogger(__name__)
+from spectroview.model.graph_control import normalize_graph_patch
 
 VALID_PLOT_STYLES: frozenset[str] = frozenset(PLOT_STYLES)
 VALID_PALETTES: frozenset[str] = frozenset(PALETTE) | frozenset({
     "tab10", "Set2", "Set3", "coolwarm", "RdBu", "inferno",
 })
-
-# Fields that must be floats or None
-_FLOAT_KEYS: tuple[str, ...] = (
-    "xmin", "xmax", "ymin", "ymax",
-    "zmin", "zmax", "y2min", "y2max",
-    "y3min", "y3max", "x2min", "x2max",
-    "error_bar_capsize", "legend_alpha",
-    "colormap_center",
-    "inset_xmin", "inset_xmax", "inset_ymin", "inset_ymax",
-)
-
-# Fields that must be ints
-_INT_KEYS: tuple[str, ...] = (
-    "x_rot", "scatter_size", "plot_width", "plot_height",
-    "dpi", "trendline_order", "hist_bins",
-    "title_fontsize", "axis_label_fontsize", "tick_label_fontsize",
-    "legend_ncol", "legend_fontsize",
-)
-
 
 # ---------------------------------------------------------------------------
 # Validation helpers
@@ -74,9 +53,10 @@ def normalize_plot_config(cfg: dict[str, Any]) -> dict[str, Any]:
     """Coerce a raw LLM plot config dictionary into the typed format
     expected by :class:`spectroview.model.m_graph.MGraph`.
 
-    This function is the single source of truth for type coercion and
-    replaces the inline normalisation previously scattered across
-    ``main.py`` and ``vm_chat.py``.
+    Compatibility wrapper around the application-level
+    :func:`spectroview.model.graph_control.normalize_graph_patch`.  Keeping
+    this function avoids breaking recipe/agent callers while ensuring GUI,
+    AI, and MCP no longer maintain different coercion rules.
 
     Parameters
     ----------
@@ -90,70 +70,9 @@ def normalize_plot_config(cfg: dict[str, Any]) -> dict[str, Any]:
     dict[str, Any]
         The same dictionary with types corrected.
     """
-    # ── y must be a list of strings ──────────────────────────────────────
-    if "y" in cfg:
-        y = cfg["y"]
-        if isinstance(y, str):
-            cfg["y"] = [y] if y else []
-        elif y is None:
-            cfg["y"] = []
-        elif not isinstance(y, list):
-            cfg["y"] = []
-
-    # ── Float limits ─────────────────────────────────────────────────────
-    for key in _FLOAT_KEYS:
-        if key in cfg:
-            val = cfg[key]
-            if val is None or val == "" or val == "null":
-                cfg[key] = None
-            else:
-                try:
-                    cfg[key] = float(val)
-                except (ValueError, TypeError):
-                    logger.debug("Cannot convert %r=%r to float; setting None", key, val)
-                    cfg[key] = None
-
-    # ── Integer fields ───────────────────────────────────────────────────
-    for key in _INT_KEYS:
-        if key in cfg:
-            try:
-                cfg[key] = int(cfg[key])
-            except (ValueError, TypeError):
-                logger.debug("Cannot convert %r=%r to int; removing key", key, cfg[key])
-                del cfg[key]
-
-    # ── Filters — normalise to list[dict] ────────────────────────────────
-    if "filters" in cfg:
-        raw_filters = cfg["filters"]
-        if isinstance(raw_filters, list):
-            parsed: list[dict] = []
-            for f in raw_filters:
-                if isinstance(f, str) and f.strip():
-                    parsed.append({"expression": f, "state": True})
-                elif isinstance(f, dict) and "expression" in f:
-                    f.setdefault("state", True)
-                    parsed.append(f)
-            cfg["filters"] = parsed
-        else:
-            cfg["filters"] = []
-
-    # ── Validate plot_style ───────────────────────────────────────────────
-    if "plot_style" in cfg:
-        # Comma-separated styles are valid at this stage (expanded later)
-        styles = [s.strip() for s in str(cfg["plot_style"]).split(",")]
-        invalid = [s for s in styles if s and not validate_plot_style(s)]
-        if invalid:
-            logger.warning("Unrecognised plot style(s): %s", invalid)
-
-    # ── Validate / sanitise color_palette ────────────────────────────────
-    if "color_palette" in cfg and cfg["color_palette"]:
-        if not validate_palette(str(cfg["color_palette"])):
-            logger.warning(
-                "Unrecognised palette %r; falling back to 'jet'",
-                cfg["color_palette"],
-            )
-            cfg["color_palette"] = "jet"
-
+    normalized = normalize_graph_patch(cfg)
+    cfg.clear()
+    cfg.update(normalized)
     return cfg
 
 
@@ -215,7 +134,10 @@ def expand_all_plot_configs(
     """
     result: list[dict[str, Any]] = []
     for raw in raw_configs:
-        cfg = copy.deepcopy(raw)
-        normalize_plot_config(cfg)
-        result.extend(expand_comma_styles(cfg))
+        # Split first: GraphPatch correctly constrains plot_style to one real
+        # renderer style, while this legacy compact shorthand can still be
+        # accepted at the boundary and expanded into valid individual calls.
+        for cfg in expand_comma_styles(copy.deepcopy(raw)):
+            normalize_plot_config(cfg)
+            result.append(cfg)
     return result

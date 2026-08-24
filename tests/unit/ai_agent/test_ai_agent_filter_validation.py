@@ -17,6 +17,7 @@ from mcp.shared.memory import create_connected_server_and_client_session
 
 from spectroview.ai_agent.agent.ports import RecordingContext
 from spectroview.ai_agent.mcp.server import create_mcp_server
+from spectroview.model.m_graph import MGraph
 
 
 def _context(graphs=None) -> RecordingContext:
@@ -97,6 +98,32 @@ class TestMergePrecedence:
         })
         assert pending[0].config["x_rot"] == 45
 
+    def test_advanced_patch_accepts_multiple_customizations_in_one_call(self):
+        _, pending = _call_tool("plot_graph", {
+            "x": "Slot", "y": "fwhm_Si", "plot_style": "line",
+            "other_properties": {
+                "title_fontsize": 16,
+                "legend_loc": "upper left",
+                "tick_direction": "in",
+                "figure_margins": [0.1, 0.2],
+                "y2": "fwhm_Si",
+                "y2color": "purple",
+            },
+        })
+        config = pending[0].config
+        assert config["title_fontsize"] == 16
+        assert config["legend_loc"] == "upper left"
+        assert config["figure_margins"] == [0.1, 0.2]
+        assert config["y2"] == "fwhm_Si"
+
+    def test_unknown_advanced_property_is_rejected_by_tool_schema(self):
+        text, pending = _call_tool("plot_graph", {
+            "x": "Slot", "y": "fwhm_Si", "plot_style": "line",
+            "other_properties": {"not_a_graph_property": 1},
+        })
+        assert "error" in text.lower()
+        assert pending == []
+
 
 class TestUpdateGraphFilterValidation:
     def test_invalid_filter_on_known_graph_is_rejected(self):
@@ -107,12 +134,30 @@ class TestUpdateGraphFilterValidation:
         assert "NOT applied" in text
         assert pending == []
 
-    def test_update_all_skips_dry_run_validation(self):
-        """graph_id='all' could span multiple DataFrames — validating
-        against one would mislead, so it's intentionally skipped rather
-        than silently guessing which DataFrame to check against."""
+    def test_update_all_with_no_open_graphs_is_rejected(self):
         text, pending = _call_tool("update_graph", {
             "graph_id": "all", "filters": ["Zone == 'Edge'"],
         })
+        assert "no graphs" in text.lower()
+        assert pending == []
+
+    def test_update_all_validates_and_queues_one_atomic_command(self):
+        graph1 = MGraph(graph_id=1, df_name="fit_results", x="Slot", y=["fwhm_Si"])
+        graph2 = MGraph(graph_id=2, df_name="fit_results", x="Slot", y=["fwhm_Si"])
+        text, pending = _call_tool(
+            "update_graph",
+            {
+                "graph_id": "all",
+                "xlogscale": True,
+                "other_properties": {"title_fontsize": 16, "legend_loc": "upper left"},
+            },
+            graphs={1: graph1.save(), 2: graph2.save()},
+        )
         assert "successfully" in text.lower()
+        assert len(pending) == 1
         assert pending[0].graph_id == "all"
+        assert pending[0].properties == {
+            "title_fontsize": 16,
+            "legend_loc": "upper left",
+            "xlogscale": True,
+        }

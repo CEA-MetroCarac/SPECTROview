@@ -85,6 +85,9 @@ graph TD
     VMC -->|"result_ready (ChatResult)"| VCP
     VCP -->|"plot_requested"| Main
     Main -->|"create / update / delete"| VWG["VWorkspaceGraphs"]
+    VWG --> GCL["graph_control.py: validated GraphPatch"]
+    GCL --> MG["MGraph"]
+    MG --> RENDER["VGraph / PlotRenderer / canvas refresh"]
 ```
 
 ### **The AppContext boundary**
@@ -97,8 +100,27 @@ adapter; tests supply `RecordingContext`.
 This is what makes the tool layer independently testable (no Qt, no LLM, no
 application) and what would let the same server run out-of-process. Tools never
 mutate the ViewModel; they submit typed commands (`agent/commands.py`:
-`CreatePlot`, `UpdatePlot`, `DeletePlots`), which `VMChat` drains and normalises
-once when the turn ends.
+`CreatePlot`, `UpdatePlot`, `DeletePlots`). Plot and update inputs are validated
+before queuing through the shared `spectroview.model.graph_control` contract,
+and the Graph workspace applies that same contract again at the mutation
+boundary.
+
+### **Complete graph customization contract**
+
+The MCP tools retain a few common top-level parameters for small-model
+reliability, and expose `other_properties: GraphPatch` for the exhaustive set.
+`GraphPatch` is generated from every mutable `MGraph` dataclass field with
+`extra="forbid"`; nested filter, series-style, spine, axis-break, and annotation
+records are also typed. This avoids a manually maintained allowlist drifting
+behind the GUI and makes one coherent call able to update log scale, fonts,
+legend placement, line widths, annotations, secondary axes, inset geometry,
+and any other Graph state together.
+
+Omission means preserve. Explicit `null` is accepted only for nullable fields.
+The server validates filters against the target DataFrame and validates
+`graph_id="all"` against every open graph before it queues a single atomic
+command. The tool result deliberately says "validated and queued" because only
+the GUI thread can truthfully report final rendering.
 
 ### **MCPHub — one loop, many servers**
 
@@ -119,10 +141,10 @@ local models degrade quickly past roughly a dozen tools.
 
 ### **Pushed vs pulled context**
 
-The system prompt always carries DataFrame names, shapes, and every column name
-with its dtype — a model that has never seen a column name will invent one, so
-this half is non-negotiable. Sample values, row previews, and full graph configs
-are bulky and rarely decisive, so they live behind MCP **resources**
+The system prompt always carries DataFrame names, shapes, every column name
+with its dtype, and a compact summary of each open graph. Sample values, row
+previews, and the actual complete `MGraph.save()` configurations are bulky and
+rarely decisive, so they live behind MCP **resources**
 (`spectroview://dataframes/detail`, `spectroview://graphs/detail`).
 
 No LLM API has a native notion of a resource, so the hub exposes reading one as

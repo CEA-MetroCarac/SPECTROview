@@ -16,6 +16,7 @@ from spectroview.model.m_settings import MSettings
 from spectroview.model.m_plot_recipe_store import MPlotRecipeStore
 from spectroview.model.m_style_template_store import MStyleTemplateStore
 from spectroview.model.graph_style import extract_style, apply_style_dict, default_style
+from spectroview.model.graph_control import GraphValidationError, normalize_graph_patch
 from spectroview.view.components.v_data_filter import VDataFilter
 from spectroview.view.components.v_plot_recipe_dialog import VPlotRecipeDialog
 from spectroview.view.components.v_style_template_dialog import VStyleTemplateDialog
@@ -962,9 +963,11 @@ class VWorkspaceGraphs(QWidget):
             on_render_error(e)
             return None
 
-        # Write directly onto the model (not vm.update_graph()): derived
-        # bookkeeping, not a user edit, so it must never be undo-tracked.
-        graph_model.legend_properties = graph_widget.legend_properties
+        # Renderer-derived bookkeeping is persisted without an undo point,
+        # while still notifying AI context listeners of the complete state.
+        self.vm.sync_derived_graph_properties(graph_model.graph_id, {
+            'legend_properties': graph_widget.legend_properties,
+        })
 
         sub_window = self._create_mdi_subwindow(graph_model)
         graph_dialog = self._wrap_graph_in_dialog(graph_widget)
@@ -1032,6 +1035,101 @@ class VWorkspaceGraphs(QWidget):
             filters = []
         self._create_and_display_plot(plot_config, select_in_list=False, filters=filters)
         return True
+
+    def update_graphs_from_config(self, graph_id, properties: dict) -> list:
+        """Apply one shared Graph patch to one graph or ``"all"``.
+
+        This is the UI execution boundary used by AI/MCP commands.  The
+        ViewModel owns validation/state/undo; this method owns rendering and
+        control refresh.  All targets are prevalidated and grouped into one
+        undo step.  A render failure restores every target to its prior state
+        rather than leaving a partially-applied multi-graph command.
+        """
+        key = str(graph_id).strip().lower()
+        if key == 'all':
+            target_ids = self.vm.get_graph_ids()
+        else:
+            try:
+                target_ids = [int(graph_id)]
+            except (TypeError, ValueError):
+                self.vm.notify.emit("Graph update rejected: graph ID must be numeric or 'all'.")
+                return []
+        target_ids = [gid for gid in target_ids if self.vm.get_graph(gid) is not None]
+        if not target_ids:
+            self.vm.notify.emit("Graph update rejected: no matching open graph.")
+            return []
+
+        prepared = {}
+        snapshots = {}
+        try:
+            for gid in target_ids:
+                model = self.vm.get_graph(gid)
+                target_df_name = properties.get('df_name', model.df_name)
+                prepared[gid] = normalize_graph_patch(
+                    properties,
+                    current=model,
+                    dataframe=self.vm.get_dataframe(target_df_name),
+                )
+                snapshots[gid] = model.save()
+        except GraphValidationError as exc:
+            self.vm.notify.emit(f"Graph update rejected: {exc}")
+            return []
+
+        self.vm.begin_undo_batch()
+        try:
+            for gid in target_ids:
+                self.vm.update_graph(gid, prepared[gid])
+            for gid in target_ids:
+                self._refresh_graph_from_model(gid, set(prepared[gid]))
+        except Exception as exc:
+            # Restore model + rendered widgets without recording another undo
+            # action.  The original batch snapshot remains a harmless no-op
+            # undo entry only if model application had already started.
+            for gid, state in snapshots.items():
+                self.vm.restore_graph_state(gid, state)
+            for gid in target_ids:
+                try:
+                    self._refresh_graph_from_model(gid, set())
+                except Exception:
+                    pass
+            QMessageBox.warning(
+                self, "Graph Update Error",
+                f"The graph update was rolled back because it could not be rendered:\n{exc}",
+            )
+            return []
+        finally:
+            self.vm.end_undo_batch()
+
+        self._update_graph_list(self.vm.get_graph_ids())
+        self._sync_active_graph_toolbar()
+        return target_ids
+
+    def _refresh_graph_from_model(self, graph_id: int, changed_fields: set) -> None:
+        """Re-render one existing graph and synchronize its live controls."""
+        entry = self.graph_widgets.get(graph_id)
+        model = self.vm.get_graph(graph_id)
+        if entry is None or model is None:
+            return
+        graph_widget, _, sub_window = entry
+        filtered_df = self.vm.apply_filters(model.df_name, model.filters)
+        self._configure_graph_from_model(graph_widget, model)
+        graph_widget.create_plot_widget(model.dpi)
+        self._render_plot(graph_widget, filtered_df, model)
+
+        # Rendering may initialize per-series labels/colors/markers.  Persist
+        # that derived state without manufacturing a second undo step.
+        self.vm.sync_derived_graph_properties(graph_id, {
+            'legend_properties': graph_widget.legend_properties,
+            'legend_bbox': graph_widget.legend_bbox,
+        })
+        sub_window.setWindowTitle(self._graph_window_title(model))
+        if {'plot_width', 'plot_height'} & changed_fields:
+            sub_window.resize(model.plot_width, model.plot_height)
+
+        if (self._customize_dialog is not None
+                and self._customize_dialog.isVisible()
+                and self._customize_dialog.graph_id == graph_id):
+            self._customize_dialog.switch_graph(graph_widget, graph_id)
 
     def _refresh_recipe_and_style_stores(self) -> None:
         """Rebuild both stores from the *current* Working Folder setting.

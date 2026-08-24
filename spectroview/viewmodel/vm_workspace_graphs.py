@@ -11,6 +11,11 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from spectroview.model.m_graph import MGraph
+from spectroview.model.graph_control import (
+    GRAPH_PROPERTY_SET,
+    apply_graph_patch,
+    normalize_graph_patch,
+)
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_io import load_dataframe_file
 from spectroview.model.workspace_io import WorkspaceIO
@@ -23,6 +28,10 @@ class VMWorkspaceGraphs(QObject):
     dataframes_changed = Signal(list)
     dataframe_columns_changed = Signal(list)
     graphs_changed = Signal(list)
+    # Emitted for *property* changes as well as graph-list changes.  The AI
+    # context listens to this signal; graphs_changed alone only represented
+    # create/delete and left GUI customizations invisible to the next turn.
+    graph_state_changed = Signal()
     notify = Signal(str)
     undo_state_changed = Signal()
 
@@ -353,31 +362,29 @@ class VMWorkspaceGraphs(QObject):
     
     def create_multi_wafer_graphs(self, df_name: str, slot_numbers: List,
                                    plot_config: Dict, base_filters: List[Dict]) -> List[MGraph]:
-        """Create multiple wafer graphs for each slot."""
+        """Create multiple validated wafer graphs for each slot."""
+        pending = []
+        dataframe = self.dataframes.get(df_name)
+        for offset, slot_num in enumerate(slot_numbers):
+            slot_filters = self._merge_filters_with_slot(base_filters, slot_num)
+            graph = MGraph(graph_id=self._next_graph_id + offset)
+            patch = copy.deepcopy(plot_config)
+            patch.pop('graph_id', None)
+            patch = {key: value for key, value in patch.items() if key in GRAPH_PROPERTY_SET}
+            patch['df_name'] = df_name
+            patch['filters'] = slot_filters
+            apply_graph_patch(graph, patch, dataframe=dataframe)
+            pending.append(graph)
+
+        # The batch is validated before the first mutation, so one bad config
+        # cannot leave a half-created set of wafer windows.
         self._record_undo_point_if_needed()
         created_graphs = []
-        
-        for slot_num in slot_numbers:
-            # Merge base filters with slot-specific filter
-            slot_filters = self._merge_filters_with_slot(base_filters, slot_num)
-            
-            # Create new graph
-            graph = MGraph(graph_id=self._next_graph_id)
-            
-            # Apply base configuration
-            for key, value in plot_config.items():
-                if hasattr(graph, key):
-                    setattr(graph, key, value)
-            
-            # Set slot-specific filters
-            graph.filters = slot_filters
-            
-            # Store graph
+        for graph in pending:
             self.graphs[self._next_graph_id] = graph
             self._next_graph_id += 1
-            
             created_graphs.append(graph)
-        
+
         self._emit_graphs_list()
         return created_graphs
     
@@ -413,19 +420,27 @@ class VMWorkspaceGraphs(QObject):
     # ═════════════════════════════════════════════════════════════════════
     
     def create_graph(self, plot_config: Dict = None) -> MGraph:
-        """Create a new graph."""
-        self._record_undo_point_if_needed()
+        """Create a graph through the shared validated graph-command layer."""
         graph = MGraph(graph_id=self._next_graph_id)
-        
-        # Apply configuration if provided
+
+        # A saved recipe/config may carry the source graph's ID.  Identity is
+        # owned by this ViewModel and must never be copied into a new graph.
         if plot_config:
-            for key, value in plot_config.items():
-                if hasattr(graph, key):
-                    setattr(graph, key, value)
-        
+            patch = copy.deepcopy(plot_config)
+            patch.pop('graph_id', None)
+            # Recipes/workspace-adjacent callers may contain obsolete fields
+            # from older releases.  Creation remains backward compatible by
+            # ignoring them; runtime updates and MCP GraphPatch are strict.
+            patch = {key: value for key, value in patch.items() if key in GRAPH_PROPERTY_SET}
+            target_df = self.dataframes.get(patch.get('df_name'))
+            apply_graph_patch(graph, patch, dataframe=target_df)
+
+        # Validate before taking an undo snapshot: a rejected command is not
+        # a mutation and therefore must not create a phantom undo step.
+        self._record_undo_point_if_needed()
         self.graphs[self._next_graph_id] = graph
         self._next_graph_id += 1
-        
+
         self._emit_graphs_list()
         return graph
     
@@ -437,16 +452,45 @@ class VMWorkspaceGraphs(QObject):
         """Get a graph by ID."""
         return self.graphs.get(graph_id)
     
-    def update_graph(self, graph_id: int, properties: Dict):
-        """Update graph properties."""
-        if graph_id not in self.graphs:
-            return
+    def update_graph(self, graph_id: int, properties: Dict) -> Dict:
+        """Validate and atomically update graph properties.
 
-        self._record_undo_point_if_needed()
+        Returns the normalized patch that was applied, or an empty dict when
+        the graph does not exist / no properties were supplied.
+        """
+        if graph_id not in self.graphs:
+            return {}
+
+        if not properties:
+            return {}
+
         graph = self.graphs[graph_id]
+        prospective_df_name = properties.get('df_name', graph.df_name)
+        dataframe = self.dataframes.get(prospective_df_name)
+        patch = normalize_graph_patch(properties, current=graph, dataframe=dataframe)
+        self._record_undo_point_if_needed()
+        apply_graph_patch(graph, patch, dataframe=dataframe)
+        self.graph_state_changed.emit()
+        return patch
+
+    def restore_graph_state(self, graph_id: int, state: Dict) -> bool:
+        """Restore a graph after a render failure without creating undo data."""
+        graph = self.graphs.get(graph_id)
+        if graph is None:
+            return False
+        graph.load(copy.deepcopy(state))
+        self.graph_state_changed.emit()
+        return True
+
+    def sync_derived_graph_properties(self, graph_id: int, properties: Dict) -> None:
+        """Persist renderer-derived bookkeeping without an undo snapshot."""
+        graph = self.graphs.get(graph_id)
+        if graph is None:
+            return
         for key, value in properties.items():
             if hasattr(graph, key):
-                setattr(graph, key, value)
+                setattr(graph, key, copy.deepcopy(value))
+        self.graph_state_changed.emit()
     
     def delete_graph(self, graph_id: int):
         """Delete a graph."""
@@ -477,7 +521,9 @@ class VMWorkspaceGraphs(QObject):
             
             # Prepare metadata (light config)
             metadata = {
-                'format_version': 3,  # signals ZIP binary format
+                # v4 distinguishes x_as_numeric=False (explicit Category)
+                # from the pre-tristate legacy meaning (Auto).
+                'format_version': 4,
                 'plots': plots_data,
                 'dataframe_sources': self.dataframe_sources,
             }
@@ -511,11 +557,13 @@ class VMWorkspaceGraphs(QObject):
             # Load source file paths
             self.dataframe_sources = metadata.get('dataframe_sources', {})
             
-            # Load graphs
+            # Load graphs.  Before format 4, x_as_numeric=False meant Auto;
+            # current files use it for the explicit Category selection.
+            legacy_axis_type = int(metadata.get('format_version', 0) or 0) < 4
             for graph_id_str, graph_data in metadata.get('plots', {}).items():
                 graph_id = int(graph_id_str)
                 graph = MGraph(graph_id=graph_id)
-                graph.load(graph_data)
+                graph.load(graph_data, legacy_x_as_numeric_false=legacy_axis_type)
                 self.graphs[graph_id] = graph
             
             # Update next graph ID
@@ -552,7 +600,7 @@ class VMWorkspaceGraphs(QObject):
             for graph_id_str, graph_data in data.get('plots', {}).items():
                 graph_id = int(graph_id_str)
                 graph = MGraph(graph_id=graph_id)
-                graph.load(graph_data)
+                graph.load(graph_data, legacy_x_as_numeric_false=True)
                 self.graphs[graph_id] = graph
             
             # Update next graph ID
@@ -589,3 +637,4 @@ class VMWorkspaceGraphs(QObject):
     def _emit_graphs_list(self):
         """Emit list of graph IDs."""
         self.graphs_changed.emit(list(self.graphs.keys()))
+        self.graph_state_changed.emit()

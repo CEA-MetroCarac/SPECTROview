@@ -744,6 +744,41 @@ class TestUpdatePlotPreservesDfName:
         assert ws.vm.get_graph(graph_model.graph_id).df_name == 'sheet1'
 
 
+class TestExternalGraphCommandUpdates:
+    def _graph(self, ws, excel_df, y):
+        model = ws.vm.create_graph({
+            'df_name': 'sheet1', 'plot_style': 'line',
+            'x': 'x0_Si', 'y': [y],
+        })
+        ws._build_graph_widget(model, excel_df, lambda exc: None)
+        return model
+
+    def test_update_all_is_one_atomic_multi_property_undo_step(self, ws, excel_df):
+        ws.vm.add_dataframe('sheet1', excel_df)
+        first = self._graph(ws, excel_df, 'ampli_Si')
+        second = self._graph(ws, excel_df, 'fwhm_Si')
+
+        updated = ws.update_graphs_from_config('all', {
+            'xlogscale': True,
+            'title_fontsize': 16,
+            'legend_loc': 'upper left',
+        })
+
+        assert set(updated) == {first.graph_id, second.graph_id}
+        for gid in updated:
+            model = ws.vm.get_graph(gid)
+            widget = ws.graph_widgets[gid][0]
+            assert model.xlogscale is True
+            assert model.title_fontsize == 16
+            assert model.legend_loc == 'upper left'
+            assert widget.xlogscale is True
+            assert widget.title_fontsize == 16
+
+        assert ws.vm.undo() is True
+        assert ws.vm.get_graph(first.graph_id).xlogscale is False
+        assert ws.vm.get_graph(second.graph_id).xlogscale is False
+
+
 class TestSubtitleSidePanelSync:
     """The side panel's 'Title and labels' group and the Customize dialog's
     More Options > Figure style tab both edit MGraph.plot_subtitle -- they

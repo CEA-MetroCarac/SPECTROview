@@ -180,8 +180,14 @@ class MGraph:
         """
         return copy.deepcopy(vars(self))
 
-    def load(self, data: Dict[str, Any]):
-        """Load graph properties from dictionary."""
+    def load(self, data: Dict[str, Any], legacy_x_as_numeric_false: bool = False):
+        """Load graph properties from dictionary.
+
+        ``x_as_numeric=False`` now explicitly means *categorical* (matching
+        the current GUI).  Workspace formats written before version 4 used
+        False to mean *automatic*; their loader opts into the legacy
+        conversion via ``legacy_x_as_numeric_false=True``.
+        """
         # List of float-type limit properties
         float_limit_keys = ['xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax',
                            'y2min', 'y2max', 'y3min', 'y3max',
@@ -195,8 +201,10 @@ class MGraph:
                         value = float(value) if value != '' else None
                     except (ValueError, TypeError):
                         value = None
-                # Backward compatibility for x_as_numeric: False -> None
-                if key == 'x_as_numeric' and value is False:
+                # Backward compatibility is format-aware.  Applying this to a
+                # current snapshot would destroy the GUI's explicit Category
+                # selection on save/reload and undo/redo.
+                if legacy_x_as_numeric_false and key == 'x_as_numeric' and value is False:
                     value = None
 
                 setattr(self, key, value)

@@ -8,6 +8,9 @@ The `Graphs` workspace is a standalone statistical plotting environment. It mana
 
 ```mermaid
 graph TD
+    GUI["Side panel / Customize dialog"] --> GCL["graph_control: GraphPatch + validation"]
+    AI["AI / MCP typed commands"] --> GCL
+    GCL --> VMWG["VMWorkspaceGraphs"]
     VWG["VWorkspaceGraphs"] --> MDI["QMdiArea"]
     MDI --> VG["VGraph"]
     VG --> PR["PlotRenderer"]
@@ -21,7 +24,7 @@ graph TD
     VWG --> EXP["VExportDialog / VBatchExportDialog"]
     VWG --> MP["VMultiPanelDialog"]
 
-    VWG -->|"calls"| VMWG["VMWorkspaceGraphs"]
+    VWG -->|"calls"| GCL
     VMWG -->|"signals"| VWG
     VMWG --> MG["MGraph"]
     VMWG --> UNDO["Undo/redo stacks"]
@@ -53,6 +56,7 @@ Manages DataFrames, graph models, and the workspace's undo/redo history. Unlike 
 dataframes_changed = Signal(list)           # List of DataFrame names updated
 dataframe_columns_changed = Signal(list)    # Column names of selected DataFrame
 graphs_changed = Signal(list)               # List of graph IDs updated
+graph_state_changed = Signal()              # Any persisted graph property changed (AI context sync)
 undo_state_changed = Signal()               # can_undo/can_redo changed -- sync toolbar buttons
 notify = Signal(str)                        # Toast notification
 ```
@@ -61,7 +65,7 @@ notify = Signal(str)                        # Toast notification
 
 **File**: `spectroview/model/m_graph.py`
 
-A pure dataclass (113 fields) that stores everything needed to recreate a plot. `save()`/`load(data)` provide complete serialization; `get_display_name()` builds the MDI subwindow title. Rather than enumerate every field here (see `m_graph.py` for the exhaustive, authoritative list), fields group into:
+A pure dataclass that stores everything needed to recreate a plot. `save()`/`load(data)` provide complete serialization; `get_display_name()` builds the MDI subwindow title. Rather than maintain a second field count or list here (see `m_graph.py` for the exhaustive, authoritative list), fields group into:
 
 | Category | Examples |
 |---|---|
@@ -79,6 +83,28 @@ A pure dataclass (113 fields) that stores everything needed to recreate a plot. 
 | Export/window geometry | `plot_width`/`height`, `dpi`, `export_width_mm`/`height_mm` |
 
 Note: style templates, plot recipes, and the working-folder setting are **not** `MGraph` fields — they're separate systems built around subsets of these fields (see [Style Templates & Plot Recipes](#style-templates-plot-recipes)).
+
+### **`graph_control.py` — Shared Graph State/Command Contract**
+
+**File**: `spectroview/model/graph_control.py`
+
+All GUI, AI, and MCP mutations converge on this Qt-free layer before they touch
+`MGraph`. `GraphPatch` is generated from the dataclass fields, so the MCP schema
+automatically exposes every mutable graph capability. Important nested values
+(filters, per-series styles, spines, axis breaks, and all eight annotation
+types) have strict schemas of their own.
+
+`normalize_graph_patch()` validates a patch against the merged current state
+without mutation: unknown keys, nullability, ranges, enum values, columns,
+limits, inset geometry, annotation shape, and mutually exclusive axis breaks
+are checked together. `apply_graph_patch()` then commits the already-valid
+patch atomically. Omitted fields are preserved; explicit `null` clears only
+nullable properties. Changes to data/series identity reset derived
+`legend_properties` unless the caller supplied a replacement list.
+
+This contract is intentionally renderer-independent. The View still owns
+Matplotlib figure/canvas creation, filtered-data lookup, re-rendering, window
+geometry, and refresh of an open Customize dialog.
 
 ### **`VGraph` — The Rendering Widget**
 
@@ -112,7 +138,7 @@ Both `_plot_wafer`/`_plot_2dmap` resolve `vmin`/`vmax` through `_clear_degenerat
 
 1. **User Action**: The user selects a DataFrame, configures the X/Y/Z axes, and clicks "Add plot" in the `VWorkspaceGraphs` UI.
 2. **Configuration Capture**: The View calls `_collect_plot_config()` to gather all UI settings into a configuration dictionary, then merges in `MSettings.get_default_graph_style()` (the user's "Set as Default Style" baseline, if any — see [Style Templates & Plot Recipes](#style-templates-plot-recipes)) via `_apply_default_style_to_config()`. The collected config's data-identity fields (`x`/`y`/`z`/`df_name`/`plot_style`) always win over the default style, since the default only ever contains appearance fields.
-3. **Model Creation**: The View calls `vm.create_graph(plot_config)`. The ViewModel instantiates an `MGraph(graph_id)`, applies the configuration, records an undo point, and returns the graph model.
+3. **Model Creation**: The View calls `vm.create_graph(plot_config)`. The ViewModel validates the complete configuration through `graph_control`, then instantiates and atomically updates an `MGraph(graph_id)`, records an undo point, and returns it.
 4. **Widget Initialization**: The View instantiates a `VGraph(graph_id)` widget and calls `create_plot_widget(dpi)` to set up the Matplotlib canvas.
 5. **Data Filtering**: The View requests the `filtered_df` from the ViewModel by calling `vm.apply_filters(df_name, filters)`.
 6. **Rendering**: The View calls `VGraph.plot(filtered_df)`.
@@ -120,6 +146,21 @@ Both `_plot_wafer`/`_plot_2dmap` resolve `vmin`/`vmax` through `_clear_degenerat
 8. **UI Integration**: The View wraps the new `VGraph` widget in a `QMdiSubWindow` and adds it to the MDI area.
 
 This same default-style merge applies to `_on_plot_multi_wafer()`; it deliberately does **not** apply when applying a Plot Recipe or replicating an existing graph, since those already carry a fully-specified, intentional style.
+
+### **Data Flow: AI/MCP Update**
+
+1. `update_graph` validates its typed `GraphPatch` against every target graph
+   and DataFrame. `graph_id="all"` is expanded before any mutation.
+2. The MCP server queues one typed `UpdatePlot`; it never imports Qt or mutates
+   a widget.
+3. `VMChat` converts queued commands to application configs and `main.py`
+   routes the update to `VWorkspaceGraphs.update_graphs_from_config()`.
+4. The workspace prevalidates all targets, opens one undo batch, updates every
+   `MGraph`, rebuilds/replots each widget, resizes explicit geometry, and reloads
+   the open Customize dialog. A render failure restores every model/widget
+   snapshot so a batch cannot be half-applied.
+5. `graph_state_changed` refreshes the AI's full serialized graph context after
+   GUI edits, AI edits, undo/redo, loads, and renderer-derived style sync.
 
 ---
 
@@ -337,6 +378,12 @@ Each `VGraph`'s toolbar **Style menu** ties these together: **Save Style…** / 
 
 - **`VMultiPanelDialog(graph_widgets: dict, parent=None)`** — composes several checked/reordered open graphs into one throwaway `matplotlib.figure.Figure` grid (auto-suggested rows/cols, constrained layout, shared-axis-label collapsing on interior panels, lettered/numbered panel labels). Each panel is rendered by temporarily repointing the source `VGraph`'s `.ax`/`.figure` onto the composed figure's subplot and calling its normal render path, then restoring the source widget so the live workspace is never mutated. Graphs with an active broken axis render via a simplified single-panel path in the composed figure (a documented scope limit).
 
+AI/MCP exposes the persistent per-graph export size (`export_width_mm` /
+`export_height_mm`) and on-screen geometry/DPI through `GraphPatch`. The actual
+Export/Batch Export and Multi-Panel actions remain GUI workflows: format,
+destination path, transparency, export-time theme, graph selection/order, and
+panel grid are one-off file/composition choices rather than `MGraph` state.
+
 ---
 
 ## **MDI Area Management**
@@ -391,10 +438,10 @@ A single user-configured root folder (Settings panel) with three subfolders auto
 
 ### **Save Format (`.graphs`)**
 
-Current format (`format_version: 3`) is a **ZIP archive**, written by `WorkspaceIO.save_workspace()`:
+Current format (`format_version: 4`) is a **ZIP archive**, written by `WorkspaceIO.save_workspace()`. Version 4 preserves `x_as_numeric=False` as the explicit Category selection; older versions keep their legacy False-to-Auto migration:
 
 ```
-metadata.json                          # {"format_version": 3, "plots": {...}, "dataframe_sources": {...}}
+metadata.json                          # {"format_version": 4, "plots": {...}, "dataframe_sources": {...}}
 dataframes/<name>.parquet              # one Parquet file per DataFrame, streamed directly into the zip
 ```
 

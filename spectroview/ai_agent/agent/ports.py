@@ -37,7 +37,12 @@ class AppContext(Protocol):
         ...
 
     def list_graphs(self) -> Dict[int, Dict[str, Any]]:
-        """Open graphs as ``{graph_id: {style, x, y, z, df, filters}}``."""
+        """Complete open-graph state keyed by graph ID.
+
+        Implementations should return the canonical ``MGraph.save()`` shape.
+        Compact legacy fakes using ``style``/``df`` remain accepted by the
+        MCP boundary for backward compatibility.
+        """
         ...
 
     def submit(self, command: AgentCommand) -> None:

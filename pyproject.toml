@@ -62,7 +62,6 @@ spectroview = [
     "resources/icons/*.png",
     "resources/icons/*.ico",
     "resources/icons/*.svg",
-    "resources/*.pdf",
     "resources/user_manual/*",
     "resources/user_manual_images/*/*",
     "ai_agent/config/*.yaml",

@@ -1,9 +1,13 @@
 """Unit tests for fit_engine/baseline.py - single and batched baseline evaluation."""
+import builtins
+from pathlib import Path
+
 import numpy as np
 import pytest
 
 from spectroview.fit_engine.baseline import (
-    eval_baseline, eval_baseline_batch, get_baseline_method_meta,
+    BaselineEvaluationError, eval_baseline, eval_baseline_batch,
+    get_baseline_method_meta,
 )
 
 
@@ -84,6 +88,46 @@ class TestEvalBaselinePolynomial:
                    "points": [[0.0, 100.0], [3.0, 203.0]]}
         baseline = eval_baseline(x, linear_y, config)
         np.testing.assert_allclose(baseline, linear_y, atol=1e-6)
+
+
+class TestEvalBaselineAutomatic:
+    @pytest.mark.parametrize("mode", ["airpls", "arpls", "asls", "modpoly"])
+    def test_supported_method_returns_a_real_baseline(self, x, mode):
+        background = 8.0 + 0.02 * x + 0.0005 * (x - 50.0) ** 2
+        peak = 30.0 * np.exp(-0.5 * ((x - 55.0) / 4.0) ** 2)
+        y = background + peak
+        config = {"mode": mode, "coef": 5.0, "order_max": 2}
+
+        baseline = eval_baseline(x, y, config)
+
+        assert baseline.shape == y.shape
+        assert np.all(np.isfinite(baseline))
+        assert np.any(baseline != 0)
+
+    def test_missing_pybaselines_is_not_silently_treated_as_zero(
+            self, x, linear_y, monkeypatch):
+        real_import = builtins.__import__
+
+        def reject_pybaselines(name, *args, **kwargs):
+            if name == "pybaselines" or name.startswith("pybaselines."):
+                raise ModuleNotFoundError("No module named 'pybaselines'")
+            return real_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", reject_pybaselines)
+
+        with pytest.raises(BaselineEvaluationError, match="pybaselines"):
+            eval_baseline(x, linear_y, {"mode": "airpls", "coef": 5.0})
+
+    def test_pybaselines_is_declared_as_a_direct_dependency(self):
+        project_root = Path(__file__).parents[3]
+        pyproject = (project_root / "pyproject.toml").read_text(encoding="utf-8")
+        requirements = (project_root / "requirements.txt").read_text(encoding="utf-8")
+
+        assert '"pybaselines ' in pyproject
+        assert any(
+            line.lower().startswith("pybaselines")
+            for line in requirements.splitlines()
+        )
 
 
 class TestEvalBaselineBatchMatchesPerSpectrumLoop:

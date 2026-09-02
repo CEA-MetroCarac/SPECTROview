@@ -1,5 +1,22 @@
 import numpy as np
 
+
+class BaselineEvaluationError(RuntimeError):
+    """Raised when an automatic baseline method cannot be evaluated."""
+
+
+def _evaluation_error(mode: str, exc: Exception) -> BaselineEvaluationError:
+    if isinstance(exc, ImportError):
+        detail = (
+            "the required 'pybaselines' package is not installed correctly"
+        )
+    else:
+        detail = str(exc) or exc.__class__.__name__
+    return BaselineEvaluationError(
+        f"Automatic baseline method '{mode}' failed: {detail}."
+    )
+
+
 _INTERNAL_METHODS = {
     None: {'label': 'None', 'use_points': False}, 
     'Linear': {'label': 'Linear Interpolation', 'use_points': True, 'sigma_kwarg': 'sigma', 'category': 'Manual'}, 
@@ -90,8 +107,8 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
             lam = 10 ** config.get("coef", 5.0)
             b, _ = baseline_fitter.arpls(y, lam=lam)
             return b
-        except Exception:
-            return np.zeros_like(x)
+        except Exception as exc:
+            raise _evaluation_error(mode, exc) from exc
     elif mode == 'sonneveld_vesser':
         try:
             from pybaselines.classification import Classification
@@ -99,8 +116,8 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
             niter = config.get("coef", 100)
             b, _ = baseline_fitter.dietrich(y, num_iter=int(niter)) # Just an approximation for Sonneveld-Vesser
             return b
-        except Exception:
-            return np.zeros_like(x)
+        except Exception as exc:
+            raise _evaluation_error(mode, exc) from exc
     else:
         try:
             from pybaselines import Baseline
@@ -122,9 +139,9 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
                 b, _ = func(y, **kwargs)
                 return b
             else:
-                return np.zeros_like(x)
-        except Exception:
-            return np.zeros_like(x)
+                raise ValueError(f"unsupported automatic baseline method '{mode}'")
+        except Exception as exc:
+            raise _evaluation_error(mode, exc) from exc
 
 def eval_baseline_batch(x: np.ndarray, Y: np.ndarray, config: dict) -> np.ndarray:
     """Evaluate baseline for a batch of spectra (N, M)."""

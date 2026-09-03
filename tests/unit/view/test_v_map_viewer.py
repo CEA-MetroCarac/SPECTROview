@@ -2,6 +2,8 @@
 import pandas as pd
 from matplotlib.colors import LogNorm
 
+from spectroview import PALETTE
+from spectroview.view.components.customized_widgets import CustomizedPalette
 from spectroview.view.components.v_map_viewer import VMapViewer
 
 
@@ -17,6 +19,19 @@ def _simple_2dmap_df():
 
 
 class TestMapViewerColorScale:
+    def test_palette_preview_widget_keeps_map_palette_set(self, qapp):
+        viewer = VMapViewer()
+
+        assert isinstance(viewer.cbb_palette, CustomizedPalette)
+        assert [
+            viewer.cbb_palette.itemText(index)
+            for index in range(viewer.cbb_palette.count())
+        ] == PALETTE
+        assert all(
+            not viewer.cbb_palette.itemIcon(index).isNull()
+            for index in range(viewer.cbb_palette.count())
+        )
+
     def test_default_is_linear_kwargs(self, qapp):
         viewer = VMapViewer()
         assert viewer.cbb_color_scale.currentText() == "Linear"

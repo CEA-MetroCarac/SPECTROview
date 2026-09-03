@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QToolButton, QLabel,
     QComboBox, QMenu, QWidgetAction,
-    QLineEdit, QDoubleSpinBox, QColorDialog, QInputDialog,
+    QLineEdit, QDoubleSpinBox, QSpinBox, QColorDialog, QInputDialog,
     QSlider, QMessageBox, QApplication
 )
 from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer, QPoint
@@ -30,7 +30,25 @@ import matplotlib.lines as mlines
 
 from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, PLOT_POLICY_SOFT_DARK, DEFAULT_COLORS
 from spectroview.viewmodel.utils import copy_fig_to_clb, get_tinted_icon, fano_display_amplitude
-from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
+from spectroview.view.components.customized_widgets import (
+    CustomizedPalette,
+    NoDoubleClickZoomToolbar,
+)
+
+
+SPECTRA_DISCRETE_PALETTES = (
+    "DEFAULT_COLORS",
+    "tab20", "tab20b", "tab20c", "Dark2", "Paired", "Accent",
+)
+SPECTRA_GRADIENT_PALETTES = (
+    "viridis", "plasma", "jet", "cividis", "magma",
+)
+SPECTRA_COLOR_PALETTES = (
+    SPECTRA_DISCRETE_PALETTES + SPECTRA_GRADIENT_PALETTES
+)
+SPECTRA_CUSTOM_PALETTES = {
+    "DEFAULT_COLORS": DEFAULT_COLORS,
+}
 
 
 class _MockPeakModelObj:
@@ -389,6 +407,22 @@ class VSpectraViewer(QWidget):
         self.cbb_plotstyle.currentIndexChanged.connect(self._emit_view_options)
         menu.addAction(self._wrap("Spectrum plot style:", self.cbb_plotstyle))
 
+        # Spectrum color palette. Qualitative palettes cycle through distinct
+        # colors; sequential/rainbow palettes are sampled across all selected
+        # spectra so ordered series (time, temperature, etc.) form a gradient.
+        self.cbb_color_palette = CustomizedPalette(
+            palette_list=SPECTRA_COLOR_PALETTES,
+            custom_palettes=SPECTRA_CUSTOM_PALETTES,
+        )
+        self.cbb_color_palette.setCurrentText("DEFAULT_COLORS")
+        self.cbb_color_palette.setToolTip(
+            "Choose colors for the selected spectrum series. Custom colors "
+            "set from the legend continue to take priority."
+        )
+        self.cbb_color_palette.currentIndexChanged.connect(
+            self._emit_view_options)
+        menu.addAction(self._wrap("Color palette:", self.cbb_color_palette))
+
         # Line width
         self.spin_lw = QDoubleSpinBox()
         self.spin_lw.setRange(0.1, 5)
@@ -434,12 +468,16 @@ class VSpectraViewer(QWidget):
         menu.addSeparator()
 
         # Max legend items / heavy overlays
-        self.spin_max_overlays = QDoubleSpinBox()
-        self.spin_max_overlays.setRange(1, 1000)
-        self.spin_max_overlays.setValue(10)
-        self.spin_max_overlays.valueChanged.connect(self._emit_view_options)
-        self.spin_max_overlays.valueChanged.connect(self._plot)
-        menu.addAction(self._wrap("Max legend items:", self.spin_max_overlays))
+        self.spin_max_legend_items = QSpinBox()
+        self.spin_max_legend_items.setRange(1, 1000)
+        self.spin_max_legend_items.setValue(15)
+        self.spin_max_legend_items.valueChanged.connect(self._emit_view_options)
+        menu.addAction(self._wrap(
+            "Max legend items:", self.spin_max_legend_items))
+
+        # Backwards-compatible alias for internal/external code that used the
+        # old name when this control was first introduced.
+        self.spin_max_overlays = self.spin_max_legend_items
 
         menu.addSeparator()
         
@@ -612,7 +650,7 @@ class VSpectraViewer(QWidget):
         plot_style = self.cbb_plotstyle.currentText()
         lw = self.spin_lw.value()
         dot_size = self.spin_dotsize.value()
-        colors_cycle = self._get_colors_cycle()
+        colors_cycle = self._get_colors_cycle(len(self._tensor_data["y"]))
 
         # ── Step 1: Build bulk segment data (main spectra + raw overlay) ──
         segments = self._build_tensor_segments(
@@ -631,11 +669,51 @@ class VSpectraViewer(QWidget):
     # Plot helpers: segment builders
     # ─────────────────────────────────────────────
 
-    def _get_colors_cycle(self):
-        """Return the current matplotlib color cycle or a sensible default."""
-        prop_cycle = plt.rcParams.get('axes.prop_cycle')
-        return (prop_cycle.by_key()['color'] if prop_cycle
-                else DEFAULT_COLORS)
+    def _get_colors_cycle(self, count=None):
+        """Return colors sampled from the selected spectrum palette.
+
+        Discrete palettes repeat only after all of their distinct colors have
+        been used. Gradient palettes are sampled evenly from end to end, which
+        makes the spectrum order visible for time/temperature series.
+        """
+        palette_name = (
+            self.cbb_color_palette.currentText()
+            if hasattr(self, "cbb_color_palette") else "DEFAULT_COLORS"
+        )
+        requested_count = (
+            len(DEFAULT_COLORS) if count is None else max(0, int(count))
+        )
+
+        if palette_name in SPECTRA_CUSTOM_PALETTES:
+            base_colors = list(SPECTRA_CUSTOM_PALETTES[palette_name])
+        else:
+            try:
+                cmap = mpl.colormaps[palette_name]
+            except (KeyError, AttributeError):
+                try:
+                    cmap = mpl.cm.get_cmap(palette_name)
+                except (ValueError, KeyError):
+                    base_colors = list(DEFAULT_COLORS)
+                    cmap = None
+
+            if palette_name in SPECTRA_DISCRETE_PALETTES and cmap is not None:
+                cmap_colors = getattr(cmap, "colors", None)
+                if cmap_colors is None:
+                    cmap_colors = cmap(np.linspace(0.0, 1.0, cmap.N))
+                base_colors = [mpl.colors.to_hex(color)
+                               for color in cmap_colors]
+            elif cmap is not None:
+                if requested_count == 0:
+                    return []
+                positions = (np.array([0.5]) if requested_count == 1
+                             else np.linspace(0.0, 1.0, requested_count))
+                return [mpl.colors.to_hex(cmap(position))
+                        for position in positions]
+
+        if not base_colors:
+            base_colors = list(DEFAULT_COLORS) or ["#1f77b4"]
+        return [base_colors[i % len(base_colors)]
+                for i in range(requested_count)]
 
     def _build_tensor_segments(self, x_shift_step, y_shift_step,
                                 plot_style, lw, fg_color, colors_cycle):
@@ -655,9 +733,15 @@ class VSpectraViewer(QWidget):
         Y_norm = self._get_normalized_y_tensor(x, Y) 
 
         # Resolve each spectrum's color: use stored color if available, else cycle
-        t_colors = self._tensor_data.get("colors", [None] * N)
-        main_colors = [c if c else colors_cycle[i % len(colors_cycle)]
-                       for i, c in enumerate(t_colors)]
+        t_colors = self._tensor_data.get("colors")
+        if t_colors is None:
+            t_colors = []
+        main_colors = [
+            t_colors[i]
+            if i < len(t_colors) and t_colors[i]
+            else colors_cycle[i]
+            for i in range(N)
+        ]
 
         # tensor_list stores ragged arrays as a Python list; tensor stores a uniform 2-D ndarray
         is_list = isinstance(Y, list)
@@ -716,7 +800,7 @@ class VSpectraViewer(QWidget):
         t_labels = self._tensor_data.get("labels", [])
         t_fnames = self._tensor_data.get("fnames", [])
         proxies = self._tensor_data.get("proxies", [])  # Spectrum objects for interactive tooltip
-        for spec_idx in range(min(N, int(self.spin_max_overlays.value()))):
+        for spec_idx in range(min(N, self.spin_max_legend_items.value())):
             spec_color = main_colors[spec_idx]
             # Priority: custom label > filename > generic fallback
             label_str = (
@@ -758,7 +842,8 @@ class VSpectraViewer(QWidget):
         is_tensor_list = self._tensor_data.get("type") == "tensor_list"
         proxies = self._tensor_data.get("proxies", [])
 
-        for spec_idx in range(min(n_specs, int(self.spin_max_overlays.value()))):
+        for spec_idx in range(
+                min(n_specs, self.spin_max_legend_items.value())):
             x_val = self._tensor_data.get("x")
             x = x_val[spec_idx] if isinstance(x_val, list) else x_val
 
@@ -1045,7 +1130,10 @@ class VSpectraViewer(QWidget):
 
         # ── Legend / axes / grid ──
         if self.btn_legend.isChecked():
-            legend = self.ax.legend(loc="best")
+            handles, labels = self.ax.get_legend_handles_labels()
+            max_items = self.spin_max_legend_items.value()
+            legend = self.ax.legend(
+                handles[:max_items], labels[:max_items], loc="best")
             self._make_legend_pickable(legend)
 
         if self.act_grid.isChecked():
@@ -1099,7 +1187,11 @@ class VSpectraViewer(QWidget):
 
         # Cache legend and its artists for double-click hit-testing
         self._legend_obj = legend
-        self._legend_bbox = legend.get_window_extent(self.canvas.renderer)
+        # ``renderer`` is only installed as an attribute after the first draw;
+        # get_renderer() also works when data arrives before the widget has
+        # been painted (common during workspace restoration and in tests).
+        self._legend_bbox = legend.get_window_extent(
+            self.canvas.get_renderer())
 
         # Connect double-click handler once (replaces pick_event)
         if not hasattr(self, "_legend_dblclick_connected"):
@@ -1256,6 +1348,7 @@ class VSpectraViewer(QWidget):
             "yaxis": self.cbb_yaxis.currentText() if hasattr(self, "cbb_yaxis") else "",
             "yscale": self.cbb_yscale.currentText() if hasattr(self, "cbb_yscale") else "Linear",
             "plotstyle": self.cbb_plotstyle.currentText() if hasattr(self, "cbb_plotstyle") else "line",
+            "color_palette": self.cbb_color_palette.currentText() if hasattr(self, "cbb_color_palette") else "DEFAULT_COLORS",
             "lw": self.spin_lw.value() if hasattr(self, "spin_lw") else 1.5,
             "dotsize": self.spin_dotsize.value() if hasattr(self, "spin_dotsize") else 3.0,
             "raw": self.act_raw.isChecked() if hasattr(self, "act_raw") else False,
@@ -1268,6 +1361,7 @@ class VSpectraViewer(QWidget):
             "height": self.height_entry.text() if hasattr(self, "height_entry") else "4.0",
             "legend": self.btn_legend.isChecked() if hasattr(self, "btn_legend") else False,
             "bestfit": self.btn_bestfit.isChecked() if hasattr(self, "btn_bestfit") else False,
+            "max_legend_items": self.spin_max_legend_items.value() if hasattr(self, "spin_max_legend_items") else 15,
             "copy_fig_theme": self.cbb_copy_theme.currentText() if hasattr(self, "cbb_copy_theme") else "Light Mode",
         }
 
@@ -1291,6 +1385,10 @@ class VSpectraViewer(QWidget):
         _update(self.cbb_yaxis, self.cbb_yaxis.setCurrentText, state.get("yaxis"))
         _update(self.cbb_yscale, self.cbb_yscale.setCurrentText, state.get("yscale"))
         _update(self.cbb_plotstyle, self.cbb_plotstyle.setCurrentText, state.get("plotstyle"))
+        if hasattr(self, "cbb_color_palette"):
+            _update(self.cbb_color_palette,
+                    self.cbb_color_palette.setCurrentText,
+                    state.get("color_palette", "DEFAULT_COLORS"))
         _update(self.spin_lw, self.spin_lw.setValue, state.get("lw"))
         _update(self.spin_dotsize, self.spin_dotsize.setValue, state.get("dotsize"))
         _update(self.act_raw, self.act_raw.setChecked, state.get("raw"))
@@ -1304,6 +1402,10 @@ class VSpectraViewer(QWidget):
         _update(self.height_entry, self.height_entry.setText, state.get("height"))
         _update(self.btn_legend, self.btn_legend.setChecked, state.get("legend"))
         _update(self.btn_bestfit, self.btn_bestfit.setChecked, state.get("bestfit"))
+        if hasattr(self, "spin_max_legend_items"):
+            _update(self.spin_max_legend_items,
+                    self.spin_max_legend_items.setValue,
+                    state.get("max_legend_items", 15))
         if hasattr(self, "cbb_copy_theme"):
             _update(self.cbb_copy_theme, self.cbb_copy_theme.setCurrentText, state.get("copy_fig_theme", "Light Mode"))
 

@@ -100,7 +100,7 @@ The `SpectraViewer` is the central plotting widget where all spectra selected vi
 | ![Bestfit](../user_manual_images/Spectra_Maps/show_bestfit.png) | **Show Bestfit**: Toggles the display of the best-fit curve(s). |
 | ![Legend](../user_manual_images/Spectra_Maps/show_legend.png) | **Legend**: Toggles the display of the legend box. When the "Zoom" tool is disabled, you can click directly on the legend box to customize colors and labels. |
 | ![Copy](../user_manual_images/Spectra_Maps/copy.png) | **Copy**: Copies the plot to your clipboard as a high-quality image. Use `Ctrl + Click` (or `Cmd + Click` on macOS) to copy the raw numerical plot data to your clipboard instead. |
-| ![More View Options](../user_manual_images/Spectra_Maps/view_options.png) | **More Options**: Opens a comprehensive configuration panel allowing you to adjust X/Y units, toggle log scales, change plot styles, toggle Raw/Residual visibility, enable grids, adjust line widths, and define precise figure dimensions.<br>![More Options Panel](../user_manual_images/Spectra_Maps/menu_view_options.png) |
+| ![More View Options](../user_manual_images/Spectra_Maps/view_options.png) | **More Options**: Opens a comprehensive configuration panel allowing you to adjust X/Y units, toggle log scales, change plot styles, choose discrete or gradient spectrum color palettes from visual color-strip previews, set the maximum number of legend items (15 by default), toggle Raw/Residual visibility, enable grids, adjust line widths, and define precise figure dimensions.<br>![More Options Panel](../user_manual_images/Spectra_Maps/menu_view_options.png) |
 
 _______
 

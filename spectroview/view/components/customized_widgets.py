@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt, QSize
 from PySide6.QtWidgets import QComboBox, QLineEdit, QLabel, QSizePolicy
 
 import numpy as np
-import matplotlib.cm as cm
+import matplotlib as mpl
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
 
@@ -46,14 +46,27 @@ class ResizableImageLabel(QLabel):
 
 
 class CustomizedPalette(QComboBox):
-    """Custom QComboBox to show color palette previews along with their names."""
-    def __init__(self, palette_list=None, parent=None, icon_size=(99, 12)):
+    """QComboBox showing each named palette as a color-strip icon.
+
+    ``custom_palettes`` allows callers to preview application-defined discrete
+    color lists alongside Matplotlib colormaps.  Matplotlib palettes retain
+    their existing gradient/segmented rendering, so the same widget can be
+    shared by map and spectrum viewers without changing the map palette set.
+    """
+
+    def __init__(self, palette_list=None, parent=None, icon_size=(99, 12),
+                 custom_palettes=None):
         super().__init__(parent)
         self.icon_width, self.icon_height = icon_size
         self.setIconSize(QSize(*icon_size))
         self.setMinimumWidth(100)
 
-        self.palette_list = palette_list or PALETTE
+        self.palette_list = list(
+            PALETTE if palette_list is None else palette_list)
+        self.custom_palettes = {
+            name: tuple(colors)
+            for name, colors in (custom_palettes or {}).items()
+        }
         self._populate_with_previews()
 
     def _populate_with_previews(self):
@@ -63,18 +76,30 @@ class CustomizedPalette(QComboBox):
             self.addItem(icon, cmap_name)
 
     def _create_colormap_preview(self, cmap_name):
-        """Generate a horizontal gradient preview image for the colormap."""
+        """Generate a horizontal palette preview image.
+
+        Custom palettes are rendered as equal-width color blocks.  Registered
+        Matplotlib colormaps are sampled continuously, which naturally renders
+        qualitative ``ListedColormap`` palettes as blocks and sequential maps
+        as gradients.
+        """
         width, height = self.icon_width, self.icon_height
-        
-        try:
-            cmap = cm.colormaps[cmap_name]
-        except AttributeError:
-            cmap = cm.get_cmap(cmap_name)
-            
-        gradient = np.linspace(0, 1, width)
-        colors = (cmap(gradient) * 255).astype(np.uint8)
+
+        custom_colors = self.custom_palettes.get(cmap_name)
+        if custom_colors:
+            rgba = mpl.colors.to_rgba_array(custom_colors)
+            indices = np.minimum(
+                np.arange(width) * len(rgba) // width,
+                len(rgba) - 1,
+            )
+            sampled_colors = rgba[indices]
+        else:
+            cmap = mpl.colormaps[cmap_name]
+            sampled_colors = cmap(np.linspace(0, 1, width))
+
+        colors = np.rint(sampled_colors * 255).astype(np.uint8)
         colors_2d = np.tile(colors, (height, 1, 1))
-        
+
         qimage = QImage(colors_2d.data, width, height, width * 4, QImage.Format_RGBA8888)
         return QPixmap.fromImage(qimage.copy())
 

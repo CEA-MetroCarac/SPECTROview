@@ -57,10 +57,10 @@ tests/
 ## Running Tests
 
 ```bash
-# Everything except the slow performance/regression suite (recommended for local dev)
+# Everything except the real-data performance/regression suite
 pytest tests/ -m "not slow"
 
-# Everything, including the real-dataset performance benchmarks (~2 min)
+# Everything, including real-data benchmarks (~7 min on the reference Windows workstation)
 pytest tests/
 
 # Just one layer
@@ -73,6 +73,9 @@ pytest tests/unit/fit_engine/test_optimizer.py::TestBounds::test_solution_respec
 
 # With coverage
 pytest tests/unit/ tests/integration/ --cov=spectroview --cov-report=html
+
+# Find the current bottlenecks
+pytest tests/ --durations=30
 ```
 
 On Windows, if you see `qt.qpa.plugin: Could not find the Qt platform plugin`, set:
@@ -105,6 +108,12 @@ $env:QT_QPA_PLATFORM="offscreen" # PowerShell
   has its own **module**-scoped variant of the same isolation, since the per-test
   one is function-scoped and would defeat the point of fitting each benchmark map
   only once per module.
+- **Qt cleanup is scoped and generational**: only tests that request `qapp` flush
+  deferred Qt deletions. Newly-created widget cycles are collected from generation
+  0 after each GUI test, with a full collection every 50 GUI tests. Running two
+  full-heap collections after every test previously made the suite take about 37
+  minutes; the bounded cleanup keeps the native-handle protection while reducing a
+  complete run to about 7 minutes.
 - **Synthetic data with known ground truth**: `tests/conftest.py` provides
   `make_fit_model`, `make_synthetic_spectrum`, and `make_synthetic_map` factory
   fixtures that build a peak (or map of peaks) from explicit parameters, so fits
@@ -118,10 +127,13 @@ $env:QT_QPA_PLATFORM="offscreen" # PowerShell
   files so the non-`slow` suite stays fast — **except the Graphs workspace tests**
   (`tests/unit/view/`, `tests/unit/viewmodel/test_vm_workspace_graphs.py`,
   `tests/integration/test_graphs_workflow.py`), which deliberately load and plot the
-  real `examples/datasets_for_plotting/dataset_Excel.xlsx` file throughout, since
+  real `examples/datasets_for_plotting/dataset_Excel.xlsx` data throughout, since
   plot-style/customization correctness is best validated against real, messy,
   wafer-shaped data (duplicate coordinates, a `NaN` category, an uneven slot split)
-  rather than a hand-crafted synthetic frame. See
+  rather than a hand-crafted synthetic frame. The checked-in workbook currently has
+  one sheet; the session fixture creates the historical no-`Slot` second sheet from
+  that real frame so multi-sheet loading and no-`Slot` guards remain deterministic.
+  See
   [`GRAPHS_WORKSPACE_TESTING.md`](GRAPHS_WORKSPACE_TESTING.md) for the full rationale
   and the three real bugs this approach found.
 

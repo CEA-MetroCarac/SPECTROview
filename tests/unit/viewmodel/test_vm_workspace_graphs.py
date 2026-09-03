@@ -1,8 +1,9 @@
 """Unit tests for viewmodel/vm_workspace_graphs.py - VMWorkspaceGraphs.
 
 Driven against the real examples/datasets_for_plotting/dataset_Excel.xlsx
-file wherever the test exercises DataFrame content (loading, filtering,
-wafer slots) -- see tests/README.md for the data's real shape:
+data wherever the test exercises DataFrame content (loading, filtering,
+wafer slots). The session fixture restores the historical no-Slot second
+sheet when the checked-in workbook contains only one -- see tests/README.md:
 sheet1 (588 rows: X, Y, x0_Si, ampli_Si, area_Si, fwhm_Si, Quadrant
 [Q1-Q4 + NaN], Zone [Center/Mid-Radius/Edge], Slot [2..12], DeltaW,
 'Strain (GPa)', 'NB pts') and sheet2 (588 rows, no Slot column).
@@ -31,7 +32,7 @@ def excel_sheets(dataframe_excel_file):
 
 @pytest.fixture
 def loaded_vm(vm, dataframe_excel_file):
-    """VM with both real sheets already loaded, matching how the app loads
+    """VM with both realistic sheets loaded, matching how the app loads
     a multi-sheet Excel file: one DataFrame per sheet, named
     '{stem}_{sheet_name}'."""
     vm.load_dataframes([str(dataframe_excel_file)])

@@ -376,7 +376,7 @@ class CustomizeLegend(QWidget):
             delegate = ColorDelegate(color)
             color.setItemDelegate(delegate)
 
-            unique_colors = list(dict.fromkeys(DEFAULT_COLORS))[:12]
+            unique_colors = list(dict.fromkeys(DEFAULT_COLORS))
             for color_code in unique_colors:
                 color.addItem(color_code)
                 item = color.model().item(color.count() - 1)

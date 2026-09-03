@@ -39,6 +39,8 @@ class MSettings:
             "yaxis": self.settings.value("view_options/yaxis", "Intensity (a.u.)", str),
             "yscale": self.settings.value("view_options/yscale", "Linear", str),
             "plotstyle": self.settings.value("view_options/plotstyle", "line", str),
+            "color_palette": self.settings.value(
+                "view_options/color_palette", "DEFAULT_COLORS", str),
             "lw": self.settings.value("view_options/lw", 1.5, float),
             "dotsize": self.settings.value("view_options/dotsize", 3.0, float),
             "raw": self.settings.value("view_options/raw", False, bool),
@@ -51,6 +53,8 @@ class MSettings:
             "height": self.settings.value("view_options/height", "4.0", str),
             "legend": self.settings.value("view_options/legend", False, bool),
             "bestfit": self.settings.value("view_options/bestfit", True, bool),
+            "max_legend_items": self.settings.value(
+                "view_options/max_legend_items", 15, int),
             "copy_fig_theme": self.settings.value("view_options/copy_fig_theme", "Light Mode", str),
         }
 

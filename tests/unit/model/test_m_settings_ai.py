@@ -10,8 +10,10 @@ their real history folder.
 Everything now goes through ``MSettings`` under the ``ai_chat/`` prefix, with a
 one-time migration so nobody loses an API key on upgrade.
 """
+import os
 import tomllib
 import uuid
+from pathlib import Path
 
 from PySide6.QtCore import QSettings
 
@@ -89,16 +91,38 @@ class TestSecretsStayOutOfTheProject:
     def test_saving_a_key_writes_nothing_into_the_project(self, qapp, project_root):
         # Generated at runtime so no source file can legitimately contain it —
         # a literal here would match this test file and mask a real leak.
+        text_suffixes = {".json", ".yaml", ".yml", ".ini", ".md", ".py", ".toml"}
+        skip = {
+            ".cache", ".claude", ".git", ".pytest_cache", ".ruff_cache",
+            ".venv", ".venv_clean", ".vscode", "__pycache__", "build",
+            "dist", "site",
+        }
+
+        def _snapshot():
+            snapshot = {}
+            for directory, subdirs, filenames in os.walk(project_root):
+                subdirs[:] = [name for name in subdirs if name not in skip]
+                directory = Path(directory)
+                for filename in filenames:
+                    path = directory / filename
+                    if path.suffix not in text_suffixes:
+                        continue
+                    stat = path.stat()
+                    snapshot[path] = (stat.st_mtime_ns, stat.st_size)
+            return snapshot
+
+        before = _snapshot()
         secret = f"sk-test-{uuid.uuid4().hex}"
         MSettings().set_ai_value("api_key_OpenAI", secret)
 
-        skip = {".venv", ".venv_clean", "site", "build", "dist", "__pycache__", ".git"}
+        after = _snapshot()
+        changed_files = [
+            path for path, metadata in after.items()
+            if before.get(path) != metadata
+        ]
         hits = [
-            path for path in project_root.rglob("*")
-            if path.is_file()
-            and path.suffix in {".json", ".yaml", ".yml", ".ini", ".md", ".py", ".toml"}
-            and not skip & set(path.parts)
-            and secret in path.read_text(encoding="utf-8", errors="ignore")
+            path for path in changed_files
+            if secret in path.read_text(encoding="utf-8", errors="ignore")
         ]
         assert hits == [], f"API key leaked into project files: {hits}"
 

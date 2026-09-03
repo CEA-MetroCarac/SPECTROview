@@ -70,7 +70,7 @@ class TestFullWaferAnalysisWorkflow:
     def test_load_filter_plot_customize_save_reload(self, vm, dataframe_excel_file, tmp_path, monkeypatch, qapp):
         from PySide6.QtWidgets import QFileDialog
 
-        # 1. Load the real multi-sheet Excel file.
+        # 1. Load the realistic two-sheet fixture derived from the real data.
         vm.load_dataframes([str(dataframe_excel_file)])
         assert "dataset_Excel_sheet1" in vm.dataframes
         vm.select_dataframe("dataset_Excel_sheet1")
@@ -167,7 +167,7 @@ class TestFullWaferAnalysisWorkflow:
 
 class TestCrossSheetWorkflow:
     """sheet2 has no Slot column -- exercises the has_slot_column()/
-    get_unique_slots() guards on a real second sheet, and a plot style
+    get_unique_slots() guards on the fixture's derived second sheet and a plot style
     (line/trendline) driven from that sheet's own numeric columns."""
 
     def test_sheet_without_slot_column_supports_non_wafer_plots(self, vm, dataframe_excel_file, qapp):

@@ -84,9 +84,12 @@ def qapp():
     yield app
 
 
+_qt_cleanup_count = 0
+
+
 @pytest.fixture(autouse=True)
-def _release_qt_widgets_between_tests():
-    """Force a GC pass (+ pending Qt deleteLater()s) after every test.
+def _release_qt_widgets_between_tests(request):
+    """Release Qt resources after tests which actually use ``qapp``.
 
     Real GUI tests each construct several native-backed widgets (VGraph's
     matplotlib canvas, CustomizeAxis's range sliders, ...) as plain local
@@ -94,24 +97,40 @@ def _release_qt_widgets_between_tests():
     of them can stay alive simultaneously across a full run and exhaust the
     platform's native surface budget (a real crash seen in practice: a
     segfault deep inside FigureCanvasQTAgg.__init__ once enough dead-but-
-    not-yet-collected canvases had piled up). Prompting collection after
-    each test keeps the live set small instead.
+    not-yet-collected canvases had piled up). A full-generation collection
+    twice after *every* test fixed that crash, but made the suite increasingly
+    slow by repeatedly scanning every long-lived pytest/Qt/Matplotlib object.
+
+    New widgets and their reference cycles start in generation 0, so a young-
+    generation collection is sufficient between GUI tests. A periodic full
+    collection keeps promoted cycles bounded without imposing that scan on
+    every pure model/numerical test.
     """
+    global _qt_cleanup_count
     yield
+
+    if "qapp" not in request.fixturenames:
+        return
+
     import gc
     from PySide6.QtCore import QEvent
-    gc.collect()
+
+    gc.collect(0)
     app = QApplication.instance()
     if app is not None:
         app.sendPostedEvents(None, QEvent.DeferredDelete)
         app.processEvents()
+
+    _qt_cleanup_count += 1
+    if _qt_cleanup_count % 50 == 0:
         gc.collect()
-        app.sendPostedEvents(None, QEvent.DeferredDelete)
-        app.processEvents()
+        if app is not None:
+            app.sendPostedEvents(None, QEvent.DeferredDelete)
+            app.processEvents()
 
 
 @pytest.fixture
-def settings(qapp):
+def settings():
     """A fresh MSettings backed by the isolated QSettings store."""
     return MSettings()
 
@@ -214,8 +233,31 @@ def zip_maps_workspace(bench_dir):
 # ── Dataframe example files (Graphs workspace, used sparingly here) ────────
 
 @pytest.fixture(scope="session")
-def dataframe_excel_file(examples_dir):
-    return examples_dir / "datasets_for_plotting" / "dataset_Excel.xlsx"
+def dataframe_excel_file(examples_dir, tmp_path_factory):
+    """Return the realistic two-sheet workbook expected by Graphs tests.
+
+    The checked-in example used to contain ``sheet1`` plus a second sheet
+    without a ``Slot`` column. It now contains only ``sheet1``, while the
+    Graphs regression suite still intentionally exercises multi-sheet loading
+    and the no-Slot guard path. Rebuild that historical second sheet from the
+    real data once per session instead of making production code treat a
+    single-sheet workbook as multi-sheet or relying on a stale binary asset.
+    """
+    source = examples_dir / "datasets_for_plotting" / "dataset_Excel.xlsx"
+    if not source.exists():
+        return source
+
+    with pd.ExcelFile(source) as workbook:
+        if len(workbook.sheet_names) > 1:
+            return source
+        sheet1 = pd.read_excel(workbook, sheet_name=workbook.sheet_names[0])
+
+    generated = tmp_path_factory.mktemp("graph_excel_fixture") / source.name
+    sheet2 = sheet1.drop(columns=["Slot"], errors="ignore")
+    with pd.ExcelWriter(generated, engine="openpyxl") as writer:
+        sheet1.to_excel(writer, sheet_name="sheet1", index=False)
+        sheet2.to_excel(writer, sheet_name="sheet2", index=False)
+    return generated
 
 
 # ── Benchmark datasets (performance/regression suite) ───────────────────────

@@ -6,7 +6,7 @@ from pathlib import Path
 # The app uses PySide6 throughout, but superqt (used for QLabeledDoubleRangeSlider)
 os.environ.setdefault("QT_API", "pyside6")
 
-VERSION = "26.36.1"
+VERSION = "26.36.2"
 
 
 TEXT_EXPIRE = (
@@ -42,6 +42,8 @@ PLOT_STYLES = [
 DEFAULT_COLORS = [
     '#E31A1C', '#33A02C', '#FF7F00', '#1F78B4', '#6A3D9A',
     '#FB9A99', '#B2DF8A', '#FDBF6F', '#A6CEE3', '#CAB2D6',
+    '#B15928', '#E6AB02', '#00A6D6', '#F564E3', '#7F7F7F',
+    '#1B9E77', '#D95F02', '#7570B3', '#E7298A', '#66A61E',
 ]
 
 MARKERS = [

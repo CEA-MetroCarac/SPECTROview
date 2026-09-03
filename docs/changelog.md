@@ -4,6 +4,23 @@
 
 ---
 
+## [v26.36.2](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.36.2) - 2026-09-03
+
+- Added visual color previews to the SpectraViewer palette selector.
+- Added more discrete and gradient palettes for spectrum series.
+- Expanded the default palette from 10 to 20 colors.
+- Made the maximum number of legend entries configurable, with a default of 15.
+- Palette and legend preferences are now saved between sessions.
+- Preserved manually customized spectrum colors.
+- Improved plotting stability and substantially reduced test-suite execution time.
+
+![image](https://github.com/user-attachments/assets/d9cf20f9-e715-4910-9b04-7489a2a7ed25)
+
+
+**Full Changelog**: https://github.com/CEA-MetroCarac/SPECTROview/compare/v26.36.1...v26.36.2
+
+---
+
 ## [v26.36.1](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.36.1) - 2026-09-02
 
 The installable wheel is attached below and is used by SPECTROview's automatic updater.

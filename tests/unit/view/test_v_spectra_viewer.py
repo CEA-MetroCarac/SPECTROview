@@ -1,12 +1,17 @@
 """Tests for spectrum-series colors and legend controls."""
 
+from types import SimpleNamespace
+
 import matplotlib as mpl
 import numpy as np
 import pytest
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDialog, QGroupBox, QLabel
 
 from spectroview import DEFAULT_COLORS
 from spectroview.view.components.customized_widgets import CustomizedPalette
 from spectroview.view.components.v_spectra_viewer import (
+    MAP_LEGEND_EDITOR_MAX_ROWS,
     SPECTRA_COLOR_PALETTES,
     VSpectraViewer,
 )
@@ -135,3 +140,162 @@ def test_palette_and_legend_limit_round_trip_through_options_state(viewer):
 
     assert viewer.cbb_color_palette.currentText() == "viridis"
     assert viewer.spin_max_legend_items.value() == 24
+
+
+def test_legend_editor_lists_all_plotted_spectra_beyond_legend_cap(viewer):
+    viewer._tensor_data = _tensor_data(6)
+    viewer.spin_max_legend_items.setValue(2)
+
+    dialog = viewer._create_legend_editor_dialog()
+
+    assert dialog.table.rowCount() == 6
+    assert dialog.max_items_spin.value() == 2
+    assert [edit.text() for edit in dialog.label_edits] == [
+        f"Series {index}" for index in range(1, 7)
+    ]
+    assert all(combo.selected_color() is None
+               for combo in dialog.color_combos)
+    dialog.close()
+
+
+def test_map_legend_editor_caps_rows_and_reports_truncation(viewer):
+    total = MAP_LEGEND_EDITOR_MAX_ROWS + 25
+    viewer._tensor_data = _tensor_data(total)
+    viewer._tensor_data["map_name"] = "large_map"
+    viewer.cbb_color_palette.setCurrentText("viridis")
+
+    entries = viewer._legend_editor_entries()
+    dialog = viewer._create_legend_editor_dialog()
+    entries_group = next(
+        group for group in dialog.findChildren(QGroupBox)
+        if group.title().startswith("Plotted spectra")
+    )
+    limit_notice = dialog.findChild(QLabel, "legendEditorLimitNotice")
+
+    assert len(entries) == MAP_LEGEND_EDITOR_MAX_ROWS
+    assert dialog.table.rowCount() == MAP_LEGEND_EDITOR_MAX_ROWS
+    assert f"showing {MAP_LEGEND_EDITOR_MAX_ROWS} of {total}" in (
+        entries_group.title().lower())
+    assert limit_notice is not None
+    assert f"{MAP_LEGEND_EDITOR_MAX_ROWS} of {total}" in limit_notice.text()
+    expected_last_color = viewer._get_colors_for_palette(
+        "viridis", total)[MAP_LEGEND_EDITOR_MAX_ROWS - 1]
+    assert expected_last_color in dialog.color_combos[-1].itemData(
+        0, Qt.ToolTipRole)
+    dialog.close()
+
+
+def test_legend_editor_color_choices_follow_selected_palette(viewer):
+    viewer._tensor_data = _tensor_data(3)
+    dialog = viewer._create_legend_editor_dialog()
+
+    dialog.palette_combo.setCurrentText("Dark2")
+    available = {
+        dialog.color_combos[0].itemData(index)
+        for index in range(dialog.color_combos[0].count())
+    }
+    expected = {
+        mpl.colors.to_hex(color)
+        for color in mpl.colormaps["Dark2"].colors
+    }
+    automatic_color = viewer._get_colors_for_palette("Dark2", 3)[0]
+
+    assert expected <= available
+    assert dialog.color_combos[0].selected_color() is None
+    assert automatic_color in dialog.color_combos[0].itemData(
+        0, Qt.ToolTipRole)
+    dialog.close()
+
+
+def test_accepted_legend_editor_syncs_view_data_and_spectrum_proxies(
+        viewer, monkeypatch):
+    data = _tensor_data(3)
+    data["colors"] = [None, "#abcdef", None]
+    proxies = [
+        SimpleNamespace(label=label, color=color)
+        for label, color in zip(data["labels"], data["colors"])
+    ]
+    data["proxies"] = proxies
+    viewer._tensor_data = data
+
+    dialog = viewer._create_legend_editor_dialog()
+    dialog.palette_combo.setCurrentText("plasma")
+    dialog.max_items_spin.setValue(2)
+    dialog.label_edits[0].setText("Renamed spectrum")
+    dialog.color_combos[0].setCurrentIndex(1)
+    selected_color = dialog.color_combos[0].selected_color()
+    dialog.color_combos[1].setCurrentIndex(0)  # Restore palette-driven color
+
+    plot_calls = []
+    customization_signals = []
+    option_signals = []
+    monkeypatch.setattr(viewer, "_plot", lambda: plot_calls.append(True))
+    viewer.spectrumCustomized.connect(
+        lambda: customization_signals.append(True))
+    viewer.allOptionsSyncChanged.connect(
+        lambda state: option_signals.append(state))
+
+    viewer._apply_legend_editor_values(dialog.values())
+
+    assert viewer.cbb_color_palette.currentText() == "plasma"
+    assert viewer.spin_max_legend_items.value() == 2
+    assert data["labels"][0] == "Renamed spectrum"
+    assert proxies[0].label == "Renamed spectrum"
+    assert data["colors"][:2] == [selected_color, None]
+    assert proxies[0].color == selected_color
+    assert proxies[1].color is None
+    assert len(customization_signals) == 1
+    assert len(option_signals) == 1
+    assert len(plot_calls) == 1
+    dialog.close()
+
+
+def test_cancelled_legend_editor_does_not_change_spectra(
+        viewer, monkeypatch):
+    data = _tensor_data(2)
+    proxy = SimpleNamespace(label="Series 1", color=None)
+    data["proxies"] = [proxy]
+    viewer._tensor_data = data
+    dialog = viewer._create_legend_editor_dialog()
+    dialog.label_edits[0].setText("Should not be applied")
+    dialog.palette_combo.setCurrentText("jet")
+    monkeypatch.setattr(dialog, "exec", lambda: QDialog.Rejected)
+    monkeypatch.setattr(
+        viewer, "_create_legend_editor_dialog", lambda: dialog)
+
+    viewer._open_legend_editor()
+
+    assert data["labels"][0] == "Series 1"
+    assert data["colors"][0] is None
+    assert proxy.label == "Series 1"
+    assert proxy.color is None
+    assert viewer.cbb_color_palette.currentText() == "DEFAULT_COLORS"
+    dialog.close()
+
+
+def test_double_click_anywhere_inside_legend_opens_batch_editor(
+        viewer, monkeypatch):
+    viewer.btn_legend.setChecked(True)
+    viewer.set_plot_data(_tensor_data(3))
+    bbox = viewer._legend_bbox
+    opened = []
+    monkeypatch.setattr(
+        viewer, "_open_legend_editor", lambda: opened.append(True))
+
+    inside_event = SimpleNamespace(
+        dblclick=True,
+        x=(bbox.x0 + bbox.x1) / 2,
+        y=(bbox.y0 + bbox.y1) / 2,
+        inaxes=viewer.ax,
+    )
+    outside_event = SimpleNamespace(
+        dblclick=True,
+        x=bbox.x1 + 20,
+        y=bbox.y1 + 20,
+        inaxes=viewer.ax,
+    )
+
+    viewer._on_legend_double_click(inside_event)
+    viewer._on_legend_double_click(outside_event)
+
+    assert opened == [True]

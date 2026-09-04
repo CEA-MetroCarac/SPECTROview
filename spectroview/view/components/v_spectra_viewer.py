@@ -11,8 +11,8 @@ from PySide6.QtWidgets import (
     QFrame,
     QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QToolButton, QLabel,
-    QComboBox, QMenu, QWidgetAction,
-    QLineEdit, QDoubleSpinBox, QSpinBox, QColorDialog, QInputDialog,
+    QComboBox, QDialog, QMenu, QWidgetAction,
+    QLineEdit, QDoubleSpinBox, QSpinBox,
     QSlider, QMessageBox, QApplication
 )
 from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer, QPoint
@@ -34,6 +34,9 @@ from spectroview.view.components.customized_widgets import (
     CustomizedPalette,
     NoDoubleClickZoomToolbar,
 )
+from spectroview.view.components.v_spectra_legend_editor import (
+    SpectraLegendEditorDialog,
+)
 
 
 SPECTRA_DISCRETE_PALETTES = (
@@ -49,6 +52,10 @@ SPECTRA_COLOR_PALETTES = (
 SPECTRA_CUSTOM_PALETTES = {
     "DEFAULT_COLORS": DEFAULT_COLORS,
 }
+
+# A map selection can contain thousands of spectra.  The plot itself is
+# batched, but constructing thousands of per-row Qt editors would be costly.
+MAP_LEGEND_EDITOR_MAX_ROWS = 100
 
 
 class _MockPeakModelObj:
@@ -325,7 +332,9 @@ class VSpectraViewer(QWidget):
         self.btn_legend = QToolButton()
         self.btn_legend.setCheckable(True)
         self.btn_legend.setIcon(QIcon(f"{ICON_DIR}/legend.png"))
-        self.btn_legend.setToolTip("Show or hide legend box")
+        self.btn_legend.setToolTip(
+            "Show or hide the legend box. Double-click the legend to edit "
+            "all spectrum labels and colors.")
         self.btn_legend.setIconSize(QSize(22, 22))
         self.btn_legend.setFixedSize(30, 30)
         self.btn_legend.toggled.connect(self._emit_view_options)
@@ -669,17 +678,13 @@ class VSpectraViewer(QWidget):
     # Plot helpers: segment builders
     # ─────────────────────────────────────────────
 
-    def _get_colors_cycle(self, count=None):
-        """Return colors sampled from the selected spectrum palette.
+    def _get_colors_for_palette(self, palette_name, count=None):
+        """Return ``count`` colors sampled from a named spectrum palette.
 
         Discrete palettes repeat only after all of their distinct colors have
         been used. Gradient palettes are sampled evenly from end to end, which
         makes the spectrum order visible for time/temperature series.
         """
-        palette_name = (
-            self.cbb_color_palette.currentText()
-            if hasattr(self, "cbb_color_palette") else "DEFAULT_COLORS"
-        )
         requested_count = (
             len(DEFAULT_COLORS) if count is None else max(0, int(count))
         )
@@ -714,6 +719,39 @@ class VSpectraViewer(QWidget):
             base_colors = list(DEFAULT_COLORS) or ["#1f77b4"]
         return [base_colors[i % len(base_colors)]
                 for i in range(requested_count)]
+
+    def _get_colors_cycle(self, count=None):
+        """Return colors sampled from the currently selected palette."""
+        palette_name = (
+            self.cbb_color_palette.currentText()
+            if hasattr(self, "cbb_color_palette") else "DEFAULT_COLORS"
+        )
+        return self._get_colors_for_palette(palette_name, count)
+
+    def _get_palette_color_choices(self, palette_name, spectrum_count=0):
+        """Return the selectable swatches for a palette in the legend editor."""
+        if palette_name in SPECTRA_CUSTOM_PALETTES:
+            return list(SPECTRA_CUSTOM_PALETTES[palette_name])
+
+        try:
+            cmap = mpl.colormaps[palette_name]
+        except (KeyError, AttributeError):
+            return list(DEFAULT_COLORS)
+
+        if palette_name in SPECTRA_DISCRETE_PALETTES:
+            cmap_colors = getattr(cmap, "colors", None)
+            if cmap_colors is None:
+                cmap_colors = cmap(np.linspace(0.0, 1.0, cmap.N))
+            return [mpl.colors.to_hex(color) for color in cmap_colors]
+
+        # A continuous gradient has infinitely many colors. Offer a useful,
+        # bounded set of evenly spaced swatches without making every table
+        # combobox excessively large for maps containing hundreds of spectra.
+        swatch_count = max(20, min(32, max(0, int(spectrum_count))))
+        return [
+            mpl.colors.to_hex(cmap(position))
+            for position in np.linspace(0.0, 1.0, swatch_count)
+        ]
 
     def _build_tensor_segments(self, x_shift_step, y_shift_step,
                                 plot_style, lw, fg_color, colors_cycle):
@@ -1129,6 +1167,8 @@ class VSpectraViewer(QWidget):
         self.ax.autoscale_view()
 
         # ── Legend / axes / grid ──
+        self._legend_obj = None
+        self._legend_bbox = None
         if self.btn_legend.isChecked():
             handles, labels = self.ax.get_legend_handles_labels()
             max_items = self.spin_max_legend_items.value()
@@ -1178,14 +1218,7 @@ class VSpectraViewer(QWidget):
 
     
     def _make_legend_pickable(self, legend):
-        """Make legend texts and handles pickable for interaction (double-click)."""
-        for text in legend.get_texts():
-            text.set_picker(True)
-
-        for handle in legend.legend_handles:
-            handle.set_picker(True)
-
-        # Cache legend and its artists for double-click hit-testing
+        """Cache the legend bounds for whole-box double-click interaction."""
         self._legend_obj = legend
         # ``renderer`` is only installed as an attribute after the first draw;
         # get_renderer() also works when data arrives before the widget has
@@ -1227,114 +1260,168 @@ class VSpectraViewer(QWidget):
                 self.lbl_noise.setText("Noise=0")
 
     def _on_legend_double_click(self, event):
-        """Handle double-click on legend text or marker to edit label/color."""
-        if not event.dblclick:
-            return
-        if event.inaxes != self.ax:
+        """Open the batch editor when any part of the legend is double-clicked."""
+        if not getattr(event, "dblclick", False):
             return
 
-        legend = getattr(self, "_legend_obj", None)
-        if legend is None:
+        legend_bbox = getattr(self, "_legend_bbox", None)
+        if legend_bbox is None or event.x is None or event.y is None:
             return
 
-        # Hit-test legend texts
-        for text in legend.get_texts():
-            contains, _ = text.contains(event)
-            if contains:
-                self._edit_legend_label(text)
-                return
+        if legend_bbox.contains(event.x, event.y):
+            self._open_legend_editor()
 
-        # Hit-test legend handles
-        for handle_idx, handle in enumerate(legend.legend_handles):
-            contains, _ = handle.contains(event)
-            if contains:
-                if handle_idx < len(legend.get_texts()):
-                    text_artist = legend.get_texts()[handle_idx]
-                    self._edit_legend_color_with_label(handle, text_artist.get_text())
-                else:
-                    self._edit_legend_color(handle)
-                return
+    def _legend_editor_entries(self):
+        """Describe editable plotted spectra, safely capped for map data."""
+        if not self._tensor_data:
+            return []
 
-    def _edit_legend_label(self, artist):
-        """Open dialog to rename the spectrum label."""
-        old_label = artist.get_text()
+        spectra = self._tensor_data.get("y")
+        spectrum_count = len(spectra) if spectra is not None else 0
+        editor_count = spectrum_count
+        if self._tensor_data.get("map_name"):
+            editor_count = min(spectrum_count, MAP_LEGEND_EDITOR_MAX_ROWS)
+        raw_labels = self._tensor_data.get("labels")
+        raw_fnames = self._tensor_data.get("fnames")
+        raw_colors = self._tensor_data.get("colors")
+        labels = [] if raw_labels is None else list(raw_labels)
+        fnames = [] if raw_fnames is None else list(raw_fnames)
+        stored_colors = [] if raw_colors is None else list(raw_colors)
 
-        new_label, ok = QInputDialog.getText(
-            self,
-            "Edit legend label",
-            "New label:",
-            text=old_label
+        entries = []
+        for index in range(editor_count):
+            name = (
+                str(fnames[index])
+                if index < len(fnames) and fnames[index]
+                else f"Spectrum {index + 1}"
+            )
+            display_label = (
+                str(labels[index])
+                if index < len(labels) and labels[index]
+                else name
+            )
+            stored_color = (
+                stored_colors[index]
+                if index < len(stored_colors) and stored_colors[index]
+                else None
+            )
+            entries.append({
+                "index": index,
+                "name": name,
+                "display_label": display_label,
+                "stored_color": stored_color,
+            })
+        return entries
+
+    def _create_legend_editor_dialog(self):
+        spectrum_count = len(self._tensor_data.get("y", []))
+        entries = self._legend_editor_entries()
+        truncation_message = ""
+        if len(entries) < spectrum_count:
+            truncation_message = (
+                f"Map performance safeguard: showing the first "
+                f"{len(entries)} of {spectrum_count} plotted spectra. "
+                "Narrow the map selection to edit spectra outside this batch."
+            )
+        return SpectraLegendEditorDialog(
+            entries=entries,
+            total_entry_count=spectrum_count,
+            truncation_message=truncation_message,
+            palette_names=SPECTRA_COLOR_PALETTES,
+            custom_palettes=SPECTRA_CUSTOM_PALETTES,
+            current_palette=self.cbb_color_palette.currentText(),
+            max_legend_items=self.spin_max_legend_items.value(),
+            series_colors_provider=self._get_colors_for_palette,
+            palette_colors_provider=self._get_palette_color_choices,
+            parent=self,
         )
 
-        if not ok or not new_label.strip():
+    def _open_legend_editor(self):
+        """Open the transactional editor and apply its values only on OK."""
+        if not self._legend_editor_entries():
             return
 
-        artist.set_text(new_label)
+        dialog = self._create_legend_editor_dialog()
+        self._legend_editor_dialog = dialog
+        if dialog.exec() == QDialog.Accepted:
+            self._apply_legend_editor_values(dialog.values())
 
-        for line in self.ax.get_lines():
-            if line.get_label() == old_label:
-                line.set_label(new_label)
+    @staticmethod
+    def _normalized_optional_color(color):
+        if not color:
+            return None
+        try:
+            return mpl.colors.to_hex(color)
+        except (TypeError, ValueError):
+            return None
 
-                if hasattr(line, "_spectrum_ref"):
-                    line._spectrum_ref.label = new_label
-                break
+    def _apply_legend_editor_values(self, values):
+        """Commit accepted dialog values to view state and spectrum proxies."""
+        if not self._tensor_data:
+            return
 
-        self.spectrumCustomized.emit()
-        self.canvas.draw_idle()
+        palette = values.get("palette", self.cbb_color_palette.currentText())
+        max_items = int(values.get(
+            "max_legend_items", self.spin_max_legend_items.value()))
+        options_changed = (
+            palette != self.cbb_color_palette.currentText()
+            or max_items != self.spin_max_legend_items.value()
+        )
 
-    def _choose_color(self, callback):
-        from PySide6.QtGui import QPixmap, QColor
-        menu = QMenu(self)
-        
-        for hex_color in DEFAULT_COLORS:
-            pixmap = QPixmap(16, 16)
-            pixmap.fill(QColor(hex_color))
-            icon = QIcon(pixmap)
-            action = menu.addAction(icon, hex_color)
-            action.triggered.connect(lambda checked=False, c=hex_color: callback(c))
-            
-        menu.addSeparator()
-        
-        other_action = menu.addAction("More Colors...")
-        def _open_dialog():
-            color = QColorDialog.getColor()
-            if color.isValid():
-                callback(color.name())
-                
-        other_action.triggered.connect(_open_dialog)
-        
-        # Use exec instead of exec_ for PySide6 compatibility
-        menu.exec(QCursor.pos())
+        self.cbb_color_palette.blockSignals(True)
+        self.spin_max_legend_items.blockSignals(True)
+        self.cbb_color_palette.setCurrentText(palette)
+        self.spin_max_legend_items.setValue(max_items)
+        self.cbb_color_palette.blockSignals(False)
+        self.spin_max_legend_items.blockSignals(False)
 
-    def _edit_legend_color(self, artist):
-        """Open color picker to change the spectrum color."""
-        def apply_color(hex_color):
-            artist.set_color(hex_color)
-            for line in self.ax.get_lines():
-                if line.get_label() == artist.get_label():
-                    line.set_color(hex_color)
-                    if hasattr(line, "_spectrum_ref"):
-                        line._spectrum_ref.color = hex_color
-                    break
+        spectrum_count = len(self._tensor_data.get("y", []))
+        raw_labels = self._tensor_data.get("labels")
+        raw_colors = self._tensor_data.get("colors")
+        raw_proxies = self._tensor_data.get("proxies")
+        labels = [] if raw_labels is None else list(raw_labels)
+        colors = [] if raw_colors is None else list(raw_colors)
+        proxies = [] if raw_proxies is None else list(raw_proxies)
+        labels.extend([None] * (spectrum_count - len(labels)))
+        colors.extend([None] * (spectrum_count - len(colors)))
+
+        spectra_changed = False
+        for edited in values.get("spectra", []):
+            index = int(edited.get("index", -1))
+            if index < 0 or index >= spectrum_count:
+                continue
+
+            new_label = str(edited.get("label", "")).strip()
+            if not new_label:
+                new_label = (
+                    self._tensor_data.get("fnames", [])[index]
+                    if index < len(self._tensor_data.get("fnames", []))
+                    else f"Spectrum {index + 1}"
+                )
+            if new_label != edited.get("original_display_label"):
+                labels[index] = new_label
+                if index < len(proxies):
+                    proxies[index].label = new_label
+                spectra_changed = True
+
+            old_color = self._normalized_optional_color(
+                edited.get("original_color"))
+            new_color = self._normalized_optional_color(edited.get("color"))
+            if new_color != old_color:
+                colors[index] = new_color
+                if index < len(proxies):
+                    proxies[index].color = new_color
+                spectra_changed = True
+
+        self._tensor_data["labels"] = labels
+        self._tensor_data["colors"] = colors
+
+        if spectra_changed:
             self.spectrumCustomized.emit()
-            self.canvas.draw_idle()
-            
-        self._choose_color(apply_color)
-
-    def _edit_legend_color_with_label(self, artist, label):
-        """Open color picker to change the spectrum color using text label as key."""
-        def apply_color(hex_color):
-            artist.set_color(hex_color)
-            for line in self.ax.get_lines():
-                if line.get_label() == label:
-                    line.set_color(hex_color)
-                    if hasattr(line, "_spectrum_ref"):
-                        line._spectrum_ref.color = hex_color
-                    break
-            self.spectrumCustomized.emit()
-            self.canvas.draw_idle()
-
-        self._choose_color(apply_color)
+        if options_changed:
+            self._emit_view_options()
+        elif spectra_changed:
+            self._plot()
 
 
     # ─────────────────────────────────────────

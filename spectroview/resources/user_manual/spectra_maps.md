@@ -98,9 +98,29 @@ The `SpectraViewer` is the central plotting widget where all spectra selected vi
 | ![Peaks](../user_manual_images/Spectra_Maps/add_peaks.png) | **Peaks**: When toggled on, allows you to manually add initial peak guesses by clicking directly on the spectra. |
 | ![Normalization](../user_manual_images/Spectra_Maps/normalize.png) | **Normalization**: Displays the selected spectra normalized to their maximum peak intensity. Enter values into the "min" and "max" fields to normalize based on a specific spectral range.<br>![Normalization Example](../user_manual_images/Spectra_Maps/ex_normalization.png)<br>*Raw spectra (left) vs. normalized spectra (right) — highly useful for inspecting subtle peak shifts.* |
 | ![Bestfit](../user_manual_images/Spectra_Maps/show_bestfit.png) | **Show Bestfit**: Toggles the display of the best-fit curve(s). |
-| ![Legend](../user_manual_images/Spectra_Maps/show_legend.png) | **Legend**: Toggles the display of the legend box. Double-click anywhere inside the legend to edit the palette, maximum number of displayed entries, and spectrum colors and labels in one dialog. Changes are applied with **OK** or discarded with **Cancel**. For responsiveness, a Maps workspace selection is edited in batches of up to 100 spectra; narrow the map selection to edit spectra outside the current batch. |
+| ![Legend](../user_manual_images/Spectra_Maps/show_legend.png) | **Legend**: Toggles the display of the legend box. Double-click anywhere inside the legend to edit the palette, maximum number of displayed entries, and spectrum colors and labels in one dialog. Changes are applied with **OK** or discarded with **Cancel**. For responsiveness, Spectra and Maps workspace selections are edited in batches of up to 100 spectra; narrow the selection to edit spectra outside the current batch. |
 | ![Copy](../user_manual_images/Spectra_Maps/copy.png) | **Copy**: Copies the plot to your clipboard as a high-quality image. Use `Ctrl + Click` (or `Cmd + Click` on macOS) to copy the raw numerical plot data to your clipboard instead. |
 | ![More View Options](../user_manual_images/Spectra_Maps/view_options.png) | **More Options**: Opens a comprehensive configuration panel allowing you to adjust X/Y units, toggle log scales, change plot styles, choose discrete or gradient spectrum color palettes from visual color-strip previews, set the maximum number of legend items (15 by default), toggle Raw/Residual visibility, enable grids, adjust line widths, and define precise figure dimensions.<br>![More Options Panel](../user_manual_images/Spectra_Maps/menu_view_options.png) |
+
+#### **3.3. Batch Legend Editor**
+
+Show the legend with the **Legend** toolbar button, then **double-click anywhere inside the legend box** to open the batch editor. This replaces the older workflow that required opening a separate dialog for every label or color.
+
+The top of the dialog contains two plot-wide controls:
+
+- **Color palette**: Select a palette from its visual color-strip preview. Discrete choices include the 20-color `DEFAULT_COLORS`, `tab20`, `tab20b`, `tab20c`, `Dark2`, `Paired`, and `Accent`. Gradient choices include `viridis`, `plasma`, `jet`, `cividis`, and `magma`.
+- **Max legend items**: Set how many entries appear in the plot legend. The default is 15. This setting does not remove spectra from the plot.
+
+The spectrum table provides one row per editable spectrum:
+
+- **Spectrum** identifies the original spectrum or filename.
+- **Color** selects a swatch from the active palette. **Automatic** keeps the spectrum linked to its palette-assigned color; selecting a swatch creates a per-spectrum override. Use **More colors…** for a color outside the palette.
+- **Label** changes the text shown in the legend. Clearing a custom label restores the spectrum filename.
+
+Changing the palette updates every **Automatic** color preview while preserving manually selected colors. Select **OK** to apply all edits together, or **Cancel** to discard every change made in the dialog. Accepted labels and colors are written back to the underlying spectrum objects, so the spectra list, Spectra workspace, Maps workspace, and saved workspace data remain synchronized.
+
+!!! note "100-spectrum editing batches"
+    To keep the interface responsive with large selections, the dialog creates editors for at most the first **100 plotted spectra** in both the Spectra and Maps workspaces. When the selection is larger, the dialog reports **“showing 100 of N”**. Spectra outside the displayed batch are not modified. Narrow the current selection to edit another group.
 
 _______
 

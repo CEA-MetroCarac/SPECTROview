@@ -53,9 +53,10 @@ SPECTRA_CUSTOM_PALETTES = {
     "DEFAULT_COLORS": DEFAULT_COLORS,
 }
 
-# A map selection can contain thousands of spectra.  The plot itself is
-# batched, but constructing thousands of per-row Qt editors would be costly.
-MAP_LEGEND_EDITOR_MAX_ROWS = 100
+# A selection can contain thousands of spectra.  The plot itself is batched,
+# but constructing thousands of per-row Qt editors would be costly in either
+# the Spectra or Maps workspace.
+LEGEND_EDITOR_MAX_ROWS = 100
 
 
 class _MockPeakModelObj:
@@ -1272,15 +1273,13 @@ class VSpectraViewer(QWidget):
             self._open_legend_editor()
 
     def _legend_editor_entries(self):
-        """Describe editable plotted spectra, safely capped for map data."""
+        """Describe editable plotted spectra, capped for responsive editing."""
         if not self._tensor_data:
             return []
 
         spectra = self._tensor_data.get("y")
         spectrum_count = len(spectra) if spectra is not None else 0
-        editor_count = spectrum_count
-        if self._tensor_data.get("map_name"):
-            editor_count = min(spectrum_count, MAP_LEGEND_EDITOR_MAX_ROWS)
+        editor_count = min(spectrum_count, LEGEND_EDITOR_MAX_ROWS)
         raw_labels = self._tensor_data.get("labels")
         raw_fnames = self._tensor_data.get("fnames")
         raw_colors = self._tensor_data.get("colors")
@@ -1319,9 +1318,9 @@ class VSpectraViewer(QWidget):
         truncation_message = ""
         if len(entries) < spectrum_count:
             truncation_message = (
-                f"Map performance safeguard: showing the first "
+                f"Performance safeguard: showing the first "
                 f"{len(entries)} of {spectrum_count} plotted spectra. "
-                "Narrow the map selection to edit spectra outside this batch."
+                "Narrow the selection to edit spectra outside this batch."
             )
         return SpectraLegendEditorDialog(
             entries=entries,

@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QDialog, QGroupBox, QLabel
 from spectroview import DEFAULT_COLORS
 from spectroview.view.components.customized_widgets import CustomizedPalette
 from spectroview.view.components.v_spectra_viewer import (
-    MAP_LEGEND_EDITOR_MAX_ROWS,
+    LEGEND_EDITOR_MAX_ROWS,
     SPECTRA_COLOR_PALETTES,
     VSpectraViewer,
 )
@@ -158,10 +158,13 @@ def test_legend_editor_lists_all_plotted_spectra_beyond_legend_cap(viewer):
     dialog.close()
 
 
-def test_map_legend_editor_caps_rows_and_reports_truncation(viewer):
-    total = MAP_LEGEND_EDITOR_MAX_ROWS + 25
+@pytest.mark.parametrize("is_map_workspace", [False, True])
+def test_legend_editor_caps_rows_in_both_workspaces(
+        viewer, is_map_workspace):
+    total = LEGEND_EDITOR_MAX_ROWS + 25
     viewer._tensor_data = _tensor_data(total)
-    viewer._tensor_data["map_name"] = "large_map"
+    if is_map_workspace:
+        viewer._tensor_data["map_name"] = "large_map"
     viewer.cbb_color_palette.setCurrentText("viridis")
 
     entries = viewer._legend_editor_entries()
@@ -172,14 +175,14 @@ def test_map_legend_editor_caps_rows_and_reports_truncation(viewer):
     )
     limit_notice = dialog.findChild(QLabel, "legendEditorLimitNotice")
 
-    assert len(entries) == MAP_LEGEND_EDITOR_MAX_ROWS
-    assert dialog.table.rowCount() == MAP_LEGEND_EDITOR_MAX_ROWS
-    assert f"showing {MAP_LEGEND_EDITOR_MAX_ROWS} of {total}" in (
+    assert len(entries) == LEGEND_EDITOR_MAX_ROWS
+    assert dialog.table.rowCount() == LEGEND_EDITOR_MAX_ROWS
+    assert f"showing {LEGEND_EDITOR_MAX_ROWS} of {total}" in (
         entries_group.title().lower())
     assert limit_notice is not None
-    assert f"{MAP_LEGEND_EDITOR_MAX_ROWS} of {total}" in limit_notice.text()
+    assert f"{LEGEND_EDITOR_MAX_ROWS} of {total}" in limit_notice.text()
     expected_last_color = viewer._get_colors_for_palette(
-        "viridis", total)[MAP_LEGEND_EDITOR_MAX_ROWS - 1]
+        "viridis", total)[LEGEND_EDITOR_MAX_ROWS - 1]
     assert expected_last_color in dialog.color_combos[-1].itemData(
         0, Qt.ToolTipRole)
     dialog.close()

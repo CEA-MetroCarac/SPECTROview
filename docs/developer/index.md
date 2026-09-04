@@ -104,6 +104,7 @@ spectroview/
 │   ├── v_quick_calculators.py    # Scientific calculators GUI
 │   └── components/               # Shared / reusable widgets
 │       ├── v_spectra_viewer.py        # Matplotlib spectra canvas
+│       ├── v_spectra_legend_editor.py  # Batch spectrum label/color editor
 │       ├── v_fit_model_builder.py     # Baseline + Peak + Fit controls
 │       ├── v_peak_table.py            # Interactive peak parameter table
 │       ├── v_map_viewer.py            # Heatmap / wafer canvas
@@ -263,6 +264,7 @@ Workspaces are composed from **shared components** that follow the same signal-b
 | Component | File | Purpose |
 |-----------|------|---------|
 | `VSpectraViewer` | `v_spectra_viewer.py` | Matplotlib canvas for spectrum display, zoom/pan, peak/baseline interaction |
+| `SpectraLegendEditorDialog` | `v_spectra_legend_editor.py` | Transactional palette, legend-limit, label, and color editor (100-row batches) |
 | `VFitModelBuilder` | `v_fit_model_builder.py` | X-correction, spectral range, baseline, peaks, fit controls |
 | `VPeakTable` | `v_peak_table.py` | Editable table of peak parameters (center, FWHM, amplitude, bounds) |
 | `VMapViewer` | `v_map_viewer.py` | Heatmap/wafer canvas with Z/X range sliders, mask, profile extraction |

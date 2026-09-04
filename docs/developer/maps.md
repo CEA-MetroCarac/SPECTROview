@@ -138,6 +138,8 @@ Overrides `_add_maps_panel()` to replace the inherited spectra sidebar with:
 
 The left side (SpectraViewer + FitModelBuilder tabs) is inherited unchanged.
 
+The inherited SpectraViewer also provides the batch legend editor. Map selections can contain thousands of spectra, so the shared editor instantiates at most 100 spectrum rows and displays the full selection count as **“showing 100 of N”**. Labels and explicit colors are committed through `SpectrumProxy(md, idx, fname)`, preserving the correct row mapping into the map's `MapData` block; spectra outside the displayed batch are not changed.
+
 **Centralized map type management:** The `selected_map_type` attribute is the single source of truth for all viewers (main + dialogs). When the user changes the combobox in any viewer, `_on_map_type_changed()` updates all viewers synchronously, preventing drift.
 
 ### `VMapViewer` — The Heatmap Canvas

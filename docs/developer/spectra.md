@@ -16,6 +16,7 @@ graph LR
     subgraph View ["View Layer (v_*)"]
         VWS["VWorkspaceSpectra<br/>(QWidget)"]
         SV["VSpectraViewer<br/>(Matplotlib canvas)"]
+        SLE["SpectraLegendEditorDialog<br/>(batch legend editor)"]
         FMB["VFitModelBuilder<br/>(controls panel)"]
         PT["VPeakTable<br/>(parameter table)"]
         SL["VSpectraList<br/>(QListWidget)"]
@@ -37,6 +38,7 @@ graph LR
     end
 
     VWS --> SV & FMB & SL & FR & MVA
+    SV --> SLE
     VWS -->|"method calls"| VMWS
     VMWS -->|"Qt signals"| VWS
     VMWS --> SS & IO & VBF & WIO
@@ -49,6 +51,7 @@ graph LR
 |-------|-------|----------------|
 | **View** | `VWorkspaceSpectra` | Assembles UI widgets, connects signals/slots, delegates all logic to ViewModel |
 | **View** | `VSpectraViewer` | Matplotlib canvas — renders spectra, baselines, peaks, best-fit, residuals |
+| **View** | `SpectraLegendEditorDialog` | Transactional palette, legend-limit, label, and color editor for selected spectra |
 | **View** | `VFitModelBuilder` | X-correction, range, baseline and fit controls panel |
 | **View** | `VPeakTable` | Editable table of peak parameters with per-row model selectors |
 | **View** | `VSpectraList` | Checkbox list with coloring rules, drag-to-reorder, multi-select |
@@ -176,6 +179,21 @@ The Matplotlib canvas renders everything visible in the spectrum plot. It receiv
 | **Peak** | Add peak at x | Remove nearest peak |
 
 Peaks can also be dragged. The viewer emits `peak_dragged(x, y)` during drag and `peak_drag_finished()` on release, which the ViewModel translates into `update_dragged_peak()` + `finalize_peak_drag()` calls.
+
+#### Batch Legend Editing
+
+`VSpectraViewer` caches the complete legend bounding box after rendering. A double-click anywhere within that box opens `SpectraLegendEditorDialog` from `v_spectra_legend_editor.py`; individual legend handles and text objects no longer launch separate editors.
+
+The dialog is transactional: its palette selector, legend-limit spinbox, label fields, and color comboboxes hold temporary values until the user accepts it. **Cancel** therefore causes no mutation. On **OK**, `VSpectraViewer._apply_legend_editor_values()`:
+
+1. Updates the shared `color_palette` and `max_legend_items` view options.
+2. Writes changed labels and explicit colors to the current tensor payload.
+3. Writes the same values through each `SpectrumProxy`, updating the source `MapData.labels` and `MapData.colors` arrays.
+4. Emits `spectrumCustomized`, causing the ViewModel to rebuild the selection payload and refresh the spectra list.
+
+A color value of `None` represents **Automatic** and is resolved from the active palette during rendering. Explicit per-spectrum colors continue to take precedence when the palette changes. Continuous palettes are sampled across the complete selection; the editor offers a bounded selection of representative swatches.
+
+Both workspaces enforce `LEGEND_EDITOR_MAX_ROWS = 100`. Only those editor rows are instantiated, preventing large map or spectrum selections from creating thousands of Qt widgets. The dialog receives the full selection count so automatic gradient previews still match their plotted spectrum positions. Values outside the current batch remain untouched.
 
 ### `VFitModelBuilder` — The Controls Panel
 

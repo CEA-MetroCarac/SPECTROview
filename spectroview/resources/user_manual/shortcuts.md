@@ -38,7 +38,7 @@ In the `SpectraViewer`, you can **interact** with the spectra plot using your mo
 
 - Regardless of the current global theme (dark or light), you can change the theme of the spectra plot in the `View Options` menu. Similarly, when you copy the figure to the clipboard, you can specify the theme (dark or light) for the copied figure.
 - You can show or deactivate best-fit curves or the legend box at any time by clicking the corresponding buttons in the `SpectraViewer` toolbar.
-- When the legend box is shown in the plot, double-click on any label to change its display name. Double-click on the color to change the color of the line.
+- When the legend box is shown, double-click anywhere inside it to open the batch legend editor. From one dialog you can change the palette, maximum number of legend entries, and the labels and colors of up to 100 selected spectra. **Automatic** colors follow the active palette; manually selected colors remain fixed. Select **OK** to apply all changes or **Cancel** to discard them.
 
 
 - Under every figure canvas, there is a **Copy** button. Simply click it to copy the plot as a PNG image. Hold `Ctrl` (or `Cmd` on macOS) and click the **Copy** button to copy the raw numerical dataset of the current plot directly to your system clipboard (instead of an image).

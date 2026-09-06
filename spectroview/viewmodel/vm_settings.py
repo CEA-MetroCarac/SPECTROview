@@ -24,11 +24,16 @@ class VMSettings(QObject):
         data["working_folder"] = self.settings.get_working_folder()
         ai_data = self.settings.load_ai_settings()
         data.update(ai_data)
+        data.update(self.settings.load_mcp_settings())
         self.settings_loaded.emit(data)
 
     # ---------- Save ----------
     def save(self, data: dict):
         working_folder = data.pop("working_folder", "")
+
+        current_mcp = self.settings.load_mcp_settings()
+        mcp_enabled = bool(data.pop("mcp_enabled", current_mcp["mcp_enabled"]))
+        mcp_port = int(data.pop("mcp_port", current_mcp["mcp_port"]))
 
         ai_keys = ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini",
                    "api_key_DeepSeek", "api_key_Mistral", "api_key_Custom",
@@ -37,6 +42,7 @@ class VMSettings(QObject):
 
         self.settings.save_fit_settings(data)
         self.settings.save_ai_settings(ai_data)
+        self.settings.save_mcp_settings(mcp_enabled, mcp_port)
 
         if working_folder:
             self.settings.set_working_folder(working_folder)

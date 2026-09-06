@@ -45,8 +45,8 @@ class AppContext(Protocol):
         """
         ...
 
-    def submit(self, command: AgentCommand) -> None:
-        """Queue *command* for the application to carry out."""
+    def submit(self, command: AgentCommand) -> Any:
+        """Queue or execute *command* and optionally return its domain result."""
         ...
 
 

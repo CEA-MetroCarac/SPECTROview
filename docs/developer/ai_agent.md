@@ -105,6 +105,13 @@ before queuing through the shared `spectroview.model.graph_control` contract,
 and the Graph workspace applies that same contract again at the mutation
 boundary.
 
+SPECTROview also has a full external desktop MCP profile. It uses the same
+FastMCP module but operates on `SpectroviewApplicationAPI`, a live-session
+facade protected by a queued Qt main-thread dispatcher. The internal chat keeps
+the five-tool profile documented here for small-model reliability. See
+[Local MCP Server](mcp_server.md) for the endpoint, complete tool catalog, and
+extension workflow.
+
 ### **Complete graph customization contract**
 
 The MCP tools retain a few common top-level parameters for small-model

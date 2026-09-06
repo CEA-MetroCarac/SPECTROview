@@ -76,6 +76,19 @@ class Main(QMainWindow):
         # Lazy chat panel (created on first use)
         self._chat_panel = None
 
+        # One domain-oriented facade over the running application. The AI
+        # Chat's graph commands and the optional external MCP endpoint both
+        # reuse it; all external-thread calls are queued onto this GUI thread.
+        from spectroview.application.dispatch import QtMainThreadDispatcher
+        from spectroview.application.service import SpectroviewApplicationAPI
+        self._application_dispatcher = QtMainThreadDispatcher(self)
+        self.application_api = SpectroviewApplicationAPI(
+            self, dispatcher=self._application_dispatcher
+        )
+        self._mcp_runtime = None
+        self._mcp_error = ""
+        self._sync_mcp_runtime()
+
 
     def init_ui(self):
         self.setWindowTitle(
@@ -389,6 +402,43 @@ class Main(QMainWindow):
                 self.v_spectra_workspace.v_spectra_viewer._plot()
             if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
                 self.v_maps_workspace.v_spectra_viewer._plot()
+            self._sync_mcp_runtime()
+
+    def _sync_mcp_runtime(self):
+        """Apply the opt-in localhost MCP setting without restarting the app."""
+        config = self.settings.load_mcp_settings()
+        enabled = bool(config["mcp_enabled"])
+        port = int(config["mcp_port"])
+
+        if not enabled:
+            if self._mcp_runtime is not None:
+                self._mcp_runtime.stop()
+                self._mcp_runtime = None
+            self._mcp_error = ""
+            return
+
+        if (self._mcp_runtime is not None
+                and self._mcp_runtime.port == port
+                and self._mcp_runtime.running):
+            return
+
+        if self._mcp_runtime is not None:
+            self._mcp_runtime.stop()
+            self._mcp_runtime = None
+
+        try:
+            # Lazy: mcp + uvicorn stay off the normal startup import path.
+            from spectroview.ai_agent.mcp.runtime import LocalMCPRuntime
+            runtime = LocalMCPRuntime(self.application_api, port=port)
+            runtime.start()
+            self._mcp_runtime = runtime
+            self._mcp_error = ""
+            self.statusBar().showMessage(
+                f"Local MCP server enabled: {runtime.endpoint}", 8000
+            )
+        except Exception as exc:
+            self._mcp_error = str(exc)
+            self.statusBar().showMessage(f"Local MCP server failed: {exc}", 15000)
 
     def file_converter(self):
         """Open file converter dialog for hyperspectral data."""
@@ -504,7 +554,11 @@ class Main(QMainWindow):
         cfg['df_name'] = df_name
 
         # Create the plot directly via the workspace API
-        ws.create_plot_from_config(df_name, cfg)
+        try:
+            self.application_api.create_graph(cfg)
+        except Exception as exc:
+            ws.vm.notify.emit(f"AI graph creation failed: {exc}")
+            return
 
         # Update the sidebar combo boxes to reflect last plot config
         def _set_combo(cbb, value):
@@ -513,10 +567,14 @@ class Main(QMainWindow):
                 if idx >= 0:
                     cbb.setCurrentIndex(idx)
 
-        if hasattr(ws, 'cbb_x'): _set_combo(ws.cbb_x, plot_config.get("x"))
-        if hasattr(ws, 'cbb_y'): _set_combo(ws.cbb_y, plot_config.get("y"))
-        if hasattr(ws, 'cbb_z'): _set_combo(ws.cbb_z, plot_config.get("z"))
-        if hasattr(ws, 'cbb_plot_style'): _set_combo(ws.cbb_plot_style, plot_config.get("plot_style"))
+        if hasattr(ws, 'cbb_x'):
+            _set_combo(ws.cbb_x, plot_config.get("x"))
+        if hasattr(ws, 'cbb_y'):
+            _set_combo(ws.cbb_y, plot_config.get("y"))
+        if hasattr(ws, 'cbb_z'):
+            _set_combo(ws.cbb_z, plot_config.get("z"))
+        if hasattr(ws, 'cbb_plot_style'):
+            _set_combo(ws.cbb_plot_style, plot_config.get("plot_style"))
 
     def _apply_graph_update(self, update_payload: dict):
         """Apply one validated AI/MCP patch through the Graph workspace API."""
@@ -527,33 +585,23 @@ class Main(QMainWindow):
         if graph_id is None or not isinstance(properties, dict):
             return
 
-        ws.update_graphs_from_config(graph_id, properties)
+        try:
+            self.application_api.update_graph(graph_id, properties)
+        except Exception as exc:
+            ws.vm.notify.emit(f"AI graph update failed: {exc}")
+            return
 
         # Switch to Graphs tab to show the result
         self.tabWidget.setCurrentWidget(ws)
 
     def _apply_graph_delete(self, delete_payload: dict):
         """Delete requested graphs based on the AI instructions."""
-        ws = self.v_graphs_workspace
         delete_all = delete_payload.get("delete_all", False)
         target_ids = delete_payload.get("graph_ids", [])
-        
-        # Collect IDs to close
-        ids_to_close = []
-        open_ids = list(ws.graph_widgets.keys())
-        
-        if delete_all:
-            ids_to_close = open_ids
-            # If they meant "delete all except [1,2,3]"
-            if target_ids:
-                ids_to_close = [gid for gid in open_ids if gid not in target_ids]
-        else:
-            ids_to_close = [gid for gid in target_ids if gid in open_ids]
-            
-        # Close the subwindows (this triggers the closed signal which cleans up the model)
-        for gid in ids_to_close:
-            _, _, sub_window = ws.graph_widgets[gid]
-            sub_window.close()
+        try:
+            self.application_api.delete_graphs(delete_all, target_ids)
+        except Exception as exc:
+            self.v_graphs_workspace.vm.notify.emit(f"AI graph deletion failed: {exc}")
 
     def about(self):
         """Show About dialog."""
@@ -820,6 +868,17 @@ class Main(QMainWindow):
             plt.close('all')
         except Exception:
             pass
+        # Reject new local requests, then stop the HTTP endpoint before Qt's
+        # objects disappear.
+        if hasattr(self, "application_api"):
+            self.application_api.close()
+        if self._mcp_runtime is not None:
+            try:
+                self._mcp_runtime.stop()
+            except Exception:
+                pass
+            self._mcp_runtime = None
+
         # Close the AI agent's MCP sessions and stop its event-loop thread —
         # a stdio server would otherwise leave an orphaned child process.
         if self._chat_panel is not None:

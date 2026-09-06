@@ -181,9 +181,9 @@ class MCPHub:
             return await stack.enter_async_context(ClientSession(read, write))
 
         # http
-        from mcp.client.streamable_http import streamablehttp_client
+        from mcp.client.streamable_http import streamable_http_client
         read, write, _ = await stack.enter_async_context(
-            streamablehttp_client(spec.url))
+            streamable_http_client(spec.url))
         return await stack.enter_async_context(ClientSession(read, write))
 
     async def _connect_all(self) -> None:

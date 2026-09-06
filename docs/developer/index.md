@@ -63,6 +63,10 @@ class VWorkspaceSpectra(QWidget):
 spectroview/
 ├── __init__.py             # Constants, peak models, resource paths
 ├── main.py                 # Entry point, QMainWindow, cross-workspace wiring
+├── application/            # API facade for the currently running desktop state
+│   ├── service.py          # Dataset/spectra/fit/graph/map domain operations
+│   ├── dispatch.py         # Queued Qt main-thread execution boundary
+│   └── errors.py           # Stable integration error codes
 │
 ├── model/                  # Data models (no Qt deps)
 │   ├── spectra_store.py    # Tensor-centric SpectraStore & MapData structures
@@ -92,7 +96,8 @@ spectroview/
 │   ├── m_llm_client.py          # Multi-provider LLM clients (Ollama/OpenAI/Anthropic) + QThread workers
 │   ├── m_conversation.py        # Conversation model (+ m_conversation_store.py: history)
 │   ├── m_prompt_manager.py      # System-prompt / rules / knowledge assembly
-│   ├── mcp/server.py            # FastMCP server exposing the AI tools (plot_graph, query_dataframe, …)
+│   ├── mcp/server.py            # Shared FastMCP chat + full desktop tool profiles
+│   ├── mcp/runtime.py           # Opt-in loopback Streamable HTTP lifecycle
 │   ├── config/, prompts/, rules/, knowledge/, examples/, utils/  # Prompt assets + helpers (see ai_agent.md)
 │   ├── vm_chat.py               # Chat ViewModel (prompt-tier selection, agentic loop)
 │   └── v_chat_panel.py          # Floating chat dialog (+ v_history_dialog.py)

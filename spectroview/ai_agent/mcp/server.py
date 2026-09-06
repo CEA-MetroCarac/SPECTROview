@@ -8,19 +8,22 @@ tools. The server reads and writes the application only through an
 Qt or the ViewModel and can be unit-tested against a fake context.
 
 Graph tools do not draw anything themselves: they submit a typed
-:mod:`~spectroview.ai_agent.agent.commands` object, which the context queues
-until the agent turn ends.
+:mod:`~spectroview.ai_agent.agent.commands` object. The chat context queues it
+until the agent turn ends; the external desktop context executes it through the
+Qt-safe running-application facade.
 """
 import json
 from typing import Annotated, Any, List, Literal, Optional, Union
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from spectroview.ai_agent.agent.commands import CreatePlot, DeletePlots, UpdatePlot
 from spectroview.ai_agent.agent.ports import AppContext
 from spectroview.ai_agent.utils.df_summary import summarize_dataframe_columns
 from spectroview.ai_agent.utils.safe_eval import evaluate_pandas_expression, format_query_result
+from spectroview.application.errors import ApplicationAPIError
 from spectroview.model.graph_control import (
     GraphPatch,
     GraphValidationError,
@@ -37,8 +40,30 @@ PlotStyle = Literal[
 ]
 VALID_PLOT_STYLES = frozenset(PlotStyle.__args__)
 
+READ_ONLY = ToolAnnotations(
+    readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
+)
+STATE_CHANGE = ToolAnnotations(
+    readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False
+)
+STATE_REPLACE = ToolAnnotations(
+    readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False
+)
+FILESYSTEM_WRITE = ToolAnnotations(
+    readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+)
 
-def create_mcp_server(context: AppContext) -> FastMCP:
+
+WorkspaceName = Literal["spectra", "maps", "graphs"]
+
+
+def create_mcp_server(
+    context: AppContext,
+    *,
+    include_application_tools: bool = False,
+    host: str = "127.0.0.1",
+    port: int = 8765,
+) -> FastMCP:
     """Create and configure the FastMCP server with SPECTROview tools.
 
     Parameters
@@ -48,7 +73,12 @@ def create_mcp_server(context: AppContext) -> FastMCP:
         :class:`AppContext` works, including
         :class:`~spectroview.ai_agent.agent.ports.RecordingContext` in tests.
     """
-    mcp = FastMCP("SPECTROview")
+    mcp = FastMCP(
+        "SPECTROview",
+        host=host,
+        port=port,
+        streamable_http_path="/mcp",
+    )
 
     # -------------------------------------------------------------------------
     # Helpers
@@ -92,6 +122,46 @@ def create_mcp_server(context: AppContext) -> FastMCP:
     def _invalid_style_message(plot_style: str) -> str:
         return (f"Error: {plot_style!r} is not a valid plot_style. Valid values: "
                 f"{', '.join(sorted(VALID_PLOT_STYLES))}.")
+
+    def _application_result(method_name: str, *args: Any, **kwargs: Any) -> dict:
+        """Return one predictable structured result from the application API."""
+        method = getattr(context, method_name, None)
+        if method is None:
+            return {
+                "ok": False,
+                "error": {
+                    "code": "APPLICATION_NOT_READY",
+                    "message": "This MCP session is not attached to the running desktop application.",
+                },
+            }
+        try:
+            return {"ok": True, "result": method(*args, **kwargs)}
+        except ApplicationAPIError as exc:
+            return {"ok": False, "error": exc.as_dict()}
+        except Exception as exc:  # keep client-visible failures actionable
+            return {
+                "ok": False,
+                "error": {"code": "INTERNAL_ERROR", "message": str(exc)},
+            }
+
+    def _submit_command(command: Any, queued_message: str) -> str:
+        """Keep chat responses stable; give desktop clients an outcome envelope."""
+        try:
+            outcome = context.submit(command)
+        except ApplicationAPIError as exc:
+            if include_application_tools:
+                return json.dumps({"ok": False, "error": exc.as_dict()})
+            return f"Error: {exc.message}"
+        except Exception as exc:
+            if include_application_tools:
+                return json.dumps({
+                    "ok": False,
+                    "error": {"code": "INTERNAL_ERROR", "message": str(exc)},
+                })
+            return f"Error: {exc}"
+        if include_application_tools:
+            return json.dumps({"ok": True, "result": outcome}, default=str)
+        return queued_message
 
     # -------------------------------------------------------------------------
     # Resources
@@ -138,11 +208,229 @@ def create_mcp_server(context: AppContext) -> FastMCP:
             indent=2, default=str,
         )
 
+    if include_application_tools:
+        @mcp.resource("spectroview://application/state")
+        def application_state_resource() -> str:
+            """Current workspace, selection, dataset counts, and fitting state."""
+            return json.dumps(_application_result("get_application_state"), indent=2)
+
+        @mcp.resource("spectroview://workspace/current")
+        def current_workspace_resource() -> str:
+            """The active workspace and its current domain selection."""
+            state = {
+                "workspace": _application_result("get_active_workspace"),
+                "selection": _application_result("get_current_selection"),
+            }
+            return json.dumps(state, indent=2)
+
+        @mcp.resource("spectroview://datasets")
+        def datasets_resource() -> str:
+            """Compact catalog of datasets loaded in all workspaces."""
+            return json.dumps(_application_result("list_datasets"), indent=2)
+
+        @mcp.resource("spectroview://graphs/current")
+        def current_graph_resource() -> str:
+            """Full configuration of the active graph."""
+            return json.dumps(_application_result("get_active_graph"), indent=2)
+
+        @mcp.resource("spectroview://fit/current")
+        def current_fit_resource() -> str:
+            """Fit configuration for the active spectrum or map."""
+            return json.dumps(_application_result("get_fit_configuration"), indent=2)
+
+        # Application/workspace -------------------------------------------------
+
+        @mcp.tool(annotations=READ_ONLY)
+        def get_application_state() -> dict:
+            """Inspect the running SPECTROview session.
+
+            Returns the active workspace, current selection, loaded-object
+            counts, and whether a Spectra or Maps fit is in progress. Read-only.
+            """
+            return _application_result("get_application_state")
+
+        @mcp.tool(annotations=READ_ONLY)
+        def get_active_workspace() -> dict:
+            """Return the workspace currently visible in SPECTROview. Read-only."""
+            return _application_result("get_active_workspace")
+
+        @mcp.tool(annotations=READ_ONLY)
+        def get_current_selection() -> dict:
+            """Return the domain selection in the active workspace. Read-only."""
+            return _application_result("get_current_selection")
+
+        # Datasets/spectra ------------------------------------------------------
+
+        @mcp.tool(annotations=READ_ONLY)
+        def list_datasets(workspace: Optional[WorkspaceName] = None) -> dict:
+            """List loaded spectra, maps, and DataFrames with stable dataset IDs.
+
+            Args:
+                workspace: Optional workspace filter. Omit to list everything.
+            """
+            return _application_result("list_datasets", workspace)
+
+        @mcp.tool(annotations=READ_ONLY)
+        def get_dataset_info(dataset_id: str) -> dict:
+            """Describe one loaded dataset without returning its full arrays.
+
+            Args:
+                dataset_id: ID from list_datasets, such as ``spectra:sample``.
+            """
+            return _application_result("get_dataset_info", dataset_id)
+
+        @mcp.tool(annotations=READ_ONLY)
+        def get_spectrum(
+            dataset_id: str,
+            spectrum: Annotated[
+                Optional[Union[int, str]],
+                Field(description="Zero-based row index or exact spectrum name; defaults to row 0."),
+            ] = None,
+            processed: bool = True,
+            max_points: Annotated[int, Field(ge=2, le=10000)] = 1000,
+        ) -> dict:
+            """Return X/Y values for one spectrum, downsampled to a safe size.
+
+            Args:
+                dataset_id: A spectra or map dataset ID from list_datasets.
+                spectrum: Row index or name within a map; omit for the first row.
+                processed: True for current processed arrays, false for raw arrays.
+                max_points: Maximum returned X/Y samples (2 to 10000).
+            """
+            return _application_result(
+                "get_spectrum", dataset_id, spectrum, processed, max_points
+            )
+
+        @mcp.tool(annotations=READ_ONLY)
+        def get_current_spectrum(
+            processed: bool = True,
+            max_points: Annotated[int, Field(ge=2, le=10000)] = 1000,
+        ) -> dict:
+            """Return the selected spectrum in the active Spectra/Maps workspace."""
+            return _application_result("get_current_spectrum", processed, max_points)
+
+        # Processing ------------------------------------------------------------
+
+        @mcp.tool(annotations=STATE_REPLACE)
+        def crop_spectrum(
+            workspace: Literal["spectra", "maps"],
+            xmin: float,
+            xmax: float,
+            apply_all: bool = False,
+        ) -> dict:
+            """Crop selected spectral data using SPECTROview's existing processing path.
+
+            This changes application state. In Spectra, apply_all targets every
+            checked spectrum; in Maps it targets every loaded map. Otherwise it
+            targets the current selection/current map.
+            """
+            return _application_result(
+                "crop_spectrum", workspace, xmin, xmax, apply_all
+            )
+
+        @mcp.tool(annotations=STATE_CHANGE)
+        def normalize_spectrum(
+            workspace: Literal["spectra", "maps"],
+            factor: Annotated[float, Field(description="Finite non-zero divisor.")],
+            apply_all: bool = False,
+        ) -> dict:
+            """Divide selected intensities by a factor using existing processing logic.
+
+            This changes application state. ``apply_all`` means all checked
+            spectra; for Maps those spectra are within the current map.
+            """
+            return _application_result(
+                "normalize_spectrum", workspace, factor, apply_all
+            )
+
+        @mcp.tool(annotations=STATE_REPLACE)
+        def subtract_baseline(
+            workspace: Literal["spectra", "maps"], apply_all: bool = False
+        ) -> dict:
+            """Subtract an already-configured baseline from selected spectral data.
+
+            This changes application state and fails if a target has no baseline
+            configuration. It does not invent or replace baseline parameters.
+            """
+            return _application_result("subtract_baseline", workspace, apply_all)
+
+        # Fitting ---------------------------------------------------------------
+
+        @mcp.tool(annotations=READ_ONLY)
+        def get_fit_configuration(dataset_id: str = "") -> dict:
+            """Return the current fit model for a spectra/map dataset. Read-only.
+
+            Omit dataset_id to use the active selected spectrum or map.
+            """
+            return _application_result("get_fit_configuration", dataset_id)
+
+        @mcp.tool(annotations=STATE_REPLACE)
+        def fit_spectrum(
+            workspace: Literal["spectra", "maps"], apply_all: bool = False
+        ) -> dict:
+            """Start the existing vectorized fit engine for configured targets.
+
+            This changes fit state and returns immediately with ``status=started``;
+            poll get_application_state and then call get_fit_results. It never
+            replaces the fit model and never starts a second concurrent fit.
+            """
+            return _application_result("fit_spectrum", workspace, apply_all)
+
+        @mcp.tool(annotations=STATE_CHANGE)
+        def get_fit_results(
+            workspace: Literal["spectra", "maps"],
+            collect: bool = False,
+            limit: Annotated[int, Field(ge=1, le=1000)] = 100,
+        ) -> dict:
+            """Return collected fit results as structured rows.
+
+            Args:
+                workspace: Spectra or Maps.
+                collect: If true, rebuild the results table from current fit arrays.
+                limit: Maximum returned rows; total_rows reports the full size.
+            """
+            return _application_result("get_fit_results", workspace, collect, limit)
+
+        # Graph/map inspection --------------------------------------------------
+
+        @mcp.tool(annotations=READ_ONLY)
+        def list_graphs() -> dict:
+            """List every graph with its complete, typed MGraph configuration."""
+            return _application_result("list_graph_configurations")
+
+        @mcp.tool(annotations=READ_ONLY)
+        def get_active_graph() -> dict:
+            """Return the complete configuration of the active graph. Read-only."""
+            return _application_result("get_active_graph")
+
+        @mcp.tool(annotations=READ_ONLY)
+        def get_active_map() -> dict:
+            """Return configuration and selection metadata for the active map."""
+            return _application_result("get_active_map")
+
+        # Explicit filesystem write --------------------------------------------
+
+        @mcp.tool(annotations=FILESYSTEM_WRITE)
+        def export_results(
+            workspace: Literal["spectra", "maps"],
+            output_path: str,
+            overwrite: bool = False,
+        ) -> dict:
+            """Export collected fit results to CSV or Excel.
+
+            This writes to the local filesystem. Existing files are rejected
+            unless ``overwrite=true`` is explicitly supplied; parent folders are
+            never created implicitly.
+            """
+            return _application_result(
+                "export_results", workspace, output_path, overwrite
+            )
+
     # -------------------------------------------------------------------------
     # Tools
     # -------------------------------------------------------------------------
 
-    @mcp.tool()
+    @mcp.tool(annotations=READ_ONLY)
     def query_dataframe(query: str, df_name: str = "") -> str:
         """Filter or query data from the dataframe and return a summary of the result.
 
@@ -161,7 +449,7 @@ def create_mcp_server(context: AppContext) -> FastMCP:
             return f"Error evaluating query: {error}"
         return format_query_result(result)
 
-    @mcp.tool()
+    @mcp.tool(annotations=STATE_CHANGE)
     def plot_graph(
         x: str,
         y: Union[str, List[str]],
@@ -243,10 +531,12 @@ def create_mcp_server(context: AppContext) -> FastMCP:
         except GraphValidationError as exc:
             return f"Error: invalid graph configuration ({exc}). This plot was NOT created; please retry."
 
-        context.submit(CreatePlot(config))
-        return "Plot configuration successfully validated and queued for the Graphs workspace."
+        return _submit_command(
+            CreatePlot(config),
+            "Plot configuration successfully validated and queued for the Graphs workspace.",
+        )
 
-    @mcp.tool()
+    @mcp.tool(annotations=READ_ONLY)
     def get_statistics(columns: List[str], df_name: str = "") -> str:
         """Compute descriptive statistics for specified columns.
 
@@ -267,7 +557,7 @@ def create_mcp_server(context: AppContext) -> FastMCP:
         except Exception as e:
             return f"Error computing statistics: {e}"
 
-    @mcp.tool()
+    @mcp.tool(annotations=STATE_CHANGE)
     def update_graph(
         graph_id: str,
         x: Annotated[Optional[str], Field(description=(
@@ -327,11 +617,16 @@ def create_mcp_server(context: AppContext) -> FastMCP:
             color_palette=color_palette, xlogscale=xlogscale, ylogscale=ylogscale,
             scatter_size=scatter_size, hist_bins=hist_bins, trendline_order=trendline_order,
         )
-        if x is not None: update_props["x"] = x
-        if y is not None: update_props["y"] = y if isinstance(y, list) else [y]
-        if plot_style is not None: update_props["plot_style"] = plot_style
-        if z is not None: update_props["z"] = z
-        if filters is not None: update_props["filters"] = filters
+        if x is not None:
+            update_props["x"] = x
+        if y is not None:
+            update_props["y"] = y if isinstance(y, list) else [y]
+        if plot_style is not None:
+            update_props["plot_style"] = plot_style
+        if z is not None:
+            update_props["z"] = z
+        if filters is not None:
+            update_props["filters"] = filters
 
         if not update_props:
             return "Error: no graph properties were supplied; nothing was queued."
@@ -375,18 +670,39 @@ def create_mcp_server(context: AppContext) -> FastMCP:
         # deterministic and have the same shape across targets.
         update_props = normalized_by_target[0]
 
-        context.submit(UpdatePlot(graph_id=graph_id, properties=update_props))
-        return f"Update for graph {graph_id} successfully validated and queued for the Graphs workspace."
+        return _submit_command(
+            UpdatePlot(graph_id=graph_id, properties=update_props),
+            f"Update for graph {graph_id} successfully validated and queued for the Graphs workspace.",
+        )
 
-    @mcp.tool()
+    @mcp.tool(annotations=STATE_REPLACE)
     def delete_graph(delete_all: bool = False, graph_ids: Optional[List[int]] = None) -> str:
         """Delete/close specific graphs or all graphs.
 
         Args:
-            delete_all: If true, closes all graphs.
-            graph_ids: List of specific graph IDs to close (e.g., [1, 2]). Ignored if delete_all is true.
+            delete_all: If true, closes all graphs except any IDs listed in graph_ids.
+            graph_ids: IDs to close, or IDs to preserve when delete_all is true.
         """
-        context.submit(DeletePlots(delete_all=delete_all, graph_ids=graph_ids or []))
-        return "Delete command sent to UI successfully."
+        return _submit_command(
+            DeletePlots(delete_all=delete_all, graph_ids=graph_ids or []),
+            "Delete command sent to UI successfully.",
+        )
 
     return mcp
+
+
+def create_desktop_mcp_server(
+    context: AppContext, *, host: str = "127.0.0.1", port: int = 8765
+) -> FastMCP:
+    """Create the full server used by trusted local external clients.
+
+    The existing AI Chat intentionally keeps the compact five-tool profile for
+    small-model reliability. Both profiles are built from this same module and
+    operate through the same application context.
+    """
+    return create_mcp_server(
+        context,
+        include_application_tools=True,
+        host=host,
+        port=port,
+    )

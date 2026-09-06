@@ -30,6 +30,7 @@
 | Feature | Description |
 |---|---|
 | 🤖 **AI Chat Agent** | Talk to SPECTROview in plain language to filter data, run analyses, and create or customize multiple plots — powered by your own local (Ollama) or cloud LLM |
+| 🔌 **Local MCP Server** | Opt-in localhost access to the running datasets, spectra, maps, fits, and graphs for external MCP clients |
 | ⚡ **Vectorized Batch Fit Engine** | Ultra-fast fitting via batched matrix operations — simultaneously fit multiple spectra or large 2D maps |
 | 🧩 **Custom Fit Models** | Build and reuse custom fit models tailored to your specific spectroscopic profiles |
 | 📊 **Versatile Data Processing** | Seamlessly handle both 1D spectral data and 2D hyperspectral data |

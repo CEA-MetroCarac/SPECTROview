@@ -268,6 +268,37 @@ class VSettingsDialog(QDialog):
 
         ai_tab_layout.addWidget(grp_history)
 
+        # Local MCP endpoint (opt-in; bind address intentionally fixed).
+        grp_mcp = QGroupBox("Local MCP Server")
+        mcp_layout = QVBoxLayout(grp_mcp)
+        mcp_layout.setContentsMargins(4, 4, 4, 4)
+        mcp_layout.setSpacing(8)
+
+        self.chk_mcp_enabled = QCheckBox("Enable local MCP endpoint")
+        self.chk_mcp_enabled.setToolTip(
+            "Expose the running SPECTROview session to MCP clients on this computer only."
+        )
+        mcp_layout.addWidget(self.chk_mcp_enabled)
+
+        mcp_row = QHBoxLayout()
+        mcp_row.addWidget(QLabel("Port:"))
+        self.spin_mcp_port = QSpinBox()
+        self.spin_mcp_port.setRange(1024, 65535)
+        self.spin_mcp_port.setValue(8765)
+        mcp_row.addWidget(self.spin_mcp_port)
+        mcp_row.addStretch()
+        mcp_layout.addLayout(mcp_row)
+
+        self.lbl_mcp_endpoint = QLabel("Endpoint: http://127.0.0.1:8765/mcp")
+        self.lbl_mcp_endpoint.setStyleSheet("color: gray; font-size: 10px;")
+        self.spin_mcp_port.valueChanged.connect(
+            lambda port: self.lbl_mcp_endpoint.setText(
+                f"Endpoint: http://127.0.0.1:{port}/mcp"
+            )
+        )
+        mcp_layout.addWidget(self.lbl_mcp_endpoint)
+        ai_tab_layout.addWidget(grp_mcp)
+
         ai_tab_layout.addSpacerItem(QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Expanding))
 
         self.tabs.addTab(tab_ai, "AI")
@@ -325,6 +356,8 @@ class VSettingsDialog(QDialog):
         self.edit_custom_url.setText(data.get("custom_base_url", ""))
         self.edit_custom_models.setText(data.get("custom_models", ""))
         self.le_history_folder.setText(data.get("history_folder", ""))
+        self.chk_mcp_enabled.setChecked(data.get("mcp_enabled", False))
+        self.spin_mcp_port.setValue(data.get("mcp_port", 8765))
 
     def _on_toggle_providers(self, checked: bool):
         self.frame_provider_presets.setVisible(checked)
@@ -352,5 +385,7 @@ class VSettingsDialog(QDialog):
             "custom_base_url": self.edit_custom_url.text(),
             "custom_models": self.edit_custom_models.text(),
             "history_folder": self.le_history_folder.text(),
+            "mcp_enabled": self.chk_mcp_enabled.isChecked(),
+            "mcp_port": self.spin_mcp_port.value(),
         })
 

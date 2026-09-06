@@ -38,6 +38,8 @@ class TestAISettingsRoundTrip:
         dialog.edit_custom_models.setText("model-a, model-b")
         dialog.edit_openai.setText("openai-key")
         dialog.edit_anthropic.setText("anthropic-key")
+        dialog.chk_mcp_enabled.setChecked(True)
+        dialog.spin_mcp_port.setValue(9012)
 
         dialog._on_accept()
 
@@ -47,3 +49,6 @@ class TestAISettingsRoundTrip:
         assert reloaded.edit_custom_models.text() == "model-a, model-b"
         assert reloaded.edit_openai.text() == "openai-key"
         assert reloaded.edit_anthropic.text() == "anthropic-key"
+        assert reloaded.chk_mcp_enabled.isChecked() is True
+        assert reloaded.spin_mcp_port.value() == 9012
+        assert "9012" in reloaded.lbl_mcp_endpoint.text()

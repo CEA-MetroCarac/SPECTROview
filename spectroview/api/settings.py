@@ -54,3 +54,18 @@ def get_last_directory() -> str:
 
 def set_last_directory(path: Union[str, Path]) -> None:
     MSettings().set_last_directory(str(path))
+
+
+def get_mcp_settings() -> Dict[str, Any]:
+    """Return the opt-in local MCP endpoint configuration."""
+    return MSettings().load_mcp_settings()
+
+
+def set_mcp_settings(enabled: bool, port: int = 8765) -> None:
+    """Enable/disable the loopback MCP endpoint for the desktop application.
+
+    A running application applies changes made through its Settings dialog
+    immediately. Programmatic changes take effect the next time SPECTROview
+    starts or its settings are re-applied.
+    """
+    MSettings().save_mcp_settings(enabled, port)

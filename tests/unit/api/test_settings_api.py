@@ -33,3 +33,17 @@ class TestLastDirectory:
     def test_round_trip(self, tmp_path):
         settings.set_last_directory(tmp_path)
         assert settings.get_last_directory() == str(tmp_path)
+
+
+class TestMCPSettings:
+    def test_defaults_are_local_and_disabled(self):
+        assert settings.get_mcp_settings() == {
+            "mcp_enabled": False,
+            "mcp_port": 8765,
+            "mcp_host": "127.0.0.1",
+        }
+
+    def test_round_trip(self):
+        settings.set_mcp_settings(True, 9012)
+        assert settings.get_mcp_settings()["mcp_enabled"] is True
+        assert settings.get_mcp_settings()["mcp_port"] == 9012

@@ -257,3 +257,22 @@ class MSettings:
         for key, value in data.items():
             if key in self.AI_SETTING_KEYS:
                 self.set_ai_value(key, value)
+
+    # ---------- Local MCP server ----------
+
+    def load_mcp_settings(self) -> dict:
+        """Return local MCP settings (disabled and loopback-only by default)."""
+        return {
+            "mcp_enabled": self.settings.value("mcp/enabled", False, bool),
+            "mcp_port": self.settings.value("mcp/port", 8765, int),
+            # Deliberately not user-configurable in this iteration.
+            "mcp_host": "127.0.0.1",
+        }
+
+    def save_mcp_settings(self, enabled: bool, port: int) -> None:
+        port = int(port)
+        if not 1024 <= port <= 65535:
+            raise ValueError("MCP port must be between 1024 and 65535.")
+        self.settings.setValue("mcp/enabled", bool(enabled))
+        self.settings.setValue("mcp/port", port)
+        self.settings.sync()

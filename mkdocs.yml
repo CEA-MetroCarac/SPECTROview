@@ -75,6 +75,7 @@ nav:
     - Vectorized Batch Fit Engine (VBF): developer/vbf_engine.md
     - Multivariate Analysis (MVA): developer/mva.md
     - AI Agent: developer/ai_agent.md
+    - Local MCP Server: developer/mcp_server.md
   
   - API:
     - Home: api/index.md

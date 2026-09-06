@@ -11,7 +11,7 @@ Access the **Settings** menu via the gear icon in the main toolbar (or press `Ct
 The `Settings Panel` is organized into two tabs:
 
 - **General** — fitting behavior and file locations: **`Fit Parameters`**, **`Global Peak Limits`**, and the **`SPECTROview Working Folder`** (sections 1–3 below).
-- **AI** — API keys and the chat-history folder for the AI Chat Agent (section 4 below).
+- **AI** — API keys, chat history, and the optional local MCP endpoint (sections 4–5 below).
 
 ---
 
@@ -93,3 +93,20 @@ Keys for the built-in cloud providers are tucked under the collapsible **▸ Oth
 | Field | Description |
 |-------|-------------|
 | **History Folder** | Where AI chat conversations are saved (as JSON). Click **Browse** to choose a folder. |
+
+---
+
+### **5. Local MCP Server** *(AI tab)*
+
+Enable this only when a trusted MCP client on the same computer needs access
+to the currently running SPECTROview session. The default endpoint is
+`http://127.0.0.1:8765/mcp` and starts as soon as you select **OK**.
+
+| Field | Default | Description |
+|---|---|---|
+| **Enable local MCP endpoint** | Off | Starts/stops the embedded MCP server. |
+| **Port** | 8765 | Local Streamable HTTP port (1024–65535). Choose another if the port is busy. |
+
+The bind address is fixed to localhost (`127.0.0.1`); it is not exposed to the
+LAN or internet. Keep SPECTROview running while the client is connected. The
+endpoint stops when SPECTROview closes or the checkbox is cleared.

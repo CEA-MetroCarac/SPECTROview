@@ -12,13 +12,13 @@
         <meta name="author" content="Van Hoan Le">
       
       
-        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/api/2dmap/">
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/mcp_server/">
       
       
-        <link rel="prev" href="../spectra/">
+        <link rel="prev" href="../ai_agent/">
       
       
-        <link rel="next" href="../graphs/">
+        <link rel="next" href="../../api/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Maps Workspace (hyperspectral, heatmaps) - SPECTROview Documentation</title>
+        <title>Local MCP Server - SPECTROview Documentation</title>
       
     
     
@@ -92,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#maps-workspace-2d-analysis" class="md-skip">
+        <a href="#local-mcp-server" class="md-skip">
           Skip to content
         </a>
       
@@ -127,7 +127,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Maps Workspace (hyperspectral, heatmaps)
+              Local MCP Server
             
           </span>
         </div>
@@ -311,11 +311,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../developer/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -333,13 +335,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
           
   
   
@@ -891,352 +891,6 @@
       
   
   
-  
-  
-    
-    
-      
-        
-          
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../developer/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Developer Guide
-  
-
-    
-  </span>
-  
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Developer Guide
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/file_loading/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    File Loading Pipeline
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/spectra_store/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Data Architecture SpectraStore
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/spectra/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Workspace Spectra
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/maps/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Workspace Maps
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/graphs/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Workspace Graphs
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/vbf_engine/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Vectorized Batch Fit Engine (VBF)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/mva/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Multivariate Analysis (MVA)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/ai_agent/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    AI Agent
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer/mcp_server/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Local MCP Server
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
     
   
   
@@ -1246,6 +900,14 @@
       
         
           
+        
+      
+        
+      
+        
+      
+        
+      
         
       
         
@@ -1274,7 +936,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -1285,7 +947,7 @@
   <span class="md-ellipsis">
     
   
-    API
+    Developer Guide
   
 
     
@@ -1296,23 +958,79 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="">
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
-    API
+    Developer Guide
   
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File Loading Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Architecture SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
               
             
               
@@ -1329,7 +1047,147 @@
   <span class="md-ellipsis">
     
   
-    Spectra Workspace (load, preprocess, fit)
+    Workspace Spectra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vectorized Batch Fit Engine (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multivariate Analysis (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
   
 
     
@@ -1366,7 +1224,7 @@
   <span class="md-ellipsis">
     
   
-    Maps Workspace (hyperspectral, heatmaps)
+    Local MCP Server
   
 
     
@@ -1384,7 +1242,7 @@
   <span class="md-ellipsis">
     
   
-    Maps Workspace (hyperspectral, heatmaps)
+    Local MCP Server
   
 
     
@@ -1410,77 +1268,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#stateful-workspaces" class="md-nav__link">
+  <a href="#architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Stateful Workspaces
+        Architecture
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#loading-map-data-directly" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Loading Map Data Directly
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#multivariate-analysis-mva" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multivariate Analysis (MVA)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Multivariate Analysis (MVA)">
+    <nav class="md-nav" aria-label="Architecture">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#principal-component-analysis-pca" class="md-nav__link">
+  <a href="#why-embedded-streamable-http" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Principal Component Analysis (PCA)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#non-negative-matrix-factorization-nmf" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Non-negative Matrix Factorization (NMF)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#reconstruction-error" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reconstruction Error
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#exporting-mva-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Exporting MVA Results
+        Why embedded Streamable HTTP
       
     </span>
   </a>
@@ -1489,6 +1292,105 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enable-and-connect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enable and connect
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-and-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security and permissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resources
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thread-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thread safety
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#existing-ai-chat-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Existing AI Chat compatibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-capability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a capability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#intentional-first-iteration-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Intentional first-iteration limits
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1501,6 +1403,92 @@
 
               
             
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
               
                 
   
@@ -1508,7 +1496,63 @@
   
   
     <li class="md-nav__item">
-      <a href="../graphs/" class="md-nav__link">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spectra Workspace (load, preprocess, fit)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maps Workspace (hyperspectral, heatmaps)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
         
   
   
@@ -1536,7 +1580,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../calculators/" class="md-nav__link">
+      <a href="../../api/calculators/" class="md-nav__link">
         
   
   
@@ -1564,7 +1608,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../extending/" class="md-nav__link">
+      <a href="../../api/extending/" class="md-nav__link">
         
   
   
@@ -1665,7 +1709,7 @@
         <a href="../" class="md-path__link">
           
   <span class="md-ellipsis">
-    API
+    Developer Guide
   </span>
 
         </a>
@@ -1687,95 +1731,324 @@
   
 
 
-<h1 id="maps-workspace-2d-analysis">Maps Workspace &amp; 2D Analysis<a class="headerlink" href="#maps-workspace-2d-analysis" title="Permanent link">&para;</a></h1>
-<p>This section demonstrates how to handle hyperspectral map data (like Raman wafer maps): loading, fitting every pixel, building heatmaps and line profiles, and running Multivariate Analysis — through the stateful <code>MapsWorkspace</code> session (recommended) and, for MVA, the lower-level array-based functions.</p>
-<hr />
-<h2 id="stateful-workspaces">Stateful Workspaces<a class="headerlink" href="#stateful-workspaces" title="Permanent link">&para;</a></h2>
-<p><code>spectroview.api.workspace.MapsWorkspace</code> mirrors the GUI's own Maps Workspace: one map per loaded file, all of whose pixels share a fit model, with pixel identifiers named <code>f"{map_name}_({x}, {y})"</code> exactly like the GUI. It reads/writes the same <code>.maps</code> file format the GUI's "Save work" produces.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">workspace</span><span class="p">,</span> <span class="n">fitting</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">ws</span> <span class="o">=</span> <span class="n">workspace</span><span class="o">.</span><span class="n">MapsWorkspace</span><span class="p">()</span>          <span class="c1"># or MapsWorkspace(map_type=&quot;wafer_300mm&quot;) for wafer maps</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">[</span><span class="n">map_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">load_files</span><span class="p">([</span><span class="s2">&quot;2Dmap_Si.txt&quot;</span><span class="p">])</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">fit_model</span> <span class="o">=</span> <span class="n">fitting</span><span class="o">.</span><span class="n">load_fit_model_template</span><span class="p">(</span><span class="s2">&quot;fit_model_Si.json&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">ws</span><span class="o">.</span><span class="n">set_fit_model</span><span class="p">(</span><span class="n">fit_model</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="n">map_name</span><span class="p">])</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">ws</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">map_names</span><span class="o">=</span><span class="p">[</span><span class="n">map_name</span><span class="p">])</span>            <span class="c1"># one vectorized fit call over every pixel in the map</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">df</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">collect_results</span><span class="p">()</span>               <span class="c1"># one row per pixel, includes X/Y coordinates</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1"># Build a heatmap of a fitted parameter</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">zi</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">get_heatmap</span><span class="p">(</span><span class="n">map_name</span><span class="p">,</span> <span class="s2">&quot;ampli_Si&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">zi</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="n">xi</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">xi</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">max</span><span class="p">()],</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Amplitude&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;heatmap.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="c1"># Extract a line profile between two points on the heatmap</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="n">profile</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">extract_profile</span><span class="p">(</span><span class="n">map_name</span><span class="p">,</span> <span class="s2">&quot;ampli_Si&quot;</span><span class="p">,</span> <span class="n">point1</span><span class="o">=</span><span class="p">(</span><span class="n">xi</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="n">point2</span><span class="o">=</span><span class="p">(</span><span class="n">xi</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="nb">print</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>  <span class="c1"># columns: X, Y, distance, values</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="c1"># Save — this file opens directly in the SPECTROview GUI</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="n">ws</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;session.maps&quot;</span><span class="p">)</span>
+<h1 id="local-mcp-server">Local MCP Server<a class="headerlink" href="#local-mcp-server" title="Permanent link">&para;</a></h1>
+<p>SPECTROview can expose the state of the currently running desktop application
+to trusted MCP clients on the same computer. The server is <strong>disabled by
+default</strong>, binds only to <code>127.0.0.1</code>, and uses MCP Streamable HTTP at
+<code>http://127.0.0.1:8765/mcp</code> unless another port is selected.</p>
+<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    GUI[PySide6 GUI] --&gt; VM[Workspace ViewModels]
+    CHAT[Existing AI Chat] --&gt; CTX[Chat snapshot context]
+    CTX --&gt; TOOLS[Shared FastMCP tool definitions]
+    CHAT --&gt; CMD[Typed graph commands]
+    CMD --&gt; API[SpectroviewApplicationAPI]
+    HTTP[Local MCP Streamable HTTP] --&gt; TOOLS
+    TOOLS --&gt; API
+    API --&gt; DISPATCH[Qt main-thread dispatcher]
+    DISPATCH --&gt; VM
+    VM --&gt; STORE[SpectraStore / MGraph / VBF engine]</code></pre>
+<p>There are two related APIs:</p>
+<ul>
+<li><code>spectroview.api</code> creates independent headless workspaces for Python scripts.</li>
+<li><code>spectroview.application.SpectroviewApplicationAPI</code> controls the currently
+  running desktop session. It is the live application boundary used by MCP.</li>
+</ul>
+<p>The MCP layer contains no fitting, preprocessing, or rendering algorithm. It
+uses the existing ViewModel orchestration, <code>SpectraStore</code>, <code>graph_control</code>, and
+Vectorized Batch Fit engine. Graph rendering remains a View responsibility.</p>
+<h3 id="why-embedded-streamable-http">Why embedded Streamable HTTP<a class="headerlink" href="#why-embedded-streamable-http" title="Permanent link">&para;</a></h3>
+<p>Three runtime designs were considered:</p>
+<table>
+<thead>
+<tr>
+<th>Design</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Embedded server in the desktop process</td>
+<td>Selected. It has direct access to the current state and needs only one Qt dispatch boundary.</td>
+</tr>
+<tr>
+<td>Separate localhost service with custom IPC</td>
+<td>Rejected for the first iteration. It adds another protocol, state synchronization, and lifecycle failure mode.</td>
+</tr>
+<tr>
+<td>Separate stdio MCP process plus IPC bridge</td>
+<td>Rejected for live desktop state. Stdio is useful when the client owns the server process, but the SPECTROview GUI is already the state owner.</td>
+</tr>
+</tbody>
+</table>
+<p>Streamable HTTP is used instead of the superseded SSE transport. Uvicorn runs
+on a daemon thread; <code>LocalMCPRuntime.stop()</code> provides deterministic shutdown.
+The FastMCP ASGI application retains the SDK's localhost Host/Origin checks.</p>
+<h2 id="enable-and-connect">Enable and connect<a class="headerlink" href="#enable-and-connect" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Open <strong>Settings → AI → Local MCP Server</strong>.</li>
+<li>Check <strong>Enable local MCP endpoint</strong>.</li>
+<li>Keep the default port or choose an unused port from 1024 to 65535.</li>
+<li>Select <strong>OK</strong>. The endpoint starts immediately; no application restart is
+   required.</li>
+<li>Configure an MCP client with the displayed Streamable HTTP URL, normally:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>http://127.0.0.1:8765/mcp
 </code></pre></div>
-<p><code>get_heatmap(map_name, value_col, ...)</code> accepts <code>value_col="Intensity"</code> or <code>"Area"</code> (computed directly from the raw intensities, no fit required) or any fit-parameter column present in <code>df_fit_results</code> (call <code>collect_results()</code> first). For wafer map types (<code>map_type != "2Dmap"</code>), the grid is built by scattered-point interpolation over the wafer radius implied by <code>map_type</code>; for <code>"2Dmap"</code> it's a fast exact pivot on the acquisition's own regular grid.</p>
-<p>Reload a session later (built by this API or saved from the GUI):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">ws2</span> <span class="o">=</span> <span class="n">workspace</span><span class="o">.</span><span class="n">MapsWorkspace</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;session.maps&quot;</span><span class="p">)</span>
+<p>The SPECTROview desktop application must be running. Disabling the setting or
+closing SPECTROview stops the endpoint.</p>
+<h2 id="security-and-permissions">Security and permissions<a class="headerlink" href="#security-and-permissions" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The bind address is hard-coded to IPv4 loopback and is not editable in the
+  UI. SPECTROview does not listen on a LAN/public interface.</li>
+<li>There is no authentication in this loopback-only first iteration. Do not
+  proxy or port-forward the endpoint.</li>
+<li>Read and write tools are distinct and their descriptions identify mutations.</li>
+<li>MCP <code>readOnlyHint</code>, <code>destructiveHint</code>, <code>idempotentHint</code>, and <code>openWorldHint</code>
+  annotations classify tools for clients that implement approval policies.</li>
+<li><code>export_results</code> requires a caller-supplied path, never creates a parent
+  directory, and refuses to replace an existing file unless the call includes
+  <code>overwrite=true</code>.</li>
+<li>Dataset or graph deletion is never inferred from a read request. <code>delete_graph</code>
+  is an explicit state-changing tool.</li>
+</ul>
+<p>This separation gives a future Work Harness enough information to apply an
+approval policy to graph changes, processing, fitting, deletion, and exports.</p>
+<h2 id="tools">Tools<a class="headerlink" href="#tools" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+<th>Access</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>get_application_state</code></td>
+<td>Active workspace, selection, object counts, fit activity</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>get_active_workspace</code></td>
+<td>Visible workspace</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>get_current_selection</code></td>
+<td>Workspace-specific selection</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>list_datasets</code></td>
+<td>Spectra, maps, and DataFrame catalog with stable IDs</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>get_dataset_info</code></td>
+<td>Dataset shape, range, processing and fit metadata</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>get_spectrum</code></td>
+<td>Bounded/downsampled raw or processed X/Y values</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>get_current_spectrum</code></td>
+<td>Selected Spectra/Maps X/Y values</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>query_dataframe</code></td>
+<td>Validated DataFrame query/expression</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>get_statistics</code></td>
+<td>Descriptive statistics for named columns</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>crop_spectrum</code></td>
+<td>Crop current/all applicable data using workspace logic</td>
+<td>Write</td>
+</tr>
+<tr>
+<td><code>normalize_spectrum</code></td>
+<td>Apply an explicit intensity divisor</td>
+<td>Write</td>
+</tr>
+<tr>
+<td><code>subtract_baseline</code></td>
+<td>Subtract an already-configured baseline</td>
+<td>Write</td>
+</tr>
+<tr>
+<td><code>get_fit_configuration</code></td>
+<td>Current fit model and parameters</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>fit_spectrum</code></td>
+<td>Start the existing VBF fitting path</td>
+<td>Write</td>
+</tr>
+<tr>
+<td><code>get_fit_results</code></td>
+<td>Collect/read bounded structured fit-result rows</td>
+<td>Read/Write when <code>collect=true</code></td>
+</tr>
+<tr>
+<td><code>list_graphs</code></td>
+<td>Complete typed <code>MGraph</code> configurations</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>get_active_graph</code></td>
+<td>Complete active graph configuration</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>plot_graph</code></td>
+<td>Validate and create a graph</td>
+<td>Write</td>
+</tr>
+<tr>
+<td><code>update_graph</code></td>
+<td>Typed partial update, including every mutable <code>MGraph</code> field</td>
+<td>Write</td>
+</tr>
+<tr>
+<td><code>delete_graph</code></td>
+<td>Close specified/all graphs</td>
+<td>Destructive write</td>
+</tr>
+<tr>
+<td><code>get_active_map</code></td>
+<td>Active map configuration and selection</td>
+<td>Read</td>
+</tr>
+<tr>
+<td><code>export_results</code></td>
+<td>CSV/Excel fit-result export with overwrite guard</td>
+<td>Filesystem write</td>
+</tr>
+</tbody>
+</table>
+<p>Every new desktop tool returns a JSON envelope:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span><span class="nt">&quot;ok&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;result&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}}</span>
 </code></pre></div>
-<p><code>MapsWorkspace</code> inherits all of <code>SpectraWorkspace</code>'s preprocessing methods (<code>crop</code>, <code>set_baseline</code>, <code>subtract_baseline</code>, <code>normalize</code>, <code>reinit</code>) — each applies across every pixel of the targeted map(s) at once.</p>
-<hr />
-<h2 id="loading-map-data-directly">Loading Map Data Directly<a class="headerlink" href="#loading-map-data-directly" title="Permanent link">&para;</a></h2>
-<p>For array-level control without a <code>MapsWorkspace</code>, <code>spectroview.api.io.load_map()</code> returns the raw map DataFrame (this is what <code>MapsWorkspace.load_files()</code> uses internally):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">io</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># WDF and SPC files return (DataFrame, metadata_dict); TXT/CSV return a DataFrame only.</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">load_map</span><span class="p">(</span><span class="s2">&quot;my_wafer_map.wdf&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">df_map</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">result</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="p">{})</span>
+<p>or a stable error code and message:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span><span class="nt">&quot;ok&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;error&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;NO_ACTIVE_GRAPH&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;No graph is active.&quot;</span><span class="p">}}</span>
 </code></pre></div>
-<p>The returned DataFrame's first two columns are always spatial coordinates (<code>X</code>, <code>Y</code>); all remaining columns are wavenumber values (as strings):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">x_coords</span> <span class="o">=</span> <span class="n">df_map</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">y_coords</span> <span class="o">=</span> <span class="n">df_map</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">wn_cols</span>  <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df_map</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">)]</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">x_axis</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">wn_cols</span><span class="p">])</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">Y_matrix</span> <span class="o">=</span> <span class="n">df_map</span><span class="p">[</span><span class="n">wn_cols</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-</code></pre></div>
-<p><code>Y_matrix</code> can be passed directly to <code>spectroview.api.fitting.fit_batch()</code> — see <a href="../spectra/#batch-fitting">Spectra Workspace: Batch Fitting</a>.</p>
-<hr />
-<h2 id="multivariate-analysis-mva">Multivariate Analysis (MVA)<a class="headerlink" href="#multivariate-analysis-mva" title="Permanent link">&para;</a></h2>
-<p>Multivariate Analysis explores large, complex datasets without requiring prior knowledge of peak positions. <code>spectroview.api.analysis</code> provides PCA and NMF, operating on any <code>(n_spectra, n_wavenumbers)</code> matrix — e.g. the <code>Y_matrix</code> above, or <code>Y0</code> from a <code>MapsWorkspace</code>'s underlying store.</p>
-<h3 id="principal-component-analysis-pca">Principal Component Analysis (PCA)<a class="headerlink" href="#principal-component-analysis-pca" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">analysis</span><span class="p">,</span> <span class="n">preprocessing</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">Y_norm</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">normalize_spectra</span><span class="p">(</span><span class="n">Y_matrix</span><span class="p">)</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">pca_result</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">Y_norm</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Explained Variance Ratios:&quot;</span><span class="p">,</span> <span class="n">pca_result</span><span class="o">.</span><span class="n">explained_variance_ratio</span><span class="p">)</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">scores</span>   <span class="o">=</span> <span class="n">pca_result</span><span class="o">.</span><span class="n">scores</span>     <span class="c1"># (n_spectra, n_components)</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">loadings</span> <span class="o">=</span> <span class="n">pca_result</span><span class="o">.</span><span class="n">loadings</span>   <span class="c1"># (n_components, n_wavenumbers)</span>
-</code></pre></div>
-<h3 id="non-negative-matrix-factorization-nmf">Non-negative Matrix Factorization (NMF)<a class="headerlink" href="#non-negative-matrix-factorization-nmf" title="Permanent link">&para;</a></h3>
-<p>NMF forces components and scores to be strictly positive, often giving more physically interpretable "pure component" spectra than PCA.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">nmf_result</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">nmf</span><span class="p">(</span><span class="n">Y_norm</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">scores_w</span>   <span class="o">=</span> <span class="n">nmf_result</span><span class="o">.</span><span class="n">W</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">loadings_h</span> <span class="o">=</span> <span class="n">nmf_result</span><span class="o">.</span><span class="n">H</span>
-</code></pre></div>
-<h3 id="reconstruction-error">Reconstruction Error<a class="headerlink" href="#reconstruction-error" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">errors</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">reconstruction_error</span><span class="p">(</span><span class="n">Y_norm</span><span class="p">,</span> <span class="n">pca_result</span><span class="o">.</span><span class="n">scores</span><span class="p">,</span> <span class="n">pca_result</span><span class="o">.</span><span class="n">loadings</span><span class="p">,</span> <span class="n">pca_result</span><span class="o">.</span><span class="n">mean_spectrum</span><span class="p">)</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># errors: (n_spectra,) per-spectrum L2 residual -- useful for flagging outlier spectra</span>
-</code></pre></div>
-<h3 id="exporting-mva-results">Exporting MVA Results<a class="headerlink" href="#exporting-mva-results" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">df_pca</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;X&quot;</span><span class="p">:</span> <span class="n">x_coords</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">:</span> <span class="n">y_coords</span><span class="p">})</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pca_result</span><span class="o">.</span><span class="n">n_components</span><span class="p">):</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">df_pca</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;PCA_Score_PC</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">df_pca</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;map_with_pca_scores.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</code></pre></div>
-<p>To visualize <code>df_pca</code> as a heatmap the same way <code>MapsWorkspace.get_heatmap()</code> does, use <code>spectroview.model.heatmap.build_heatmap_grid(x_coords, y_coords, scores[:, 0], map_type="2Dmap")</code>.</p>
+<p>The installed MCP SDK version represents this JSON as text content. Clients
+should parse it as JSON rather than matching human-readable messages.</p>
+<h2 id="resources">Resources<a class="headerlink" href="#resources" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>URI</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>spectroview://application/state</code></td>
+<td>Application/workspace summary</td>
+</tr>
+<tr>
+<td><code>spectroview://workspace/current</code></td>
+<td>Current workspace and selection</td>
+</tr>
+<tr>
+<td><code>spectroview://datasets</code></td>
+<td>Compact loaded-dataset catalog</td>
+</tr>
+<tr>
+<td><code>spectroview://dataframes/detail</code></td>
+<td>DataFrame columns, samples, preview</td>
+</tr>
+<tr>
+<td><code>spectroview://graphs/detail</code></td>
+<td>All graph configurations</td>
+</tr>
+<tr>
+<td><code>spectroview://graphs/current</code></td>
+<td>Active graph configuration or typed error</td>
+</tr>
+<tr>
+<td><code>spectroview://fit/current</code></td>
+<td>Active fit configuration or typed error</td>
+</tr>
+</tbody>
+</table>
+<p>Resources are read-only context. Actions remain tools.</p>
+<h2 id="thread-safety">Thread safety<a class="headerlink" href="#thread-safety" title="Permanent link">&para;</a></h2>
+<p>The HTTP/ASGI thread never reads or mutates Qt-owned state directly.
+<code>QtMainThreadDispatcher</code> emits a queued signal carrying a callable and waits on
+the server thread for its result. The callable executes on the <code>QApplication</code>
+thread. Calls already on that thread execute directly. Requests during
+shutdown fail with <code>APPLICATION_NOT_READY</code>; stalled dispatches fail with
+<code>MAIN_THREAD_TIMEOUT</code> rather than waiting forever.</p>
+<p>Fitting itself remains asynchronous and continues to use SPECTROview's existing
+<code>VBFthread</code>. <code>fit_spectrum</code> reports that the fit started; clients inspect
+<code>get_application_state</code> before collecting results.</p>
+<h2 id="existing-ai-chat-compatibility">Existing AI Chat compatibility<a class="headerlink" href="#existing-ai-chat-compatibility" title="Permanent link">&para;</a></h2>
+<p>The internal chat is not converted into an HTTP client. Its existing MCP hub,
+ReAct loop, provider adapters, conversation behavior, and typed graph-command
+queue are unchanged. It intentionally keeps the original compact five-tool
+profile (<code>query_dataframe</code>, <code>get_statistics</code>, <code>plot_graph</code>, <code>update_graph</code>,
+<code>delete_graph</code>) because large schemas materially reduce small local model
+reliability. The resulting graph commands are applied through
+<code>SpectroviewApplicationAPI</code>, the same live application boundary used by the
+external server.</p>
+<p>The chat's DataFrame and graph reads remain turn snapshots. Routing a
+synchronous in-process chat tool call back through a blocking Qt dispatcher
+would deadlock the GUI thread; the external server does not have that
+constraint.</p>
+<h2 id="adding-a-capability">Adding a capability<a class="headerlink" href="#adding-a-capability" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Reuse or add a domain operation in a Model/ViewModel or the headless
+   <code>spectroview.api</code>; do not implement scientific logic in the MCP handler.</li>
+<li>Add a domain-shaped method to <code>SpectroviewApplicationAPI</code>. Keep widget
+   lookup, combo boxes, dialogs, and signal wiring inside the adapter.</li>
+<li>Register a typed tool in <code>create_mcp_server(...,
+   include_application_tools=True)</code>. Use <code>Literal</code>/<code>Field</code> constraints and the
+   <code>{ok,result|error}</code> response envelope.</li>
+<li>Decide explicitly whether it is read-only, state-changing, destructive, or
+   a filesystem write. Require an overwrite/delete flag where appropriate.</li>
+<li>Add service tests, generated-schema tests, valid/invalid MCP calls, and a
+   thread-boundary test if Qt state is touched.</li>
+<li>Update the tool/resource tables on this page.</li>
+</ol>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Connection refused:</strong> enable the server, keep SPECTROview running, and use
+  the exact endpoint displayed in Settings.</li>
+<li><strong>Server failed / port in use:</strong> select another port and press OK. The status
+  bar reports startup failures.</li>
+<li><strong>HTTP 421:</strong> connect with <code>127.0.0.1</code> or <code>localhost</code>. The SDK intentionally
+  rejects unexpected Host headers to reduce DNS-rebinding risk.</li>
+<li><strong><code>APPLICATION_NOT_READY</code>:</strong> SPECTROview is starting/stopping, or the compact
+  internal-chat profile was used without a live desktop facade.</li>
+<li><strong><code>MAIN_THREAD_TIMEOUT</code>:</strong> a modal dialog or long GUI operation prevented the
+  main event loop from servicing the request. Close the dialog and retry.</li>
+<li><strong>No fit results:</strong> wait for fitting to finish, then call <code>get_fit_results</code>
+  with <code>collect=true</code> once before exporting.</li>
+</ul>
+<h2 id="intentional-first-iteration-limits">Intentional first-iteration limits<a class="headerlink" href="#intentional-first-iteration-limits" title="Permanent link">&para;</a></h2>
+<ul>
+<li>No graph-image export tool yet; only fit-result export is exposed.</li>
+<li>No smoothing tool is exposed because no single supported workspace operation
+  currently owns a stable smoothing contract.</li>
+<li>MCP cannot create/edit fit models or baseline points yet; it can inspect a
+  configured model and run the existing engine.</li>
+<li>Map colormap/viewer customization and map image export are not exposed.</li>
+<li>No authentication, remote bind, TLS, server-initiated sampling, or elicitation.</li>
+<li>No MCP progress notifications for VBF; fit progress is currently polled from
+  application state.</li>
+</ul>
 
 
 
@@ -1815,7 +2088,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../spectra/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Spectra Workspace (load, preprocess, fit)">
+          <a href="../ai_agent/" class="md-footer__link md-footer__link--prev" aria-label="Previous: AI Agent">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1825,20 +2098,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Spectra Workspace (load, preprocess, fit)
+                AI Agent
               </div>
             </div>
           </a>
         
         
           
-          <a href="../graphs/" class="md-footer__link md-footer__link--next" aria-label="Next: Data Visualization (Graphs)">
+          <a href="../../api/" class="md-footer__link md-footer__link--next" aria-label="Next: Home">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Data Visualization (Graphs)
+                Home
               </div>
             </div>
             <div class="md-footer__button md-icon">

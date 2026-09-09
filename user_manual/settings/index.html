@@ -923,6 +923,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#5-local-mcp-server-ai-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Local MCP Server (AI tab)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1038,6 +1049,8 @@
       
         
           
+        
+      
         
       
         
@@ -1323,6 +1336,34 @@
     
   
     AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local MCP Server
   
 
     
@@ -1676,7 +1717,7 @@
 <p>The <code>Settings Panel</code> is organized into two tabs:</p>
 <ul>
 <li><strong>General</strong> — fitting behavior and file locations: <strong><code>Fit Parameters</code></strong>, <strong><code>Global Peak Limits</code></strong>, and the <strong><code>SPECTROview Working Folder</code></strong> (sections 1–3 below).</li>
-<li><strong>AI</strong> — API keys and the chat-history folder for the AI Chat Agent (section 4 below).</li>
+<li><strong>AI</strong> — API keys, chat history, and the optional local MCP endpoint (sections 4–5 below).</li>
 </ul>
 <hr />
 <h3 id="1-fit-parameters-general-tab"><strong>1. Fit Parameters</strong> <em>(General tab)</em><a class="headerlink" href="#1-fit-parameters-general-tab" title="Permanent link">&para;</a></h3>
@@ -1855,6 +1896,35 @@ they are readable by anything running under your user account.</p>
 </tr>
 </tbody>
 </table>
+<hr />
+<h3 id="5-local-mcp-server-ai-tab"><strong>5. Local MCP Server</strong> <em>(AI tab)</em><a class="headerlink" href="#5-local-mcp-server-ai-tab" title="Permanent link">&para;</a></h3>
+<p>Enable this only when a trusted MCP client on the same computer needs access
+to the currently running SPECTROview session. The default endpoint is
+<code>http://127.0.0.1:8765/mcp</code> and starts as soon as you select <strong>OK</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Enable local MCP endpoint</strong></td>
+<td>Off</td>
+<td>Starts/stops the embedded MCP server.</td>
+</tr>
+<tr>
+<td><strong>Port</strong></td>
+<td>8765</td>
+<td>Local Streamable HTTP port (1024–65535). Choose another if the port is busy.</td>
+</tr>
+</tbody>
+</table>
+<p>The bind address is fixed to localhost (<code>127.0.0.1</code>); it is not exposed to the
+LAN or internet. Keep SPECTROview running while the client is connected. The
+endpoint stops when SPECTROview closes or the checkbox is cleared.</p>
 
 
 

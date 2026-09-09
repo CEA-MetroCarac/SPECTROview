@@ -918,6 +918,8 @@
       
         
       
+        
+      
     
     
     
@@ -1217,6 +1219,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="VSpectraViewer — The Plot Canvas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#batch-legend-editing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch Legend Editing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1579,6 +1598,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local MCP Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1920,6 +1967,7 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
     subgraph View ["View Layer (v_*)"]
         VWS["VWorkspaceSpectra&lt;br/&gt;(QWidget)"]
         SV["VSpectraViewer&lt;br/&gt;(Matplotlib canvas)"]
+        SLE["SpectraLegendEditorDialog&lt;br/&gt;(batch legend editor)"]
         FMB["VFitModelBuilder&lt;br/&gt;(controls panel)"]
         PT["VPeakTable&lt;br/&gt;(parameter table)"]
         SL["VSpectraList&lt;br/&gt;(QListWidget)"]
@@ -1941,6 +1989,7 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
     end
 
     VWS --&gt; SV &amp; FMB &amp; SL &amp; FR &amp; MVA
+    SV --&gt; SLE
     VWS --&gt;|"method calls"| VMWS
     VMWS --&gt;|"Qt signals"| VWS
     VMWS --&gt; SS &amp; IO &amp; VBF &amp; WIO
@@ -1964,6 +2013,11 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 <td><strong>View</strong></td>
 <td><code>VSpectraViewer</code></td>
 <td>Matplotlib canvas — renders spectra, baselines, peaks, best-fit, residuals</td>
+</tr>
+<tr>
+<td><strong>View</strong></td>
+<td><code>SpectraLegendEditorDialog</code></td>
+<td>Transactional palette, legend-limit, label, and color editor for selected spectra</td>
 </tr>
 <tr>
 <td><strong>View</strong></td>
@@ -2181,6 +2235,17 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 </tbody>
 </table>
 <p>Peaks can also be dragged. The viewer emits <code>peak_dragged(x, y)</code> during drag and <code>peak_drag_finished()</code> on release, which the ViewModel translates into <code>update_dragged_peak()</code> + <code>finalize_peak_drag()</code> calls.</p>
+<h4 id="batch-legend-editing">Batch Legend Editing<a class="headerlink" href="#batch-legend-editing" title="Permanent link">&para;</a></h4>
+<p><code>VSpectraViewer</code> caches the complete legend bounding box after rendering. A double-click anywhere within that box opens <code>SpectraLegendEditorDialog</code> from <code>v_spectra_legend_editor.py</code>; individual legend handles and text objects no longer launch separate editors.</p>
+<p>The dialog is transactional: its palette selector, legend-limit spinbox, label fields, and color comboboxes hold temporary values until the user accepts it. <strong>Cancel</strong> therefore causes no mutation. On <strong>OK</strong>, <code>VSpectraViewer._apply_legend_editor_values()</code>:</p>
+<ol>
+<li>Updates the shared <code>color_palette</code> and <code>max_legend_items</code> view options.</li>
+<li>Writes changed labels and explicit colors to the current tensor payload.</li>
+<li>Writes the same values through each <code>SpectrumProxy</code>, updating the source <code>MapData.labels</code> and <code>MapData.colors</code> arrays.</li>
+<li>Emits <code>spectrumCustomized</code>, causing the ViewModel to rebuild the selection payload and refresh the spectra list.</li>
+</ol>
+<p>A color value of <code>None</code> represents <strong>Automatic</strong> and is resolved from the active palette during rendering. Explicit per-spectrum colors continue to take precedence when the palette changes. Continuous palettes are sampled across the complete selection; the editor offers a bounded selection of representative swatches.</p>
+<p>Both workspaces enforce <code>LEGEND_EDITOR_MAX_ROWS = 100</code>. Only those editor rows are instantiated, preventing large map or spectrum selections from creating thousands of Qt widgets. The dialog receives the full selection count so automatic gradient previews still match their plotted spectrum positions. Values outside the current batch remain untouched.</p>
 <h3 id="vfitmodelbuilder-the-controls-panel"><code>VFitModelBuilder</code> — The Controls Panel<a class="headerlink" href="#vfitmodelbuilder-the-controls-panel" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <a href="file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_fit_model_builder.py"><code>v_fit_model_builder.py</code></a></p>
 <p>A splitter panel containing the full preprocessing and fitting control surface:</p>

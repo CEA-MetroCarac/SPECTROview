@@ -918,6 +918,8 @@
       
         
       
+        
+      
     
     
     
@@ -1741,6 +1743,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local MCP Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2257,6 +2287,7 @@
 <li><code>VMapsList</code> — dual-panel list (maps on top, spectra in map below) with action buttons.</li>
 </ul>
 <p>The left side (SpectraViewer + FitModelBuilder tabs) is inherited unchanged.</p>
+<p>The inherited SpectraViewer also provides the batch legend editor. Map selections can contain thousands of spectra, so the shared editor instantiates at most 100 spectrum rows and displays the full selection count as <strong>“showing 100 of N”</strong>. Labels and explicit colors are committed through <code>SpectrumProxy(md, idx, fname)</code>, preserving the correct row mapping into the map's <code>MapData</code> block; spectra outside the displayed batch are not changed.</p>
 <p><strong>Centralized map type management:</strong> The <code>selected_map_type</code> attribute is the single source of truth for all viewers (main + dialogs). When the user changes the combobox in any viewer, <code>_on_map_type_changed()</code> updates all viewers synchronously, preventing drift.</p>
 <h3 id="vmapviewer-the-heatmap-canvas"><code>VMapViewer</code> — The Heatmap Canvas<a class="headerlink" href="#vmapviewer-the-heatmap-canvas" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <a href="file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_map_viewer.py"><code>v_map_viewer.py</code></a></p>

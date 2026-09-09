@@ -812,6 +812,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#33-batch-legend-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3. Batch Legend Editor
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1184,6 +1195,8 @@
       
         
       
+        
+      
     
     
     
@@ -1451,6 +1464,34 @@
     
   
     AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local MCP Server
   
 
     
@@ -1897,7 +1938,7 @@
 </tr>
 <tr>
 <td><img alt="Legend" src="../../user_manual_images/Spectra_Maps/show_legend.png" /></td>
-<td><strong>Legend</strong>: Toggles the display of the legend box. When the "Zoom" tool is disabled, you can click directly on the legend box to customize colors and labels.</td>
+<td><strong>Legend</strong>: Toggles the display of the legend box. Double-click anywhere inside the legend to edit the palette, maximum number of displayed entries, and spectrum colors and labels in one dialog. Changes are applied with <strong>OK</strong> or discarded with <strong>Cancel</strong>. For responsiveness, Spectra and Maps workspace selections are edited in batches of up to 100 spectra; narrow the selection to edit spectra outside the current batch.</td>
 </tr>
 <tr>
 <td><img alt="Copy" src="../../user_manual_images/Spectra_Maps/copy.png" /></td>
@@ -1909,6 +1950,24 @@
 </tr>
 </tbody>
 </table>
+<h4 id="33-batch-legend-editor"><strong>3.3. Batch Legend Editor</strong><a class="headerlink" href="#33-batch-legend-editor" title="Permanent link">&para;</a></h4>
+<p>Show the legend with the <strong>Legend</strong> toolbar button, then <strong>double-click anywhere inside the legend box</strong> to open the batch editor. This replaces the older workflow that required opening a separate dialog for every label or color.</p>
+<p>The top of the dialog contains two plot-wide controls:</p>
+<ul>
+<li><strong>Color palette</strong>: Select a palette from its visual color-strip preview. Discrete choices include the 20-color <code>DEFAULT_COLORS</code>, <code>tab20</code>, <code>tab20b</code>, <code>tab20c</code>, <code>Dark2</code>, <code>Paired</code>, and <code>Accent</code>. Gradient choices include <code>viridis</code>, <code>plasma</code>, <code>jet</code>, <code>cividis</code>, and <code>magma</code>.</li>
+<li><strong>Max legend items</strong>: Set how many entries appear in the plot legend. The default is 15. This setting does not remove spectra from the plot.</li>
+</ul>
+<p>The spectrum table provides one row per editable spectrum:</p>
+<ul>
+<li><strong>Spectrum</strong> identifies the original spectrum or filename.</li>
+<li><strong>Color</strong> selects a swatch from the active palette. <strong>Automatic</strong> keeps the spectrum linked to its palette-assigned color; selecting a swatch creates a per-spectrum override. Use <strong>More colors…</strong> for a color outside the palette.</li>
+<li><strong>Label</strong> changes the text shown in the legend. Clearing a custom label restores the spectrum filename.</li>
+</ul>
+<p>Changing the palette updates every <strong>Automatic</strong> color preview while preserving manually selected colors. Select <strong>OK</strong> to apply all edits together, or <strong>Cancel</strong> to discard every change made in the dialog. Accepted labels and colors are written back to the underlying spectrum objects, so the spectra list, Spectra workspace, Maps workspace, and saved workspace data remain synchronized.</p>
+<div class="admonition note">
+<p class="admonition-title">100-spectrum editing batches</p>
+<p>To keep the interface responsive with large selections, the dialog creates editors for at most the first <strong>100 plotted spectra</strong> in both the Spectra and Maps workspaces. When the selection is larger, the dialog reports <strong>“showing 100 of N”</strong>. Spectra outside the displayed batch are not modified. Narrow the current selection to edit another group.</p>
+</div>
 <hr />
 <h3 id="4-fitmodelbuilder"><strong>4. <code>FitModelBuilder</code></strong><a class="headerlink" href="#4-fitmodelbuilder" title="Permanent link">&para;</a></h3>
 <p>The <code>FitModelBuilder</code> tab is where you configure your spectral fit models. It is divided into three main panels: <code>Fitting</code>, <code>PeakTable</code>, and <code>FitModelControl</code>, each explained in the following sections.</p>

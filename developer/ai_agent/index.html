@@ -18,7 +18,7 @@
         <link rel="prev" href="../mva/">
       
       
-        <link rel="next" href="../../api/">
+        <link rel="next" href="../mcp_server/">
       
       
         
@@ -918,6 +918,8 @@
       
         
       
+        
+      
     
     
     
@@ -1762,6 +1764,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local MCP Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2189,6 +2219,12 @@ mutate the ViewModel; they submit typed commands (<code>agent/commands.py</code>
 before queuing through the shared <code>spectroview.model.graph_control</code> contract,
 and the Graph workspace applies that same contract again at the mutation
 boundary.</p>
+<p>SPECTROview also has a full external desktop MCP profile. It uses the same
+FastMCP module but operates on <code>SpectroviewApplicationAPI</code>, a live-session
+facade protected by a queued Qt main-thread dispatcher. The internal chat keeps
+the five-tool profile documented here for small-model reliability. See
+<a href="../mcp_server/">Local MCP Server</a> for the endpoint, complete tool catalog, and
+extension workflow.</p>
 <h3 id="complete-graph-customization-contract"><strong>Complete graph customization contract</strong><a class="headerlink" href="#complete-graph-customization-contract" title="Permanent link">&para;</a></h3>
 <p>The MCP tools retain a few common top-level parameters for small-model
 reliability, and expose <code>other_properties: GraphPatch</code> for the exhaustive set.
@@ -3101,13 +3137,13 @@ connected.</p>
         
         
           
-          <a href="../../api/" class="md-footer__link md-footer__link--next" aria-label="Next: Home">
+          <a href="../mcp_server/" class="md-footer__link md-footer__link--next" aria-label="Next: Local MCP Server">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Home
+                Local MCP Server
               </div>
             </div>
             <div class="md-footer__button md-icon">

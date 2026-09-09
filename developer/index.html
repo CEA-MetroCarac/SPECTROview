@@ -918,6 +918,8 @@
       
         
       
+        
+      
     
     
     
@@ -1186,6 +1188,34 @@
     
   
     AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local MCP Server
   
 
     
@@ -1616,87 +1646,93 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>spectroview/
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├── __init__.py             # Constants, peak models, resource paths
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├── main.py                 # Entry point, QMainWindow, cross-workspace wiring
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>├── model/                  # Data models (no Qt deps)
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│   ├── spectra_store.py    # Tensor-centric SpectraStore &amp; MapData structures
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│   ├── workspace_io.py     # Unified serialization for Workspaces
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│   ├── peak_model.py       # Helper functions for peak parameters
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│   ├── m_graph.py          # Plot configuration model
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│   ├── m_settings.py       # Persistent app settings (QSettings wrapper)
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│   ├── m_io.py             # File loaders (TXT, CSV, WDF, SPC, TRPL, DAT)
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│   ├── m_mva.py            # PCA + NMF engine
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│   ├── m_fit_model_manager.py # Saved fit model file management
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│   ├── m_file_converter.py # Batch file format converter
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│   ├── m_quick_calculators.py     # Pure math logic for scientific calculators (Spot Size, Depth, Unit conversion)
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│   ├── m_update_checker.py # Background GitHub release checker (QThread)
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>│   └── m_spc.py            # Galactic SPC binary reader
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>│
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>├── viewmodel/              # Business logic and data orchestration
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>│   ├── vm_workspace_spectra.py   # Spectra workspace logic (base class)
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>│   ├── vm_workspace_maps.py      # Maps workspace (extends Spectra VM)
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>│   ├── vm_workspace_graphs.py    # Graphs workspace logic
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>│   ├── vm_fit_model_builder.py   # Fit model file management orchestration
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>│   ├── vm_mva.py                 # MVA orchestration
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>│   ├── vm_settings.py            # Settings persistence
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>│   └── utils.py                  # Helpers, toast notifications
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>│
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>├── ai_agent/               # AI Data Chat module (multi-provider; runtime-optional)
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>│   ├── __init__.py              # Module docstring, keeps import guarded
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>│   ├── m_llm_client.py          # Multi-provider LLM clients (Ollama/OpenAI/Anthropic) + QThread workers
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>│   ├── m_conversation.py        # Conversation model (+ m_conversation_store.py: history)
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>│   ├── m_prompt_manager.py      # System-prompt / rules / knowledge assembly
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>│   ├── mcp/server.py            # FastMCP server exposing the AI tools (plot_graph, query_dataframe, …)
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>│   ├── config/, prompts/, rules/, knowledge/, examples/, utils/  # Prompt assets + helpers (see ai_agent.md)
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>│   ├── vm_chat.py               # Chat ViewModel (prompt-tier selection, agentic loop)
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>│   └── v_chat_panel.py          # Floating chat dialog (+ v_history_dialog.py)
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>│
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>├── view/                   # Qt widgets and UI layout
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>│   ├── v_workspace_spectra.py    # Spectra workspace View
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>│   ├── v_workspace_maps.py       # Maps workspace View (extends Spectra)
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>│   ├── v_workspace_graphs.py     # Graphs workspace View
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>│   ├── v_quick_calculators.py    # Scientific calculators GUI
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>│   └── components/               # Shared / reusable widgets
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>│       ├── v_spectra_viewer.py        # Matplotlib spectra canvas
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>│       ├── v_fit_model_builder.py     # Baseline + Peak + Fit controls
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>│       ├── v_peak_table.py            # Interactive peak parameter table
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>│       ├── v_map_viewer.py            # Heatmap / wafer canvas
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>│       ├── v_map_viewer_dialog.py     # Detachable map viewer window
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>│       ├── v_map_list.py              # Loaded maps list panel
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>│       ├── v_graph.py                 # Single graph widget (matplotlib)
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>│       ├── v_mva.py                   # PCA/NMF controls and plots
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>│       ├── v_fit_results.py           # Fit results DataFrame table
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>│       ├── v_data_filter.py           # Dynamic query filter panel
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>│       ├── v_dataframe_table.py       # Generic DataFrame viewer
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>│       ├── v_spectra_list.py          # Spectrum list with checkboxes
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>│       ├── v_moretab.py               # Metadata / tab panel
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>│       ├── v_settings.py              # Fit/view settings dialog
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>│       ├── v_menubar.py               # Main menu bar
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>│       ├── v_about.py                 # About dialog
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>│       ├── v_update_banner.py         # Update notification banner widget
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>│       ├── v_user_manual.py           # Built-in user manual viewer
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>│       ├── customized_widgets.py      # Palette combobox, custom toolbar
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>│       └── customize_graph/           # Graph customization dialog (package)
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>│           ├── customize_graph_dialog.py     # CustomizeGraphDialog (singleton, tab host)
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>│           ├── customize_legend.py           # Legend/Color tab
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>│           ├── customize_axis.py             # Axis tab (scale/limits/breaks; incl. wafer/2Dmap Z color-scale)
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>│           ├── customize_annotations.py      # Annotations tab
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>│           ├── customize_more_options.py     # More Options tab (plot options, theme, fonts, sorting, trendline/histogram)
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>│           └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>│
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>├── fit_engine/             # High-performance batch fitting
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>│   ├── vbf_engine.py            # Orchestrator (VBFengine)
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>│   ├── evaluator.py             # Parameter mapping (VBFevaluator)
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>│   ├── optimizer.py             # Batched Levenberg-Marquardt
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>│   ├── models.py                # Batched peak functions + Jacobians
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>│   ├── scalar_models.py         # Fallback scalar functions + PEAK_MODEL_REGISTRY
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>│   ├── vbf_thread.py            # QThread wrapper
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>│   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>│   └── noise.py                 # Noise estimation functions
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>│
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>└── resources/              # Icons, stylesheets, user manual assets
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>    ├── icons/
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>    ├── styles/
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>    └── user_manual/
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>├── application/            # API facade for the currently running desktop state
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│   ├── service.py          # Dataset/spectra/fit/graph/map domain operations
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│   ├── dispatch.py         # Queued Qt main-thread execution boundary
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│   └── errors.py           # Stable integration error codes
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>├── model/                  # Data models (no Qt deps)
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│   ├── spectra_store.py    # Tensor-centric SpectraStore &amp; MapData structures
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│   ├── workspace_io.py     # Unified serialization for Workspaces
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│   ├── peak_model.py       # Helper functions for peak parameters
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│   ├── m_graph.py          # Plot configuration model
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│   ├── m_settings.py       # Persistent app settings (QSettings wrapper)
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│   ├── m_io.py             # File loaders (TXT, CSV, WDF, SPC, TRPL, DAT)
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│   ├── m_mva.py            # PCA + NMF engine
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>│   ├── m_fit_model_manager.py # Saved fit model file management
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>│   ├── m_file_converter.py # Batch file format converter
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>│   ├── m_quick_calculators.py     # Pure math logic for scientific calculators (Spot Size, Depth, Unit conversion)
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>│   ├── m_update_checker.py # Background GitHub release checker (QThread)
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>│   └── m_spc.py            # Galactic SPC binary reader
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>│
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>├── viewmodel/              # Business logic and data orchestration
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>│   ├── vm_workspace_spectra.py   # Spectra workspace logic (base class)
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>│   ├── vm_workspace_maps.py      # Maps workspace (extends Spectra VM)
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>│   ├── vm_workspace_graphs.py    # Graphs workspace logic
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>│   ├── vm_fit_model_builder.py   # Fit model file management orchestration
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>│   ├── vm_mva.py                 # MVA orchestration
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>│   ├── vm_settings.py            # Settings persistence
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>│   └── utils.py                  # Helpers, toast notifications
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>│
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>├── ai_agent/               # AI Data Chat module (multi-provider; runtime-optional)
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>│   ├── __init__.py              # Module docstring, keeps import guarded
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>│   ├── m_llm_client.py          # Multi-provider LLM clients (Ollama/OpenAI/Anthropic) + QThread workers
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>│   ├── m_conversation.py        # Conversation model (+ m_conversation_store.py: history)
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>│   ├── m_prompt_manager.py      # System-prompt / rules / knowledge assembly
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>│   ├── mcp/server.py            # Shared FastMCP chat + full desktop tool profiles
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>│   ├── mcp/runtime.py           # Opt-in loopback Streamable HTTP lifecycle
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>│   ├── config/, prompts/, rules/, knowledge/, examples/, utils/  # Prompt assets + helpers (see ai_agent.md)
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>│   ├── vm_chat.py               # Chat ViewModel (prompt-tier selection, agentic loop)
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>│   └── v_chat_panel.py          # Floating chat dialog (+ v_history_dialog.py)
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>│
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>├── view/                   # Qt widgets and UI layout
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>│   ├── v_workspace_spectra.py    # Spectra workspace View
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>│   ├── v_workspace_maps.py       # Maps workspace View (extends Spectra)
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>│   ├── v_workspace_graphs.py     # Graphs workspace View
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>│   ├── v_quick_calculators.py    # Scientific calculators GUI
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>│   └── components/               # Shared / reusable widgets
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>│       ├── v_spectra_viewer.py        # Matplotlib spectra canvas
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>│       ├── v_spectra_legend_editor.py  # Batch spectrum label/color editor
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>│       ├── v_fit_model_builder.py     # Baseline + Peak + Fit controls
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>│       ├── v_peak_table.py            # Interactive peak parameter table
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>│       ├── v_map_viewer.py            # Heatmap / wafer canvas
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>│       ├── v_map_viewer_dialog.py     # Detachable map viewer window
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>│       ├── v_map_list.py              # Loaded maps list panel
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>│       ├── v_graph.py                 # Single graph widget (matplotlib)
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>│       ├── v_mva.py                   # PCA/NMF controls and plots
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>│       ├── v_fit_results.py           # Fit results DataFrame table
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>│       ├── v_data_filter.py           # Dynamic query filter panel
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>│       ├── v_dataframe_table.py       # Generic DataFrame viewer
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>│       ├── v_spectra_list.py          # Spectrum list with checkboxes
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>│       ├── v_moretab.py               # Metadata / tab panel
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>│       ├── v_settings.py              # Fit/view settings dialog
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>│       ├── v_menubar.py               # Main menu bar
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>│       ├── v_about.py                 # About dialog
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>│       ├── v_update_banner.py         # Update notification banner widget
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>│       ├── v_user_manual.py           # Built-in user manual viewer
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>│       ├── customized_widgets.py      # Palette combobox, custom toolbar
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>│       └── customize_graph/           # Graph customization dialog (package)
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>│           ├── customize_graph_dialog.py     # CustomizeGraphDialog (singleton, tab host)
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>│           ├── customize_legend.py           # Legend/Color tab
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>│           ├── customize_axis.py             # Axis tab (scale/limits/breaks; incl. wafer/2Dmap Z color-scale)
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>│           ├── customize_annotations.py      # Annotations tab
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>│           ├── customize_more_options.py     # More Options tab (plot options, theme, fonts, sorting, trendline/histogram)
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>│           └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>│
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>├── fit_engine/             # High-performance batch fitting
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>│   ├── vbf_engine.py            # Orchestrator (VBFengine)
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>│   ├── evaluator.py             # Parameter mapping (VBFevaluator)
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>│   ├── optimizer.py             # Batched Levenberg-Marquardt
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>│   ├── models.py                # Batched peak functions + Jacobians
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>│   ├── scalar_models.py         # Fallback scalar functions + PEAK_MODEL_REGISTRY
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>│   ├── vbf_thread.py            # QThread wrapper
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>│   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>│   └── noise.py                 # Noise estimation functions
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>│
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>└── resources/              # Icons, stylesheets, user manual assets
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>    ├── icons/
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>    ├── styles/
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>    └── user_manual/
 </code></pre></div>
 <hr />
 <h2 id="application-entry-point"><strong>Application Entry Point</strong><a class="headerlink" href="#application-entry-point" title="Permanent link">&para;</a></h2>
@@ -1812,6 +1848,11 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <td><code>VSpectraViewer</code></td>
 <td><code>v_spectra_viewer.py</code></td>
 <td>Matplotlib canvas for spectrum display, zoom/pan, peak/baseline interaction</td>
+</tr>
+<tr>
+<td><code>SpectraLegendEditorDialog</code></td>
+<td><code>v_spectra_legend_editor.py</code></td>
+<td>Transactional palette, legend-limit, label, and color editor (100-row batches)</td>
 </tr>
 <tr>
 <td><code>VFitModelBuilder</code></td>

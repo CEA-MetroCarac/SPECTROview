@@ -4,6 +4,20 @@
 
 ---
 
+## [v26.36.3](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.36.3) - 2026-09-09
+
+##### What's New in v26.36.3
+
+**New Features**
+* Added local MCP (Model Context Protocol) server architecture, including runtime and settings APIs
+
+**Improvements & Fixes**
+* Improved legend editing capabilities in the SpectraViewer
+* Limited batch legend editing to 100 spectra to ensure stability and performance
+
+
+---
+
 ## [v26.36.2](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.36.2) - 2026-09-03
 
 - Added visual color previews to the SpectraViewer palette selector.

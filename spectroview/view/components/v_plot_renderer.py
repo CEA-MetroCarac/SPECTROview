@@ -304,6 +304,8 @@ class PlotRenderer:
         if self.vg.z and self.vg.z in plot_df.columns:
             hue_cats = self._get_sorted_categories(plot_df[self.vg.z], df=plot_df)
             n_hue = len(hue_cats)
+            if n_hue == 0:
+                return
             sub_width = box_width / n_hue
             offsets = np.linspace(-(box_width - sub_width) / 2,
                                   (box_width - sub_width) / 2, n_hue)

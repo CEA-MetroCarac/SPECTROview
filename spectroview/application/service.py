@@ -718,7 +718,13 @@ class SpectroviewApplicationAPI:
             success = self._graphs_workspace.create_plot_from_config(dataframe_name, config)
             created = sorted(set(self._graphs_vm.graphs) - before)
             if not success or not created:
-                raise ApplicationAPIError("GRAPH_CREATE_FAILED", "The graph could not be created.")
+                raise ApplicationAPIError(
+                    "GRAPH_RENDER_FAILED",
+                    "The graph could not be rendered (likely a degenerate data range after "
+                    "filtering, e.g. zero variance on an axis). Do NOT retry this plot with "
+                    "different parameters \u2014 report the issue to the user and continue with "
+                    "the remaining plots.",
+                )
             gid = created[-1]
             self._application.tabWidget.setCurrentWidget(self._graphs_workspace)
             image_path = None

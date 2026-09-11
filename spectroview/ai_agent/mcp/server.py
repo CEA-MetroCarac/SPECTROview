@@ -156,7 +156,11 @@ def create_mcp_server(
             outcome = context.submit(command)
         except ApplicationAPIError as exc:
             if include_application_tools:
-                return json.dumps({"ok": False, "error": exc.as_dict()})
+                err = exc.as_dict()
+                # Tell the LLM not to retry render failures
+                if err.get("code") == "GRAPH_RENDER_FAILED":
+                    err["retry"] = False
+                return json.dumps({"ok": False, "error": err})
             return f"Error: {exc.message}"
         except Exception as exc:
             if include_application_tools:

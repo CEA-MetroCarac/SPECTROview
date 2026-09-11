@@ -15,7 +15,10 @@ Qt-safe running-application facade.
 import json
 from typing import Annotated, Any, List, Literal, Optional, Union
 
-from mcp.server.fastmcp import FastMCP
+try:
+    from mcp.server.mcpserver import MCPServer as FastMCP
+except ImportError:
+    from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
@@ -73,12 +76,15 @@ def create_mcp_server(
         :class:`AppContext` works, including
         :class:`~spectroview.ai_agent.agent.ports.RecordingContext` in tests.
     """
-    mcp = FastMCP(
-        "SPECTROview",
-        host=host,
-        port=port,
-        streamable_http_path="/mcp",
-    )
+    try:
+        mcp = FastMCP(
+            "SPECTROview",
+            host=host,
+            port=port,
+            streamable_http_path="/mcp",
+        )
+    except TypeError:
+        mcp = FastMCP("SPECTROview")
 
     # -------------------------------------------------------------------------
     # Helpers
@@ -160,6 +166,27 @@ def create_mcp_server(
                 })
             return f"Error: {exc}"
         if include_application_tools:
+            if isinstance(outcome, dict) and outcome.get("image_path"):
+                gid = outcome.get("graph_id")
+                img_path = outcome.get("image_path")
+                from pathlib import Path
+                url_path = Path(img_path).as_uri()
+                title = (command.config.get("plot_title") if hasattr(command, "config") else None) or f"Graph #{gid}"
+                msg = (
+                    f"Plot #{gid} successfully created in SPECTROview.\n\n"
+                    f"![{title}]({url_path})\n\n"
+                    f"[Open in SPECTROview](plume-spectroview://graph/{gid})"
+                )
+                outcome["display_markdown"] = msg
+                return f"{msg}\n\nDetails: " + json.dumps({"ok": True, "result": outcome}, default=str)
+            elif isinstance(outcome, dict) and outcome.get("graph_id") is not None:
+                gid = outcome.get("graph_id")
+                msg = (
+                    f"Plot #{gid} successfully created in SPECTROview.\n\n"
+                    f"[Open in SPECTROview](plume-spectroview://graph/{gid})"
+                )
+                outcome["display_markdown"] = msg
+                return f"{msg}\n\nDetails: " + json.dumps({"ok": True, "result": outcome}, default=str)
             return json.dumps({"ok": True, "result": outcome}, default=str)
         return queued_message
 
@@ -430,6 +457,45 @@ def create_mcp_server(
     # Tools
     # -------------------------------------------------------------------------
 
+    @mcp.tool(annotations=STATE_CHANGE)
+    def load_dataframe(file_path: str) -> str:
+        """Load an Excel (.xlsx, .xls) or CSV (.csv, .tsv) file into the SPECTROview workspace.
+
+        Args:
+            file_path: Absolute local path to the data file on disk.
+        """
+        from pathlib import Path
+        path = Path(file_path).expanduser().resolve()
+        if not path.is_file():
+            return f"Error: File not found: {file_path}"
+        loader = getattr(context, "load_dataframes", None)
+        if callable(loader):
+            try:
+                loaded = loader([str(path)])
+                names = ", ".join(loaded) if loaded else path.stem
+                return f"Successfully loaded dataframe(s) into SPECTROview: {names}"
+            except Exception as exc:
+                return f"Error loading dataframe from {path.name}: {exc}"
+        return "Error: DataFrame loading is not supported in this context."
+
+    @mcp.tool(annotations=READ_ONLY)
+    def show_graph(graph_id: Optional[int] = None) -> str:
+        """Bring the SPECTROview application window to the front and display the specified graph.
+
+        Args:
+            graph_id: Optional ID of the graph to display and activate.
+        """
+        shower = getattr(context, "show_graph", None)
+        if callable(shower):
+            try:
+                shower(graph_id)
+                target = f"Graph #{graph_id}" if graph_id is not None else "Graphs workspace"
+                return f"SPECTROview window activated and focused on {target}."
+            except Exception as exc:
+                return f"Error showing graph: {exc}"
+        return "Error: Window activation is not supported in this context."
+
+
     @mcp.tool(annotations=READ_ONLY)
     def query_dataframe(query: str, df_name: str = "") -> str:
         """Filter or query data from the dataframe and return a summary of the result.
@@ -454,6 +520,10 @@ def create_mcp_server(
         x: str,
         y: Union[str, List[str]],
         plot_style: PlotStyle,
+        file_path: Annotated[Optional[str], Field(description=(
+            "Optional local path to an Excel or CSV file. If specified and the dataset "
+            "is not yet loaded in SPECTROview, it will be loaded automatically before plotting."
+        ))] = None,
         z: Annotated[Optional[str], Field(description=(
             "Grouping / colour column. For 'wafer' and '2Dmap' this MUST be the metric "
             "value to visualise. For every OTHER style it is the hue: the data is split "
@@ -497,6 +567,19 @@ def create_mcp_server(
             filters: Optional list of pandas query strings to filter data. String values MUST be quoted (e.g., ["Zone == 'Edge'", "Yield > 90"]).
             df_name: Optional target DataFrame name. If empty, uses the active one.
         """
+        if file_path:
+            from pathlib import Path
+            fpath = Path(file_path).expanduser().resolve()
+            if fpath.is_file():
+                loader = getattr(context, "load_dataframes", None)
+                if callable(loader):
+                    try:
+                        loaded = loader([str(fpath)])
+                        if not df_name and loaded:
+                            df_name = loaded[0]
+                    except Exception:
+                        pass
+
         target_df_name = df_name or context.active_dataframe_name()
 
         target_df = context.get_dataframe(target_df_name)

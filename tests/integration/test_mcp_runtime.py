@@ -24,7 +24,8 @@ def test_runtime_is_loopback_discoverable_and_stops():
         assert runtime.endpoint.startswith("http://127.0.0.1:")
 
         async def discover():
-            async with streamable_http_client(runtime.endpoint) as (read, write, _):
+            async with streamable_http_client(runtime.endpoint) as streams:
+                read, write = streams[0], streams[1]
                 async with ClientSession(read, write) as session:
                     await session.initialize()
                     return {tool.name for tool in (await session.list_tools()).tools}

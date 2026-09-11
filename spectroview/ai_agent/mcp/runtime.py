@@ -67,7 +67,10 @@ class LocalMCPRuntime:
         mcp = create_desktop_mcp_server(
             self.context, host=self.host, port=self.port
         )
-        app = mcp.streamable_http_app()
+        try:
+            app = mcp.streamable_http_app(streamable_http_path="/mcp", host=self.host)
+        except TypeError:
+            app = mcp.streamable_http_app()
         config = uvicorn.Config(
             app,
             host=self.host,

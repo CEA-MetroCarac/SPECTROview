@@ -148,6 +148,29 @@ class SpectroviewApplicationAPI:
     # Existing AppContext surface (used by the graph/DataFrame MCP tools)
     # ------------------------------------------------------------------
 
+    def load_dataframes(self, file_paths: List[str]) -> List[str]:
+        def mutate():
+            self._graphs_vm.load_dataframes(file_paths)
+            return list(self._graphs_vm.dataframes.keys())
+        return self._call(mutate)
+
+    def show_graph(self, graph_id: Optional[Union[str, int]] = None) -> None:
+        def call():
+            self._application.show()
+            self._application.raise_()
+            self._application.activateWindow()
+            self._application.tabWidget.setCurrentWidget(self._graphs_workspace)
+            if graph_id is not None:
+                try:
+                    gid = int(graph_id)
+                    entry = self._graphs_workspace.graph_widgets.get(gid)
+                    if entry and len(entry) >= 3 and entry[2]:
+                        self._graphs_workspace.mdi_area.setActiveSubWindow(entry[2])
+                except Exception:
+                    pass
+        self._call(call)
+
+
     def list_dataframes(self) -> List[str]:
         return self._call(lambda: list(self._graphs_vm.dataframes))
 
@@ -696,8 +719,34 @@ class SpectroviewApplicationAPI:
             created = sorted(set(self._graphs_vm.graphs) - before)
             if not success or not created:
                 raise ApplicationAPIError("GRAPH_CREATE_FAILED", "The graph could not be created.")
+            gid = created[-1]
             self._application.tabWidget.setCurrentWidget(self._graphs_workspace)
-            return {"graph_id": created[-1], "configuration": config}
+            image_path = None
+            entry = self._graphs_workspace.graph_widgets.get(gid)
+            if entry and entry[0]:
+                widget = entry[0]
+                fig = getattr(widget, "figure", None)
+                if fig is None and hasattr(widget, "plot_widget"):
+                    fig = getattr(widget.plot_widget, "figure", None)
+                if fig is not None:
+                    import tempfile, time
+                    from pathlib import Path
+                    temp_dir = Path(tempfile.gettempdir()) / "spectroview_plots"
+                    temp_dir.mkdir(parents=True, exist_ok=True)
+                    dest = temp_dir / f"spectroview_graph_{gid}_{int(time.time())}.png"
+                    try:
+                        canvas = getattr(widget, "canvas", None)
+                        if canvas is not None and hasattr(canvas, "draw"):
+                            try:
+                                canvas.draw()
+                            except Exception:
+                                pass
+                        fig.savefig(str(dest), format="png", dpi=150, bbox_inches="tight")
+                        if dest.is_file() and dest.stat().st_size > 0:
+                            image_path = str(dest)
+                    except Exception:
+                        pass
+            return {"graph_id": gid, "image_path": image_path, "configuration": config}
 
         return self._call(mutate)
 

@@ -49,6 +49,14 @@ class AppContext(Protocol):
         """Queue or execute *command* and optionally return its domain result."""
         ...
 
+    def load_dataframes(self, file_paths: List[str]) -> List[str]:
+        """Load external Excel or CSV dataframes into the application."""
+        ...
+
+    def show_graph(self, graph_id: Optional[int] = None) -> None:
+        """Bring the application and specified graph window to the foreground."""
+        ...
+
 
 class RecordingContext:
     """In-memory :class:`AppContext` — the fake for tests, and the base the
@@ -83,6 +91,31 @@ class RecordingContext:
 
     def submit(self, command: AgentCommand) -> None:
         self.commands.append(command)
+
+    def load_dataframes(self, file_paths: List[str]) -> List[str]:
+        import os
+        from pathlib import Path
+        loaded = []
+        for fp in file_paths:
+            p = Path(fp)
+            if p.is_file():
+                try:
+                    if p.suffix.lower() in ('.xlsx', '.xls'):
+                        dfs = pd.read_excel(p, sheet_name=None)
+                        for sname, df in dfs.items():
+                            name = f"{p.stem}_{sname}" if len(dfs) > 1 else p.stem
+                            self.dataframes[name] = df
+                            loaded.append(name)
+                    elif p.suffix.lower() in ('.csv', '.tsv'):
+                        sep = '\t' if p.suffix.lower() == '.tsv' else ','
+                        self.dataframes[p.stem] = pd.read_csv(p, sep=sep)
+                        loaded.append(p.stem)
+                except Exception:
+                    pass
+        return loaded
+
+    def show_graph(self, graph_id: Optional[int] = None) -> None:
+        pass
 
     def drain(self) -> List[AgentCommand]:
         """Return the queued commands and clear the queue."""

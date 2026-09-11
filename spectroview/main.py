@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", category=UserWarning, message=".*Glyph.*")
 import pandas as pd
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QFileDialog, QMessageBox
-from PySide6.QtCore import Qt, QFileInfo, QUrl
+from PySide6.QtCore import Qt, QFileInfo, QUrl, QTimer
 from PySide6.QtGui import QIcon, QDesktopServices
 
 from spectroview.model.m_file_converter import MFileConverter
@@ -88,6 +88,10 @@ class Main(QMainWindow):
         self._mcp_runtime = None
         self._mcp_error = ""
         self._sync_mcp_runtime()
+
+        # Pre-warm AI chat panel in background after main window is idle
+        if LLM_AVAILABLE:
+            QTimer.singleShot(1500, self._prewarm_ai_chat)
 
 
     def init_ui(self):
@@ -454,58 +458,69 @@ class Main(QMainWindow):
         self._quick_calc_dlg.raise_()
         self._quick_calc_dlg.activateWindow()
 
-    def open_ai_chat(self):
-        """Open (or raise) the SPECTROview AI Agent panel.
-
-        The panel is created lazily on first use and then kept alive so
-        the conversation history is preserved across multiple open/close
-        cycles.  The active DataFrame from the Graphs workspace is
-        injected each time the panel is shown.
-        """
-        # Imported here rather than at module level: the provider SDKs cost
-        # several seconds to import and are only needed once the user opens the chat.
+    def _ensure_chat_panel(self) -> bool:
+        """Create and wire the chat panel if not already created."""
+        if self._chat_panel is not None:
+            return True
         try:
             if not LLM_AVAILABLE:
                 raise ImportError(LLM_ERROR_MSG)
             from spectroview.ai_agent.v_chat_panel import VChatPanel
-        except ImportError as e:
+        except ImportError:
+            return False
+
+        self._chat_panel = VChatPanel(self)
+        self._chat_panel.plot_requested.connect(self._on_chat_plot_requested)
+
+        # Keep chat panel in sync with workspace dataframes
+        def sync_chat_dfs_full(*args):
+            """Called when dataframes are added/removed."""
+            vm_graphs = self.v_graphs_workspace.vm
+            self._chat_panel.set_dataframes(vm_graphs.dataframes, vm_graphs.selected_df_name or "")
+            self._chat_panel.vm.set_graphs(vm_graphs.graphs)
+
+        def sync_chat_active(*args):
+            """Called when the user selects a different dataframe — preserve history."""
+            vm_graphs = self.v_graphs_workspace.vm
+            active = vm_graphs.selected_df_name or ""
+            self._chat_panel.vm.update_active_df_name(active)
+
+        def sync_chat_graphs(*args):
+            """Called when graphs are added/removed/updated."""
+            vm_graphs = self.v_graphs_workspace.vm
+            self._chat_panel.vm.set_graphs(vm_graphs.graphs)
+
+        self.v_graphs_workspace.vm.dataframes_changed.connect(sync_chat_dfs_full)
+        self.v_graphs_workspace.vm.dataframe_columns_changed.connect(sync_chat_active)
+        self.v_graphs_workspace.vm.graph_state_changed.connect(sync_chat_graphs)
+        return True
+
+    def _prewarm_ai_chat(self):
+        """Asynchronously pre-create the AI Chat panel when the app is idle
+        so that when the user clicks the AI Chat toolbar button, it opens instantly."""
+        try:
+            self._ensure_chat_panel()
+        except Exception:
+            pass
+
+    def open_ai_chat(self):
+        """Open (or raise) the SPECTROview AI Agent panel.
+
+        The panel is created lazily on first use (or pre-warmed during idle)
+        and then kept alive so the conversation history is preserved across
+        multiple open/close cycles. The active DataFrame from the Graphs
+        workspace is injected each time the panel is shown.
+        """
+        if not self._ensure_chat_panel():
             QMessageBox.information(
                 self,
                 "SPECTROview AI Agent — Not Available",
-                f"The AI Chat module could not be imported.\nError: {e}\n\n"
+                f"The AI Chat module could not be imported.\nError: {LLM_ERROR_MSG}\n\n"
                 "Please install the optional dependencies:\n"
                 "    pip install ollama mcp\n\n"
                 "Then restart SPECTROview.",
             )
             return
-
-        # Lazy creation
-        if self._chat_panel is None:
-            self._chat_panel = VChatPanel(self)
-            # When the AI suggests a plot, configure the Graphs workspace
-            self._chat_panel.plot_requested.connect(self._on_chat_plot_requested)
-
-            # Keep chat panel in sync with workspace dataframes
-            def sync_chat_dfs_full(*args):
-                """Called when dataframes are added/removed."""
-                vm_graphs = self.v_graphs_workspace.vm
-                self._chat_panel.set_dataframes(vm_graphs.dataframes, vm_graphs.selected_df_name or "")
-                self._chat_panel.vm.set_graphs(vm_graphs.graphs)
-
-            def sync_chat_active(*args):
-                """Called when the user selects a different dataframe — preserve history."""
-                vm_graphs = self.v_graphs_workspace.vm
-                active = vm_graphs.selected_df_name or ""
-                self._chat_panel.vm.update_active_df_name(active)
-
-            def sync_chat_graphs(*args):
-                """Called when graphs are added/removed/updated."""
-                vm_graphs = self.v_graphs_workspace.vm
-                self._chat_panel.vm.set_graphs(vm_graphs.graphs)
-
-            self.v_graphs_workspace.vm.dataframes_changed.connect(sync_chat_dfs_full)
-            self.v_graphs_workspace.vm.dataframe_columns_changed.connect(sync_chat_active)
-            self.v_graphs_workspace.vm.graph_state_changed.connect(sync_chat_graphs)
 
         # Toggle: clicking the toolbar button again while the panel is
         # already open closes it, instead of just re-focusing it.

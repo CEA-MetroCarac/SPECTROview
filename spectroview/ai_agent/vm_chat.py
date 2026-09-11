@@ -329,7 +329,7 @@ class VMChat(QObject):
         ``False`` (full tier) whenever detection is inconclusive, since
         misclassifying an unknown *large* model as small is more harmful
         than the reverse."""
-        if self._provider != "Ollama":
+        if self._provider != "Ollama" or not self._model:
             return False
 
         by_params = self._detect_small_by_param_count(self._model)
@@ -342,6 +342,8 @@ class VMChat(QObject):
     def _detect_small_by_param_count(self, model: str) -> Optional[bool]:
         """Return True/False from the model's reported parameter count via
         ``ollama show``, or None if undeterminable. Cached per model name."""
+        if not model:
+            return None
         if model in self._param_count_cache:
             return self._param_count_cache[model]
 

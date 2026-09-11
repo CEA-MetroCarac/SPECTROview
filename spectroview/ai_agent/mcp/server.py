@@ -670,11 +670,33 @@ def create_mcp_server(
         if errors and not validated_configs:
             return "Error: None of the plots could be created:\n" + "\n".join(f"- {e}" for e in errors)
 
+        batch_results = []
         for cfg in validated_configs:
-            _submit_command(
+            out = _submit_command(
                 CreatePlot(cfg),
                 "Queued plot",
             )
+            batch_results.append(out)
+
+        if include_application_tools:
+            markdown_blocks = []
+            outcomes = []
+            for out in batch_results:
+                if "\n\nDetails: " in out:
+                    md_part, _, details_part = out.partition("\n\nDetails: ")
+                    markdown_blocks.append(md_part.strip())
+                    try:
+                        outcomes.append(json.loads(details_part))
+                    except Exception:
+                        pass
+                else:
+                    markdown_blocks.append(out.strip())
+
+            display_text = f"Successfully created {len(validated_configs)} plot(s) in SPECTROview as a batch:\n\n"
+            display_text += "\n\n---\n\n".join(markdown_blocks)
+            if errors:
+                display_text += "\n\nWarning: The following plots had errors:\n" + "\n".join(f"- {e}" for e in errors)
+            return display_text + "\n\nDetails: " + json.dumps({"ok": True, "batch": outcomes}, default=str)
 
         msg = f"Successfully validated and queued {len(validated_configs)} plot(s) for the Graphs workspace as a batch:\n"
         msg += "\n".join(f"- Plot {i}: {s}" for i, s in enumerate(summaries, start=1))

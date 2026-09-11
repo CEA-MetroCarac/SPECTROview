@@ -153,13 +153,16 @@ def _load_anthropic():
 # Known cloud API providers — all use OpenAI-compatible endpoints
 # ---------------------------------------------------------------------------
 
-def get_ollama_model_info(model: str) -> Optional[Any]:
+def get_ollama_model_info(model: str, timeout: float = 1.0) -> Optional[Any]:
     """Best-effort ``ollama.show(model)``. Returns ``None`` on any failure
     or if the ``ollama`` package is unavailable. Never raises."""
     if not OLLAMA_AVAILABLE:
         return None
     try:
-        return _load_ollama().show(model)
+        mod = _load_ollama()
+        if hasattr(mod, "Client"):
+            return mod.Client(timeout=timeout).show(model)
+        return mod.show(model)
     except Exception:           # noqa: BLE001
         return None
 
@@ -713,11 +716,15 @@ class LLMClient:
             return OPENAI_AVAILABLE and bool(self._api_key)
 
     @staticmethod
-    def _is_ollama_available() -> bool:
+    def _is_ollama_available(timeout: float = 1.0) -> bool:
         if not OLLAMA_AVAILABLE:
             return False
         try:
-            _load_ollama().list()
+            mod = _load_ollama()
+            if hasattr(mod, "Client"):
+                mod.Client(timeout=timeout).list()
+            else:
+                mod.list()
             return True
         except Exception:           # noqa: BLE001
             return False
@@ -730,11 +737,15 @@ class LLMClient:
             return self._get_api_models()
 
     @staticmethod
-    def _get_ollama_models() -> List[str]:
+    def _get_ollama_models(timeout: float = 2.0) -> List[str]:
         if not OLLAMA_AVAILABLE:
             return []
         try:
-            response = _load_ollama().list()
+            mod = _load_ollama()
+            if hasattr(mod, "Client"):
+                response = mod.Client(timeout=timeout).list()
+            else:
+                response = mod.list()
             models = getattr(response, "models", None) or response.get("models", [])
             names = []
             for m in models:

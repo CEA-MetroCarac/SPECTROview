@@ -273,6 +273,26 @@ _DISPLAY_TO_PROVIDER = {
 _PROVIDER_TO_DISPLAY = {v: k for k, v in _DISPLAY_TO_PROVIDER.items()}
 
 
+class _StatusWorker(QThread):
+    """Background worker to probe provider availability and fetch model list
+    without blocking the Qt main thread."""
+    status_ready = Signal(str, bool, list)  # provider_key, is_available, models
+
+    def __init__(self, vm: VMChat, provider_key: str, parent: Optional[QObject] = None) -> None:
+        super().__init__(parent)
+        self.vm = vm
+        self.provider_key = provider_key
+
+    def run(self) -> None:
+        try:
+            available = self.vm.is_available()
+            models = list(self.vm.get_models()) if available else []
+        except Exception:
+            available = False
+            models = []
+        self.status_ready.emit(self.provider_key, available, models)
+
+
 class VChatPanel(QDialog):
     """Floating AI Chat panel — opened from the toolbar button.
 
@@ -299,6 +319,7 @@ class VChatPanel(QDialog):
         self._active_card: Optional[_MessageCard] = None  # streaming target
         self._reply_to_index: Optional[int] = None
         self._voice_worker: Optional[VoiceWorker] = None
+        self._status_worker: Optional[_StatusWorker] = None
 
         # Streaming re-render throttle: markdown parsing + HTML re-layout
         # is too expensive to redo on every single streamed token, so
@@ -663,10 +684,27 @@ class VChatPanel(QDialog):
             self.cbb_prompt_tier.blockSignals(True)
             self.cbb_prompt_tier.setCurrentIndex(saved_tier_idx)
             self.cbb_prompt_tier.blockSignals(False)
+        # Apply the loaded provider directly without triggering redundant status refreshes
+        provider_key = _DISPLAY_TO_PROVIDER.get(saved_provider, "Ollama")
+        if provider_key == "Ollama":
+            saved_model = self._settings.get_ai_value("model_Ollama", "", str)
+            self.vm.set_provider("Ollama", model=saved_model)
+        else:
+            api_key = self._settings.get_ai_value(f"api_key_{provider_key}", "", str)
+            base_url = (self._settings.get_ai_value("custom_base_url", "", str)
+                        if provider_key == "Custom" else "")
+            saved_model = self._settings.get_ai_value(f"model_{provider_key}", "", str)
+            self.vm.set_provider(provider_key, api_key=api_key, base_url=base_url, model=saved_model)
+
         self.vm.set_small_model_mode({0: None, 1: False, 2: True}.get(saved_tier_idx))
 
-        # Apply the loaded provider
-        self._on_provider_changed(saved_provider)
+        saved_model = self._settings.get_ai_value(f"model_{provider_key}", "", str)
+        if saved_model:
+            self.cbb_model.blockSignals(True)
+            if self.cbb_model.findText(saved_model) < 0:
+                self.cbb_model.addItem(saved_model)
+            self.cbb_model.setCurrentText(saved_model)
+            self.cbb_model.blockSignals(False)
 
     def _save_settings(self) -> None:
         """Persist current provider, prompt tier, and model."""
@@ -740,7 +778,7 @@ class VChatPanel(QDialog):
     # ------------------------------------------------------------------
 
     def _refresh_status(self) -> None:
-        """Check availability, update status bar and model list."""
+        """Check availability, update status bar and model list asynchronously."""
         provider_display = self.cbb_provider.currentText()
         provider_key = _DISPLAY_TO_PROVIDER.get(provider_display, "Ollama")
         is_ollama = (provider_key == "Ollama")
@@ -772,12 +810,52 @@ class VChatPanel(QDialog):
             self.btn_send.setEnabled(False)
             return
 
-        available = self.vm.is_available()
+        # Cancel any pending worker
+        if self._status_worker is not None and self._status_worker.isRunning():
+            try:
+                self._status_worker.status_ready.disconnect()
+            except (RuntimeError, TypeError):
+                pass
+            self._status_worker.quit()
+
+        # Update status UI immediately to indicate checking without freezing
+        if is_ollama:
+            self.lbl_status.setText("🟡  Checking Ollama connection…")
+        else:
+            self.lbl_status.setText(f"🟡  Checking {provider_key} connection…")
+        self.lbl_status.setStyleSheet("color: #FFA726; font-size: 11px;")
+
+        # Pre-populate model combo with saved or fallback model if currently empty
+        if self.cbb_model.count() == 0:
+            saved_model = self._settings.get_ai_value(f"model_{provider_key}", "", str)
+            fallback = saved_model or (
+                LLMClient.DEFAULT_MODEL
+                if is_ollama
+                else API_PROVIDERS.get(provider_key, {}).get("default_model", "")
+            )
+            if fallback:
+                self.cbb_model.blockSignals(True)
+                self.cbb_model.addItem(fallback)
+                self.cbb_model.setCurrentText(fallback)
+                self.cbb_model.blockSignals(False)
+
+        # Launch background worker
+        self._status_worker = _StatusWorker(self.vm, provider_key, self)
+        self._status_worker.status_ready.connect(self._on_status_ready)
+        self._status_worker.finished.connect(self._status_worker.deleteLater)
+        self._status_worker.start()
+
+    def _on_status_ready(self, provider_key: str, available: bool, models: List[str]) -> None:
+        """Handle background status check completion."""
+        current_display = self.cbb_provider.currentText()
+        current_key = _DISPLAY_TO_PROVIDER.get(current_display, "Ollama")
+        if current_key != provider_key:
+            return
+
+        is_ollama = (provider_key == "Ollama")
 
         if available:
-            models = list(self.vm.get_models())
-            # Merge in user-defined Custom Models (Settings ▸ AI) so they are
-            # always selectable even when the endpoint has no listing API.
+            models = list(models)
             for name in self._custom_model_names(provider_key):
                 if name not in models:
                     models.append(name)
@@ -795,21 +873,17 @@ class VChatPanel(QDialog):
                 if fallback:
                     self.cbb_model.addItem(fallback)
 
-            # Restore previous selection if still present
             saved_model = self._settings.get_ai_value(f"model_{provider_key}", "", str)
             target_model = saved_model if saved_model else current
             idx = self.cbb_model.findText(target_model)
             if idx >= 0:
                 self.cbb_model.setCurrentIndex(idx)
             elif target_model:
-                # Editable combobox: keep a typed/saved model the provider
-                # didn't list rather than silently dropping it.
                 self.cbb_model.setCurrentText(target_model)
             elif self.cbb_model.findText(current) >= 0:
                 self.cbb_model.setCurrentIndex(self.cbb_model.findText(current))
             if self.cbb_model.currentText():
                 self.vm.set_model(self.cbb_model.currentText())
-                # The combo is too narrow for a long id; show it all on hover.
                 self.cbb_model.setToolTip(
                     f"{self.cbb_model.currentText()}\n\nSelect or type a model name")
             self.cbb_model.blockSignals(False)
@@ -830,11 +904,22 @@ class VChatPanel(QDialog):
             if is_ollama:
                 self.lbl_status.setText("🔴  Ollama not running — run: ollama serve")
             else:
-                self.lbl_status.setText(f"🔴  {provider_key} API — invalid or expired API key")
+                self.lbl_status.setText(f"🔴  {provider_key} API — could not connect or invalid key")
             self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
             self.edit_input.setEnabled(False)
             self._apply_send_button_style()
             self.btn_send.setEnabled(False)
+
+    def closeEvent(self, event) -> None:
+        """Clean up background workers on close."""
+        if self._status_worker is not None and self._status_worker.isRunning():
+            try:
+                self._status_worker.status_ready.disconnect()
+            except (RuntimeError, TypeError):
+                pass
+            self._status_worker.quit()
+            self._status_worker.wait(500)
+        super().closeEvent(event)
 
     # ------------------------------------------------------------------
     # Slot handlers

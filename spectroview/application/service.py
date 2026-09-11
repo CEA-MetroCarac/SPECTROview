@@ -733,7 +733,7 @@ class SpectroviewApplicationAPI:
                     from pathlib import Path
                     temp_dir = Path(tempfile.gettempdir()) / "spectroview_plots"
                     temp_dir.mkdir(parents=True, exist_ok=True)
-                    dest = temp_dir / f"spectroview_graph_{gid}_{int(time.time())}.png"
+                    dest = temp_dir / f"spectroview_graph_{gid}_{int(time.time() * 1000)}.png"
                     try:
                         canvas = getattr(widget, "canvas", None)
                         if canvas is not None and hasattr(canvas, "draw"):
@@ -744,8 +744,9 @@ class SpectroviewApplicationAPI:
                         fig.savefig(str(dest), format="png", dpi=150, bbox_inches="tight")
                         if dest.is_file() and dest.stat().st_size > 0:
                             image_path = str(dest)
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        import logging
+                        logging.getLogger(__name__).warning("Failed to save graph figure to %s: %s", dest, exc)
             return {"graph_id": gid, "image_path": image_path, "configuration": config}
 
         return self._call(mutate)

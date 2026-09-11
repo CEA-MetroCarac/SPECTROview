@@ -8,7 +8,8 @@ decoding, sees and is constrained by) rather than just the Python source.
 import asyncio
 import dataclasses
 
-from mcp.shared.memory import create_connected_server_and_client_session
+from mcp import ClientSession
+from mcp.client._memory import InMemoryTransport
 
 from spectroview import PLOT_STYLES
 from spectroview.ai_agent.agent.ports import RecordingContext
@@ -20,10 +21,11 @@ from spectroview.model.m_graph import MGraph
 def _list_tools():
     async def _run():
         server = create_mcp_server(RecordingContext())
-        async with create_connected_server_and_client_session(server._mcp_server) as session:
-            await session.initialize()
-            res = await session.list_tools()
-            return {t.name: t.inputSchema for t in res.tools}
+        async with InMemoryTransport(server) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                res = await session.list_tools()
+                return {t.name: t.input_schema for t in res.tools}
     return asyncio.run(_run())
 
 
@@ -121,3 +123,12 @@ class TestQueryDataframeSchema:
         schema = _list_tools()["query_dataframe"]
         assert "query" in schema["properties"]
         assert schema["required"] == ["query"]
+
+
+class TestPlotGraphsSchema:
+    def test_plot_graphs_schema_has_plots_array(self):
+        schema = _list_tools()["plot_graphs"]
+        assert "plots" in schema["properties"]
+        assert schema["required"] == ["plots"]
+        assert schema["properties"]["plots"]["type"] == "array"
+

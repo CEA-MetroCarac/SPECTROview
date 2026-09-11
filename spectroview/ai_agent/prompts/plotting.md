@@ -1,19 +1,20 @@
 # Purpose
 
-This file provides plotting-specific instructions for the SPECTROview AI Agent. It governs how the agent calls `plot_graph`, handles multiple plot styles, and generates spatial visualisations.
+This file provides plotting-specific instructions for the SPECTROview AI Agent. It governs how the agent calls `plot_graph` and `plot_graphs`, handles multiple plot styles, and generates spatial visualisations.
 
 ---
 
 # Instructions
 
-## Plotting with `plot_graph`
+## Plotting with `plot_graph` and `plot_graphs`
 
-When creating a plot, call the `plot_graph` tool. Each tool call corresponds to one graph window in the SPECTROview Graphs workspace.
+- **Single plot**: When creating one plot, call the `plot_graph` tool.
+- **Multiple plots (2 or more)**: When creating multiple plots, ALWAYS call `plot_graphs(plots=[...])` in a **SINGLE tool call (recipe / batch mode)**. Do NOT make multiple separate tool calls when you can batch them together in one `plot_graphs` call.
 
-### Required Fields
+### Required Fields for Each Plot
 
 - `x` — column name for the X axis (string)
-- `y` — column name for the primary Y axis (string)
+- `y` — column name for the primary Y axis (string or list of strings)
 - `plot_style` — one of: `point`, `scatter`, `box`, `bar`, `line`, `trendline`, `histogram`, `wafer`, `2Dmap` (schema-validated — an invalid value is rejected)
 
 ### Optional Fields — Leave Unset Unless Explicitly Requested
@@ -57,11 +58,16 @@ The distinction: if the user names a column to group/colour **an existing or oth
 
 `z` is normally a low-cardinality categorical column (a zone, a type, a condition). If you are unsure whether a column is categorical, call `get_context` with `spectroview://dataframes/detail` to see its sample values before choosing.
 
-## Multi-Style Plots
+## Multi-Style and Batch Plots
 
-If the user requests multiple plot styles with identical axes (for example a
-box plot and a scatter plot), make one `plot_graph` call per style. The
-`plot_style` schema accepts exactly one of the nine renderer styles per call.
+If the user requests multiple plot styles (for example a box plot and a scatter plot) or multiple distinct graphs (e.g. 5 plots across different columns/filters), call `plot_graphs(plots=[...])` in **a single tool call**. Put each graph's configuration dictionary into the `plots` array:
+
+```json
+plot_graphs(plots=[
+  {"x": "Slot", "y": "fwhm_Si", "plot_style": "point", "z": "Zone"},
+  {"x": "Slot", "y": "x0_Si", "plot_style": "box", "z": "Quadrant"}
+])
+```
 
 ## Spatial Plots
 
@@ -70,11 +76,9 @@ For `"wafer"` and `"2Dmap"` plots, you MUST correctly map spatial coordinates an
 - `y` MUST be the Y-coordinate column (e.g., `"Y"`, `"y_coord"`). Do NOT assign the metric value to `y`.
 - `z` MUST be the metric value you want to visualize (e.g., `"Strain (GPa)"`, `"FWHM_Si"`).
 
-If the user requests multiple **distinct items** for spatial plots (e.g., "plot wafer maps for slots 5, 6, and 8"), you MUST execute **multiple separate tool calls** to `plot_graph` — one per item with a specific filter — since spatial plots cannot overlay distinct groupings on the same axes:
+If the user requests multiple **distinct items** for spatial plots (e.g., "plot wafer maps for slots 5, 6, and 8"), call `plot_graphs` with a list of wafer map configurations in **one single tool call**:
 
-- Tool Call 1: `filters: ["Slot == 5"]`, `plot_style: "wafer"`
-- Tool Call 2: `filters: ["Slot == 6"]`, `plot_style: "wafer"`
-- Tool Call 3: `filters: ["Slot == 8"]`, `plot_style: "wafer"`
+- `plots: [{"filters": ["Slot == 5"], "plot_style": "wafer", "x": "X", "y": "Y", "z": "Strain"}, {"filters": ["Slot == 6"], ...}, {"filters": ["Slot == 8"], ...}]`
 
 Do NOT set `spines_visible` (or any spine/border styling) for a `wafer` plot. A wafer plot shows only the **left** spine by convention — the top/right/bottom borders are intentionally hidden and the application applies this automatically. Passing `spines_visible` yourself risks re-enabling all four borders and producing an incorrect wafer plot.
 
@@ -96,6 +100,7 @@ When the user wants to **modify** an existing graph (change axis limits, title, 
 
 When providing filters, you must supply a list of valid pandas query strings. 
 **CRITICAL**: You MUST use quotes around string values inside your query strings. Failure to do so will cause the query to fail. For example, use `["Zone != 'Edge'"]` instead of `["Zone != Edge"]` and `["Type == 'Control'"]` instead of `["Type == Control"]`. Smaller models in particular must pay close attention to this.
+To filter multiple values for the same column, use `in`: e.g. `["Slot in [2, 6, 8, 10]"]`.
 
 ## Deleting Graphs
 
@@ -112,4 +117,4 @@ When the user wants to close or delete graphs, call the `delete_graph` tool.
 - Use EXACTLY these plot style strings: `point`, `scatter`, `box`, `bar`, `line`, `trendline`, `histogram`, `wafer`, `2Dmap`
 - NEVER add a `plot_title` unless the user explicitly requests one.
 - Do NOT add grid lines unless explicitly requested.
-- For spatial plots with multiple distinct items, always generate separate entries.
+- For multiple plots, ALWAYS prefer a single `plot_graphs` batch call instead of multiple separate tool calls.

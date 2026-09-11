@@ -16,7 +16,8 @@ import asyncio
 
 import pandas as pd
 import pytest
-from mcp.shared.memory import create_connected_server_and_client_session
+from mcp import ClientSession
+from mcp.client._memory import InMemoryTransport
 
 from spectroview.ai_agent.agent.ports import RecordingContext
 from spectroview.ai_agent.mcp.server import create_mcp_server
@@ -26,9 +27,10 @@ from spectroview.ai_agent.vm_chat import VMChat
 def _schemas():
     async def _run():
         server = create_mcp_server(RecordingContext())
-        async with create_connected_server_and_client_session(server._mcp_server) as session:
-            await session.initialize()
-            return {t.name: t.inputSchema for t in (await session.list_tools()).tools}
+        async with InMemoryTransport(server) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                return {t.name: t.input_schema for t in (await session.list_tools()).tools}
     return asyncio.run(_run())
 
 

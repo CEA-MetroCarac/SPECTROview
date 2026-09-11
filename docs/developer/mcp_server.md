@@ -68,7 +68,7 @@ closing SPECTROview stops the endpoint.
 - There is no authentication in this loopback-only first iteration. Do not
   proxy or port-forward the endpoint.
 - Read and write tools are distinct and their descriptions identify mutations.
-- MCP `readOnlyHint`, `destructiveHint`, `idempotentHint`, and `openWorldHint`
+- MCP `read_only_hint`, `destructive_hint`, `idempotent_hint`, and `open_world_hint`
   annotations classify tools for clients that implement approval policies.
 - `export_results` requires a caller-supplied path, never creates a parent
   directory, and refuses to replace an existing file unless the call includes
@@ -101,6 +101,7 @@ approval policy to graph changes, processing, fitting, deletion, and exports.
 | `list_graphs` | Complete typed `MGraph` configurations | Read |
 | `get_active_graph` | Complete active graph configuration | Read |
 | `plot_graph` | Validate and create a graph | Write |
+| `plot_graphs` | Validate and create multiple graphs simultaneously (recipe / batch mode) | Write |
 | `update_graph` | Typed partial update, including every mutable `MGraph` field | Write |
 | `delete_graph` | Close specified/all graphs | Destructive write |
 | `get_active_map` | Active map configuration and selection | Read |

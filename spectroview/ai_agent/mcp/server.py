@@ -15,12 +15,9 @@ Qt-safe running-application facade.
 import json
 from typing import Annotated, Any, List, Literal, Optional, Union
 
-try:
-    from mcp.server.mcpserver import MCPServer as FastMCP
-except ImportError:
-    from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer as FastMCP
 from mcp.types import ToolAnnotations
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from spectroview.ai_agent.agent.commands import CreatePlot, DeletePlots, UpdatePlot
 from spectroview.ai_agent.agent.ports import AppContext
@@ -30,6 +27,7 @@ from spectroview.application.errors import ApplicationAPIError
 from spectroview.model.graph_control import (
     GraphPatch,
     GraphValidationError,
+    _normalize_filters,
     graph_patch_to_dict,
     normalize_graph_patch,
 )
@@ -43,18 +41,48 @@ PlotStyle = Literal[
 ]
 VALID_PLOT_STYLES = frozenset(PlotStyle.__args__)
 
-READ_ONLY = ToolAnnotations(
-    readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False
-)
-STATE_CHANGE = ToolAnnotations(
-    readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False
-)
-STATE_REPLACE = ToolAnnotations(
-    readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False
-)
-FILESYSTEM_WRITE = ToolAnnotations(
-    readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
-)
+
+class SinglePlotConfig(BaseModel):
+    """Specification for a single plot within a batch / recipe."""
+    x: str = Field(description="Column name for X-axis. For 'wafer' and '2Dmap', this MUST be the X-coordinate column.")
+    y: Union[str, List[str]] = Field(description="Column name(s) for Y-axis (string or list of strings). For 'wafer' and '2Dmap', Y-coordinate column.")
+    plot_style: PlotStyle = Field(description="Visual style: 'point', 'scatter', 'box', 'bar', 'line', 'trendline', 'histogram', 'wafer', '2Dmap'.")
+    z: Optional[str] = Field(default=None, description="Grouping / colour (hue) column. For 'wafer' and '2Dmap', the metric value.")
+    filters: Optional[List[str]] = Field(default=None, description="Optional list of pandas query strings to filter data (e.g. [\"Zone != 'Edge'\", \"Slot in [2, 6, 8, 10]\"]).")
+    df_name: str = Field(default="", description="Optional target DataFrame name. If empty, uses the active one.")
+    grid: Optional[bool] = Field(default=None, description="Show grid lines.")
+    plot_title: Optional[str] = Field(default=None, description="Custom plot title.")
+    xlabel: Optional[str] = Field(default=None, description="Custom X-axis label.")
+    ylabel: Optional[str] = Field(default=None, description="Custom Y-axis label.")
+    zlabel: Optional[str] = Field(default=None, description="Custom Z-axis/colorbar label.")
+    xmin: Optional[float] = Field(default=None, description="X-axis lower limit.")
+    xmax: Optional[float] = Field(default=None, description="X-axis upper limit.")
+    ymin: Optional[float] = Field(default=None, description="Y-axis lower limit.")
+    ymax: Optional[float] = Field(default=None, description="Y-axis upper limit.")
+    zmin: Optional[float] = Field(default=None, description="Z-axis lower limit.")
+    zmax: Optional[float] = Field(default=None, description="Z-axis upper limit.")
+    color_palette: Optional[str] = Field(default=None, description="Color palette name (e.g. 'jet', 'viridis').")
+    xlogscale: Optional[bool] = Field(default=None, description="Log scale on X axis.")
+    ylogscale: Optional[bool] = Field(default=None, description="Log scale on Y axis.")
+    scatter_size: Optional[int] = Field(default=None, description="Marker size for scatter/point.")
+    hist_bins: Optional[int] = Field(default=None, description="Number of histogram bins.")
+    trendline_order: Optional[int] = Field(default=None, description="Polynomial order for trendline.")
+    other_properties: Optional[GraphPatch] = Field(default=None, description="Typed advanced graph patch.")
+
+
+def _make_annotations(*, read_only=False, destructive=False, idempotent=False, open_world=False) -> ToolAnnotations:
+    return ToolAnnotations(
+        read_only_hint=read_only,
+        destructive_hint=destructive,
+        idempotent_hint=idempotent,
+        open_world_hint=open_world,
+    )
+
+
+READ_ONLY = _make_annotations(read_only=True, idempotent=True)
+STATE_CHANGE = _make_annotations()
+STATE_REPLACE = _make_annotations(destructive=True)
+FILESYSTEM_WRITE = _make_annotations(destructive=True, open_world=True)
 
 
 WorkspaceName = Literal["spectra", "maps", "graphs"]
@@ -113,15 +141,35 @@ def create_mcp_server(
         """Dry-run each filter against *df*. Returns an error message, or None if all valid."""
         if not filters or df is None:
             return None
+        active_exprs = []
         for f in filters:
             expression = f.get("expression", "") if isinstance(f, dict) else f
             if isinstance(f, dict) and not f.get("state", True):
                 continue
-            _, error = evaluate_pandas_expression(df, expression)
+            res, error = evaluate_pandas_expression(df, expression)
             if error is not None:
                 return (
                     f"Error: filter {expression!r} is invalid ({error}). Common cause: string values must be "
                     f"quoted, e.g. \"Zone == 'Edge'\" not \"Zone == Edge\"."
+                )
+            if isinstance(expression, str) and expression.strip():
+                active_exprs.append(expression.strip())
+
+        if active_exprs and hasattr(df, "query"):
+            # Check combined active filters using normalized expressions
+            norm = _normalize_filters(active_exprs)
+            combined = df
+            for f in norm:
+                expr = f["expression"] if isinstance(f, dict) else f
+                try:
+                    combined = combined.query(expr)
+                except Exception:
+                    break
+            if combined is not None and len(combined) == 0:
+                return (
+                    f"Error: the specified filters resulted in an empty dataset (0 matching rows). "
+                    "This plot was NOT created; please verify your filter conditions (e.g. use 'Slot in [2, 6, 8, 10]' "
+                    "for multi-value selection)."
                 )
         return None
 
@@ -457,47 +505,48 @@ def create_mcp_server(
                 "export_results", workspace, output_path, overwrite
             )
 
+        @mcp.tool(annotations=STATE_CHANGE)
+        def load_dataframe(file_path: str) -> str:
+            """Load an Excel (.xlsx, .xls) or CSV (.csv, .tsv) file into the SPECTROview workspace.
+
+            Args:
+                file_path: Absolute local path to the data file on disk.
+            """
+            from pathlib import Path
+            path = Path(file_path).expanduser().resolve()
+            if not path.is_file():
+                return f"Error: File not found: {file_path}"
+            loader = getattr(context, "load_dataframes", None)
+            if callable(loader):
+                try:
+                    loaded = loader([str(path)])
+                    names = ", ".join(loaded) if loaded else path.stem
+                    return f"Successfully loaded dataframe(s) into SPECTROview: {names}"
+                except Exception as exc:
+                    return f"Error loading dataframe from {path.name}: {exc}"
+            return "Error: DataFrame loading is not supported in this context."
+
+        @mcp.tool(annotations=READ_ONLY)
+        def show_graph(graph_id: Optional[int] = None) -> str:
+            """Bring the SPECTROview application window to the front and display the specified graph.
+
+            Args:
+                graph_id: Optional ID of the graph to display and activate.
+            """
+            shower = getattr(context, "show_graph", None)
+            if callable(shower):
+                try:
+                    shower(graph_id)
+                    target = f"Graph #{graph_id}" if graph_id is not None else "Graphs workspace"
+                    return f"SPECTROview window activated and focused on {target}."
+                except Exception as exc:
+                    return f"Error showing graph: {exc}"
+            return "Error: Window activation is not supported in this context."
+
     # -------------------------------------------------------------------------
     # Tools
     # -------------------------------------------------------------------------
 
-    @mcp.tool(annotations=STATE_CHANGE)
-    def load_dataframe(file_path: str) -> str:
-        """Load an Excel (.xlsx, .xls) or CSV (.csv, .tsv) file into the SPECTROview workspace.
-
-        Args:
-            file_path: Absolute local path to the data file on disk.
-        """
-        from pathlib import Path
-        path = Path(file_path).expanduser().resolve()
-        if not path.is_file():
-            return f"Error: File not found: {file_path}"
-        loader = getattr(context, "load_dataframes", None)
-        if callable(loader):
-            try:
-                loaded = loader([str(path)])
-                names = ", ".join(loaded) if loaded else path.stem
-                return f"Successfully loaded dataframe(s) into SPECTROview: {names}"
-            except Exception as exc:
-                return f"Error loading dataframe from {path.name}: {exc}"
-        return "Error: DataFrame loading is not supported in this context."
-
-    @mcp.tool(annotations=READ_ONLY)
-    def show_graph(graph_id: Optional[int] = None) -> str:
-        """Bring the SPECTROview application window to the front and display the specified graph.
-
-        Args:
-            graph_id: Optional ID of the graph to display and activate.
-        """
-        shower = getattr(context, "show_graph", None)
-        if callable(shower):
-            try:
-                shower(graph_id)
-                target = f"Graph #{graph_id}" if graph_id is not None else "Graphs workspace"
-                return f"SPECTROview window activated and focused on {target}."
-            except Exception as exc:
-                return f"Error showing graph: {exc}"
-        return "Error: Window activation is not supported in this context."
 
 
     @mcp.tool(annotations=READ_ONLY)
@@ -518,6 +567,123 @@ def create_mcp_server(
         if error is not None:
             return f"Error evaluating query: {error}"
         return format_query_result(result)
+
+    def _prepare_single_plot(d: dict) -> tuple[Optional[dict], Optional[str]]:
+        x = d.get("x")
+        y = d.get("y")
+        plot_style = d.get("plot_style")
+        z = d.get("z")
+        filters = d.get("filters")
+        df_name = d.get("df_name", "")
+        other_properties = d.get("other_properties")
+        file_path = d.get("file_path")
+
+        if file_path:
+            from pathlib import Path
+            fpath = Path(file_path).expanduser().resolve()
+            if fpath.is_file():
+                loader = getattr(context, "load_dataframes", None)
+                if callable(loader):
+                    try:
+                        loaded = loader([str(fpath)])
+                        if not df_name and loaded:
+                            df_name = loaded[0]
+                    except Exception:
+                        pass
+
+        target_df_name = df_name or context.active_dataframe_name()
+        target_df = context.get_dataframe(target_df_name)
+        if target_df is None:
+            return None, f"Error: DataFrame {target_df_name!r} not found."
+
+        if not plot_style or plot_style not in VALID_PLOT_STYLES:
+            return None, _invalid_style_message(plot_style)
+
+        filter_error = _validate_filters(filters, target_df)
+        if filter_error is not None:
+            return None, filter_error
+
+        named_keys = (
+            "grid", "plot_title", "xlabel", "ylabel", "zlabel",
+            "xmin", "xmax", "ymin", "ymax", "zmin", "zmax",
+            "color_palette", "xlogscale", "ylogscale",
+            "scatter_size", "hist_bins", "trendline_order",
+        )
+        named = {k: d[k] for k in named_keys if k in d and d[k] is not None}
+        config = _merge_properties(other_properties, **named)
+        config.update({
+            "x": x,
+            "y": y if isinstance(y, list) else [y],
+            "plot_style": plot_style,
+            "z": z,
+            "filters": filters or [],
+            "df_name": target_df_name,
+        })
+
+        try:
+            config = normalize_graph_patch(config, dataframe=target_df)
+            return config, None
+        except GraphValidationError as exc:
+            return None, f"Error: invalid graph configuration ({exc})."
+
+    @mcp.tool(annotations=STATE_CHANGE)
+    def plot_graphs(
+        plots: Annotated[List[SinglePlotConfig], Field(
+            description=(
+                "Create multiple graphs simultaneously in a single tool call (recipe / batch mode). "
+                "Use this whenever creating 2 or more graphs. Each item in the list specifies "
+                "one graph with its own style, axes, filters, hue, and options."
+            )
+        )],
+        recipe_name: Annotated[Optional[str], Field(
+            description="Optional recipe name if the user asked to save this batch as a named recipe."
+        )] = None,
+    ) -> str:
+        """Create multiple graphs simultaneously in a single tool call (batch / recipe mode).
+
+        Args:
+            plots: List of plot specifications to create together.
+            recipe_name: Optional name for this recipe.
+        """
+        if not plots:
+            return "Error: No plots provided in the batch. Please supply at least one plot specification."
+
+        validated_configs = []
+        errors = []
+        summaries = []
+
+        for i, item in enumerate(plots, start=1):
+            item_dict = item.model_dump(exclude_unset=True) if isinstance(item, BaseModel) else dict(item)
+            cfg, err = _prepare_single_plot(item_dict)
+            if err is not None:
+                errors.append(f"Plot {i}: {err}")
+            else:
+                validated_configs.append(cfg)
+                style = cfg.get("plot_style", "plot")
+                x_col = cfg.get("x", "")
+                y_col = cfg.get("y", [])
+                y_str = ", ".join(y_col) if isinstance(y_col, list) else str(y_col)
+                z_col = cfg.get("z", "")
+                desc = f"{style.capitalize()} ({x_col} vs {y_str}" + (f", hue={z_col}" if z_col else "") + ")"
+                summaries.append(desc)
+
+        if errors and not validated_configs:
+            return "Error: None of the plots could be created:\n" + "\n".join(f"- {e}" for e in errors)
+
+        for cfg in validated_configs:
+            _submit_command(
+                CreatePlot(cfg),
+                "Queued plot",
+            )
+
+        msg = f"Successfully validated and queued {len(validated_configs)} plot(s) for the Graphs workspace as a batch:\n"
+        msg += "\n".join(f"- Plot {i}: {s}" for i, s in enumerate(summaries, start=1))
+        if errors:
+            msg += "\nWarning: The following plots had errors and were not created:\n"
+            msg += "\n".join(f"- {e}" for e in errors)
+        if recipe_name:
+            msg += f"\nRecipe: '{recipe_name}'"
+        return msg
 
     @mcp.tool(annotations=STATE_CHANGE)
     def plot_graph(
@@ -560,6 +726,10 @@ def create_mcp_server(
             "export geometry. Supply only requested fields; explicit null clears nullable fields. "
             "Prefer the common named parameters above when one exists."
         ))] = None,
+        plots: Annotated[Optional[List[SinglePlotConfig]], Field(description=(
+            "Batch mode / recipe: list of plot configurations to plot simultaneously in one call. "
+            "When provided, plots in this list are created simultaneously as a batch."
+        ))] = None,
     ) -> str:
         """Create a new graph from a loaded DataFrame. One tool call = one graph window.
 
@@ -568,55 +738,24 @@ def create_mcp_server(
             y: Column name(s) for Y-axis (can be a string or a list of strings). For 'wafer' and '2Dmap', this MUST be the Y-coordinate column, NOT the metric value.
             plot_style: The visual style.
             z: Grouping / colour (hue) column — see the parameter description. "Group by Zone" means z='Zone', NOT x='Zone'.
-            filters: Optional list of pandas query strings to filter data. String values MUST be quoted (e.g., ["Zone == 'Edge'", "Yield > 90"]).
+            filters: Optional list of pandas query strings to filter data, combined with AND. String values MUST be quoted (e.g., ["Zone == 'Edge'", "Yield > 90"]). To filter multiple allowed values for one column, use 'in': e.g. ["Slot in [2, 6, 8, 10]"], NEVER pass multiple equality filters for the same column (such as ["Slot == 2", "Slot == 6"]) which evaluate as AND and yield an empty dataset.
             df_name: Optional target DataFrame name. If empty, uses the active one.
+            plots: Optional list of plot configurations to create in a single batch call.
         """
-        if file_path:
-            from pathlib import Path
-            fpath = Path(file_path).expanduser().resolve()
-            if fpath.is_file():
-                loader = getattr(context, "load_dataframes", None)
-                if callable(loader):
-                    try:
-                        loaded = loader([str(fpath)])
-                        if not df_name and loaded:
-                            df_name = loaded[0]
-                    except Exception:
-                        pass
+        if plots:
+            return plot_graphs(plots=plots)
 
-        target_df_name = df_name or context.active_dataframe_name()
-
-        target_df = context.get_dataframe(target_df_name)
-        if target_df is None:
-            return f"Error: DataFrame {target_df_name!r} not found. This plot was NOT created."
-
-        if plot_style not in VALID_PLOT_STYLES:
-            return _invalid_style_message(plot_style) + " This plot was NOT created; please retry."
-
-        filter_error = _validate_filters(filters, target_df)
-        if filter_error is not None:
-            return filter_error + " This plot was NOT created; please fix the filter and retry."
-
-        config = _merge_properties(
-            other_properties,
-            grid=grid, plot_title=plot_title, xlabel=xlabel, ylabel=ylabel, zlabel=zlabel,
-            xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, zmin=zmin, zmax=zmax,
-            color_palette=color_palette, xlogscale=xlogscale, ylogscale=ylogscale,
-            scatter_size=scatter_size, hist_bins=hist_bins, trendline_order=trendline_order,
-        )
-        config.update({
-            "x": x,
-            "y": y if isinstance(y, list) else [y],
-            "plot_style": plot_style,
-            "z": z,
-            "filters": filters or [],
-            "df_name": target_df_name,
-        })
-
-        try:
-            config = normalize_graph_patch(config, dataframe=target_df)
-        except GraphValidationError as exc:
-            return f"Error: invalid graph configuration ({exc}). This plot was NOT created; please retry."
+        d = {
+            "x": x, "y": y, "plot_style": plot_style, "file_path": file_path, "z": z,
+            "filters": filters, "df_name": df_name, "grid": grid, "plot_title": plot_title,
+            "xlabel": xlabel, "ylabel": ylabel, "zlabel": zlabel, "xmin": xmin, "xmax": xmax,
+            "ymin": ymin, "ymax": ymax, "zmin": zmin, "zmax": zmax, "color_palette": color_palette,
+            "xlogscale": xlogscale, "ylogscale": ylogscale, "scatter_size": scatter_size,
+            "hist_bins": hist_bins, "trendline_order": trendline_order, "other_properties": other_properties,
+        }
+        config, err = _prepare_single_plot(d)
+        if err is not None:
+            return f"{err} This plot was NOT created; please retry."
 
         return _submit_command(
             CreatePlot(config),

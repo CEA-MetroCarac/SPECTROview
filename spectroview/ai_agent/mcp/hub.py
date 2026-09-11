@@ -164,14 +164,14 @@ class MCPHub:
         """Open one server's session on the hub loop, per its transport."""
         from mcp import ClientSession, StdioServerParameters
         from mcp.client.stdio import stdio_client
-        from mcp.shared.memory import create_connected_server_and_client_session
 
         if spec.transport == "in-process":
             module_name, _, attr = spec.factory.partition(":")
             factory = getattr(importlib.import_module(module_name), attr)
             server = factory(self._context)
-            return await stack.enter_async_context(
-                create_connected_server_and_client_session(server._mcp_server))
+            from mcp.client._memory import InMemoryTransport
+            read, write = await stack.enter_async_context(InMemoryTransport(server))
+            return await stack.enter_async_context(ClientSession(read, write))
 
         if spec.transport == "stdio":
             params = StdioServerParameters(
@@ -249,7 +249,7 @@ class MCPHub:
                     "function": {
                         "name": exposed,
                         "description": tool.description,
-                        "parameters": tool.inputSchema,
+                        "parameters": tool.input_schema,
                     },
                 })
 

@@ -12,6 +12,7 @@ nothing about Qt, Matplotlib figures, the chat ViewModel, or MCP transports.
 from __future__ import annotations
 
 import copy
+import re
 import dataclasses
 import types
 from typing import Any, Dict, List, Literal, Mapping, Optional, Union, get_args, get_origin
@@ -257,6 +258,55 @@ def graph_patch_to_dict(value: Any) -> Dict[str, Any]:
     raise GraphValidationError("Graph properties must be a JSON object.")
 
 
+_EQ_FILTER_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*|`[^`]+`)\s*==\s*(.+?)\s*$")
+
+
+def _merge_equality_filters(filters: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Automatically merge multiple active equality filters on the same column.
+
+    For example, if a model or user provides:
+        ["Slot == 2", "Slot == 6", "Slot == 8", "Slot == 10", "Quadrant != 'Q4'"]
+    which would evaluate as AND and yield an empty DataFrame (0 rows),
+    merge them into:
+        ["Slot in [2, 6, 8, 10]", "Quadrant != 'Q4'"].
+    """
+    col_counts: Dict[str, List[str]] = {}
+    for f in filters:
+        if not f.get("state", True):
+            continue
+        m = _EQ_FILTER_RE.match(f["expression"])
+        if m:
+            col, val = m.group(1), m.group(2).strip()
+            col_counts.setdefault(col, []).append(val)
+
+    multi_cols = {col: vals for col, vals in col_counts.items() if len(set(vals)) > 1}
+    if not multi_cols:
+        return filters
+
+    seen_cols = set()
+    result = []
+    for f in filters:
+        if not f.get("state", True):
+            result.append(f)
+            continue
+        m = _EQ_FILTER_RE.match(f["expression"])
+        if m and m.group(1) in multi_cols:
+            col = m.group(1)
+            if col not in seen_cols:
+                seen_cols.add(col)
+                vals = []
+                for v in multi_cols[col]:
+                    if v not in vals:
+                        vals.append(v)
+                result.append({
+                    "expression": f"{col} in [{', '.join(vals)}]",
+                    "state": True,
+                })
+        else:
+            result.append(f)
+    return result
+
+
 def _normalize_filters(value: Any) -> List[Dict[str, Any]]:
     if value is None:
         return []
@@ -275,7 +325,7 @@ def _normalize_filters(value: Any) -> List[Dict[str, Any]]:
             raise GraphValidationError(
                 f"filters[{index}] must be a non-empty query string or an object with expression/state."
             )
-    return result
+    return _merge_equality_filters(result)
 
 
 def _validate_limit_pair(state: Mapping[str, Any], low: str, high: str) -> None:

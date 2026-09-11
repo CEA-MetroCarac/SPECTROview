@@ -13,7 +13,8 @@ Covers the two concrete qwen3:8b failure shapes from the investigation:
 import asyncio
 
 import pandas as pd
-from mcp.shared.memory import create_connected_server_and_client_session
+from mcp import ClientSession
+from mcp.client._memory import InMemoryTransport
 
 from spectroview.ai_agent.agent.ports import RecordingContext
 from spectroview.ai_agent.mcp.server import create_mcp_server
@@ -39,11 +40,12 @@ def _call_tool(name, args, graphs=None):
     async def _run():
         context = _context(graphs)
         server = create_mcp_server(context)
-        async with create_connected_server_and_client_session(server._mcp_server) as session:
-            await session.initialize()
-            res = await session.call_tool(name, args)
-            text = res.content[0].text if res.content and hasattr(res.content[0], "text") else str(res)
-            return text, context.commands
+        async with InMemoryTransport(server) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                res = await session.call_tool(name, args)
+                text = res.content[0].text if res.content and hasattr(res.content[0], "text") else str(res)
+                return text, context.commands
     return asyncio.run(_run())
 
 
@@ -70,6 +72,48 @@ class TestFilterValidation:
             "x": "Slot", "y": "fwhm_Si", "plot_style": "pie",
         })
         assert pending == []
+
+    def test_multiple_equality_filters_on_same_column_merged_to_in(self):
+        """When an LLM passes separate equality filters for multiple values of the
+        same column (e.g. ['Slot == 2', 'Slot == 6']), normalize_graph_patch merges
+        them into 'Slot in [2, 6]' so conjunctive query evaluation does not produce
+        an empty DataFrame."""
+        text, pending = _call_tool("plot_graph", {
+            "x": "Slot", "y": "fwhm_Si", "plot_style": "point",
+            "filters": ["Slot == 2", "Slot == 6", "Slot == 8", "Zone == 'Center'"],
+        })
+        assert "successfully" in text.lower()
+        assert len(pending) == 1
+        filters = pending[0].config["filters"]
+        assert len(filters) == 2
+        assert filters[0]["expression"] == "Slot in [2, 6, 8]"
+        assert filters[1]["expression"] == "Zone == 'Center'"
+
+    def test_filters_resulting_in_empty_dataset_rejected_with_actionable_message(self):
+        """When filters genuinely match 0 rows in the DataFrame, reject early with
+        a descriptive message rather than failing later during plot rendering."""
+        text, pending = _call_tool("plot_graph", {
+            "x": "Slot", "y": "fwhm_Si", "plot_style": "point",
+            "filters": ["Slot > 999"],
+        })
+        assert "empty dataset (0 matching rows)" in text.lower()
+        assert "NOT created" in text
+        assert pending == []
+
+    def test_plot_graphs_creates_multiple_plots_in_single_call(self):
+        """Verify that plot_graphs validates and creates multiple plots simultaneously in a single call."""
+        text, pending = _call_tool("plot_graphs", {
+            "plots": [
+                {"x": "Slot", "y": "fwhm_Si", "plot_style": "point", "z": "Zone"},
+                {"x": "Slot", "y": "fwhm_Si", "plot_style": "box", "filters": ["Slot in [2, 6]"]},
+            ]
+        })
+        assert "validated and queued 2 plot(s)" in text.lower()
+        assert len(pending) == 2
+        assert pending[0].config["plot_style"] == "point"
+        assert pending[0].config["z"] == "Zone"
+        assert pending[1].config["plot_style"] == "box"
+        assert pending[1].config["filters"][0]["expression"] == "Slot in [2, 6]"
 
 
 class TestMergePrecedence:

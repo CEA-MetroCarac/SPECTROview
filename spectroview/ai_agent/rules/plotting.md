@@ -18,6 +18,7 @@ These rules govern how the AI agent creates, modifies, and deletes graphs.
 - **Never answer "group by / colour by / split by `<column>`" with `x`.** That is the `z` (hue) argument; `x` stays as it is. Putting the grouping column on `x` throws away the axis the user was actually looking at.
 - **Never use `seaborn`** or reference any plotting library — the agent never generates standalone code (see `rules/general.md` Safety); every plot goes through `plot_graph`/`update_graph`.
 - **Never set spine/border styling on `wafer` plots** — a wafer plot uses only the left spine by design; the app hides the top/right/bottom borders and applies this automatically. Do not pass `spines_visible` for a wafer plot (it can wrongly re-enable all four borders).
+- **Always batch multi-plot requests into a single `plot_graphs` tool call** rather than issuing multiple individual `plot_graph` calls. All plots should be created in one turn whenever their parameters are known.
 
 ---
 

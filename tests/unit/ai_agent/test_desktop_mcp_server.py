@@ -3,7 +3,8 @@
 import asyncio
 import json
 
-from mcp.shared.memory import create_connected_server_and_client_session
+from mcp import ClientSession
+from mcp.client._memory import InMemoryTransport
 
 from spectroview.ai_agent.agent.ports import RecordingContext
 from spectroview.ai_agent.mcp.server import create_desktop_mcp_server, create_mcp_server
@@ -50,19 +51,21 @@ class DesktopContext(RecordingContext):
 async def _catalog(full=True):
     server = (create_desktop_mcp_server(DesktopContext()) if full
               else create_mcp_server(DesktopContext()))
-    async with create_connected_server_and_client_session(server._mcp_server) as session:
-        await session.initialize()
-        tools = (await session.list_tools()).tools
-        resources = (await session.list_resources()).resources
-        return tools, resources
+    async with InMemoryTransport(server) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            tools = (await session.list_tools()).tools
+            resources = (await session.list_resources()).resources
+            return tools, resources
 
 
 def _call(tool_name, arguments):
     async def run():
         server = create_desktop_mcp_server(DesktopContext())
-        async with create_connected_server_and_client_session(server._mcp_server) as session:
-            await session.initialize()
-            return await session.call_tool(tool_name, arguments)
+        async with InMemoryTransport(server) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                return await session.call_tool(tool_name, arguments)
     return asyncio.run(run())
 
 
@@ -77,7 +80,7 @@ class TestDiscoveryAndSchemas:
         assert {
             "get_application_state", "list_datasets", "get_spectrum",
             "crop_spectrum", "fit_spectrum", "list_graphs", "export_results",
-            "plot_graph", "update_graph",
+            "plot_graph", "plot_graphs", "update_graph",
         } <= names
         assert {str(resource.uri) for resource in resources} >= {
             "spectroview://application/state", "spectroview://workspace/current",
@@ -88,12 +91,12 @@ class TestDiscoveryAndSchemas:
     def test_internal_chat_profile_stays_compact(self):
         tools, _ = asyncio.run(_catalog(full=False))
         assert {tool.name for tool in tools} == {
-            "query_dataframe", "plot_graph", "get_statistics", "update_graph", "delete_graph"
+            "query_dataframe", "plot_graph", "plot_graphs", "get_statistics", "update_graph", "delete_graph"
         }
 
     def test_workspace_and_limits_are_typed(self):
         tools, _ = asyncio.run(_catalog())
-        schemas = {tool.name: tool.inputSchema for tool in tools}
+        schemas = {tool.name: tool.input_schema for tool in tools}
         assert set(schemas["fit_spectrum"]["properties"]["workspace"]["enum"]) == {
             "spectra", "maps"
         }
@@ -104,11 +107,11 @@ class TestDiscoveryAndSchemas:
     def test_permission_hints_distinguish_reads_mutations_and_filesystem_writes(self):
         tools, _ = asyncio.run(_catalog())
         catalog = {tool.name: tool for tool in tools}
-        assert catalog["get_application_state"].annotations.readOnlyHint is True
-        assert catalog["crop_spectrum"].annotations.destructiveHint is True
-        assert catalog["plot_graph"].annotations.readOnlyHint is False
-        assert catalog["export_results"].annotations.openWorldHint is True
-        assert catalog["delete_graph"].annotations.destructiveHint is True
+        assert catalog["get_application_state"].annotations.read_only_hint is True
+        assert catalog["crop_spectrum"].annotations.destructive_hint is True
+        assert catalog["plot_graph"].annotations.read_only_hint is False
+        assert catalog["export_results"].annotations.open_world_hint is True
+        assert catalog["delete_graph"].annotations.destructive_hint is True
 
 
 class TestCallsAndErrors:
@@ -134,15 +137,16 @@ class TestCallsAndErrors:
         result = _call("get_spectrum", {
             "dataset_id": "spectra:sample", "max_points": 1
         })
-        assert result.isError is True
+        assert result.is_error is True
 
     def test_application_state_resource_is_readable(self):
         async def run():
             server = create_desktop_mcp_server(DesktopContext())
-            async with create_connected_server_and_client_session(server._mcp_server) as session:
-                await session.initialize()
-                result = await session.read_resource("spectroview://application/state")
-                return json.loads(result.contents[0].text)
+            async with InMemoryTransport(server) as (read, write):
+                async with ClientSession(read, write) as session:
+                    await session.initialize()
+                    result = await session.read_resource("spectroview://application/state")
+                    return json.loads(result.contents[0].text)
 
         payload = asyncio.run(run())
         assert payload["ok"] is True

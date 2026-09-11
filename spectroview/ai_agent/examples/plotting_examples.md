@@ -21,12 +21,15 @@ This file contains representative plotting examples that demonstrate how the AI 
 
 ---
 
-## Example 2: Multi-Style Plot
+## Example 2: Multi-Style Plot (Batch / Recipe)
 
 **User:** Plot a box plot and a scatter plot of FWHM_Si vs Slot.
 
-Make two `plot_graph` calls with the same `x`, `y`, and `df_name`: the first
-with `plot_style="box"`, the second with `plot_style="scatter"`.
+**Call tool:** `plot_graphs` with:
+- `plots` = [
+    {"x": "Slot", "y": "FWHM_Si", "plot_style": "box", "df_name": "fit_results"},
+    {"x": "Slot", "y": "FWHM_Si", "plot_style": "scatter", "df_name": "fit_results"}
+  ]
 
 ---
 
@@ -244,3 +247,28 @@ Note what is **absent**: no `x`, no `y`, no `plot_style`. "Group by Zone" is the
 - `df_name` = `"fit_results"`
 
 "one colour per Zone" / "grouped by Zone" / "split by Zone" all mean the same thing: `z="Zone"`, with `x` unchanged.
+ 
+---
+
+## Example 17: Multiple Distinct Graphs in One Tool Call (Batch / Recipe)
+
+**User:** 
+1/ Point plot of fwhm_Si vs Slot, excluding slots 5, 6, 7, 10, coloured by Zone.
+2/ Box plot of x0_Si vs Slot, slots 2, 6, 8, 10 only, coloured by Quadrant.
+3/ Histogram of ampli_Si for slot 9, title "Slot 9".
+
+**Call tool:** `plot_graphs` with:
+- `plots` = [
+    {
+      "x": "Slot", "y": "fwhm_Si", "plot_style": "point", "z": "Zone",
+      "filters": ["Slot not in [5, 6, 7, 10]"], "df_name": "fit_results"
+    },
+    {
+      "x": "Slot", "y": "x0_Si", "plot_style": "box", "z": "Quadrant",
+      "filters": ["Slot in [2, 6, 8, 10]"], "df_name": "fit_results"
+    },
+    {
+      "x": "ampli_Si", "plot_style": "histogram", "plot_title": "Slot 9",
+      "filters": ["Slot == 9"], "df_name": "fit_results"
+    }
+  ]

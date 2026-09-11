@@ -87,6 +87,20 @@ FILESYSTEM_WRITE = _make_annotations(destructive=True, open_world=True)
 
 WorkspaceName = Literal["spectra", "maps", "graphs"]
 
+SERVER_INSTRUCTIONS = (
+    "SPECTROview is a scientific spectroscopy, mapping, and data visualization application.\n"
+    "CRITICAL PLOTTING RULES (MUST FOLLOW STRICTLY):\n"
+    "- NEVER add decorative elements (extra annotations, watermarks, legends, spines) that the user did not request.\n"
+    "- NEVER add a plot_title unless the user explicitly requests one. Leave it unset; the application generates optimal titles automatically.\n"
+    "- Do NOT add grid lines unless explicitly requested (grid default is false).\n"
+    "- Leave optional fields (xlabel, ylabel, zlabel, xmin, xmax, ymin, ymax, zmin, zmax, color_palette, other_properties) "
+    "unset unless the user explicitly requested them. Supply only fields the user asked for.\n"
+    "- On update_graph, pass ONLY the properties the user asked to change; omitted properties keep their current value.\n"
+    "- For wafer/2D maps: X MUST be the spatial X coordinate, Y MUST be spatial Y coordinate, and Z MUST be the physical metric/property.\n"
+    "- Never invent column names. Always use the exact column names from the loaded DataFrame.\n"
+    "- Keep conversational responses concise: summarize actions in a single factual sentence."
+)
+
 
 def create_mcp_server(
     context: AppContext,
@@ -107,12 +121,16 @@ def create_mcp_server(
     try:
         mcp = FastMCP(
             "SPECTROview",
+            instructions=SERVER_INSTRUCTIONS,
             host=host,
             port=port,
             streamable_http_path="/mcp",
         )
     except TypeError:
-        mcp = FastMCP("SPECTROview")
+        try:
+            mcp = FastMCP("SPECTROview", instructions=SERVER_INSTRUCTIONS)
+        except TypeError:
+            mcp = FastMCP("SPECTROview")
 
     # -------------------------------------------------------------------------
     # Helpers

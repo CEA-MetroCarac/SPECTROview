@@ -30,6 +30,7 @@ class CreatePlot(AgentCommand):
     ``filters``, ``df_name``, plus any styling option).
     """
     config: Dict[str, Any]
+    thread_id: Optional[str] = None
 
 
 @dataclass

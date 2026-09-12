@@ -193,7 +193,7 @@ class SpectroviewApplicationAPI:
     def submit(self, command: Any) -> Any:
         """Execute a validated agent command through this same facade."""
         if isinstance(command, CreatePlot):
-            return self.create_graph(command.config)
+            return self.create_graph(command.config, thread_id=getattr(command, "thread_id", None))
         if isinstance(command, UpdatePlot):
             return self.update_graph(command.graph_id, command.properties)
         if isinstance(command, DeletePlots):
@@ -699,7 +699,7 @@ class SpectroviewApplicationAPI:
 
         return self._call(read)
 
-    def create_graph(self, configuration: Dict[str, Any]) -> Dict[str, Any]:
+    def create_graph(self, configuration: Dict[str, Any], thread_id: Optional[str] = None) -> Dict[str, Any]:
         def mutate():
             config = copy.deepcopy(configuration)
             dataframe_name = config.get("df_name") or self._graphs_vm.selected_df_name
@@ -735,9 +735,14 @@ class SpectroviewApplicationAPI:
                 if fig is None and hasattr(widget, "plot_widget"):
                     fig = getattr(widget.plot_widget, "figure", None)
                 if fig is not None:
-                    import tempfile, time
+                    import tempfile, time, re
                     from pathlib import Path
-                    temp_dir = Path(tempfile.gettempdir()) / "spectroview_plots"
+                    subfolder = thread_id or config.get("thread_id") or config.get("subfolder")
+                    if subfolder:
+                        clean_sub = re.sub(r'[<>:"/\\|?*]', '_', str(subfolder)).strip().rstrip('.')
+                        temp_dir = Path(tempfile.gettempdir()) / "spectroview_plots" / (clean_sub or "default")
+                    else:
+                        temp_dir = Path(tempfile.gettempdir()) / "spectroview_plots" / "default"
                     temp_dir.mkdir(parents=True, exist_ok=True)
                     dest = temp_dir / f"spectroview_graph_{gid}_{int(time.time() * 1000)}.png"
                     try:

@@ -68,6 +68,7 @@ class SinglePlotConfig(BaseModel):
     hist_bins: Optional[int] = Field(default=None, description="Number of histogram bins.")
     trendline_order: Optional[int] = Field(default=None, description="Polynomial order for trendline.")
     other_properties: Optional[GraphPatch] = Field(default=None, description="Typed advanced graph patch.")
+    thread_id: Optional[str] = Field(default=None, description="Optional conversation thread ID or subfolder name to organize plot files into sub-folders.")
 
 
 def _make_annotations(*, read_only=False, destructive=False, idempotent=False, open_world=False) -> ToolAnnotations:
@@ -658,6 +659,9 @@ def create_mcp_server(
         recipe_name: Annotated[Optional[str], Field(
             description="Optional recipe name if the user asked to save this batch as a named recipe."
         )] = None,
+        thread_id: Annotated[Optional[str], Field(
+            description="Optional conversation thread ID or subfolder name to organize plot files into sub-folders."
+        )] = None,
     ) -> str:
         """Create multiple graphs simultaneously in a single tool call (batch / recipe mode).
 
@@ -678,7 +682,8 @@ def create_mcp_server(
             if err is not None:
                 errors.append(f"Plot {i}: {err}")
             else:
-                validated_configs.append(cfg)
+                tid = item_dict.get("thread_id") or thread_id
+                validated_configs.append((cfg, tid))
                 style = cfg.get("plot_style", "plot")
                 x_col = cfg.get("x", "")
                 y_col = cfg.get("y", [])
@@ -691,9 +696,9 @@ def create_mcp_server(
             return "Error: None of the plots could be created:\n" + "\n".join(f"- {e}" for e in errors)
 
         batch_results = []
-        for cfg in validated_configs:
+        for cfg, tid in validated_configs:
             out = _submit_command(
-                CreatePlot(cfg),
+                CreatePlot(cfg, thread_id=tid),
                 "Queued plot",
             )
             batch_results.append(out)
@@ -772,6 +777,9 @@ def create_mcp_server(
             "Batch mode / recipe: list of plot configurations to plot simultaneously in one call. "
             "When provided, plots in this list are created simultaneously as a batch."
         ))] = None,
+        thread_id: Annotated[Optional[str], Field(description=(
+            "Optional conversation thread ID or subfolder name to organize generated plot files into sub-folders."
+        ))] = None,
     ) -> str:
         """Create a new graph from a loaded DataFrame. One tool call = one graph window.
 
@@ -785,7 +793,7 @@ def create_mcp_server(
             plots: Optional list of plot configurations to create in a single batch call.
         """
         if plots:
-            return plot_graphs(plots=plots)
+            return plot_graphs(plots=plots, thread_id=thread_id)
 
         d = {
             "x": x, "y": y, "plot_style": plot_style, "file_path": file_path, "z": z,
@@ -795,12 +803,13 @@ def create_mcp_server(
             "xlogscale": xlogscale, "ylogscale": ylogscale, "scatter_size": scatter_size,
             "hist_bins": hist_bins, "trendline_order": trendline_order, "other_properties": other_properties,
         }
+        tid = d.get("thread_id") or thread_id
         config, err = _prepare_single_plot(d)
         if err is not None:
             return f"{err} This plot was NOT created; please retry."
 
         return _submit_command(
-            CreatePlot(config),
+            CreatePlot(config, thread_id=tid),
             "Plot configuration successfully validated and queued for the Graphs workspace.",
         )
 

@@ -45,7 +45,7 @@ VALID_PLOT_STYLES = frozenset(PlotStyle.__args__)
 class SinglePlotConfig(BaseModel):
     """Specification for a single plot within a batch / recipe."""
     x: str = Field(description="Column name for X-axis. For 'wafer' and '2Dmap', this MUST be the X-coordinate column.")
-    y: Union[str, List[str]] = Field(description="Column name(s) for Y-axis (string or list of strings). For 'wafer' and '2Dmap', Y-coordinate column.")
+    y: Optional[Union[str, List[str]]] = Field(default=None, description="Column name(s) for Y-axis (string or list of strings). For 'wafer' and '2Dmap', Y-coordinate column. For 'histogram', can be omitted.")
     plot_style: PlotStyle = Field(description="Visual style: 'point', 'scatter', 'box', 'bar', 'line', 'trendline', 'histogram', 'wafer', '2Dmap'.")
     z: Optional[str] = Field(default=None, description="Grouping / colour (hue) column. For 'wafer' and '2Dmap', the metric value.")
     filters: Optional[List[str]] = Field(default=None, description="Optional list of pandas query strings to filter data (e.g. [\"Zone != 'Edge'\", \"Slot in [2, 6, 8, 10]\"]).")
@@ -629,6 +629,8 @@ def create_mcp_server(
         )
         named = {k: d[k] for k in named_keys if k in d and d[k] is not None}
         config = _merge_properties(other_properties, **named)
+        if not y and plot_style == "histogram":
+            y = x
         config.update({
             "x": x,
             "y": y if isinstance(y, list) else [y],

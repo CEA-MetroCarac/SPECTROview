@@ -96,9 +96,28 @@ PLOT_POLICY_SOFT_DARK = resource_path("spectroview/resources/plotpolicy_soft_dar
 
 UI_FILE = resource_path("spectroview/config/gui/gui.ui")
 LOGO_APPLI = resource_path("spectroview/resources/icons/logo_spectroview.png")
+LOGO_APPLI_ICO = resource_path("spectroview/resources/icons/logo_spectroview.ico")
 
 USER_MANUAL_DIR = resource_path(
     "spectroview/resources/user_manual"
 )
 
 
+def get_app_icon():
+    """Return the application QIcon with multi-resolution support (.ico and .png)."""
+    from PySide6.QtGui import QIcon, QPixmap
+
+    ico_path = Path(LOGO_APPLI_ICO)
+    png_path = Path(LOGO_APPLI)
+
+    icon = QIcon()
+    if ico_path.is_file():
+        icon = QIcon(str(ico_path))
+    if png_path.is_file():
+        icon.addFile(str(png_path))
+
+    if not icon.isNull():
+        return icon
+
+    # Fallback: 1×1 transparent pixmap so callers always get a valid QIcon
+    return QIcon(QPixmap(1, 1))

@@ -4,6 +4,18 @@ import os
 import importlib.util
 import threading
 from pathlib import Path
+
+# ── Windows taskbar identity ─────────────────────────────────────────────────
+# Must run BEFORE any PySide6/Qt import. When Qt is first imported it
+# initialises the Windows platform plugin which registers the process with
+# the Shell.  If we haven't set our own AppUserModelID by that point,
+# Windows associates the process with python.exe's default icon and the
+# taskbar button will never show the SPECTROview logo.
+# This mirrors the pattern used in PLUME (see plume/__main__.py).
+from spectroview.winapi import set_current_process_app_id
+set_current_process_app_id()
+# ─────────────────────────────────────────────────────────────────────────────
+
 import matplotlib as mpl
 mpl.use('qtagg')
 
@@ -40,7 +52,7 @@ from spectroview.view.v_workspace_maps import VWorkspaceMaps
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 from spectroview.view.theme import ThemeManager
 
-from spectroview import LOGO_APPLI, USER_MANUAL_DIR
+from spectroview import LOGO_APPLI, USER_MANUAL_DIR, get_app_icon
 
 try:
     from renishawWiRE import WDFReader
@@ -99,7 +111,7 @@ class Main(QMainWindow):
             "SPECTROview (Tool for Spectroscopic Data Processing and Visualization)"
         )
         self.setGeometry(100, 100, 1400, 930)
-        self.setWindowIcon(QIcon(LOGO_APPLI))
+        self.setWindowIcon(get_app_icon())
 
         # Central widget
         central = QWidget(self)
@@ -905,12 +917,14 @@ class Main(QMainWindow):
 
 def launcher():
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon(LOGO_APPLI))
+    app.setApplicationName("SPECTROview")
+    app.setWindowIcon(get_app_icon())
     app.setStyle("Fusion")
 
     window = Main()
     window.show()
-    sys.exit(app.exec())
+    code = app.exec()
+    os._exit(code)
 
 if __name__ == "__main__":
     launcher()

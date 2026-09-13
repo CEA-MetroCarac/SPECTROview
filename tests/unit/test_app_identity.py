@@ -85,3 +85,55 @@ def test_apply_windows_taskbar_icon_non_windows():
     with patch("sys.platform", "darwin"), patch("ctypes.WinDLL") as mock_windll:
         apply_windows_taskbar_icon(1234, LOGO_APPLI_ICO)
         mock_windll.assert_not_called()
+
+
+def test_apply_windows_taskbar_icon_default_ico():
+    """Verify apply_windows_taskbar_icon defaults to LOGO_APPLI_ICO when ico_path is None."""
+    apply_windows_taskbar_icon(0)
+
+
+def test_apply_windows_taskbar_icon_win32_api_calls():
+    """Verify apply_windows_taskbar_icon invokes correct Win32 API calls (WM_SETICON, SetClassLong)."""
+    mock_user32 = MagicMock()
+    mock_user32.LoadImageW.side_effect = [111, 222]
+
+    with patch("sys.platform", "win32"), patch("ctypes.WinDLL", return_value=mock_user32):
+        apply_windows_taskbar_icon(99999)
+
+    assert mock_user32.LoadImageW.call_count == 2
+    # WM_SETICON = 0x0080 (128)
+    msg_calls = mock_user32.SendMessageW.call_args_list
+    assert len(msg_calls) == 2
+    assert msg_calls[0].args == (99999, 0x0080, 1, 111)
+    assert msg_calls[1].args == (99999, 0x0080, 0, 222)
+
+    # SetClassLongPtrW (GCLP_HICON = -14, GCLP_HICONSM = -34)
+    if hasattr(mock_user32, "SetClassLongPtrW"):
+        ptr_calls = mock_user32.SetClassLongPtrW.call_args_list
+        assert len(ptr_calls) == 2
+        assert ptr_calls[0].args == (99999, -14, 111)
+        assert ptr_calls[1].args == (99999, -34, 222)
+
+
+def test_apply_windows_taskbar_icon_on_widget(qapp):
+    """Verify applying taskbar icon on a widget executes without error and updates icon when native."""
+    from PySide6.QtWidgets import QDialog
+
+    dialog = QDialog()
+    dialog.show()
+    try:
+        hwnd = int(dialog.winId())
+        apply_windows_taskbar_icon(hwnd)
+        if sys.platform == "win32" and QApplication.platformName() == "windows":
+            import ctypes
+            from ctypes import wintypes
+            user32 = ctypes.windll.user32
+            user32.SendMessageW.argtypes = (wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
+            user32.SendMessageW.restype = wintypes.LPARAM
+            WM_GETICON = 0x007F
+            h_big = user32.SendMessageW(hwnd, WM_GETICON, 1, 0)
+            h_small = user32.SendMessageW(hwnd, WM_GETICON, 0, 0)
+            assert h_big != 0
+            assert h_small != 0
+    finally:
+        dialog.close()

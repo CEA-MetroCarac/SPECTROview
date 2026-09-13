@@ -12,7 +12,7 @@ from pathlib import Path
 # Windows associates the process with python.exe's default icon and the
 # taskbar button will never show the SPECTROview logo.
 # This mirrors the pattern used in PLUME (see plume/__main__.py).
-from spectroview.winapi import set_current_process_app_id
+from spectroview.winapi import apply_windows_taskbar_icon, set_current_process_app_id
 set_current_process_app_id()
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -858,6 +858,7 @@ class Main(QMainWindow):
     def showEvent(self, event):
         """Start the update check and the import prewarm once the window is up."""
         super().showEvent(event)
+        apply_windows_taskbar_icon(int(self.winId()))
         # Use a short single-shot timer so the UI paints before the thread starts
         from PySide6.QtCore import QTimer
         QTimer.singleShot(2000, self._start_update_check)

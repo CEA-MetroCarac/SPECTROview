@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ctypes
 import sys
+from pathlib import Path
 
 
 def set_current_process_app_id(app_id: str = "fr.cea.spectroview") -> None:
@@ -24,27 +25,84 @@ def set_current_process_app_id(app_id: str = "fr.cea.spectroview") -> None:
         return
 
 
-def apply_windows_taskbar_icon(hwnd: int, ico_path: str) -> None:
-    """Explicitly send WM_SETICON with native HICON handles to ensure Windows taskbar displays the icon."""
+def apply_windows_taskbar_icon(hwnd: int, ico_path: str | Path | None = None) -> None:
+    """Explicitly send WM_SETICON and update window class icon with native HICON handles.
+
+    This ensures Windows taskbar and Alt-Tab display the native SPECTROview icon rather than
+    the generic Python launcher logo when running in development or via python -m spectroview.
+    """
     if sys.platform != "win32" or not hwnd:
         return
     try:
+        from ctypes import wintypes
+
+        if ico_path is None:
+            from spectroview import LOGO_APPLI_ICO
+
+            ico_path = LOGO_APPLI_ICO
+        if not ico_path or not Path(ico_path).exists():
+            return
+
         user32 = ctypes.WinDLL("user32", use_last_error=True)
+        user32.LoadImageW.argtypes = (
+            wintypes.HINSTANCE,
+            wintypes.LPCWSTR,
+            wintypes.UINT,
+            ctypes.c_int,
+            ctypes.c_int,
+            wintypes.UINT,
+        )
+        user32.LoadImageW.restype = wintypes.HANDLE
+
+        user32.SendMessageW.argtypes = (
+            wintypes.HWND,
+            wintypes.UINT,
+            wintypes.WPARAM,
+            wintypes.LPARAM,
+        )
+        user32.SendMessageW.restype = wintypes.LPARAM
+
         IMAGE_ICON = 1
         LR_LOADFROMFILE = 0x00000010
         LR_DEFAULTSIZE = 0x00000040
 
-        # Load native large icon (for taskbar and Alt-Tab) and small icon (for titlebar)
-        h_big = user32.LoadImageW(None, str(ico_path), IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE)
-        h_small = user32.LoadImageW(None, str(ico_path), IMAGE_ICON, 16, 16, LR_LOADFROMFILE)
+        ico_str = str(ico_path)
+        # Load large icon (system default for taskbar/Alt-Tab) and small icon (16x16 for titlebar)
+        h_big = user32.LoadImageW(None, ico_str, IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE)
+        h_small = user32.LoadImageW(None, ico_str, IMAGE_ICON, 16, 16, LR_LOADFROMFILE)
 
-        WM_SETICON = 0x007F
+        WM_SETICON = 0x0080
         ICON_SMALL = 0
         ICON_BIG = 1
+        GCLP_HICON = -14
+        GCLP_HICONSM = -34
 
         if h_big:
             user32.SendMessageW(hwnd, WM_SETICON, ICON_BIG, h_big)
+            try:
+                if ctypes.sizeof(ctypes.c_void_p) == 8:
+                    user32.SetClassLongPtrW.argtypes = (wintypes.HWND, ctypes.c_int, ctypes.c_void_p)
+                    user32.SetClassLongPtrW.restype = ctypes.c_void_p
+                    user32.SetClassLongPtrW(hwnd, GCLP_HICON, h_big)
+                else:
+                    user32.SetClassLongW.argtypes = (wintypes.HWND, ctypes.c_int, ctypes.c_long)
+                    user32.SetClassLongW.restype = ctypes.c_long
+                    user32.SetClassLongW(hwnd, GCLP_HICON, h_big)
+            except Exception:
+                pass
+
         if h_small:
             user32.SendMessageW(hwnd, WM_SETICON, ICON_SMALL, h_small)
+            try:
+                if ctypes.sizeof(ctypes.c_void_p) == 8:
+                    user32.SetClassLongPtrW.argtypes = (wintypes.HWND, ctypes.c_int, ctypes.c_void_p)
+                    user32.SetClassLongPtrW.restype = ctypes.c_void_p
+                    user32.SetClassLongPtrW(hwnd, GCLP_HICONSM, h_small)
+                else:
+                    user32.SetClassLongW.argtypes = (wintypes.HWND, ctypes.c_int, ctypes.c_long)
+                    user32.SetClassLongW.restype = ctypes.c_long
+                    user32.SetClassLongW(hwnd, GCLP_HICONSM, h_small)
+            except Exception:
+                pass
     except Exception:
         pass

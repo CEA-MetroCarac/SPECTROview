@@ -4,6 +4,38 @@
 
 ---
 
+## [v26.37.1](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.37.1) - 2026-09-13
+
+##### [v26.37.1](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.37.1) - 2026-09-13
+
+##### 🚀 What's New in v26.37.1
+
+##### 🔌 MCP 2.x Architecture & Batch Plotting
+* **MCP 2.x Upgrade**: Upgraded the Model Context Protocol stack to `mcp>=2.2.0` with standard `InMemoryTransport` and `ClientSession`.
+* **Batch Plot Tool (`plot_graphs`)**: Added support for creating multiple plots simultaneously in a single recipe/batch tool call.
+* **External Workflow Tools**:
+  * Added direct CSV/Excel dataset loading via file path (`load_dataframes` and `file_path` parameter).
+  * Added window focus and activation tool (`show_graph`) to bring SPECTROview to the foreground.
+  * Added automatic plot PNG export with millisecond timestamps and `thread_id` folder grouping for external agent/chat previews.
+* **Server Plotting Instructions**: Configured FastMCP server instructions to guide LLMs with strict plotting conventions and coordinate rules.
+
+##### ⚡ AI Chat & UI Performance
+* **Instant Dialog Opening**: Pre-instantiated the chat panel in the background during idle time (`_prewarm_ai_chat`), eliminating opening delays.
+* **Non-blocking Status Worker**: Offloaded provider availability checks and model listings to a background thread (`_StatusWorker`), preventing Qt GUI main thread freezes.
+* **Ollama Probing Guardrails**: Added probe request timeouts and guarded against empty model selections.
+
+##### 🛠️ Plotting Engine & Stability Fixes
+* **Box Plot Division by Zero**: Fixed `ZeroDivisionError` when all hue categories are filtered out.
+* **Filter Merging**: Automatically merged redundant equality filters on the same column to prevent empty DataFrames.
+* **Histogram Simplification**: Made `y` optional in `SinglePlotConfig` with sensible defaults for histograms.
+* **Loop Prevention**: Added `GRAPH_RENDER_FAILED` error flag (`retry=false`) to prevent wasteful LLM retry loops upon unrecoverable rendering errors.
+
+---
+
+**Full Changelog**: https://github.com/CEA-MetroCarac/SPECTROview/compare/v26.36.3...v26.37.1
+
+---
+
 ## [v26.36.3](https://github.com/CEA-MetroCarac/SPECTROview/releases/tag/v26.36.3) - 2026-09-09
 
 ##### What's New in v26.36.3

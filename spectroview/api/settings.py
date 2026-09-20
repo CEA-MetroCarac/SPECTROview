@@ -15,7 +15,7 @@ from spectroview.model.m_settings import MSettings
 def get_fit_defaults() -> Dict[str, Any]:
     """Return the fit_params defaults the GUI's Fit Settings dialog uses.
 
-    Keys: fit_negative, max_ite, xtol, ftol, coef_noise, maxshift, maxfwhm, minfwhm.
+    Keys: fit_negative, max_ite, xtol, ftol, coef_noise, maxshift, maxfwhm, minfwhm, loss, f_scale.
     """
     return MSettings().load_fit_settings()
 

@@ -83,18 +83,65 @@ def _robust_scale_factor(r, loss="linear", f_scale=1.0):
     """
     if loss == "linear":
         return 1.0
-    z = (r / f_scale) ** 2
+    u = np.abs(r / f_scale)
     if loss == "soft_l1":
-        scale = (1.0 + z) ** (-0.25)
+        scale = np.where(
+            u > 1e150,
+            1.0 / np.sqrt(np.maximum(u, 1e-30)),
+            (1.0 + np.minimum(u, 1e150) ** 2) ** (-0.25),
+        )
     elif loss == "huber":
-        scale = np.ones_like(z)
-        mask = z > 1.0
-        scale[mask] = z[mask] ** (-0.25)
+        scale = np.where(
+            u > 1.0,
+            1.0 / np.sqrt(np.maximum(u, 1.0)),
+            1.0,
+        )
     else:
         raise ValueError(f"Unknown loss '{loss}'. Expected 'linear', 'soft_l1', or 'huber'.")
     if not np.isfinite(scale).all():
         np.nan_to_num(scale, copy=False, nan=1.0, posinf=1.0, neginf=1.0)
     return scale
+
+
+def _robust_cost(r, loss="linear", f_scale=1.0):
+    """Compute the total loss cost sum(rho((r / f_scale)^2) * f_scale^2) per spectrum.
+
+    For 'linear': sum(r^2)
+    For 'soft_l1': sum(2 * f_scale^2 * (sqrt(1 + (r / f_scale)^2) - 1))
+    For 'huber': sum(r^2 if |r| <= f_scale else 2 * f_scale * |r| - f_scale^2)
+
+    Args:
+        r: Residuals array of shape (..., M).
+        loss: 'linear', 'soft_l1', or 'huber'.
+        f_scale: Inlier/outlier margin scale (default 1.0).
+
+    Returns:
+        Cost per spectrum of shape (...).
+    """
+    if loss == "linear":
+        return np.sum(r * r, axis=-1)
+    u = np.abs(r / f_scale)
+    if loss == "soft_l1":
+        # 2 * r^2 / (sqrt(1 + u^2) + 1) avoids catastrophic cancellation for small u
+        # and avoids overflow for large u.
+        r_small = np.where(u > 1e150, 0.0, r)
+        rho_scaled = np.where(
+            u > 1e150,
+            2.0 * f_scale * np.abs(r),
+            2.0 * (r_small ** 2) / (np.sqrt(1.0 + np.minimum(u, 1e150) ** 2) + 1.0),
+        )
+    elif loss == "huber":
+        r_inlier = np.where(u > 1.0, 0.0, r)
+        rho_scaled = np.where(
+            u <= 1.0,
+            r_inlier ** 2,
+            2.0 * f_scale * np.abs(r) - (f_scale ** 2),
+        )
+    else:
+        raise ValueError(f"Unknown loss '{loss}'. Expected 'linear', 'soft_l1', or 'huber'.")
+    if not np.isfinite(rho_scaled).all():
+        np.nan_to_num(rho_scaled, copy=False, nan=0.0, posinf=1e30, neginf=0.0)
+    return np.sum(rho_scaled, axis=-1)
 
 
 def batched_levenberg_marquardt(
@@ -173,12 +220,7 @@ def batched_levenberg_marquardt(
     # Initial residuals and cost
     Y_pred = evaluate_fn(x, p)
     residuals = weights * (Y_pred - Y_data)        # (N, M)
-    if loss != "linear":
-        w_robust = _robust_scale_factor(residuals, loss, f_scale)
-        scaled_r = w_robust * residuals
-        cost = np.sum(scaled_r * scaled_r, axis=1)  # (N,)
-    else:
-        cost = np.sum(residuals * residuals, axis=1)  # (N,)
+    cost = _robust_cost(residuals, loss, f_scale)  # (N,)
 
     # Per-spectrum damping factor
     lam = np.full(N, 1e-2)
@@ -264,12 +306,7 @@ def batched_levenberg_marquardt(
         # Evaluate only the active spectra
         Y_trial_active = evaluate_fn(x_active, p_trial_active)
         r_trial_active = weights[active_idx] * (Y_trial_active - Y_data[active_idx])
-        if loss != "linear":
-            w_trial = _robust_scale_factor(r_trial_active, loss, f_scale)
-            scaled_r_trial = w_trial * r_trial_active
-            cost_trial_active = np.sum(scaled_r_trial * scaled_r_trial, axis=1)
-        else:
-            cost_trial_active = np.sum(r_trial_active * r_trial_active, axis=1)
+        cost_trial_active = _robust_cost(r_trial_active, loss, f_scale)
 
         improved_active = cost_trial_active <= cost[active_idx]
         worsened_active = ~improved_active

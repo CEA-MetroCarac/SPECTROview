@@ -333,3 +333,45 @@ class TestRobustLoss:
         assert success[0]
         res = dict(zip(names, p_full[0]))
         assert res["P1_x0"] == pytest.approx(500.0, abs=0.5)
+
+    def test_spike_at_peak_maximum_recovery(self, make_fit_model, make_synthetic_spectrum):
+        true_peak = ("Lorentzian", {"x0": 500.0, "ampli": 100.0, "fwhm": 6.0})
+        fit_model = make_fit_model([true_peak])
+        x, y = make_synthetic_spectrum([(true_peak[0], fit_model["peak_models"]["0"]["Lorentzian"])])
+
+        # Inject spike directly at peak center
+        idx_center = np.argmin(np.abs(x - 500.0))
+        y_spike = y.copy()
+        y_spike[idx_center] += 400.0
+
+        seed_model_lin = make_fit_model(
+            [("Lorentzian", {"x0": 496.0, "ampli": 80.0, "fwhm": 5.0})],
+            fit_params={"loss": "linear", "max_ite": 200},
+        )
+        seed_model_soft = make_fit_model(
+            [("Lorentzian", {"x0": 496.0, "ampli": 80.0, "fwhm": 5.0})],
+            fit_params={"loss": "soft_l1", "f_scale": 5.0, "max_ite": 200},
+        )
+        seed_model_huber = make_fit_model(
+            [("Lorentzian", {"x0": 496.0, "ampli": 80.0, "fwhm": 5.0})],
+            fit_params={"loss": "huber", "f_scale": 5.0, "max_ite": 200},
+        )
+
+        engine = VBFengine()
+        p_lin, _, _, _, _, names = engine.fit_spectra(x=x, Y=y_spike[None, :], fit_model=seed_model_lin)
+        p_soft, s_soft, _, _, _, _ = engine.fit_spectra(x=x, Y=y_spike[None, :], fit_model=seed_model_soft)
+        p_huber, s_huber, _, _, _, _ = engine.fit_spectra(x=x, Y=y_spike[None, :], fit_model=seed_model_huber)
+
+        assert s_soft[0]
+        assert s_huber[0]
+        res_lin = dict(zip(names, p_lin[0]))
+        res_soft = dict(zip(names, p_soft[0]))
+        res_huber = dict(zip(names, p_huber[0]))
+
+        # Linear fit gets severely corrupted by spike on the peak
+        assert abs(res_lin["P1_ampli"] - 100.0) > 300.0
+        # Robust losses recover the amplitude and FWHM accurately
+        assert abs(res_soft["P1_ampli"] - 100.0) < 10.0
+        assert abs(res_huber["P1_ampli"] - 100.0) < 10.0
+        assert res_soft["P1_x0"] == pytest.approx(500.0, abs=0.1)
+        assert res_huber["P1_x0"] == pytest.approx(500.0, abs=0.1)

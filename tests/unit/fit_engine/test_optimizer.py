@@ -7,7 +7,11 @@ isolation from the rest of the fit_engine stack.
 import numpy as np
 import pytest
 
-from spectroview.fit_engine.optimizer import batched_levenberg_marquardt
+from spectroview.fit_engine.optimizer import (
+    _robust_cost,
+    _robust_scale_factor,
+    batched_levenberg_marquardt,
+)
 
 
 def _linear_problem():
@@ -354,3 +358,29 @@ class TestRobustLosses:
             )
             assert success[0]
             np.testing.assert_allclose(p_opt[0], true_p[0], atol=1e-3)
+
+    def test_robust_scale_factor_and_cost_numerical_stability(self):
+        # Extreme values: very large (1e200) and very small (1e-10)
+        r = np.array([[1e200, 1e-10, 0.0, 5.0, -10.0]])
+        f_scale = 2.0
+
+        for loss in ("soft_l1", "huber"):
+            w = _robust_scale_factor(r, loss=loss, f_scale=f_scale)
+            assert np.isfinite(w).all()
+            assert (w > 0).all()
+            assert w[0, 2] == pytest.approx(1.0)  # zero residual has scale 1.0
+
+            cost = _robust_cost(r, loss=loss, f_scale=f_scale)
+            assert np.isfinite(cost).all()
+            assert (cost >= 0).all()
+
+        # Cost for linear should be exact sum of squares
+        r_clean = np.array([[1.0, 2.0, 3.0]])
+        np.testing.assert_allclose(_robust_cost(r_clean, loss="linear"), 14.0)
+
+        # Cost for huber at small residuals (inliers) should match linear exactly
+        r_inlier = np.array([[0.5, -0.2, 0.1]])
+        np.testing.assert_allclose(
+            _robust_cost(r_inlier, loss="huber", f_scale=1.0),
+            _robust_cost(r_inlier, loss="linear"),
+        )

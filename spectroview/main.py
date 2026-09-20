@@ -664,7 +664,7 @@ class Main(QMainWindow):
 
     def open_releases(self):
         """Open the project's releases page."""
-        url = QUrl("https://cea-metrocarac.github.io/SPECTROview/changelog/")
+        url = QUrl("https://github.com/CEA-MetroCarac/SPECTROview/releases")
         QDesktopServices.openUrl(url)
 
     def toggle_theme(self, theme=None):

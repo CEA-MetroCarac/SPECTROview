@@ -1804,7 +1804,7 @@ closing SPECTROview stops the endpoint.</p>
 <li>There is no authentication in this loopback-only first iteration. Do not
   proxy or port-forward the endpoint.</li>
 <li>Read and write tools are distinct and their descriptions identify mutations.</li>
-<li>MCP <code>readOnlyHint</code>, <code>destructiveHint</code>, <code>idempotentHint</code>, and <code>openWorldHint</code>
+<li>MCP <code>read_only_hint</code>, <code>destructive_hint</code>, <code>idempotent_hint</code>, and <code>open_world_hint</code>
   annotations classify tools for clients that implement approval policies.</li>
 <li><code>export_results</code> requires a caller-supplied path, never creates a parent
   directory, and refuses to replace an existing file unless the call includes
@@ -1912,6 +1912,11 @@ approval policy to graph changes, processing, fitting, deletion, and exports.</p
 <tr>
 <td><code>plot_graph</code></td>
 <td>Validate and create a graph</td>
+<td>Write</td>
+</tr>
+<tr>
+<td><code>plot_graphs</code></td>
+<td>Validate and create multiple graphs simultaneously (recipe / batch mode)</td>
 <td>Write</td>
 </tr>
 <tr>

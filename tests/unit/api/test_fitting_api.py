@@ -68,6 +68,25 @@ class TestFitBatch:
         # Excluding the negative spike should fit at least as well as including it.
         assert result_auto["r_squared"][0] >= result_noauto["r_squared"][0] - 1e-6
 
+    def test_fit_batch_with_robust_loss(self, make_fit_model, make_synthetic_map):
+        x, Y, coords, fnames, true_params, canonical = make_synthetic_map(
+            shape="Lorentzian", n_spectra=4, noise_std=0.0,
+        )
+        # Add spikes
+        Y_corrupted = Y.copy()
+        Y_corrupted[:, 5] += 500.0
+
+        fm = make_fit_model([("Lorentzian", dict(x0=500.0, ampli=100.0, fwhm=8.0))])
+        # Direct loss argument
+        result_soft = fitting.fit_batch(x, Y_corrupted, fm, loss="soft_l1", f_scale=2.0)
+        assert result_soft["success"].all()
+
+        # Via fit_params
+        result_huber = fitting.fit_batch(
+            x, Y_corrupted, fm, fit_params={"loss": "huber", "f_scale": 2.0}
+        )
+        assert result_huber["success"].all()
+
 
 class TestApplyFitModel:
     def test_crops_baselines_and_fits(self, make_fit_model, synth_x):

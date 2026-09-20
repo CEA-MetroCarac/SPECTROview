@@ -1,7 +1,7 @@
 # spectroview/view/components/v_settings.py
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QCheckBox, QSpinBox, QDoubleSpinBox, QLineEdit, QDialogButtonBox,
+    QPushButton, QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox, QLineEdit, QDialogButtonBox,
     QSpacerItem, QSizePolicy, QFrame, QGroupBox, QTabWidget, QWidget, QToolButton
 )
 from PySide6.QtGui import QFont
@@ -91,6 +91,25 @@ class VSettingsDialog(QDialog):
         self.spin_coef_noise.setSingleStep(0.5)
         self.spin_coef_noise.setValue(1.0)
         row.addWidget(self.spin_coef_noise)
+        fitting_layout.addLayout(row)
+
+        # Loss function
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Loss function:"))
+        self.combo_loss = QComboBox()
+        self.combo_loss.addItems(["linear", "soft_l1", "huber"])
+        row.addWidget(self.combo_loss)
+        fitting_layout.addLayout(row)
+
+        # Loss scale (f_scale)
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Loss scale (f_scale):"))
+        self.spin_f_scale = QDoubleSpinBox()
+        self.spin_f_scale.setDecimals(3)
+        self.spin_f_scale.setRange(1e-4, 1e4)
+        self.spin_f_scale.setSingleStep(0.5)
+        self.spin_f_scale.setValue(1.0)
+        row.addWidget(self.spin_f_scale)
         fitting_layout.addLayout(row)
 
         self.chk_fit_negative = QCheckBox("Fit negative values")
@@ -340,6 +359,12 @@ class VSettingsDialog(QDialog):
         self.spin_f_tol.setValue(data.get("ftol", 1e-4))
         self.spin_coef_noise.setValue(data.get("coef_noise", 1.0))
         
+        loss = str(data.get("loss", "linear"))
+        idx = self.combo_loss.findText(loss)
+        if idx >= 0:
+            self.combo_loss.setCurrentIndex(idx)
+        self.spin_f_scale.setValue(float(data.get("f_scale", 1.0)))
+
         self.spin_maxshift.setValue(data.get("maxshift", 20.0))
         self.spin_minfwhm.setValue(data.get("minfwhm", 0.1))
         self.spin_maxfwhm.setValue(data.get("maxfwhm", 200.0))
@@ -371,6 +396,8 @@ class VSettingsDialog(QDialog):
             "xtol": self.spin_x_tol.value(),
             "ftol": self.spin_f_tol.value(),
             "coef_noise": self.spin_coef_noise.value(),
+            "loss": self.combo_loss.currentText(),
+            "f_scale": self.spin_f_scale.value(),
             "maxshift": self.spin_maxshift.value(),
             "minfwhm": self.spin_minfwhm.value(),
             "maxfwhm": self.spin_maxfwhm.value(),

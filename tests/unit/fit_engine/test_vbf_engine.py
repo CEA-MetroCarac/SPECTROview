@@ -248,3 +248,88 @@ class TestCancellation:
             x=x, Y=Y, fit_model=fit_model, cancel_check=lambda: True,
         )
         assert np.isfinite(p_full).all()
+
+
+class TestRobustLoss:
+    def test_spikes_recovered_better_under_soft_l1_than_linear(self, make_fit_model, make_synthetic_spectrum):
+        true_peak = ("Lorentzian", {"x0": 500.0, "ampli": 100.0, "fwhm": 6.0})
+        fit_model = make_fit_model([true_peak])
+        x, y = make_synthetic_spectrum([(true_peak[0], fit_model["peak_models"]["0"]["Lorentzian"])])
+
+        # Inject spike outliers into the spectrum
+        y_spikes = y.copy()
+        y_spikes[10] += 300.0
+        y_spikes[80] += 500.0
+        y_spikes[len(x) - 15] += 400.0
+
+        seed_model_lin = make_fit_model(
+            [("Lorentzian", {"x0": 496.0, "ampli": 80.0, "fwhm": 5.0})],
+            fit_params={"loss": "linear", "max_ite": 200, "xtol": 1e-4, "ftol": 1e-4},
+        )
+        seed_model_soft = make_fit_model(
+            [("Lorentzian", {"x0": 496.0, "ampli": 80.0, "fwhm": 5.0})],
+            fit_params={"loss": "soft_l1", "f_scale": 5.0, "max_ite": 200, "xtol": 1e-4, "ftol": 1e-4},
+        )
+
+        engine = VBFengine()
+        p_lin, s_lin, r2_lin, _, _, names = engine.fit_spectra(x=x, Y=y_spikes[None, :], fit_model=seed_model_lin)
+        p_soft, s_soft, r2_soft, _, _, _ = engine.fit_spectra(x=x, Y=y_spikes[None, :], fit_model=seed_model_soft)
+
+        assert s_soft[0]
+        res_lin = dict(zip(names, p_lin[0]))
+        res_soft = dict(zip(names, p_soft[0]))
+
+        # Under soft_l1, the recovered peak position should be closer to truth (500.0)
+        err_x0_lin = abs(res_lin["P1_x0"] - 500.0)
+        err_x0_soft = abs(res_soft["P1_x0"] - 500.0)
+        assert err_x0_soft < err_x0_lin
+
+    def test_spikes_recovered_better_under_huber_than_linear(self, make_fit_model, make_synthetic_spectrum):
+        true_peak = ("Lorentzian", {"x0": 500.0, "ampli": 100.0, "fwhm": 6.0})
+        fit_model = make_fit_model([true_peak])
+        x, y = make_synthetic_spectrum([(true_peak[0], fit_model["peak_models"]["0"]["Lorentzian"])])
+
+        y_spikes = y.copy()
+        y_spikes[15] += 400.0
+        y_spikes[85] += 600.0
+
+        seed_model_lin = make_fit_model(
+            [("Lorentzian", {"x0": 495.0, "ampli": 80.0, "fwhm": 5.0})],
+            fit_params={"loss": "linear", "max_ite": 200, "xtol": 1e-4, "ftol": 1e-4},
+        )
+        seed_model_huber = make_fit_model(
+            [("Lorentzian", {"x0": 495.0, "ampli": 80.0, "fwhm": 5.0})],
+            fit_params={"loss": "huber", "f_scale": 5.0, "max_ite": 200, "xtol": 1e-4, "ftol": 1e-4},
+        )
+
+        engine = VBFengine()
+        p_lin, _, _, _, _, names = engine.fit_spectra(x=x, Y=y_spikes[None, :], fit_model=seed_model_lin)
+        p_huber, s_huber, _, _, _, _ = engine.fit_spectra(x=x, Y=y_spikes[None, :], fit_model=seed_model_huber)
+
+        assert s_huber[0]
+        res_lin = dict(zip(names, p_lin[0]))
+        res_huber = dict(zip(names, p_huber[0]))
+
+        err_x0_lin = abs(res_lin["P1_x0"] - 500.0)
+        err_x0_huber = abs(res_huber["P1_x0"] - 500.0)
+        assert err_x0_huber < err_x0_lin
+
+    def test_coef_noise_and_robust_loss_composition(self, make_fit_model, make_synthetic_spectrum):
+        true_peak = ("Lorentzian", {"x0": 500.0, "ampli": 100.0, "fwhm": 6.0})
+        fit_model = make_fit_model([true_peak])
+        x, y = make_synthetic_spectrum([(true_peak[0], fit_model["peak_models"]["0"]["Lorentzian"])])
+
+        # Add baseline noise + spikes
+        rng = np.random.default_rng(42)
+        y_noisy = y + rng.normal(0, 1.0, len(x))
+        y_noisy[20] += 300.0  # spike
+
+        seed_model = make_fit_model(
+            [("Lorentzian", {"x0": 498.0, "ampli": 90.0, "fwhm": 5.5})],
+            fit_params={"loss": "soft_l1", "f_scale": 5.0, "coef_noise": 1.0, "max_ite": 200},
+        )
+        engine = VBFengine()
+        p_full, success, r2, _, _, names = engine.fit_spectra(x=x, Y=y_noisy[None, :], fit_model=seed_model)
+        assert success[0]
+        res = dict(zip(names, p_full[0]))
+        assert res["P1_x0"] == pytest.approx(500.0, abs=0.5)

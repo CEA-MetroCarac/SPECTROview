@@ -23,6 +23,8 @@ class MSettings:
             "maxshift": self.settings.value("fit_settings/maxshift", 20.0, float),
             "maxfwhm": self.settings.value("fit_settings/maxfwhm", 200.0, float),
             "minfwhm": self.settings.value("fit_settings/minfwhm", 0.1, float),
+            "loss": self.settings.value("fit_settings/loss", "linear", str),
+            "f_scale": self.settings.value("fit_settings/f_scale", 1.0, float),
         }
 
     def save_fit_settings(self, data: dict):

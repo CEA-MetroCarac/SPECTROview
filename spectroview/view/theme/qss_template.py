@@ -200,7 +200,7 @@ _QSS_TEMPLATE = r"""
         background: {surface_input};
         border: 1px solid {border_subtle};
         border-radius: 5px;
-        padding: 3px 5px;
+        padding: 1px 4px;
         color: {text_primary};
     }}
     QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus {{
@@ -234,15 +234,15 @@ _QSS_TEMPLATE = r"""
     }}
 
     QComboBox::down-arrow {{
-        image: url({icon_dir}/arrow-down{arrow_suffix}.svg);
+        image: url("{icon_dir}/arrow-down{arrow_suffix}.svg");
         width: 10px; height: 10px;
     }}
     QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {{
-        image: url({icon_dir}/arrow-up{arrow_suffix}.svg);
+        image: url("{icon_dir}/arrow-up{arrow_suffix}.svg");
         width: 9px; height: 9px;
     }}
     QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {{
-        image: url({icon_dir}/arrow-down{arrow_suffix}.svg);
+        image: url("{icon_dir}/arrow-down{arrow_suffix}.svg");
         width: 9px; height: 9px;
     }}
 

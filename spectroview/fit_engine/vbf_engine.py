@@ -75,7 +75,7 @@ class VBFengine:
         shared_x = x.ndim == 1
 
         if fit_params is None:
-            fit_params = {}
+            fit_params = fit_model.get("fit_params", {}) if fit_model else {}
 
         # ─── 2. Build initial parameter matrix ───
         t0 = time.perf_counter()
@@ -97,6 +97,8 @@ class VBFengine:
         xtol = float(fit_params.get("xtol", 1e-4))
         ftol = float(fit_params.get("ftol", 1e-4))
         max_ite = int(fit_params.get("max_ite", 200))
+        loss = str(fit_params.get("loss", "linear"))
+        f_scale = float(fit_params.get("f_scale", 1.0))
 
         # ─── 4. TENSOR FIT ───
         t0 = time.perf_counter()
@@ -112,6 +114,8 @@ class VBFengine:
             max_iter=max_ite,
             xtol=xtol,
             ftol=ftol,
+            loss=loss,
+            f_scale=f_scale,
             progress_callback=progress_callback,
             cancel_check=cancel_check,
         )

@@ -7,7 +7,11 @@ isolation from the rest of the fit_engine stack.
 import numpy as np
 import pytest
 
-from spectroview.fit_engine.optimizer import batched_levenberg_marquardt
+from spectroview.fit_engine.optimizer import (
+    _robust_cost,
+    _robust_scale_factor,
+    batched_levenberg_marquardt,
+)
 
 
 def _linear_problem():
@@ -243,3 +247,140 @@ class TestCancellation:
         )
         assert len(progress_calls) > 0
         assert all(tot == 1 for _, tot in progress_calls)
+
+
+class TestRobustLosses:
+    def test_linear_loss_is_bit_identical_to_default(self):
+        x, evaluate_fn, jacobian_fn = _linear_problem()
+        true_p = np.array([[3.0, -2.0]])
+        Y = evaluate_fn(x, true_p)
+        p0 = np.array([[0.5, 0.5]])
+        kwargs = dict(
+            x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+            p0=p0, lower_bounds=np.array([-100.0, -100.0]),
+            upper_bounds=np.array([100.0, 100.0]),
+        )
+        p_def, s_def, c_def = batched_levenberg_marquardt(**kwargs)
+        p_lin, s_lin, c_lin = batched_levenberg_marquardt(**kwargs, loss="linear")
+
+        np.testing.assert_array_equal(p_def, p_lin)
+        np.testing.assert_array_equal(s_def, s_lin)
+        np.testing.assert_array_equal(c_def, c_lin)
+
+    def test_invalid_loss_raises(self):
+        x, evaluate_fn, jacobian_fn = _linear_problem()
+        Y = evaluate_fn(x, np.array([[1.0, 1.0]]))
+        with pytest.raises(ValueError, match="Unknown loss"):
+            batched_levenberg_marquardt(
+                x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+                p0=np.array([[1.0, 1.0]]), lower_bounds=np.array([-10.0, -10.0]),
+                upper_bounds=np.array([10.0, 10.0]), loss="cauchy",
+            )
+
+    def test_invalid_f_scale_raises(self):
+        x, evaluate_fn, jacobian_fn = _linear_problem()
+        Y = evaluate_fn(x, np.array([[1.0, 1.0]]))
+        with pytest.raises(ValueError, match="f_scale must be positive"):
+            batched_levenberg_marquardt(
+                x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+                p0=np.array([[1.0, 1.0]]), lower_bounds=np.array([-10.0, -10.0]),
+                upper_bounds=np.array([10.0, 10.0]), loss="soft_l1", f_scale=0.0,
+            )
+
+    def test_soft_l1_outperforms_linear_with_outliers(self):
+        x, evaluate_fn, jacobian_fn = _linear_problem()
+        true_p = np.array([[3.0, -2.0]])
+        Y = evaluate_fn(x, true_p)
+        # Inject large spike outliers
+        Y_spikes = Y.copy()
+        Y_spikes[0, 10] += 50.0
+        Y_spikes[0, 25] += 80.0
+        Y_spikes[0, 40] -= 60.0
+
+        p0 = np.array([[1.0, 1.0]])
+        bounds = (np.array([-100.0, -100.0]), np.array([100.0, 100.0]))
+
+        p_lin, s_lin, _ = batched_levenberg_marquardt(
+            x=x, Y_data=Y_spikes, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+            p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss="linear",
+        )
+        p_soft, s_soft, _ = batched_levenberg_marquardt(
+            x=x, Y_data=Y_spikes, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+            p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss="soft_l1", f_scale=1.0,
+        )
+
+        err_lin = np.linalg.norm(p_lin[0] - true_p[0])
+        err_soft = np.linalg.norm(p_soft[0] - true_p[0])
+
+        assert s_soft[0]
+        # soft_l1 should be substantially closer to true parameters than linear
+        assert err_soft < err_lin / 3.0
+
+    def test_huber_outperforms_linear_with_outliers(self):
+        x, evaluate_fn, jacobian_fn = _linear_problem()
+        true_p = np.array([[3.0, -2.0]])
+        Y = evaluate_fn(x, true_p)
+        Y_spikes = Y.copy()
+        Y_spikes[0, 10] += 50.0
+        Y_spikes[0, 25] += 80.0
+        Y_spikes[0, 40] -= 60.0
+
+        p0 = np.array([[1.0, 1.0]])
+        bounds = (np.array([-100.0, -100.0]), np.array([100.0, 100.0]))
+
+        p_lin, _, _ = batched_levenberg_marquardt(
+            x=x, Y_data=Y_spikes, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+            p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss="linear",
+        )
+        p_huber, s_huber, _ = batched_levenberg_marquardt(
+            x=x, Y_data=Y_spikes, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+            p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss="huber", f_scale=1.0,
+        )
+
+        err_lin = np.linalg.norm(p_lin[0] - true_p[0])
+        err_huber = np.linalg.norm(p_huber[0] - true_p[0])
+
+        assert s_huber[0]
+        assert err_huber < err_lin / 3.0
+
+    def test_clean_data_inliers_converge_accurately(self):
+        x, evaluate_fn, jacobian_fn = _linear_problem()
+        true_p = np.array([[3.0, -2.0]])
+        Y = evaluate_fn(x, true_p)
+        p0 = np.array([[1.0, 1.0]])
+        bounds = (np.array([-100.0, -100.0]), np.array([100.0, 100.0]))
+
+        for loss_name in ("soft_l1", "huber"):
+            p_opt, success, _ = batched_levenberg_marquardt(
+                x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+                p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1],
+                loss=loss_name, f_scale=1.0,
+            )
+            assert success[0]
+            np.testing.assert_allclose(p_opt[0], true_p[0], atol=1e-3)
+
+    def test_robust_scale_factor_and_cost_numerical_stability(self):
+        # Extreme values: very large (1e200) and very small (1e-10)
+        r = np.array([[1e200, 1e-10, 0.0, 5.0, -10.0]])
+        f_scale = 2.0
+
+        for loss in ("soft_l1", "huber"):
+            w = _robust_scale_factor(r, loss=loss, f_scale=f_scale)
+            assert np.isfinite(w).all()
+            assert (w > 0).all()
+            assert w[0, 2] == pytest.approx(1.0)  # zero residual has scale 1.0
+
+            cost = _robust_cost(r, loss=loss, f_scale=f_scale)
+            assert np.isfinite(cost).all()
+            assert (cost >= 0).all()
+
+        # Cost for linear should be exact sum of squares
+        r_clean = np.array([[1.0, 2.0, 3.0]])
+        np.testing.assert_allclose(_robust_cost(r_clean, loss="linear"), 14.0)
+
+        # Cost for huber at small residuals (inliers) should match linear exactly
+        r_inlier = np.array([[0.5, -0.2, 0.1]])
+        np.testing.assert_allclose(
+            _robust_cost(r_inlier, loss="huber", f_scale=1.0),
+            _robust_cost(r_inlier, loss="linear"),
+        )

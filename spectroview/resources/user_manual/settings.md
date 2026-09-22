@@ -25,9 +25,13 @@ These parameters control the behavior of the **Vectorized Batch Fit (`VBF`) engi
 | **x-tolerance** | `xtol` | 1×10⁻⁴ | 1×10⁻⁶ – 1×10⁻¹ | Relative tolerance for the parameter step size. Convergence requires: <br> mean(\|&delta;<i>p</i>\| / \|<i>p</i>\|) &lt; `xtol` |
 | **f-tolerance** | `ftol` | 1×10⁻⁴ | 1×10⁻⁶ – 1×10⁻¹ | Relative tolerance for the cost function. Convergence requires: <br> \|cost<sub>n</sub> - cost<sub>n-1</sub>\| / \|cost<sub>n</sub>\| &lt; `ftol` |
 | **Noise Threshold Coefficient** | `coef_noise` | 1.0 | 0 – 100 | Multiplier for the auto-estimated noise level (`coef_noise` × estimated noise amplitude). Masks noisy data and suppresses ghost peaks.<br>• **0**: Disabled<br>• **0.5–1.0**: Conservative<br>• **1.0–2.0**: Moderate (Default)<br>• **3.0+**: Aggressive<br><br>*Note: You can refer to the noise level displayed in the toolbar or activate the "Show noise level" checkbox within the `View Options` of the `SpectraViewer` to see the noise level directly on the spectra plot.* |
+| **Loss Function** | `loss` | `linear` | `linear`, `soft_l1`, `huber` | Robust loss function for outlier resistance (e.g. cosmic ray spikes, sharp artifacts). <br>• **linear**: Standard least squares (default).<br>• **soft_l1**: Smooth L1 approximation $\rho(z) = 2(\sqrt{1+z}-1)$, robust to large spikes without manual masking.<br>• **huber**: Huber loss, quadratic for inliers and linear for residuals exceeding `f_scale`. |
+| **Loss Scale** | `f_scale` | 1.0 | 1×10⁻⁴ – 10,000 | Margin scale between inliers and outliers for robust loss functions. Residuals are scaled as $(r / f\_scale)$ before evaluating $\rho'(z)$. |
 | **Fit Negative Values** | - | Unchecked | - | When checked, negative intensity values are included in the fit. When unchecked, they are assigned zero weight. |
 
 > **Note**: A spectrum is considered converged only when **both** `xtol` and `ftol` criteria are simultaneously satisfied.
+>
+> **Weighting Composition Order**: Hard exclusions (`fit_negative` and `coef_noise` noise-floor masking) are evaluated first to assign zero weight to excluded points. For active points, robust loss weighting (`soft_l1` or `huber`) is applied second, smoothly down-weighting outlier residuals via Iteratively Reweighted Least Squares (IRLS).
 
 ---
 

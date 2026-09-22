@@ -94,6 +94,8 @@ def fit_batch(
     weights: Optional[np.ndarray] = None,
     fit_params: Optional[Dict[str, Any]] = None,
     auto_weights: bool = True,
+    loss: Optional[str] = None,
+    f_scale: Optional[float] = None,
     progress_callback: Optional[Callable[[int, int], None]] = None,
     cancel_check: Optional[Callable[[], bool]] = None,
 ) -> Dict[str, Any]:
@@ -106,12 +108,16 @@ def fit_batch(
             Use `build_fit_model()` to construct this from a simple peak list,
             or `load_fit_model_template()` to load a JSON file saved by the GUI.
         weights: Optional explicit fit weights, shape (N, M). If given, `auto_weights` is ignored.
-        fit_params: Optimizer parameters (fit_negative, coef_noise, xtol, ftol, max_ite, ...).
+        fit_params: Optimizer parameters (fit_negative, coef_noise, xtol, ftol, max_ite, loss, f_scale, ...).
         auto_weights: If True (default) and `weights` is None, weights are derived
             from `fit_params` exactly as the GUI does before every fit: points with
             negative intensity are excluded unless fit_params['fit_negative'] is
             True, and points below a noise floor (fit_params['coef_noise']) are
             excluded. Set False to fit every point with equal weight.
+        loss: Optional robust loss function ('linear', 'soft_l1', 'huber').
+            Overrides fit_params['loss'] if specified.
+        f_scale: Optional inlier/outlier margin scale (default 1.0).
+            Overrides fit_params['f_scale'] if specified.
         progress_callback: optional callable(current, total) called during fitting.
         cancel_check: optional callable() -> bool; return True to abort mid-fit.
 
@@ -127,13 +133,23 @@ def fit_batch(
     if not fit_model.get("peak_models"):
         raise FitModelError("fit_model has no 'peak_models' entry — nothing to fit.")
 
+    if fit_params is None:
+        params = fit_model.get("fit_params", {}).copy() if fit_model.get("fit_params") else {}
+    else:
+        params = fit_params.copy()
+
+    if loss is not None:
+        params["loss"] = loss
+    if f_scale is not None:
+        params["f_scale"] = f_scale
+
     if weights is None and auto_weights:
-        weights = compute_fit_weights(Y, fit_params or {})
+        weights = compute_fit_weights(Y, params)
 
     try:
         engine = VBFengine()
         p_full, success, rsquared, best_fits, Y_peaks, param_names = engine.fit_spectra(
-            x, Y, fit_model, weights=weights, fit_params=fit_params,
+            x, Y, fit_model, weights=weights, fit_params=params,
             progress_callback=progress_callback, cancel_check=cancel_check,
         )
     except Exception as e:

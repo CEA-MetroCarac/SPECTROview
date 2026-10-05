@@ -1239,6 +1239,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#33-robust-loss-functions-irls-style-scaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3. Robust Loss Functions (IRLS-Style Scaling)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2171,6 +2182,18 @@
 </ol>
 <h3 id="32-independent-convergence"><strong>3.2. Independent Convergence</strong><a class="headerlink" href="#32-independent-convergence" title="Permanent link">&para;</a></h3>
 <p>Even though the math is batched, each spectrum converges independently. The optimizer uses a boolean mask (<code>active = ~converged</code>) to skip Jacobian calculations and linear solves for spectra that have already reached the tolerance limits, progressively speeding up the later iterations. A second boolean mask (<code>dirty</code>, see §2) further skips the Jacobian/normal-equation computation — but <em>not</em> the trial-step evaluation — for active spectra whose parameters didn't change on the previous iteration (a rejected step), since only the damping factor differs on the retry.</p>
+<h3 id="33-robust-loss-functions-irls-style-scaling"><strong>3.3. Robust Loss Functions (IRLS-Style Scaling)</strong><a class="headerlink" href="#33-robust-loss-functions-irls-style-scaling" title="Permanent link">&para;</a></h3>
+<p>To handle outliers such as cosmic ray spikes and sharp detector artifacts without requiring manual data masking, the optimizer supports robust M-estimators via Iteratively Reweighted Least Squares (IRLS):
+- <strong><code>linear</code></strong> (default): Standard least-squares objective <span class="arithmatex">\(\rho(z) = z\)</span>, <span class="arithmatex">\(\rho'(z) = 1\)</span>. The code path is bit-identical to the original unweighted LM.
+- <strong><code>soft_l1</code></strong>: Smooth <span class="arithmatex">\(L_1\)</span> approximation <span class="arithmatex">\(\rho(z) = 2(\sqrt{1 + z} - 1)\)</span>, with derivative scaling factor <span class="arithmatex">\(\sqrt{\rho'(z)} = (1 + z)^{-1/4}\)</span> where <span class="arithmatex">\(z = (r / f\_scale)^2\)</span>. Transitions smoothly from quadratic behavior near zero to linear penalty for large residuals.
+- <strong><code>huber</code></strong>: Huber loss <span class="arithmatex">\(\rho(z) = z\)</span> if <span class="arithmatex">\(z \le 1\)</span> else <span class="arithmatex">\(2\sqrt{z} - 1\)</span>, with derivative scaling factor <span class="arithmatex">\(\sqrt{\rho'(z)} = 1\)</span> if <span class="arithmatex">\(z \le 1\)</span> else <span class="arithmatex">\(z^{-1/4}\)</span>.</p>
+<p><strong>Mathematical Formulation</strong>:
+Residuals and Jacobian rows are scaled by <span class="arithmatex">\(w_{\text{robust}} = \sqrt{\rho'((r / f\_scale)^2)}\)</span>. The normal equations solved at each iteration are:
+$<span class="arithmatex">\((J^T W J + \lambda \text{diag}(J^T W J)) \delta \mathbf{p} = -J^T W \mathbf{r}\)</span>$
+where <span class="arithmatex">\(W = \text{diag}(w_{\text{hard}}^2 \cdot w_{\text{robust}}^2)\)</span>.</p>
+<p><strong>Weighting Composition Order</strong>:
+1. <strong>Hard exclusions</strong> (<code>fit_negative</code> and <code>coef_noise</code> noise floor) are evaluated first in <code>weights.py</code> to assign zero weight (<span class="arithmatex">\(w_{\text{hard}} = 0\)</span>) to excluded points.
+2. <strong>Robust weighting</strong> (<span class="arithmatex">\(w_{\text{robust}}\)</span>) is applied second inside <code>optimizer.py</code> on the active points, smoothly down-weighting large outlier residuals. Zero-weighted points remain zero.</p>
 <hr />
 <h2 id="4-folder-and-class-structure"><strong>4. Folder and Class Structure</strong><a class="headerlink" href="#4-folder-and-class-structure" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>graph TD

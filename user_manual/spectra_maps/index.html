@@ -823,6 +823,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#34-heatmap-visualization-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4. Heatmap Visualization Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1945,6 +1956,10 @@
 <td><strong>Copy</strong>: Copies the plot to your clipboard as a high-quality image. Use <code>Ctrl + Click</code> (or <code>Cmd + Click</code> on macOS) to copy the raw numerical plot data to your clipboard instead.</td>
 </tr>
 <tr>
+<td><img alt="Heatmap" src="../../user_manual_images/Spectra_Maps/heatmap_button.png" /></td>
+<td><strong>Plot Heatmap</strong>: Toggles the 2D intensity heatmap visualization mode for multiple selected spectra. Displays continuous spectral intensity evolution with dedicated Y-axis selection, custom labeling, and resolution controls directly on the toolbar.</td>
+</tr>
+<tr>
 <td><img alt="More View Options" src="../../user_manual_images/Spectra_Maps/view_options.png" /></td>
 <td><strong>More Options</strong>: Opens a comprehensive configuration panel allowing you to adjust X/Y units, toggle log scales, change plot styles, choose discrete or gradient spectrum color palettes from visual color-strip previews, set the maximum number of legend items (15 by default), toggle Raw/Residual visibility, enable grids, adjust line widths, and define precise figure dimensions.<br><img alt="More Options Panel" src="../../user_manual_images/Spectra_Maps/menu_view_options.png" /></td>
 </tr>
@@ -1968,6 +1983,24 @@
 <p class="admonition-title">100-spectrum editing batches</p>
 <p>To keep the interface responsive with large selections, the dialog creates editors for at most the first <strong>100 plotted spectra</strong> in both the Spectra and Maps workspaces. When the selection is larger, the dialog reports <strong>“showing 100 of N”</strong>. Spectra outside the displayed batch are not modified. Narrow the current selection to edit another group.</p>
 </div>
+<h4 id="34-heatmap-visualization-mode"><strong>3.4. Heatmap Visualization Mode</strong><a class="headerlink" href="#34-heatmap-visualization-mode" title="Permanent link">&para;</a></h4>
+<p>The <strong>Heatmap Plot</strong> tool transforms multiple plotted spectra into a continuous 2D intensity map. This mode is particularly powerful for analyzing series data, such as in-situ temperature profiles, time-resolved kinetics, spatial line-scans, or composition gradients.</p>
+<div align="center">
+  <img src="../../user_manual_images/Spectra_Maps/heatmap_plot_for_spectraviewer.png" alt="SpectraViewer Heatmap Mode" width="800"><br>
+  <i>The <code>SpectraViewer</code> in Heatmap visualization mode, displaying a continuous 2D intensity map across an in-situ temperature series.</i>
+</div>
+
+<h5 id="key-controls-and-parameters"><strong>Key Controls and Parameters</strong><a class="headerlink" href="#key-controls-and-parameters" title="Permanent link">&para;</a></h5>
+<p>When Heatmap mode is activated, specialized configuration controls appear directly on the main toolbar, while incompatible 1D tools (such as peak markers, baseline anchors, cosmic-ray eraser, and normalization entries) are automatically hidden:</p>
+<ul>
+<li><strong>Heatmap Toggle</strong> (<img alt="Heatmap" src="../../user_manual_images/Spectra_Maps/heatmap_button.png" />): Enables or disables 2D heatmap rendering. Unchecking this button instantly restores standard 1D spectrum curves and returns all standard toolbar tools.</li>
+<li><strong>Y-Axis Parameter Dropdown</strong>:</li>
+<li><strong><code>Index</code></strong>: Stacks spectra uniformly along the vertical axis according to selection order (<code>0, 1, 2, ...</code>).</li>
+<li><strong>Filename Tokens</strong>: Automatically extracts numerical parameters embedded in filenames separated by underscores (for instance, <code>sample_25°C.txt</code>, <code>sample_100°C.txt</code>, <code>sample_200°C.txt</code> automatically populate tokens such as <code>25°C</code>, extracting the corresponding numerical values <code>25, 100, 200</code> for physical Y coordinates).</li>
+<li><strong>Custom Y-Axis Label</strong>: Text field to override the automatic vertical axis title (e.g., <code>Temperature (°C)</code>, <code>Time (min)</code>, or <code>Position (µm)</code>).</li>
+<li><strong>Y-Axis Interpolation Points (<code>Pts:</code>)</strong>: Specifies the number of interpolated vertical slices (default <code>300</code> pts) using smooth interpolation. Setting this value to <code>0</code> disables interpolation, displaying raw discrete rows.</li>
+<li><strong>Intensity Colormap</strong>: Respects the active color palette chosen under <strong>More Options</strong> (e.g. <code>jet</code>, <code>viridis</code>, <code>plasma</code>).</li>
+</ul>
 <hr />
 <h3 id="4-fitmodelbuilder"><strong>4. <code>FitModelBuilder</code></strong><a class="headerlink" href="#4-fitmodelbuilder" title="Permanent link">&para;</a></h3>
 <p>The <code>FitModelBuilder</code> tab is where you configure your spectral fit models. It is divided into three main panels: <code>Fitting</code>, <code>PeakTable</code>, and <code>FitModelControl</code>, each explained in the following sections.</p>

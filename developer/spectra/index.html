@@ -1162,6 +1162,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#vspectraviewer-plotting-and-2d-heatmap-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VSpectraViewer — Plotting and 2D Heatmap Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#vmworkspacespectra-the-viewmodel" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2012,7 +2023,7 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 <tr>
 <td><strong>View</strong></td>
 <td><code>VSpectraViewer</code></td>
-<td>Matplotlib canvas — renders spectra, baselines, peaks, best-fit, residuals</td>
+<td>Matplotlib canvas — renders 1D spectra, baselines, peaks, best-fit, residuals, and 2D heatmaps</td>
 </tr>
 <tr>
 <td><strong>View</strong></td>
@@ -2074,6 +2085,15 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="bp">self</span><span class="o">.</span><span class="n">btn_reinit</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_with_ctrl</span><span class="p">(</span><span class="n">vm</span><span class="o">.</span><span class="n">reinit_spectra</span><span class="p">))</span>
 </code></pre></div>
 <p>All bulk actions (baseline subtract, peak paste, reinit, fit) follow this pattern. A normal click applies to selected spectra; Ctrl+click applies to all spectra in the store.</p>
+<h3 id="vspectraviewer-plotting-and-2d-heatmap-mode"><code>VSpectraViewer</code> — Plotting and 2D Heatmap Mode<a class="headerlink" href="#vspectraviewer-plotting-and-2d-heatmap-mode" title="Permanent link">&para;</a></h3>
+<p><strong>File</strong>: <a href="file:///spectroview/view/components/v_spectra_viewer.py"><code>v_spectra_viewer.py</code></a></p>
+<p><code>VSpectraViewer</code> is the core spectral canvas widget. In addition to multi-line 1D spectrum visualization, it provides a native <strong>2D Heatmap Mode</strong> for visualizing series data (e.g., temperature variations, kinetics, line scans):</p>
+<ul>
+<li><strong>Data Alignment &amp; Ragged Matrix Interpolation</strong>: When selected spectra possess differing or ragged wavenumber grids, <code>_plot_heatmap()</code> aligns all rows onto a common spectral range via <code>scipy.interpolate.interp1d</code>.</li>
+<li><strong>Y-Axis Token Extraction</strong>: Automatically parses numeric parameters embedded in filenames (e.g. <code>_100C_</code>, <code>_250K_</code>) using regex tokenization, or defaults to index-based ordering (<code>0..N-1</code>).</li>
+<li><strong>Smooth Vertical Interpolation</strong>: Supports 1D cubic/linear interpolation along the vertical axis when <code>spin_heatmap_interp &gt; 0</code> (default 300 points).</li>
+<li><strong>Dynamic Toolbar Adaptation</strong>: Activating heatmap mode toggles toolbar state: standard 1D tools (<code>btn_peak</code>, <code>btn_baseline</code>, <code>btn_eraser</code>, <code>btn_norm</code>, <code>btn_bestfit</code>, and <code>shift_panel</code>) are hidden via <code>setVisible(False)</code>, while heatmap-specific controls (<code>cbb_heatmap_yaxis</code>, <code>le_heatmap_ylabel</code>, <code>spin_heatmap_interp</code>) become visible. Unchecking the mode restores the 1D tools immediately.</li>
+</ul>
 <h3 id="vmworkspacespectra-the-viewmodel"><code>VMWorkspaceSpectra</code> — The ViewModel<a class="headerlink" href="#vmworkspacespectra-the-viewmodel" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <a href="file:///Users/HoanLe/Documents/SPECTROview/spectroview/viewmodel/vm_workspace_spectra.py"><code>vm_workspace_spectra.py</code></a></p>
 <p>This is the largest and most critical class in the application. It owns the <code>SpectraStore</code> and orchestrates every operation.</p>

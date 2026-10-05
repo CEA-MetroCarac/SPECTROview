@@ -1762,6 +1762,20 @@
 <td>Multiplier for the auto-estimated noise level (<code>coef_noise</code> × estimated noise amplitude). Masks noisy data and suppresses ghost peaks.<br>• <strong>0</strong>: Disabled<br>• <strong>0.5–1.0</strong>: Conservative<br>• <strong>1.0–2.0</strong>: Moderate (Default)<br>• <strong>3.0+</strong>: Aggressive<br><br><em>Note: You can refer to the noise level displayed in the toolbar or activate the "Show noise level" checkbox within the <code>View Options</code> of the <code>SpectraViewer</code> to see the noise level directly on the spectra plot.</em></td>
 </tr>
 <tr>
+<td><strong>Loss Function</strong></td>
+<td><code>loss</code></td>
+<td><code>linear</code></td>
+<td><code>linear</code>, <code>soft_l1</code>, <code>huber</code></td>
+<td>Robust loss function for outlier resistance (e.g. cosmic ray spikes, sharp artifacts). <br>• <strong>linear</strong>: Standard least squares (default).<br>• <strong>soft_l1</strong>: Smooth L1 approximation <span class="arithmatex">\(\rho(z) = 2(\sqrt{1+z}-1)\)</span>, robust to large spikes without manual masking.<br>• <strong>huber</strong>: Huber loss, quadratic for inliers and linear for residuals exceeding <code>f_scale</code>.</td>
+</tr>
+<tr>
+<td><strong>Loss Scale</strong></td>
+<td><code>f_scale</code></td>
+<td>1.0</td>
+<td>1×10⁻⁴ – 10,000</td>
+<td>Margin scale between inliers and outliers for robust loss functions. Residuals are scaled as <span class="arithmatex">\((r / f\_scale)\)</span> before evaluating <span class="arithmatex">\(\rho'(z)\)</span>.</td>
+</tr>
+<tr>
 <td><strong>Fit Negative Values</strong></td>
 <td>-</td>
 <td>Unchecked</td>
@@ -1772,6 +1786,7 @@
 </table>
 <blockquote>
 <p><strong>Note</strong>: A spectrum is considered converged only when <strong>both</strong> <code>xtol</code> and <code>ftol</code> criteria are simultaneously satisfied.</p>
+<p><strong>Weighting Composition Order</strong>: Hard exclusions (<code>fit_negative</code> and <code>coef_noise</code> noise-floor masking) are evaluated first to assign zero weight to excluded points. For active points, robust loss weighting (<code>soft_l1</code> or <code>huber</code>) is applied second, smoothly down-weighting outlier residuals via Iteratively Reweighted Least Squares (IRLS).</p>
 </blockquote>
 <hr />
 <h3 id="2-global-peak-limits-general-tab"><strong>2. Global Peak Limits</strong> <em>(General tab)</em><a class="headerlink" href="#2-global-peak-limits-general-tab" title="Permanent link">&para;</a></h3>

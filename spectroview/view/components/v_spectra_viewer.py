@@ -102,7 +102,6 @@ class VSpectraViewer(QWidget):
         # ── Heatmap mode state ──
         self._heatmap_mode = False
         self._heatmap_colorbar = None      # Reference to colorbar for removal
-        self._df_fit_results = None        # Fit results dataframe for heatmap Y-axis
 
         # ── Cosmic-ray eraser state ──
         self._erase_mode = False           # Whether eraser mode is active
@@ -611,24 +610,6 @@ class VSpectraViewer(QWidget):
             self._refresh_heatmap_yaxis_choices()
             
         self._plot()
-
-    def set_fit_results(self, df):
-        """Store the fit-results dataframe for heatmap Y-axis choices.
-
-        Called when the viewmodel emits fit_results_updated.
-        Numeric columns from the dataframe (excluding 'Filename', 'X', 'Y')
-        become available as heatmap Y-axis options.
-        """
-        import pandas as pd
-        if df is not None and not df.empty:
-            self._df_fit_results = df.copy()
-        else:
-            self._df_fit_results = None
-
-        # Refresh heatmap Y-axis choices if heatmap mode is active
-        if getattr(self, "_heatmap_mode", False):
-            self._refresh_heatmap_yaxis_choices()
-            self._plot()
 
     def _compute_shift_steps(self):
         """Compute per-spectrum X and Y shift steps based on slider values and data range."""
@@ -1321,38 +1302,14 @@ class VSpectraViewer(QWidget):
         return [(pos, tok)
                 for pos, tok, _val in self._extract_filename_tokens(fnames[0])]
 
-    def _get_fit_result_columns(self):
-        """Return numeric column names from df_fit_results (excluding housekeeping cols)."""
-        import pandas as pd
-        if self._df_fit_results is None or self._df_fit_results.empty:
-            return []
-        skip = {"Filename", "X", "Y", "Quadrant", "Zone"}
-        cols = []
-        for col in self._df_fit_results.columns:
-            if col in skip:
-                continue
-            if pd.api.types.is_numeric_dtype(self._df_fit_results[col]):
-                cols.append(col)
-        return cols
-
     def _refresh_heatmap_yaxis_choices(self):
-        """Rebuild the Y-axis combobox items from filenames and fit results."""
+        """Rebuild the Y-axis combobox items from the selected filenames."""
         prev = self.cbb_heatmap_yaxis.currentText()
         self.cbb_heatmap_yaxis.blockSignals(True)
         self.cbb_heatmap_yaxis.clear()
         self.cbb_heatmap_yaxis.addItem("Index")
-
-        # Filename-based tokens
         for _pos, token_text in self._collect_heatmap_yaxis_tokens():
             self.cbb_heatmap_yaxis.addItem(token_text)
-
-        # Fit-result numeric columns (prefixed to distinguish from filename tokens)
-        fit_cols = self._get_fit_result_columns()
-        if fit_cols:
-            self.cbb_heatmap_yaxis.insertSeparator(self.cbb_heatmap_yaxis.count())
-            for col in fit_cols:
-                self.cbb_heatmap_yaxis.addItem(f"[Fit] {col}")
-
         # Restore previous selection if still available
         idx = self.cbb_heatmap_yaxis.findText(prev)
         if idx >= 0:
@@ -1375,26 +1332,6 @@ class VSpectraViewer(QWidget):
 
         if selected == "Index" or not fnames:
             label = self.le_heatmap_ylabel.text().strip() or "Spectrum index"
-            return np.arange(N, dtype=float), label
-
-        # ── Fit-result column (prefixed with "[Fit] ") ──
-        if selected.startswith("[Fit] "):
-            col_name = selected[len("[Fit] "):]
-            label = self.le_heatmap_ylabel.text().strip() or col_name
-            if self._df_fit_results is not None and col_name in self._df_fit_results.columns:
-                # Match rows by filename
-                df = self._df_fit_results
-                values = []
-                for fname in fnames:
-                    row = df.loc[df["Filename"] == fname, col_name]
-                    if not row.empty:
-                        try:
-                            values.append(float(row.iloc[0]))
-                        except (TypeError, ValueError):
-                            values.append(float("nan"))
-                    else:
-                        values.append(float("nan"))
-                return np.array(values, dtype=float), label
             return np.arange(N, dtype=float), label
 
         # ── Filename token ──

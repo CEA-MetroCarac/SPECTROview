@@ -329,7 +329,6 @@ class VWorkspaceSpectra(QWidget):
         
         # ViewModel → View for fit results
         vm.fit_results_updated.connect(self._update_fit_results)
-        vm.fit_results_updated.connect(self.v_spectra_viewer.set_fit_results)
         vm.split_parts_updated.connect(self.v_fit_results.populate_split_combobox)
 
         # Sync sidebar icons with theme changes

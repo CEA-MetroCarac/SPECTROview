@@ -369,6 +369,42 @@ class VSpectraViewer(QWidget):
         self.btn_heatmap.toggled.connect(self._toggle_heatmap_mode)
         layout.addWidget(self.btn_heatmap)
 
+        # Heatmap controls (placed on toolbar next to btn_heatmap, hidden until heatmap mode is active)
+        self.cbb_heatmap_yaxis = QComboBox()
+        self.cbb_heatmap_yaxis.setFixedHeight(30)
+        self.cbb_heatmap_yaxis.addItem("Index")
+        self.cbb_heatmap_yaxis.setToolTip(
+            "Heatmap Y-axis: choose parameter for vertical axis.\n"
+            "Index = spectrum order, or select a token parsed from filenames.")
+        self.cbb_heatmap_yaxis.currentIndexChanged.connect(self._emit_view_options)
+        self.cbb_heatmap_yaxis.setVisible(False)
+        layout.addWidget(self.cbb_heatmap_yaxis)
+
+        self.le_heatmap_ylabel = QLineEdit()
+        self.le_heatmap_ylabel.setFixedHeight(30)
+        self.le_heatmap_ylabel.setFixedWidth(80)
+        self.le_heatmap_ylabel.setPlaceholderText("Y label")
+        self.le_heatmap_ylabel.setToolTip(
+            "Custom label for the heatmap Y-axis.\n"
+            "Leave empty for the automatic token name.\n"
+            "Example: Temperature (°C)")
+        self.le_heatmap_ylabel.textChanged.connect(self._on_heatmap_ylabel_changed)
+        self.le_heatmap_ylabel.setVisible(False)
+        layout.addWidget(self.le_heatmap_ylabel)
+
+        self.spin_heatmap_interp = QSpinBox()
+        self.spin_heatmap_interp.setFixedHeight(30)
+        self.spin_heatmap_interp.setFixedWidth(85)
+        self.spin_heatmap_interp.setRange(0, 2000)
+        self.spin_heatmap_interp.setValue(300)
+        self.spin_heatmap_interp.setPrefix("Pts: ")
+        self.spin_heatmap_interp.setToolTip(
+            "Number of interpolation points along the Y-axis for smooth\n"
+            "rendering. Set to 0 to disable interpolation (raw rows only).")
+        self.spin_heatmap_interp.valueChanged.connect(self._emit_view_options)
+        self.spin_heatmap_interp.setVisible(False)
+        layout.addWidget(self.spin_heatmap_interp)
+
         # Options
         self.options_menu = self._create_options_menu()
         self.btn_options = QToolButton()
@@ -507,40 +543,6 @@ class VSpectraViewer(QWidget):
         # Backwards-compatible alias for internal/external code that used the
         # old name when this control was first introduced.
         self.spin_max_overlays = self.spin_max_legend_items
-
-        menu.addSeparator()
-
-        # ─── Heatmap options ───
-        self.cbb_heatmap_yaxis = QComboBox()
-        self.cbb_heatmap_yaxis.addItems(["Index"])
-        self.cbb_heatmap_yaxis.setToolTip(
-            "Parameter to use as the heatmap Y-axis.\n"
-            "'Index' uses the spectrum order (0, 1, 2, …).\n"
-            "Other entries are extracted from the filenames\n"
-            "of the selected spectra.")
-        self.cbb_heatmap_yaxis.currentIndexChanged.connect(self._emit_view_options)
-        self.act_heatmap_yaxis = self._wrap("Heatmap Y-axis:", self.cbb_heatmap_yaxis)
-        menu.addAction(self.act_heatmap_yaxis)
-
-        self.le_heatmap_ylabel = QLineEdit()
-        self.le_heatmap_ylabel.setPlaceholderText("auto")
-        self.le_heatmap_ylabel.setToolTip(
-            "Custom label for the heatmap Y-axis.\n"
-            "Leave empty for the automatic token name.\n"
-            "Example: Temperature (°C)")
-        self.le_heatmap_ylabel.textChanged.connect(self._on_heatmap_ylabel_changed)
-        self.act_heatmap_ylabel = self._wrap("Heatmap Y label:", self.le_heatmap_ylabel)
-        menu.addAction(self.act_heatmap_ylabel)
-
-        self.spin_heatmap_interp = QSpinBox()
-        self.spin_heatmap_interp.setRange(0, 2000)
-        self.spin_heatmap_interp.setValue(300)
-        self.spin_heatmap_interp.setToolTip(
-            "Number of interpolation points along the Y-axis for smooth\n"
-            "rendering. Set to 0 to disable interpolation (raw rows only).")
-        self.spin_heatmap_interp.valueChanged.connect(self._emit_view_options)
-        self.act_heatmap_interp = self._wrap("Heatmap Y interp. pts:", self.spin_heatmap_interp)
-        menu.addAction(self.act_heatmap_interp)
 
         menu.addSeparator()
         
@@ -1320,8 +1322,6 @@ class VSpectraViewer(QWidget):
         """Return ``(y_values, y_label)`` for the heatmap Y-axis.
 
         * **Index** → simple 0 … N-1.
-        * **[Fit] ColName** → pull numeric values from the fit-results
-          dataframe, matched by filename.
         * Otherwise the selected token text is matched to a token position
           from the *first* filename, and the numeric part of that same
           position is extracted from every filename.
@@ -1516,31 +1516,39 @@ class VSpectraViewer(QWidget):
             self._refresh_heatmap_yaxis_choices()
 
             # Exit eraser mode if active
-            if self._erase_mode:
+            if getattr(self, "_erase_mode", False):
                 self.btn_eraser.setChecked(False)
 
-            # Force zoom mode on and disable incompatible tool buttons
+            # Force zoom mode on and hide incompatible tool buttons
             self.btn_zoom.blockSignals(True)
             self.btn_zoom.setChecked(True)
             self.btn_zoom.blockSignals(False)
             self._set_zoom_tool_active(True)
 
-            for btn in (self.btn_peak, self.btn_baseline, self.btn_eraser,
-                        self.btn_norm, self.btn_bestfit):
-                btn.setEnabled(False)
+            self.btn_peak.setVisible(False)
+            self.btn_baseline.setVisible(False)
+            self.btn_eraser.setVisible(False)
+            self.btn_norm.setVisible(False)
+            self.norm_xmin.setVisible(False)
+            self.norm_xmax.setVisible(False)
+            self.btn_bestfit.setVisible(False)
 
             # Hide shift sliders
             self.shift_panel.setVisible(False)
 
             # Show heatmap-specific options
-            self.act_heatmap_yaxis.setVisible(True)
-            self.act_heatmap_ylabel.setVisible(True)
-            self.act_heatmap_interp.setVisible(True)
+            self.cbb_heatmap_yaxis.setVisible(True)
+            self.le_heatmap_ylabel.setVisible(True)
+            self.spin_heatmap_interp.setVisible(True)
         else:
-            # Re-enable tools
-            for btn in (self.btn_peak, self.btn_baseline, self.btn_eraser,
-                        self.btn_norm, self.btn_bestfit):
-                btn.setEnabled(True)
+            # Re-show tools
+            self.btn_peak.setVisible(True)
+            self.btn_baseline.setVisible(True)
+            self.btn_eraser.setVisible(True)
+            self.btn_norm.setVisible(True)
+            self.norm_xmin.setVisible(True)
+            self.norm_xmax.setVisible(True)
+            self.btn_bestfit.setVisible(True)
 
             # Restore shift sliders
             self.shift_panel.setVisible(True)
@@ -1548,7 +1556,13 @@ class VSpectraViewer(QWidget):
             # Remove the colorbar left over from heatmap
             self._remove_heatmap_colorbar()
 
+            # Hide heatmap-specific options
+            self.cbb_heatmap_yaxis.setVisible(False)
+            self.le_heatmap_ylabel.setVisible(False)
+            self.spin_heatmap_interp.setVisible(False)
+
         self._emit_view_options()
+
 
     def _get_normalized_y(self, x, y):
         """Apply normalization if enabled (VIEW-ONLY)."""

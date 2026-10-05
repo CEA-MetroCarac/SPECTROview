@@ -302,3 +302,54 @@ def test_double_click_anywhere_inside_legend_opens_batch_editor(
     viewer._on_legend_double_click(outside_event)
 
     assert opened == [True]
+
+
+def test_heatmap_toggle_and_controls(viewer):
+    viewer.show()
+    viewer.set_plot_data(_tensor_data(3))
+
+    # Initially heatmap is off
+    assert not viewer._heatmap_mode
+    assert not viewer.cbb_heatmap_yaxis.isVisible()
+    assert not viewer.le_heatmap_ylabel.isVisible()
+    assert not viewer.spin_heatmap_interp.isVisible()
+    assert viewer.btn_peak.isVisible()
+    assert viewer.btn_baseline.isVisible()
+    assert viewer.btn_norm.isVisible()
+    assert viewer.norm_xmin.isVisible()
+    assert viewer.norm_xmax.isVisible()
+    assert viewer.btn_bestfit.isVisible()
+    assert viewer.shift_panel.isVisible()
+
+    # Toggle heatmap ON
+    viewer.btn_heatmap.setChecked(True)
+    assert viewer._heatmap_mode
+    assert viewer.cbb_heatmap_yaxis.isVisible()
+    assert viewer.le_heatmap_ylabel.isVisible()
+    assert viewer.spin_heatmap_interp.isVisible()
+    assert not viewer.btn_peak.isVisible()
+    assert not viewer.btn_baseline.isVisible()
+    assert not viewer.btn_eraser.isVisible()
+    assert not viewer.btn_norm.isVisible()
+    assert not viewer.norm_xmin.isVisible()
+    assert not viewer.norm_xmax.isVisible()
+    assert not viewer.btn_bestfit.isVisible()
+    assert not viewer.shift_panel.isVisible()
+    assert viewer._heatmap_colorbar is not None
+
+    # Toggle heatmap OFF
+    viewer.btn_heatmap.setChecked(False)
+    assert not viewer._heatmap_mode
+    assert not viewer.cbb_heatmap_yaxis.isVisible()
+    assert not viewer.le_heatmap_ylabel.isVisible()
+    assert not viewer.spin_heatmap_interp.isVisible()
+    assert viewer.btn_peak.isVisible()
+    assert viewer.btn_baseline.isVisible()
+    assert viewer.btn_eraser.isVisible()
+    assert viewer.btn_norm.isVisible()
+    assert viewer.norm_xmin.isVisible()
+    assert viewer.norm_xmax.isVisible()
+    assert viewer.btn_bestfit.isVisible()
+    assert viewer.shift_panel.isVisible()
+    assert viewer._heatmap_colorbar is None
+

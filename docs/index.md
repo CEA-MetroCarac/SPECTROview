@@ -43,7 +43,7 @@ hide:
 
     ---
 
-    Seamlessly process both 1D spectral data and 2D hyperspectral data.
+    Seamlessly process 1D spectral data, in-situ series (interactive 2D heatmaps in SpectraViewer), and 2D hyperspectral data.
 
 -   :material-table-large-plus: __Unified Results__
 
@@ -55,7 +55,7 @@ hide:
 
     ---
 
-    Dedicated workspace for generating fast, publication-ready data visualizations.
+    Dedicated workspace for generating fast, publication-ready data visualizations, alongside 2D heatmap plots for spectral series.
 
 -   :material-robot-happy-outline: __AI Chat Agent__
 

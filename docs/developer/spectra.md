@@ -50,7 +50,7 @@ graph LR
 | Layer | Class | Responsibility |
 |-------|-------|----------------|
 | **View** | `VWorkspaceSpectra` | Assembles UI widgets, connects signals/slots, delegates all logic to ViewModel |
-| **View** | `VSpectraViewer` | Matplotlib canvas — renders spectra, baselines, peaks, best-fit, residuals |
+| **View** | `VSpectraViewer` | Matplotlib canvas — renders 1D spectra, baselines, peaks, best-fit, residuals, and 2D heatmaps |
 | **View** | `SpectraLegendEditorDialog` | Transactional palette, legend-limit, label, and color editor for selected spectra |
 | **View** | `VFitModelBuilder` | X-correction, range, baseline and fit controls panel |
 | **View** | `VPeakTable` | Editable table of peak parameters with per-row model selectors |
@@ -92,6 +92,17 @@ self.btn_reinit.clicked.connect(lambda: self._apply_with_ctrl(vm.reinit_spectra)
 ```
 
 All bulk actions (baseline subtract, peak paste, reinit, fit) follow this pattern. A normal click applies to selected spectra; Ctrl+click applies to all spectra in the store.
+
+### `VSpectraViewer` — Plotting and 2D Heatmap Mode
+
+**File**: [`v_spectra_viewer.py`](file:///spectroview/view/components/v_spectra_viewer.py)
+
+`VSpectraViewer` is the core spectral canvas widget. In addition to multi-line 1D spectrum visualization, it provides a native **2D Heatmap Mode** for visualizing series data (e.g., temperature variations, kinetics, line scans):
+
+- **Data Alignment & Ragged Matrix Interpolation**: When selected spectra possess differing or ragged wavenumber grids, `_plot_heatmap()` aligns all rows onto a common spectral range via `scipy.interpolate.interp1d`.
+- **Y-Axis Token Extraction**: Automatically parses numeric parameters embedded in filenames (e.g. `_100C_`, `_250K_`) using regex tokenization, or defaults to index-based ordering (`0..N-1`).
+- **Smooth Vertical Interpolation**: Supports 1D cubic/linear interpolation along the vertical axis when `spin_heatmap_interp > 0` (default 300 points).
+- **Dynamic Toolbar Adaptation**: Activating heatmap mode toggles toolbar state: standard 1D tools (`btn_peak`, `btn_baseline`, `btn_eraser`, `btn_norm`, `btn_bestfit`, and `shift_panel`) are hidden via `setVisible(False)`, while heatmap-specific controls (`cbb_heatmap_yaxis`, `le_heatmap_ylabel`, `spin_heatmap_interp`) become visible. Unchecking the mode restores the 1D tools immediately.
 
 ### `VMWorkspaceSpectra` — The ViewModel
 

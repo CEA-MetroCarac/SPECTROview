@@ -100,6 +100,7 @@ The `SpectraViewer` is the central plotting widget where all spectra selected vi
 | ![Bestfit](../user_manual_images/Spectra_Maps/show_bestfit.png) | **Show Bestfit**: Toggles the display of the best-fit curve(s). |
 | ![Legend](../user_manual_images/Spectra_Maps/show_legend.png) | **Legend**: Toggles the display of the legend box. Double-click anywhere inside the legend to edit the palette, maximum number of displayed entries, and spectrum colors and labels in one dialog. Changes are applied with **OK** or discarded with **Cancel**. For responsiveness, Spectra and Maps workspace selections are edited in batches of up to 100 spectra; narrow the selection to edit spectra outside the current batch. |
 | ![Copy](../user_manual_images/Spectra_Maps/copy.png) | **Copy**: Copies the plot to your clipboard as a high-quality image. Use `Ctrl + Click` (or `Cmd + Click` on macOS) to copy the raw numerical plot data to your clipboard instead. |
+| ![Heatmap](../user_manual_images/Spectra_Maps/heatmap_button.png) | **Plot Heatmap**: Toggles the 2D intensity heatmap visualization mode for multiple selected spectra. Displays continuous spectral intensity evolution with dedicated Y-axis selection, custom labeling, and resolution controls directly on the toolbar. |
 | ![More View Options](../user_manual_images/Spectra_Maps/view_options.png) | **More Options**: Opens a comprehensive configuration panel allowing you to adjust X/Y units, toggle log scales, change plot styles, choose discrete or gradient spectrum color palettes from visual color-strip previews, set the maximum number of legend items (15 by default), toggle Raw/Residual visibility, enable grids, adjust line widths, and define precise figure dimensions.<br>![More Options Panel](../user_manual_images/Spectra_Maps/menu_view_options.png) |
 
 #### **3.3. Batch Legend Editor**
@@ -121,6 +122,27 @@ Changing the palette updates every **Automatic** color preview while preserving 
 
 !!! note "100-spectrum editing batches"
     To keep the interface responsive with large selections, the dialog creates editors for at most the first **100 plotted spectra** in both the Spectra and Maps workspaces. When the selection is larger, the dialog reports **“showing 100 of N”**. Spectra outside the displayed batch are not modified. Narrow the current selection to edit another group.
+
+#### **3.4. Heatmap Visualization Mode**
+
+The **Heatmap Plot** tool transforms multiple plotted spectra into a continuous 2D intensity map. This mode is particularly powerful for analyzing series data, such as in-situ temperature profiles, time-resolved kinetics, spatial line-scans, or composition gradients.
+
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/heatmap_plot_for_spectraviewer.png" alt="SpectraViewer Heatmap Mode" width="800"><br>
+  <i>The <code>SpectraViewer</code> in Heatmap visualization mode, displaying a continuous 2D intensity map across an in-situ temperature series.</i>
+</div>
+
+##### **Key Controls and Parameters**
+
+When Heatmap mode is activated, specialized configuration controls appear directly on the main toolbar, while incompatible 1D tools (such as peak markers, baseline anchors, cosmic-ray eraser, and normalization entries) are automatically hidden:
+
+- **Heatmap Toggle** (![Heatmap](../user_manual_images/Spectra_Maps/heatmap_button.png)): Enables or disables 2D heatmap rendering. Unchecking this button instantly restores standard 1D spectrum curves and returns all standard toolbar tools.
+- **Y-Axis Parameter Dropdown**:
+  - **`Index`**: Stacks spectra uniformly along the vertical axis according to selection order (`0, 1, 2, ...`).
+  - **Filename Tokens**: Automatically extracts numerical parameters embedded in filenames separated by underscores (for instance, `sample_25°C.txt`, `sample_100°C.txt`, `sample_200°C.txt` automatically populate tokens such as `25°C`, extracting the corresponding numerical values `25, 100, 200` for physical Y coordinates).
+- **Custom Y-Axis Label**: Text field to override the automatic vertical axis title (e.g., `Temperature (°C)`, `Time (min)`, or `Position (µm)`).
+- **Y-Axis Interpolation Points (`Pts:`)**: Specifies the number of interpolated vertical slices (default `300` pts) using smooth interpolation. Setting this value to `0` disables interpolation, displaying raw discrete rows.
+- **Intensity Colormap**: Respects the active color palette chosen under **More Options** (e.g. `jet`, `viridis`, `plasma`).
 
 _______
 

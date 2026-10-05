@@ -1,6 +1,8 @@
 # view/components/spectra_viewer.py
+import re
 import warnings
 import numpy as np
+from scipy.interpolate import interp1d
 from PySide6.QtCore import QSettings
 from spectroview.fit_engine.noise import detect_noise_level
 from spectroview.fit_engine.evaluator import eval_peak_initial
@@ -96,6 +98,11 @@ class VSpectraViewer(QWidget):
 
         self.zoom_pan_active = True
         QApplication.instance().focusChanged.connect(self._hide_tooltip)
+
+        # ── Heatmap mode state ──
+        self._heatmap_mode = False
+        self._heatmap_colorbar = None      # Reference to colorbar for removal
+        self._df_fit_results = None        # Fit results dataframe for heatmap Y-axis
 
         # ── Cosmic-ray eraser state ──
         self._erase_mode = False           # Whether eraser mode is active
@@ -350,6 +357,19 @@ class VSpectraViewer(QWidget):
         self.btn_copy.clicked.connect(self._emit_copy)
         layout.addWidget(self.btn_copy)
 
+        # Heatmap toggle
+        self.btn_heatmap = QToolButton()
+        self.btn_heatmap.setCheckable(True)
+        self.btn_heatmap.setIcon(QIcon(f"{ICON_DIR}/2Dmap.png"))
+        self.btn_heatmap.setToolTip(
+            "Plot Heatmap — display multiple spectra as a 2D intensity map.\n"
+            "X-axis: spectral axis, Y-axis: varying parameter (see options), "
+            "Color: intensity.")
+        self.btn_heatmap.setIconSize(QSize(22, 22))
+        self.btn_heatmap.setFixedSize(30, 30)
+        self.btn_heatmap.toggled.connect(self._toggle_heatmap_mode)
+        layout.addWidget(self.btn_heatmap)
+
         # Options
         self.options_menu = self._create_options_menu()
         self.btn_options = QToolButton()
@@ -490,6 +510,40 @@ class VSpectraViewer(QWidget):
         self.spin_max_overlays = self.spin_max_legend_items
 
         menu.addSeparator()
+
+        # ─── Heatmap options ───
+        self.cbb_heatmap_yaxis = QComboBox()
+        self.cbb_heatmap_yaxis.addItems(["Index"])
+        self.cbb_heatmap_yaxis.setToolTip(
+            "Parameter to use as the heatmap Y-axis.\n"
+            "'Index' uses the spectrum order (0, 1, 2, …).\n"
+            "Other entries are extracted from the filenames\n"
+            "of the selected spectra.")
+        self.cbb_heatmap_yaxis.currentIndexChanged.connect(self._emit_view_options)
+        self.act_heatmap_yaxis = self._wrap("Heatmap Y-axis:", self.cbb_heatmap_yaxis)
+        menu.addAction(self.act_heatmap_yaxis)
+
+        self.le_heatmap_ylabel = QLineEdit()
+        self.le_heatmap_ylabel.setPlaceholderText("auto")
+        self.le_heatmap_ylabel.setToolTip(
+            "Custom label for the heatmap Y-axis.\n"
+            "Leave empty for the automatic token name.\n"
+            "Example: Temperature (°C)")
+        self.le_heatmap_ylabel.textChanged.connect(self._on_heatmap_ylabel_changed)
+        self.act_heatmap_ylabel = self._wrap("Heatmap Y label:", self.le_heatmap_ylabel)
+        menu.addAction(self.act_heatmap_ylabel)
+
+        self.spin_heatmap_interp = QSpinBox()
+        self.spin_heatmap_interp.setRange(0, 2000)
+        self.spin_heatmap_interp.setValue(300)
+        self.spin_heatmap_interp.setToolTip(
+            "Number of interpolation points along the Y-axis for smooth\n"
+            "rendering. Set to 0 to disable interpolation (raw rows only).")
+        self.spin_heatmap_interp.valueChanged.connect(self._emit_view_options)
+        self.act_heatmap_interp = self._wrap("Heatmap Y interp. pts:", self.spin_heatmap_interp)
+        menu.addAction(self.act_heatmap_interp)
+
+        menu.addSeparator()
         
         # ─── Copied figure size (NEW) ───
         ratio_widget = QWidget()
@@ -551,7 +605,30 @@ class VSpectraViewer(QWidget):
         else:
             self._tensor_data = None
             self._current_spectra = []
+            
+        # Keep heatmap Y-axis choices up-to-date with the current selection
+        if getattr(self, "_heatmap_mode", False):
+            self._refresh_heatmap_yaxis_choices()
+            
         self._plot()
+
+    def set_fit_results(self, df):
+        """Store the fit-results dataframe for heatmap Y-axis choices.
+
+        Called when the viewmodel emits fit_results_updated.
+        Numeric columns from the dataframe (excluding 'Filename', 'X', 'Y')
+        become available as heatmap Y-axis options.
+        """
+        import pandas as pd
+        if df is not None and not df.empty:
+            self._df_fit_results = df.copy()
+        else:
+            self._df_fit_results = None
+
+        # Refresh heatmap Y-axis choices if heatmap mode is active
+        if getattr(self, "_heatmap_mode", False):
+            self._refresh_heatmap_yaxis_choices()
+            self._plot()
 
     def _compute_shift_steps(self):
         """Compute per-spectrum X and Y shift steps based on slider values and data range."""
@@ -640,8 +717,14 @@ class VSpectraViewer(QWidget):
     def _plot_internal(self):
         if not self._tensor_data:
             self.ax.clear()
+            self._remove_heatmap_colorbar()
             self.lbl_r2.setText("R²=0")
             self.canvas.draw_idle()
+            return
+
+        # ── Heatmap branch ──
+        if self._heatmap_mode:
+            self._plot_heatmap()
             return
 
         # Save current zoom/pan limits so they survive a full ax.clear()
@@ -1191,6 +1274,345 @@ class VSpectraViewer(QWidget):
 
         self.canvas.draw_idle()
 
+    # ─────────────────────────────────────────────
+    # Heatmap mode
+    # ─────────────────────────────────────────────
+
+    def _remove_heatmap_colorbar(self):
+        """Remove the colorbar created by a previous heatmap draw, if any."""
+        if self._heatmap_colorbar is not None:
+            try:
+                self._heatmap_colorbar.remove()
+            except Exception:
+                pass
+            self._heatmap_colorbar = None
+
+    # ── Filename-based numeric token extraction for heatmap Y-axis ──
+
+    @staticmethod
+    def _extract_filename_tokens(fname):
+        """Split *fname* on underscores and return tokens that contain digits.
+
+        Returns a list of ``(position, token_text, numeric_value)`` tuples.
+        *position* is the 0-based index inside the underscore-split list so
+        the same slot can be looked up across different filenames.
+        """
+        stem = fname.rsplit(".", 1)[0] if "." in fname else fname
+        tokens = stem.split("_")
+        result = []
+        for pos, tok in enumerate(tokens):
+            # Find all digit groups (supports decimals like "3.5")
+            numbers = re.findall(r"\d+\.?\d*", tok)
+            if numbers:
+                result.append((pos, tok, float(numbers[0])))
+        return result
+
+    def _collect_heatmap_yaxis_tokens(self):
+        """Return filename tokens suitable as heatmap Y-axis choices.
+
+        Parse the *first* selected spectrum's filename, find every
+        underscore-delimited token that contains a numeric value, and
+        return them as ``(position, token_text)`` pairs.
+        """
+        fnames = (self._tensor_data.get("fnames", [])
+                  if self._tensor_data else [])
+        if not fnames:
+            return []
+        return [(pos, tok)
+                for pos, tok, _val in self._extract_filename_tokens(fnames[0])]
+
+    def _get_fit_result_columns(self):
+        """Return numeric column names from df_fit_results (excluding housekeeping cols)."""
+        import pandas as pd
+        if self._df_fit_results is None or self._df_fit_results.empty:
+            return []
+        skip = {"Filename", "X", "Y", "Quadrant", "Zone"}
+        cols = []
+        for col in self._df_fit_results.columns:
+            if col in skip:
+                continue
+            if pd.api.types.is_numeric_dtype(self._df_fit_results[col]):
+                cols.append(col)
+        return cols
+
+    def _refresh_heatmap_yaxis_choices(self):
+        """Rebuild the Y-axis combobox items from filenames and fit results."""
+        prev = self.cbb_heatmap_yaxis.currentText()
+        self.cbb_heatmap_yaxis.blockSignals(True)
+        self.cbb_heatmap_yaxis.clear()
+        self.cbb_heatmap_yaxis.addItem("Index")
+
+        # Filename-based tokens
+        for _pos, token_text in self._collect_heatmap_yaxis_tokens():
+            self.cbb_heatmap_yaxis.addItem(token_text)
+
+        # Fit-result numeric columns (prefixed to distinguish from filename tokens)
+        fit_cols = self._get_fit_result_columns()
+        if fit_cols:
+            self.cbb_heatmap_yaxis.insertSeparator(self.cbb_heatmap_yaxis.count())
+            for col in fit_cols:
+                self.cbb_heatmap_yaxis.addItem(f"[Fit] {col}")
+
+        # Restore previous selection if still available
+        idx = self.cbb_heatmap_yaxis.findText(prev)
+        if idx >= 0:
+            self.cbb_heatmap_yaxis.setCurrentIndex(idx)
+        self.cbb_heatmap_yaxis.blockSignals(False)
+
+    def _get_heatmap_y_values(self):
+        """Return ``(y_values, y_label)`` for the heatmap Y-axis.
+
+        * **Index** → simple 0 … N-1.
+        * **[Fit] ColName** → pull numeric values from the fit-results
+          dataframe, matched by filename.
+        * Otherwise the selected token text is matched to a token position
+          from the *first* filename, and the numeric part of that same
+          position is extracted from every filename.
+        """
+        fnames = self._tensor_data.get("fnames", []) if self._tensor_data else []
+        selected = self.cbb_heatmap_yaxis.currentText()
+        N = len(self._tensor_data.get("y", []))
+
+        if selected == "Index" or not fnames:
+            label = self.le_heatmap_ylabel.text().strip() or "Spectrum index"
+            return np.arange(N, dtype=float), label
+
+        # ── Fit-result column (prefixed with "[Fit] ") ──
+        if selected.startswith("[Fit] "):
+            col_name = selected[len("[Fit] "):]
+            label = self.le_heatmap_ylabel.text().strip() or col_name
+            if self._df_fit_results is not None and col_name in self._df_fit_results.columns:
+                # Match rows by filename
+                df = self._df_fit_results
+                values = []
+                for fname in fnames:
+                    row = df.loc[df["Filename"] == fname, col_name]
+                    if not row.empty:
+                        try:
+                            values.append(float(row.iloc[0]))
+                        except (TypeError, ValueError):
+                            values.append(float("nan"))
+                    else:
+                        values.append(float("nan"))
+                return np.array(values, dtype=float), label
+            return np.arange(N, dtype=float), label
+
+        # ── Filename token ──
+        # Identify the token position from the first filename
+        ref_tokens = self._extract_filename_tokens(fnames[0])
+        token_pos = None
+        for pos, tok, _val in ref_tokens:
+            if tok == selected:
+                token_pos = pos
+                break
+
+        if token_pos is None:
+            label = self.le_heatmap_ylabel.text().strip() or selected
+            return np.arange(N, dtype=float), label
+
+        # Extract the numeric value at *token_pos* from every filename
+        values = []
+        for fname in fnames:
+            stem = fname.rsplit(".", 1)[0] if "." in fname else fname
+            parts = stem.split("_")
+            if token_pos < len(parts):
+                nums = re.findall(r"\d+\.?\d*", parts[token_pos])
+                values.append(float(nums[0]) if nums else float("nan"))
+            else:
+                values.append(float("nan"))
+
+        auto_label = selected
+        label = self.le_heatmap_ylabel.text().strip() or auto_label
+        return np.array(values, dtype=float), label
+
+    def _plot_heatmap(self):
+        """Render the selected spectra as a 2D pcolormesh heatmap."""
+        style_name = self.cbb_theme.currentText()
+        if style_name == "Soft Dark Mode":
+            style_path = PLOT_POLICY_SOFT_DARK
+        elif style_name == "Dark Mode":
+            style_path = PLOT_POLICY_DARK
+        else:
+            style_path = PLOT_POLICY_LIGHT
+
+        fg_color = plt.rcParams.get('axes.labelcolor', 'black')
+
+        # Save current zoom/pan limits
+        xlim = self.ax.get_xlim()
+        ylim = self.ax.get_ylim()
+        is_default = (xlim == (0.0, 1.0) and ylim == (0.0, 1.0))
+
+        self.ax.clear()
+        self._remove_heatmap_colorbar()
+        self._fitted_lines.clear()
+
+        Y_data = self._tensor_data.get("y", [])
+        x_data = self._tensor_data.get("x")
+        N = len(Y_data)
+
+        if N < 2 or x_data is None:
+            self.ax.set_title("Heatmap requires ≥ 2 spectra", color=fg_color)
+            self.canvas.draw_idle()
+            return
+
+        # ── Build intensity matrix ──
+        # For tensor_list (ragged), interpolate all spectra onto a common x grid
+        is_list = isinstance(Y_data, list)
+        if is_list:
+            # Determine common x range
+            x_arrays = [np.asarray(x_data[i] if isinstance(x_data, list) else x_data)
+                        for i in range(N)]
+            x_min = max(np.nanmin(xa) for xa in x_arrays)
+            x_max = min(np.nanmax(xa) for xa in x_arrays)
+            n_pts = max(len(xa) for xa in x_arrays)
+            raman_shift = np.linspace(x_min, x_max, n_pts)
+
+            intensity_rows = []
+            for i in range(N):
+                yi = np.asarray(Y_data[i])
+                xi = x_arrays[i]
+                f = interp1d(xi, yi, kind="linear", bounds_error=False,
+                             fill_value=np.nan)
+                intensity_rows.append(f(raman_shift))
+            intensity_matrix = np.array(intensity_rows)
+        else:
+            raman_shift = np.asarray(x_data)
+            intensity_matrix = np.asarray(Y_data)
+
+        # ── Apply normalization if enabled ──
+        intensity_matrix = np.asarray(
+            self._get_normalized_y_tensor(raman_shift, intensity_matrix))
+
+        # ── Y-axis values ──
+        y_values, y_label = self._get_heatmap_y_values()
+
+        valid_y = ~np.isnan(y_values)
+        if not np.all(valid_y):
+            y_values = y_values[valid_y]
+            intensity_matrix = intensity_matrix[valid_y]
+            N = len(y_values)
+            if N == 0:
+                return
+
+
+        # Sort by Y values for a coherent image
+        sort_idx = np.argsort(y_values)
+        y_values = y_values[sort_idx]
+        intensity_matrix = intensity_matrix[sort_idx]
+
+        # ── Handle duplicate Y-values (average them) ──
+        unique_y, inverse_idx = np.unique(y_values, return_inverse=True)
+        if len(unique_y) < len(y_values):
+            import warnings
+            new_intensity = np.zeros((len(unique_y), intensity_matrix.shape[1]))
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', category=RuntimeWarning)
+                for i in range(len(unique_y)):
+                    new_intensity[i] = np.nanmean(intensity_matrix[inverse_idx == i], axis=0)
+            y_values = unique_y
+            intensity_matrix = new_intensity
+            N = len(y_values)
+
+        # ── Optional interpolation along Y ──
+        n_interp = self.spin_heatmap_interp.value()
+        if n_interp > 0 and N >= 3 and len(np.unique(y_values)) >= 3:
+            y_fine = np.linspace(y_values.min(), y_values.max(), n_interp)
+            interp_cols = []
+            for col_idx in range(intensity_matrix.shape[1]):
+                col = intensity_matrix[:, col_idx]
+                valid = ~np.isnan(col)
+                if valid.sum() >= 2:
+                    kind = "cubic" if valid.sum() >= 4 else "linear"
+                    f = interp1d(y_values[valid], col[valid], kind=kind,
+                                 bounds_error=False, fill_value=np.nan)
+                    interp_cols.append(f(y_fine))
+                else:
+                    interp_cols.append(np.full_like(y_fine, np.nan))
+            intensity_plot = np.array(interp_cols).T
+            y_plot = y_fine
+        else:
+            intensity_plot = intensity_matrix
+            y_plot = y_values
+
+        # ── Colormap from current palette ──
+        palette_name = self.cbb_color_palette.currentText()
+        if palette_name in SPECTRA_DISCRETE_PALETTES:
+            cmap_name = "jet"  # Discrete palettes aren't suitable for heatmaps
+        else:
+            cmap_name = palette_name
+        try:
+            cmap = mpl.colormaps[cmap_name]
+        except (KeyError, AttributeError):
+            cmap = mpl.colormaps["jet"]
+
+        # ── Draw pcolormesh ──
+        with plt.style.context(style_path):
+            mesh = self.ax.pcolormesh(
+                raman_shift, y_plot, intensity_plot,
+                shading="auto", cmap=cmap)
+
+            cbar = self.figure.colorbar(mesh, ax=self.ax)
+            cbar.set_label(self.cbb_yaxis.currentText(), color=fg_color)
+            cbar.ax.tick_params(colors=fg_color)
+            self._heatmap_colorbar = cbar
+
+        self.ax.set_xlabel(self.cbb_xaxis.currentText())
+        self.ax.set_ylabel(y_label)
+
+        if self.act_grid.isChecked():
+            self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
+
+        if not is_default:
+            self.ax.set_xlim(xlim)
+            self.ax.set_ylim(ylim)
+
+        self.lbl_r2.setText("")
+        self.lbl_noise.setText("")
+        self.canvas.draw_idle()
+
+    def _toggle_heatmap_mode(self, checked: bool):
+        """Activate or deactivate heatmap mode, disabling incompatible tools."""
+        self._heatmap_mode = checked
+
+        if checked:
+            # Refresh Y-axis choices from current data
+            self._refresh_heatmap_yaxis_choices()
+
+            # Exit eraser mode if active
+            if self._erase_mode:
+                self.btn_eraser.setChecked(False)
+
+            # Force zoom mode on and disable incompatible tool buttons
+            self.btn_zoom.blockSignals(True)
+            self.btn_zoom.setChecked(True)
+            self.btn_zoom.blockSignals(False)
+            self._set_zoom_tool_active(True)
+
+            for btn in (self.btn_peak, self.btn_baseline, self.btn_eraser,
+                        self.btn_norm, self.btn_bestfit):
+                btn.setEnabled(False)
+
+            # Hide shift sliders
+            self.shift_panel.setVisible(False)
+
+            # Show heatmap-specific options
+            self.act_heatmap_yaxis.setVisible(True)
+            self.act_heatmap_ylabel.setVisible(True)
+            self.act_heatmap_interp.setVisible(True)
+        else:
+            # Re-enable tools
+            for btn in (self.btn_peak, self.btn_baseline, self.btn_eraser,
+                        self.btn_norm, self.btn_bestfit):
+                btn.setEnabled(True)
+
+            # Restore shift sliders
+            self.shift_panel.setVisible(True)
+
+            # Remove the colorbar left over from heatmap
+            self._remove_heatmap_colorbar()
+
+        self._emit_view_options()
+
     def _get_normalized_y(self, x, y):
         """Apply normalization if enabled (VIEW-ONLY)."""
         if not self.btn_norm.isChecked():
@@ -1449,6 +1871,10 @@ class VSpectraViewer(QWidget):
             "bestfit": self.btn_bestfit.isChecked() if hasattr(self, "btn_bestfit") else False,
             "max_legend_items": self.spin_max_legend_items.value() if hasattr(self, "spin_max_legend_items") else 15,
             "copy_fig_theme": self.cbb_copy_theme.currentText() if hasattr(self, "cbb_copy_theme") else "Light Mode",
+            "heatmap": self.btn_heatmap.isChecked() if hasattr(self, "btn_heatmap") else False,
+            "heatmap_yaxis": self.cbb_heatmap_yaxis.currentText() if hasattr(self, "cbb_heatmap_yaxis") else "Index",
+            "heatmap_ylabel": self.le_heatmap_ylabel.text() if hasattr(self, "le_heatmap_ylabel") else "",
+            "heatmap_interp": self.spin_heatmap_interp.value() if hasattr(self, "spin_heatmap_interp") else 300,
         }
 
     def set_options_state(self, state):
@@ -1460,6 +1886,7 @@ class VSpectraViewer(QWidget):
         if current_state == state:
             return
             
+        self._is_setting_options = True
         def _update(widget, setter, value):
             if value is None: return
             widget.blockSignals(True)
@@ -1494,8 +1921,18 @@ class VSpectraViewer(QWidget):
                     state.get("max_legend_items", 15))
         if hasattr(self, "cbb_copy_theme"):
             _update(self.cbb_copy_theme, self.cbb_copy_theme.setCurrentText, state.get("copy_fig_theme", "Light Mode"))
+        if hasattr(self, "btn_heatmap"):
+            _update(self.btn_heatmap, self.btn_heatmap.setChecked, state.get("heatmap", False))
+        if hasattr(self, "cbb_heatmap_yaxis"):
+            _update(self.cbb_heatmap_yaxis, self.cbb_heatmap_yaxis.setCurrentText, state.get("heatmap_yaxis", "Index"))
+        if hasattr(self, "le_heatmap_ylabel"):
+            _update(self.le_heatmap_ylabel, self.le_heatmap_ylabel.setText, state.get("heatmap_ylabel", ""))
+        if hasattr(self, "spin_heatmap_interp"):
+            _update(self.spin_heatmap_interp, self.spin_heatmap_interp.setValue, state.get("heatmap_interp", 300))
 
         self._apply_plot_style()
+        self._plot()
+        self._is_setting_options = False
         
     def _apply_plot_style(self):
         style_name = self.cbb_theme.currentText()
@@ -1529,7 +1966,19 @@ class VSpectraViewer(QWidget):
             self.plotStyleChanged.emit()
             self._emit_view_options()
 
+    def _on_heatmap_ylabel_changed(self):
+        if not hasattr(self, '_ylabel_timer'):
+            from PySide6.QtCore import QTimer
+            self._ylabel_timer = QTimer(self)
+            self._ylabel_timer.setSingleShot(True)
+            self._ylabel_timer.setInterval(400)
+            self._ylabel_timer.timeout.connect(self._emit_view_options)
+        self._ylabel_timer.start()
+
     def _emit_view_options(self):
+        if getattr(self, '_is_setting_options', False):
+            return
+            
         # Sync options with other viewers
         self.allOptionsSyncChanged.emit(self.get_options_state())
         
@@ -1576,6 +2025,10 @@ class VSpectraViewer(QWidget):
             return
 
         if self.zoom_pan_active:
+            return
+
+        # Heatmap mode: no peak/baseline clicking
+        if self._heatmap_mode:
             return
 
         # The cosmic-ray eraser has its own press/motion/release handlers
@@ -2134,6 +2587,7 @@ class VSpectraViewer(QWidget):
             self.btn_legend.setIcon(get_tinted_icon(f"{ICON_DIR}/legend.png", icon_color))
             self.btn_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
             self.btn_options.setIcon(get_tinted_icon(f"{ICON_DIR}/options.png", icon_color))
+            self.btn_heatmap.setIcon(get_tinted_icon(f"{ICON_DIR}/2Dmap.png", icon_color))
         
         if hasattr(self, 'btn_eraser'):
             self.btn_erase_undo.setIcon(get_tinted_icon(f"{ICON_DIR}/undo2.png", icon_color))

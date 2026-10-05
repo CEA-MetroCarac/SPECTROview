@@ -894,6 +894,10 @@ class Main(QMainWindow):
         try:
             import matplotlib.pyplot as plt
             plt.close('all')
+            if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace.vm, '_cancel_fit_thread'):
+                self.v_spectra_workspace.vm._cancel_fit_thread()
+            if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace.vm, '_cancel_fit_thread'):
+                self.v_maps_workspace.vm._cancel_fit_thread()
         except Exception:
             pass
         # Reject new local requests, then stop the HTTP endpoint before Qt's

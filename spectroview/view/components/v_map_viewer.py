@@ -464,21 +464,29 @@ class VMapViewer(QWidget):
         self.cbb_mask_param.blockSignals(True)
         
         current_z = self.cbb_zparameter.currentText()
+        current_mask = self.cbb_mask_param.currentText()
         
         # Update Z parameters
         self.cbb_zparameter.clear()
         self.cbb_zparameter.addItems(['Intensity', 'Area'])
+        self.cbb_mask_param.clear()
         
         if not self.df_fit_results.empty:
             fit_columns = [col for col in self.df_fit_results.columns 
                           if col not in ['Filename', 'X', 'Y']]
             self.cbb_zparameter.addItems(fit_columns)
-            self.cbb_mask_param.clear()
             self.cbb_mask_param.addItems(fit_columns)
         
         # Restore selection if possible
-        if current_z and self.cbb_zparameter.findText(current_z) >= 0:
+        if current_z:
+            if self.cbb_zparameter.findText(current_z) < 0:
+                self.cbb_zparameter.addItem(current_z)
             self.cbb_zparameter.setCurrentText(current_z)
+            
+        if current_mask:
+            if self.cbb_mask_param.findText(current_mask) < 0:
+                self.cbb_mask_param.addItem(current_mask)
+            self.cbb_mask_param.setCurrentText(current_mask)
         
         self.cbb_zparameter.blockSignals(False)
         self.cbb_mask_param.blockSignals(False)
@@ -942,6 +950,8 @@ class VMapViewer(QWidget):
         try:
             vmin = float(final_z_col.min())
             vmax = float(final_z_col.max())
+            if np.isnan(vmin) or np.isnan(vmax):
+                vmin, vmax = 0, 100
         except:
             vmin, vmax = 0, 100
         

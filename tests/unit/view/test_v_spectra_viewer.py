@@ -353,3 +353,10 @@ def test_heatmap_toggle_and_controls(viewer):
     assert viewer.shift_panel.isVisible()
     assert viewer._heatmap_colorbar is None
 
+
+def test_bestfit_button_default_state(viewer):
+    assert viewer.btn_bestfit.isCheckable()
+    assert viewer.btn_bestfit.isChecked()
+    state = viewer.get_options_state()
+    assert state["bestfit"] is True
+

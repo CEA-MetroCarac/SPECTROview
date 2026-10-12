@@ -1819,7 +1819,7 @@ class VSpectraViewer(QWidget):
             "width": self.width_entry.text() if hasattr(self, "width_entry") else "5.5",
             "height": self.height_entry.text() if hasattr(self, "height_entry") else "4.0",
             "legend": self.btn_legend.isChecked() if hasattr(self, "btn_legend") else False,
-            "bestfit": self.btn_bestfit.isChecked() if hasattr(self, "btn_bestfit") else False,
+            "bestfit": self.btn_bestfit.isChecked() if hasattr(self, "btn_bestfit") else True,
             "max_legend_items": self.spin_max_legend_items.value() if hasattr(self, "spin_max_legend_items") else 15,
             "copy_fig_theme": self.cbb_copy_theme.currentText() if hasattr(self, "cbb_copy_theme") else "Light Mode",
             "heatmap": self.btn_heatmap.isChecked() if hasattr(self, "btn_heatmap") else False,

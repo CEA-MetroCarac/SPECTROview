@@ -154,6 +154,7 @@ class TestViewOptions:
         data = settings.load_view_options()
         assert data["theme"] == "Dark Mode"
         assert data["legend"] is False
+        assert data["bestfit"] is True
         assert data["color_palette"] == "DEFAULT_COLORS"
         assert data["max_legend_items"] == 15
 

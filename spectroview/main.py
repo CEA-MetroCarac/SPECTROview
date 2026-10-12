@@ -199,8 +199,9 @@ class Main(QMainWindow):
             # The above will sync to the maps workspace automatically, but we can do it explicitly just in case
             self.v_maps_workspace.v_spectra_viewer.set_options_state(persisted_view_options)
             
-            # Save view options whenever they change
+            # Save view options whenever they change in either workspace
             self.v_spectra_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(self.settings.save_view_options)
+            self.v_maps_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(self.settings.save_view_options)
         
 
     def open_files(self):
@@ -900,6 +901,16 @@ class Main(QMainWindow):
                 self.v_maps_workspace.vm._cancel_fit_thread()
         except Exception:
             pass
+
+        # Persist view options on application close
+        try:
+            if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):
+                self.settings.save_view_options(self.v_spectra_workspace.v_spectra_viewer.get_options_state())
+            elif hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
+                self.settings.save_view_options(self.v_maps_workspace.v_spectra_viewer.get_options_state())
+        except Exception:
+            pass
+
         # Reject new local requests, then stop the HTTP endpoint before Qt's
         # objects disappear.
         if hasattr(self, "application_api"):

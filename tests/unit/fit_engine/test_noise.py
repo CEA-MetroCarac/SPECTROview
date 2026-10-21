@@ -39,3 +39,11 @@ class TestDetectNoiseLevel:
     def test_returns_python_float(self):
         y = np.linspace(0, 1, 50)
         assert isinstance(detect_noise_level(y), float)
+
+    def test_empty_or_single_element_array_returns_zero(self):
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            assert detect_noise_level(np.array([])) == 0.0
+            assert detect_noise_level(np.array([42.0])) == 0.0
+            assert detect_noise_level(None) == 0.0

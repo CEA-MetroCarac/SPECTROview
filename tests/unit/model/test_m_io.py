@@ -94,6 +94,45 @@ class TestLoadMapFile:
         wavelength_cols = [float(c) for c in map_df.columns if c not in ("X", "Y")]
         assert wavelength_cols == sorted(wavelength_cols)
 
+    def test_load_csv_old_format_alternating_rows(self, tmp_path):
+        csv_file = tmp_path / "old_format_map.csv"
+        # Line 0: title, Line 1: X;Y;, Line 2: coords + wavenumbers, Line 3: coords + intensities
+        content = (
+            "Map Title\n"
+            "X;Y;\n"
+            "1.000;1.000;0.500;1.000;1.500;2.000;\n"
+            "1.000;1.000;10.0;20.0;30.0;40.0;\n"
+            "2.000;1.000;0.500;1.000;1.500;2.000;\n"
+            "2.000;1.000;15.0;25.0;35.0;45.0;\n"
+        )
+        csv_file.write_text(content)
+        map_df = load_map_file(csv_file)
+        assert isinstance(map_df, pd.DataFrame)
+        assert list(map_df.columns[:2]) == ["X", "Y"]
+        # Wavenumber 1.0 should NOT collide with X=1.0 or Y=1.0 (no '.1' or '.2' suffix)
+        assert "1.0" in map_df.columns
+        assert "1.0.1" not in map_df.columns
+        assert "1.0.2" not in map_df.columns
+        assert len(map_df) == 2
+        assert map_df["X"].tolist() == [1.0, 2.0]
+        assert map_df["Y"].tolist() == [1.0, 1.0]
+        assert map_df["1.0"].tolist() == [20.0, 25.0]
+
+    def test_load_csv_new_format_with_trailing_semicolon(self, tmp_path):
+        csv_file = tmp_path / "new_format_map.csv"
+        content = (
+            "Wafer Map\n"
+            "X;Y;100.0;200.0;300.0;\n"
+            "1.0;2.0;10.0;20.0;30.0;\n"
+            "3.0;4.0;40.0;50.0;60.0;\n"
+        )
+        csv_file.write_text(content)
+        map_df = load_map_file(csv_file)
+        assert isinstance(map_df, pd.DataFrame)
+        assert list(map_df.columns[:2]) == ["X", "Y"]
+        assert list(map_df.columns[2:5]) == ["100.0", "200.0", "300.0"]
+        assert len(map_df) == 2
+
     def test_load_unsupported_map_extension_raises(self, tmp_path):
         bad_file = tmp_path / "map.xyz"
         bad_file.write_text("X\tY\t100\t200\n1\t1\t50\t60\n")

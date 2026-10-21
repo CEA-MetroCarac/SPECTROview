@@ -15,6 +15,12 @@ def mad_noise(y: np.ndarray, axis: int = -1) -> np.ndarray:
     median(|dy|)/0.6745 is a robust estimator of that std, so the result
     approximates the noise amplitude. Returns a scalar for 1-D input, else (N,).
     """
+    if y is None or y.shape[axis] < 2:
+        if y is None or y.ndim == 1:
+            return 0.0
+        out_shape = list(y.shape)
+        out_shape.pop(axis)
+        return np.zeros(out_shape, dtype=np.float64)
     dy = np.diff(y, axis=axis)
     return np.median(np.abs(dy), axis=axis) / 0.6745 * np.sqrt(2)
 
@@ -29,4 +35,6 @@ def moving_average_5(y: np.ndarray) -> np.ndarray:
 
 def detect_noise_level(y: np.ndarray) -> float:
     """Scalar noise amplitude for a single 1-D spectrum (see `mad_noise`)."""
+    if y is None or len(y) < 2:
+        return 0.0
     return float(mad_noise(y))

@@ -82,17 +82,29 @@ def load_map_file(path: Path) -> pd.DataFrame:
             lines = [next(file) for _ in range(3)]
         
         # Check 2nd line to determine old and new format
-        if len(lines[1].split(';')) > 3:
+        line1_tokens = [t.strip() for t in lines[1].split(';') if t.strip()]
+        if len(line1_tokens) > 2:
             # New format: multiple columns
             map_df = pd.read_csv(path, skiprows=1, delimiter=";")
-        else:
-            # Old format: alternating rows
-            df = pd.read_csv(path, skiprows=2, delimiter=";")
-            map_df = df.iloc[::2].reset_index(drop=True)
             map_df.rename(columns={
                 map_df.columns[0]: "X", 
                 map_df.columns[1]: "Y"
             }, inplace=True)
+        else:
+            # Old format: alternating rows
+            # Line 1: X;Y;
+            # Line 2: X_coord; Y_coord; wavenumber_0; wavenumber_1; ...
+            # Line 3: X_coord; Y_coord; intensity_0; intensity_1; ...
+            df = pd.read_csv(path, skiprows=2, delimiter=";", header=None)
+            
+            # Wavenumbers are in row 0, starting from column index 2
+            wavenumbers = df.iloc[0, 2:].values
+            map_df = df.iloc[1::2].reset_index(drop=True)
+            col_names = ['X', 'Y'] + [
+                str(w) if (pd.notna(w) and str(w).strip() != '') else f"Unnamed: {i + 2}"
+                for i, w in enumerate(wavenumbers)
+            ]
+            map_df.columns = col_names
     
     elif ext == '.txt':
         # Add support for CL map type (23/02/2026)

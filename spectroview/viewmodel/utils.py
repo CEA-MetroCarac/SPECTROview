@@ -374,7 +374,13 @@ def show_toast_notification(parent, message, title=None, duration=3000, preset=N
 
 
 def closest_index(array, value):
-    return int(np.abs(array - value).argmin())
+    diff = np.abs(array - value)
+    if np.isnan(diff).any():
+        try:
+            return int(np.nanargmin(diff))
+        except ValueError:
+            return 0
+    return int(diff.argmin())
 
 
 def parse_coords_from_fname(fname: str) -> tuple[float, float] | None:

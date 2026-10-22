@@ -787,8 +787,8 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if self.df_fit_results is None or self.df_fit_results.empty:
             return
 
-        # Wafer post-processing
-        if self.map_type != '2Dmap':
+        # Wafer post-processing (only if not already computed in build_fit_results_df)
+        if self.map_type != '2Dmap' and ('Quadrant' not in self.df_fit_results.columns or 'Zone' not in self.df_fit_results.columns):
             radius = 150
             if '300' in self.map_type:
                 radius = 150
@@ -814,7 +814,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             zone_arr[dist >= radius * 0.8] = 'Edge'
             self.df_fit_results['Zone'] = zone_arr
 
-            # Re-emit the wafer updated results
+            # Re-emit only if columns were newly added
             self.fit_results_updated.emit(self.df_fit_results)
 
         # Trigger heatmap refresh with new fit results

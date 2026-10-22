@@ -157,22 +157,8 @@ class VFitResults(QWidget):
         right_layout = QVBoxLayout(right_panel)
         right_layout.setContentsMargins(3, 0, 0, 0)
         
-        # Create scroll area for table
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        
-        # Create table widget container
-        table_container = QWidget()
-        table_layout = QVBoxLayout(table_container)
-        table_layout.setContentsMargins(0, 0, 0, 0)
-        
-        # VDataframeTable
-        self.df_table = VDataframeTable(table_layout)
-        
-        scroll_area.setWidget(table_container)
-        right_layout.addWidget(scroll_area)
+        # VDataframeTable (virtualized table with built-in scrolling)
+        self.df_table = VDataframeTable(right_layout)
         
         # Add panels to splitter
         splitter = QSplitter(Qt.Horizontal)

@@ -417,7 +417,8 @@ class SpectraStore:
                 return (param_priority.get(ptype, 999), label_order.get(label, 999))
             return (999, 0)
 
-        all_param_data = {c: params[:, i].round(decimals) for i, c in enumerate(col_names)}
+        params_rounded = params.round(decimals)
+        all_param_data = {c: params_rounded[:, i] for i, c in enumerate(col_names)}
         all_param_data.update(area_cols)
         sorted_param_cols = sorted(all_param_data.keys(), key=sort_key)
 

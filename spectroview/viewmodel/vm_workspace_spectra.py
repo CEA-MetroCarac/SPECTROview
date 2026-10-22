@@ -11,8 +11,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QFileDialog, QMessageBox
+from PySide6.QtCore import QObject, Signal, Qt
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
 
 from spectroview.model.m_io import load_spectrum_file, load_TRPL_data, load_wdf_spectrum, load_spc_spectrum
 from spectroview.model.m_settings import MSettings
@@ -2090,45 +2090,38 @@ class VMWorkspaceSpectra(QObject):
             return
         
         try:
-            parts = self.df_fit_results['Filename'].str.split('_')
-            
-            # Extract selected part and convert to float if possible
-            new_col = []
-            for part in parts:
-                if len(part) > part_index:
-                    value = part[part_index]
-                    # Try to convert to float
-                    try:
-                        new_col.append(float(value))
-                    except (ValueError, TypeError):
-                        new_col.append(value)
-                else:
-                    new_col.append(None)
-            
-            self.df_fit_results[col_name] = new_col
-            
+            # Vectorized extraction of part_index from split filename
+            extracted = self.df_fit_results['Filename'].str.split('_').str[part_index]
+            numeric = pd.to_numeric(extracted, errors='coerce')
+
+            # If all non-null values can be converted to float, use numeric Series; otherwise keep text with converted floats
+            if numeric.notna().sum() == extracted.notna().sum() and extracted.notna().sum() > 0:
+                self.df_fit_results[col_name] = numeric
+            else:
+                self.df_fit_results[col_name] = extracted.where(numeric.isna(), numeric)
+
             # Emit updated dataframe
             self.fit_results_updated.emit(self.df_fit_results)
             self.notify.emit(f"Added column '{col_name}' in the fit results.")
-            
+
         except Exception as e:
             self.notify.emit(f"Error adding column: {e}")
-    
+
     def compute_column_from_expression(self, col_name: str, expression: str):
         """Add a new column to fit results by evaluating a mathematical expression."""
-        
+
         if self.df_fit_results is None or self.df_fit_results.empty:
             QMessageBox.warning(None, "No Fit Results", "No fit results available. Collect results first.")
             return
-        
+
         if not col_name:
             QMessageBox.warning(None, "Missing Column Name", "Please enter a column name.")
             return
-        
+
         if not expression:
             QMessageBox.warning(None, "Missing Expression", "Please enter a mathematical expression.")
             return
-        
+
         # Check if column already exists
         if col_name in self.df_fit_results.columns:
             QMessageBox.warning(
@@ -2137,35 +2130,36 @@ class VMWorkspaceSpectra(QObject):
                 f"Column '{col_name}' already exists. Please choose a different name."
             )
             return
-        
+
         try:
             # Use pandas eval for safe expression evaluation
             # This handles mathematical operations safely without eval()
             result = self.df_fit_results.eval(expression)
-            
+
             # Check for inf and NaN values (from division by zero, etc.)
             warnings = []
-            if pd.isna(result).any():
-                nan_count = pd.isna(result).sum()
+            nan_count = int(pd.isna(result).sum())
+            if nan_count > 0:
                 warnings.append(
                     f"Expression resulted in {nan_count} NaN value(s). "
                     "This may be due to division by zero or invalid operations."
                 )
-            
-            if np.isinf(result).any():
-                inf_count = np.isinf(result).sum()
-                warnings.append(
-                    f"Expression resulted in {inf_count} infinite value(s). "
-                    "This may be due to division by zero."
-                )
-            
+
+            if pd.api.types.is_numeric_dtype(result):
+                inf_count = int(np.isinf(result).sum())
+                if inf_count > 0:
+                    warnings.append(
+                        f"Expression resulted in {inf_count} infinite value(s). "
+                        "This may be due to division by zero."
+                    )
+
             # Add the computed column to the dataframe
             self.df_fit_results[col_name] = result
-            
+
             # Round to the user-selected results precision for consistency
             if pd.api.types.is_numeric_dtype(self.df_fit_results[col_name]):
                 self.df_fit_results[col_name] = self.df_fit_results[col_name].round(self.results_decimals)
-            
+
             # Emit updated dataframe
             self.fit_results_updated.emit(self.df_fit_results)
             
@@ -2236,6 +2230,7 @@ class VMWorkspaceSpectra(QObject):
         )
         
         if file_path:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
             try:
                 # Determine format from file extension or filter
                 ext = Path(file_path).suffix.lower()
@@ -2259,6 +2254,8 @@ class VMWorkspaceSpectra(QObject):
                 self.settings.set_last_directory(str(Path(file_path).parent))
             except Exception as e:
                 QMessageBox.critical(None, "Error", f"Error saving fit results: {e}")
+            finally:
+                QApplication.restoreOverrideCursor()
     
     def send_results_to_graphs(self, df_name: str, force_replace: bool = False):
         """Send fit results DataFrame to Graphs workspace."""

@@ -231,7 +231,9 @@ Small local models (roughly, anything under ~10B parameters) get a measurably di
 
 `VMChat._auto_detect_small_model()` resolves in this order:
 
-1. **Manual override** — `VMChat.set_small_model_mode(True | False | None)`. `None` (the default) means "keep auto-detecting." Exposed in the UI as the **Auto / Full / Small** combo box in `v_chat_panel.py`'s header, persisted via `MSettings`.
+1. **Manual override** — `VMChat.set_small_model_mode(True | False | None)`. `None` (the default) means "keep auto-detecting," persisted via `MSettings`.
+2. **Provider Testing** — Settings dialog (`VSettingsDialog` / `VMSettings`) includes an asynchronous "Test Connection" button calling `test_provider_connection` (`m_llm_client.py`) to validate credentials, endpoints, and model reachability on a background thread.
+3. **Streamlined Header** — `v_chat_panel.py` features a compact 42px single-row header bar hosting the conversation title and action buttons (**Chat History**, **New Chat**, **Clear Chat**).
 
 ### **Persisted settings**
 

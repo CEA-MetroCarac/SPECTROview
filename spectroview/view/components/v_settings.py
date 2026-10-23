@@ -220,6 +220,12 @@ class VSettingsDialog(QDialog):
             "They populate the model dropdown in the AI chat panel — useful "
             "when the endpoint does not expose a model-listing API."
         )
+        self.edit_custom_label = QLineEdit()
+        self.edit_custom_label.setPlaceholderText("e.g. Internal LLM, Lab Model (default: Custom)")
+        self.edit_custom_label.setToolTip(
+            "Display name for the Custom provider in the AI chat panel composer.\n"
+            "If empty, 'Custom' is displayed."
+        )
 
         # Provider presets — tucked away in the collapsible section below
         self.edit_openai = QLineEdit()
@@ -244,6 +250,7 @@ class VSettingsDialog(QDialog):
         add_api_row(api_layout, "Custom API Key:", self.edit_custom)
         add_api_row(api_layout, "Base URL:", self.edit_custom_url)
         add_api_row(api_layout, "Model Name:", self.edit_custom_models)
+        add_api_row(api_layout, "Label:", self.edit_custom_label)
 
         # ── Collapsible "Provider Presets" section (collapsed by default) ──
         self.btn_toggle_providers = QToolButton()
@@ -265,6 +272,37 @@ class VSettingsDialog(QDialog):
         add_api_row(provider_layout, "Mistral API Key:", self.edit_mistral)
         self.frame_provider_presets.setVisible(False)
         api_layout.addWidget(self.frame_provider_presets)
+
+        # ── Test Connection row (similar to PLUME AI settings) ─────
+        test_row = QHBoxLayout()
+        test_row.setContentsMargins(0, 4, 0, 0)
+        test_row.setSpacing(6)
+
+        lbl_test = QLabel("Test:")
+        lbl_test.setFixedWidth(120)
+        test_row.addWidget(lbl_test)
+
+        self.cbb_test_provider = QComboBox()
+        self.cbb_test_provider.setObjectName("cbb_test_provider")
+        self.cbb_test_provider.addItems(["Custom", "OpenAI", "Anthropic", "Gemini", "DeepSeek", "Mistral", "Ollama"])
+        self.cbb_test_provider.setToolTip("Select provider to test")
+        self.cbb_test_provider.setFixedWidth(100)
+        test_row.addWidget(self.cbb_test_provider)
+
+        self.btn_test_connection = QPushButton("Test Connection")
+        self.btn_test_connection.setObjectName("btn_test_connection")
+        self.btn_test_connection.setCursor(Qt.PointingHandCursor)
+        self.btn_test_connection.clicked.connect(self._on_test_connection)
+        test_row.addWidget(self.btn_test_connection)
+
+        self.lbl_test_status = QLabel("")
+        self.lbl_test_status.setObjectName("lbl_test_status")
+        self.lbl_test_status.setStyleSheet("font-size: 11px;")
+        self.lbl_test_status.setWordWrap(True)
+        self.lbl_test_status.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        test_row.addWidget(self.lbl_test_status, 1)
+
+        api_layout.addLayout(test_row)
 
         ai_tab_layout.addWidget(grp_api)
 
@@ -346,6 +384,7 @@ class VSettingsDialog(QDialog):
         self.vm.settings_loaded.connect(self._apply_settings)
         self.vm.working_folder_changed.connect(self.le_working_folder.setText)
         self.vm.history_folder_changed.connect(self.le_history_folder.setText)
+        self.vm.connection_test_finished.connect(self._on_connection_test_finished)
         self.vm.settings_saved.connect(self.accept)
 
     # ──────────────────────────────────────────────
@@ -380,6 +419,7 @@ class VSettingsDialog(QDialog):
         self.edit_custom.setText(data.get("api_key_Custom", ""))
         self.edit_custom_url.setText(data.get("custom_base_url", ""))
         self.edit_custom_models.setText(data.get("custom_models", ""))
+        self.edit_custom_label.setText(data.get("custom_label", ""))
         self.le_history_folder.setText(data.get("history_folder", ""))
         self.chk_mcp_enabled.setChecked(data.get("mcp_enabled", False))
         self.spin_mcp_port.setValue(data.get("mcp_port", 8765))
@@ -411,8 +451,67 @@ class VSettingsDialog(QDialog):
             "api_key_Custom": self.edit_custom.text(),
             "custom_base_url": self.edit_custom_url.text(),
             "custom_models": self.edit_custom_models.text(),
+            "custom_label": self.edit_custom_label.text(),
             "history_folder": self.le_history_folder.text(),
             "mcp_enabled": self.chk_mcp_enabled.isChecked(),
             "mcp_port": self.spin_mcp_port.value(),
         })
+
+    def _on_test_connection(self):
+        provider = self.cbb_test_provider.currentText()
+        if provider == "Custom":
+            api_key = self.edit_custom.text().strip()
+            base_url = self.edit_custom_url.text().strip()
+            models_text = self.edit_custom_models.text().strip()
+            model = models_text.split(",")[0].strip() if models_text else ""
+        elif provider == "OpenAI":
+            api_key = self.edit_openai.text().strip()
+            base_url = ""
+            model = ""
+        elif provider == "Anthropic":
+            api_key = self.edit_anthropic.text().strip()
+            base_url = ""
+            model = ""
+        elif provider == "Gemini":
+            api_key = self.edit_gemini.text().strip()
+            base_url = ""
+            model = ""
+        elif provider == "DeepSeek":
+            api_key = self.edit_deepseek.text().strip()
+            base_url = ""
+            model = ""
+        elif provider == "Mistral":
+            api_key = self.edit_mistral.text().strip()
+            base_url = ""
+            model = ""
+        elif provider == "Ollama":
+            api_key = ""
+            base_url = ""
+            model = ""
+        else:
+            api_key, base_url, model = "", "", ""
+
+        self.btn_test_connection.setEnabled(False)
+        self.lbl_test_status.setText("Testing connection…")
+        self.lbl_test_status.setStyleSheet("color: #FFA726; font-size: 11px;")
+        self.lbl_test_status.setToolTip("")
+        self.vm.test_connection(provider, api_key, base_url, model)
+
+    def _on_connection_test_finished(self, success: bool, message: str):
+        self.btn_test_connection.setEnabled(True)
+        if success:
+            self.lbl_test_status.setText(f"✓ {message}")
+            self.lbl_test_status.setStyleSheet("color: #1E9E5A; font-size: 11px; font-weight: bold;")
+            self.lbl_test_status.setToolTip(message)
+        else:
+            first_line = message.splitlines()[0] if message else "Failed"
+            self.lbl_test_status.setText(f"✕ {first_line}")
+            self.lbl_test_status.setStyleSheet("color: #D14343; font-size: 11px;")
+            self.lbl_test_status.setToolTip(message)
+
+    def closeEvent(self, event):
+        if hasattr(self.vm, "cancel_test_connection"):
+            self.vm.cancel_test_connection()
+        super().closeEvent(event)
+
 

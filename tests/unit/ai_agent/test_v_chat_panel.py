@@ -46,10 +46,17 @@ class TestVChatPanelComposerLayout:
         assert hasattr(chat_panel, "btn_clear")
         assert hasattr(chat_panel, "edit_title")
 
-        # Header height is compact (74px vs old 112px)
+        # Header height is compact (42px single-row bar)
         header = chat_panel.findChild(QFrame, "chatHeader")
         assert header is not None
-        assert header.height() == 74
+        assert header.height() == 42
+
+        # Title and action buttons are in the header; status label is not displayed in header
+        assert chat_panel.edit_title.parent() == header
+        assert chat_panel.btn_history.parent() == header
+        assert chat_panel.btn_new_chat.parent() == header
+        assert chat_panel.btn_clear.parent() == header
+        assert chat_panel.lbl_status.parent() != header or chat_panel.lbl_status.isHidden()
 
     def test_send_button_appearance_reacts_to_text_input(self, chat_panel):
         # Empty input -> standard send style
@@ -79,3 +86,15 @@ class TestVChatPanelComposerLayout:
 
         chat_panel.btn_clear.click()
         assert chat_panel.vm.message_count == 0
+
+    def test_custom_provider_label_display(self, chat_panel):
+        chat_panel._settings.set_ai_value("custom_label", "Lab-LLM")
+        chat_panel._populate_providers()
+
+        items = [chat_panel.cbb_provider.itemText(i) for i in range(chat_panel.cbb_provider.count())]
+        assert "Lab-LLM" in items
+        assert "Custom" not in items
+        assert chat_panel._display_to_provider("Lab-LLM") == "Custom"
+        assert chat_panel._provider_to_display("Custom") == "Lab-LLM"
+
+

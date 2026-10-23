@@ -897,3 +897,119 @@ class LLMClient:
     def is_busy(self) -> bool:
         """Return ``True`` while a worker thread is running."""
         return bool(self._worker and self._worker.isRunning())
+
+
+def test_provider_connection(
+    provider: str,
+    api_key: str = "",
+    base_url: str = "",
+    model: str = "",
+    timeout: float = 8.0,
+) -> tuple[bool, str]:
+    """Test connection and authentication for an AI provider.
+
+    Parameters
+    ----------
+    provider:
+        One of ``"Custom"``, ``"OpenAI"``, ``"Anthropic"``, ``"Gemini"``,
+        ``"DeepSeek"``, ``"Mistral"``, or ``"Ollama"``.
+    api_key:
+        API key for cloud providers (optional for Ollama or local Custom).
+    base_url:
+        Base URL override (primarily for Custom provider).
+    model:
+        Model name override.
+    timeout:
+        Network request timeout in seconds.
+
+    Returns
+    -------
+    tuple[bool, str]
+        (success: bool, status_message: str)
+    """
+    if provider == "Ollama":
+        if not OLLAMA_AVAILABLE:
+            return False, "ollama package missing — pip install ollama"
+        try:
+            mod = _load_ollama()
+            if hasattr(mod, "Client"):
+                resp = mod.Client(timeout=timeout).list()
+            else:
+                resp = mod.list()
+            models_list = getattr(resp, "models", None) or resp.get("models", [])
+            count = len(models_list)
+            return True, f"Connected to Ollama ({count} model{'s' if count != 1 else ''} available)"
+        except Exception as exc:
+            return False, f"Ollama not running: {exc}"
+
+    if provider == "Anthropic":
+        if not ANTHROPIC_AVAILABLE:
+            return False, "anthropic package missing — pip install anthropic"
+        if not api_key:
+            return False, "Anthropic API key is required"
+        try:
+            mod = _load_anthropic()
+            http_cli = _make_http_client()
+            client = mod.Anthropic(
+                api_key=api_key,
+                timeout=timeout,
+                http_client=http_cli,
+            )
+            target_model = model or "claude-3-5-haiku-latest"
+            client.messages.create(
+                model=target_model,
+                max_tokens=5,
+                messages=[{"role": "user", "content": "Hi"}],
+            )
+            return True, f"Connection successful ({target_model})"
+        except Exception as exc:
+            return False, _format_exception(exc)
+
+    # Cloud OpenAI-compatible providers: Custom, OpenAI, Gemini, DeepSeek, Mistral
+    if not OPENAI_AVAILABLE:
+        return False, "openai package missing — pip install openai"
+
+    preset = API_PROVIDERS.get(provider, {})
+    effective_url = base_url or preset.get("base_url", "")
+    default_model = preset.get("default_model", "")
+    target_model = model or default_model
+
+    if provider != "Custom" and not api_key:
+        return False, f"{provider} API key is required"
+
+    effective_key = api_key or "none"
+
+    try:
+        openai_mod = _load_openai()
+        http_cli = _make_http_client()
+        client = openai_mod.OpenAI(
+            api_key=effective_key,
+            base_url=effective_url or None,
+            timeout=timeout,
+            http_client=http_cli,
+        )
+
+        # 1. Try listing models first
+        try:
+            models_resp = client.models.list()
+            data = getattr(models_resp, "data", [])
+            if data:
+                count = len(data)
+                return True, f"Connection successful ({count} model{'s' if count != 1 else ''} found)"
+        except Exception:
+            # Fall back to testing minimal chat completion
+            pass
+
+        if not target_model:
+            target_model = "default"
+
+        client.chat.completions.create(
+            model=target_model,
+            messages=[{"role": "user", "content": "Hi"}],
+            max_tokens=2,
+        )
+        return True, f"Connection successful ({target_model})"
+
+    except Exception as exc:
+        return False, _format_exception(exc)
+

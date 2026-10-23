@@ -402,34 +402,31 @@ class VChatPanel(QDialog):
     def _make_header(self) -> QFrame:
         header = QFrame()
         header.setObjectName("chatHeader")
-        header.setFixedHeight(74)
+        header.setFixedHeight(42)
 
-        main_layout = QVBoxLayout(header)
-        main_layout.setContentsMargins(10, 6, 10, 6)
-        main_layout.setSpacing(4)
+        main_layout = QHBoxLayout(header)
+        main_layout.setContentsMargins(10, 4, 10, 4)
+        main_layout.setSpacing(6)
 
-        # ── Row 1: Status (left) + Actions (history, new chat, clear; right) ─
-        row1_layout = QHBoxLayout()
-        row1_layout.setContentsMargins(0, 0, 0, 0)
-        row1_layout.setSpacing(6)
+        # Retained as internal attributes for signal compatibility without polluting the header UI
+        self.lbl_status = QLabel("")
+        self.lbl_no_data = QLabel("")
 
-        self.lbl_status = QLabel("Checking…")
-        self.lbl_status.setStyleSheet("font-size: 11px;")
-        row1_layout.addWidget(self.lbl_status)
+        # ── Conversation title (stretches to take available width) ───
+        self.edit_title = QLineEdit()
+        self.edit_title.setObjectName("chatTitleEdit")
+        self.edit_title.setPlaceholderText("New Conversation")
+        self.edit_title.setStyleSheet("font-size: 13px; font-weight: bold; padding: 2px 6px; border-radius: 4px;")
+        self.edit_title.editingFinished.connect(self._on_title_edited)
+        main_layout.addWidget(self.edit_title, stretch=1)
 
-        # No-data notice (shown when no df is loaded)
-        self.lbl_no_data = QLabel("ⓘ No DataFrame selected")
-        self.lbl_no_data.setStyleSheet("color: #FFA726; font-size: 11px;")
-        row1_layout.addWidget(self.lbl_no_data)
-
-        row1_layout.addStretch()
-
+        # ── Action buttons in the same line ─────────────────────────
         self.btn_history = QPushButton("")
         self.btn_history.setObjectName("btn_history")
         self.btn_history.setIcon(QIcon(os.path.join(ICON_DIR, "view-details.png")))
         self.btn_history.setIconSize(QSize(20, 20))
         self.btn_history.setFixedSize(30, 30)
-        self.btn_history.setToolTip("Conversation History")
+        self.btn_history.setToolTip("Chat History")
 
         self.btn_new_chat = QPushButton("")
         self.btn_new_chat.setObjectName("btn_new_chat")
@@ -443,21 +440,11 @@ class VChatPanel(QDialog):
         self.btn_clear.setIcon(QIcon(os.path.join(ICON_DIR, "trash.png")))
         self.btn_clear.setIconSize(QSize(18, 18))
         self.btn_clear.setFixedSize(30, 30)
-        self.btn_clear.setToolTip("Clear Conversation")
+        self.btn_clear.setToolTip("Clear Chat")
 
         for btn in (self.btn_history, self.btn_new_chat, self.btn_clear):
             btn.setCursor(Qt.PointingHandCursor)
-            row1_layout.addWidget(btn)
-
-        main_layout.addLayout(row1_layout)
-
-        # ── Row 2: Title ─────────────────────────────────────────────
-        self.edit_title = QLineEdit()
-        self.edit_title.setObjectName("chatTitleEdit")
-        self.edit_title.setPlaceholderText("New Conversation")
-        self.edit_title.setStyleSheet("font-size: 13px; padding: 2px 4px;")
-        self.edit_title.editingFinished.connect(self._on_title_edited)
-        main_layout.addWidget(self.edit_title)
+            main_layout.addWidget(btn)
 
         return header
 
@@ -506,8 +493,7 @@ class VChatPanel(QDialog):
         # Provider selector dropdown
         self.cbb_provider = QComboBox()
         self.cbb_provider.setObjectName("cbb_provider")
-        for display in _DISPLAY_TO_PROVIDER.keys():
-            self.cbb_provider.addItem(display)
+        self._populate_providers()
         self.cbb_provider.setMinimumWidth(80)
         self.cbb_provider.setMaximumWidth(125)
         self.cbb_provider.setFixedHeight(23)
@@ -690,20 +676,54 @@ class VChatPanel(QDialog):
             self.lbl_no_data.setStyleSheet("color: #FFA726; font-size: 11px;")
 
     # ------------------------------------------------------------------
+    # Provider mapping with custom label support
+    # ------------------------------------------------------------------
+
+    def _get_custom_label(self) -> str:
+        """Return user-configured display label for Custom provider, or 'Custom'."""
+        label = self._settings.get_ai_value("custom_label", "", str).strip()
+        return label if label else "Custom"
+
+    def _display_to_provider(self, display_name: str) -> str:
+        """Map combo display text to canonical provider key."""
+        custom_label = self._get_custom_label()
+        if display_name in (custom_label, "Custom"):
+            return "Custom"
+        return _DISPLAY_TO_PROVIDER.get(display_name, "Ollama")
+
+    def _provider_to_display(self, provider_key: str) -> str:
+        """Map canonical provider key to combo display text."""
+        if provider_key == "Custom":
+            return self._get_custom_label()
+        return _PROVIDER_TO_DISPLAY.get(provider_key, "Ollama (local)")
+
+    def _populate_providers(self) -> None:
+        """Fill cbb_provider with display names honoring custom_label."""
+        self.cbb_provider.blockSignals(True)
+        self.cbb_provider.clear()
+        custom_label = self._get_custom_label()
+        for entry in _PROVIDER_ENTRIES:
+            display = custom_label if entry == "Custom" else entry
+            self.cbb_provider.addItem(display)
+        self.cbb_provider.blockSignals(False)
+
+    # ------------------------------------------------------------------
     # Settings persistence
     # ------------------------------------------------------------------
 
     def _load_settings(self) -> None:
         """Restore provider and model from the app settings."""
+        self._populate_providers()
         saved_provider = self._settings.get_ai_value("provider", "Ollama (local)", str)
-        idx = self.cbb_provider.findText(saved_provider)
+        provider_key = self._display_to_provider(saved_provider)
+        target_display = self._provider_to_display(provider_key)
+        idx = self.cbb_provider.findText(target_display)
         if idx >= 0:
             self.cbb_provider.blockSignals(True)
             self.cbb_provider.setCurrentIndex(idx)
             self.cbb_provider.blockSignals(False)
 
         # Apply the loaded provider directly without triggering redundant status refreshes
-        provider_key = _DISPLAY_TO_PROVIDER.get(saved_provider, "Ollama")
         if provider_key == "Ollama":
             saved_model = self._settings.get_ai_value("model_Ollama", "", str)
             self.vm.set_provider("Ollama", model=saved_model)
@@ -728,9 +748,9 @@ class VChatPanel(QDialog):
     def _save_settings(self) -> None:
         """Persist current provider and model."""
         provider_display = self.cbb_provider.currentText()
-        provider_key = _DISPLAY_TO_PROVIDER.get(provider_display, "Ollama")
+        provider_key = self._display_to_provider(provider_display)
 
-        self._settings.set_ai_value("provider", provider_display)
+        self._settings.set_ai_value("provider", provider_key)
 
         current_model = self.cbb_model.currentText()
         if current_model:
@@ -772,7 +792,7 @@ class VChatPanel(QDialog):
 
     def _on_provider_changed(self, display_name: str) -> None:
         """Update the ViewModel provider."""
-        provider_key = _DISPLAY_TO_PROVIDER.get(display_name, "Ollama")
+        provider_key = self._display_to_provider(display_name)
 
         if provider_key == "Ollama":
             self.vm.set_provider("Ollama")
@@ -797,7 +817,7 @@ class VChatPanel(QDialog):
     def _refresh_status(self) -> None:
         """Check availability, update status bar and model list asynchronously."""
         provider_display = self.cbb_provider.currentText()
-        provider_key = _DISPLAY_TO_PROVIDER.get(provider_display, "Ollama")
+        provider_key = self._display_to_provider(provider_display)
         is_ollama = (provider_key == "Ollama")
 
         # ── Package availability guard ──────────────────────────────────
@@ -865,7 +885,7 @@ class VChatPanel(QDialog):
     def _on_status_ready(self, provider_key: str, available: bool, models: List[str]) -> None:
         """Handle background status check completion."""
         current_display = self.cbb_provider.currentText()
-        current_key = _DISPLAY_TO_PROVIDER.get(current_display, "Ollama")
+        current_key = self._display_to_provider(current_display)
         if current_key != provider_key:
             return
 
@@ -908,6 +928,8 @@ class VChatPanel(QDialog):
 
             if is_ollama:
                 status_text = "🟢  Ollama connected"
+            elif provider_key == "Custom":
+                status_text = f"🟢  {self._get_custom_label()} API connected"
             else:
                 status_text = f"🟢  {provider_key} API connected"
             if self.vm.is_small_model_mode():

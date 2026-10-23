@@ -44,8 +44,9 @@ The AI Agent supports multiple LLM backends out of the box — no extra packages
 2. For cloud providers, configure your **API key** in the **Settings** dialog (`Ctrl + Shift + S` → **AI** tab):
    - The **Custom** provider's **Custom API Key**, **Base URL**, and **Model Name** fields are shown by default.
    - Other cloud provider keys are organized under the collapsed **▸ Other cloud providers** section.
+   - Use the **Test Connection** button directly in the **AI** tab to verify authentication, host connectivity, and model availability with immediate visual feedback (`✓ Connection successful` or detailed error messages).
 3. Choose a **Model** from the editable model dropdown right next to the provider in the composer toolbar. If your model is not listed, you can type its identifier directly.
-4. Click the **⟳ refresh** button next to the model dropdown to verify the connection. A green status indicator in the top header confirms when the provider is connected and ready.
+4. Click the **⟳ refresh** button next to the model dropdown to refresh available models.
 
 > **Model Name:** Some endpoints (custom ones especially) do not expose a model-listing API. Enter the model names you use in **Settings** → **AI** tab → **Model Name** as a comma-separated list (e.g. `model-a, model-b`). They will then appear in the composer's model dropdown for the **Custom** provider.
 
@@ -55,15 +56,13 @@ The AI Agent supports multiple LLM backends out of the box — no extra packages
 
 Small local models (roughly under ~10 billion parameters — such as `qwen2.5:7b`, `gemma2:2b`, `phi3:mini`) are noticeably more sensitive to long system prompts. SPECTROview automatically inspects the parameter size of local Ollama models and activates a compact prompt tier, a targeted conversation window, and tuned generation parameters.
 
-When small-model mode is active, the status indicator in the header automatically displays **`· Simplified prompts`**, requiring no manual intervention.
-
 ---
 
 ### **5. Modern Chat Composer & Interface Overview**
 
 The chat interface features an intuitive, unified layout:
 
-- **Top Header Bar**: Shows connection status (`🟢 Connected`), DataFrame availability notices, conversation title, and quick-action icon buttons (Conversation History, New Chat, Clear Conversation).
+- **Top Header Bar**: A clean, single-row header bar containing the editable **Conversation Title** on the left (takes available width) and quick-action icon buttons on the right: **Chat History**, **New Chat**, and **Clear Chat**.
 - **Conversation Thread**: Displays color-coded message cards (User, AI replies with formatted Markdown/tables/equations, and error alerts).
 - **Embedded Composer Card**: A rounded composer box at the bottom containing:
   - An auto-expanding multi-line text input (press `Enter` to send, `Shift + Enter` for new lines).

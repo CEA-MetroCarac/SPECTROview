@@ -226,7 +226,7 @@ class MSettings:
     AI_SETTING_KEYS = (
         "api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini",
         "api_key_DeepSeek", "api_key_Mistral", "api_key_Custom",
-        "custom_base_url", "custom_models", "history_folder",
+        "custom_base_url", "custom_models", "custom_label", "history_folder",
     )
 
     def _migrate_legacy_ai_settings(self):

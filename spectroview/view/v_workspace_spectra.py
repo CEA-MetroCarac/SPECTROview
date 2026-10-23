@@ -252,6 +252,7 @@ class VWorkspaceSpectra(QWidget):
         # SpectraList connection: ViewModel → View
         vm.spectra_list_changed.connect(self._on_spectra_list_changed)
         self.v_spectra_list.itemChanged.connect(self._on_checkbox_changed)
+        self.v_spectra_list.set_metadata_provider(self._get_spectrum_metadata)
         vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
         vm.spectra_selection_changed.connect(self._update_metadata_display)
         vm.spectra_selection_changed.connect(self.v_fit_model_builder.update_baseline_ui)
@@ -364,6 +365,17 @@ class VWorkspaceSpectra(QWidget):
             self.v_more_tab.show_metadata(spectrum)
         else:
             self.v_more_tab.clear_metadata()
+
+    def _get_spectrum_metadata(self, item_or_fname):
+        """Retrieve metadata for a spectrum item or filename."""
+        fname = item_or_fname.text() if hasattr(item_or_fname, "text") else str(item_or_fname)
+        if self.vm and hasattr(self.vm, "store"):
+            md = self.vm.store.get_map_data(fname)
+            if md:
+                return getattr(md, "map_metadata", {})
+        if hasattr(item_or_fname, "data"):
+            return item_or_fname.data(Qt.UserRole + 2) or {}
+        return {}
     
     def save_work(self):
         """Trigger save work in ViewModel."""

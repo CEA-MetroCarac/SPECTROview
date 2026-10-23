@@ -1,5 +1,5 @@
 # spectroview/viewmodel/utils.py
-from PySide6.QtGui import QColor, QPixmap, QImage, QTextCursor, QIcon, QPainter
+from PySide6.QtGui import QColor, QPixmap, QImage, QTextCursor, QIcon, QPainter, QCursor
 
 def get_tinted_icon(path: str, color_str: str) -> QIcon:
     """Return a QIcon created from the image at `path` tinted to `color_str`."""
@@ -10,10 +10,10 @@ def get_tinted_icon(path: str, color_str: str) -> QIcon:
     painter.end()
     return QIcon(pixmap)
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QObject, QEvent
 from PySide6.QtWidgets import (
     QMessageBox, QApplication, QListWidgetItem,
-    QDialog, QTextBrowser, QVBoxLayout
+    QDialog, QTextBrowser, QVBoxLayout, QToolTip
 )    
 
 import os
@@ -625,3 +625,294 @@ def build_clean_fit_model(fit_model):
         "peak_labels": fit_model.get("peak_labels", []),
         "peak_models": fit_model.get("peak_models", {}),
     }
+
+
+def _clean_metadata_value(val):
+    if val is None:
+        return None
+    s = str(val).strip()
+    if s.lower() in ("", "unknown", "none", "nan", "n/a", "null"):
+        return None
+    return s
+
+
+def extract_primary_metadata(metadata: dict | object | None) -> dict[str, str]:
+    """Extract standard acquisition metadata fields from a dictionary or spectrum object.
+    
+    Returns a dict with keys:
+    - 'Laser Wavelength'
+    - 'Laser Power'
+    - 'Exposure Time'
+    - 'Accumulation'
+    - 'Objective'
+    
+    Missing or unavailable values are gracefully represented as 'N/A'.
+    """
+    if metadata is None:
+        raw_meta = {}
+    elif isinstance(metadata, dict):
+        raw_meta = metadata
+    elif hasattr(metadata, "metadata") and isinstance(metadata.metadata, dict):
+        raw_meta = metadata.metadata
+    elif hasattr(metadata, "map_metadata") and isinstance(metadata.map_metadata, dict):
+        raw_meta = metadata.map_metadata
+    else:
+        raw_meta = {}
+
+    def get_first_match(candidate_keys):
+        # 1. Exact match
+        for k in candidate_keys:
+            if k in raw_meta:
+                v = _clean_metadata_value(raw_meta[k])
+                if v is not None:
+                    return k, v
+        # 2. Case-insensitive match
+        lower_map = {k.lower(): (k, v) for k, v in raw_meta.items()}
+        for k in candidate_keys:
+            lk = k.lower()
+            if lk in lower_map:
+                orig_k, orig_v = lower_map[lk]
+                v = _clean_metadata_value(orig_v)
+                if v is not None:
+                    return orig_k, v
+        return None, None
+
+    # 1. Laser Wavelength
+    k, v = get_first_match([
+        "Laser Wavelength (nm)", "Laser Wavelength", "laser_wavelength",
+        "EXCIT_LINE", "Wavelength (nm)", "Wavelength"
+    ])
+    if v:
+        wavelength = v if v.lower().endswith("nm") else f"{v} nm"
+    else:
+        wavelength = "N/A"
+
+    # 2. Laser Power
+    k, v = get_first_match([
+        "Laser Power (%)", "Laser Power (mW)", "Laser Power", "laser_power",
+        "ND FILTER", "Power (%)", "Power (mW)", "Power"
+    ])
+    if v:
+        if ("(%)" in (k or "") or "%" in (k or "")) and not v.endswith("%"):
+            power = f"{v} %"
+        elif "(mw)" in (k or "").lower() and not v.lower().endswith("mw"):
+            power = f"{v} mW"
+        else:
+            power = v
+    else:
+        power = "N/A"
+
+    # 3. Exposure Time
+    k, v = get_first_match([
+        "Exposure Time (s)", "Exposure Time", "exposure_time",
+        "ACQ. TIME (S)", "Acquisition Time (s)", "Acquisition Time"
+    ])
+    if v:
+        exposure = v if (v.lower().endswith("s") or v.lower().endswith("sec")) else f"{v} s"
+    else:
+        exposure = "N/A"
+
+    # 4. Accumulation
+    k, v = get_first_match([
+        "Accumulations", "Accumulation", "accumulation_count", "ACCUMULATIONS"
+    ])
+    accum = v if v else "N/A"
+
+    # 5. Objective
+    k, v = get_first_match([
+        "Objective Used", "Objective", "objective_name", "OBJECTIV"
+    ])
+    obj = v if v else "N/A"
+
+    return {
+        "Laser Wavelength": wavelength,
+        "Laser Power": power,
+        "Exposure Time": exposure,
+        "Accumulation": accum,
+        "Objective": obj,
+    }
+
+
+def format_metadata_tooltip(metadata: dict | object | None) -> str:
+    """Format primary metadata into a compact HTML tooltip."""
+    fields = extract_primary_metadata(metadata)
+    lines = [
+        "<b>Metadata</b>",
+        f"• Laser Wavelength: {fields['Laser Wavelength']}",
+        f"• Laser Power: {fields['Laser Power']}",
+        f"• Exposure Time: {fields['Exposure Time']}",
+        f"• Accumulation: {fields['Accumulation']}",
+        f"• Objective: {fields['Objective']}",
+    ]
+    return "<br>".join(lines)
+
+
+class MetadataTooltipManager(QObject):
+    """Manages Ctrl-hover metadata tooltips for QListWidget items.
+    
+    Requirements:
+    - Display tooltip when user holds Ctrl (or Cmd on macOS) and hovers an item.
+    - Do NOT display tooltip when Ctrl is not held.
+    - Disappear when mouse leaves item, user releases Ctrl, or hovered item changes.
+    - Update automatically when moving between items while Ctrl is held.
+    - Does not interfere with item selection, double-click, context-menu, or drag-and-drop.
+    """
+    
+    def __init__(self, list_widget, metadata_provider=None):
+        super().__init__(list_widget)
+        self.list_widget = list_widget
+        self.metadata_provider = metadata_provider
+        self._hovered_item = None
+        self._is_showing = False
+        self._app_filtered = False
+
+        self.list_widget.setMouseTracking(True)
+        viewport = self.list_widget.viewport()
+        if viewport:
+            viewport.setMouseTracking(True)
+            viewport.installEventFilter(self)
+        self.list_widget.installEventFilter(self)
+
+        app = QApplication.instance()
+        if app:
+            app.installEventFilter(self)
+            self._app_filtered = True
+
+        self.list_widget.destroyed.connect(self._on_widget_destroyed)
+
+    def set_metadata_provider(self, provider):
+        """Update the metadata provider callable."""
+        self.metadata_provider = provider
+
+    def _remove_app_filter(self):
+        """Cleanly remove application event filter."""
+        if self._app_filtered:
+            app = QApplication.instance()
+            if app:
+                try:
+                    app.removeEventFilter(self)
+                except Exception:
+                    pass
+            self._app_filtered = False
+
+    def _on_widget_destroyed(self):
+        """Cleanly remove application event filter when widget is destroyed."""
+        self._remove_app_filter()
+
+    def __del__(self):
+        self._remove_app_filter()
+
+    @staticmethod
+    def _is_ctrl_held() -> bool:
+        """Check if Ctrl (or Cmd on macOS) modifier is held down."""
+        mods = QApplication.keyboardModifiers()
+        return bool(mods & (Qt.ControlModifier | Qt.MetaModifier))
+
+    def _hide_tooltip(self):
+        """Dismiss active tooltip and reset state."""
+        if self._is_showing:
+            QToolTip.hideText()
+            self._is_showing = False
+            self._hovered_item = None
+
+    def _fetch_metadata(self, item):
+        """Retrieve metadata for the given item."""
+        if self.metadata_provider:
+            try:
+                return self.metadata_provider(item)
+            except TypeError:
+                return self.metadata_provider(item.text())
+        return item.data(Qt.UserRole + 2) or {}
+
+    def _show_tooltip_for_item(self, item, global_pos):
+        """Render and display tooltip for a valid list item."""
+        if not item or item.flags() == Qt.NoItemFlags or not item.text():
+            self._hide_tooltip()
+            return
+
+        try:
+            lw = self.list_widget
+            viewport = lw.viewport() if lw else None
+            if not viewport:
+                return
+            rect = lw.visualItemRect(item)
+        except (RuntimeError, AttributeError):
+            return
+
+        metadata = self._fetch_metadata(item)
+        tooltip_html = format_metadata_tooltip(metadata)
+        
+        # Pass large msecShowTime (e.g. 1 hour = 3600000 ms) so Qt does not automatically
+        # hide the tooltip after ~2-3 seconds; it will stay until Ctrl is released or mouse moves elsewhere.
+        QToolTip.showText(global_pos, tooltip_html, viewport, rect, 3600000)
+        self._hovered_item = item
+        self._is_showing = True
+
+    def eventFilter(self, watched, event):
+        """Handle mouse movement, leave, and global key events."""
+        try:
+            lw = self.list_widget
+            if lw is None:
+                return False
+            viewport = lw.viewport()
+            if viewport is None:
+                return False
+        except (RuntimeError, AttributeError):
+            return False
+
+        etype = event.type()
+
+        # 1. Mouse move on viewport
+        if etype == QEvent.MouseMove and watched == viewport:
+            if not self._is_ctrl_held():
+                self._hide_tooltip()
+            else:
+                pos = event.position().toPoint() if hasattr(event, "position") else event.pos()
+                item = lw.itemAt(pos)
+                if not item or item.flags() == Qt.NoItemFlags or not item.text():
+                    self._hide_tooltip()
+                elif item != self._hovered_item or not self._is_showing:
+                    gpos = event.globalPosition().toPoint() if hasattr(event, "globalPosition") else event.globalPos()
+                    self._show_tooltip_for_item(item, gpos)
+            return False
+
+        # 2. Mouse leave on viewport
+        elif etype == QEvent.Leave and watched == viewport:
+            self._hide_tooltip()
+            return False
+
+        # 3. Mouse click or drag interaction - immediately hide tooltip
+        elif etype in (QEvent.MouseButtonPress, QEvent.DragEnter):
+            self._hide_tooltip()
+            return False
+
+        # 4. Global key release - release of Ctrl immediately dismisses tooltip
+        elif etype == QEvent.KeyRelease:
+            if event.key() in (Qt.Key_Control, Qt.Key_Meta):
+                self._hide_tooltip()
+            return False
+
+        # 5. Global key press - pressing Ctrl while mouse is already hovering an item shows tooltip
+        elif etype == QEvent.KeyPress:
+            if event.key() in (Qt.Key_Control, Qt.Key_Meta):
+                try:
+                    if viewport and viewport.isVisible():
+                        gpos = QCursor.pos()
+                        vpos = viewport.mapFromGlobal(gpos)
+                        if viewport.rect().contains(vpos):
+                            item = lw.itemAt(vpos)
+                            if item:
+                                self._show_tooltip_for_item(item, gpos)
+                except (RuntimeError, AttributeError):
+                    pass
+            return False
+
+        # 6. Widget hide or window deactivate (ONLY if it is the list widget or its parent window)
+        elif etype == QEvent.Hide and watched in (lw, viewport, lw.window()):
+            self._hide_tooltip()
+            return False
+        elif etype == QEvent.WindowDeactivate and watched == lw.window():
+            self._hide_tooltip()
+            return False
+
+        return False

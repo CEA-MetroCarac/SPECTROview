@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, Q
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 
-from spectroview.viewmodel.utils import set_spectrum_item_color
+from spectroview.viewmodel.utils import set_spectrum_item_color, MetadataTooltipManager
 
 
 class SpectrumItemDelegate(QStyledItemDelegate):
@@ -46,8 +46,27 @@ class VSpectraList(QListWidget):
         # Internal state to detect reorder
         self._order_before_drag = []
 
+        # Metadata tooltip support
+        self._metadata_provider = None
+        self._tooltip_manager = MetadataTooltipManager(self, self._get_item_metadata)
+
         # Qt signals → our semantic signals
         self.itemSelectionChanged.connect(self._emit_selection_changed)
+
+    def set_metadata_provider(self, provider):
+        """Set a custom metadata provider callable for tooltips."""
+        self._metadata_provider = provider
+
+    def _get_item_metadata(self, item):
+        """Retrieve metadata for a spectrum item."""
+        if self._metadata_provider:
+            try:
+                meta = self._metadata_provider(item)
+            except TypeError:
+                meta = self._metadata_provider(item.text())
+            if meta:
+                return meta
+        return item.data(Qt.UserRole + 2) or {}
     
     def _update_placeholder(self):
         """Update placeholder text based on list state."""
@@ -118,6 +137,7 @@ class VSpectraList(QListWidget):
             # Connect checkbox state change to update spectrum.is_active
             # Store reference to fname instead of ID
             item.setData(Qt.UserRole + 1, fname)
+            item.setData(Qt.UserRole + 2, spectrum.get("metadata", {}))
             items_by_fname[fname] = item
 
         # Restore selection by matching fnames (O(1) lookup per fname instead

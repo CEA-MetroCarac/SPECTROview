@@ -234,6 +234,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # ── ViewModel → VMapsList connections ──
         self.vm.maps_list_changed.connect(self.v_maps_list.set_maps_names)
+        self.v_maps_list.set_map_metadata_provider(self._get_map_metadata)
+        self.v_maps_list.set_spectra_metadata_provider(self._get_map_spectrum_metadata)
         
         # Check all checkbox (now in VMapsList)
         self.v_maps_list.check_all_toggled.connect(self._on_check_all_toggled)
@@ -528,6 +530,26 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             # Display metadata for the selected map (not per-spectrum)
             map_metadata = self.vm.maps_metadata.get(map_name, {})
             self.v_more_tab.show_metadata(map_metadata)
+
+    def _get_map_metadata(self, item_or_map_name):
+        """Retrieve metadata for a map item or map name."""
+        map_name = item_or_map_name.text() if hasattr(item_or_map_name, "text") else str(item_or_map_name)
+        if self.vm:
+            if hasattr(self.vm, "maps_metadata") and map_name in self.vm.maps_metadata:
+                return self.vm.maps_metadata[map_name]
+            if hasattr(self.vm, "store") and self.vm.store:
+                md = self.vm.store.get_map_data(map_name)
+                if md:
+                    return getattr(md, "map_metadata", {})
+        if hasattr(item_or_map_name, "data"):
+            return item_or_map_name.data(Qt.UserRole + 2) or {}
+        return {}
+
+    def _get_map_spectrum_metadata(self, item_or_fname):
+        """Retrieve metadata for a spectrum belonging to the current map."""
+        if self.vm and self.vm.current_map_name:
+            return self._get_map_metadata(self.vm.current_map_name)
+        return {}
     
     def _on_view_map_requested(self):
         """Display the current map's DataFrame in a table dialog."""

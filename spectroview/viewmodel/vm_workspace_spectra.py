@@ -611,6 +611,7 @@ class VMWorkspaceSpectra(QObject):
                 "has_baseline": has_baseline,
                 "has_fit": has_fit,
                 "fit_success": fit_converged,
+                "metadata": getattr(md, "map_metadata", {}),
             })
             
         self.spectra_list_changed.emit(spectra_info)

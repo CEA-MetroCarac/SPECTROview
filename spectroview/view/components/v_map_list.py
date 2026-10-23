@@ -9,7 +9,7 @@ from PySide6.QtCore import Qt, Signal, QTimer, QItemSelection, QItemSelectionMod
 from PySide6.QtGui import QFont
 
 from spectroview import ICON_DIR
-from spectroview.viewmodel.utils import set_spectrum_item_color
+from spectroview.viewmodel.utils import set_spectrum_item_color, MetadataTooltipManager
 from spectroview.view.components.v_spectra_list import SpectrumItemDelegate
 
 
@@ -42,9 +42,45 @@ class VMapsList(QWidget):
         self._selection_timer.setSingleShot(True)
         self._selection_timer.setInterval(100)
         self._selection_timer.timeout.connect(self._emit_debounced_selection)
+
+        # Metadata tooltip support
+        self._map_metadata_provider = None
+        self._spectra_metadata_provider = None
         
         self._init_ui()
+        self._maps_tooltip_manager = MetadataTooltipManager(self.maps_list, self._get_map_metadata)
+        self._spectra_tooltip_manager = MetadataTooltipManager(self.spectra_list, self._get_spectrum_metadata)
         self._update_maps_placeholder()  # Show placeholder initially
+
+    def set_map_metadata_provider(self, provider):
+        """Set metadata provider for the maps list."""
+        self._map_metadata_provider = provider
+
+    def set_spectra_metadata_provider(self, provider):
+        """Set metadata provider for the spectra list."""
+        self._spectra_metadata_provider = provider
+
+    def _get_map_metadata(self, item):
+        """Retrieve metadata for a map item."""
+        if self._map_metadata_provider:
+            try:
+                meta = self._map_metadata_provider(item)
+            except TypeError:
+                meta = self._map_metadata_provider(item.text())
+            if meta:
+                return meta
+        return item.data(Qt.UserRole + 2) or {}
+
+    def _get_spectrum_metadata(self, item):
+        """Retrieve metadata for a spectrum item within a map."""
+        if self._spectra_metadata_provider:
+            try:
+                meta = self._spectra_metadata_provider(item)
+            except TypeError:
+                meta = self._spectra_metadata_provider(item.text())
+            if meta:
+                return meta
+        return item.data(Qt.UserRole + 2) or {}
         
     def _init_ui(self):
         main_layout = QVBoxLayout(self)

@@ -971,6 +971,21 @@ class MetadataTooltipManager(QObject):
 
     def eventFilter(self, watched, event):
         """Handle mouse movement, leave, and events."""
+        etype = event.type()
+        if etype not in (
+            QEvent.MouseMove,
+            QEvent.ToolTip,
+            QEvent.Leave,
+            QEvent.MouseButtonPress,
+            QEvent.DragEnter,
+            QEvent.Wheel,
+            QEvent.KeyRelease,
+            QEvent.KeyPress,
+            QEvent.Hide,
+            QEvent.WindowDeactivate,
+        ):
+            return False
+
         try:
             lw = self.list_widget
             if lw is None:
@@ -980,8 +995,6 @@ class MetadataTooltipManager(QObject):
                 return False
         except (RuntimeError, AttributeError):
             return False
-
-        etype = event.type()
 
         # 1. Mouse move on viewport
         if etype == QEvent.MouseMove and watched == viewport:

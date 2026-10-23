@@ -502,12 +502,20 @@ class VMapViewer(QWidget):
             numeric_cols = column_labels.astype(float)
             xmin, xmax = float(numeric_cols.min()), float(numeric_cols.max())
             
-            # Update X-range slider
+            # Update X-range slider with blocked signals to avoid cascade
             if not self.cb_fix_x.isChecked():
-                self.x_range_slider.setRange(xmin, xmax)
-                self.x_range_slider.setValue((xmin, xmax))
-                self.spin_xmin.setValue(xmin)
-                self.spin_xmax.setValue(xmax)
+                self.x_range_slider.blockSignals(True)
+                self.spin_xmin.blockSignals(True)
+                self.spin_xmax.blockSignals(True)
+                try:
+                    self.x_range_slider.setRange(xmin, xmax)
+                    self.x_range_slider.setValue((xmin, xmax))
+                    self.spin_xmin.setValue(xmin)
+                    self.spin_xmax.setValue(xmax)
+                finally:
+                    self.x_range_slider.blockSignals(False)
+                    self.spin_xmin.blockSignals(False)
+                    self.spin_xmax.blockSignals(False)
         except:
             pass
         
@@ -522,15 +530,23 @@ class VMapViewer(QWidget):
         try:
             _, _, vmin, vmax, _, _ = self._get_data_for_heatmap()
             
-            # Update Z-range slider
-            if not self.cb_fix_z.isChecked():
-                self.z_range_slider.setRange(vmin, vmax)
-                self.z_range_slider.setValue((vmin, vmax))
-                self.spin_zmin.setValue(vmin)
-                self.spin_zmax.setValue(vmax)
-            else:
-                # Just update the range, keep current values
-                self.z_range_slider.setRange(vmin, vmax)
+            # Update Z-range slider with blocked signals to avoid cascade
+            self.z_range_slider.blockSignals(True)
+            self.spin_zmin.blockSignals(True)
+            self.spin_zmax.blockSignals(True)
+            try:
+                if not self.cb_fix_z.isChecked():
+                    self.z_range_slider.setRange(vmin, vmax)
+                    self.z_range_slider.setValue((vmin, vmax))
+                    self.spin_zmin.setValue(vmin)
+                    self.spin_zmax.setValue(vmax)
+                else:
+                    # Just update the range, keep current values
+                    self.z_range_slider.setRange(vmin, vmax)
+            finally:
+                self.z_range_slider.blockSignals(False)
+                self.spin_zmin.blockSignals(False)
+                self.spin_zmax.blockSignals(False)
         except:
             pass
     
@@ -670,25 +686,99 @@ class VMapViewer(QWidget):
             return
         
         map_type = self.cbb_map_type.currentText()
+        show_stats = self.action_show_stats.isChecked() if map_type != '2Dmap' else False
+        show_grid = self.action_grid.isChecked()
+
+        # Fast path: update existing Artists in-place without rebuilding Figure / tight_layout
+        can_fast_update = (
+            getattr(self, 'ax', None) is not None
+            and getattr(self, 'img', None) is not None
+            and getattr(self, 'cbar', None) is not None
+            and getattr(self, '_last_map_type', None) == map_type
+            and getattr(self, '_last_show_stats', None) == show_stats
+            and getattr(self, '_last_grid', None) == show_grid
+            and getattr(self, '_last_style', None) == self.current_style
+            and not show_stats  # full redraw if stats box is enabled
+        )
+
+        if can_fast_update:
+            try:
+                heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col = self._get_data_for_heatmap()
+                self._last_final_z_col = final_z_col
+
+                cmap = plt.get_cmap(self.cbb_palette.currentText()).copy()
+                cmap.set_bad(color='none')
+                interpolation = 'bilinear' if self.action_smoothing.isChecked() else 'none'
+                vmin_plot, vmax_plot = self.z_range_slider.value()
+
+                if map_type != '2Dmap' and grid_z is not None:
+                    img_data = grid_z
+                    width = extent[1] - extent[0]
+                    height = extent[3] - extent[2]
+                    self._current_dx = width / 80.0
+                    self._current_dy = height / 80.0
+                    if hasattr(self, '_scatter_sites') and self._scatter_sites is not None:
+                        all_x, all_y = self._get_measurement_sites()
+                        if len(all_x) > 0:
+                            self._scatter_sites.set_offsets(np.column_stack([all_x, all_y]))
+                elif not heatmap_pivot.empty:
+                    img_data = heatmap_pivot.values if hasattr(heatmap_pivot, 'values') else np.asarray(heatmap_pivot)
+                    rows, cols = heatmap_pivot.shape
+                    if cols > 0 and rows > 0:
+                        self._current_dx = (extent[1] - extent[0]) / cols
+                        self._current_dy = (extent[3] - extent[2]) / rows
+                    else:
+                        self._current_dx = 1.0
+                        self._current_dy = 1.0
+                else:
+                    img_data = None
+
+                if img_data is not None:
+                    self.img.set_cmap(cmap)
+                    self.img.set_interpolation(interpolation)
+                    if self.cbb_color_scale.currentText() == "Log" and vmin_plot is not None and vmin_plot > 0:
+                        self.img.set_norm(LogNorm(vmin=vmin_plot, vmax=vmax_plot))
+                    else:
+                        self.img.set_norm(None)
+                        self.img.set_clim(vmin_plot, vmax_plot)
+                    self.img.set_data(img_data)
+                    self.img.set_extent(extent)
+                    self.ax.set_xlim(extent[0], extent[1])
+                    self.ax.set_ylim(extent[2], extent[3])
+                    self.cbar.update_normal(self.img)
+                    title = self.cbb_zparameter.currentText()
+                    self.ax.set_title(title, fontsize=13)
+                    self._update_selection_overlay()
+                    self.canvas.draw_idle()
+                    return
+            except Exception:
+                # If anything fails during fast path, seamlessly fall through to full redraw
+                pass
         
         # Clear figure and recreate axes to ensure no leftover colorbars and reset sizes
         self.figure.clf()
         self.figure.patch.set_facecolor(plt.rcParams.get('figure.facecolor', 'white'))
         self.ax = self.figure.add_subplot(111)
         self.cbar = None
+        self._last_map_type = map_type
+        self._last_show_stats = show_stats
+        self._last_grid = show_grid
+        self._last_style = self.current_style
+        self._wafer_circle = None
+        self._scatter_sites = None
 
         # Plot wafer circle for wafer maps
         if map_type != '2Dmap':
             r = self._get_wafer_radius(map_type)
             if r:
                 edge_color = plt.rcParams.get('axes.edgecolor', 'black')
-                wafer_circle = patches.Circle((0, 0), radius=r, fill=False, 
+                self._wafer_circle = patches.Circle((0, 0), radius=r, fill=False, 
                                              color=edge_color, linewidth=1)
-                self.ax.add_patch(wafer_circle)
+                self.ax.add_patch(self._wafer_circle)
                 
                 # Show all measurement sites
                 all_x, all_y = self._get_measurement_sites()
-                self.ax.scatter(all_x, all_y, marker='x', color='gray', s=15)
+                self._scatter_sites = self.ax.scatter(all_x, all_y, marker='x', color='gray', s=15)
                 
                 # Remove X labels for wafer, keep Y
                 self.ax.tick_params(axis='x', which='both', bottom=False, 

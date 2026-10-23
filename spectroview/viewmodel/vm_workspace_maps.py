@@ -138,8 +138,10 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             map_name = self.current_map_name
             md = self.store.get_map_data(map_name)
             
-            # Find indices for the selected fnames
-            idx_map = {name: i for i, name in enumerate(md.fnames)}
+            # Find indices for the selected fnames (cached on MapData for speed)
+            if not hasattr(md, "_fname_to_idx") or md._fname_to_idx is None or len(md._fname_to_idx) != len(md.fnames):
+                md._fname_to_idx = {name: i for i, name in enumerate(md.fnames)}
+            idx_map = md._fname_to_idx
             indices = [idx_map[name] for name in self.selected_fnames if name in idx_map]
             
             if indices:
@@ -292,14 +294,23 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         # Filter by active spectra — use SpectraStore as source of truth
         md = self.store.get_map_data(self.current_map_name)
-        if md is not None:
-            active_fnames = {
-                fname for fname, active in zip(md.fnames, md.is_active) if active
-            }
-        else:
-            active_fnames = set()
-        # Build set of (X, Y) tuples from active fnames of this map only
-        # (fname format: "map_name_(x, y)")
+        if md is None or not hasattr(md, "is_active") or md.is_active is None:
+            return df
+        
+        # Fast path 1: All spectra are active (common case) -> zero-copy return
+        if np.all(md.is_active):
+            return df
+            
+        # Fast path 2: 1-to-1 array alignment between MapData and DataFrame -> instant boolean slice
+        if len(md.is_active) == len(df):
+            if not np.any(md.is_active):
+                return df.iloc[0:0]
+            return df.iloc[md.is_active]
+
+        # Fallback for legacy or unaligned DataFrames
+        active_fnames = {
+            fname for fname, active in zip(md.fnames, md.is_active) if active
+        }
         fname_prefix = f"{self.current_map_name}_("
         active_coords = set()
         for fname in active_fnames:
@@ -312,7 +323,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             # No active spectra for this map, return empty DataFrame with same structure
             return df.iloc[0:0]
         
-        # Filter DataFrame rows by (X, Y) coordinates (Vectorized & much faster than apply)
+        # Filter DataFrame rows by (X, Y) coordinates
         idx = pd.MultiIndex.from_arrays([df['X'], df['Y']])
         mask = idx.isin(list(active_coords))
         return df[mask]

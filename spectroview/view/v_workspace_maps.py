@@ -173,13 +173,21 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         """Handle spectra list update from ViewModel."""
         self.v_maps_list.set_spectra_names(spectra)
         
-        # Pre-build coordinate lookup cache for fast selection syncing
-        self._spectra_coords_cache = {}
-        for i, s in enumerate(spectra):
-            fname = s["fname"] if isinstance(s, dict) else s.fname
-            coords = self._extract_coords_from_fname(fname)
-            if coords:
-                self._spectra_coords_cache[i] = coords
+        # Fast coordinate lookup cache: use MapData.coords directly if available
+        md = self.vm.store.get_map_data(self.vm.current_map_name) if self.vm.current_map_name else None
+        if md is not None and md.coords is not None and len(md.coords) == len(spectra):
+            coords = md.coords
+            self._spectra_coords_cache = {
+                i: (float(coords[i, 0]), float(coords[i, 1]))
+                for i in range(len(coords))
+            }
+        else:
+            self._spectra_coords_cache = {}
+            for i, s in enumerate(spectra):
+                fname = s["fname"] if isinstance(s, dict) else s.fname
+                coords = self._extract_coords_from_fname(fname)
+                if coords:
+                    self._spectra_coords_cache[i] = coords
     
     def _on_checkbox_changed(self, item):
         """Notify the ViewModel when a spectrum's checkbox state changes."""
@@ -240,9 +248,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Check all checkbox (now in VMapsList)
         self.v_maps_list.check_all_toggled.connect(self._on_check_all_toggled)
         
-        # The spectra list is updated via inherited VMWorkspaceSpectra signals
-        # when vm.select_map() calls _extract_spectra_from_map()
-        self.vm.spectra_list_changed.connect(self._on_spectra_list_changed)
+        # Note: self.vm.spectra_list_changed is already connected to
+        # self._on_spectra_list_changed in super().setup_connections()
         self.v_maps_list.spectra_list.itemChanged.connect(self._on_checkbox_changed)
         
         # Clear griddata cache when map data changes (after fitting)
@@ -258,8 +265,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Update parameter lists when fit results change (e.g., computed columns added)
         self.vm.fit_results_updated.connect(self._on_fit_results_updated)
         
-        # Connect spectra selection to viewer (inherited from parent)
-        self.vm.spectra_selection_changed.connect(self.v_spectra_viewer.set_plot_data)
+        # Note: self.vm.spectra_selection_changed is already connected to
+        # self.v_spectra_viewer.set_plot_data in super().setup_connections()
 
     def _on_map_viewer_selection(self, selected_points: list):
         """Handle spectrum selection from map viewer."""

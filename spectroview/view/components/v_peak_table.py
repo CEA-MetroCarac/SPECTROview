@@ -1,5 +1,6 @@
 # spectroview/view/components/v_peak_table.py
 
+from copy import deepcopy
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QComboBox, QPushButton, QCheckBox, QSizePolicy, QSpacerItem
@@ -24,6 +25,9 @@ class VPeakTable(QWidget):
         self._spectrum = None
         self._show_limits = False
         self._show_expr = False
+        self._last_fit_model = None
+        self._current_topology = None
+        self._row_bindings = []
 
         self._build_ui()
 
@@ -51,22 +55,29 @@ class VPeakTable(QWidget):
 
     def set_show_limits(self, state: bool):
         self._show_limits = state
+        self._last_fit_model = None
+        self._current_topology = None
+        self._row_bindings = []
         self._rebuild()
 
     def set_show_expr(self, state: bool):
         self._show_expr = state
+        self._last_fit_model = None
+        self._current_topology = None
+        self._row_bindings = []
         self._rebuild()
 
     def clear(self):
         self._spectrum = None
+        self._last_fit_model = None
+        self._current_topology = None
+        self._row_bindings = []
         self._clear_layout(self.main_layout)
 
     # ------------------------------------------------------------------
     # Table build
     # ------------------------------------------------------------------
     def _rebuild(self):
-        self._clear_layout(self.main_layout)
-
         fit_model = None
         if hasattr(self._spectrum, "fit_model"):
             fit_model = self._spectrum.fit_model
@@ -78,6 +89,11 @@ class VPeakTable(QWidget):
                     fit_model = fit_models[0]
             
         if not fit_model or not fit_model.get("peak_models"):
+            self._last_fit_model = None
+            self._clear_layout(self.main_layout)
+            return
+
+        if fit_model == getattr(self, "_last_fit_model", None):
             return
 
         class DummyPeak:
@@ -91,6 +107,17 @@ class VPeakTable(QWidget):
         for k, pdict in fit_model["peak_models"].items():
             shape = list(pdict.keys())[0]
             peaks.append(DummyPeak(k, shape, pdict[shape], f"P{int(k)+1}_"))
+
+        new_topology = (tuple((pm.key, pm.name2) for pm in peaks), self._show_limits, self._show_expr)
+        if getattr(self, "_current_topology", None) == new_topology and getattr(self, "_row_bindings", None):
+            self._update_existing_rows(fit_model, peaks)
+            self._last_fit_model = deepcopy(fit_model)
+            return
+
+        self._clear_layout(self.main_layout)
+        self._current_topology = new_topology
+        self._last_fit_model = deepcopy(fit_model)
+        self._row_bindings = []
 
         labels = fit_model.get("peak_labels", [])
 
@@ -153,6 +180,15 @@ class VPeakTable(QWidget):
 
         # ── Rows
         for i, pm in enumerate(peaks):
+            row_data = {
+                'key': pm.key,
+                'prefix': pm.prefix,
+                'label_le': None,
+                'model_cmb': None,
+                'peak_model_obj': pm,
+                'param_widgets': {},
+            }
+
             # delete
             btn = QPushButton(pm.prefix)
             btn.setIcon(QIcon(f"{ICON_DIR}/close.png"))
@@ -169,6 +205,7 @@ class VPeakTable(QWidget):
                 lambda key=pm.key, w=le: self.peak_label_changed.emit(int(key), w.text())
             )
             cols["label"].addWidget(le)
+            row_data['label_le'] = le
 
             # model
             cmb = QComboBox()
@@ -179,6 +216,7 @@ class VPeakTable(QWidget):
                 lambda txt, key=pm.key: self.peak_model_changed.emit(int(key), txt)
             )
             cols["model"].addWidget(cmb)
+            row_data['model_cmb'] = cmb
 
             # parameters
             for p, d in param_cols.items():
@@ -187,6 +225,8 @@ class VPeakTable(QWidget):
                 if hint is None:
                     self._add_empty(d)
                     continue
+
+                p_data = {'val_le': None, 'vary_chk': None}
 
                 # value
                 display_val = hint.get('value', 0)
@@ -216,6 +256,7 @@ class VPeakTable(QWidget):
 
                 val.editingFinished.connect(make_editing_finished_cb(int(pm.key), p, val, pm.name2, pm))
                 d["value"].addWidget(val)
+                p_data['val_le'] = val
 
                 # vary
                 chk = QCheckBox()
@@ -225,22 +266,27 @@ class VPeakTable(QWidget):
                     self.peak_param_changed.emit(int(key), k, "vary", not st)
                 )
                 d["vary"].addWidget(self._center_checkbox(chk))
+                p_data['vary_chk'] = chk
 
                 # limits
                 if "min" in d:
-                    self._add_limit(d["min"], int(pm.key), p, "min", hint, pm.name2, pm)
-                    self._add_limit(d["max"], int(pm.key), p, "max", hint, pm.name2, pm)
+                    p_data['min_le'] = self._add_limit(d["min"], int(pm.key), p, "min", hint, pm.name2, pm)
+                    p_data['max_le'] = self._add_limit(d["max"], int(pm.key), p, "max", hint, pm.name2, pm)
 
                 # expr
                 if "expr" in d:
                     expr = QLineEdit(str(hint.get("expr", "")))
-                    # expr.setFixedWidth(150)
                     expr.setFixedSize(150, ROW_HEIGHT)
                     expr.editingFinished.connect(
                         lambda key=pm.key, k=p, w=expr:
                         self.peak_param_changed.emit(int(key), k, "expr", w.text())
                     )
                     d["expr"].addWidget(expr)
+                    p_data['expr_le'] = expr
+
+                row_data['param_widgets'][p] = p_data
+
+            self._row_bindings.append(row_data)
 
         # ── Add vertical stretch to absorb remaining space
         def add_vstretch(layout):
@@ -259,6 +305,72 @@ class VPeakTable(QWidget):
                 self.main_layout.addLayout(col)
 
         self.main_layout.addStretch()
+
+    def _update_existing_rows(self, fit_model, peaks):
+        """Fast-path in-place update of widget contents when table topology is unchanged."""
+        labels = fit_model.get("peak_labels", [])
+        for i, pm in enumerate(peaks):
+            if i >= len(self._row_bindings):
+                break
+            row = self._row_bindings[i]
+            row['peak_model_obj'].param_hints = pm.param_hints
+            k_int = int(pm.key)
+            le_text = labels[k_int] if k_int < len(labels) and labels[k_int] is not None else f"Peak{k_int+1}"
+            
+            label_le = row.get('label_le')
+            if label_le is not None:
+                label_le.blockSignals(True)
+                label_le.setText(le_text)
+                label_le.blockSignals(False)
+            
+            for p, p_data in row.get('param_widgets', {}).items():
+                hint = pm.param_hints.get(p)
+                if hint is None:
+                    continue
+                display_val = hint.get('value', 0)
+                if pm.name2 == "Fano" and p == "ampli":
+                    q = pm.param_hints.get("q", {}).get("value", 50.0)
+                    display_val = fano_display_amplitude(display_val, q)
+                
+                val_le = p_data.get('val_le')
+                if val_le is not None:
+                    val_le.blockSignals(True)
+                    val_le.setText(f"{display_val:.3f}")
+                    val_le.blockSignals(False)
+                
+                vary_chk = p_data.get('vary_chk')
+                if vary_chk is not None:
+                    vary_chk.blockSignals(True)
+                    vary_chk.setChecked(not hint.get("vary", True))
+                    vary_chk.blockSignals(False)
+                
+                min_le = p_data.get('min_le')
+                if min_le is not None:
+                    min_val = hint.get('min', 0)
+                    display_min = min_val
+                    if pm.name2 == "Fano" and p == "ampli":
+                        q = pm.param_hints.get("q", {}).get("value", 50.0)
+                        display_min = fano_display_amplitude(min_val, q)
+                    min_le.blockSignals(True)
+                    min_le.setText(f"{display_min:.3f}")
+                    min_le.blockSignals(False)
+                
+                max_le = p_data.get('max_le')
+                if max_le is not None:
+                    max_val = hint.get('max', 0)
+                    display_max = max_val
+                    if pm.name2 == "Fano" and p == "ampli":
+                        q = pm.param_hints.get("q", {}).get("value", 50.0)
+                        display_max = fano_display_amplitude(max_val, q)
+                    max_le.blockSignals(True)
+                    max_le.setText(f"{display_max:.3f}")
+                    max_le.blockSignals(False)
+                
+                expr_le = p_data.get('expr_le')
+                if expr_le is not None:
+                    expr_le.blockSignals(True)
+                    expr_le.setText(str(hint.get("expr", "")))
+                    expr_le.blockSignals(False)
         
     # ------------------------------------------------------------------
     # Helpers
@@ -300,6 +412,7 @@ class VPeakTable(QWidget):
 
         le.editingFinished.connect(make_editing_finished_limit_cb(idx, key, field, le, pm_name, peak_model))
         layout.addWidget(le)
+        return le
 
     def _add_header(self, layout, text):
         lbl = QLabel(text)

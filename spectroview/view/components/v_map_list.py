@@ -267,66 +267,68 @@ class VMapsList(QWidget):
         Args:
             spectra: List of dicts with keys: fname, is_active, has_baseline, fit_success
         """
-        # Save current selection positions before clearing
+        # Save current selection positions before updating
         self._last_selected_positions = self.get_selected_spectra_indices()
         
-        # Block signals to prevent itemSelectionChanged cascade when clearing
+        # Block signals and disable visual updates during bulk update
         self.spectra_list.blockSignals(True)
+        self.spectra_list.setUpdatesEnabled(False)
         
-        can_update_in_place = False
-        if self.spectra_list.count() == len(spectra):
-            if len(spectra) > 0:
-                first_fname = spectra[0]["fname"]
-                last_fname = spectra[-1]["fname"]
-                if self.spectra_list.item(0).text() == first_fname and self.spectra_list.item(self.spectra_list.count()-1).text() == last_fname:
-                    can_update_in_place = True
-            else:
-                can_update_in_place = True
+        current_count = self.spectra_list.count()
+        new_count = len(spectra)
+        
+        # In-place recycle existing items for maximum responsiveness
+        common_count = min(current_count, new_count)
+        for i in range(common_count):
+            item = self.spectra_list.item(i)
+            spectrum = spectra[i]
+            fname = spectrum["fname"]
+            if item.text() != fname:
+                item.setText(fname)
+            item.setData(Qt.UserRole, i)
+            check_state = Qt.Checked if spectrum["is_active"] else Qt.Unchecked
+            if item.checkState() != check_state:
+                item.setCheckState(check_state)
+            set_spectrum_item_color(item, spectrum)
 
-        if can_update_in_place:
-            for i, spectrum in enumerate(spectra):
-                item = self.spectra_list.item(i)
-                item.setCheckState(Qt.Checked if spectrum["is_active"] else Qt.Unchecked)
-                set_spectrum_item_color(item, spectrum)
-        else:
-            self.spectra_list.clear()
-            for i, spectrum in enumerate(spectra):
+        # Append new items if new list is larger
+        if new_count > current_count:
+            for i in range(current_count, new_count):
+                spectrum = spectra[i]
                 item = QListWidgetItem(spectrum["fname"])
-                item.setData(Qt.UserRole, i)  # Store index
+                item.setData(Qt.UserRole, i)
                 item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-                # Set checkbox state from is_active
                 item.setCheckState(Qt.Checked if spectrum["is_active"] else Qt.Unchecked)
-
-                # Set background color based on spectrum status
                 set_spectrum_item_color(item, spectrum)
-
                 self.spectra_list.addItem(item)
-            
-            # Restore selection at same positions (if they still exist)
-            selection_restored = False
-            if self._last_selected_positions and len(spectra) > 0:
+        # Remove extra items if old list was larger
+        elif current_count > new_count:
+            for _ in range(current_count - new_count):
+                self.spectra_list.takeItem(new_count)
+
+        # Restore selection at same positions (if they still exist)
+        selection_restored = False
+        if self._last_selected_positions and new_count > 0:
+            if len(self._last_selected_positions) >= new_count:
+                self.spectra_list.selectAll()
+                selection_restored = True
+            else:
                 selection = QItemSelection()
                 model = self.spectra_list.model()
+                for pos in self._last_selected_positions:
+                    if 0 <= pos < new_count:
+                        idx = model.index(pos, 0)
+                        selection.select(idx, idx)
+                        selection_restored = True
                 
-                # If all items were selected, use selectAll for maximum speed
-                if len(self._last_selected_positions) >= len(spectra):
-                    self.spectra_list.selectAll()
-                    selection_restored = True
-                else:
-                    for pos in self._last_selected_positions:
-                        if 0 <= pos < len(spectra):
-                            idx = model.index(pos, 0)
-                            selection.select(idx, idx)
-                            selection_restored = True
-                    
-                    if selection_restored:
-                        self.spectra_list.selectionModel().select(selection, QItemSelectionModel.ClearAndSelect)
-            
-            # If no selection was restored and list is not empty, select first item
-            if not selection_restored and len(spectra) > 0:
-                self.spectra_list.item(0).setSelected(True)
+                if selection_restored:
+                    self.spectra_list.selectionModel().select(selection, QItemSelectionModel.ClearAndSelect)
         
-        # Unblock signals
+        # If no selection was restored and list is not empty, select first item
+        if not selection_restored and new_count > 0:
+            self.spectra_list.item(0).setSelected(True)
+        
+        self.spectra_list.setUpdatesEnabled(True)
         self.spectra_list.blockSignals(False)
         
         # Trigger selection changed signal manually

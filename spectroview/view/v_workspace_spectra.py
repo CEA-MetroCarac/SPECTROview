@@ -313,9 +313,6 @@ class VWorkspaceSpectra(QWidget):
         pt.peak_model_changed.connect(vm.update_peak_model)
         pt.peak_param_changed.connect(vm.update_peak_param)
         pt.peak_deleted.connect(vm.delete_peak)
-
-        # Selection → PeakTable
-        vm.spectra_selection_changed.connect(self._update_peak_table)
         
         # ═════════════════════════════════════════════════════════════════
         # Fit Results connections

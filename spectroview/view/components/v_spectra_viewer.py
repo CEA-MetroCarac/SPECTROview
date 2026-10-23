@@ -2,7 +2,6 @@
 import re
 import warnings
 import numpy as np
-from scipy.interpolate import interp1d
 from PySide6.QtCore import QSettings
 from spectroview.fit_engine.noise import detect_noise_level
 from spectroview.fit_engine.evaluator import eval_peak_initial
@@ -1364,6 +1363,7 @@ class VSpectraViewer(QWidget):
 
     def _plot_heatmap(self):
         """Render the selected spectra as a 2D pcolormesh heatmap."""
+        from scipy.interpolate import interp1d
         style_name = self.cbb_theme.currentText()
         if style_name == "Soft Dark Mode":
             style_path = PLOT_POLICY_SOFT_DARK

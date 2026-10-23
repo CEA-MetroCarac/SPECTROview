@@ -1,5 +1,6 @@
 """Unit tests for fit_engine/baseline.py - single and batched baseline evaluation."""
 import builtins
+import re
 from pathlib import Path
 
 import numpy as np
@@ -123,7 +124,7 @@ class TestEvalBaselineAutomatic:
         pyproject = (project_root / "pyproject.toml").read_text(encoding="utf-8")
         requirements = (project_root / "requirements.txt").read_text(encoding="utf-8")
 
-        assert '"pybaselines ' in pyproject
+        assert re.search(r'["\']pybaselines(?:[<>=!~]|\s|["\'])', pyproject)
         assert any(
             line.lower().startswith("pybaselines")
             for line in requirements.splitlines()

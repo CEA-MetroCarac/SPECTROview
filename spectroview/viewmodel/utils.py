@@ -816,7 +816,7 @@ class MetadataTooltipManager(QObject):
     - Disappears immediately on click, drag, scroll, or window hide so it never interferes.
     """
 
-    def __init__(self, list_widget, metadata_provider=None, require_ctrl: bool = False, show_delay_ms: int = 400):
+    def __init__(self, list_widget, metadata_provider=None, require_ctrl: bool = False, show_delay_ms: int = 1000):
         super().__init__(list_widget)
         self.list_widget = list_widget
         self.metadata_provider = metadata_provider

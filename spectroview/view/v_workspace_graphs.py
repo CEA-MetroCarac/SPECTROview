@@ -2068,6 +2068,16 @@ class VWorkspaceGraphs(QWidget):
         # Load data into ViewModel
         self.vm.load_workspace(file_path)
 
+        # Pre-populate all available filter definitions across loaded graphs
+        for graph_id in self.vm.get_graph_ids():
+            graph_model = self.vm.get_graph(graph_id)
+            if graph_model and graph_model.filters:
+                for f in graph_model.filters:
+                    if isinstance(f, dict):
+                        expr = f.get('expression', '').strip()
+                        if expr:
+                            self.v_data_filter.add_filter_definition(expr)
+
         # Select first DataFrame if available
         if self.df_listbox.count() > 0:
             self.df_listbox.setCurrentRow(0)

@@ -468,15 +468,25 @@ To add a "disable updates" toggle to the Settings dialog, bind `MSettings.set_ch
 # Run from source
 python -m spectroview.main
 
-# Install in editable mode
-pip install -e .
+# Install in editable mode with dev dependencies
+pip install -e ".[dev]"
 
-# Run tests
-pytest
+# Run fast test suite (skips slow real-data benchmarks; headless offscreen auto-configured)
+pytest tests/ -m "not slow" -q
 
-# Build documentation
+# Run full test suite (including real benchmark datasets; ~7-8 min)
+pytest tests/ -q
+
+# Static syntax & import check on modified files
+python -m pyflakes spectroview/<modified_file>.py
+
+# Build and preview documentation
 mkdocs serve
 ```
+
+> [!NOTE]
+> For detailed developer and pair programming guidelines, refer to the [AI Development Framework (AGENTS.md)](../../AGENTS.md) and the test suite guide in [tests/README.md](../../tests/README.md).
+
 
 ---
 

@@ -420,6 +420,8 @@ class Main(QMainWindow):
             if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
                 self.v_maps_workspace.v_spectra_viewer._plot()
             self._sync_mcp_runtime()
+            if self._chat_panel is not None:
+                self._chat_panel.reload_settings()
 
     def _sync_mcp_runtime(self):
         """Apply the opt-in localhost MCP setting without restarting the app."""
@@ -542,6 +544,7 @@ class Main(QMainWindow):
             return
 
         # Force a sync right now when opening
+        self._chat_panel.reload_settings()
         vm_graphs = self.v_graphs_workspace.vm
         self._chat_panel.set_dataframes(vm_graphs.dataframes, vm_graphs.selected_df_name or "")
         self._chat_panel.vm.set_graphs(vm_graphs.graphs)

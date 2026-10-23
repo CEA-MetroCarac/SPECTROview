@@ -48,7 +48,7 @@ The AI Agent supports multiple LLM backends out of the box — no extra packages
 3. Choose a **Model** from the editable model dropdown right next to the provider in the composer toolbar. If your model is not listed, you can type its identifier directly.
 4. Click the **⟳ refresh** button next to the model dropdown to refresh available models.
 
-> **Model Name:** Some endpoints (custom ones especially) do not expose a model-listing API. Enter the model names you use in **Settings** → **AI** tab → **Model Name** as a comma-separated list (e.g. `model-a, model-b`). They will then appear in the composer's model dropdown for the **Custom** provider.
+> **Model Name & Label:** Some endpoints (custom ones especially) do not expose a model-listing API. Enter the model names you use in **Settings** → **AI** tab → **Model Name** as a comma-separated list (e.g. `model-a, model-b`). You can also specify a custom display **Label** (e.g. `ABC` or `Lab Model`) so that your endpoint appears by name in the composer's provider dropdown instead of generic `Custom`. Settings changes are applied immediately to any open chat dialog.
 
 ---
 

@@ -681,6 +681,7 @@ class VChatPanel(QDialog):
 
     def _get_custom_label(self) -> str:
         """Return user-configured display label for Custom provider, or 'Custom'."""
+        self._settings.settings.sync()
         label = self._settings.get_ai_value("custom_label", "", str).strip()
         return label if label else "Custom"
 
@@ -704,15 +705,67 @@ class VChatPanel(QDialog):
         custom_label = self._get_custom_label()
         for entry in _PROVIDER_ENTRIES:
             display = custom_label if entry == "Custom" else entry
-            self.cbb_provider.addItem(display)
+            canonical_key = "Ollama" if entry == "Ollama (local)" else entry
+            self.cbb_provider.addItem(display, userData=canonical_key)
         self.cbb_provider.blockSignals(False)
 
     # ------------------------------------------------------------------
-    # Settings persistence
+    # Settings persistence & live reload
     # ------------------------------------------------------------------
+
+    def reload_settings(self) -> None:
+        """Reload configuration from MSettings and refresh provider/model state."""
+        self._settings.settings.sync()
+
+        # Determine currently selected provider key
+        current_data = self.cbb_provider.currentData()
+        current_display = self.cbb_provider.currentText()
+        current_key = (
+            str(current_data)
+            if current_data
+            else self._display_to_provider(current_display)
+        )
+
+        # Refresh provider items in combobox with latest custom_label
+        self._populate_providers()
+
+        # Restore provider selection
+        target_display = self._provider_to_display(current_key)
+        idx = self.cbb_provider.findText(target_display)
+        if idx >= 0:
+            self.cbb_provider.blockSignals(True)
+            self.cbb_provider.setCurrentIndex(idx)
+            self.cbb_provider.blockSignals(False)
+        else:
+            self._load_settings()
+            return
+
+        # Re-apply credentials / endpoints / models
+        if current_key == "Ollama":
+            saved_model = self._settings.get_ai_value("model_Ollama", "", str)
+            self.vm.set_provider("Ollama", model=saved_model)
+        else:
+            api_key = self._settings.get_ai_value(f"api_key_{current_key}", "", str)
+            base_url = (
+                self._settings.get_ai_value("custom_base_url", "", str)
+                if current_key == "Custom"
+                else ""
+            )
+            saved_model = self._settings.get_ai_value(f"model_{current_key}", "", str)
+            self.vm.set_provider(
+                current_key, api_key=api_key, base_url=base_url, model=saved_model
+            )
+
+        self._refresh_status()
+
+    def showEvent(self, event) -> None:
+        """Reload settings whenever the dialog is displayed."""
+        super().showEvent(event)
+        self.reload_settings()
 
     def _load_settings(self) -> None:
         """Restore provider and model from the app settings."""
+        self._settings.settings.sync()
         self._populate_providers()
         saved_provider = self._settings.get_ai_value("provider", "Ollama (local)", str)
         provider_key = self._display_to_provider(saved_provider)
@@ -747,8 +800,12 @@ class VChatPanel(QDialog):
 
     def _save_settings(self) -> None:
         """Persist current provider and model."""
-        provider_display = self.cbb_provider.currentText()
-        provider_key = self._display_to_provider(provider_display)
+        current_data = self.cbb_provider.currentData()
+        provider_key = (
+            str(current_data)
+            if current_data
+            else self._display_to_provider(self.cbb_provider.currentText())
+        )
 
         self._settings.set_ai_value("provider", provider_key)
 
@@ -792,7 +849,12 @@ class VChatPanel(QDialog):
 
     def _on_provider_changed(self, display_name: str) -> None:
         """Update the ViewModel provider."""
-        provider_key = self._display_to_provider(display_name)
+        current_data = self.cbb_provider.currentData()
+        provider_key = (
+            str(current_data)
+            if current_data
+            else self._display_to_provider(display_name)
+        )
 
         if provider_key == "Ollama":
             self.vm.set_provider("Ollama")
@@ -816,8 +878,12 @@ class VChatPanel(QDialog):
 
     def _refresh_status(self) -> None:
         """Check availability, update status bar and model list asynchronously."""
-        provider_display = self.cbb_provider.currentText()
-        provider_key = self._display_to_provider(provider_display)
+        current_data = self.cbb_provider.currentData()
+        provider_key = (
+            str(current_data)
+            if current_data
+            else self._display_to_provider(self.cbb_provider.currentText())
+        )
         is_ollama = (provider_key == "Ollama")
 
         # ── Package availability guard ──────────────────────────────────
@@ -847,13 +913,20 @@ class VChatPanel(QDialog):
             self.btn_send.setEnabled(False)
             return
 
-        # Cancel any pending worker
-        if self._status_worker is not None and self._status_worker.isRunning():
+        # Cancel any pending worker safely
+        worker = self._status_worker
+        self._status_worker = None
+        if worker is not None:
             try:
-                self._status_worker.status_ready.disconnect()
-            except (RuntimeError, TypeError):
+                if worker.isRunning():
+                    try:
+                        worker.status_ready.disconnect()
+                    except (RuntimeError, TypeError):
+                        pass
+                    worker.quit()
+                    worker.wait(300)
+            except RuntimeError:
                 pass
-            self._status_worker.quit()
 
         # Update status UI immediately to indicate checking without freezing
         if is_ollama:
@@ -877,15 +950,26 @@ class VChatPanel(QDialog):
                 self.cbb_model.blockSignals(False)
 
         # Launch background worker
-        self._status_worker = _StatusWorker(self.vm, provider_key, self)
-        self._status_worker.status_ready.connect(self._on_status_ready)
-        self._status_worker.finished.connect(self._status_worker.deleteLater)
-        self._status_worker.start()
+        new_worker = _StatusWorker(self.vm, provider_key, self)
+        self._status_worker = new_worker
+
+        def _cleanup():
+            if self._status_worker is new_worker:
+                self._status_worker = None
+            new_worker.deleteLater()
+
+        new_worker.status_ready.connect(self._on_status_ready)
+        new_worker.finished.connect(_cleanup)
+        new_worker.start()
 
     def _on_status_ready(self, provider_key: str, available: bool, models: List[str]) -> None:
         """Handle background status check completion."""
-        current_display = self.cbb_provider.currentText()
-        current_key = self._display_to_provider(current_display)
+        current_data = self.cbb_provider.currentData()
+        current_key = (
+            str(current_data)
+            if current_data
+            else self._display_to_provider(self.cbb_provider.currentText())
+        )
         if current_key != provider_key:
             return
 
@@ -951,13 +1035,19 @@ class VChatPanel(QDialog):
 
     def closeEvent(self, event) -> None:
         """Clean up background workers and persist state on close."""
-        if self._status_worker is not None and self._status_worker.isRunning():
+        worker = self._status_worker
+        self._status_worker = None
+        if worker is not None:
             try:
-                self._status_worker.status_ready.disconnect()
-            except (RuntimeError, TypeError):
+                if worker.isRunning():
+                    try:
+                        worker.status_ready.disconnect()
+                    except (RuntimeError, TypeError):
+                        pass
+                    worker.quit()
+                    worker.wait(500)
+            except RuntimeError:
                 pass
-            self._status_worker.quit()
-            self._status_worker.wait(500)
         self._save_settings()
         self._stop_voice_recording()
         self.vm.cancel()

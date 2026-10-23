@@ -86,5 +86,6 @@ class TestAIConnectionTest:
         success, msg = blocker.args
         assert success is False
         assert "API key is required" in msg
+        vm.cancel_test_connection()
 
 

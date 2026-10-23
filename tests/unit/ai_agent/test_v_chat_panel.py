@@ -97,4 +97,23 @@ class TestVChatPanelComposerLayout:
         assert chat_panel._display_to_provider("Lab-LLM") == "Custom"
         assert chat_panel._provider_to_display("Custom") == "Lab-LLM"
 
+    def test_reload_settings_updates_custom_label_in_composer(self, chat_panel):
+        # Initial state: default "Custom" provider selected
+        chat_panel._settings.set_ai_value("custom_label", "")
+        chat_panel._settings.set_ai_value("provider", "Custom")
+        chat_panel._load_settings()
+        assert chat_panel.cbb_provider.currentText() == "Custom"
+
+        # User updates label in settings to "ABC"
+        chat_panel._settings.set_ai_value("custom_label", "ABC")
+        chat_panel.reload_settings()
+
+        # Chat panel composer must now show "ABC"
+        assert chat_panel.cbb_provider.currentText() == "ABC"
+        items = [chat_panel.cbb_provider.itemText(i) for i in range(chat_panel.cbb_provider.count())]
+        assert "ABC" in items
+        assert "Custom" not in items
+        assert chat_panel.cbb_provider.currentData() == "Custom"
+
+
 

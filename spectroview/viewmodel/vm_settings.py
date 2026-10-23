@@ -114,23 +114,39 @@ class VMSettings(QObject):
         self.cancel_test_connection()
         self.connection_test_started.emit()
 
-        self._test_worker = _ConnectionTestWorker(
-            provider, api_key, base_url, model, parent=self
+        worker = _ConnectionTestWorker(
+            provider, api_key, base_url, model, parent=None
         )
-        self._test_worker.result_ready.connect(self._on_test_result)
-        self._test_worker.finished.connect(self._test_worker.deleteLater)
-        self._test_worker.start()
+        self._test_worker = worker
+
+        def _cleanup():
+            worker.deleteLater()
+
+        worker.result_ready.connect(self._on_test_result)
+        worker.finished.connect(_cleanup)
+        worker.start()
 
     def _on_test_result(self, success: bool, message: str) -> None:
         self.connection_test_finished.emit(success, message)
 
     def cancel_test_connection(self) -> None:
         """Abort any ongoing connection test."""
-        if self._test_worker is not None and self._test_worker.isRunning():
+        worker = self._test_worker
+        if worker is None:
+            return
+
+        try:
+            is_running = worker.isRunning()
+        except RuntimeError:
+            self._test_worker = None
+            return
+
+        if is_running:
             try:
-                self._test_worker.result_ready.disconnect()
+                worker.result_ready.disconnect()
             except (RuntimeError, TypeError):
                 pass
-            self._test_worker.quit()
-            self._test_worker = None
+            worker.quit()
+            worker.wait(1000)
+        self._test_worker = None
 

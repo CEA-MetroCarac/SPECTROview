@@ -1,5 +1,5 @@
 # spectroview/viewmodel/utils.py
-from PySide6.QtGui import QColor, QPixmap, QImage, QTextCursor, QIcon, QPainter, QCursor
+from PySide6.QtGui import QColor, QPixmap, QImage, QTextCursor, QIcon, QPainter, QCursor, QPalette
 
 def get_tinted_icon(path: str, color_str: str) -> QIcon:
     """Return a QIcon created from the image at `path` tinted to `color_str`."""
@@ -752,7 +752,7 @@ def format_metadata_tooltip(metadata: dict | object | None) -> str:
 
 
 class MetadataTooltipPopup(QFrame):
-    """Floating tooltip frame with consistent styling that stays visible as long as needed."""
+    """Floating tooltip frame with theme-adaptive styling that stays visible as long as needed."""
 
     def __init__(self, parent=None):
         super().__init__(parent, Qt.ToolTip | Qt.FramelessWindowHint | Qt.WindowDoesNotAcceptFocus)
@@ -769,23 +769,33 @@ class MetadataTooltipPopup(QFrame):
         self.label.setWordWrap(False)
         layout.addWidget(self.label)
 
-        self.setStyleSheet("""
-            QFrame#MetadataTooltipPopup {
-                background-color: #252526;
-                color: #cccccc;
-                border: 1px solid #4a4a4a;
-                border-radius: 6px;
-            }
-            QLabel {
-                background: transparent;
-                color: #e0e0e0;
-                font-size: 11px;
-                line-height: 1.4;
-            }
-        """)
-
     def show_tip(self, html: str, global_pos: QPoint):
         """Update content and position near cursor, constrained to screen bounds."""
+        app = QApplication.instance()
+        if app and not app.styleSheet():
+            # Classic themes or environments without QSS: style dynamically from palette
+            pal = app.palette()
+            bg = pal.color(QPalette.ToolTipBase).name()
+            fg = pal.color(QPalette.ToolTipText).name()
+            border = pal.color(QPalette.Mid).name()
+            self.setStyleSheet(f"""
+                QFrame#MetadataTooltipPopup {{
+                    background-color: {bg};
+                    color: {fg};
+                    border: 1px solid {border};
+                    border-radius: 6px;
+                }}
+                QLabel {{
+                    background: transparent;
+                    color: {fg};
+                    font-size: 11px;
+                    line-height: 1.4;
+                }}
+            """)
+        elif self.styleSheet():
+            # Clear any inline stylesheet so the application QSS rules apply
+            self.setStyleSheet("")
+
         self.label.setText(html)
         self.adjustSize()
 

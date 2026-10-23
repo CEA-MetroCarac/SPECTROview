@@ -516,3 +516,27 @@ class TestMapsListMetadataTooltip:
 
         assert maps_widget._maps_tooltip_manager._is_showing
         assert maps_widget._maps_tooltip_manager._hovered_item == item
+
+    def test_tooltip_adapts_to_theme_change(self, qtbot):
+        """MetadataTooltipPopup adapts background and text colours when theme switches between Dark and Light."""
+        from spectroview.model.m_settings import MSettings
+        from spectroview.view.theme.manager import ThemeManager
+
+        settings = MSettings()
+        theme_mgr = ThemeManager(settings)
+
+        lw = VSpectraList()
+        qtbot.addWidget(lw)
+        popup = lw._tooltip_manager._popup
+
+        # 1. Dark theme
+        theme_mgr.apply("dark")
+        popup.show_tip("<b>Metadata</b>", QPoint(50, 50))
+        dark_bg = popup.palette().color(popup.backgroundRole())
+        assert dark_bg.lightness() < 128
+
+        # 2. Light theme
+        theme_mgr.apply("light")
+        popup.show_tip("<b>Metadata</b>", QPoint(50, 50))
+        light_bg = popup.palette().color(popup.backgroundRole())
+        assert light_bg.lightness() > 180

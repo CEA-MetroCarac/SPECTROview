@@ -527,6 +527,25 @@ _QSS_TEMPLATE = r"""
     }}
 
     /* ═══════════════════════════════════════════════
+       TOOLTIPS — native tooltips & metadata popup
+       ═══════════════════════════════════════════════ */
+
+    QToolTip,
+    QFrame#MetadataTooltipPopup {{
+        background-color: {surface_overlay};
+        color: {text_primary};
+        border: 1px solid {border_medium};
+        border-radius: 6px;
+    }}
+
+    QFrame#MetadataTooltipPopup QLabel {{
+        background: transparent;
+        color: {text_primary};
+        font-size: 11px;
+        line-height: 1.4;
+    }}
+
+    /* ═══════════════════════════════════════════════
        LABEL — default transparency
        ═══════════════════════════════════════════════ */
 

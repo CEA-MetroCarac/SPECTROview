@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 import pandas as pd
 from PySide6.QtWidgets import (
@@ -385,120 +385,77 @@ class VChatPanel(QDialog):
 
         # ── Input Area ──────────────────────────────────────────────
         self.input_container = QWidget()
+        self.input_container.setObjectName("chatComposerContainer")
         input_vbox = QVBoxLayout(self.input_container)
-        input_vbox.setContentsMargins(0, 0, 0, 0)
-        input_vbox.setSpacing(0)
-        
+        input_vbox.setContentsMargins(8, 4, 8, 8)
+        input_vbox.setSpacing(4)
+
         self.reply_preview = self._make_reply_preview()
         self.reply_preview.hide()
         input_vbox.addWidget(self.reply_preview)
-        
-        input_bar = self._make_input_bar()
-        input_vbox.addWidget(input_bar)
-        
+
+        composer_frame = self._make_composer()
+        input_vbox.addWidget(composer_frame)
+
         root.addWidget(self.input_container)
 
     def _make_header(self) -> QFrame:
         header = QFrame()
         header.setObjectName("chatHeader")
-        header.setFixedHeight(112)
+        header.setFixedHeight(74)
 
-        # Main layout holds three rows: connection controls, action
-        # buttons, and the conversation title — split across rows rather
-        # than crammed into one so nothing gets clipped at the panel's
-        # default width.
         main_layout = QVBoxLayout(header)
         main_layout.setContentsMargins(10, 6, 10, 6)
         main_layout.setSpacing(4)
 
-        # ── Row 1: Connection (provider / model / prompt tier) ─────────
+        # ── Row 1: Status (left) + Actions (history, new chat, clear; right) ─
         row1_layout = QHBoxLayout()
         row1_layout.setContentsMargins(0, 0, 0, 0)
         row1_layout.setSpacing(6)
 
-        self.lbl_provider = QLabel("Provider:")
-        self.lbl_provider.setStyleSheet("color: gray; font-weight: bold; font-size: 11px;")
-        row1_layout.addWidget(self.lbl_provider)
-
-        # Row-1 widths: model names are the longest and most-read value here
-
-        self.cbb_provider = QComboBox()
-        for display in _DISPLAY_TO_PROVIDER.keys():
-            self.cbb_provider.addItem(display)
-        self.cbb_provider.setMinimumWidth(80)
-        row1_layout.addWidget(self.cbb_provider, stretch=1)
-
-        self.cbb_model = QComboBox()
-        self.cbb_model.setMinimumWidth(130)
-        # Editable so a model name can be typed directly — some endpoints
-        # (custom OpenAI-compatible ones especially) don't expose a
-        self.cbb_model.setEditable(True)
-        self.cbb_model.setInsertPolicy(QComboBox.NoInsert)
-        self.cbb_model.setToolTip("Select or type a model name")
-        row1_layout.addWidget(self.cbb_model, stretch=3)
-
-        self.cbb_prompt_tier = QComboBox()
-        self.cbb_prompt_tier.addItems(["Auto", "Full", "Small"])
-        self.cbb_prompt_tier.setFixedWidth(90)
-        self.cbb_prompt_tier.setToolTip(
-            "Prompt tier for local Ollama models.\n"
-            "Auto: chosen from the model's parameter count.\n"
-            "Full: always send the full prompt.\n"
-            "Small: always send the simplified prompt."
-        )
-        row1_layout.addWidget(self.cbb_prompt_tier)   # no stretch: fixed width
-
-        self.btn_refresh_models = QPushButton("")
-        self.btn_refresh_models.setObjectName("btn_refresh_models")
-        self.btn_refresh_models.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
-        self.btn_refresh_models.setIconSize(QSize(20, 20))
-        self.btn_refresh_models.setFixedSize(28, 28)
-        self.btn_refresh_models.setToolTip("Refresh model list / re-check connection")
-        row1_layout.addWidget(self.btn_refresh_models)
-
-        main_layout.addLayout(row1_layout)
-
-        # ── Row 2: Status (left) + Actions (history, new chat; right) ───
-        row2_layout = QHBoxLayout()
-        row2_layout.setContentsMargins(0, 0, 0, 0)
-        row2_layout.setSpacing(6)
-
         self.lbl_status = QLabel("Checking…")
         self.lbl_status.setStyleSheet("font-size: 11px;")
-        row2_layout.addWidget(self.lbl_status)
+        row1_layout.addWidget(self.lbl_status)
 
         # No-data notice (shown when no df is loaded)
         self.lbl_no_data = QLabel("ⓘ No DataFrame selected")
         self.lbl_no_data.setStyleSheet("color: #FFA726; font-size: 11px;")
-        row2_layout.addWidget(self.lbl_no_data)
+        row1_layout.addWidget(self.lbl_no_data)
 
-        row2_layout.addStretch()
+        row1_layout.addStretch()
 
         self.btn_history = QPushButton("")
         self.btn_history.setObjectName("btn_history")
         self.btn_history.setIcon(QIcon(os.path.join(ICON_DIR, "view-details.png")))
-        self.btn_history.setIconSize(QSize(26, 26))
-        self.btn_history.setFixedSize(36, 36)
+        self.btn_history.setIconSize(QSize(20, 20))
+        self.btn_history.setFixedSize(30, 30)
         self.btn_history.setToolTip("Conversation History")
 
         self.btn_new_chat = QPushButton("")
         self.btn_new_chat.setObjectName("btn_new_chat")
         self.btn_new_chat.setIcon(QIcon(os.path.join(ICON_DIR, "ai_chat.png")))
-        self.btn_new_chat.setIconSize(QSize(26, 26))
-        self.btn_new_chat.setFixedSize(36, 36)
+        self.btn_new_chat.setIconSize(QSize(20, 20))
+        self.btn_new_chat.setFixedSize(30, 30)
         self.btn_new_chat.setToolTip("New Chat")
 
-        for btn in (self.btn_history, self.btn_new_chat):
+        self.btn_clear = QPushButton("")
+        self.btn_clear.setObjectName("btn_clear")
+        self.btn_clear.setIcon(QIcon(os.path.join(ICON_DIR, "trash.png")))
+        self.btn_clear.setIconSize(QSize(18, 18))
+        self.btn_clear.setFixedSize(30, 30)
+        self.btn_clear.setToolTip("Clear Conversation")
+
+        for btn in (self.btn_history, self.btn_new_chat, self.btn_clear):
             btn.setCursor(Qt.PointingHandCursor)
-            row2_layout.addWidget(btn)
+            row1_layout.addWidget(btn)
 
-        main_layout.addLayout(row2_layout)
+        main_layout.addLayout(row1_layout)
 
-        # ── Row 3: Title ─────────────────────────────────────────────
+        # ── Row 2: Title ─────────────────────────────────────────────
         self.edit_title = QLineEdit()
         self.edit_title.setObjectName("chatTitleEdit")
         self.edit_title.setPlaceholderText("New Conversation")
-        self.edit_title.setStyleSheet("font-size: 14px; padding: 2px 4px;")
+        self.edit_title.setStyleSheet("font-size: 13px; padding: 2px 4px;")
         self.edit_title.editingFinished.connect(self._on_title_edited)
         main_layout.addWidget(self.edit_title)
 
@@ -524,57 +481,93 @@ class VChatPanel(QDialog):
         
         return frame
 
-    def _make_input_bar(self) -> QFrame:
-        bar = QFrame()
-        bar.setObjectName("chatInputBar")
+    def _make_composer(self) -> QFrame:
+        """Create the modern composer frame embedding the text input,
+        provider & model selectors, voice dictation, and send/stop button."""
+        self.composer_frame = QFrame()
+        self.composer_frame.setObjectName("chatComposerFrame")
 
-        layout = QHBoxLayout(bar)
-        layout.setContentsMargins(8, 6, 8, 6)
-        layout.setSpacing(6)
+        composer_layout = QVBoxLayout(self.composer_frame)
+        composer_layout.setContentsMargins(10, 8, 10, 6)
+        composer_layout.setSpacing(4)
 
-        # Clear button
-        self.btn_clear = QPushButton("Clear")
-        self.btn_clear.setFixedWidth(55)
-        self.btn_clear.setFixedHeight(34)
-        self.btn_clear.setToolTip("Clear conversation history")
-        layout.addWidget(self.btn_clear, alignment=Qt.AlignBottom)
-
-        # Text input
+        # Auto-resizing multi-line text input
         self.edit_input = _ChatLineEdit()
+        self.edit_input.setObjectName("chatComposerInput")
         self.edit_input.setPlaceholderText("Ask a question about your data…")
-        layout.addWidget(self.edit_input, stretch=1)
+        self.edit_input.setStyleSheet("QTextEdit { border: none; background: transparent; padding: 0px; }")
+        composer_layout.addWidget(self.edit_input)
+
+        # Embedded bottom toolbar inside composer
+        composer_toolbar = QHBoxLayout()
+        composer_toolbar.setContentsMargins(0, 2, 0, 0)
+        composer_toolbar.setSpacing(5)
+
+        # Provider selector dropdown
+        self.cbb_provider = QComboBox()
+        self.cbb_provider.setObjectName("cbb_provider")
+        for display in _DISPLAY_TO_PROVIDER.keys():
+            self.cbb_provider.addItem(display)
+        self.cbb_provider.setMinimumWidth(80)
+        self.cbb_provider.setMaximumWidth(125)
+        self.cbb_provider.setFixedHeight(23)
+        self.cbb_provider.setToolTip("Select AI provider")
+        self.cbb_provider.setCursor(Qt.PointingHandCursor)
+        composer_toolbar.addWidget(self.cbb_provider, 0, Qt.AlignVCenter)
+
+        # Model selector dropdown (editable)
+        self.cbb_model = QComboBox()
+        self.cbb_model.setObjectName("cbb_model")
+        self.cbb_model.setMinimumWidth(110)
+        self.cbb_model.setMaximumWidth(180)
+        self.cbb_model.setFixedHeight(23)
+        self.cbb_model.setEditable(True)
+        self.cbb_model.setInsertPolicy(QComboBox.NoInsert)
+        self.cbb_model.setToolTip("Select or type a model name")
+        self.cbb_model.setCursor(Qt.PointingHandCursor)
+        composer_toolbar.addWidget(self.cbb_model, 0, Qt.AlignVCenter)
+
+        # Refresh models / test connection button
+        self.btn_refresh_models = QPushButton("")
+        self.btn_refresh_models.setObjectName("btn_refresh_models")
+        self.btn_refresh_models.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
+        self.btn_refresh_models.setIconSize(QSize(14, 14))
+        self.btn_refresh_models.setFixedSize(23, 23)
+        self.btn_refresh_models.setCursor(Qt.PointingHandCursor)
+        self.btn_refresh_models.setToolTip("Refresh model list / re-check connection")
+        composer_toolbar.addWidget(self.btn_refresh_models, 0, Qt.AlignVCenter)
+
+        # Spacer pushing actions to right
+        composer_toolbar.addStretch(1)
 
         # Microphone button (voice dictation)
         self.btn_mic = QPushButton("🎤")
         self.btn_mic.setObjectName("btn_mic")
-        self.btn_mic.setFixedHeight(50)
-        self.btn_mic.setFixedWidth(44)
+        self.btn_mic.setFixedSize(24, 23)
         self.btn_mic.setCheckable(True)
         self.btn_mic.setCursor(Qt.PointingHandCursor)
         self.btn_mic.clicked.connect(self._on_mic_toggle)
-
-        self.btn_mic.setEnabled(True)
         if not VOICE_AVAILABLE:
             self.btn_mic.setToolTip("Voice dictation unavailable — pip install SpeechRecognition pyaudio")
         else:
             self.btn_mic.setToolTip("Click to start voice recording")
+        composer_toolbar.addWidget(self.btn_mic, 0, Qt.AlignVCenter)
 
-        # Base look inherits the themed QPushButton rule; only the
-        # "recording" (checked) state needs a distinct, semantic color.
-        self.btn_mic.setStyleSheet("""
-            QPushButton#btn_mic { font-size: 18px; }
-            QPushButton#btn_mic:checked { background: #C62828; color: white; border-color: #E53935; }
-        """)
-        layout.addWidget(self.btn_mic)
-
-        # Send / Stop button (toggles appearance based on AI state)
+        # Send / Stop button
         self.btn_send = QPushButton("Send ▶")
-        self.btn_send.setFixedHeight(50)
-        self.btn_send.setFixedWidth(70)
+        self.btn_send.setObjectName("btn_send")
+        self.btn_send.setFixedHeight(23)
+        self.btn_send.setMinimumWidth(55)
+        self.btn_send.setCursor(Qt.PointingHandCursor)
         self._apply_send_button_style()
-        layout.addWidget(self.btn_send)
+        composer_toolbar.addWidget(self.btn_send, 0, Qt.AlignVCenter)
 
-        return bar
+        composer_layout.addLayout(composer_toolbar)
+        return self.composer_frame
+
+    def _make_input_bar(self) -> QFrame:
+        """Backward compatibility alias for _make_composer."""
+        return self._make_composer()
 
     # ------------------------------------------------------------------
     # Signal wiring
@@ -584,14 +577,13 @@ class VChatPanel(QDialog):
         # Input — use a dispatcher so the button can send OR stop
         self.btn_send.clicked.connect(self._on_send_or_stop)
         self.edit_input.send_requested.connect(self._on_send_or_stop)
+        self.edit_input.textChanged.connect(self._on_input_text_changed)
         self.btn_clear.clicked.connect(self._on_clear)
         self.btn_history.clicked.connect(self._on_history_clicked)
         self.btn_new_chat.clicked.connect(self._on_new_chat_clicked)
         self.btn_refresh_models.clicked.connect(self._refresh_status)
         self.cbb_model.currentTextChanged.connect(self.vm.set_model)
         self.cbb_provider.currentTextChanged.connect(self._on_provider_changed)
-        self.cbb_prompt_tier.currentIndexChanged.connect(self._on_prompt_tier_changed)
-
         self.cbb_model.currentTextChanged.connect(lambda _: self._save_settings())
 
         # ViewModel → View
@@ -607,35 +599,61 @@ class VChatPanel(QDialog):
     # ------------------------------------------------------------------
 
     _SEND_STYLE = """
-        QPushButton {
-            background: #1565C0;
+        QPushButton#btn_send {
+            background-color: #1976D2;
             color: white;
             border: none;
-            border-radius: 4px;
-            font-weight: bold;
+            border-radius: 5px;
+            padding: 2px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            min-height: 20px;
+            max-height: 23px;
         }
-        QPushButton:hover   { background: #1976D2; }
-        QPushButton:pressed { background: #0D47A1; }
-        QPushButton:disabled { background: #555; color: #888; }
+        QPushButton#btn_send:hover   { background-color: #2196F3; }
+        QPushButton#btn_send:pressed { background-color: #0D47A1; }
+        QPushButton#btn_send:disabled { background-color: rgba(128, 128, 128, 0.35); color: rgba(255, 255, 255, 0.5); }
+    """
+
+    _SEND_ACTIVE_STYLE = """
+        QPushButton#btn_send {
+            background-color: #1565C0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 2px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            min-height: 20px;
+            max-height: 23px;
+        }
+        QPushButton#btn_send:hover   { background-color: #1E88E5; }
+        QPushButton#btn_send:pressed { background-color: #0D47A1; }
+        QPushButton#btn_send:disabled { background-color: rgba(128, 128, 128, 0.35); color: rgba(255, 255, 255, 0.5); }
     """
 
     _STOP_STYLE = """
-        QPushButton {
-            background: #C62828;
+        QPushButton#btn_send {
+            background-color: #D32F2F;
             color: white;
             border: none;
-            border-radius: 4px;
-            font-weight: bold;
+            border-radius: 5px;
+            padding: 2px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            min-height: 20px;
+            max-height: 23px;
         }
-        QPushButton:hover   { background: #D32F2F; }
-        QPushButton:pressed { background: #B71C1C; }
-        QPushButton:disabled { background: #555; color: #888; }
+        QPushButton#btn_send:hover   { background-color: #E53935; }
+        QPushButton#btn_send:pressed { background-color: #B71C1C; }
+        QPushButton#btn_send:disabled { background-color: rgba(128, 128, 128, 0.35); color: rgba(255, 255, 255, 0.5); }
     """
 
     def _apply_send_button_style(self) -> None:
-        """Switch the action button to 'Send' mode (blue)."""
+        """Switch the action button to 'Send' mode."""
         self.btn_send.setText("Send ▶")
-        self.btn_send.setStyleSheet(self._SEND_STYLE)
+        has_text = bool(self.edit_input.toPlainText().strip()) if hasattr(self, "edit_input") else False
+        self.btn_send.setStyleSheet(self._SEND_ACTIVE_STYLE if has_text else self._SEND_STYLE)
         self.btn_send.setEnabled(True)
 
     def _apply_stop_button_style(self) -> None:
@@ -643,6 +661,11 @@ class VChatPanel(QDialog):
         self.btn_send.setText("Stop ■")
         self.btn_send.setStyleSheet(self._STOP_STYLE)
         self.btn_send.setEnabled(True)
+
+    def _on_input_text_changed(self) -> None:
+        """Dynamically update Send button appearance based on typed text."""
+        if not self.vm.is_busy():
+            self._apply_send_button_style()
 
     def _on_send_or_stop(self) -> None:
         """Dispatch to send or stop depending on whether the AI is busy."""
@@ -671,7 +694,7 @@ class VChatPanel(QDialog):
     # ------------------------------------------------------------------
 
     def _load_settings(self) -> None:
-        """Restore provider, prompt tier, and model from the app settings."""
+        """Restore provider and model from the app settings."""
         saved_provider = self._settings.get_ai_value("provider", "Ollama (local)", str)
         idx = self.cbb_provider.findText(saved_provider)
         if idx >= 0:
@@ -679,11 +702,6 @@ class VChatPanel(QDialog):
             self.cbb_provider.setCurrentIndex(idx)
             self.cbb_provider.blockSignals(False)
 
-        saved_tier_idx = self._settings.get_ai_value("prompt_tier_index", 0, int)
-        if 0 <= saved_tier_idx < self.cbb_prompt_tier.count():
-            self.cbb_prompt_tier.blockSignals(True)
-            self.cbb_prompt_tier.setCurrentIndex(saved_tier_idx)
-            self.cbb_prompt_tier.blockSignals(False)
         # Apply the loaded provider directly without triggering redundant status refreshes
         provider_key = _DISPLAY_TO_PROVIDER.get(saved_provider, "Ollama")
         if provider_key == "Ollama":
@@ -696,7 +714,8 @@ class VChatPanel(QDialog):
             saved_model = self._settings.get_ai_value(f"model_{provider_key}", "", str)
             self.vm.set_provider(provider_key, api_key=api_key, base_url=base_url, model=saved_model)
 
-        self.vm.set_small_model_mode({0: None, 1: False, 2: True}.get(saved_tier_idx))
+        # Default small-model handling to automatic detection
+        self.vm.set_small_model_mode(None)
 
         saved_model = self._settings.get_ai_value(f"model_{provider_key}", "", str)
         if saved_model:
@@ -707,12 +726,11 @@ class VChatPanel(QDialog):
             self.cbb_model.blockSignals(False)
 
     def _save_settings(self) -> None:
-        """Persist current provider, prompt tier, and model."""
+        """Persist current provider and model."""
         provider_display = self.cbb_provider.currentText()
         provider_key = _DISPLAY_TO_PROVIDER.get(provider_display, "Ollama")
 
         self._settings.set_ai_value("provider", provider_display)
-        self._settings.set_ai_value("prompt_tier_index", self.cbb_prompt_tier.currentIndex())
 
         current_model = self.cbb_model.currentText()
         if current_model:
@@ -744,9 +762,8 @@ class VChatPanel(QDialog):
         return [m.strip() for m in raw.split(",") if m.strip()]
 
     def _on_prompt_tier_changed(self, index: int) -> None:
-        """Apply the manual prompt-tier override (or resume auto-detection)."""
+        """Apply manual prompt-tier override (compatibility helper)."""
         self.vm.set_small_model_mode({0: None, 1: False, 2: True}.get(index))
-        self._save_settings()
         self._refresh_status()
 
     # ------------------------------------------------------------------
@@ -911,7 +928,7 @@ class VChatPanel(QDialog):
             self.btn_send.setEnabled(False)
 
     def closeEvent(self, event) -> None:
-        """Clean up background workers on close."""
+        """Clean up background workers and persist state on close."""
         if self._status_worker is not None and self._status_worker.isRunning():
             try:
                 self._status_worker.status_ready.disconnect()
@@ -919,6 +936,9 @@ class VChatPanel(QDialog):
                 pass
             self._status_worker.quit()
             self._status_worker.wait(500)
+        self._save_settings()
+        self._stop_voice_recording()
+        self.vm.cancel()
         super().closeEvent(event)
 
     # ------------------------------------------------------------------
@@ -1229,17 +1249,6 @@ class VChatPanel(QDialog):
         super().resizeEvent(event)
         self._reposition_scroll_to_bottom_button()
 
-    # ------------------------------------------------------------------
-    # Close event — hide instead of destroy so state is preserved
-    # ------------------------------------------------------------------
-
-    def closeEvent(self, event) -> None:
-        # The panel is hidden, not destroyed, so the MCP hub thread and its
-        # sessions stay up for the next open; main.py shuts them down on exit.
-        self._save_settings()
-        self._stop_voice_recording()
-        self.vm.cancel()
-        event.accept()
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -1247,7 +1256,7 @@ class VChatPanel(QDialog):
 # ─────────────────────────────────────────────────────────────────────────
 
 class _ChatLineEdit(QTextEdit):
-    """A QTextEdit that emits ``send_requested`` on Enter / Return (but Shift+Enter adds newline)
+    """A QTextEdit that emits ``send_requested`` on Enter / Return (Shift+Enter adds newline)
     and dynamically resizes its height based on its content."""
 
     send_requested = Signal()
@@ -1256,7 +1265,7 @@ class _ChatLineEdit(QTextEdit):
         super().__init__(parent)
         self.setAcceptRichText(False)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self._min_height = 50
+        self._min_height = 42
         self._max_height = 150
         self.setFixedHeight(self._min_height)
         self.textChanged.connect(self._adjust_height)
@@ -1264,7 +1273,7 @@ class _ChatLineEdit(QTextEdit):
     def _adjust_height(self) -> None:
         doc_height = int(self.document().size().height())
         margins = self.contentsMargins()
-        total_height = doc_height + margins.top() + margins.bottom() + 10
+        total_height = doc_height + margins.top() + margins.bottom() + 4
         new_height = max(self._min_height, min(total_height, self._max_height))
         if self.height() != new_height:
             self.setFixedHeight(new_height)

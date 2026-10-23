@@ -436,12 +436,24 @@ class ChatResult:
 
 **File**: `spectroview/ai_agent/v_chat_panel.py`
 
-A floating `QDialog`. Header row 1: provider selector, model selector, **prompt-tier selector** (`cbb_prompt_tier`: Auto / Full prompt / Simplified prompt — see [Small-Model Support](#small-model-support)), refresh button. Header row 2 (left to right): connection status label `lbl_status` (appends `· Simplified prompts` when active), `lbl_no_data` (a "no DataFrame selected/available" notice, blank once DataFrames are loaded), a stretch, then the Conversation History / New Chat buttons (36×36 icon buttons). There is no longer a separate status-bar strip below the header — both status labels live in the header itself now.
+A floating `QDialog` styled with a modern, clean card aesthetic inspired by modern AI composers.
 
-Two things previously on this panel have since moved or been removed:
-- The **"Show model reasoning" toggle** is gone entirely (see the note under `LLMWorker`/`APIWorker`/`AnthropicWorker` above) — reasoning is never surfaced in the chat UI now.
-- **General plot-template management** (browse/apply/rename/duplicate/delete, save-all-open-graphs) now lives entirely in the Graphs workspace (`VWorkspaceGraphs`, next to Add/Update plot), not here. `VChatPanel.prompt_and_save_template()` survives only as the inline "Save N plot(s) as Template" shortcut offered after the AI creates plots (see `_on_result_ready`).
-- **Intermediate tool-step chips** (`🔧 query_dataframe`, `🔧 plot_graph`, …) are no longer shown in the conversation. `_on_tool_execution` now only updates the transient "thinking" status so the finished chat stays clean.
+**Header**: Streamlined 2-row layout (height 74px):
+- **Row 1**: Connection status label `lbl_status` (appends `· Simplified prompts` when small-model mode is active), `lbl_no_data` notice, stretch, and 30×30 action buttons: Conversation History (`btn_history`), New Chat (`btn_new_chat`), and Clear Conversation (`btn_clear`).
+- **Row 2**: Editable conversation title (`edit_title`).
+
+**Composer (`chatComposerFrame`)**:
+- Enclosed card with rounded corners (8px) and subtle border at the bottom of the dialog.
+- **Top**: Auto-resizing multi-line text input (`_ChatLineEdit`), borderless with transparent background.
+- **Embedded Toolbar**: Located inside the bottom of the composer card:
+  - AI Provider selector dropdown (`cbb_provider`)
+  - Model selector dropdown (`cbb_model`, editable)
+  - Connection/models refresh button (`btn_refresh_models`)
+  - Stretch
+  - Voice dictation microphone button (`btn_mic`)
+  - Modern action button (`btn_send`): toggles between blue Send and red Stop states, with dynamic hover/active styling.
+
+The previous manual prompt-tier combobox (`cbb_prompt_tier`: Auto / Full / Small) has been removed; small-model detection operates automatically based on the model's parameter count.
 
 Helper widgets:
 - **`_MessageCard`**: styled message bubble; `_add_card(text, role, timestamp)` indents it on the side matching the speaker

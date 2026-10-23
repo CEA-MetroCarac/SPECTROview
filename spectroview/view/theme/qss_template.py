@@ -627,13 +627,72 @@ _QSS_TEMPLATE = r"""
 
     #replyPreview {{
         background: {accent_bg};
-        border-top: 1px solid {border_subtle};
+        border: 1px solid {border_subtle};
         border-left: 3px solid {accent};
+        border-radius: 6px;
     }}
 
-    #chatInputBar {{
-        border-top: 1px solid {border_subtle};
+    #chatComposerContainer {{
+        background: transparent;
+    }}
+
+    #chatComposerFrame {{
+        background: {surface_card};
+        border: 1px solid {border_medium};
+        border-radius: 8px;
+    }}
+
+    #chatComposerFrame:hover {{
+        border: 1px solid {border_strong};
+    }}
+
+    #chatComposerInput {{
+        background: transparent;
+        border: none;
+        color: {text_primary};
+        font-size: 12px;
         padding: 2px;
+    }}
+
+    QComboBox#cbb_provider, QComboBox#cbb_model {{
+        background: {surface_input};
+        border: 1px solid {border_subtle};
+        border-radius: 5px;
+        padding: 1px 6px;
+        font-size: 11px;
+        color: {text_primary};
+        min-height: 21px;
+        max-height: 23px;
+    }}
+    QComboBox#cbb_provider:hover, QComboBox#cbb_model:hover {{
+        background: {hover_bg};
+        border: 1px solid {border_medium};
+    }}
+    QComboBox#cbb_model QLineEdit {{
+        background: transparent;
+        border: none;
+        color: {text_primary};
+        font-size: 11px;
+        padding: 0px;
+    }}
+
+    #btn_mic {{
+        background: transparent;
+        border: none;
+        border-radius: 5px;
+        padding: 0px;
+        font-size: 13px;
+        color: {text_primary};
+    }}
+    #btn_mic:hover {{
+        background: {hover_bg};
+    }}
+    #btn_mic:pressed {{
+        background: {hover_bg_strong};
+    }}
+    #btn_mic:checked {{
+        background: #C62828;
+        color: white;
     }}
 
     #card_user {{
@@ -652,12 +711,12 @@ _QSS_TEMPLATE = r"""
         border-radius: 8px;
     }}
 
-    #btn_refresh_models, #btn_history, #btn_new_chat, #btn_templates, #btn_reasoning_toggle {{
+    #btn_refresh_models, #btn_history, #btn_new_chat, #btn_clear, #btn_templates, #btn_reasoning_toggle {{
         background: transparent;
         border: none;
         border-radius: 4px;
     }}
-    #btn_refresh_models:hover, #btn_history:hover, #btn_new_chat:hover,
+    #btn_refresh_models:hover, #btn_history:hover, #btn_new_chat:hover, #btn_clear:hover,
     #btn_templates:hover, #btn_reasoning_toggle:hover {{
         background: {hover_bg};
     }}

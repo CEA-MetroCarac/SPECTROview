@@ -38,39 +38,36 @@ The AI Agent supports multiple LLM backends out of the box — no extra packages
 
 ---
 
-### **3. Configuring a Provider**
+### **3. Configuring a Provider and Model**
 
-1. Select a **Provider** from the dropdown on the top-left of the chat panel.
-2. For cloud providers, enter your **API key** in the **Settings** panel (`Ctrl + Shift + S` → **AI** tab):
+1. Inside the **Chat Composer** at the bottom of the panel, select an **AI Provider** from the dropdown (`Ollama (local)`, `OpenAI`, `Anthropic`, `Mistral`, `Gemini`, `DeepSeek`, `Groq`, or `Custom`).
+2. For cloud providers, configure your **API key** in the **Settings** dialog (`Ctrl + Shift + S` → **AI** tab):
    - The **Custom** provider's **Custom API Key**, **Base URL**, and **Model Name** fields are shown by default.
-   - OpenAI, Anthropic, Gemini, DeepSeek, and Mistral keys are tucked under the collapsed **▸ Other cloud providers** section — click it to expand.
-   - For the **Custom** provider, fill in the **Base URL** (the endpoint's OpenAI-compatible URL).
-3. Choose a **Model** from the model dropdown next to the provider. The dropdown is **editable** — if the model you want is not listed, just type its name in.
-4. Click the **⟳ refresh** icon to verify the connection. A green status indicator confirms it is working.
+   - Other cloud provider keys are organized under the collapsed **▸ Other cloud providers** section.
+3. Choose a **Model** from the editable model dropdown right next to the provider in the composer toolbar. If your model is not listed, you can type its identifier directly.
+4. Click the **⟳ refresh** button next to the model dropdown to verify the connection. A green status indicator in the top header confirms when the provider is connected and ready.
 
-> **Model Name:** Some endpoints (custom ones especially) do not expose a model-listing API, so the dropdown starts empty. Enter the model names you use in **Settings** → **AI** tab → **Model Name** as a comma-separated list (e.g. `model-a, model-b`). They then appear in the dropdown for the **Custom** provider and are remembered between sessions.
-
----
-
-### **4. Prompt Tier for Local Models (Auto / Full / Simplified)**
-
-Next to the model dropdown is a small **prompt tier** selector: **Auto**, **Full prompt**, or **Simplified prompt**. It only affects local **Ollama** models.
-
-Small local models (roughly under ~10 billion parameters — things like `qwen3:8b`, `gemma3:4b`, `phi3:mini`) are noticeably less reliable with a long, information-dense prompt than a large cloud model is. To compensate, SPECTROview can automatically give small models a shorter, more focused prompt, a smaller conversation-history window, and tuned generation settings — while leaving larger models completely untouched.
-
-| Option | What it does |
-|--------|--------------|
-| **Auto** (default) | SPECTROview checks the size of the selected Ollama model and automatically picks the right prompt for it. No action needed — this is the recommended setting for almost everyone. |
-| **Full prompt** | Always use the full, detailed prompt, even for a small model. Useful for comparing behavior, or if a "small" model is actually working fine as-is. |
-| **Simplified prompt** | Always use the shorter, small-model-optimized prompt, even for a large model. Useful if a specific model is struggling despite being large, or if you want faster responses. |
-
-When Simplified mode is active, the status bar shows **`· Simplified prompts`** next to the connection indicator, so you can always tell which mode you're in.
-
-**If a local model isn't calling tools correctly** (e.g. it describes what it *would* plot instead of actually creating the plot, or drops a setting like grid lines), try switching this selector to **Simplified prompt** — even if Auto didn't pick it automatically for that model — before assuming the model can't do the task at all.
+> **Model Name:** Some endpoints (custom ones especially) do not expose a model-listing API. Enter the model names you use in **Settings** → **AI** tab → **Model Name** as a comma-separated list (e.g. `model-a, model-b`). They will then appear in the composer's model dropdown for the **Custom** provider.
 
 ---
 
-### **5. Chat Interface Overview**
+### **4. Automatic Small-Model Optimization**
+
+Small local models (roughly under ~10 billion parameters — such as `qwen2.5:7b`, `gemma2:2b`, `phi3:mini`) are noticeably more sensitive to long system prompts. SPECTROview automatically inspects the parameter size of local Ollama models and activates a compact prompt tier, a targeted conversation window, and tuned generation parameters.
+
+When small-model mode is active, the status indicator in the header automatically displays **`· Simplified prompts`**, requiring no manual intervention.
+
+---
+
+### **5. Modern Chat Composer & Interface Overview**
+
+The chat interface features an intuitive, unified layout:
+
+- **Top Header Bar**: Shows connection status (`🟢 Connected`), DataFrame availability notices, conversation title, and quick-action icon buttons (Conversation History, New Chat, Clear Conversation).
+- **Conversation Thread**: Displays color-coded message cards (User, AI replies with formatted Markdown/tables/equations, and error alerts).
+- **Embedded Composer Card**: A rounded composer box at the bottom containing:
+  - An auto-expanding multi-line text input (press `Enter` to send, `Shift + Enter` for new lines).
+  - An embedded bottom toolbar hosting the **AI Provider selector**, **Model selector**, **Refresh button**, **Voice dictation mic (`🎤`)**, and **Send ▶ / Stop ■ button**.
 
 The chat panel shows messages in chronological order with clear color-coded bubbles:
 

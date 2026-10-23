@@ -681,7 +681,7 @@ def extract_primary_metadata(metadata: dict | object | None) -> dict[str, str]:
     # 1. Laser Wavelength
     k, v = get_first_match([
         "Laser Wavelength (nm)", "Laser Wavelength", "laser_wavelength",
-        "EXCIT_LINE", "Wavelength (nm)", "Wavelength"
+        "EXCIT_LINE", "EXCIT LINE", "Wavelength (nm)", "Wavelength"
     ])
     if v:
         wavelength = v if v.lower().endswith("nm") else f"{v} nm"
@@ -691,12 +691,13 @@ def extract_primary_metadata(metadata: dict | object | None) -> dict[str, str]:
     # 2. Laser Power
     k, v = get_first_match([
         "Laser Power (%)", "Laser Power (mW)", "Laser Power", "laser_power",
-        "ND FILTER", "Power (%)", "Power (mW)", "Power"
+        "ND FILTER", "Power (%)", "Power (mW)", "Power", "POWER"
     ])
     if v:
-        if ("(%)" in (k or "") or "%" in (k or "")) and not v.endswith("%"):
+        has_unit = "%" in v or "mw" in v.lower() or "w" in v.lower()
+        if ("(%)" in (k or "") or "%" in (k or "")) and not has_unit:
             power = f"{v} %"
-        elif "(mw)" in (k or "").lower() and not v.lower().endswith("mw"):
+        elif "(mw)" in (k or "").lower() and not has_unit:
             power = f"{v} mW"
         else:
             power = v
@@ -706,7 +707,8 @@ def extract_primary_metadata(metadata: dict | object | None) -> dict[str, str]:
     # 3. Exposure Time
     k, v = get_first_match([
         "Exposure Time (s)", "Exposure Time", "exposure_time",
-        "ACQ. TIME (S)", "Acquisition Time (s)", "Acquisition Time"
+        "ACQ. TIME (S)", "Acquisition Time (s)", "Acquisition Time",
+        "TIME", "TIME (S)", "ACQ. TIME", "ACQ TIME", "EXP TIME", "EXPOSURE TIME"
     ])
     if v:
         exposure = v if (v.lower().endswith("s") or v.lower().endswith("sec")) else f"{v} s"
@@ -715,13 +717,14 @@ def extract_primary_metadata(metadata: dict | object | None) -> dict[str, str]:
 
     # 4. Accumulation
     k, v = get_first_match([
-        "Accumulations", "Accumulation", "accumulation_count", "ACCUMULATIONS"
+        "Accumulations", "Accumulation", "accumulation_count", "ACCUMULATIONS",
+        "ACCUM", "ACC", "NB ACCUM"
     ])
     accum = v if v else "N/A"
 
     # 5. Objective
     k, v = get_first_match([
-        "Objective Used", "Objective", "objective_name", "OBJECTIV"
+        "Objective Used", "Objective", "objective_name", "OBJECTIV", "OBJECTIVE"
     ])
     obj = v if v else "N/A"
 

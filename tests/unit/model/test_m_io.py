@@ -182,3 +182,51 @@ class TestLoadDataFrameFile:
         bad.write_text("A,B,C\n1,2,3\n")
         with pytest.raises(ValueError, match="Unsupported file type"):
             load_dataframe_file(bad)
+
+
+class TestMapSpcMetadata:
+    def test_map_spc_metadata_t64000(self):
+        from spectroview.model.m_io import _map_spc_metadata
+        log_meta = {
+            "INSTRUMENT": "T64000",
+            "TIME": "10",
+            "ACCUM": "2",
+            "BINNING": "1",
+            "SPECTRO": "599.991",
+            "HOLE": "200",
+            "EXCIT_LINE": "354.7",
+            "GRATING": "2400",
+            "OBJECTIV": "X100",
+            "DATE": "10/02/26 16:23:36",
+            "POWER": "",
+        }
+        res = _map_spc_metadata(log_meta)
+        assert res["Exposure Time (s)"] == "10"
+        assert res["Accumulations"] == "2"
+        assert res["Slit Opening (µm)"] == "200"
+        assert res["Laser Wavelength (nm)"] == "354.7"
+        assert res["Grating"] == "2400"
+        assert res["Objective Used"] == "X100"
+        assert res["Date"] == "10/02/26 16:23:36"
+        assert "TIME" not in res
+        assert "ACCUM" not in res
+        assert "HOLE" not in res
+        assert "POWER" not in res
+        assert res["INSTRUMENT"] == "T64000"
+
+    def test_map_spc_metadata_labspec(self):
+        from spectroview.model.m_io import _map_spc_metadata
+        log_meta = {
+            "ACQ. TIME (S)": "5",
+            "ACCUMULATIONS": "3",
+            "ND FILTER": "10%",
+            "OBJECTIV": "100X",
+            "EXCIT_LINE": "532.0",
+        }
+        res = _map_spc_metadata(log_meta)
+        assert res["Exposure Time (s)"] == "5"
+        assert res["Accumulations"] == "3"
+        assert res["Laser Power (%)"] == "10%"
+        assert res["Objective Used"] == "100X"
+        assert res["Laser Wavelength (nm)"] == "532.0"
+

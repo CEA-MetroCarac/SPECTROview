@@ -61,6 +61,22 @@ class TestMetadataExtraction:
         assert res["Accumulation"] == "4"
         assert res["Objective"] == "x20"
 
+    def test_spc_t64000_keys_fallback(self):
+        meta = {
+            "EXCIT_LINE": "354.7",
+            "POWER": "",
+            "TIME": "10",
+            "ACCUM": "2",
+            "OBJECTIV": "X100",
+            "GRATING": "2400",
+        }
+        res = extract_primary_metadata(meta)
+        assert res["Laser Wavelength"] == "354.7 nm"
+        assert res["Laser Power"] == "N/A"
+        assert res["Exposure Time"] == "10 s"
+        assert res["Accumulation"] == "2"
+        assert res["Objective"] == "X100"
+
     def test_empty_or_unknown_metadata_graceful(self):
         meta = {
             "Laser Wavelength (nm)": "Unknown",

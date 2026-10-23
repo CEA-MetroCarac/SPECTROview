@@ -554,33 +554,36 @@ def _construct_wdf_metadata(reader, wdf_metadata, x_step=None, y_step=None):
 
 def _map_spc_metadata(log_metadata: dict) -> dict:
     """Map SPC log keys to standard WDF keys."""
-    # Mapping table (WDF Key <- SPC Key)
-    key_map = {
-        "GRATING": "Grating",
-        "OBJECTIV": "Objective Used",
-        "EXCIT_LINE": "Laser Wavelength (nm)",
-        "ND FILTER": "Laser Power (%)",
-        "ACQ. TIME (S)": "Exposure Time (s)",
-        "ACCUMULATIONS": "Accumulations",
-        "HOLE (M)": "Slit Opening (µm)",
-        "DATE": "Date",
-    }
-    
+    # Mapping rules: list of (standard_wdf_key, [candidate_spc_keys in priority order])
+    mapping_rules = [
+        ("Grating", ["GRATING"]),
+        ("Objective Used", ["OBJECTIV", "OBJECTIVE"]),
+        ("Laser Wavelength (nm)", ["EXCIT_LINE", "EXCIT LINE", "LASER WAVELENGTH", "WAVELENGTH"]),
+        ("Laser Power (%)", ["ND FILTER", "POWER", "LASER POWER", "LASER_POWER"]),
+        ("Exposure Time (s)", ["ACQ. TIME (S)", "TIME", "ACQ TIME (S)", "ACQ TIME", "EXPOSURE TIME", "EXP TIME"]),
+        ("Accumulations", ["ACCUMULATIONS", "ACCUM", "ACCUMULATION", "NB ACCUM"]),
+        ("Slit Opening (µm)", ["HOLE (M)", "HOLE", "SLIT OPENING"]),
+        ("Date", ["DATE"]),
+    ]
+
     new_metadata = {}
-    
-    # Apply mapping
-    for spc_key, standard_key in key_map.items():
-        if spc_key in log_metadata:
-            val = log_metadata[spc_key]
-            new_metadata[standard_key] = val
-            
-    # Add other unmapped keys at the end 
-    mapped_source_keys = set(key_map.keys())
-    
+    mapped_source_keys = set()
+
+    # Apply mapping in order of preference
+    for standard_key, candidate_keys in mapping_rules:
+        for spc_key in candidate_keys:
+            mapped_source_keys.add(spc_key)
+            if spc_key in log_metadata and standard_key not in new_metadata:
+                val = log_metadata[spc_key]
+                # Only populate if value is non-empty
+                if val is not None and str(val).strip() != "":
+                    new_metadata[standard_key] = str(val).strip()
+
+    # Add other unmapped keys at the end
     for k, v in log_metadata.items():
         if k not in mapped_source_keys:
             new_metadata[k] = v
-            
+
     return new_metadata
 
 def _reorder_metadata(metadata: dict) -> dict:
@@ -598,6 +601,7 @@ def _reorder_metadata(metadata: dict) -> dict:
         "Wavenumber Range",
         "X-axis Unit",
         "Points per Spectrum",
+        "Points",
         "Total Map Points",
         "X Step Size (µm)",
         "Y Step Size (µm)",

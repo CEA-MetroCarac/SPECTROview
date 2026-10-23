@@ -10,10 +10,11 @@ def get_tinted_icon(path: str, color_str: str) -> QIcon:
     painter.end()
     return QIcon(pixmap)
 
-from PySide6.QtCore import Qt, QObject, QEvent
+from PySide6.QtCore import Qt, QObject, QEvent, QPoint, QTimer
 from PySide6.QtWidgets import (
     QMessageBox, QApplication, QListWidgetItem,
-    QDialog, QTextBrowser, QVBoxLayout, QToolTip
+    QDialog, QTextBrowser, QVBoxLayout, QToolTip,
+    QFrame, QLabel
 )    
 
 import os
@@ -747,24 +748,88 @@ def format_metadata_tooltip(metadata: dict | object | None) -> str:
     return "<br>".join(lines)
 
 
+class MetadataTooltipPopup(QFrame):
+    """Floating tooltip frame with consistent styling that stays visible as long as needed."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent, Qt.ToolTip | Qt.FramelessWindowHint | Qt.WindowDoesNotAcceptFocus)
+        self.setObjectName("MetadataTooltipPopup")
+        self.setAttribute(Qt.WA_ShowWithoutActivating, True)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 8, 10, 8)
+        layout.setSpacing(0)
+
+        self.label = QLabel(self)
+        self.label.setTextFormat(Qt.RichText)
+        self.label.setWordWrap(False)
+        layout.addWidget(self.label)
+
+        self.setStyleSheet("""
+            QFrame#MetadataTooltipPopup {
+                background-color: #252526;
+                color: #cccccc;
+                border: 1px solid #4a4a4a;
+                border-radius: 6px;
+            }
+            QLabel {
+                background: transparent;
+                color: #e0e0e0;
+                font-size: 11px;
+                line-height: 1.4;
+            }
+        """)
+
+    def show_tip(self, html: str, global_pos: QPoint):
+        """Update content and position near cursor, constrained to screen bounds."""
+        self.label.setText(html)
+        self.adjustSize()
+
+        pos = global_pos + QPoint(16, 16)
+        screen = self.screen()
+        if screen:
+            sg = screen.availableGeometry()
+            if pos.x() + self.width() > sg.right():
+                pos.setX(max(sg.left(), global_pos.x() - self.width() - 8))
+            if pos.y() + self.height() > sg.bottom():
+                pos.setY(max(sg.top(), global_pos.y() - self.height() - 8))
+
+        self.move(pos)
+        self.show()
+        self.raise_()
+
+
 class MetadataTooltipManager(QObject):
-    """Manages Ctrl-hover metadata tooltips for QListWidget items.
+    """Manages metadata tooltips for QListWidget items.
     
     Requirements:
-    - Display tooltip when user holds Ctrl (or Cmd on macOS) and hovers an item.
-    - Do NOT display tooltip when Ctrl is not held.
-    - Disappear when mouse leaves item, user releases Ctrl, or hovered item changes.
-    - Update automatically when moving between items while Ctrl is held.
-    - Does not interfere with item selection, double-click, context-menu, or drag-and-drop.
+    - Display tooltip when user hovers an item (with initial show_delay_ms delay, native-like).
+    - Can optionally require Ctrl key if require_ctrl=True.
+    - Once showing, seamlessly and immediately updates without delay when moving between items.
+    - Stays displayed continuously as long as the mouse cursor is over items.
+    - Does NOT automatically disappear after 2 seconds (independent of OS tooltip timeout).
+    - Disappears when mouse leaves items or widget.
+    - Disappears immediately on click, drag, scroll, or window hide so it never interferes.
     """
-    
-    def __init__(self, list_widget, metadata_provider=None):
+
+    def __init__(self, list_widget, metadata_provider=None, require_ctrl: bool = False, show_delay_ms: int = 400):
         super().__init__(list_widget)
         self.list_widget = list_widget
         self.metadata_provider = metadata_provider
+        self.require_ctrl = require_ctrl
+        self.show_delay_ms = show_delay_ms
         self._hovered_item = None
+        self._pending_item = None
+        self._pending_global_pos = None
         self._is_showing = False
         self._app_filtered = False
+
+        self._popup = MetadataTooltipPopup()
+
+        self._delay_timer = QTimer(self)
+        self._delay_timer.setSingleShot(True)
+        self._delay_timer.timeout.connect(self._on_delay_timeout)
 
         self.list_widget.setMouseTracking(True)
         viewport = self.list_widget.viewport()
@@ -784,6 +849,45 @@ class MetadataTooltipManager(QObject):
         """Update the metadata provider callable."""
         self.metadata_provider = provider
 
+    def set_delay_ms(self, delay: int):
+        """Set initial hover delay in milliseconds before showing tooltip."""
+        self.show_delay_ms = max(0, delay)
+
+    def _cancel_delay(self):
+        """Cancel pending hover delay timer and reset pending tracking."""
+        try:
+            if hasattr(self, "_delay_timer") and self._delay_timer is not None and self._delay_timer.isActive():
+                self._delay_timer.stop()
+        except RuntimeError:
+            pass
+        self._pending_item = None
+        self._pending_global_pos = None
+
+    def _on_delay_timeout(self):
+        """Triggered when initial hover delay expires."""
+        item = self._pending_item
+        gpos = self._pending_global_pos
+        self._pending_item = None
+        self._pending_global_pos = None
+
+        if not item or item.flags() == Qt.NoItemFlags or not item.text():
+            return
+
+        if self.require_ctrl and not self._is_ctrl_held():
+            return
+
+        try:
+            lw = self.list_widget
+            if not lw or not lw.isVisible():
+                return
+        except (RuntimeError, AttributeError):
+            return
+
+        if gpos is None:
+            gpos = QCursor.pos()
+
+        self._show_tooltip_for_item(item, gpos)
+
     def _remove_app_filter(self):
         """Cleanly remove application event filter."""
         if self._app_filtered:
@@ -796,10 +900,19 @@ class MetadataTooltipManager(QObject):
             self._app_filtered = False
 
     def _on_widget_destroyed(self):
-        """Cleanly remove application event filter when widget is destroyed."""
+        """Cleanly remove application event filter and popup when widget is destroyed."""
+        self._cancel_delay()
         self._remove_app_filter()
+        if self._popup:
+            try:
+                self._popup.hide()
+                self._popup.deleteLater()
+            except Exception:
+                pass
+            self._popup = None
 
     def __del__(self):
+        self._cancel_delay()
         self._remove_app_filter()
 
     @staticmethod
@@ -810,10 +923,11 @@ class MetadataTooltipManager(QObject):
 
     def _hide_tooltip(self):
         """Dismiss active tooltip and reset state."""
-        if self._is_showing:
-            QToolTip.hideText()
-            self._is_showing = False
-            self._hovered_item = None
+        self._cancel_delay()
+        if self._popup:
+            self._popup.hide()
+        self._is_showing = False
+        self._hovered_item = None
 
     def _fetch_metadata(self, item):
         """Retrieve metadata for the given item."""
@@ -830,26 +944,18 @@ class MetadataTooltipManager(QObject):
             self._hide_tooltip()
             return
 
-        try:
-            lw = self.list_widget
-            viewport = lw.viewport() if lw else None
-            if not viewport:
-                return
-            rect = lw.visualItemRect(item)
-        except (RuntimeError, AttributeError):
+        if not self._popup:
             return
 
         metadata = self._fetch_metadata(item)
         tooltip_html = format_metadata_tooltip(metadata)
-        
-        # Pass large msecShowTime (e.g. 1 hour = 3600000 ms) so Qt does not automatically
-        # hide the tooltip after ~2-3 seconds; it will stay until Ctrl is released or mouse moves elsewhere.
-        QToolTip.showText(global_pos, tooltip_html, viewport, rect, 3600000)
+
+        self._popup.show_tip(tooltip_html, global_pos)
         self._hovered_item = item
         self._is_showing = True
 
     def eventFilter(self, watched, event):
-        """Handle mouse movement, leave, and global key events."""
+        """Handle mouse movement, leave, and events."""
         try:
             lw = self.list_widget
             if lw is None:
@@ -864,35 +970,72 @@ class MetadataTooltipManager(QObject):
 
         # 1. Mouse move on viewport
         if etype == QEvent.MouseMove and watched == viewport:
-            if not self._is_ctrl_held():
+            if self.require_ctrl and not self._is_ctrl_held():
                 self._hide_tooltip()
-            else:
-                pos = event.position().toPoint() if hasattr(event, "position") else event.pos()
-                item = lw.itemAt(pos)
-                if not item or item.flags() == Qt.NoItemFlags or not item.text():
-                    self._hide_tooltip()
-                elif item != self._hovered_item or not self._is_showing:
-                    gpos = event.globalPosition().toPoint() if hasattr(event, "globalPosition") else event.globalPos()
+                return False
+
+            pos = event.position().toPoint() if hasattr(event, "position") else event.pos()
+            item = lw.itemAt(pos)
+            gpos = event.globalPosition().toPoint() if hasattr(event, "globalPosition") else event.globalPos()
+
+            if not item or item.flags() == Qt.NoItemFlags or not item.text():
+                self._hide_tooltip()
+                return False
+
+            if self._is_showing:
+                # WARM STATE: tooltip is already active
+                if item != self._hovered_item:
+                    # Switched to another item -> display continuously and IMMEDIATELY without delay
+                    self._cancel_delay()
                     self._show_tooltip_for_item(item, gpos)
+                elif self._popup:
+                    # Keep popup following cursor smoothly
+                    pos_pop = gpos + QPoint(16, 16)
+                    screen = self._popup.screen()
+                    if screen:
+                        sg = screen.availableGeometry()
+                        if pos_pop.x() + self._popup.width() > sg.right():
+                            pos_pop.setX(max(sg.left(), gpos.x() - self._popup.width() - 8))
+                        if pos_pop.y() + self._popup.height() > sg.bottom():
+                            pos_pop.setY(max(sg.top(), gpos.y() - self._popup.height() - 8))
+                    self._popup.move(pos_pop)
+            else:
+                # COLD STATE: tooltip not yet showing -> apply delay
+                if self.show_delay_ms <= 0:
+                    self._show_tooltip_for_item(item, gpos)
+                else:
+                    if item != self._pending_item:
+                        self._pending_item = item
+                        self._pending_global_pos = gpos
+                        self._delay_timer.start(self.show_delay_ms)
+                    else:
+                        # Moving within same pending item: track cursor position
+                        self._pending_global_pos = gpos
+                        if not self._delay_timer.isActive():
+                            self._delay_timer.start(self.show_delay_ms)
             return False
 
-        # 2. Mouse leave on viewport
+        # 2. Suppress default Qt ToolTip event so QAbstractItemView does not clear tooltip
+        elif etype == QEvent.ToolTip and watched in (viewport, lw):
+            return True
+
+        # 3. Mouse leave on viewport
         elif etype == QEvent.Leave and watched == viewport:
             self._hide_tooltip()
             return False
 
-        # 3. Mouse click or drag interaction - immediately hide tooltip
-        elif etype in (QEvent.MouseButtonPress, QEvent.DragEnter):
+        # 4. Mouse click, wheel, or drag interaction - immediately hide tooltip
+        elif etype in (QEvent.MouseButtonPress, QEvent.DragEnter, QEvent.Wheel):
             self._hide_tooltip()
             return False
 
-        # 4. Global key release - release of Ctrl immediately dismisses tooltip
+        # 5. Key release - if require_ctrl is True, release of Ctrl immediately dismisses tooltip
         elif etype == QEvent.KeyRelease:
-            if event.key() in (Qt.Key_Control, Qt.Key_Meta):
+            if self.require_ctrl and event.key() in (Qt.Key_Control, Qt.Key_Meta):
                 self._hide_tooltip()
             return False
 
-        # 5. Global key press - pressing Ctrl while mouse is already hovering an item shows tooltip
+        # 6. Key press - pressing Ctrl shows tooltip
         elif etype == QEvent.KeyPress:
             if event.key() in (Qt.Key_Control, Qt.Key_Meta):
                 try:
@@ -901,13 +1044,14 @@ class MetadataTooltipManager(QObject):
                         vpos = viewport.mapFromGlobal(gpos)
                         if viewport.rect().contains(vpos):
                             item = lw.itemAt(vpos)
-                            if item:
+                            if item and item.flags() != Qt.NoItemFlags and item.text():
+                                self._cancel_delay()
                                 self._show_tooltip_for_item(item, gpos)
                 except (RuntimeError, AttributeError):
                     pass
             return False
 
-        # 6. Widget hide or window deactivate (ONLY if it is the list widget or its parent window)
+        # 7. Widget hide or window deactivate (ONLY if it is the list widget or its parent window)
         elif etype == QEvent.Hide and watched in (lw, viewport, lw.window()):
             self._hide_tooltip()
             return False

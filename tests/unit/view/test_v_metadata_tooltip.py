@@ -119,31 +119,8 @@ class TestMetadataExtraction:
 class TestMetadataTooltipManager:
     """Tests for MetadataTooltipManager event filter interactions."""
 
-    def test_hover_without_ctrl_shows_no_tooltip(self, qtbot, monkeypatch):
-        lw = VSpectraList()
-        qtbot.addWidget(lw)
-        lw.addItem("Spec1")
-        lw.resize(300, 200)
-        lw.show()
-
-        monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.NoModifier))
-
-        item = lw.item(0)
-        rect = lw.visualItemRect(item)
-        pos = rect.center()
-
-        event = QMouseEvent(
-            QEvent.MouseMove,
-            pos,
-            lw.viewport().mapToGlobal(pos),
-            Qt.NoButton,
-            Qt.NoButton,
-            Qt.NoModifier,
-        )
-        QApplication.sendEvent(lw.viewport(), event)
-        assert not lw._tooltip_manager._is_showing
-
-    def test_hover_with_ctrl_shows_tooltip(self, qtbot, monkeypatch):
+    def test_hover_without_ctrl_shows_tooltip(self, qtbot, monkeypatch):
+        """Hovering over an item starts delay timer, and displays tooltip upon timeout."""
         lw = VSpectraList()
         qtbot.addWidget(lw)
         lw.set_spectra_names([
@@ -166,7 +143,7 @@ class TestMetadataTooltipManager:
         lw.resize(300, 200)
         lw.show()
 
-        monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.ControlModifier))
+        monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.NoModifier))
 
         item = lw.item(0)
         rect = lw.visualItemRect(item)
@@ -178,13 +155,154 @@ class TestMetadataTooltipManager:
             lw.viewport().mapToGlobal(pos),
             Qt.NoButton,
             Qt.NoButton,
-            Qt.ControlModifier,
+            Qt.NoModifier,
         )
         QApplication.sendEvent(lw.viewport(), event)
+        # Cold start: not immediately showing, timer active
+        assert not lw._tooltip_manager._is_showing
+        assert lw._tooltip_manager._delay_timer.isActive()
+        assert lw._tooltip_manager._pending_item == item
+
+        # Once delay timer fires, tooltip is displayed
+        lw._tooltip_manager._delay_timer.timeout.emit()
         assert lw._tooltip_manager._is_showing
         assert lw._tooltip_manager._hovered_item == item
 
-    def test_release_ctrl_hides_tooltip(self, qtbot, monkeypatch):
+    def test_continuous_hover_to_other_spectra_is_immediate(self, qtbot, monkeypatch):
+        """Once tooltip is displayed, moving to other items displays immediately with 0 delay."""
+        lw = VSpectraList()
+        qtbot.addWidget(lw)
+        lw.set_spectra_names([
+            {
+                "fname": "Spectrum_A",
+                "is_active": True,
+                "is_cropped": False,
+                "has_baseline": False,
+                "has_fit": False,
+                "fit_success": False,
+                "metadata": {"Laser Wavelength (nm)": "532.0"},
+            },
+            {
+                "fname": "Spectrum_B",
+                "is_active": True,
+                "is_cropped": False,
+                "has_baseline": False,
+                "has_fit": False,
+                "fit_success": False,
+                "metadata": {"Laser Wavelength (nm)": "785.0"},
+            },
+        ])
+        lw.resize(300, 200)
+        lw.show()
+
+        monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.NoModifier))
+
+        item_a = lw.item(0)
+        item_b = lw.item(1)
+
+        # 1. Hover item A, wait for delay timeout
+        pos_a = lw.visualItemRect(item_a).center()
+        event_a = QMouseEvent(QEvent.MouseMove, pos_a, lw.viewport().mapToGlobal(pos_a), Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+        QApplication.sendEvent(lw.viewport(), event_a)
+        assert not lw._tooltip_manager._is_showing
+        lw._tooltip_manager._delay_timer.timeout.emit()
+        assert lw._tooltip_manager._is_showing
+        assert lw._tooltip_manager._hovered_item == item_a
+
+        # 2. Move directly to item B: warm state -> IMMEDIATELY displayed with NO delay
+        pos_b = lw.visualItemRect(item_b).center()
+        event_b = QMouseEvent(QEvent.MouseMove, pos_b, lw.viewport().mapToGlobal(pos_b), Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+        QApplication.sendEvent(lw.viewport(), event_b)
+        assert lw._tooltip_manager._is_showing
+        assert lw._tooltip_manager._hovered_item == item_b
+        assert not lw._tooltip_manager._delay_timer.isActive()
+
+    def test_leave_before_delay_cancels_tooltip(self, qtbot, monkeypatch):
+        """Leaving the widget before delay expires cancels the tooltip."""
+        lw = VSpectraList()
+        qtbot.addWidget(lw)
+        lw.set_spectra_names([
+            {"fname": "Spectrum_A", "is_active": True, "is_cropped": False, "has_baseline": False, "has_fit": False, "fit_success": False, "metadata": {"Laser Wavelength (nm)": "532.0"}}
+        ])
+        lw.resize(300, 200)
+        lw.show()
+
+        monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.NoModifier))
+        item = lw.item(0)
+        pos = lw.visualItemRect(item).center()
+
+        event = QMouseEvent(QEvent.MouseMove, pos, lw.viewport().mapToGlobal(pos), Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+        QApplication.sendEvent(lw.viewport(), event)
+        assert lw._tooltip_manager._delay_timer.isActive()
+
+        # Leave before timeout
+        leave_event = QEvent(QEvent.Leave)
+        QApplication.sendEvent(lw.viewport(), leave_event)
+
+        assert not lw._tooltip_manager._delay_timer.isActive()
+        assert lw._tooltip_manager._pending_item is None
+        assert not lw._tooltip_manager._is_showing
+
+    def test_require_ctrl_mode_behavior(self, qtbot, monkeypatch):
+        """When require_ctrl=True, tooltip requires Ctrl to show and hides on Ctrl release."""
+        lw = VSpectraList()
+        qtbot.addWidget(lw)
+        lw._tooltip_manager.require_ctrl = True
+        lw.set_spectra_names([
+            {
+                "fname": "Spectrum_A",
+                "is_active": True,
+                "is_cropped": False,
+                "has_baseline": False,
+                "has_fit": False,
+                "fit_success": False,
+                "metadata": {"Laser Wavelength (nm)": "532.0"},
+            }
+        ])
+        lw.resize(300, 200)
+        lw.show()
+
+        item = lw.item(0)
+        rect = lw.visualItemRect(item)
+        pos = rect.center()
+
+        # 1. Hover without Ctrl -> no tooltip
+        monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.NoModifier))
+        event = QMouseEvent(
+            QEvent.MouseMove,
+            pos,
+            lw.viewport().mapToGlobal(pos),
+            Qt.NoButton,
+            Qt.NoButton,
+            Qt.NoModifier,
+        )
+        QApplication.sendEvent(lw.viewport(), event)
+        assert not lw._tooltip_manager._is_showing
+
+        # 2. Hover with Ctrl -> shows tooltip after delay
+        monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.ControlModifier))
+        event_ctrl = QMouseEvent(
+            QEvent.MouseMove,
+            pos,
+            lw.viewport().mapToGlobal(pos),
+            Qt.NoButton,
+            Qt.NoButton,
+            Qt.ControlModifier,
+        )
+        QApplication.sendEvent(lw.viewport(), event_ctrl)
+        if lw._tooltip_manager._delay_timer.isActive():
+            lw._tooltip_manager._delay_timer.timeout.emit()
+        assert lw._tooltip_manager._is_showing
+
+        # 3. Release Ctrl -> hides tooltip
+        monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.NoModifier))
+        key_event = QKeyEvent(QEvent.KeyRelease, Qt.Key_Control, Qt.NoModifier)
+        QApplication.sendEvent(lw, key_event)
+        assert not lw._tooltip_manager._is_showing
+
+    def test_tooltip_persists_when_mouse_stationary(self, qtbot, monkeypatch):
+        """Stationary mouse fires QHelpEvent (QEvent.ToolTip) which must not dismiss the tooltip."""
+        from PySide6.QtGui import QHelpEvent
         lw = VSpectraList()
         qtbot.addWidget(lw)
         lw.set_spectra_names([
@@ -193,30 +311,31 @@ class TestMetadataTooltipManager:
         lw.resize(300, 200)
         lw.show()
 
-        # Hover with Ctrl
-        monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.ControlModifier))
         item = lw.item(0)
         rect = lw.visualItemRect(item)
         pos = rect.center()
+        gpos = lw.viewport().mapToGlobal(pos)
 
         event = QMouseEvent(
             QEvent.MouseMove,
             pos,
-            lw.viewport().mapToGlobal(pos),
+            gpos,
             Qt.NoButton,
             Qt.NoButton,
-            Qt.ControlModifier,
+            Qt.NoModifier,
         )
         QApplication.sendEvent(lw.viewport(), event)
+        if lw._tooltip_manager._delay_timer.isActive():
+            lw._tooltip_manager._delay_timer.timeout.emit()
         assert lw._tooltip_manager._is_showing
 
-        # Release Ctrl
-        monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.NoModifier))
-        key_event = QKeyEvent(QEvent.KeyRelease, Qt.Key_Control, Qt.NoModifier)
-        QApplication.sendEvent(lw, key_event)
+        # Stationary mouse trigger: QHelpEvent
+        help_event = QHelpEvent(QEvent.ToolTip, pos, gpos)
+        QApplication.sendEvent(lw.viewport(), help_event)
 
-        assert not lw._tooltip_manager._is_showing
-        assert lw._tooltip_manager._hovered_item is None
+        # Tooltip MUST remain showing!
+        assert lw._tooltip_manager._is_showing
+        assert lw._tooltip_manager._popup.isVisible()
 
     def test_leave_event_hides_tooltip(self, qtbot, monkeypatch):
         lw = VSpectraList()
@@ -241,6 +360,8 @@ class TestMetadataTooltipManager:
             Qt.ControlModifier,
         )
         QApplication.sendEvent(lw.viewport(), event)
+        if lw._tooltip_manager._delay_timer.isActive():
+            lw._tooltip_manager._delay_timer.timeout.emit()
         assert lw._tooltip_manager._is_showing
 
         leave_event = QEvent(QEvent.Leave)
@@ -272,6 +393,8 @@ class TestMetadataTooltipManager:
             Qt.ControlModifier,
         )
         QApplication.sendEvent(lw.viewport(), event)
+        if lw._tooltip_manager._delay_timer.isActive():
+            lw._tooltip_manager._delay_timer.timeout.emit()
         assert lw._tooltip_manager._is_showing
 
         # Send Hide event on an unrelated widget (e.g. tooltip animation effect or popup)
@@ -304,6 +427,8 @@ class TestMetadataTooltipManager:
 
         key_event = QKeyEvent(QEvent.KeyPress, Qt.Key_Control, Qt.ControlModifier)
         QApplication.sendEvent(lw, key_event)
+        if lw._tooltip_manager._delay_timer.isActive():
+            lw._tooltip_manager._delay_timer.timeout.emit()
 
         assert lw._tooltip_manager._is_showing
         assert lw._tooltip_manager._hovered_item == item
@@ -370,6 +495,8 @@ class TestMapsListMetadataTooltip:
             Qt.ControlModifier,
         )
         QApplication.sendEvent(maps_widget.maps_list.viewport(), event)
+        if maps_widget._maps_tooltip_manager._delay_timer.isActive():
+            maps_widget._maps_tooltip_manager._delay_timer.timeout.emit()
 
         assert maps_widget._maps_tooltip_manager._is_showing
         assert maps_widget._maps_tooltip_manager._hovered_item == item

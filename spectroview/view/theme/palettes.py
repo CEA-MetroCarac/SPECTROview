@@ -56,40 +56,6 @@ def dark_palette() -> QPalette:
     return p
 
 
-def soft_dark_palette() -> QPalette:
-    """Soft-dark palette — neutral warm grays, slightly lighter than dark."""
-    p = QPalette()
-
-    p.setColor(QPalette.Window,        QColor(50, 50, 52))
-    p.setColor(QPalette.Base,          QColor(72, 72, 75))
-    p.setColor(QPalette.AlternateBase, QColor(78, 78, 82))
-
-    p.setColor(QPalette.WindowText,      QColor(235, 235, 235))
-    p.setColor(QPalette.Text,            QColor(235, 235, 235))
-    p.setColor(QPalette.ButtonText,      QColor(230, 230, 230))
-    p.setColor(QPalette.PlaceholderText, QColor(135, 135, 135))
-
-    p.setColor(QPalette.Button, QColor(66, 66, 68))
-    p.setColor(QPalette.Light,  QColor(92, 92, 96))
-    p.setColor(QPalette.Mid,    QColor(76, 76, 80))
-    p.setColor(QPalette.Dark,   QColor(44, 44, 46))
-    p.setColor(QPalette.Shadow, QColor(26, 26, 28))
-
-    p.setColor(QPalette.ToolTipBase, QColor(64, 64, 66))
-    p.setColor(QPalette.ToolTipText, QColor(235, 235, 235))
-
-    accent = QColor(64, 156, 255)
-    p.setColor(QPalette.Highlight,      accent)
-    p.setColor(QPalette.HighlightedText, Qt.white)
-    p.setColor(QPalette.Link,           QColor(100, 180, 255))
-
-    p.setColor(QPalette.Disabled, QPalette.Text,       QColor(115, 115, 115))
-    p.setColor(QPalette.Disabled, QPalette.ButtonText,  QColor(115, 115, 115))
-    p.setColor(QPalette.Disabled, QPalette.WindowText,  QColor(115, 115, 115))
-
-    return p
-
-
 def light_palette() -> QPalette:
     """Light palette — soft off-white surfaces, dark text."""
     p = QPalette()
@@ -127,7 +93,6 @@ def light_palette() -> QPalette:
 # ── Lookup table ─────────────────────────────────────────────
 _PALETTE_BUILDERS = {
     "dark":          dark_palette,
-    "soft_dark":     soft_dark_palette,
     "light":         light_palette,
     "classic_dark":  dark_palette,
     "classic_light": light_palette,

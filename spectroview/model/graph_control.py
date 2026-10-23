@@ -122,7 +122,7 @@ _TYPE_OVERRIDES = {
     "xscale_mode": Literal["log", "symlog"],
     "yscale_mode": Literal["log", "symlog"],
     "tick_direction": Literal["in", "out", "inout"],
-    "figure_theme": Literal["light", "dark", "soft_dark"],
+    "figure_theme": Literal["light", "dark"],
     "colormap_norm": Literal["linear", "log", "centered"],
     "error_bar_type": Literal["none", "sd", "sem", "ci95"],
     "bar_error_bar_type": Literal["none", "sd", "sem", "ci95"],
@@ -174,7 +174,7 @@ _FIELD_DESCRIPTIONS = {
     "figure_facecolor": "Matplotlib color for figure and axes background; null uses the selected theme.",
     "figure_margins": "Two non-negative margins [x_margin, y_margin].",
     "spines_visible": "Visibility mapping for top, right, bottom, and left axes spines.",
-    "figure_theme": "Per-graph rendering theme: light, dark, or soft_dark.",
+    "figure_theme": "Per-graph rendering theme: light or dark.",
     "legend_visible": "Show or hide the legend.",
     "legend_outside": "Place the legend outside the axes.",
     "legend_properties": (

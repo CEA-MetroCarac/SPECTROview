@@ -209,105 +209,6 @@ DARK_TOKENS = ThemeTokens(
 
 
 # ═══════════════════════════════════════════════════════════════
-#  SOFT DARK THEME
-# ═══════════════════════════════════════════════════════════════
-SOFT_DARK_TOKENS = ThemeTokens(
-    # Surfaces — warmer / lighter grays than DARK
-    surface_bg="rgb(50, 50, 52)",
-    surface_card="rgba(255, 255, 255, 0.04)",
-    surface_card_border="rgba(255, 255, 255, 0.07)",
-    surface_input="rgba(0, 0, 0, 0.12)",
-    surface_overlay="rgba(58, 58, 60, 250)",
-    surface_list="rgba(0, 0, 0, 0.10)",
-    surface_table="rgba(0, 0, 0, 0.10)",
-    surface_table_alt="rgba(255, 255, 255, 0.04)",
-    surface_toolbar="rgba(54, 54, 56, 245)",
-
-    # Text
-    text_primary="rgba(255, 255, 255, 0.90)",
-    text_secondary="rgba(255, 255, 255, 0.65)",
-    text_disabled="rgba(255, 255, 255, 0.28)",
-    text_placeholder="rgba(255, 255, 255, 0.32)",
-
-    # Borders
-    border_subtle="rgba(255, 255, 255, 0.08)",
-    border_medium="rgba(255, 255, 255, 0.16)",
-    border_strong="rgba(255, 255, 255, 0.22)",
-    border_separator="rgba(255, 255, 255, 0.08)",
-
-    # Accent
-    accent="rgba(64, 156, 255, 1.0)",
-    accent_light="rgba(100, 180, 255, 1.0)",
-    accent_bg="rgba(64, 156, 255, 0.16)",
-    accent_bg_strong="rgba(64, 156, 255, 0.35)",
-    accent_border="rgba(64, 156, 255, 0.60)",
-
-    # Interactive
-    hover_bg="rgba(255, 255, 255, 0.06)",
-    hover_bg_strong="rgba(255, 255, 255, 0.09)",
-    pressed_bg="rgba(64, 156, 255, 0.30)",
-    selected_bg="rgba(64, 156, 255, 0.35)",
-    selected_border="rgba(64, 156, 255, 0.60)",
-
-    # Scrollbar / slider
-    scrollbar_thumb="rgba(255, 255, 255, 0.12)",
-    scrollbar_thumb_hover="rgba(255, 255, 255, 0.24)",
-    slider_groove="rgba(255, 255, 255, 0.12)",
-    slider_filled="rgba(64, 156, 255, 0.78)",
-    slider_handle="rgba(255, 255, 255, 0.90)",
-    slider_handle_border="rgba(0, 0, 0, 0.28)",
-
-    # Progress bar
-    progress_bg="rgba(0, 0, 0, 0.18)",
-    progress_chunk_start="rgba(30, 100, 200, 0.70)",
-    progress_chunk_mid="rgba(50, 135, 230, 0.75)",
-    progress_chunk_end="rgba(64, 156, 255, 0.70)",
-
-    # Checkbox
-    checkbox_bg="rgba(0, 0, 0, 0.20)",
-    checkbox_border="rgba(255, 255, 255, 0.14)",
-    checkbox_checked_bg="rgba(64, 156, 255, 0.90)",
-    checkbox_checked_border="rgba(42, 130, 218, 0.90)",
-    checkbox_disabled_bg="rgba(255, 255, 255, 0.05)",
-    checkbox_disabled_border="rgba(255, 255, 255, 0.05)",
-    checkbox_checked_disabled_bg="rgba(255, 255, 255, 0.15)",
-    checkbox_checked_disabled_border="rgba(255, 255, 255, 0.15)",
-
-    # Tabs
-    tab_bg="rgba(255, 255, 255, 0.04)",
-    tab_border="rgba(255, 255, 255, 0.07)",
-    tab_text="rgba(255, 255, 255, 0.60)",
-    tab_selected_bg="rgba(255, 255, 255, 0.13)",
-    tab_selected_border="rgba(255, 255, 255, 0.20)",
-    tab_selected_bottom="rgba(50, 50, 52, 255)",
-    tab_hover_bg="rgba(255, 255, 255, 0.06)",
-    tab_hover_text="rgba(255, 255, 255, 0.82)",
-    tab_pane_bg="rgba(54, 54, 56, 235)",
-    tab_pane_border="rgba(255, 255, 255, 0.07)",
-
-    # Misc
-    tooltip_bg="rgba(64, 64, 66, 248)",
-    tooltip_border="rgba(255, 255, 255, 0.12)",
-    tooltip_text="white",
-    dialog_bg="rgb(54, 54, 56)",
-    menu_bg="rgba(56, 56, 58, 252)",
-    menu_border="rgba(255, 255, 255, 0.10)",
-    menu_item_hover="rgba(255, 255, 255, 0.09)",
-    menu_separator="rgba(255, 255, 255, 0.07)",
-    gridline="rgba(255, 255, 255, 0.06)",
-    header_bg="rgba(255, 255, 255, 0.05)",
-    header_border_right="rgba(255, 255, 255, 0.06)",
-    header_border_bottom="rgba(255, 255, 255, 0.08)",
-    header_text="rgba(255, 255, 255, 0.75)",
-    frame_line_color="rgba(255, 255, 255, 0.07)",
-
-    # Icons
-    arrow_suffix="",
-    is_dark=True,
-)
-
-
-# ═══════════════════════════════════════════════════════════════
 #  LIGHT THEME
 # ═══════════════════════════════════════════════════════════════
 LIGHT_TOKENS = ThemeTokens(
@@ -409,7 +310,6 @@ LIGHT_TOKENS = ThemeTokens(
 # ── Lookup table ─────────────────────────────────────────────
 THEME_TOKENS: dict[str, ThemeTokens] = {
     "dark": DARK_TOKENS,
-    "soft_dark": SOFT_DARK_TOKENS,
     "light": LIGHT_TOKENS,
     # Classic themes reuse the palette-only path; tokens are still
     # available for downstream helpers like icon-color selection.

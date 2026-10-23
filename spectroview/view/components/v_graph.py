@@ -20,16 +20,15 @@ from PySide6.QtGui import QIcon, QAction
 
 from spectroview import (
     DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR,
-    PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, PLOT_POLICY_SOFT_DARK,
+    PLOT_POLICY_LIGHT, PLOT_POLICY_DARK,
 )
 
 # figure_theme value -> mplstyle file. "light" (the default) reproduces the
-# app's only-ever-existing hardcoded behavior; dark/soft_dark reuse the same
-# theme files the Maps/Spectra viewers already switch between.
+# app's only-ever-existing hardcoded behavior; dark reuses the same
+# theme file the Maps/Spectra viewers switch between.
 _THEME_STYLE_MAP = {
     "light": PLOT_POLICY_LIGHT,
     "dark": PLOT_POLICY_DARK,
-    "soft_dark": PLOT_POLICY_SOFT_DARK,
 }
 
 # matplotlib nav-toolbar action text -> our own colorful icon (theme-independent,
@@ -1117,7 +1116,7 @@ class VGraph(QWidget):
             self.figure.set_facecolor(self.figure_facecolor)
 
         # Same gap as facecolor above, for text/spine color -- without this,
-        # switching to Dark/Soft Dark left labels/title/ticks/spines black.
+        # switching to Dark left labels/title/ticks/spines black.
         self.ax.xaxis.label.set_color(plt.rcParams['axes.labelcolor'])
         self.ax.yaxis.label.set_color(plt.rcParams['axes.labelcolor'])
         self.ax.title.set_color(plt.rcParams['text.color'])

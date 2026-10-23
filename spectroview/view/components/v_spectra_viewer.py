@@ -27,10 +27,16 @@ from matplotlib.backends.backend_qtagg import (
 )
 import matplotlib as mpl
 
+from functools import lru_cache
 import matplotlib.lines as mlines
 
-from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, PLOT_POLICY_SOFT_DARK, DEFAULT_COLORS
+from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, DEFAULT_COLORS
 from spectroview.viewmodel.utils import copy_fig_to_clb, get_tinted_icon, fano_display_amplitude
+
+@lru_cache(maxsize=8)
+def get_cached_style_dict(style_path: str) -> dict:
+    """Cache parsed mplstyle files to prevent disk re-reading on every plot/theme switch."""
+    return dict(mpl.rc_params_from_file(style_path))
 from spectroview.view.components.customized_widgets import (
     CustomizedPalette,
     NoDoubleClickZoomToolbar,
@@ -443,7 +449,7 @@ class VSpectraViewer(QWidget):
 
         # Plot Theme
         self.cbb_theme = QComboBox()
-        self.cbb_theme.addItems(["Light Mode", "Dark Mode", "Soft Dark Mode"])
+        self.cbb_theme.addItems(["Light Mode", "Dark Mode"])
         self.cbb_theme.currentIndexChanged.connect(self._apply_plot_style)
         menu.addAction(self._wrap("Plot Theme:", self.cbb_theme))
 
@@ -687,9 +693,7 @@ class VSpectraViewer(QWidget):
 
     def _plot(self):
         style_name = self.cbb_theme.currentText()
-        if style_name == "Soft Dark Mode":
-            style_path = PLOT_POLICY_SOFT_DARK
-        elif style_name == "Dark Mode":
+        if style_name == "Dark Mode":
             style_path = PLOT_POLICY_DARK
         else:
             style_path = PLOT_POLICY_LIGHT
@@ -1365,9 +1369,7 @@ class VSpectraViewer(QWidget):
         """Render the selected spectra as a 2D pcolormesh heatmap."""
         from scipy.interpolate import interp1d
         style_name = self.cbb_theme.currentText()
-        if style_name == "Soft Dark Mode":
-            style_path = PLOT_POLICY_SOFT_DARK
-        elif style_name == "Dark Mode":
+        if style_name == "Dark Mode":
             style_path = PLOT_POLICY_DARK
         else:
             style_path = PLOT_POLICY_LIGHT
@@ -1844,7 +1846,10 @@ class VSpectraViewer(QWidget):
             setter(value)
             widget.blockSignals(False)
 
-        _update(self.cbb_theme, self.cbb_theme.setCurrentText, state.get("theme"))
+        theme_val = state.get("theme")
+        if theme_val == "Soft Dark Mode":
+            theme_val = "Dark Mode"
+        _update(self.cbb_theme, self.cbb_theme.setCurrentText, theme_val)
         _update(self.cbb_xaxis, self.cbb_xaxis.setCurrentText, state.get("xaxis"))
         _update(self.cbb_yaxis, self.cbb_yaxis.setCurrentText, state.get("yaxis"))
         _update(self.cbb_yscale, self.cbb_yscale.setCurrentText, state.get("yscale"))
@@ -1887,15 +1892,13 @@ class VSpectraViewer(QWidget):
         
     def _apply_plot_style(self):
         style_name = self.cbb_theme.currentText()
-        if style_name == "Soft Dark Mode":
-            style_path = PLOT_POLICY_SOFT_DARK
-        elif style_name == "Dark Mode":
+        if style_name == "Dark Mode":
             style_path = PLOT_POLICY_DARK
         else:
             style_path = PLOT_POLICY_LIGHT
             
-        # Parse the style file without modifying global rcParams
-        style_dict = mpl.rc_params_from_file(style_path)
+        # Parse the style file from cached dict without modifying global rcParams
+        style_dict = get_cached_style_dict(style_path)
             
         self.figure.patch.set_facecolor(style_dict.get('figure.facecolor', 'white'))
         self.figure.patch.set_edgecolor(style_dict.get('figure.edgecolor', 'white'))

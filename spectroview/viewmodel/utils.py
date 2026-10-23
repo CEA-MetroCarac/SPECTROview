@@ -1,6 +1,8 @@
 # spectroview/viewmodel/utils.py
+from functools import lru_cache
 from PySide6.QtGui import QColor, QPixmap, QImage, QTextCursor, QIcon, QPainter, QCursor, QPalette
 
+@lru_cache(maxsize=128)
 def get_tinted_icon(path: str, color_str: str) -> QIcon:
     """Return a QIcon created from the image at `path` tinted to `color_str`."""
     pixmap = QPixmap(path)
@@ -13,7 +15,7 @@ def get_tinted_icon(path: str, color_str: str) -> QIcon:
 from PySide6.QtCore import Qt, QObject, QEvent, QPoint, QTimer
 from PySide6.QtWidgets import (
     QMessageBox, QApplication, QListWidgetItem,
-    QDialog, QTextBrowser, QVBoxLayout, QToolTip,
+    QDialog, QTextBrowser, QVBoxLayout,
     QFrame, QLabel
 )    
 

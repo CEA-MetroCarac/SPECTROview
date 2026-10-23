@@ -254,7 +254,7 @@ These checkboxes are always visible, but only enabled when the corresponding plo
 | **Dodge overlapping points** | `scatter` | Offsets overlapping hue groups horizontally for scatter plots. |
 | **Show error bar** | `bar` | Displays standard deviation error bars on top of each bar. |
 | **Show statistics** | `wafer` | Overlays statistical summary (mean, std, etc.) on the wafer map. |
-| **Theme** | all styles | Figure color scheme: `Light`, `Dark`, or `Soft Dark`. |
+| **Theme** | all styles | Figure color scheme: `Light` or `Dark`. |
 | **X label rotation** | all styles | Rotates the X-axis tick labels (0–90°). |
 | **Grid** | all styles | Toggles the plot's background grid lines. |
 

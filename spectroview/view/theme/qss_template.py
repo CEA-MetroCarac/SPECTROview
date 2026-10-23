@@ -2,12 +2,12 @@
 """
 Single parameterized QSS template for SPECTROview.
 
-Replaces the three duplicated stylesheet functions (dark, soft_dark, light)
-with one template that accepts a ``ThemeTokens`` instance.
+Parameterized stylesheet template that accepts a ``ThemeTokens`` instance.
 """
 from __future__ import annotations
 
 from dataclasses import asdict
+from functools import lru_cache
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -28,12 +28,7 @@ _QSS_TEMPLATE = r"""
        GLOBAL DEFAULTS
        ═══════════════════════════════════════════════ */
 
-    QWidget {{
-        font-family: "Helvetica Neue", Helvetica, Arial;
-        font-size: 13px;
-    }}
-
-    QMainWindow, QDialog {{
+    QMainWindow {{
         background-color: {surface_bg};
     }}
 
@@ -746,6 +741,7 @@ _QSS_TEMPLATE = r"""
 """
 
 
+@lru_cache(maxsize=8)
 def build_stylesheet(tokens: "ThemeTokens") -> str:
     """Render the QSS template with the given *tokens*.
 

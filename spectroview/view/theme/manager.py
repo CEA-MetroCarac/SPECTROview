@@ -27,7 +27,6 @@ _CLASSIC_THEMES = {"classic_dark", "classic_light"}
 # Mapping from theme key → spectra-viewer combobox display name.
 _VIEWER_THEME_NAMES = {
     "dark":          "Dark Mode",
-    "soft_dark":     "Soft Dark Mode",
     "light":         "Light Mode",
     "classic_dark":  "Dark Mode",
     "classic_light": "Light Mode",
@@ -45,7 +44,11 @@ class ThemeManager:
 
     def __init__(self, settings: "MSettings") -> None:
         self._settings = settings
-        self._current: str = settings.get_theme() or "dark"
+        raw = settings.get_theme() or "dark"
+        if raw == "soft_dark":
+            raw = "dark"
+            settings.set_theme("dark")
+        self._current: str = raw
 
     # ── Properties ────────────────────────────────────────────
 
@@ -57,7 +60,7 @@ class ThemeManager:
     @property
     def is_dark(self) -> bool:
         """``True`` when the active theme has a dark background."""
-        return self._current in ("dark", "soft_dark", "classic_dark")
+        return self._current in ("dark", "classic_dark")
 
     @property
     def tokens(self) -> ThemeTokens:
@@ -87,6 +90,8 @@ class ThemeManager:
 
         if theme_key is None:
             theme_key = self._settings.get_theme() or "dark"
+        if theme_key == "soft_dark":
+            theme_key = "dark"
         self._current = theme_key
 
         # 1) Palette
@@ -99,14 +104,5 @@ class ThemeManager:
             tokens = THEME_TOKENS.get(theme_key, THEME_TOKENS["dark"])
             app.setStyleSheet(build_stylesheet(tokens))
 
-        # 3) Force Fusion style refresh to clear cached QSS
-        app.setStyle("Windows")
-        app.setStyle("Fusion")
-
-        # 4) Deep unpolish / polish to eradicate stuck QSS
-        for widget in app.allWidgets():
-            widget.style().unpolish(widget)
-            widget.style().polish(widget)
-
-        # 5) Persist
+        # 3) Persist
         self._settings.set_theme(theme_key)

@@ -138,7 +138,7 @@ class VUpdateBanner(QWidget):
 
     def apply_theme(self, theme_key: str) -> None:
         """Switch banner colours to match the application theme."""
-        style = _DARK_STYLE if theme_key in ("dark", "soft_dark", "classic_dark") else _LIGHT_STYLE
+        style = _DARK_STYLE if theme_key in ("dark", "classic_dark") else _LIGHT_STYLE
         self.setStyleSheet(style)
 
     def set_download_progress(self, percent: int) -> None:

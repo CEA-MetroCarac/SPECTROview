@@ -10,7 +10,6 @@ from spectroview import ICON_DIR, VERSION
 # Available themes: internal key → display label
 THEME_OPTIONS = [
     ("dark", "Dark"),
-    ("soft_dark", "Soft Dark"),
     ("light", "Light"),
     ("---", ""),  # separator
     ("classic_dark", "Classic Dark"),
@@ -28,7 +27,7 @@ class VMenuBar(QToolBar):
     ai_chat_requested = Signal()       # opens the SPECTROview AI Agent panel
     settings_requested = Signal()
     github_requested = Signal()
-    theme_selected = Signal(str)       # emits theme key, e.g. "dark" / "soft_dark" / "light"
+    theme_selected = Signal(str)       # emits theme key, e.g. "dark" / "light" / "classic_dark" / "classic_light"
     manual_requested = Signal()
     about_requested = Signal()
     version_requested = Signal()
@@ -107,6 +106,8 @@ class VMenuBar(QToolBar):
     # ── Theme dropdown ────────────────────────────────────────
     def set_current_theme(self, theme_key: str):
         """Update internal state so the checkmark appears on the right item."""
+        if theme_key == "soft_dark":
+            theme_key = "dark"
         self._current_theme = theme_key
 
     def _show_theme_menu(self, checked=False):

@@ -95,7 +95,7 @@ class MGraph:
     spines_visible: Dict[str, bool] = field(
         default_factory=lambda: {'top': True, 'right': True, 'bottom': True, 'left': True}
     )
-    figure_theme: str = "light"  # light/dark/soft_dark -- selects the mplstyle used to render this graph
+    figure_theme: str = "light"  # light/dark -- selects the mplstyle used to render this graph
     export_width_mm: Optional[float] = None   # None = use the current on-screen figure size at export time
     export_height_mm: Optional[float] = None
 
@@ -210,6 +210,8 @@ class MGraph:
                 setattr(self, key, value)
 
         # Backward compatibility: ensure annotations exists for old .graphs files
+        if getattr(self, 'figure_theme', None) == 'soft_dark':
+            self.figure_theme = 'dark'
         if not hasattr(self, 'annotations') or self.annotations is None:
             self.annotations = []
 

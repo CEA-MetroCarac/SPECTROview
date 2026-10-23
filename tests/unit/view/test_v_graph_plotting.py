@@ -671,7 +671,7 @@ class TestFigureStyle:
         """Regression: ax.clear() doesn't retroactively repaint an Axes
         built under a *different* theme (same root cause already fixed for
         facecolor) -- axis labels, title, tick labels, and spines used to
-        stay black under Dark/Soft Dark instead of following the theme."""
+        stay black under Dark instead of following the theme."""
         import matplotlib.colors as mcolors
         _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
         vg.figure_theme = "dark"

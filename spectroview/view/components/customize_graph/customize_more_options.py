@@ -16,8 +16,8 @@ from PySide6.QtWidgets import (
 from spectroview import ICON_DIR
 
 # Text <-> MGraph.figure_theme value.
-_THEME_TEXT_MAP = {"Light": "light", "Dark": "dark", "Soft Dark": "soft_dark"}
-_THEME_VALUE_TEXT = {v: k for k, v in _THEME_TEXT_MAP.items()}
+_THEME_TEXT_MAP = {"Light": "light", "Dark": "dark"}
+_THEME_VALUE_TEXT = {"light": "Light", "dark": "Dark", "soft_dark": "Dark"}
 
 # Real mplstyle defaults (same across all three theme files -- they only
 # differ in color, not typography) so the font-size spinboxes always show a
@@ -98,7 +98,7 @@ class CustomizeMoreOptions(QWidget):
         theme_row = QHBoxLayout()
         theme_row.addWidget(QLabel("Theme:"))
         self._combo_figure_theme = QComboBox()
-        self._combo_figure_theme.addItems(["Light", "Dark", "Soft Dark"])
+        self._combo_figure_theme.addItems(["Light", "Dark"])
         theme_row.addWidget(self._combo_figure_theme)
 
         theme_row.addSpacing(12)

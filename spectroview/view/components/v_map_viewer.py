@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon, QAction
 
-from spectroview import ICON_DIR, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, PLOT_POLICY_SOFT_DARK
+from spectroview import ICON_DIR, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
 from spectroview.viewmodel.utils import copy_fig_to_clb, get_tinted_icon
 from spectroview.view.components.customized_widgets import CustomizedPalette
 
@@ -652,9 +652,7 @@ class VMapViewer(QWidget):
     
     def _do_plot_heatmap(self):
         """Wrapper to plot using local style context, isolating from global rcParams."""
-        if self.current_style == 'Soft Dark Mode':
-            style_path = PLOT_POLICY_SOFT_DARK
-        elif self.current_style == 'Dark Mode':
+        if self.current_style == 'Dark Mode':
             style_path = PLOT_POLICY_DARK
         else:
             style_path = PLOT_POLICY_LIGHT

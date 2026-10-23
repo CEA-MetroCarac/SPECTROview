@@ -35,8 +35,14 @@ class MSettings:
     # ---------- View Options ----------
     def load_view_options(self) -> dict:
         """Load view options of spectra viewer from settings"""
+        theme = self.settings.value("view_options/theme", "Dark Mode", str)
+        if theme == "Soft Dark Mode":
+            theme = "Dark Mode"
+        copy_theme = self.settings.value("view_options/copy_fig_theme", "Light Mode", str)
+        if copy_theme == "Soft Dark Mode":
+            copy_theme = "Light Mode"
         return {
-            "theme": self.settings.value("view_options/theme", "Dark Mode", str),
+            "theme": theme,
             "xaxis": self.settings.value("view_options/xaxis", "Wavenumber (cm⁻¹)", str),
             "yaxis": self.settings.value("view_options/yaxis", "Intensity (a.u.)", str),
             "yscale": self.settings.value("view_options/yscale", "Linear", str),
@@ -57,7 +63,7 @@ class MSettings:
             "bestfit": self.settings.value("view_options/bestfit", True, bool),
             "max_legend_items": self.settings.value(
                 "view_options/max_legend_items", 15, int),
-            "copy_fig_theme": self.settings.value("view_options/copy_fig_theme", "Light Mode", str),
+            "copy_fig_theme": copy_theme,
         }
 
     def save_view_options(self, data: dict):
@@ -68,11 +74,14 @@ class MSettings:
     # ---------- Export Options (Graph Workspace figure export) ----------
     def load_export_options(self) -> dict:
         """Last-used figure export settings, remembered across dialog opens."""
+        theme = self.settings.value("export_options/theme", "Light Mode", str)
+        if theme == "Soft Dark Mode":
+            theme = "Dark Mode"
         return {
             "format": self.settings.value("export_options/format", "png", str),
             "dpi": self.settings.value("export_options/dpi", 300, int),
             "transparent": self.settings.value("export_options/transparent", False, bool),
-            "theme": self.settings.value("export_options/theme", "Light Mode", str),
+            "theme": theme,
         }
 
     def save_export_options(self, data: dict):
@@ -159,11 +168,17 @@ class MSettings:
     
     # ---------- Theme ----------
     def get_theme(self) -> str:
-        """Get current theme (light or dark)."""
-        return self.settings.value("theme", "dark", str)
+        """Get current theme (dark, light, classic_dark, classic_light)."""
+        val = self.settings.value("theme", "dark", str)
+        if val == "soft_dark":
+            self.set_theme("dark")
+            return "dark"
+        return val
     
     def set_theme(self, theme: str):
-        """Set theme (light or dark)."""
+        """Set theme (dark, light, classic_dark, classic_light)."""
+        if theme == "soft_dark":
+            theme = "dark"
         self.settings.setValue("theme", theme)
         self.settings.sync()
 

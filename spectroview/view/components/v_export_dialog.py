@@ -31,8 +31,8 @@ _FORMAT_EXTENSIONS = {
 
 # Display text <-> MGraph.figure_theme value -- matches the display-name
 # convention already used by view_options/theme and view_options/copy_fig_theme.
-_THEME_DISPLAY_TO_KEY = {"Light Mode": "light", "Dark Mode": "dark", "Soft Dark Mode": "soft_dark"}
-_THEME_KEY_TO_DISPLAY = {v: k for k, v in _THEME_DISPLAY_TO_KEY.items()}
+_THEME_DISPLAY_TO_KEY = {"Light Mode": "light", "Dark Mode": "dark"}
+_THEME_KEY_TO_DISPLAY = {"light": "Light Mode", "dark": "Dark Mode", "soft_dark": "Dark Mode"}
 
 _MM_PER_INCH = 25.4
 

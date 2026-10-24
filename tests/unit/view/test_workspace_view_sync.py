@@ -52,3 +52,30 @@ def test_spectra_workspace_view_options_saved_to_settings(main_window):
     assert maps_viewer.btn_bestfit.isChecked() is False
     assert spectra_viewer.btn_bestfit.isChecked() is False
     assert settings.load_view_options()["bestfit"] is False
+
+
+def test_legend_outside_view_options_saved_and_synced(main_window):
+    """Confirm changes to 'Move legend box outside' sync between workspaces and persist."""
+    maps_viewer = main_window.v_maps_workspace.v_spectra_viewer
+    spectra_viewer = main_window.v_spectra_workspace.v_spectra_viewer
+    settings = main_window.settings
+
+    # Verify initial default state is False
+    assert maps_viewer.act_legend_outside.isChecked() is False
+    assert spectra_viewer.act_legend_outside.isChecked() is False
+    assert settings.load_view_options()["legend_outside"] is False
+
+    # Toggle in Spectra workspace
+    spectra_viewer.act_legend_outside.setChecked(True)
+
+    # Both workspaces should sync and settings should persist True
+    assert maps_viewer.act_legend_outside.isChecked() is True
+    assert spectra_viewer.act_legend_outside.isChecked() is True
+    assert settings.load_view_options()["legend_outside"] is True
+
+    # Toggle back to False from Maps workspace
+    maps_viewer.act_legend_outside.setChecked(False)
+    assert maps_viewer.act_legend_outside.isChecked() is False
+    assert spectra_viewer.act_legend_outside.isChecked() is False
+    assert settings.load_view_options()["legend_outside"] is False
+

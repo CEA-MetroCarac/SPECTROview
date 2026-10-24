@@ -360,3 +360,52 @@ def test_bestfit_button_default_state(viewer):
     state = viewer.get_options_state()
     assert state["bestfit"] is True
 
+
+def test_legend_outside_option_default_and_toggle(viewer):
+    """Test 'Move legend box outside' action and its effect on axes legend placement."""
+    assert viewer.act_legend_outside.isCheckable()
+    assert viewer.act_legend_outside.isChecked() is False
+    assert viewer.get_options_state()["legend_outside"] is False
+
+    viewer.set_plot_data(_tensor_data(3))
+    viewer.btn_legend.setChecked(True)
+
+    # By default, legend is located inside axes with loc='best' (0)
+    legend = viewer.ax.get_legend()
+    assert legend is not None
+    assert legend._loc == 0
+
+    # Toggle Move legend box outside ON
+    viewer.act_legend_outside.setChecked(True)
+    assert viewer.act_legend_outside.isChecked() is True
+    assert viewer.get_options_state()["legend_outside"] is True
+
+    # Legend is now placed at center left outside the axes (loc=6, bbox_to_anchor x=1.02, y=0.5)
+    legend = viewer.ax.get_legend()
+    assert legend is not None
+    assert legend._loc == 6
+    bbox_anchor = legend.get_bbox_to_anchor()
+    assert bbox_anchor._bbox.x0 == 1.02
+    assert bbox_anchor._bbox.y0 == 0.5
+
+    # Toggle Move legend box outside OFF
+    viewer.act_legend_outside.setChecked(False)
+    assert viewer.act_legend_outside.isChecked() is False
+    assert viewer.get_options_state()["legend_outside"] is False
+    legend = viewer.ax.get_legend()
+    assert legend._loc == 0
+
+
+def test_legend_outside_round_trip_through_options_state(viewer):
+    """Test legend_outside preserves state across get_options_state and set_options_state."""
+    viewer.act_legend_outside.setChecked(True)
+    state = viewer.get_options_state()
+    assert state["legend_outside"] is True
+
+    viewer.act_legend_outside.setChecked(False)
+    assert viewer.act_legend_outside.isChecked() is False
+
+    viewer.set_options_state(state)
+    assert viewer.act_legend_outside.isChecked() is True
+
+

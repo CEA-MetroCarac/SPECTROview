@@ -545,6 +545,12 @@ class VSpectraViewer(QWidget):
         menu.addAction(self._wrap(
             "Max legend items:", self.spin_max_legend_items))
 
+        # Move legend box outside
+        self.act_legend_outside = menu.addAction("Move legend box outside")
+        self.act_legend_outside.setCheckable(True)
+        self.act_legend_outside.setChecked(False)
+        self.act_legend_outside.toggled.connect(self._emit_view_options)
+
         # Backwards-compatible alias for internal/external code that used the
         # old name when this control was first introduced.
         self.spin_max_overlays = self.spin_max_legend_items
@@ -1242,8 +1248,16 @@ class VSpectraViewer(QWidget):
         if self.btn_legend.isChecked():
             handles, labels = self.ax.get_legend_handles_labels()
             max_items = self.spin_max_legend_items.value()
-            legend = self.ax.legend(
-                handles[:max_items], labels[:max_items], loc="best")
+            if getattr(self, "act_legend_outside", None) and self.act_legend_outside.isChecked():
+                legend = self.ax.legend(
+                    handles[:max_items],
+                    labels[:max_items],
+                    loc="center left",
+                    bbox_to_anchor=(1.02, 0.5),
+                )
+            else:
+                legend = self.ax.legend(
+                    handles[:max_items], labels[:max_items], loc="best")
             self._make_legend_pickable(legend)
 
         if self.act_grid.isChecked():
@@ -1640,6 +1654,15 @@ class VSpectraViewer(QWidget):
         if not getattr(event, "dblclick", False):
             return
 
+        legend_obj = getattr(self, "_legend_obj", None)
+        if legend_obj is not None:
+            try:
+                self._legend_bbox = legend_obj.get_window_extent(
+                    self.canvas.get_renderer()
+                )
+            except Exception:
+                pass
+
         legend_bbox = getattr(self, "_legend_bbox", None)
         if legend_bbox is None or event.x is None or event.y is None:
             return
@@ -1821,6 +1844,7 @@ class VSpectraViewer(QWidget):
             "width": self.width_entry.text() if hasattr(self, "width_entry") else "5.5",
             "height": self.height_entry.text() if hasattr(self, "height_entry") else "4.0",
             "legend": self.btn_legend.isChecked() if hasattr(self, "btn_legend") else False,
+            "legend_outside": self.act_legend_outside.isChecked() if hasattr(self, "act_legend_outside") else False,
             "bestfit": self.btn_bestfit.isChecked() if hasattr(self, "btn_bestfit") else True,
             "max_legend_items": self.spin_max_legend_items.value() if hasattr(self, "spin_max_legend_items") else 15,
             "copy_fig_theme": self.cbb_copy_theme.currentText() if hasattr(self, "cbb_copy_theme") else "Light Mode",
@@ -1870,6 +1894,8 @@ class VSpectraViewer(QWidget):
         _update(self.width_entry, self.width_entry.setText, state.get("width"))
         _update(self.height_entry, self.height_entry.setText, state.get("height"))
         _update(self.btn_legend, self.btn_legend.setChecked, state.get("legend"))
+        if hasattr(self, "act_legend_outside"):
+            _update(self.act_legend_outside, self.act_legend_outside.setChecked, state.get("legend_outside", False))
         _update(self.btn_bestfit, self.btn_bestfit.setChecked, state.get("bestfit"))
         if hasattr(self, "spin_max_legend_items"):
             _update(self.spin_max_legend_items,
@@ -1995,8 +2021,18 @@ class VSpectraViewer(QWidget):
             return
 
         # Skip legend clicks
-        if getattr(self, "_legend_bbox", None) is not None:
-            if self._legend_bbox.contains(event.x, event.y):
+        legend_obj = getattr(self, "_legend_obj", None)
+        if legend_obj is not None:
+            try:
+                self._legend_bbox = legend_obj.get_window_extent(
+                    self.canvas.get_renderer()
+                )
+            except Exception:
+                pass
+
+        legend_bbox = getattr(self, "_legend_bbox", None)
+        if legend_bbox is not None and event.x is not None and event.y is not None:
+            if legend_bbox.contains(event.x, event.y):
                 return
 
         x = event.xdata

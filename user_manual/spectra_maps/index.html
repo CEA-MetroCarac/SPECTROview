@@ -834,6 +834,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#35-interactive-spectral-range-selectors-live-maps-maps-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5. Interactive Spectral Range Selectors &amp; Live Maps (Maps Workspace)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1856,8 +1867,8 @@
 <hr />
 <h3 id="1-maplist-and-mapviewer"><strong>1. <code>MapList</code> and <code>MapViewer</code></strong><a class="headerlink" href="#1-maplist-and-mapviewer" title="Permanent link">&para;</a></h3>
 <p><code>MapList</code> and <code>MapViewer</code> are widgets designed for the efficient navigation and management of your hyperspectral datasets. The <code>MapList</code> displays all loaded map files, including wafer maps and standard 2D maps.</p>
-<p>Three utility buttons located on the right side of the <code>MapList</code> allow you to: (1) view the selected map data, (2) delete the selected map from the workspace, or (3) export the selected map directly to an Excel file.</p>
-<p>You can easily navigate between loaded 2D maps using the <code>MapList</code>. The selected map is rendered in the <code>MapViewer</code>. By default, the <code>MapViewer</code> displays a heatmap of signal "Intensity" or "Area". If the map has been fitted, you can select and visualize the heatmap of any fitted parameter.</p>
+<p>The action buttons located beside the <code>MapList</code> allow you to: (1) view the selected map data, (2) delete the selected map from the workspace, or (3) export the selected map directly to an Excel file.</p>
+<p>You can easily navigate between loaded 2D maps using the <code>MapList</code>. The selected map is rendered in the <code>MapViewer</code>. When opening or selecting a map, <strong>the first spectrum in the map is automatically selected</strong> and highlighted on the heatmap plot, immediately rendering its curve in <code>SpectraViewer</code> and synchronizing the baseline, peak table, and metadata. By default, the <code>MapViewer</code> displays a heatmap of signal "Intensity" or "Area". If the map has been fitted, you can select and visualize the heatmap of any fitted parameter.</p>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Switching Maps" width="350"><br>
 </div>
@@ -1949,7 +1960,7 @@
 </tr>
 <tr>
 <td><img alt="Legend" src="../../user_manual_images/Spectra_Maps/show_legend.png" /></td>
-<td><strong>Legend</strong>: Toggles the display of the legend box. Double-click anywhere inside the legend to edit the palette, maximum number of displayed entries, and spectrum colors and labels in one dialog. Changes are applied with <strong>OK</strong> or discarded with <strong>Cancel</strong>. For responsiveness, Spectra and Maps workspace selections are edited in batches of up to 100 spectra; narrow the selection to edit spectra outside the current batch.</td>
+<td><strong>Legend</strong>: Toggles the display of the legend box. When displayed inside the canvas, the legend box is pinned to the top right corner (<code>upper right</code>) to prevent obstructing lower-intensity spectra (or can be positioned outside adjacent to the canvas via <em>Move legend box outside</em> in More Options). Double-click anywhere inside the legend to edit the palette, maximum number of displayed entries, and spectrum colors and labels in one dialog. Changes are applied with <strong>OK</strong> or discarded with <strong>Cancel</strong>. For responsiveness, Spectra and Maps workspace selections are edited in batches of up to 100 spectra; narrow the selection to edit spectra outside the current batch.</td>
 </tr>
 <tr>
 <td><img alt="Copy" src="../../user_manual_images/Spectra_Maps/copy.png" /></td>
@@ -1961,7 +1972,7 @@
 </tr>
 <tr>
 <td><img alt="More View Options" src="../../user_manual_images/Spectra_Maps/view_options.png" /></td>
-<td><strong>More Options</strong>: Opens a comprehensive configuration panel allowing you to adjust X/Y units, toggle log scales, change plot styles, choose discrete or gradient spectrum color palettes from visual color-strip previews, set the maximum number of legend items (15 by default), toggle Raw/Residual visibility, enable grids, adjust line widths, and define precise figure dimensions.<br><img alt="More Options Panel" src="../../user_manual_images/Spectra_Maps/menu_view_options.png" /></td>
+<td><strong>More Options</strong>: Opens a comprehensive configuration panel allowing you to adjust X/Y units, toggle log scales, change plot styles, choose discrete or gradient spectrum color palettes from visual color-strip previews, set the maximum number of legend items (15 by default), toggle "Move legend box outside" to place the legend box adjacent to the canvas instead of overlapping spectra, toggle Raw/Residual visibility, enable grids, adjust line widths, and define precise figure dimensions.<br><img alt="More Options Panel" src="../../user_manual_images/Spectra_Maps/menu_view_options.png" /></td>
 </tr>
 </tbody>
 </table>
@@ -2001,6 +2012,86 @@
 <li><strong>Y-Axis Interpolation Points (<code>Pts:</code>)</strong>: Specifies the number of interpolated vertical slices (default <code>300</code> pts) using smooth interpolation. Setting this value to <code>0</code> disables interpolation, displaying raw discrete rows.</li>
 <li><strong>Intensity Colormap</strong>: Respects the active color palette chosen under <strong>More Options</strong> (e.g. <code>jet</code>, <code>viridis</code>, <code>plasma</code>).</li>
 </ul>
+<h4 id="35-interactive-spectral-range-selectors-live-maps-maps-workspace"><strong>3.5. Interactive Spectral Range Selectors &amp; Live Maps (Maps Workspace)</strong><a class="headerlink" href="#35-interactive-spectral-range-selectors-live-maps-maps-workspace" title="Permanent link">&para;</a></h4>
+<p>When working in the <strong>Maps workspace</strong>, you can interactively bracket spectral features in the <code>SpectraViewer</code> and visualize their spatial distributions as real-time 2D heatmaps in the dedicated <strong>Live Maps</strong> tab.</p>
+<div align="center">
+  <img src="../../user_manual_images/Spectra_Maps/rgb_live_map.png" alt="RGB Live Maps and Spectral Range Selectors" width="800"><br>
+  <i>Interactive Spectral Range Selectors in <code>SpectraViewer</code> (top) paired with real-time 2D spatial heatmaps in the <code>Live Maps</code> tab (bottom).</i>
+</div>
+
+<h5 id="range-selector-controls-spectra-viewer"><strong>Range Selector Controls (Spectra Viewer)</strong><a class="headerlink" href="#range-selector-controls-spectra-viewer" title="Permanent link">&para;</a></h5>
+<p>A vertical toolbar panel located on the right edge of the <code>SpectraViewer</code> provides three independent, color-coded toggle buttons:
+- <strong>Red</strong> (<code>R</code>)
+- <strong>Blue</strong> (<code>B</code>)
+- <strong>Green</strong> (<code>G</code>)</p>
+<p><em>(Note: These range selector controls and the companion Live Maps tab are exclusive to the Maps workspace where 2D hyperspectral mapping is performed, keeping the individual Spectra workspace clean and focused on discrete 1D operations).</em></p>
+<p>Each button activates a corresponding pair of draggable vertical markers (brackets and shaded interval) directly on the spectrum plot:
+- <strong>Interactive Dragging</strong>: Click and drag either vertical boundary line to adjust the minimum or maximum wavenumber. Click and drag the shaded middle area to shift the entire interval without altering its width.
+- <strong>Multiple Simultaneous Ranges</strong>: Any combination of the three selectors can be activated at once. Each maintains its own color, interval, and visibility independently.
+- <strong>Rescale Integrity</strong>: Range selector markers do not expand or pollute the spectrum autoscale boundaries, ensuring the <strong>Rescale</strong> button (<code>Ctrl+R</code>) always zooms perfectly to the loaded spectral data.
+- <strong>Auto-Clamping</strong>: When cropping or loading new spectral data, range selectors automatically clamp and reposition within the visible spectrum domain.
+- <strong>Real-Time Map Updating</strong>: Moving any selector immediately recalculates and updates the corresponding 2D spatial heatmap in the <strong>Live Maps</strong> tab (with a smooth 60 ms debounce to prevent lagging).</p>
+<h5 id="live-maps-tab-visualization-subpanels"><strong>Live Maps Tab Visualization &amp; Subpanels</strong><a class="headerlink" href="#live-maps-tab-visualization-subpanels" title="Permanent link">&para;</a></h5>
+<p>The <strong>Live Maps</strong> tab is located on the bottom tab bar between <strong>Fit Results</strong> and <strong>MVA</strong> (with the <strong>More</strong> tab positioned at the end of the tabs list).
+- <strong>Subpanels Display</strong>: When one or more range selectors are active, their corresponding map panels (Red, Blue, Green) are displayed side-by-side. If no selectors are currently active, a helpful placeholder message guides you to activate a selector button on the right edge of the <code>SpectraViewer</code>.
+- <strong>Supported Spectral Parameters</strong>: For each map subpanel, you can select which parameter is extracted and plotted from the dropdown:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Integrated intensity</strong></td>
+<td>Direct</td>
+<td>Integral (<span class="arithmatex">\(\sum Y \cdot \Delta x\)</span>) of intensity across the selected spectral interval.</td>
+</tr>
+<tr>
+<td><strong>Mean intensity</strong></td>
+<td>Direct</td>
+<td>Average intensity within the selected interval.</td>
+</tr>
+<tr>
+<td><strong>Maximum intensity</strong></td>
+<td>Direct</td>
+<td>Highest intensity value measured within the interval.</td>
+</tr>
+<tr>
+<td><strong>Peak position</strong></td>
+<td>Direct</td>
+<td>Wavenumber corresponding to the maximum intensity within the interval.</td>
+</tr>
+<tr>
+<td><strong>Peak height</strong></td>
+<td>Direct</td>
+<td>Maximum intensity minus local baseline at interval endpoints.</td>
+</tr>
+<tr>
+<td><strong>Peak position (fit)</strong></td>
+<td>Fit-based</td>
+<td>Center wavenumber (<span class="arithmatex">\(x_0\)</span>) of a fitted peak within the interval (requires prior fitting).</td>
+</tr>
+<tr>
+<td><strong>Peak height (fit)</strong></td>
+<td>Fit-based</td>
+<td>Fitted amplitude (<span class="arithmatex">\(A\)</span>) of the peak within the interval (requires prior fitting).</td>
+</tr>
+<tr>
+<td><strong>Peak area (fit)</strong></td>
+<td>Fit-based</td>
+<td>Analytical integrated area of the fitted peak (requires prior fitting).</td>
+</tr>
+</tbody>
+</table>
+<p><em>Note</em>: If a fit-based parameter is selected but fit results are not yet available, the map gracefully displays a notification banner rather than misleading or corrupted values.</p>
+<h5 id="individual-map-controls"><strong>Individual Map Controls</strong><a class="headerlink" href="#individual-map-controls" title="Permanent link">&para;</a></h5>
+<p>Each subpanel provides dedicated controls:
+- <strong>Palette</strong>: Choose any standard colormap (e.g., <code>viridis</code>, <code>plasma</code>, <code>inferno</code>, <code>jet</code>, <code>turbo</code>, <code>coolwarm</code>, <code>cividis</code>, <code>magma</code>, <code>Reds</code>, <code>Blues</code>, <code>Greens</code>).
+- <strong>Copy</strong>: Quickly copy the rendered heatmap figure to the clipboard as an image.
+- <strong>Range / Status Badge</strong>: Displays the current interval range <span class="arithmatex">\([x_{min}, x_{max}]\)</span> or fitting status.</p>
 <hr />
 <h3 id="4-fitmodelbuilder"><strong>4. <code>FitModelBuilder</code></strong><a class="headerlink" href="#4-fitmodelbuilder" title="Permanent link">&para;</a></h3>
 <p>The <code>FitModelBuilder</code> tab is where you configure your spectral fit models. It is divided into three main panels: <code>Fitting</code>, <code>PeakTable</code>, and <code>FitModelControl</code>, each explained in the following sections.</p>
@@ -2124,7 +2215,11 @@ A fully configured fit model can be copied from one spectrum and pasted onto ano
 </ul>
 </blockquote>
 <p><strong>Saving / Loading Fit Models</strong>:
-If you intend to use a model frequently, you can save it as a template. Stored models can be easily accessed and applied to new datasets using the dropdown menu.</p>
+If you intend to use a model frequently, you can save it as a template. Stored models can be easily accessed and applied to new datasets using the dropdown menu.
+- <strong>Select from Dropdown</strong>: Pick any pre-existing model from the <code>Fit model:</code> combobox.
+- <strong>Load via Button</strong>: Click the <strong>Load</strong> button to browse for and load any <code>.json</code> fit model template from your filesystem.
+- <strong>Drag &amp; Drop</strong>: You can drag and drop a <code>.json</code> fit model file directly onto the <code>Fit Model Builder</code> panel or anywhere on the <strong>Spectra</strong> or <strong>Maps</strong> workspace. The file is instantly added to the model list, selected in the dropdown, and ready to be applied.
+- <strong>Apply Model</strong>: Click <strong>Apply</strong> to assign the loaded model to the currently selected spectrum (or hold <strong>Ctrl</strong> while clicking <strong>Apply</strong> to assign it to all spectra).</p>
 <blockquote>
 <ul>
 <li>When you <strong>Save</strong> a model to a <code>.json</code> file, the <em>current</em> Noise Threshold is permanently baked into that file. Later, when you <strong>Apply (Load)</strong> that model, the fit engine strictly uses the exact noise threshold saved in the file, ignoring whatever is currently set in your Settings Panel.</li>

@@ -55,6 +55,23 @@ def on_page_content(html, page, config, files):
     return html
 
 
+def on_page_markdown(markdown, page, config, files):
+    """
+    Hook to dynamically ensure the rendered user manual index.md always has the current date.
+    """
+    src_path = page.file.src_path.replace('\\', '/')
+    if src_path.endswith("index.md") and "user_manual" in src_path:
+        import datetime
+        timestamp_str = datetime.datetime.now().strftime("%d %B %Y at %H:%M")
+        markdown = re.sub(
+            r"\(Last updated:\s*[^)]+\)",
+            f"(Last updated: {timestamp_str})",
+            markdown,
+            flags=re.IGNORECASE
+        )
+    return markdown
+
+
 def on_pre_build(config, **kwargs):
     """
     Hook that runs before the MkDocs build process starts.
@@ -63,7 +80,6 @@ def on_pre_build(config, **kwargs):
     read the User Manual content directly from the canonical source in
     ``spectroview/resources/``.  The symlinks are removed automatically in
     :func:`on_post_build` so they never linger in the working tree.
-    
     """
     docs_dir = config['docs_dir']
 
@@ -75,6 +91,9 @@ def on_pre_build(config, **kwargs):
     src_img_dir = os.path.join(project_root,
                                "spectroview", "resources",
                                "user_manual_images")
+
+    # Automatically update "(Last updated: DD Month YYYY)" in user_manual/index.md
+    _update_last_updated_date(src_manual_dir)
 
     # Destination paths (inside the MkDocs docs folder)
     dest_manual_dir = os.path.join(docs_dir, "user_manual")
@@ -93,7 +112,7 @@ def on_files(files, config):
     This hook manually re-adds the images to the MkDocs files collection
     so they are copied to the site/ output directory and link validation works.
     """
-    from mkdocs.structure.files import File
+    from mkdocs.structure.files import File  # type: ignore
     
     docs_dir = config['docs_dir']
     site_dir = config['site_dir']
@@ -175,3 +194,27 @@ def _ensure_link(src: str, dest: str, *, label: str = "") -> None:
         print(f"  Copied {label}: {src} -> {dest}  (symlink unavailable)")
 
     _created_symlinks.append(dest)
+
+
+def _update_last_updated_date(src_manual_dir: str) -> None:
+    """Automatically update '(Last updated: DD Month YYYY at HH:MM)' in user_manual/index.md."""
+    import datetime
+    index_path = os.path.join(src_manual_dir, "index.md")
+    if not os.path.isfile(index_path):
+        return
+
+    timestamp_str = datetime.datetime.now().strftime("%d %B %Y at %H:%M")
+    try:
+        with open(index_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        pattern = r"\(Last updated:\s*[^)]+\)"
+        new_text = f"(Last updated: {timestamp_str})"
+        new_content, count = re.subn(pattern, new_text, content, flags=re.IGNORECASE)
+
+        if count > 0 and new_content != content:
+            with open(index_path, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            print(f"  [docs_hook] Automatically updated user manual date and time to: {timestamp_str}")
+    except Exception as e:
+        print(f"  [docs_hook] Warning: Could not update last updated date: {e}")

@@ -1632,13 +1632,13 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <h3 id="signalslot-communication"><strong>Signal/Slot Communication</strong><a class="headerlink" href="#signalslot-communication" title="Permanent link">&para;</a></h3>
 <p>Views and ViewModels communicate <strong>exclusively via Qt signals and slots</strong>. A ViewModel must never call View methods directly, and a View must never modify Model state without going through its ViewModel.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># ── ViewModel defines signals ──</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">VMWorkspaceSpectra</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">class</span> <span class="nc">VMWorkspaceSpectra</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">spectra_list_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>       <span class="c1"># ViewModel → View</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">fit_progress_updated</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># ── View connects in __init__ ──</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">class</span><span class="w"> </span><span class="nc">VWorkspaceSpectra</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">class</span> <span class="nc">VWorkspaceSpectra</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">spectra_list_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_list</span><span class="p">)</span>
 </code></pre></div>
 <hr />
@@ -1718,21 +1718,27 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>│           ├── customize_annotations.py      # Annotations tab
 <a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>│           ├── customize_more_options.py     # More Options tab (plot options, theme, fonts, sorting, trendline/histogram)
 <a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>│           └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>│
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>├── fit_engine/             # High-performance batch fitting
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>│   ├── vbf_engine.py            # Orchestrator (VBFengine)
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>│   ├── evaluator.py             # Parameter mapping (VBFevaluator)
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>│   ├── optimizer.py             # Batched Levenberg-Marquardt
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>│   ├── models.py                # Batched peak functions + Jacobians
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>│   ├── scalar_models.py         # Fallback scalar functions + PEAK_MODEL_REGISTRY
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>│   ├── vbf_thread.py            # QThread wrapper
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>│   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>│   └── noise.py                 # Noise estimation functions
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>│
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>└── resources/              # Icons, stylesheets, user manual assets
-<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>    ├── icons/
-<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>    ├── styles/
-<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>    └── user_manual/
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>│       └── theme/                     # Theme &amp; font architecture (ThemeManager, tokens, palettes, fonts)
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>│           ├── manager.py             # Single owner of application-wide theme state
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>│           ├── fonts.py               # Cross-platform application font configuration (macOS/Windows/Linux)
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>│           ├── palettes.py            # QPalette builders for 5 canonical themes
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>│           ├── qss_template.py        # Parameterized QSS template
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>│           └── tokens.py              # ThemeTokens dataclass and presets
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>│
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>├── fit_engine/             # High-performance batch fitting
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>│   ├── vbf_engine.py            # Orchestrator (VBFengine)
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>│   ├── evaluator.py             # Parameter mapping (VBFevaluator)
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>│   ├── optimizer.py             # Batched Levenberg-Marquardt
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>│   ├── models.py                # Batched peak functions + Jacobians
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>│   ├── scalar_models.py         # Fallback scalar functions + PEAK_MODEL_REGISTRY
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>│   ├── vbf_thread.py            # QThread wrapper
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>│   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>│   └── noise.py                 # Noise estimation functions
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>│
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>└── resources/              # Icons, stylesheets, user manual assets
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>    ├── icons/
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>    ├── styles/
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>    └── user_manual/
 </code></pre></div>
 <hr />
 <h2 id="application-entry-point"><strong>Application Entry Point</strong><a class="headerlink" href="#application-entry-point" title="Permanent link">&para;</a></h2>
@@ -1901,6 +1907,17 @@ Every workspace follows the same three-layer separation of concerns:</p>
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="theme-typography-system"><strong>Theme &amp; Typography System</strong><a class="headerlink" href="#theme-typography-system" title="Permanent link">&para;</a></h2>
+<p>SPECTROview uses a centralised theme and typography architecture (<code>spectroview/view/theme/</code>):</p>
+<ul>
+<li><strong><code>ThemeManager</code> (<code>manager.py</code>)</strong>: Owns the canonical active theme state (<code>dark</code>, <code>light</code>, <code>modern_warm</code>, <code>classic_dark</code>, <code>classic_light</code>), applies QPalette and parameterized stylesheets (<code>qss_template.py</code>), and manages runtime switching.</li>
+<li><strong>Cross-Platform Fonts (<code>fonts.py</code>)</strong>: <code>setup_application_font(app)</code> applies the platform-appropriate default font to <code>QApplication</code>:</li>
+<li><strong>Windows</strong>: <code>Segoe UI</code> at 10pt (standard 96-DPI Windows desktop font, ~13.3px).</li>
+<li><strong>macOS</strong>: <code>.AppleSystemUIFont</code> (San Francisco) at 13pt (standard 72-DPI Apple HIG font, 13px).</li>
+<li><strong>Linux / Other</strong>: Desktop environment sans-serif font at &gt;= 10pt.</li>
+<li><strong>DPI &amp; Sizing Invariant</strong>: By avoiding universal <code>QWidget { font-size: ... }</code> in stylesheets, theme switches avoid expensive font-cache invalidation bottlenecks. Controls inherit their size from the application font, preserving native readability, standard menu metrics, and seamless multi-monitor DPI scaling across platforms.</li>
+</ul>
 <hr />
 <h2 id="persistence-serialization"><strong>Persistence &amp; Serialization</strong><a class="headerlink" href="#persistence-serialization" title="Permanent link">&para;</a></h2>
 <p><code>SPECTROview</code> delegates all loading and saving operations to the unified <code>WorkspaceIO</code> class (<code>workspace_io.py</code>), which isolates IO logic from the ViewModels. Each workspace uses its own save/load format via <code>WorkspaceIO</code>:</p>
@@ -2205,15 +2222,25 @@ in the repository.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Run from source</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>python<span class="w"> </span>-m<span class="w"> </span>spectroview.main
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Install in editable mode</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Install in editable mode with dev dependencies</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Run tests</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>pytest
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Run fast test suite (skips slow real-data benchmarks; headless offscreen auto-configured)</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow&quot;</span><span class="w"> </span>-q
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1"># Build documentation</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>mkdocs<span class="w"> </span>serve
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1"># Run full test suite (including real benchmark datasets; ~7-8 min)</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-q
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># Static syntax &amp; import check on modified files</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>python<span class="w"> </span>-m<span class="w"> </span>pyflakes<span class="w"> </span>spectroview/&lt;modified_file&gt;.py
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="c1"># Build and preview documentation</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>mkdocs<span class="w"> </span>serve
 </code></pre></div>
+<blockquote>
+<p>[!NOTE]
+For detailed developer and pair programming guidelines, refer to the <a href="../../AGENTS.md">AI Development Framework (AGENTS.md)</a> and the test suite guide in <a href="../../tests/README.md">tests/README.md</a>.</p>
+</blockquote>
 <hr />
 <h2 id="dependencies"><strong>Dependencies</strong><a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
 <table>

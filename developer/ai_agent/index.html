@@ -2393,7 +2393,9 @@ real URI. Resources added by any server appear there with no client change.</p>
 <h3 id="detection">Detection<a class="headerlink" href="#detection" title="Permanent link">&para;</a></h3>
 <p><code>VMChat._auto_detect_small_model()</code> resolves in this order:</p>
 <ol>
-<li><strong>Manual override</strong> — <code>VMChat.set_small_model_mode(True | False | None)</code>. <code>None</code> (the default) means "keep auto-detecting." Exposed in the UI as the <strong>Auto / Full / Small</strong> combo box in <code>v_chat_panel.py</code>'s header, persisted via <code>MSettings</code>.</li>
+<li><strong>Manual override</strong> — <code>VMChat.set_small_model_mode(True | False | None)</code>. <code>None</code> (the default) means "keep auto-detecting," persisted via <code>MSettings</code>.</li>
+<li><strong>Provider Testing</strong> — Settings dialog (<code>VSettingsDialog</code> / <code>VMSettings</code>) includes an asynchronous "Test Connection" button calling <code>test_provider_connection</code> (<code>m_llm_client.py</code>) to validate credentials, endpoints, and model reachability on a background thread.</li>
+<li><strong>Streamlined Header</strong> — <code>v_chat_panel.py</code> features a compact 42px single-row header bar hosting the conversation title and action buttons (<strong>Chat History</strong>, <strong>New Chat</strong>, <strong>Clear Chat</strong>).</li>
 </ol>
 <h3 id="persisted-settings"><strong>Persisted settings</strong><a class="headerlink" href="#persisted-settings" title="Permanent link">&para;</a></h3>
 <p>Everything the agent stores — provider, selected model per provider, prompt
@@ -2726,7 +2728,7 @@ in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
 <p><code>to_llm_messages()</code> <strong>widens</strong> that window rather than cutting blindly: a <code>role="tool"</code> message is only valid immediately after the assistant message carrying its <code>tool_calls</code>, so if the cap would land between them the window is extended backwards until the pair is intact. Slicing between them made providers reject the request — and because the cap is only active in simplified mode, it hit exactly the small local models least able to recover from an API error.</p>
 <h3 id="chatresult-parsed-response"><strong><code>ChatResult</code> — Parsed Response</strong><a class="headerlink" href="#chatresult-parsed-response" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/ai_agent/vm_chat.py</code></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">ChatResult</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span> <span class="nc">ChatResult</span><span class="p">:</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="s2">&quot;explanation&quot;</span><span class="p">,</span> <span class="s2">&quot;text_summary&quot;</span><span class="p">,</span> <span class="s2">&quot;plot_config&quot;</span><span class="p">)</span>
 </code></pre></div>
 <table>
@@ -2762,11 +2764,21 @@ in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
 </table>
 <h3 id="vchatpanel-view-dialog"><strong><code>VChatPanel</code> — View Dialog</strong><a class="headerlink" href="#vchatpanel-view-dialog" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/ai_agent/v_chat_panel.py</code></p>
-<p>A floating <code>QDialog</code>. Header row 1: provider selector, model selector, <strong>prompt-tier selector</strong> (<code>cbb_prompt_tier</code>: Auto / Full prompt / Simplified prompt — see <a href="#small-model-support">Small-Model Support</a>), refresh button. Header row 2 (left to right): connection status label <code>lbl_status</code> (appends <code>· Simplified prompts</code> when active), <code>lbl_no_data</code> (a "no DataFrame selected/available" notice, blank once DataFrames are loaded), a stretch, then the Conversation History / New Chat buttons (36×36 icon buttons). There is no longer a separate status-bar strip below the header — both status labels live in the header itself now.</p>
-<p>Two things previously on this panel have since moved or been removed:
-- The <strong>"Show model reasoning" toggle</strong> is gone entirely (see the note under <code>LLMWorker</code>/<code>APIWorker</code>/<code>AnthropicWorker</code> above) — reasoning is never surfaced in the chat UI now.
-- <strong>General plot-template management</strong> (browse/apply/rename/duplicate/delete, save-all-open-graphs) now lives entirely in the Graphs workspace (<code>VWorkspaceGraphs</code>, next to Add/Update plot), not here. <code>VChatPanel.prompt_and_save_template()</code> survives only as the inline "Save N plot(s) as Template" shortcut offered after the AI creates plots (see <code>_on_result_ready</code>).
-- <strong>Intermediate tool-step chips</strong> (<code>🔧 query_dataframe</code>, <code>🔧 plot_graph</code>, …) are no longer shown in the conversation. <code>_on_tool_execution</code> now only updates the transient "thinking" status so the finished chat stays clean.</p>
+<p>A floating <code>QDialog</code> styled with a modern, clean card aesthetic inspired by modern AI composers.</p>
+<p><strong>Header</strong>: Streamlined 2-row layout (height 74px):
+- <strong>Row 1</strong>: Connection status label <code>lbl_status</code> (appends <code>· Simplified prompts</code> when small-model mode is active), <code>lbl_no_data</code> notice, stretch, and 30×30 action buttons: Conversation History (<code>btn_history</code>), New Chat (<code>btn_new_chat</code>), and Clear Conversation (<code>btn_clear</code>).
+- <strong>Row 2</strong>: Editable conversation title (<code>edit_title</code>).</p>
+<p><strong>Composer (<code>chatComposerFrame</code>)</strong>:
+- Enclosed card with rounded corners (8px) and subtle border at the bottom of the dialog.
+- <strong>Top</strong>: Auto-resizing multi-line text input (<code>_ChatLineEdit</code>), borderless with transparent background.
+- <strong>Embedded Toolbar</strong>: Located inside the bottom of the composer card:
+  - AI Provider selector dropdown (<code>cbb_provider</code>)
+  - Model selector dropdown (<code>cbb_model</code>, editable)
+  - Connection/models refresh button (<code>btn_refresh_models</code>)
+  - Stretch
+  - Voice dictation microphone button (<code>btn_mic</code>)
+  - Modern action button (<code>btn_send</code>): toggles between blue Send and red Stop states, with dynamic hover/active styling.</p>
+<p>The previous manual prompt-tier combobox (<code>cbb_prompt_tier</code>: Auto / Full / Small) has been removed; small-model detection operates automatically based on the model's parameter count.</p>
 <p>Helper widgets:
 - <strong><code>_MessageCard</code></strong>: styled message bubble; <code>_add_card(text, role, timestamp)</code> indents it on the side matching the speaker
 - <strong><code>_ChatLineEdit</code></strong> / input area: emits <code>send_requested</code> on Enter key</p>
@@ -2860,7 +2872,7 @@ in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">LLM_AVAILABLE</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;spectroview.ai_agent.v_chat_panel&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># main.py — inside open_ai_chat()</span>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.ai_agent.v_chat_panel</span><span class="w"> </span><span class="kn">import</span> <span class="n">VChatPanel</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="kn">from</span> <span class="nn">spectroview.ai_agent.v_chat_panel</span> <span class="kn">import</span> <span class="n">VChatPanel</span>
 <a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span> <span class="o">=</span> <span class="n">VChatPanel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span><span class="o">.</span><span class="n">plot_requested</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_chat_plot_requested</span><span class="p">)</span>
@@ -2954,11 +2966,11 @@ in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
 <a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">OLLAMA_AVAILABLE</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 <a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">_ollama</span> <span class="o">=</span> <span class="kc">None</span>
 <a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">_load_ollama</span><span class="p">():</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">def</span> <span class="nf">_load_ollama</span><span class="p">():</span>
 <a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the `ollama` module (imported on first use), or None.&quot;&quot;&quot;</span>
 <a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="k">global</span> <span class="n">_ollama</span>
 <a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="k">if</span> <span class="n">_ollama</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">OLLAMA_AVAILABLE</span><span class="p">:</span>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">ollama</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_mod</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>        <span class="kn">import</span> <span class="nn">ollama</span> <span class="k">as</span> <span class="nn">_mod</span>
 <a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>        <span class="n">_ollama</span> <span class="o">=</span> <span class="n">_mod</span>
 <a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>    <span class="k">return</span> <span class="n">_ollama</span>
 <a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="c1"># ... same pattern for openai (_load_openai), anthropic (_load_anthropic)</span>

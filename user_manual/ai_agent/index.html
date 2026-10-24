@@ -962,10 +962,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-configuring-a-provider" class="md-nav__link">
+  <a href="#3-configuring-a-provider-and-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Configuring a Provider
+        3. Configuring a Provider and Model
       
     </span>
   </a>
@@ -973,10 +973,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-prompt-tier-for-local-models-auto-full-simplified" class="md-nav__link">
+  <a href="#4-automatic-small-model-optimization" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Prompt Tier for Local Models (Auto / Full / Simplified)
+        4. Automatic Small-Model Optimization
       
     </span>
   </a>
@@ -984,15 +984,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#5-chat-interface-overview" class="md-nav__link">
+  <a href="#5-modern-chat-composer-interface-overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Chat Interface Overview
+        5. Modern Chat Composer &amp; Interface Overview
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="5. Chat Interface Overview">
+    <nav class="md-nav" aria-label="5. Modern Chat Composer &amp; Interface Overview">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1817,49 +1817,32 @@
 <p><strong>Note:</strong> DeepSeek, Gemini, and other OpenAI-compatible providers all use the <code>openai</code> Python package as a generic networking client. You are <strong>not</strong> sending data to OpenAI — only the package is reused as a universal API tool.</p>
 </blockquote>
 <hr />
-<h3 id="3-configuring-a-provider"><strong>3. Configuring a Provider</strong><a class="headerlink" href="#3-configuring-a-provider" title="Permanent link">&para;</a></h3>
+<h3 id="3-configuring-a-provider-and-model"><strong>3. Configuring a Provider and Model</strong><a class="headerlink" href="#3-configuring-a-provider-and-model" title="Permanent link">&para;</a></h3>
 <ol>
-<li>Select a <strong>Provider</strong> from the dropdown on the top-left of the chat panel.</li>
-<li>For cloud providers, enter your <strong>API key</strong> in the <strong>Settings</strong> panel (<code>Ctrl + Shift + S</code> → <strong>AI</strong> tab):</li>
+<li>Inside the <strong>Chat Composer</strong> at the bottom of the panel, select an <strong>AI Provider</strong> from the dropdown (<code>Ollama (local)</code>, <code>OpenAI</code>, <code>Anthropic</code>, <code>Mistral</code>, <code>Gemini</code>, <code>DeepSeek</code>, <code>Groq</code>, or <code>Custom</code>).</li>
+<li>For cloud providers, configure your <strong>API key</strong> in the <strong>Settings</strong> dialog (<code>Ctrl + Shift + S</code> → <strong>AI</strong> tab):</li>
 <li>The <strong>Custom</strong> provider's <strong>Custom API Key</strong>, <strong>Base URL</strong>, and <strong>Model Name</strong> fields are shown by default.</li>
-<li>OpenAI, Anthropic, Gemini, DeepSeek, and Mistral keys are tucked under the collapsed <strong>▸ Other cloud providers</strong> section — click it to expand.</li>
-<li>For the <strong>Custom</strong> provider, fill in the <strong>Base URL</strong> (the endpoint's OpenAI-compatible URL).</li>
-<li>Choose a <strong>Model</strong> from the model dropdown next to the provider. The dropdown is <strong>editable</strong> — if the model you want is not listed, just type its name in.</li>
-<li>Click the <strong>⟳ refresh</strong> icon to verify the connection. A green status indicator confirms it is working.</li>
+<li>Other cloud provider keys are organized under the collapsed <strong>▸ Other cloud providers</strong> section.</li>
+<li>Use the <strong>Test Connection</strong> button directly in the <strong>AI</strong> tab to verify authentication, host connectivity, and model availability with immediate visual feedback (<code>✓ Connection successful</code> or detailed error messages).</li>
+<li>Choose a <strong>Model</strong> from the editable model dropdown right next to the provider in the composer toolbar. If your model is not listed, you can type its identifier directly.</li>
+<li>Click the <strong>⟳ refresh</strong> button next to the model dropdown to refresh available models.</li>
 </ol>
 <blockquote>
-<p><strong>Model Name:</strong> Some endpoints (custom ones especially) do not expose a model-listing API, so the dropdown starts empty. Enter the model names you use in <strong>Settings</strong> → <strong>AI</strong> tab → <strong>Model Name</strong> as a comma-separated list (e.g. <code>model-a, model-b</code>). They then appear in the dropdown for the <strong>Custom</strong> provider and are remembered between sessions.</p>
+<p><strong>Model Name &amp; Label:</strong> Some endpoints (custom ones especially) do not expose a model-listing API. Enter the model names you use in <strong>Settings</strong> → <strong>AI</strong> tab → <strong>Model Name</strong> as a comma-separated list (e.g. <code>model-a, model-b</code>). You can also specify a custom display <strong>Label</strong> (e.g. <code>ABC</code> or <code>Lab Model</code>) so that your endpoint appears by name in the composer's provider dropdown instead of generic <code>Custom</code>. Settings changes are applied immediately to any open chat dialog.</p>
 </blockquote>
 <hr />
-<h3 id="4-prompt-tier-for-local-models-auto-full-simplified"><strong>4. Prompt Tier for Local Models (Auto / Full / Simplified)</strong><a class="headerlink" href="#4-prompt-tier-for-local-models-auto-full-simplified" title="Permanent link">&para;</a></h3>
-<p>Next to the model dropdown is a small <strong>prompt tier</strong> selector: <strong>Auto</strong>, <strong>Full prompt</strong>, or <strong>Simplified prompt</strong>. It only affects local <strong>Ollama</strong> models.</p>
-<p>Small local models (roughly under ~10 billion parameters — things like <code>qwen3:8b</code>, <code>gemma3:4b</code>, <code>phi3:mini</code>) are noticeably less reliable with a long, information-dense prompt than a large cloud model is. To compensate, SPECTROview can automatically give small models a shorter, more focused prompt, a smaller conversation-history window, and tuned generation settings — while leaving larger models completely untouched.</p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>What it does</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Auto</strong> (default)</td>
-<td>SPECTROview checks the size of the selected Ollama model and automatically picks the right prompt for it. No action needed — this is the recommended setting for almost everyone.</td>
-</tr>
-<tr>
-<td><strong>Full prompt</strong></td>
-<td>Always use the full, detailed prompt, even for a small model. Useful for comparing behavior, or if a "small" model is actually working fine as-is.</td>
-</tr>
-<tr>
-<td><strong>Simplified prompt</strong></td>
-<td>Always use the shorter, small-model-optimized prompt, even for a large model. Useful if a specific model is struggling despite being large, or if you want faster responses.</td>
-</tr>
-</tbody>
-</table>
-<p>When Simplified mode is active, the status bar shows <strong><code>· Simplified prompts</code></strong> next to the connection indicator, so you can always tell which mode you're in.</p>
-<p><strong>If a local model isn't calling tools correctly</strong> (e.g. it describes what it <em>would</em> plot instead of actually creating the plot, or drops a setting like grid lines), try switching this selector to <strong>Simplified prompt</strong> — even if Auto didn't pick it automatically for that model — before assuming the model can't do the task at all.</p>
+<h3 id="4-automatic-small-model-optimization"><strong>4. Automatic Small-Model Optimization</strong><a class="headerlink" href="#4-automatic-small-model-optimization" title="Permanent link">&para;</a></h3>
+<p>Small local models (roughly under ~10 billion parameters — such as <code>qwen2.5:7b</code>, <code>gemma2:2b</code>, <code>phi3:mini</code>) are noticeably more sensitive to long system prompts. SPECTROview automatically inspects the parameter size of local Ollama models and activates a compact prompt tier, a targeted conversation window, and tuned generation parameters.</p>
 <hr />
-<h3 id="5-chat-interface-overview"><strong>5. Chat Interface Overview</strong><a class="headerlink" href="#5-chat-interface-overview" title="Permanent link">&para;</a></h3>
+<h3 id="5-modern-chat-composer-interface-overview"><strong>5. Modern Chat Composer &amp; Interface Overview</strong><a class="headerlink" href="#5-modern-chat-composer-interface-overview" title="Permanent link">&para;</a></h3>
+<p>The chat interface features an intuitive, unified layout:</p>
+<ul>
+<li><strong>Top Header Bar</strong>: A clean, single-row header bar containing the editable <strong>Conversation Title</strong> on the left (takes available width) and quick-action icon buttons on the right: <strong>Chat History</strong>, <strong>New Chat</strong>, and <strong>Clear Chat</strong>.</li>
+<li><strong>Conversation Thread</strong>: Displays color-coded message cards (User, AI replies with formatted Markdown/tables/equations, and error alerts).</li>
+<li><strong>Embedded Composer Card</strong>: A rounded composer box at the bottom containing:</li>
+<li>An auto-expanding multi-line text input (press <code>Enter</code> to send, <code>Shift + Enter</code> for new lines).</li>
+<li>An embedded bottom toolbar hosting the <strong>AI Provider selector</strong>, <strong>Model selector</strong>, <strong>Refresh button</strong>, <strong>Voice dictation mic (<code>🎤</code>)</strong>, and <strong>Send ▶ / Stop ■ button</strong>.</li>
+</ul>
 <p>The chat panel shows messages in chronological order with clear color-coded bubbles:</p>
 <ul>
 <li>🔵 <strong>Blue bubble</strong> — Your messages (User)</li>

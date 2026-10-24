@@ -1,32 +1,30 @@
 # spectroview/view/components/v_map_list.py
-"""View component for Maps list - two-level navigation (Maps → Spectra)."""
+"""View component for Maps list and spectrum action controls."""
 import os 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
-    QListWidgetItem, QAbstractItemView, QPushButton, QCheckBox
+    QListWidgetItem, QAbstractItemView, QPushButton
 )
-from PySide6.QtCore import Qt, Signal, QTimer, QItemSelection, QItemSelectionModel
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 
 from spectroview import ICON_DIR
-from spectroview.viewmodel.utils import set_spectrum_item_color, MetadataTooltipManager
-from spectroview.view.components.v_spectra_list import SpectrumItemDelegate
+from spectroview.viewmodel.utils import MetadataTooltipManager, get_tinted_icon
 
 
 class VMapsList(QWidget):
-    """Two-level list widget: Maps (top) → Spectra from selected map (bottom).
+    """Maps list widget with map actions and spectrum selection action buttons.
     
-    Provides drag-and-drop support for loading map files and action buttons
-    for viewing, deleting, saving maps, and managing extracted spectra.
+    Provides navigation across loaded maps (view, delete, save) and actions
+    operating on spectra selected via the 2D Map Viewer (select all, reinit,
+    stats, send to Spectra workspace).
     """
     
     # ═══ View → ViewModel signals ═══
     map_selection_changed = Signal(int)           # Selected map index
-    spectra_selection_changed = Signal(list)      # Selected spectrum indices
-    check_all_toggled = Signal(bool)              # Check all checkbox toggled
     view_map_requested = Signal()                 # View map DataFrame
     delete_map_requested = Signal()               # Delete selected map
-    save_requested = Signal()                     # Save map to Excel
+    save_requested = Signal()                     # Save map to Excel / CSV
     select_all_requested = Signal()               # Select all spectra
     reinitialize_requested = Signal()             # Reinitialize selected spectra
     stats_requested = Signal()                    # Show fitting statistics
@@ -34,31 +32,18 @@ class VMapsList(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._last_selected_positions = []  # Remember last selected positions
         self._has_maps_placeholder = False  # Track placeholder state
-        
-        # Debounce timer for spectra selection changes to prevent plot lag
-        self._selection_timer = QTimer()
-        self._selection_timer.setSingleShot(True)
-        self._selection_timer.setInterval(100)
-        self._selection_timer.timeout.connect(self._emit_debounced_selection)
 
         # Metadata tooltip support
         self._map_metadata_provider = None
-        self._spectra_metadata_provider = None
         
         self._init_ui()
         self._maps_tooltip_manager = MetadataTooltipManager(self.maps_list, self._get_map_metadata)
-        self._spectra_tooltip_manager = MetadataTooltipManager(self.spectra_list, self._get_spectrum_metadata)
         self._update_maps_placeholder()  # Show placeholder initially
 
     def set_map_metadata_provider(self, provider):
         """Set metadata provider for the maps list."""
         self._map_metadata_provider = provider
-
-    def set_spectra_metadata_provider(self, provider):
-        """Set metadata provider for the spectra list."""
-        self._spectra_metadata_provider = provider
 
     def _get_map_metadata(self, item):
         """Retrieve metadata for a map item."""
@@ -70,22 +55,11 @@ class VMapsList(QWidget):
             if meta:
                 return meta
         return item.data(Qt.UserRole + 2) or {}
-
-    def _get_spectrum_metadata(self, item):
-        """Retrieve metadata for a spectrum item within a map."""
-        if self._spectra_metadata_provider:
-            try:
-                meta = self._spectra_metadata_provider(item)
-            except TypeError:
-                meta = self._spectra_metadata_provider(item.text())
-            if meta:
-                return meta
-        return item.data(Qt.UserRole + 2) or {}
         
     def _init_ui(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(4)
+        main_layout.setSpacing(6)
         
         # ══════════════════════════════════════════════════════════════
         # MAPS LIST WITH ACTION BUTTONS
@@ -103,13 +77,8 @@ class VMapsList(QWidget):
         
         self.maps_list = QListWidget()
         self.maps_list.setSelectionMode(QAbstractItemView.SingleSelection)
-        # self.maps_list.setAcceptDrops(True) # Disabled to allow global drop
-        self.maps_list.setMaximumHeight(150)
+        self.maps_list.setMaximumHeight(160)
         self.maps_list.setMinimumHeight(80)
-        
-        # Connect selection change
-        
-        # Connect selection change
         self.maps_list.itemSelectionChanged.connect(self._on_map_selected)
         
         maps_list_layout.addWidget(self.maps_list)
@@ -144,58 +113,29 @@ class VMapsList(QWidget):
         main_layout.addLayout(maps_container)
         
         # ══════════════════════════════════════════════════════════════
-        # SPECTRA LIST WITH ACTION BUTTONS
+        # SPECTRA ACTIONS (operating on heatmap-selected spectra)
         # ══════════════════════════════════════════════════════════════
-        spectra_container = QHBoxLayout()
-        spectra_container.setSpacing(4)
+        spectra_actions_container = QVBoxLayout()
+        spectra_actions_container.setSpacing(3)
         
-        # Left: Spectra list
-        spectra_list_layout = QVBoxLayout()
-        spectra_list_layout.setContentsMargins(0, 0, 0, 0)
-        spectra_list_layout.setSpacing(2)
+        spectra_actions_label = QLabel("Spectra actions:")
+        spectra_actions_container.addWidget(spectra_actions_label)
         
-        header_layout = QHBoxLayout()
-        header_layout.setContentsMargins(0, 0, 0, 0)
-        
-        spectra_label = QLabel("Spectra list:")
-        
-        # Check All checkbox above the spectra list
-        self.cb_check_all = QCheckBox("Check All")
-        self.cb_check_all.setChecked(True)  # Checked by default
-        self.cb_check_all.toggled.connect(self.check_all_toggled.emit)
-        
-        header_layout.addWidget(spectra_label)
-        header_layout.addWidget(self.cb_check_all)
-        header_layout.addStretch()
-        
-        spectra_list_layout.addLayout(header_layout)
-        
-        self.spectra_list = QListWidget()
-        self.spectra_list.setItemDelegate(SpectrumItemDelegate(self.spectra_list))
-        self.spectra_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        
-        # Connect selection change
-        self.spectra_list.itemSelectionChanged.connect(self._on_spectra_selection_changed)
-        
-        spectra_list_layout.addWidget(self.spectra_list, stretch=1)
-        spectra_container.addLayout(spectra_list_layout, stretch=1)
-        
-        # Right: Spectra action buttons
-        spectra_buttons_layout = QVBoxLayout()
-        spectra_buttons_layout.setSpacing(4)
+        spectra_buttons_layout = QHBoxLayout()
+        spectra_buttons_layout.setSpacing(6)
         
         self.btn_select_all = QPushButton()
-        self.btn_select_all.setToolTip("Select all spectra")
+        self.btn_select_all.setToolTip("Select all spectra in current map")
         self.btn_select_all.setFixedSize(32, 32)
         self.btn_select_all.clicked.connect(self.select_all_requested.emit)
         
         self.btn_reinit = QPushButton()
-        self.btn_reinit.setToolTip("Reinitialize selected spectra")
+        self.btn_reinit.setToolTip("Reinitialize selected spectra (Ctrl for all maps)")
         self.btn_reinit.setFixedSize(32, 32)
         self.btn_reinit.clicked.connect(self.reinitialize_requested.emit)
         
         self.btn_stats = QPushButton()
-        self.btn_stats.setToolTip("Show fitting statistics")
+        self.btn_stats.setToolTip("Show fitting statistics of selected spectrum")
         self.btn_stats.setFixedSize(32, 32)
         self.btn_stats.clicked.connect(self.stats_requested.emit)
         
@@ -210,32 +150,27 @@ class VMapsList(QWidget):
         spectra_buttons_layout.addWidget(self.btn_send_to_spectra)
         spectra_buttons_layout.addStretch()
         
-        spectra_container.addLayout(spectra_buttons_layout)
-        main_layout.addLayout(spectra_container, stretch=1)
+        spectra_actions_container.addLayout(spectra_buttons_layout)
+        main_layout.addLayout(spectra_actions_container)
     
     def _update_maps_placeholder(self):
         """Update placeholder text for maps list based on state."""
         if self.maps_list.count() == 0:
-            # Add 2 empty lines before placeholder for spacing
             for _ in range(2):
                 spacer = QListWidgetItem("")
                 spacer.setFlags(Qt.NoItemFlags)
                 self.maps_list.addItem(spacer)
             
-            # Add the centered placeholder item with larger text
             placeholder = QListWidgetItem("📂 Drag and drop file(s) anywhere to open")
-            placeholder.setFlags(Qt.NoItemFlags)  # Make it non-selectable and non-editable
+            placeholder.setFlags(Qt.NoItemFlags)
             placeholder.setForeground(Qt.gray)
-            placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
-            
-            # Set larger font size
+            placeholder.setTextAlignment(Qt.AlignCenter)
             
             font = QFont()
-            font.setPointSize(12)  # Increase font size
+            font.setPointSize(12)
             placeholder.setFont(font)
             
             self.maps_list.addItem(placeholder)
-
             self._has_maps_placeholder = True
 
     # ───── Public API (ViewModel → View) ─────────────────────────
@@ -261,96 +196,12 @@ class VMapsList(QWidget):
         if len(names) == 0:
             self._update_maps_placeholder()
     
-    def set_spectra_names(self, spectra: list):
-        """Replace spectra list for currently selected map.
-        
-        Args:
-            spectra: List of dicts with keys: fname, is_active, has_baseline, fit_success
-        """
-        # Save current selection positions before updating
-        self._last_selected_positions = self.get_selected_spectra_indices()
-        
-        # Block signals and disable visual updates during bulk update
-        self.spectra_list.blockSignals(True)
-        self.spectra_list.setUpdatesEnabled(False)
-        
-        current_count = self.spectra_list.count()
-        new_count = len(spectra)
-        
-        # In-place recycle existing items for maximum responsiveness
-        common_count = min(current_count, new_count)
-        for i in range(common_count):
-            item = self.spectra_list.item(i)
-            spectrum = spectra[i]
-            fname = spectrum["fname"]
-            if item.text() != fname:
-                item.setText(fname)
-            item.setData(Qt.UserRole, i)
-            check_state = Qt.Checked if spectrum["is_active"] else Qt.Unchecked
-            if item.checkState() != check_state:
-                item.setCheckState(check_state)
-            set_spectrum_item_color(item, spectrum)
-
-        # Append new items if new list is larger
-        if new_count > current_count:
-            for i in range(current_count, new_count):
-                spectrum = spectra[i]
-                item = QListWidgetItem(spectrum["fname"])
-                item.setData(Qt.UserRole, i)
-                item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-                item.setCheckState(Qt.Checked if spectrum["is_active"] else Qt.Unchecked)
-                set_spectrum_item_color(item, spectrum)
-                self.spectra_list.addItem(item)
-        # Remove extra items if old list was larger
-        elif current_count > new_count:
-            for _ in range(current_count - new_count):
-                self.spectra_list.takeItem(new_count)
-
-        # Restore selection at same positions (if they still exist)
-        selection_restored = False
-        if self._last_selected_positions and new_count > 0:
-            if len(self._last_selected_positions) >= new_count:
-                self.spectra_list.selectAll()
-                selection_restored = True
-            else:
-                selection = QItemSelection()
-                model = self.spectra_list.model()
-                for pos in self._last_selected_positions:
-                    if 0 <= pos < new_count:
-                        idx = model.index(pos, 0)
-                        selection.select(idx, idx)
-                        selection_restored = True
-                
-                if selection_restored:
-                    self.spectra_list.selectionModel().select(selection, QItemSelectionModel.ClearAndSelect)
-        
-        # If no selection was restored and list is not empty, select first item
-        if not selection_restored and new_count > 0:
-            self.spectra_list.item(0).setSelected(True)
-        
-        self.spectra_list.setUpdatesEnabled(True)
-        self.spectra_list.blockSignals(False)
-        
-        # Trigger selection changed signal manually
-        self._on_spectra_selection_changed()
-    
     def get_selected_map_index(self) -> int:
         """Return currently selected map index, or -1 if none."""
         selected = self.maps_list.selectedItems()
         if selected:
             return self.maps_list.row(selected[0])
         return -1
-    
-    def get_selected_spectra_indices(self) -> list[int]:
-        """Return list of selected spectrum indices."""
-        return [
-            self.spectra_list.row(item)
-            for item in self.spectra_list.selectedItems()
-        ]
-    
-    def select_all_spectra(self):
-        """Select all spectra in the list."""
-        self.spectra_list.selectAll()
 
     # ───── Internal signal handlers ──────────────────────────────
     def _on_map_selected(self):
@@ -358,21 +209,9 @@ class VMapsList(QWidget):
         idx = self.get_selected_map_index()
         if idx >= 0:
             self.map_selection_changed.emit(idx)
-    
-    def _on_spectra_selection_changed(self):
-        """Debounce spectra selection changes to prevent plot lag."""
-        self._selection_timer.start()
-        
-    def _emit_debounced_selection(self):
-        """Actually emit the signal after debounce timer finishes."""
-        indices = self.get_selected_spectra_indices()
-        self.spectra_selection_changed.emit(indices)
-    
-    # ───── Internal signal handlers ──────────────────────────────
 
     def apply_theme(self, theme: str):
         """Update icons based on the global application theme."""
-        from spectroview.viewmodel.utils import get_tinted_icon
         icon_color = "#404040" if theme != "dark" else "#F0F0F0"
 
         # Map action buttons

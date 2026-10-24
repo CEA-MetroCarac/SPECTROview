@@ -12,9 +12,7 @@ from spectroview.view.components.v_map_viewer import VMapViewer
 from spectroview.view.components.v_map_viewer_dialog import VMapViewerDialog
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
-from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon, parse_coords_from_fname
-import os
-from spectroview import ICON_DIR
+from spectroview.viewmodel.utils import show_toast_notification, parse_coords_from_fname
 
 
 class VWorkspaceMaps(VWorkspaceSpectra):
@@ -144,19 +142,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
     def apply_theme(self, theme: str):
         """Update Maps-specific sidebar icons dynamically."""
-        if not hasattr(self, 'v_maps_list'):
-            return
-            
-        icon_color = "#404040" if theme != "dark" else "#F0F0F0"
-        
-        # Spectra list buttons (legacy, kept for backward compatibility)
-        self.v_maps_list.btn_select_all.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "select-all.png"), icon_color))
-        self.v_maps_list.btn_reinit.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "undo2.png"), icon_color))
-        self.v_maps_list.btn_stats.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "stats.png"), icon_color))
-        self.v_maps_list.btn_send_to_spectra.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "send.png"), icon_color))
-        
-        # Propagate to VMapsList (map action buttons: view, delete, save)
-        self.v_maps_list.apply_theme(theme)
+        if hasattr(self, 'v_maps_list'):
+            self.v_maps_list.apply_theme(theme)
         
         # Propagate to Fit Model Builder
         if hasattr(self, 'v_fit_model_builder'):
@@ -170,56 +157,13 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                 dialog.map_viewer.apply_global_theme(theme)
     
     def _on_spectra_list_changed(self, spectra: list):
-        """Handle spectra list update from ViewModel."""
-        self.v_maps_list.set_spectra_names(spectra)
-        
-        # Fast coordinate lookup cache: use MapData.coords directly if available
-        md = self.vm.store.get_map_data(self.vm.current_map_name) if self.vm.current_map_name else None
-        if md is not None and md.coords is not None and len(md.coords) == len(spectra):
-            coords = md.coords
-            self._spectra_coords_cache = {
-                i: (float(coords[i, 0]), float(coords[i, 1]))
-                for i in range(len(coords))
-            }
-        else:
-            self._spectra_coords_cache = {}
-            for i, s in enumerate(spectra):
-                fname = s["fname"] if isinstance(s, dict) else s.fname
-                coords = self._extract_coords_from_fname(fname)
-                if coords:
-                    self._spectra_coords_cache[i] = coords
-    
-    def _on_checkbox_changed(self, item):
-        """Notify the ViewModel when a spectrum's checkbox state changes."""
-        if item is None or not self.vm.current_map_name:
-            return
-
-        fname = item.text()
-        is_checked = item.checkState() == Qt.Checked
-        self.vm.set_spectrum_active(fname, is_checked)
-
-    def _on_check_all_toggled(self, checked: bool):
-        """Handle check all checkbox toggle for current map."""
-        if not self.vm.current_map_name:
-            return
-
-        # Block signals temporarily to avoid triggering individual checkbox handlers
-        self.v_maps_list.spectra_list.blockSignals(True)
-
-        # Update all checkboxes in the list
-        for i in range(self.v_maps_list.spectra_list.count()):
-            item = self.v_maps_list.spectra_list.item(i)
-            item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
-
-        self.v_maps_list.spectra_list.blockSignals(False)
-
-        self.vm.set_all_current_map_spectra_active(checked)
+        """Handle spectra list update from ViewModel (no-op: selection is heatmap-driven)."""
+        pass
 
     def _connect_signals(self):
         """Connect Maps-specific signals between View and ViewModel."""
         # ── VMapsList → ViewModel connections ──
         self.v_maps_list.map_selection_changed.connect(self._on_map_selected)
-        self.v_maps_list.spectra_selection_changed.connect(self._on_spectra_list_selection)
         
         # ── VMapsList button connections ──
         self.v_maps_list.view_map_requested.connect(self._on_view_map_requested)
@@ -243,14 +187,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # ── ViewModel → VMapsList connections ──
         self.vm.maps_list_changed.connect(self.v_maps_list.set_maps_names)
         self.v_maps_list.set_map_metadata_provider(self._get_map_metadata)
-        self.v_maps_list.set_spectra_metadata_provider(self._get_map_spectrum_metadata)
-        
-        # Check all checkbox (now in VMapsList)
-        self.v_maps_list.check_all_toggled.connect(self._on_check_all_toggled)
-        
-        # Note: self.vm.spectra_list_changed is already connected to
-        # self._on_spectra_list_changed in super().setup_connections()
-        self.v_maps_list.spectra_list.itemChanged.connect(self._on_checkbox_changed)
         
         # Clear griddata cache when map data changes (after fitting)
         self.vm.clear_map_cache_requested.connect(self.v_map_viewer.clear_cache_for_map)
@@ -269,45 +205,33 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # self.v_spectra_viewer.set_plot_data in super().setup_connections()
 
     def _on_map_viewer_selection(self, selected_points: list):
-        """Handle spectrum selection from map viewer."""
-        if not selected_points:
-            self.v_maps_list.spectra_list.clearSelection()
+        """Handle spectrum selection from map viewer (single source of truth)."""
+        if not selected_points or not self.vm.current_map_name:
+            self.vm.set_selected_fnames([])
+            for dialog in self.viewer_dialogs:
+                dialog.set_selected_points([])
             return
         
-        # Build fnames from coordinates
-        selected_fnames = [
-            f"{self.vm.current_map_name}_({x}, {y})"
-            for x, y in selected_points
-        ]
-        
-        # Get list of current map's fnames from SpectraStore
+        # Map (x, y) coordinates to spectrum filenames
         md = self.vm.store.get_map_data(self.vm.current_map_name)
-        current_map_fnames = list(md.fnames) if md else []
+        if md is not None and md.coords is not None:
+            coord_map = {
+                (round(float(md.coords[i, 0]), 4), round(float(md.coords[i, 1]), 4)): md.fnames[i]
+                for i in range(len(md.fnames))
+            }
+            selected_fnames = []
+            for x, y in selected_points:
+                key = (round(float(x), 4), round(float(y), 4))
+                if key in coord_map:
+                    selected_fnames.append(coord_map[key])
+                else:
+                    selected_fnames.append(f"{self.vm.current_map_name}_({x}, {y})")
+        else:
+            selected_fnames = [
+                f"{self.vm.current_map_name}_({x}, {y})"
+                for x, y in selected_points
+            ]
         
-        # Find list indices
-        list_indices = [
-            i for i, fname in enumerate(current_map_fnames)
-            if fname in selected_fnames
-        ]
-        
-        if not list_indices:
-            return
-        
-        self.v_maps_list.spectra_list.blockSignals(True)
-        self.v_maps_list.spectra_list.clearSelection()
-        
-        # Set selection in list widget
-        for list_idx in list_indices:
-            if 0 <= list_idx < self.v_maps_list.spectra_list.count():
-                self.v_maps_list.spectra_list.item(list_idx).setSelected(True)
-        
-        # Auto-scroll
-        if list_indices:
-            self.v_maps_list.spectra_list.scrollToItem(
-                self.v_maps_list.spectra_list.item(list_indices[0])
-            )
-        
-        self.v_maps_list.spectra_list.blockSignals(False)
         self.vm.set_selected_fnames(selected_fnames)
         
         # Sync selected points to all dialog viewers
@@ -393,37 +317,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             dialog.map_viewer.cbb_map_type.blockSignals(False)
             dialog.map_viewer.plot_heatmap()  # Manually trigger plot update
     
-    def _on_spectra_list_selection(self, list_indices: list):
-        """Handle spectra selection from list."""
-        # Update heatmap highlights
-        self._update_heatmap_selection()
-        
-        if not list_indices:
-            self.vm.set_selected_fnames([])
-            return
-        
-        # Get list of current map's fnames from SpectraStore
-        md = self.vm.store.get_map_data(self.vm.current_map_name)
-        current_map_fnames = list(md.fnames) if md else []
-        
-        # Convert list indices to fnames
-        selected_fnames = [
-            current_map_fnames[i]
-            for i in list_indices
-            if 0 <= i < len(current_map_fnames)
-        ]
-        
-        if not selected_fnames:
-            return
-        
-        # Auto-scroll to first selected item
-        if 0 <= list_indices[0] < self.v_maps_list.spectra_list.count():
-            self.v_maps_list.spectra_list.scrollToItem(
-                self.v_maps_list.spectra_list.item(list_indices[0])
-            )
-        
-        self.vm.set_selected_fnames(selected_fnames)
-    
     def _on_map_data_changed(self):
         """Update map viewer when map data changes."""
         # Get current map data and fit results ONCE (shared references)
@@ -452,9 +345,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                     dialog.set_map_data(None, None, None)
             finally:
                 dialog.blockSignals(dialog_old_state)
-        
-        # After map data is loaded, sync heatmap highlights with current selection
-        self._sync_heatmap_with_selection()
     
     def _on_fit_results_updated(self, df_fit_results):
         """Update map viewer parameter lists when fit results change.
@@ -471,58 +361,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         for dialog in self.viewer_dialogs:
             dialog.map_viewer.df_fit_results = df_fit_results if df_fit_results is not None else pd.DataFrame()
             dialog.map_viewer._update_parameter_lists()
-    
-    def _sync_heatmap_with_selection(self):
-        """Synchronize heatmap highlights with current spectra list selection."""
-        self._update_heatmap_selection()
-    
-    def _update_heatmap_selection(self):
-        """Update heatmap highlights based on current list selection (common logic)."""
-        if not self.vm.current_map_name:
-            return
-        
-        # Get currently selected indices from the list widget
-        selected_indices = self.v_maps_list.get_selected_spectra_indices()
-        total_count = self.v_maps_list.spectra_list.count()
-        
-        if not selected_indices:
-            self.v_map_viewer.set_selected_points([])
-            for dialog in self.viewer_dialogs:
-                dialog.set_selected_points([])
-            return
-        
-        # Skip overlay if ALL or nearly all spectra selected (Fix 4)
-        # Drawing thousands of rectangles is very slow and visually meaningless
-        if len(selected_indices) > 500 or len(selected_indices) == total_count:
-            self.v_map_viewer.set_selected_points([])
-            for dialog in self.viewer_dialogs:
-                dialog.set_selected_points([])
-            return
-        
-        # Convert indices to coordinates using pre-built cache (Fix 5)
-        selected_points = []
-        if hasattr(self, '_spectra_coords_cache') and self._spectra_coords_cache:
-            for idx in selected_indices:
-                coords = self._spectra_coords_cache.get(idx)
-                if coords:
-                    selected_points.append(coords)
-        else:
-            # Fallback: build coords from fnames (slower path)
-            md_fb = self.vm.store.get_map_data(self.vm.current_map_name)
-            current_map_fnames = list(md_fb.fnames) if md_fb else []
-            for idx in selected_indices:
-                if 0 <= idx < len(current_map_fnames):
-                    coords = self._extract_coords_from_fname(current_map_fnames[idx])
-                    if coords:
-                        selected_points.append(coords)
-        
-        # Update heatmap highlights in main viewer
-        if selected_points:
-            self.v_map_viewer.set_selected_points(selected_points)
-        
-        # Update all dialog viewers
-        for dialog in self.viewer_dialogs:
-            dialog.set_selected_points(selected_points if selected_points else [])
     
     def _on_map_selected(self, index: int):
         """Handle map selection - convert index to map name and call ViewModel."""
@@ -602,27 +440,21 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     
     def _on_select_all_spectra(self):
         """Select all spectra in the current map."""
-        # Block spectra list signals to prevent duplicate _emit_selected_spectra 
-        self.v_maps_list.spectra_list.blockSignals(True)
+        if not self.vm.current_map_name:
+            return
         
         self.vm.select_all_current_map_spectra()
         
-        # Ensure Check All checkbox is visually checked without emitting toggled twice
-        self.v_maps_list.cb_check_all.blockSignals(True)
-        self.v_maps_list.cb_check_all.setChecked(True)
-        self.v_maps_list.cb_check_all.blockSignals(False)
-        
-        # Manually invoke the check all logic to update all items efficiently
-        self._on_check_all_toggled(True)
-        
-        # Select all items in the UI list (visual only, signals blocked)
-        self.v_maps_list.select_all_spectra()
-        
-        # Unblock signals
-        self.v_maps_list.spectra_list.blockSignals(False)
-        
-        # Manually update heatmap selection once (will skip overlay for large selections via Fix 4)
-        self._update_heatmap_selection()
+        md = self.vm.store.get_map_data(self.vm.current_map_name)
+        if md is not None and md.coords is not None:
+            # Skip drawing individual box overlays for large maps (>500 spectra) to prevent rendering lag
+            if len(md.coords) > 500:
+                all_pts = []
+            else:
+                all_pts = [(float(c[0]), float(c[1])) for c in md.coords]
+            self.v_map_viewer.set_selected_points(all_pts)
+            for dialog in self.viewer_dialogs:
+                dialog.set_selected_points(all_pts)
     
     def _on_reinit_spectra(self):
         """Reinitialize selected spectra (Ctrl for all maps)."""

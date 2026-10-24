@@ -12,7 +12,7 @@ def get_tinted_icon(path: str, color_str: str) -> QIcon:
     painter.end()
     return QIcon(pixmap)
 
-from PySide6.QtCore import Qt, QObject, QEvent, QPoint, QTimer
+from PySide6.QtCore import Qt, QObject, QEvent, QPoint, QTimer, Slot
 from PySide6.QtWidgets import (
     QMessageBox, QApplication, QListWidgetItem,
     QDialog, QTextBrowser, QVBoxLayout,
@@ -858,8 +858,6 @@ class MetadataTooltipManager(QObject):
             app.installEventFilter(self)
             self._app_filtered = True
 
-        self.list_widget.destroyed.connect(self._on_widget_destroyed)
-
     def set_metadata_provider(self, provider):
         """Update the metadata provider callable."""
         self.metadata_provider = provider
@@ -905,7 +903,7 @@ class MetadataTooltipManager(QObject):
 
     def _remove_app_filter(self):
         """Cleanly remove application event filter."""
-        if self._app_filtered:
+        if getattr(self, "_app_filtered", False):
             app = QApplication.instance()
             if app:
                 try:
@@ -914,14 +912,17 @@ class MetadataTooltipManager(QObject):
                     pass
             self._app_filtered = False
 
-    def _on_widget_destroyed(self):
+    @Slot()
+    @Slot(object)
+    def _on_widget_destroyed(self, obj=None):
         """Cleanly remove application event filter and popup when widget is destroyed."""
         self._cancel_delay()
         self._remove_app_filter()
-        if self._popup:
+        popup = getattr(self, "_popup", None)
+        if popup:
             try:
-                self._popup.hide()
-                self._popup.deleteLater()
+                popup.hide()
+                popup.deleteLater()
             except Exception:
                 pass
             self._popup = None
@@ -972,6 +973,10 @@ class MetadataTooltipManager(QObject):
     def eventFilter(self, watched, event):
         """Handle mouse movement, leave, and events."""
         etype = event.type()
+        if etype == QEvent.Destroy and watched == getattr(self, "list_widget", None):
+            self._on_widget_destroyed()
+            return False
+
         if etype not in (
             QEvent.MouseMove,
             QEvent.ToolTip,

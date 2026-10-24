@@ -49,7 +49,7 @@ MapData ("wafer_300mm") — 50×50 wafer (2500 spectra, 1000 wavenumbers)
 graph LR
     subgraph View ["View Layer"]
         VWM["VWorkspaceMaps<br/>(extends VWorkspaceSpectra)"]
-        ML["VMapsList<br/>(maps + spectra list)"]
+        ML["VMapsList<br/>(maps list + actions)"]
         MV["VMapViewer<br/>(Matplotlib heatmap)"]
         MVD["VMapViewerDialog<br/>(detachable viewer)"]
         SV_inh["VSpectraViewer<br/>(inherited)"]
@@ -134,7 +134,7 @@ switch_to_graphs_tab    = Signal()        # request tab switch after profile ext
 Overrides `_add_maps_panel()` to replace the inherited spectra sidebar with:
 
 - `VMapViewer` — the heatmap canvas with Z-parameter and X-range sliders.
-- `VMapsList` — dual-panel list (maps on top, spectra in map below) with action buttons.
+- `VMapsList` — maps list panel with map management and spectra action buttons.
 
 The left side (SpectraViewer + FitModelBuilder tabs) is inherited unchanged.
 
@@ -156,13 +156,11 @@ The most complex View component (~1 300 lines). It renders both 2D rectangular m
 - **In-Place Artist Updates on Map Switching**: When switching between already-loaded maps of the same type and style, `_do_plot_heatmap_internal()` fast-paths by updating `self.img.set_data(...)`, `self.img.set_extent(...)`, `self.img.set_clim(...)`, and `self.cbar.update_normal(...)` in-place, bypassing destructive `figure.clf()`, subplot re-creation, and expensive `tight_layout()`.
 - Multi-viewer dialog spawning
 
-### `VMapsList` — The Dual-Panel List
+### `VMapsList` — The Maps List & Actions Panel
 
 **File**: [`v_map_list.py`](file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_map_list.py)
 
-Contains two `QListWidget`s and action buttons. The top list shows loaded map names; the bottom list shows spectra within the selected map, with checkboxes controlling `md.is_active`. Also provides a "Check All" checkbox that updates `is_active` for all N spectra in a single bulk operation.
-
-**In-Place Item Recycling**: `set_spectra_names()` reuses and updates existing `QListWidgetItem` objects in-place under `setUpdatesEnabled(False/True)` rather than calling `.clear()` and re-allocating thousands of widgets on every map selection change.
+Displays loaded map names with quick management buttons (View, Delete, Export CSV) alongside unified spectra action buttons (Select All, Reinitialize, Fitting Statistics, Send to Spectra Workspace) targeting the currently active map and its spatially selected spectra. Directly operates on 2D heatmap selections without overhead from redundant list widgets.
 
 ### `VMapViewerDialog` — Detachable Window
 
@@ -224,9 +222,8 @@ When the user clicks a map name in `VMapsList`:
 1. **User Action**: The user clicks a map name in the `VMapsList` UI widget.
 2. **View → ViewModel**: The View captures this and calls `vm.select_map(map_name)`.
 3. **State Update**: The ViewModel sets `current_map_name = map_name`.
-4. **Spectra List Refresh**: The ViewModel reads the `fnames`, `is_active` flags, and fit status from the MapData, then emits `spectra_list_changed(spectra_info)` to update the bottom list pane.
-5. **Map Viewer Refresh**: The ViewModel emits `map_data_updated(current_map_df)`.
-6. **Canvas Redraw**: `VWorkspaceMaps` forwards the updated data to the `VMapViewer`, which calls `plot_heatmap()` to render the spatial data.
+4. **Map Viewer Refresh**: The ViewModel emits `map_data_updated(current_map_df)`.
+5. **Canvas Redraw**: `VWorkspaceMaps` forwards the updated data to the `VMapViewer`, which calls `plot_heatmap()` to render the spatial data.
 
 ### Fitting Workflow (Maps Override)
 

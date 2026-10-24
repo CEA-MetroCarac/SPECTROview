@@ -234,6 +234,7 @@ class Main(QMainWindow):
         spectra_files = []
         hyperspectral_files = []
         dataframes = []
+        fit_model_files = []
         spectra_work_file = None
         maps_work_file = None
         graphs_work_file = None
@@ -249,6 +250,8 @@ class Main(QMainWindow):
                 maps_work_file = str(path)
             elif ext == '.graphs':
                 graphs_work_file = str(path)
+            elif ext == '.json':
+                fit_model_files.append(str(path))
             elif ext == '.dat':
                 # TRPL time-resolved data
                 spectra_files.append(str(path))
@@ -368,6 +371,18 @@ class Main(QMainWindow):
         if dataframes:
             self.v_graphs_workspace.vm.load_dataframes(dataframes)
             self.tabWidget.setCurrentWidget(self.v_graphs_workspace)
+        
+        # Load fit model files
+        if fit_model_files:
+            current_tab = self.tabWidget.currentWidget()
+            target_workspace = (
+                current_tab
+                if current_tab in (self.v_spectra_workspace, self.v_maps_workspace)
+                else self.v_spectra_workspace
+            )
+            for f in fit_model_files:
+                target_workspace.load_fit_model_file(f)
+            self.tabWidget.setCurrentWidget(target_workspace)
         
         # Load saved work files
         if spectra_work_file:

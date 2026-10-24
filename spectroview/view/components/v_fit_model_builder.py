@@ -38,6 +38,7 @@ class VFitModelBuilder(QWidget):
     fit_requested = Signal(bool)  # apply_all
 
     load_fit_models_requested = Signal()
+    fit_model_dropped = Signal(str)
     refresh_fit_models_requested = Signal()
     apply_loaded_fit_model_requested = Signal(bool)  # apply_all
 
@@ -50,6 +51,7 @@ class VFitModelBuilder(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAcceptDrops(True)
         self._init_ui()
 
         # Debounce the expensive baseline-recompute-and-replot triggered by
@@ -662,7 +664,7 @@ class VFitModelBuilder(QWidget):
         self.cbb_model = QComboBox()
         self.cbb_model.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        self.cbb_model.setToolTip("Select fit model.")
+        self.cbb_model.setToolTip("Select fit model, or drag and drop a JSON model file here.")
 
         self.btn_apply = QPushButton("Apply")
         self.btn_apply.setToolTip("Apply selected fit model to current selected spectrum(s).")
@@ -671,7 +673,7 @@ class VFitModelBuilder(QWidget):
         )
 
         self.btn_load = QPushButton("Load")
-        self.btn_load.setToolTip("Load fit model from a JSON file.")
+        self.btn_load.setToolTip("Load fit model from a JSON file (or drag and drop JSON file).")
         self.btn_load.clicked.connect(self.load_fit_models_requested.emit)  
 
         self.btn_refresh = QPushButton()
@@ -731,4 +733,38 @@ class VFitModelBuilder(QWidget):
         self.btn_apply.setIcon(get_tinted_icon(f"{ICON_DIR}/done.png", icon_color))
         self.btn_load.setIcon(get_tinted_icon(f"{ICON_DIR}/load.png", icon_color))
         self.btn_refresh.setIcon(get_tinted_icon(f"{ICON_DIR}/update.png", icon_color))
+
+    # ───── Drag & Drop handling ──────────────────────────────────
+    def dragEnterEvent(self, event):
+        """Accept dragging JSON fit model files into the builder."""
+        if event.mimeData().hasUrls():
+            for url in event.mimeData().urls():
+                if url.toLocalFile().lower().endswith(".json"):
+                    event.acceptProposedAction()
+                    return
+        event.ignore()
+
+    def dragMoveEvent(self, event):
+        """Accept dragging JSON fit model files over the builder."""
+        if event.mimeData().hasUrls():
+            for url in event.mimeData().urls():
+                if url.toLocalFile().lower().endswith(".json"):
+                    event.acceptProposedAction()
+                    return
+        event.ignore()
+
+    def dropEvent(self, event):
+        """Emit fit_model_dropped for each dropped JSON file."""
+        if event.mimeData().hasUrls():
+            json_paths = [
+                url.toLocalFile() for url in event.mimeData().urls()
+                if url.toLocalFile().lower().endswith(".json")
+            ]
+            if json_paths:
+                for path in json_paths:
+                    self.fit_model_dropped.emit(path)
+                event.acceptProposedAction()
+                return
+        event.ignore()
+
 

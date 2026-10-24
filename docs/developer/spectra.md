@@ -218,6 +218,7 @@ A splitter panel containing the full preprocessing and fitting control surface:
 
 - **Left pane**: X-correction, spectral range, baseline mode selector, baseline action buttons.
 - **Right pane**: `VPeakTable` (editable parameter rows) + fit action buttons (Fit, Copy model, Paste model, Save model, Apply model).
+- **Drag-and-Drop Model Loading**: Accepts dropped `.json` fit model files directly onto the panel or via the parent workspace. When dropped, `fit_model_dropped(path)` triggers `load_fit_model_file()`, delegating to `VMFitModelBuilder.load_model_file()`. This loads the external model into memory, updates the model dropdown, selects it, activates the `Fit Model Builder` tab, and displays a toast notification. Both Spectra and Maps workspaces inherit and support this functionality.
 
 ### `VPeakTable` — The Parameter Table
 

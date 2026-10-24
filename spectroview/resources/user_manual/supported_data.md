@@ -9,6 +9,7 @@ Examples of all supported data types can be found in the [`/examples`](https://g
 | SPC | `.spc` | Built-in binary reader | Single spectra and maps |
 | TRPL | `.dat` | Built-in parser | Time-resolved decays |
 | Tabular data | `.xlsx`, `.csv` | `Pandas` & `Openpyxl` | DataFrames for plotting |
+| Fit model template | `.json` | Fit Model Builder | Peak models & baseline configuration |
 
 ### **1. `.wdf` (Renishaw) and `.spc` (HORIBA) Formats**
 
@@ -54,3 +55,4 @@ To ensure workflows can be saved and resumed later, **SPECTROview** uses specifi
 - **`Maps` Workspace** → `.maps`
 - **`Spectra` Workspace** → `.spectra`
 - **`Graphs` Workspace** → `.graphs`
+- **Fit Model Templates** → `.json` (drag & drop or Load into `Spectra` and `Maps` workspaces)

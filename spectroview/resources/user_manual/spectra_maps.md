@@ -247,6 +247,10 @@ A fully configured fit model can be copied from one spectrum and pasted onto ano
 
 **Saving / Loading Fit Models**:
 If you intend to use a model frequently, you can save it as a template. Stored models can be easily accessed and applied to new datasets using the dropdown menu.
+- **Select from Dropdown**: Pick any pre-existing model from the `Fit model:` combobox.
+- **Load via Button**: Click the **Load** button to browse for and load any `.json` fit model template from your filesystem.
+- **Drag & Drop**: You can drag and drop a `.json` fit model file directly onto the `Fit Model Builder` panel or anywhere on the **Spectra** or **Maps** workspace. The file is instantly added to the model list, selected in the dropdown, and ready to be applied.
+- **Apply Model**: Click **Apply** to assign the loaded model to the currently selected spectrum (or hold **Ctrl** while clicking **Apply** to assign it to all spectra).
 > - When you **Save** a model to a `.json` file, the *current* Noise Threshold is permanently baked into that file. Later, when you **Apply (Load)** that model, the fit engine strictly uses the exact noise threshold saved in the file, ignoring whatever is currently set in your Settings Panel.
 
 _______

@@ -1,5 +1,6 @@
 """View for Spectra Workspace - main UI coordinator for spectral analysis."""
 import os
+from pathlib import Path
 
 import pandas as pd
 
@@ -38,6 +39,7 @@ class VWorkspaceSpectra(QWidget):
     def init_ui(self):
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.setObjectName("SpectraTab")
+        self.setAcceptDrops(True)
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(4, 4, 4, 4)
 
@@ -297,6 +299,7 @@ class VWorkspaceSpectra(QWidget):
         # V_FitModelBuilder <-> VM_FitModelBuilder
         self.v_fit_model_builder.refresh_fit_models_requested.connect(self.vm_fit_model_builder.refresh_models)
         self.v_fit_model_builder.load_fit_models_requested.connect(self.vm_fit_model_builder.pick_and_load_model)
+        self.v_fit_model_builder.fit_model_dropped.connect(self.load_fit_model_file)
         self.v_fit_model_builder.cbb_model.currentTextChanged.connect(self.vm_fit_model_builder.set_current_model)
         self.v_fit_model_builder.apply_loaded_fit_model_requested.connect(vm.apply_fit_model)
         self.v_fit_model_builder.apply_loaded_fit_model_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after apply
@@ -304,6 +307,7 @@ class VWorkspaceSpectra(QWidget):
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.clear)
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.addItems)
         self.vm_fit_model_builder.model_selected.connect(self.v_fit_model_builder.cbb_model.setCurrentText)
+        self.vm_fit_model_builder.notify.connect(self._show_toast_notification)
         self.vm_fit_model_builder.refresh_models() # Initial load of models
 
 
@@ -425,4 +429,46 @@ class VWorkspaceSpectra(QWidget):
             self.v_fit_model_builder.peak_table.set_spectrum(spectra[0])
         else:
             self.v_fit_model_builder.peak_table.clear()
+
+    def load_fit_model_file(self, file_path: str) -> bool:
+        """Load a JSON fit model file into the workspace fit model builder."""
+        success = self.vm_fit_model_builder.load_model_file(file_path)
+        if success:
+            self.bottom_tabs.setCurrentWidget(self.v_fit_model_builder)
+            self._show_toast_notification(f"Fit model loaded: {Path(file_path).name}")
+        return success
+
+    # ───── Drag & Drop handling ──────────────────────────────────
+    def dragEnterEvent(self, event):
+        """Accept dragging JSON fit model files into the workspace."""
+        if event.mimeData().hasUrls():
+            for url in event.mimeData().urls():
+                if url.toLocalFile().lower().endswith(".json"):
+                    event.acceptProposedAction()
+                    return
+        event.ignore()
+
+    def dragMoveEvent(self, event):
+        """Accept dragging JSON fit model files over the workspace."""
+        if event.mimeData().hasUrls():
+            for url in event.mimeData().urls():
+                if url.toLocalFile().lower().endswith(".json"):
+                    event.acceptProposedAction()
+                    return
+        event.ignore()
+
+    def dropEvent(self, event):
+        """Handle dropped JSON fit model files."""
+        if event.mimeData().hasUrls():
+            json_paths = [
+                url.toLocalFile() for url in event.mimeData().urls()
+                if url.toLocalFile().lower().endswith(".json")
+            ]
+            if json_paths:
+                for path in json_paths:
+                    self.load_fit_model_file(path)
+                event.acceptProposedAction()
+                return
+        event.ignore()
+
 

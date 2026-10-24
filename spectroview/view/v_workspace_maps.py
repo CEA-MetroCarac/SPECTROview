@@ -16,7 +16,11 @@ from spectroview.viewmodel.utils import show_toast_notification, parse_coords_fr
 
 
 class VWorkspaceMaps(VWorkspaceSpectra):
-    """Maps Workspace View - inherits from Spectra Workspace and adds map visualization."""
+    """Maps Workspace View - inherits from Spectra Workspace and adds map visualization.
+
+    Inherits discrete spectra visualization, fit model builder, drag-and-drop fit model
+    loading, and adds hyperspectral 2D/wafer map visualization.
+    """
     
     # ───── Additional signals for Maps ─────
     map_type_changed = Signal(str)

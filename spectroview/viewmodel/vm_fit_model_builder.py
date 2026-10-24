@@ -1,4 +1,5 @@
 """ViewModel for Fit Model Builder - manages fit model selection and loading."""
+import json
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
@@ -52,6 +53,41 @@ class VMFitModelBuilder(QObject):
             self._current_model_name = all_models[0]
             self.model_selected.emit(self._current_model_name)
 
+    def load_model_file(self, file_path: str | Path) -> bool:
+        """Load a JSON fit model file without changing default model folder."""
+        path = Path(file_path)
+        if not path.is_file() or path.suffix.lower() != ".json":
+            self.notify.emit(f"Invalid fit model file: {path.name}")
+            return False
+
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if not isinstance(data, dict):
+                self.notify.emit(f"Invalid fit model format: {path.name} must be a JSON object.")
+                return False
+        except Exception as e:
+            self.notify.emit(f"Failed to read fit model {path.name}: {e}")
+            return False
+
+        model_name = path.name
+
+        # Store external model separately
+        self._extra_models[model_name] = path
+
+        # Update combobox WITHOUT rescanning folders
+        base_models = self.model_manager.available_models
+        all_models = base_models + [
+            name for name in self._extra_models
+            if name not in base_models
+        ]
+
+        self.models_changed.emit(all_models)
+
+        self._current_model_name = model_name
+        self.model_selected.emit(model_name)
+        return True
+
     def pick_and_load_model(self):
         """Load a JSON model without changing default model folder."""
         start_dir = self.settings.get_fit_model_folder() or ""
@@ -66,22 +102,7 @@ class VMFitModelBuilder(QObject):
         if not file_path:
             return
 
-        path = Path(file_path)
-        model_name = path.name
-
-        # Store external model separately
-        self._extra_models[model_name] = path
-
-        # Update combobox WITHOUT rescanning folders
-        all_models = (
-            self.model_manager.available_models +
-            list(self._extra_models.keys())
-        )
-
-        self.models_changed.emit(all_models)
-
-        self._current_model_name = model_name
-        self.model_selected.emit(model_name)
+        self.load_model_file(file_path)
 
     def set_current_model(self, model_name: str):
         """Called when user changes combobox selection."""

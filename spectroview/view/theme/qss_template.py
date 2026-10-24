@@ -463,7 +463,8 @@ _QSS_TEMPLATE = r"""
         border: 1px solid {border_subtle};
         border-radius: 4px;
         text-align: center;
-        color: {text_secondary};
+        color: {progress_text};
+        font-weight: 600;
     }}
 
     QProgressBar::chunk {{

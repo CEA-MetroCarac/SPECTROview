@@ -62,6 +62,7 @@ class ThemeTokens:
 
     # ── Progress bar ─────────────────────────────────────────
     progress_bg: str
+    progress_text: str
     progress_chunk_start: str
     progress_chunk_mid: str
     progress_chunk_end: str
@@ -164,6 +165,7 @@ DARK_TOKENS = ThemeTokens(
 
     # Progress bar
     progress_bg="rgba(0, 0, 0, 0.25)",
+    progress_text="#FFFFFF",
     progress_chunk_start="rgba(30, 100, 200, 0.70)",
     progress_chunk_mid="rgba(50, 135, 230, 0.75)",
     progress_chunk_end="rgba(64, 156, 255, 0.70)",
@@ -266,10 +268,11 @@ LIGHT_TOKENS = ThemeTokens(
     slider_handle_border="rgba(0, 0, 0, 0.20)",
 
     # Progress bar
-    progress_bg="rgba(0, 0, 0, 0.06)",
-    progress_chunk_start="rgba(42, 130, 218, 0.55)",
-    progress_chunk_mid="rgba(55, 145, 235, 0.65)",
-    progress_chunk_end="rgba(64, 156, 255, 0.60)",
+    progress_bg="rgba(0, 0, 0, 0.20)",
+    progress_text="#FFFFFF",
+    progress_chunk_start="rgba(25, 118, 210, 0.85)",
+    progress_chunk_mid="rgba(33, 150, 243, 0.90)",
+    progress_chunk_end="rgba(66, 165, 245, 0.85)",
 
     # Checkbox
     checkbox_bg="rgba(0, 0, 0, 0.06)",
@@ -369,7 +372,8 @@ MODERN_WARM_TOKENS = ThemeTokens(
     slider_handle_border="rgba(24, 24, 26, 0.40)",
 
     # Progress bar
-    progress_bg="rgba(24, 24, 26, 0.08)",
+    progress_bg="rgba(24, 24, 26, 0.25)",
+    progress_text="#FAF7F2",
     progress_chunk_start="#38383A",
     progress_chunk_mid="#242426",
     progress_chunk_end="#18181A",

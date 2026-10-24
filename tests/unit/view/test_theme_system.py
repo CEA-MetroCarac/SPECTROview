@@ -166,3 +166,27 @@ def test_spectra_viewer_themes_and_migration(qtbot):
     # Test migration via set_options_state
     viewer.set_options_state({"theme": "Soft Dark Mode"})
     assert viewer.cbb_theme.currentText() == "Dark Mode"
+
+
+def test_progressbar_contrast_and_tokens():
+    """Verify progress bar text token exists, has high contrast, and is injected into QSS."""
+    from spectroview.view.theme.qss_template import build_stylesheet
+
+    for theme_name, tokens in THEME_TOKENS.items():
+        assert hasattr(tokens, "progress_text"), f"Missing progress_text on {theme_name}"
+        assert tokens.progress_text, f"Empty progress_text on {theme_name}"
+
+    # Specifically for modern_warm, progress_text must not be dark text_secondary
+    warm_tokens = THEME_TOKENS["modern_warm"]
+    assert warm_tokens.progress_text != warm_tokens.text_secondary
+    # Contrast: warm_tokens.progress_text should be light (e.g. #FAF7F2 or #FFFFFF)
+    assert warm_tokens.progress_text in ("#FAF7F2", "#FFFFFF")
+
+    # Specifically for light theme, progress_text must be high-contrast white
+    light_tokens = THEME_TOKENS["light"]
+    assert light_tokens.progress_text == "#FFFFFF"
+
+    # Verify stylesheet contains the progress_text in QProgressBar rule
+    qss = build_stylesheet(warm_tokens)
+    assert f"color: {warm_tokens.progress_text};" in qss
+

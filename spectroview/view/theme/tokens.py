@@ -75,6 +75,9 @@ class ThemeTokens:
     checkbox_disabled_border: str
     checkbox_checked_disabled_bg: str
     checkbox_checked_disabled_border: str
+    checkbox_checked_image: str
+    checkbox_checked_disabled_image: str
+    checkbox_indeterminate_image: str
 
     # ── Tab bar ──────────────────────────────────────────────
     tab_bg: str
@@ -174,6 +177,9 @@ DARK_TOKENS = ThemeTokens(
     checkbox_disabled_border="rgba(255, 255, 255, 0.05)",
     checkbox_checked_disabled_bg="rgba(255, 255, 255, 0.15)",
     checkbox_checked_disabled_border="rgba(255, 255, 255, 0.15)",
+    checkbox_checked_image="check-white.svg",
+    checkbox_checked_disabled_image="check-white-disabled.svg",
+    checkbox_indeterminate_image="indeterminate-white.svg",
 
     # Tabs
     tab_bg="rgba(255, 255, 255, 0.04)",
@@ -274,6 +280,9 @@ LIGHT_TOKENS = ThemeTokens(
     checkbox_disabled_border="rgba(0, 0, 0, 0.05)",
     checkbox_checked_disabled_bg="rgba(0, 0, 0, 0.15)",
     checkbox_checked_disabled_border="rgba(0, 0, 0, 0.15)",
+    checkbox_checked_image="check-white.svg",
+    checkbox_checked_disabled_image="check-white-disabled.svg",
+    checkbox_indeterminate_image="indeterminate-white.svg",
 
     # Tabs
     tab_bg="rgba(0, 0, 0, 0.03)",
@@ -368,12 +377,15 @@ MODERN_WARM_TOKENS = ThemeTokens(
     # Checkbox indicator
     checkbox_bg="#FFFFFF",
     checkbox_border="rgba(24, 24, 26, 0.28)",
-    checkbox_checked_bg="#18181A",
+    checkbox_checked_bg="#FFFFFF",
     checkbox_checked_border="#18181A",
     checkbox_disabled_bg="rgba(24, 24, 26, 0.04)",
     checkbox_disabled_border="rgba(24, 24, 26, 0.10)",
-    checkbox_checked_disabled_bg="rgba(24, 24, 26, 0.20)",
-    checkbox_checked_disabled_border="rgba(24, 24, 26, 0.20)",
+    checkbox_checked_disabled_bg="rgba(24, 24, 26, 0.04)",
+    checkbox_checked_disabled_border="rgba(24, 24, 26, 0.15)",
+    checkbox_checked_image="check-dark.svg",
+    checkbox_checked_disabled_image="check-dark-disabled.svg",
+    checkbox_indeterminate_image="indeterminate-dark.svg",
 
     # Tab bar
     tab_bg="rgba(24, 24, 26, 0.04)",

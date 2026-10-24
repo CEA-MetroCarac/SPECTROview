@@ -252,11 +252,19 @@ _QSS_TEMPLATE = r"""
         border-radius: 3px;
         background: {checkbox_bg};
         border: 1px solid {checkbox_border};
+        image: none;
     }}
     QCheckBox::indicator:checked, QListView::indicator:checked,
     QTreeView::indicator:checked, QGroupBox::indicator:checked {{
         background: {checkbox_checked_bg};
         border: 1px solid {checkbox_checked_border};
+        image: url("{icon_dir}/{checkbox_checked_image}");
+    }}
+    QCheckBox::indicator:indeterminate, QListView::indicator:indeterminate,
+    QTreeView::indicator:indeterminate, QGroupBox::indicator:indeterminate {{
+        background: {checkbox_checked_bg};
+        border: 1px solid {checkbox_checked_border};
+        image: url("{icon_dir}/{checkbox_indeterminate_image}");
     }}
     QCheckBox::indicator:hover, QListView::indicator:hover,
     QTreeView::indicator:hover, QGroupBox::indicator:hover {{
@@ -279,11 +287,13 @@ _QSS_TEMPLATE = r"""
     QTreeView::indicator:disabled, QGroupBox::indicator:disabled {{
         background: {checkbox_disabled_bg};
         border: 1px solid {checkbox_disabled_border};
+        image: none;
     }}
     QCheckBox::indicator:checked:disabled, QListView::indicator:checked:disabled,
     QTreeView::indicator:checked:disabled, QGroupBox::indicator:checked:disabled {{
         background: {checkbox_checked_disabled_bg};
         border: 1px solid {checkbox_checked_disabled_border};
+        image: url("{icon_dir}/{checkbox_checked_disabled_image}");
     }}
 
 

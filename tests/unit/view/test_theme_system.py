@@ -25,6 +25,10 @@ def test_theme_constants_have_exactly_five_themes():
     assert menubar_keys == EXPECTED_THEMES
     assert len(menubar_keys) == 5
 
+    assert THEME_TOKENS["modern_warm"].checkbox_checked_image == "check-dark.svg"
+    assert THEME_TOKENS["dark"].checkbox_checked_image == "check-white.svg"
+    assert THEME_TOKENS["light"].checkbox_checked_image == "check-white.svg"
+
 
 def test_theme_manager_is_dark():
     settings = MSettings()

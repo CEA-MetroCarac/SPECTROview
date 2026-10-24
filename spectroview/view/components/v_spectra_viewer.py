@@ -44,6 +44,13 @@ from spectroview.view.components.customized_widgets import (
 from spectroview.view.components.v_spectra_legend_editor import (
     SpectraLegendEditorDialog,
 )
+from spectroview.view.components.v_range_selector import (
+    VRangeSelectorPanel,
+    RangeSelectorManager,
+    SELECTOR_RED,
+    SELECTOR_BLUE,
+    SELECTOR_GREEN,
+)
 
 
 SPECTRA_DISCRETE_PALETTES = (
@@ -91,6 +98,10 @@ class VSpectraViewer(QWidget):
     cosmicRayErased = Signal(int, object)  # (spec_idx, modified_y_array) — live preview
     cosmicRayValidated = Signal()          # User accepted all erasures → persist to model
 
+    # ── Spectral Range Selector signals ──
+    range_toggled = Signal(str, bool)          # (color_id, is_active)
+    range_changed = Signal(str, float, float)  # (color_id, x_min, x_max)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._init_ui()
@@ -114,6 +125,14 @@ class VSpectraViewer(QWidget):
         self._erase_highlight = None       # Matplotlib axvspan for visual feedback
         self._erase_history = []           # Stack of (spec_idx, y_snapshot) for undo
         self._erase_cids = []              # Matplotlib event connection IDs
+
+        # ── Spectral Range Selector state & manager ──
+        self.range_manager = RangeSelectorManager(self)
+        self.range_manager.range_toggled.connect(self.range_toggled.emit)
+        self.range_manager.range_changed.connect(self.range_changed.emit)
+        self._range_drag_cids = []
+        self._range_hover_active = False
+        self._ranges_initialized = False
         
     def _init_ui(self):
         main_layout = QVBoxLayout(self)
@@ -227,6 +246,14 @@ class VSpectraViewer(QWidget):
         self.btn_erase_validate.clicked.connect(self._erase_validate)
         self.btn_erase_validate.setVisible(False)
         layout.addWidget(self.btn_erase_validate, 0, Qt.AlignHCenter)
+
+        # ── Spectral Range Selector Panel (Red, Blue, Green) ──
+        self.range_panel = VRangeSelectorPanel(panel)
+        self.range_panel.selector_toggled.connect(self._toggle_range_selector)
+        self.btn_range_red = self.range_panel.buttons[SELECTOR_RED]
+        self.btn_range_blue = self.range_panel.buttons[SELECTOR_BLUE]
+        self.btn_range_green = self.range_panel.buttons[SELECTOR_GREEN]
+        layout.addWidget(self.range_panel, 0, Qt.AlignHCenter)
 
         layout.addStretch(1)
         
@@ -614,6 +641,12 @@ class VSpectraViewer(QWidget):
         if isinstance(data, dict) and data.get("type") in ["tensor", "tensor_list"]:
             self._tensor_data = data
             self._current_spectra = data.get("proxies", [])
+            x_arr = data.get("x")
+            if x_arr is not None and not getattr(self, "_ranges_initialized", False):
+                first_x = x_arr[0] if isinstance(x_arr, list) and len(x_arr) > 0 else x_arr
+                if hasattr(first_x, "__len__") and len(first_x) > 1:
+                    self.range_manager.initialize_ranges_from_axis(first_x)
+                    self._ranges_initialized = True
         else:
             self._tensor_data = None
             self._current_spectra = []
@@ -1271,6 +1304,10 @@ class VSpectraViewer(QWidget):
         if not is_default:
             self.ax.set_xlim(xlim)
             self.ax.set_ylim(ylim)
+
+        # ── Render active spectral range selectors ──
+        if hasattr(self, "range_manager") and self.ax is not None:
+            self.range_manager.render(self.ax)
 
         self.canvas.draw_idle()
 
@@ -2006,6 +2043,18 @@ class VSpectraViewer(QWidget):
         if event.inaxes != self.ax:
             return
 
+        # ── Check if clicking on active range selector marker or span ──
+        if hasattr(self, "range_manager") and any(s.is_active for s in self.range_manager.selectors.values()):
+            hit = self.range_manager.hit_test(self.ax, event)
+            if hit and event.button == 1:
+                color_id, target = hit
+                self.range_manager.start_drag(color_id, target, event.xdata)
+                self.canvas.setCursor(Qt.ClosedHandCursor if target == "body" else Qt.SizeHorCursor)
+                cid_m = self.canvas.mpl_connect("motion_notify_event", self._on_range_drag_motion)
+                cid_r = self.canvas.mpl_connect("button_release_event", self._on_range_drag_release)
+                self._range_drag_cids = [cid_m, cid_r]
+                return
+
         if self.zoom_pan_active:
             return
 
@@ -2122,6 +2171,23 @@ class VSpectraViewer(QWidget):
             self._hide_tooltip()
             self._reset_highlight()
             return
+
+        # ── Range selector hover feedback ──
+        if hasattr(self, "range_manager") and any(s.is_active for s in self.range_manager.selectors.values()):
+            if not self.range_manager.is_dragging():
+                hit = self.range_manager.hit_test(self.ax, event)
+                if hit:
+                    if hit[1] in ("min", "max"):
+                        self.canvas.setCursor(Qt.SizeHorCursor)
+                        self._range_hover_active = True
+                        return
+                    elif hit[1] == "body":
+                        self.canvas.setCursor(Qt.OpenHandCursor)
+                        self._range_hover_active = True
+                        return
+                elif getattr(self, "_range_hover_active", False):
+                    self.canvas.unsetCursor()
+                    self._range_hover_active = False
 
         if not self._fitted_lines:
             self._hide_tooltip()
@@ -2317,6 +2383,44 @@ class VSpectraViewer(QWidget):
             # Clear dragging state
             self._dragging_peak = None
 
+    # ═════════════════════════════════════════════════════════════════════
+    # Spectral Range Selector Tool
+    # ═════════════════════════════════════════════════════════════════════
+
+    def _toggle_range_selector(self, color_id: str, checked: bool):
+        """Activate or deactivate one of the spectral range selectors."""
+        self.range_manager.set_active(color_id, checked)
+        if self.ax is not None:
+            self.range_manager.render(self.ax)
+            self.canvas.draw_idle()
+
+    def _on_range_drag_motion(self, event):
+        """Update range selector boundaries while user drags."""
+        if not hasattr(self, "range_manager") or not self.range_manager.is_dragging():
+            return
+        if event.inaxes != self.ax or event.xdata is None:
+            return
+        color_id = self.range_manager.update_drag(event.xdata)
+        if color_id and self.ax is not None:
+            self.range_manager.render(self.ax)
+            self.canvas.draw_idle()
+
+    def _on_range_drag_release(self, event):
+        """Finalize range selector dragging on mouse button release."""
+        if hasattr(self, "_range_drag_cids"):
+            for cid in self._range_drag_cids:
+                try:
+                    self.canvas.mpl_disconnect(cid)
+                except Exception:
+                    pass
+            self._range_drag_cids.clear()
+        if hasattr(self, "range_manager") and self.range_manager.is_dragging():
+            self.range_manager.finish_drag()
+            if self.ax is not None:
+                self.range_manager.render(self.ax)
+                self.canvas.draw_idle()
+            self.canvas.unsetCursor()
+            self._range_hover_active = False
 
     # ═════════════════════════════════════════════════════════════════════
     # Cosmic-Ray Eraser Tool

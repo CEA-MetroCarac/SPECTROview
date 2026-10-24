@@ -136,9 +136,9 @@ Overrides `_add_maps_panel()` to replace the inherited spectra sidebar with:
 - `VMapViewer` — the heatmap canvas with Z-parameter and X-range sliders.
 - `VMapsList` — maps list panel with map management and spectra action buttons.
 
-The left side (SpectraViewer + FitModelBuilder tabs) is inherited unchanged.
+The left side (SpectraViewer + FitModelBuilder tabs) is inherited unchanged, including the **Spectral Range Selectors** (Red, Blue, Green) on the right edge of `VSpectraViewer` and the **Live Maps** tab located immediately before `More`.
 
-The inherited SpectraViewer also provides the batch legend editor. Map selections can contain thousands of spectra, so the shared editor instantiates at most 100 spectrum rows and displays the full selection count as **“showing 100 of N”**. Labels and explicit colors are committed through `SpectrumProxy(md, idx, fname)`, preserving the correct row mapping into the map's `MapData` block; spectra outside the displayed batch are not changed.
+In the Maps workspace, when a map is loaded or selected, `VWorkspaceMaps` forwards the current active `MapData` block to `self.vm_live_maps.set_map_data(md)`. As the user toggles the range selectors or drags the boundary brackets on the spectrum plot, the three Live Maps subpanels compute and render 2D heatmaps across the map's spatial grid in real time with a 60 ms debounce.
 
 **Centralized map type management:** The `selected_map_type` attribute is the single source of truth for all viewers (main + dialogs). When the user changes the combobox in any viewer, `_on_map_type_changed()` updates all viewers synchronously, preventing drift.
 

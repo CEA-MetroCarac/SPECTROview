@@ -18,11 +18,13 @@ from spectroview.model.m_settings import MSettings
 from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
 from spectroview.view.components.v_fit_results import VFitResults
+from spectroview.view.components.v_live_maps import VLiveMaps
 from spectroview.view.components.v_moretab  import VMoreTab
 from spectroview.view.components.v_mva import VMVA
 from spectroview.view.components.v_spectra_list import VSpectraList
 from spectroview.view.components.v_spectra_viewer import VSpectraViewer
 from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
+from spectroview.viewmodel.vm_live_maps import VMLiveMaps
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.viewmodel.vm_mva import VMMVA
 
@@ -69,14 +71,17 @@ class VWorkspaceSpectra(QWidget):
         self.bottom_tabs.setMinimumHeight(150)
         self.v_fit_model_builder = VFitModelBuilder()
         self.v_fit_results = VFitResults()
+        self.v_live_maps = VLiveMaps()
         self.v_more_tab = VMoreTab()
         self.v_mva = VMVA()
         self.vm_fit_model_builder = VMFitModelBuilder(self.m_settings)
+        self.vm_live_maps = VMLiveMaps(self.m_settings)
         self.vm_mva = VMMVA(self.m_settings)
         self.vm.set_fit_model_builder(self.vm_fit_model_builder) # 🔑 inject dependency
         
         self.bottom_tabs.addTab(self.v_fit_model_builder, "Fit Model Builder")
         self.bottom_tabs.addTab(self.v_fit_results, "Fit Results")
+        self.bottom_tabs.addTab(self.v_live_maps, "Live Maps")
         self.bottom_tabs.addTab(self.v_more_tab, "More")
         self.bottom_tabs.addTab(self.v_mva, "MVA (beta)")
         
@@ -271,6 +276,15 @@ class VWorkspaceSpectra(QWidget):
         )
 
         # ═════════════════════════════════════════════════════════════════
+        # Live Maps connections
+        # ═════════════════════════════════════════════════════════════════
+        self.v_spectra_viewer.range_toggled.connect(self._on_range_selector_toggled)
+        self.v_spectra_viewer.range_changed.connect(self._on_range_selector_changed)
+        self.v_live_maps.parameter_change_requested.connect(self.vm_live_maps.set_selector_parameter)
+        self.vm_live_maps.map_data_ready.connect(self.v_live_maps.update_map_data)
+        vm.spectra_selection_changed.connect(self._on_selection_changed_for_live_maps)
+
+        # ═════════════════════════════════════════════════════════════════
         # MVA connections
         # ═════════════════════════════════════════════════════════════════
         self.vm_mva.set_store(self.vm.store)  # inject SpectraStore reference
@@ -355,6 +369,29 @@ class VWorkspaceSpectra(QWidget):
         # Propagate to Fit Model Builder
         if hasattr(self, 'v_fit_model_builder'):
             self.v_fit_model_builder.apply_theme(theme)
+
+        # Propagate to Live Maps
+        if hasattr(self, 'v_live_maps'):
+            self.v_live_maps.apply_theme(theme)
+
+    def _on_range_selector_toggled(self, color_id: str, is_active: bool):
+        self.v_live_maps.set_selector_active(color_id, is_active)
+        self.vm_live_maps.set_selector_active(color_id, is_active)
+
+    def _on_range_selector_changed(self, color_id: str, x_min: float, x_max: float):
+        self.v_live_maps.set_selector_range(color_id, x_min, x_max)
+        self.vm_live_maps.set_selector_range(color_id, x_min, x_max)
+
+    def _on_selection_changed_for_live_maps(self, selected_data):
+        if hasattr(self.vm, "current_map_name") and self.vm.current_map_name:
+            md = self.vm.store.get_map_data(self.vm.current_map_name)
+            if md is not None:
+                self.vm_live_maps.set_map_data(md)
+        elif hasattr(self.vm, "selected_fnames") and self.vm.selected_fnames:
+            fname = self.vm.selected_fnames[0]
+            md = self.vm.store.get_map_data(fname)
+            if md is not None:
+                self.vm_live_maps.set_map_data(md)
 
     def _update_fit_results(self, df):
         """Update fit results table display."""

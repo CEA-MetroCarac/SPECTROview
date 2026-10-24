@@ -152,7 +152,11 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Propagate to Fit Model Builder
         if hasattr(self, 'v_fit_model_builder'):
             self.v_fit_model_builder.apply_theme(theme)
-        
+
+        # Propagate to Live Maps
+        if hasattr(self, 'v_live_maps'):
+            self.v_live_maps.apply_theme(theme)
+
         # Map viewer toolbar icons and plot style
         plot_style = "Dark Mode" if theme in ("dark", "classic_dark") else "Light Mode"
         if hasattr(self, 'v_map_viewer'):
@@ -356,6 +360,11 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                     dialog.set_map_data(None, None, None)
             finally:
                 dialog.blockSignals(dialog_old_state)
+
+        # Update Live Maps with current MapData
+        if hasattr(self, 'vm_live_maps') and self.vm.current_map_name:
+            md = self.vm.store.get_map_data(self.vm.current_map_name)
+            self.vm_live_maps.set_map_data(md)
     
     def _on_fit_results_updated(self, df_fit_results):
         """Update map viewer parameter lists when fit results change.
@@ -372,6 +381,11 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         for dialog in self.viewer_dialogs:
             dialog.map_viewer.df_fit_results = df_fit_results if df_fit_results is not None else pd.DataFrame()
             dialog.map_viewer._update_parameter_lists()
+
+        # Update Live Maps with updated fit results
+        if hasattr(self, 'vm_live_maps') and self.vm.current_map_name:
+            md = self.vm.store.get_map_data(self.vm.current_map_name)
+            self.vm_live_maps.set_map_data(md)
     
     def _on_map_selected(self, index: int):
         """Handle map selection - convert index to map name and call ViewModel."""

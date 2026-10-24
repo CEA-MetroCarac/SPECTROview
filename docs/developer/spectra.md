@@ -50,12 +50,17 @@ graph LR
 | Layer | Class | Responsibility |
 |-------|-------|----------------|
 | **View** | `VWorkspaceSpectra` | Assembles UI widgets, connects signals/slots, delegates all logic to ViewModel |
-| **View** | `VSpectraViewer` | Matplotlib canvas — renders 1D spectra, baselines, peaks, best-fit, residuals, and 2D heatmaps |
+| **View** | `VSpectraViewer` | Matplotlib canvas — renders 1D spectra, baselines, peaks, best-fit, residuals, 2D heatmaps, and interactive range selectors |
+| **View** | `VRangeSelectorPanel` | Vertical right-side panel with red, blue, and green toggle buttons for spectral intervals |
+| **View** | `RangeSelectorManager` | Canvas overlay managing draggable bracket markers and shaded spans for active selectors |
+| **View** | `VLiveMaps` | Live Maps tab hosting three synchronized 2D heatmap subpanels (Red, Blue, Green) |
 | **View** | `SpectraLegendEditorDialog` | Transactional palette, legend-limit, label, and color editor for selected spectra |
 | **View** | `VFitModelBuilder` | X-correction, range, baseline and fit controls panel |
 | **View** | `VPeakTable` | Editable table of peak parameters with per-row model selectors |
 | **View** | `VSpectraList` | Checkbox list with coloring rules, drag-to-reorder, multi-select |
 | **ViewModel** | `VMWorkspaceSpectra` | Business logic: orchestrates loading, preprocessing, fitting, persistence |
+| **ViewModel** | `VMLiveMaps` | Computes 2D spatial parameter arrays from MapData on selector interval/parameter updates |
+| **Model** | `spectral_parameters` | Vectorized calculations for integrated/mean/max intensity, peak position, height, and area |
 | **Model** | `SpectraStore` | Tensor-centric in-memory store — see [spectra_store.md](spectra_store.md) |
 | **Model** | `VBFthread` | `QThread` that runs the vectorized batch fitting engine off the main thread |
 
@@ -103,6 +108,45 @@ All bulk actions (baseline subtract, peak paste, reinit, fit) follow this patter
 - **Y-Axis Token Extraction**: Automatically parses numeric parameters embedded in filenames (e.g. `_100C_`, `_250K_`) using regex tokenization, or defaults to index-based ordering (`0..N-1`).
 - **Smooth Vertical Interpolation**: Supports 1D cubic/linear interpolation along the vertical axis when `spin_heatmap_interp > 0` (default 300 points).
 - **Dynamic Toolbar Adaptation**: Activating heatmap mode toggles toolbar state: standard 1D tools (`btn_peak`, `btn_baseline`, `btn_eraser`, `btn_norm`, `btn_bestfit`, and `shift_panel`) are hidden via `setVisible(False)`, while heatmap-specific controls (`cbb_heatmap_yaxis`, `le_heatmap_ylabel`, `spin_heatmap_interp`) become visible. Unchecking the mode restores the 1D tools immediately.
+
+### Interactive Spectral Mapping & Live Maps
+
+The interactive spectral mapping subsystem allows users to select up to three independent spectral ranges on the 1D spectrum viewer and see live-updating 2D parameter heatmaps in real time.
+
+```mermaid
+graph TD
+    subgraph Spectra Viewer
+        RP["VRangeSelectorPanel<br/>(Red, Blue, Green toggle buttons)"]
+        RSM["RangeSelectorManager<br/>(Interactive brackets & shaded spans)"]
+    end
+
+    subgraph ViewModel
+        VMLM["VMLiveMaps<br/>(60 ms debounce timer, active states, intervals)"]
+    end
+
+    subgraph Model
+        SP["spectral_parameters.py<br/>(Vectorized numpy parameter calculation)"]
+    end
+
+    subgraph Live Maps Tab
+        VLM["VLiveMaps<br/>(Tab placed immediately before More)"]
+        Sub["LiveMapSubpanel x 3<br/>(Canvas, colorbar, parameter dropdown, palette dropdown)"]
+    end
+
+    RP -->|"range_toggled(key, active)"| RSM & VMLM
+    RSM -->|"range_changed(key, xmin, xmax)"| VMLM
+    VMLM -->|"compute_spectral_parameter()"| SP
+    VMLM -->|"map_updated(key, grid, coords, ...)"| VLM
+    VLM --> Sub
+```
+
+- **`VRangeSelectorPanel`**: Positioned as a dedicated vertical panel on the right side of `VSpectraViewer`. Contains three independent toggle buttons identified by Red (`#e74c3c`), Blue (`#3498db`), and Green (`#2ecc71`) circular badges and labels.
+- **`RangeSelectorManager`**: Manages interactive vertical boundary lines, inward bracket annotations, and transparent spans for each selector. Dragging either line or the center span smoothly translates or resizes the interval. Hit testing uses pixel tolerance with coordinate translation from Matplotlib transforms.
+- **`VMLiveMaps`**: Owns selector intervals, parameter selections, and colormap choices. Uses a 60ms debounce timer to prevent full-dataset recalculations during continuous mouse drag.
+- **`spectral_parameters.py`**: Model-level vectorized evaluation over `MapData.Y` (2D array $[N, M]$) without per-spectrum loops. Calculates:
+  - *Direct*: `Integrated intensity`, `Mean intensity`, `Maximum intensity`, `Peak position`, `Peak height` (baseline-subtracted).
+  - *Fitted*: `Peak position (fit)`, `Peak height (fit)`, `Peak area (fit)` using fitted peak parameters when available.
+- **`VLiveMaps`**: QWidget tab installed in `bottom_tabs` immediately before the `More` tab. Hosts 3 independent subpanels that dynamically hide/show based on active selectors, with dark/light theme support.
 
 ### `VMWorkspaceSpectra` — The ViewModel
 

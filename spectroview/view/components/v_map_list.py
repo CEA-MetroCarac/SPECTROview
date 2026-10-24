@@ -59,71 +59,30 @@ class VMapsList(QWidget):
     def _init_ui(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(6)
+        main_layout.setSpacing(4)
+        
+        maps_label = QLabel("Maps list:")
+        main_layout.addWidget(maps_label)
         
         # ══════════════════════════════════════════════════════════════
-        # MAPS LIST WITH ACTION BUTTONS
+        # MAPS LIST (EXPANDED) WITH VERTICAL ACTION BUTTON STRIP
         # ══════════════════════════════════════════════════════════════
         maps_container = QHBoxLayout()
         maps_container.setSpacing(4)
         
-        # Left: Maps list
-        maps_list_layout = QVBoxLayout()
-        maps_list_layout.setContentsMargins(0, 0, 0, 0)
-        maps_list_layout.setSpacing(2)
-    
-        maps_label = QLabel("Maps list:")
-        maps_list_layout.addWidget(maps_label)
-        
+        # Left: Maps list (occupies remaining height)
         self.maps_list = QListWidget()
         self.maps_list.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.maps_list.setMaximumHeight(160)
         self.maps_list.setMinimumHeight(80)
         self.maps_list.itemSelectionChanged.connect(self._on_map_selected)
+        maps_container.addWidget(self.maps_list, stretch=1)
         
-        maps_list_layout.addWidget(self.maps_list)
-        maps_container.addLayout(maps_list_layout, stretch=1)
+        # Right: Action buttons vertical strip (Spectra actions on top, Maps actions below)
+        buttons_layout = QVBoxLayout()
+        buttons_layout.setContentsMargins(0, 0, 0, 0)
+        buttons_layout.setSpacing(4)
         
-        # Right: Map action buttons
-        map_buttons_layout = QVBoxLayout()
-        map_buttons_layout.setSpacing(4)
-        
-        self.btn_view = QPushButton()
-        self.btn_view.setToolTip("View selected map")
-        self.btn_view.setFixedSize(32, 32)
-        self.btn_view.clicked.connect(self.view_map_requested.emit)
-        
-        self.btn_delete = QPushButton()
-        self.btn_delete.setToolTip("Delete selected map")
-        self.btn_delete.setFixedSize(32, 32)
-        self.btn_delete.clicked.connect(self.delete_map_requested.emit)
-        
-        self.btn_save = QPushButton()
-        self.btn_save.setToolTip("Save the selected map")
-        self.btn_save.setFixedSize(32, 32)
-        self.btn_save.clicked.connect(self.save_requested.emit)
-        
-        map_buttons_layout.addStretch()
-        map_buttons_layout.addWidget(self.btn_view)
-        map_buttons_layout.addWidget(self.btn_delete)
-        map_buttons_layout.addWidget(self.btn_save)
-        map_buttons_layout.addStretch()
-        
-        maps_container.addLayout(map_buttons_layout)
-        main_layout.addLayout(maps_container)
-        
-        # ══════════════════════════════════════════════════════════════
-        # SPECTRA ACTIONS (operating on heatmap-selected spectra)
-        # ══════════════════════════════════════════════════════════════
-        spectra_actions_container = QVBoxLayout()
-        spectra_actions_container.setSpacing(3)
-        
-        spectra_actions_label = QLabel("Spectra actions:")
-        spectra_actions_container.addWidget(spectra_actions_label)
-        
-        spectra_buttons_layout = QHBoxLayout()
-        spectra_buttons_layout.setSpacing(6)
-        
+        # --- Spectra action buttons (operating on heatmap-selected spectra) ---
         self.btn_select_all = QPushButton()
         self.btn_select_all.setToolTip("Select all spectra in current map")
         self.btn_select_all.setFixedSize(32, 32)
@@ -144,19 +103,42 @@ class VMapsList(QWidget):
         self.btn_send_to_spectra.setFixedSize(32, 32)
         self.btn_send_to_spectra.clicked.connect(self.send_to_spectra_requested.emit)
         
-        spectra_buttons_layout.addWidget(self.btn_select_all)
-        spectra_buttons_layout.addWidget(self.btn_reinit)
-        spectra_buttons_layout.addWidget(self.btn_stats)
-        spectra_buttons_layout.addWidget(self.btn_send_to_spectra)
-        spectra_buttons_layout.addStretch()
+        buttons_layout.addWidget(self.btn_select_all)
+        buttons_layout.addWidget(self.btn_reinit)
+        buttons_layout.addWidget(self.btn_stats)
+        buttons_layout.addWidget(self.btn_send_to_spectra)
         
-        spectra_actions_container.addLayout(spectra_buttons_layout)
-        main_layout.addLayout(spectra_actions_container)
+        # Visual spacing between spectra actions and map actions
+        buttons_layout.addSpacing(6)
+        
+        # --- Map action buttons ---
+        self.btn_view = QPushButton()
+        self.btn_view.setToolTip("View selected map")
+        self.btn_view.setFixedSize(32, 32)
+        self.btn_view.clicked.connect(self.view_map_requested.emit)
+        
+        self.btn_delete = QPushButton()
+        self.btn_delete.setToolTip("Delete selected map")
+        self.btn_delete.setFixedSize(32, 32)
+        self.btn_delete.clicked.connect(self.delete_map_requested.emit)
+        
+        self.btn_save = QPushButton()
+        self.btn_save.setToolTip("Save the selected map")
+        self.btn_save.setFixedSize(32, 32)
+        self.btn_save.clicked.connect(self.save_requested.emit)
+        
+        buttons_layout.addWidget(self.btn_view)
+        buttons_layout.addWidget(self.btn_delete)
+        buttons_layout.addWidget(self.btn_save)
+        buttons_layout.addStretch()
+        
+        maps_container.addLayout(buttons_layout)
+        main_layout.addLayout(maps_container, stretch=1)
     
     def _update_maps_placeholder(self):
         """Update placeholder text for maps list based on state."""
         if self.maps_list.count() == 0:
-            for _ in range(2):
+            for _ in range(4):
                 spacer = QListWidgetItem("")
                 spacer.setFlags(Qt.NoItemFlags)
                 self.maps_list.addItem(spacer)

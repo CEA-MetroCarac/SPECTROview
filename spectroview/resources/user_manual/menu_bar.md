@@ -7,7 +7,7 @@ A horizontal toolbar located at the top of the application provides quick access
 |--------|----------|
 | ![Open](../user_manual_images/menu_bar/open.png) | **Open**: Loads any supported data type. The application automatically detects the file format and switches to the appropriate workspace. |
 | ![Save](../user_manual_images/menu_bar/save.png) | **Save**: Saves the active workspace to a dedicated file (`.maps`, `.spectra`, or `.graphs`), allowing you to pause and resume your work effortlessly. |
-| ![Clear](../user_manual_images/menu_bar/clear.png) | **Clear**: Clears the currently active workspace, removing all loaded data to start a fresh session. |
+| ![Clear](../user_manual_images/menu_bar/clear.png) | **Clear**: Clears the currently active workspace, resetting loaded data, viewers, fitted peak models, fit results, and multivariate analysis state to start a fresh session. |
 | ![Convert](../user_manual_images/menu_bar/convert.png) | **Convert**: Opens the `Hyperspectral Data Converter` tool (see below for details). |
 | ![Calculation](../user_manual_images/menu_bar/quick_calculation.png) | **Calculators**: Opens the `Quick Calculators` tool (`Ctrl + Shift + C`, see below for details). |
 | 🤖 | **SPECTROview AI Agent**: Opens the AI Chat Agent panel (`Ctrl + Shift + A`) to query, filter, and plot your data in natural language. See the "AI Chat Agent" section. |

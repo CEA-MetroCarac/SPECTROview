@@ -483,15 +483,15 @@ class VMapViewer(QWidget):
             self.cbb_mask_param.addItems(fit_columns)
         
         # Restore selection if possible
-        if current_z:
-            if self.cbb_zparameter.findText(current_z) < 0:
-                self.cbb_zparameter.addItem(current_z)
+        if current_z and self.cbb_zparameter.findText(current_z) >= 0:
             self.cbb_zparameter.setCurrentText(current_z)
+        else:
+            self.cbb_zparameter.setCurrentIndex(0)
             
-        if current_mask:
-            if self.cbb_mask_param.findText(current_mask) < 0:
-                self.cbb_mask_param.addItem(current_mask)
+        if current_mask and self.cbb_mask_param.findText(current_mask) >= 0:
             self.cbb_mask_param.setCurrentText(current_mask)
+        elif self.cbb_mask_param.count() > 0:
+            self.cbb_mask_param.setCurrentIndex(0)
         
         self.cbb_zparameter.blockSignals(False)
         self.cbb_mask_param.blockSignals(False)

@@ -3,7 +3,7 @@ import os
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit,
-    QLabel, QComboBox, QSplitter, QScrollArea, QCompleter, QSpinBox
+    QLabel, QComboBox, QSplitter, QCompleter, QSpinBox
 )
 from PySide6.QtCore import Qt, Signal, QSize, QStringListModel
 from PySide6.QtGui import QIcon
@@ -210,5 +210,10 @@ class VFitResults(QWidget):
             self.completer.setModel(model)
     
     def clear_results(self):
-        """Clear the results table."""
+        """Clear the results table and reset associated controls."""
         self.df_table.clear()
+        self.completer.setModel(QStringListModel([]))
+        self.cbb_split_fname.clear()
+        self.ent_col_name.clear()
+        self.ent_compute_col_name.clear()
+        self.ent_compute_expression.clear()

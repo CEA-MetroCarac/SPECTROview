@@ -1966,6 +1966,7 @@ class VMWorkspaceSpectra(QObject):
         """Clear all spectra and reset workspace to initial state."""
         self.store = SpectraStore()
         self.selected_fnames = []
+        self.df_fit_results = None
         
         # Clear clipboard data
         self._baseline_clipboard = None
@@ -1976,9 +1977,17 @@ class VMWorkspaceSpectra(QObject):
         # Stop any running fit thread
         self._cancel_fit_thread()
         self._is_fitting = False
+        self.fit_in_progress.emit(False)
+        self.fit_progress_updated.emit(0, 0, 0, 0.0, 0)
+
+        # Reset spectral range and x-correction values
+        self.show_xcorrection_value.emit(0.0)
+        self.spectral_range_changed.emit(0.0, 0.0)
         
         # Emit updates to View
         self._emit_list_update()
+        self._emit_selected_spectra()
+        self.fit_results_updated.emit(None)
 
     def set_results_decimals(self, decimals: int):
         """Set the decimal precision used to round the collected fit-results

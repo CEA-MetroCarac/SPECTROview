@@ -1056,13 +1056,14 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
     def clear_workspace(self):
         """Clear all maps, spectra, and reset workspace to initial state."""
-        # Stop any running fit thread first (via parent)
-        super().clear_workspace()
-
-        # Clear Maps-specific data structures
+        # Clear Maps-specific data structures first so current_map_name is None
         self.maps.clear()
+        self.maps_metadata.clear()
         self.current_map_name = None
         self.current_map_df = None
+
+        # Stop any running fit thread and clear base structures (via parent)
+        super().clear_workspace()
 
         # Reset SpectraStore
         if hasattr(self, 'store'):
@@ -1070,7 +1071,9 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
         # Emit updates to View
         self.maps_list_changed.emit([])
+        self.spectra_list_changed.emit([])
         self.map_data_updated.emit(pd.DataFrame())
+        self.count_changed.emit(0)
 
 
     def set_graphs_workspace(self, graphs_workspace):

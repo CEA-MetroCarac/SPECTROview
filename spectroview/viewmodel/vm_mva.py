@@ -59,6 +59,15 @@ class VMMVA(QObject):
         """
         self._current_map_name = name
 
+    def clear(self):
+        """Clear cached results and active map reference."""
+        self._current_map_name = None
+        self._last_pca_result = None
+        self._last_nmf_result = None
+        self._last_x_axis = None
+        self._last_fnames = None
+        self._last_data_matrix = None
+
     # ── Data matrix construction from SpectraStore ────────────────────
 
     def _build_data_matrix(self) -> tuple[np.ndarray, np.ndarray, list[str]]:

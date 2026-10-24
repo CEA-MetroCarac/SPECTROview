@@ -248,10 +248,20 @@ class TestClearWorkspace:
     def test_clear_workspace_resets_maps_state(self, vm):
         _load_map(vm, "map1", n_rows_side=2)
         vm.select_map("map1")
+        vm.df_fit_results = pd.DataFrame({"Filename": ["map1"]})
+        fit_results_signals = []
+        selection_signals = []
+        vm.fit_results_updated.connect(fit_results_signals.append)
+        vm.spectra_selection_changed.connect(selection_signals.append)
+
         vm.clear_workspace()
         assert vm.maps == {}
+        assert vm.maps_metadata == {}
         assert vm.current_map_name is None
         assert vm.store.map_names == []
+        assert vm.df_fit_results is None
+        assert fit_results_signals == [None]
+        assert selection_signals == [[]]
 
 
 class TestPersistence:

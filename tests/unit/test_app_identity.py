@@ -37,14 +37,14 @@ def test_set_current_process_app_id_native():
 
 def test_set_current_process_app_id_non_windows():
     """Verify early exit on non-Windows platforms."""
-    with patch("sys.platform", "linux"), patch("ctypes.WinDLL") as mock_windll:
+    with patch("sys.platform", "linux"), patch("ctypes.WinDLL", create=True) as mock_windll:
         set_current_process_app_id()
         mock_windll.assert_not_called()
 
 
 def test_set_current_process_app_id_handles_os_error():
     """Verify exceptions from WinDLL or Shell32 are caught safely."""
-    with patch("sys.platform", "win32"), patch("ctypes.WinDLL", side_effect=OSError("Access denied")):
+    with patch("sys.platform", "win32"), patch("ctypes.WinDLL", create=True, side_effect=OSError("Access denied")):
         # Should return silently and not raise
         set_current_process_app_id()
 
@@ -82,7 +82,7 @@ def test_apply_windows_taskbar_icon_noop_on_invalid_hwnd():
 
 def test_apply_windows_taskbar_icon_non_windows():
     """Verify apply_windows_taskbar_icon does nothing on non-Windows."""
-    with patch("sys.platform", "darwin"), patch("ctypes.WinDLL") as mock_windll:
+    with patch("sys.platform", "darwin"), patch("ctypes.WinDLL", create=True) as mock_windll:
         apply_windows_taskbar_icon(1234, LOGO_APPLI_ICO)
         mock_windll.assert_not_called()
 
@@ -97,7 +97,7 @@ def test_apply_windows_taskbar_icon_win32_api_calls():
     mock_user32 = MagicMock()
     mock_user32.LoadImageW.side_effect = [111, 222]
 
-    with patch("sys.platform", "win32"), patch("ctypes.WinDLL", return_value=mock_user32):
+    with patch("sys.platform", "win32"), patch("ctypes.WinDLL", create=True, return_value=mock_user32):
         apply_windows_taskbar_icon(99999)
 
     assert mock_user32.LoadImageW.call_count == 2

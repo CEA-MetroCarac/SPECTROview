@@ -392,8 +392,17 @@ class VWorkspaceSpectra(QWidget):
         self.vm.load_work(file_path)
 
     def clear_workspace(self):
-        """Trigger workspace clear in ViewModel."""
+        """Trigger workspace clear in ViewModel and clean view states."""
         self.vm.clear_workspace()
+        if hasattr(self, 'vm_mva'):
+            self.vm_mva.clear()
+            self.vm_mva.set_store(self.vm.store)
+        if hasattr(self, 'v_mva'):
+            self.v_mva.clear()
+        if hasattr(self, 'cb_check_all'):
+            self.cb_check_all.blockSignals(True)
+            self.cb_check_all.setChecked(True)
+            self.cb_check_all.blockSignals(False)
     
 
     def _send_df_to_graphs(self, df_name: str, df: pd.DataFrame, force_replace: bool = False):

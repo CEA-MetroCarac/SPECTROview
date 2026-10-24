@@ -507,9 +507,18 @@ class TestPersistence:
     def test_clear_workspace_resets_store(self, vm):
         x, y = _synthetic_lorentzian()
         _add_spectrum(vm, "s1", x, y)
+        vm.df_fit_results = pd.DataFrame({"Filename": ["s1"]})
+        fit_results_signals = []
+        selection_signals = []
+        vm.fit_results_updated.connect(fit_results_signals.append)
+        vm.spectra_selection_changed.connect(selection_signals.append)
+
         vm.clear_workspace()
         assert vm.store.map_names == []
         assert vm.selected_fnames == []
+        assert vm.df_fit_results is None
+        assert fit_results_signals == [None]
+        assert selection_signals == [[]]
 
 
 class TestResultsExtraction:

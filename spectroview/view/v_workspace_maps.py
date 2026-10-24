@@ -538,11 +538,20 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.viewer_dialogs.clear()
         self.next_viewer_number = 2
         
-        # Reset MVA map reference
-        self.vm_mva.set_current_map_name(None)
+        # Reset MVA map reference and cached results
+        if hasattr(self, 'vm_mva'):
+            self.vm_mva.clear()
+        if hasattr(self, 'v_mva'):
+            self.v_mva.clear()
+
+        # Reset cached map data and fit results references
+        self._current_map_df = None
+        self._current_fit_results = None
         
         # Delegate to ViewModel for data clearing
         self.vm.clear_workspace()
+        if hasattr(self, 'vm_mva'):
+            self.vm_mva.set_store(self.vm.store)
     
     def save_work(self):
         """Trigger save work in ViewModel."""

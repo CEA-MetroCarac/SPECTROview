@@ -391,6 +391,16 @@ class VMVA(QWidget):
         self.tab_scores.clear_and_placeholder()
         self.tab_residuals.clear_and_placeholder()
 
+    def clear(self):
+        """Clear all results, dropdown choices, and reset plots to placeholders."""
+        self._pca_payload = None
+        self._nmf_payload = None
+        self.cbb_score_x.clear()
+        self.cbb_score_y.clear()
+        self.cbb_heatmap_comp.clear()
+        self._show_all_placeholders()
+        self.set_status("Ready")
+
     # ══════════════════════════════════════════════════════════════════
     # Public slots — called by ViewModel via signals
     # ══════════════════════════════════════════════════════════════════
@@ -750,7 +760,7 @@ class VMVA(QWidget):
         n = len(fnames)
         indices = np.arange(n)
 
-        bars = ax.bar(
+        ax.bar(
             indices, reconstruction_errors,
             color="#70AD47", edgecolor="#548235", alpha=0.85, zorder=2,
         )

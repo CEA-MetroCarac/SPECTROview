@@ -88,13 +88,14 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         
         if loaded_maps:
             self._emit_maps_list_update()
+            self.select_map(loaded_maps[-1])
             
             # Update last_directory setting
             if last_valid_path:
                 self.settings.set_last_directory(str(last_valid_path.parent))
     
     def select_map(self, map_name: str):
-        """Select a map and filter/show its spectra (fast - no extraction)."""
+        """Select a map, auto-select its first spectrum, and update map data."""
         if map_name not in self.maps:
             return
         
@@ -104,6 +105,15 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         # Filter and show spectra for this map (already extracted during load)
         self._show_map_spectra(map_name)
         
+        # Automatically select the first spectrum in the map
+        md = self.store.get_map_data(map_name)
+        if md is not None and len(md.fnames) > 0:
+            self.selected_fnames = [md.fnames[0]]
+            self._emit_selected_spectra()
+        else:
+            self.selected_fnames = []
+            self.spectra_selection_changed.emit([])
+
         # Emit single signal to update view
         self.map_data_updated.emit(self.current_map_df)
 

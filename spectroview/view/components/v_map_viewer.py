@@ -426,14 +426,42 @@ class VMapViewer(QWidget):
     
     # ═══ Public API (ViewModel → View) ═══
     
-    def set_map_data(self, map_df, map_name, df_fit_results=None):
+    def set_map_data(self, map_df, map_name, df_fit_results=None, selected_points=None):
         """Set map data and schedule plot update with debounce."""
+        is_map_change = (map_name != getattr(self, "map_df_name", None))
+
         self.map_df = map_df
         self.map_df_name = map_name
         self.df_fit_results = df_fit_results if df_fit_results is not None else pd.DataFrame()
         
-        # Clear selection points when switching maps (prevents out-of-range highlights)
-        self.selected_points = []
+        # Auto-select the first coordinate on map open or switch
+        if selected_points is not None:
+            self.selected_points = list(dict.fromkeys(selected_points))
+        elif is_map_change or not self.selected_points:
+            if self.map_df is not None and not self.map_df.empty:
+                col_x = 'X' if 'X' in self.map_df.columns else self.map_df.columns[0]
+                col_y = 'Y' if 'Y' in self.map_df.columns else self.map_df.columns[1]
+                first_x = float(self.map_df[col_x].iloc[0])
+                first_y = float(self.map_df[col_y].iloc[0])
+                self.selected_points = [(first_x, first_y)]
+            else:
+                self.selected_points = []
+        else:
+            # Same map: retain valid selected points
+            if self.map_df is not None and not self.map_df.empty:
+                col_x = 'X' if 'X' in self.map_df.columns else self.map_df.columns[0]
+                col_y = 'Y' if 'Y' in self.map_df.columns else self.map_df.columns[1]
+                valid_coords = set(zip(self.map_df[col_x].round(4), self.map_df[col_y].round(4)))
+                self.selected_points = [
+                    pt for pt in self.selected_points
+                    if (round(float(pt[0]), 4), round(float(pt[1]), 4)) in valid_coords
+                ]
+                if not self.selected_points:
+                    first_x = float(self.map_df[col_x].iloc[0])
+                    first_y = float(self.map_df[col_y].iloc[0])
+                    self.selected_points = [(first_x, first_y)]
+            else:
+                self.selected_points = []
         
         # Note: griddata cache is NOT cleared here - it persists across map switches
         # for faster map switching. Cache is only cleared when data changes (after fitting).

@@ -303,7 +303,12 @@ class VWorkspaceMaps(VWorkspaceSpectra):
 
         # Set current map data in dialog (shared references - no duplication)
         if self._current_map_df is not None and not self._current_map_df.empty and self.vm.current_map_name:
-            dialog.set_map_data(self._current_map_df, self.vm.current_map_name, self._current_fit_results)
+            dialog.set_map_data(
+                self._current_map_df,
+                self.vm.current_map_name,
+                self._current_fit_results,
+                selected_points=self.v_map_viewer.selected_points,
+            )
         
         # Sync map type with centralized value
         dialog.map_viewer.cbb_map_type.blockSignals(True)
@@ -378,12 +383,22 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             # Restore signal state
             self.v_map_viewer.blockSignals(old_state)
         
+        # Sync maps list UI selection
+        if self.vm.current_map_name:
+            self.v_maps_list.set_selected_map_name(self.vm.current_map_name)
+
         # Update all dialog viewers (they share the same dataframe references - no duplication)
+        initial_points = self.v_map_viewer.selected_points
         for dialog in self.viewer_dialogs:
             dialog_old_state = dialog.blockSignals(True)
             try:
                 if self._current_map_df is not None and not self._current_map_df.empty and self.vm.current_map_name:
-                    dialog.set_map_data(self._current_map_df, self.vm.current_map_name, self._current_fit_results)
+                    dialog.set_map_data(
+                        self._current_map_df,
+                        self.vm.current_map_name,
+                        self._current_fit_results,
+                        selected_points=initial_points,
+                    )
                 else:
                     dialog.set_map_data(None, None, None)
             finally:

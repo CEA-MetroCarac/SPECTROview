@@ -82,10 +82,21 @@ class TestLoadAndSelectMap:
 
     def test_select_map_updates_current_map_state(self, vm):
         _load_map(vm, "map1", n_rows_side=2)
-        _load_map(vm, "map2", n_rows_side=2)
+        md2 = _load_map(vm, "map2", n_rows_side=2)
         vm.select_map("map2")
         assert vm.current_map_name == "map2"
         assert vm.current_map_df is vm.maps["map2"]
+        assert vm.selected_fnames == [md2.fnames[0]]
+
+    def test_select_map_auto_selects_first_spectrum(self, vm):
+        md = _load_map(vm, "map1", n_rows_side=2)
+        selected_batches = []
+        vm.spectra_selection_changed.connect(selected_batches.append)
+
+        vm.select_map("map1")
+        assert vm.selected_fnames == [md.fnames[0]]
+        assert len(selected_batches) == 1
+        assert selected_batches[0]["fnames"] == [md.fnames[0]]
 
     def test_select_unknown_map_is_noop(self, vm):
         _load_map(vm, "map1", n_rows_side=2)

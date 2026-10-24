@@ -67,6 +67,13 @@ class TestVMapsListUnit:
         assert w.maps_list.count() == 2
         assert w.get_selected_map_index() == 0
 
+    def test_set_selected_map_name(self, maps_list_widget):
+        """set_selected_map_name changes selection without re-triggering unnecessary signals."""
+        w = maps_list_widget
+        w.set_maps_names(["Map_A", "Map_B"])
+        w.set_selected_map_name("Map_B")
+        assert w.get_selected_map_index() == 1
+
     def test_apply_theme_switches_icons(self, maps_list_widget):
         """apply_theme updates all 7 button icons without error."""
         w = maps_list_widget
@@ -81,6 +88,33 @@ class TestVMapsListUnit:
 
 class TestVWorkspaceMapsHeatmapSelection:
     """Integration tests verifying spectrum actions operate on heatmap selection."""
+
+    def test_map_open_auto_selects_first_spectrum_and_heatmap_point(self, qapp):
+        workspace = VWorkspaceMaps()
+        workspace.show()
+
+        import pandas as pd
+        import numpy as np
+
+        map_df = pd.DataFrame({
+            'X': [12.0, 14.0],
+            'Y': [25.0, 30.0],
+            100.0: [5.0, 10.0],
+            200.0: [15.0, 20.0],
+        })
+        workspace.vm.maps["map_test"] = map_df
+        workspace.vm._extract_spectra_from_map("map_test", map_df)
+
+        # Trigger map selection as when opening a map
+        workspace.vm.select_map("map_test")
+        qapp.processEvents()
+
+        # Verify ViewModel selected the first spectrum
+        assert workspace.vm.selected_fnames == ["map_test_(12.0, 25.0)"]
+        # Verify heatmap viewer auto-selected the first coordinate
+        assert workspace.v_map_viewer.selected_points == [(12.0, 25.0)]
+
+        workspace.close()
 
     def test_map_viewer_selection_updates_viewmodel(self, qapp, monkeypatch):
         workspace = VWorkspaceMaps()

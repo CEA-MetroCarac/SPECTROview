@@ -370,10 +370,10 @@ def test_legend_outside_option_default_and_toggle(viewer):
     viewer.set_plot_data(_tensor_data(3))
     viewer.btn_legend.setChecked(True)
 
-    # By default, legend is located inside axes with loc='best' (0)
+    # By default, legend is located inside axes at top right corner (loc='upper right', code 1)
     legend = viewer.ax.get_legend()
     assert legend is not None
-    assert legend._loc == 0
+    assert legend._loc == 1
 
     # Toggle Move legend box outside ON
     viewer.act_legend_outside.setChecked(True)
@@ -393,7 +393,7 @@ def test_legend_outside_option_default_and_toggle(viewer):
     assert viewer.act_legend_outside.isChecked() is False
     assert viewer.get_options_state()["legend_outside"] is False
     legend = viewer.ax.get_legend()
-    assert legend._loc == 0
+    assert legend._loc == 1
 
 
 def test_legend_outside_round_trip_through_options_state(viewer):

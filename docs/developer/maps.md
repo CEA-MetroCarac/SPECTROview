@@ -217,13 +217,13 @@ Coordinate parsing is centralized in `parse_coords_from_fname()` (`viewmodel/uti
 
 ### Map Selection
 
-When the user clicks a map name in `VMapsList`:
+When the user clicks a map name in `VMapsList` or opens a new map:
 
-1. **User Action**: The user clicks a map name in the `VMapsList` UI widget.
+1. **User Action**: The user opens a map file or clicks a map name in the `VMapsList` UI widget.
 2. **View → ViewModel**: The View captures this and calls `vm.select_map(map_name)`.
-3. **State Update**: The ViewModel sets `current_map_name = map_name`.
+3. **State Update & Auto-Selection**: The ViewModel sets `current_map_name = map_name`, populates `_show_map_spectra(map_name)`, and automatically selects the first spectrum `self.selected_fnames = [md.fnames[0]]`, emitting `spectra_selection_changed` to immediately plot the first spectrum in `VSpectraViewer`.
 4. **Map Viewer Refresh**: The ViewModel emits `map_data_updated(current_map_df)`.
-5. **Canvas Redraw**: `VWorkspaceMaps` forwards the updated data to the `VMapViewer`, which calls `plot_heatmap()` to render the spatial data.
+5. **Canvas Redraw & Selection Overlay**: `VWorkspaceMaps` forwards the updated data to `VMapViewer.set_map_data()`, which automatically highlights the first coordinate `(x_0, y_0)` with the red selection overlay and calls `plot_heatmap()` to render the spatial data. Floating viewer dialogs are kept in sync.
 
 ### Fitting Workflow (Maps Override)
 

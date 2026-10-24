@@ -64,3 +64,43 @@ class TestMapViewerColorScale:
 
         assert viewer.img is not None
         assert isinstance(viewer.img.norm, LogNorm)
+
+
+class TestMapViewerAutoSelection:
+    def test_auto_selects_first_point_on_map_load(self, qapp):
+        viewer = VMapViewer()
+        df = _simple_2dmap_df()
+        viewer.set_map_data(df, "m1")
+        assert viewer.selected_points == [(0.0, 0.0)]
+
+    def test_auto_selects_first_point_on_map_switch(self, qapp):
+        viewer = VMapViewer()
+        df1 = _simple_2dmap_df()
+        viewer.set_map_data(df1, "m1")
+        assert viewer.selected_points == [(0.0, 0.0)]
+
+        df2 = pd.DataFrame({
+            'X': [10.0, 20.0],
+            'Y': [30.0, 40.0],
+            100.0: [1.0, 2.0],
+        })
+        viewer.set_map_data(df2, "m2")
+        assert viewer.selected_points == [(10.0, 30.0)]
+
+    def test_preserves_selected_point_on_same_map_refresh(self, qapp):
+        viewer = VMapViewer()
+        df = _simple_2dmap_df()
+        viewer.set_map_data(df, "m1")
+        # User selects point (1.0, 1.0)
+        viewer.set_selected_points([(1.0, 1.0)])
+        assert viewer.selected_points == [(1.0, 1.0)]
+
+        # Map data refreshed (e.g. after baseline subtraction on m1)
+        viewer.set_map_data(df, "m1")
+        assert viewer.selected_points == [(1.0, 1.0)]
+
+    def test_explicit_selected_points_honored(self, qapp):
+        viewer = VMapViewer()
+        df = _simple_2dmap_df()
+        viewer.set_map_data(df, "m1", selected_points=[(1.0, 0.0)])
+        assert viewer.selected_points == [(1.0, 0.0)]

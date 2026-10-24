@@ -1316,7 +1316,7 @@ class VSpectraViewer(QWidget):
                 )
             else:
                 legend = self.ax.legend(
-                    handles[:max_items], labels[:max_items], loc="best")
+                    handles[:max_items], labels[:max_items], loc="upper right")
             self._make_legend_pickable(legend)
 
         if self.act_grid.isChecked():

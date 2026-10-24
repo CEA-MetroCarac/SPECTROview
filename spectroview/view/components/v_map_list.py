@@ -185,6 +185,17 @@ class VMapsList(QWidget):
             return self.maps_list.row(selected[0])
         return -1
 
+    def set_selected_map_name(self, name: str):
+        """Select a map by name in the list without emitting duplicate signals if already selected."""
+        for i in range(self.maps_list.count()):
+            item = self.maps_list.item(i)
+            if item and item.text() == name:
+                if self.maps_list.currentRow() != i:
+                    self.maps_list.blockSignals(True)
+                    self.maps_list.setCurrentRow(i)
+                    self.maps_list.blockSignals(False)
+                break
+
     # ───── Internal signal handlers ──────────────────────────────
     def _on_map_selected(self):
         """Emit signal when map selection changes."""

@@ -44,9 +44,9 @@ class VMapViewerDialog(QDialog):
         self.map_viewer.btn_add_viewer.setToolTip("Only available in main viewer")
     
     # Public API - delegate to internal viewer
-    def set_map_data(self, map_df, map_name, df_fit_results=None):
+    def set_map_data(self, map_df, map_name, df_fit_results=None, selected_points=None):
         """Set map data in the viewer."""
-        self.map_viewer.set_map_data(map_df, map_name, df_fit_results)
+        self.map_viewer.set_map_data(map_df, map_name, df_fit_results, selected_points=selected_points)
     
     def set_selected_points(self, points: list):
         """Set selected points in the viewer."""

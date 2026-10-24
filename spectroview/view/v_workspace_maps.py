@@ -11,7 +11,9 @@ from spectroview.view.components.v_map_list import VMapsList
 from spectroview.view.components.v_map_viewer import VMapViewer
 from spectroview.view.components.v_map_viewer_dialog import VMapViewerDialog
 from spectroview.view.components.v_dataframe_table import VDataframeTable
+from spectroview.view.components.v_live_maps import VLiveMaps
 from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
+from spectroview.viewmodel.vm_live_maps import VMLiveMaps
 from spectroview.viewmodel.utils import show_toast_notification, parse_coords_from_fname
 
 
@@ -49,6 +51,12 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Re-inject the fit model builder dependency (required for apply_loaded_fit_model)
         self.vm.set_fit_model_builder(self.vm_fit_model_builder)
+
+        # ── Live Maps Initialization (exclusive to Maps workspace) ──
+        self.v_spectra_viewer.set_range_selectors_visible(True)
+        self.v_live_maps = VLiveMaps(self)
+        self.vm_live_maps = VMLiveMaps(self.m_settings)
+        self.bottom_tabs.insertTab(2, self.v_live_maps, "Live Maps")
         
         # Now set up ALL connections with the correct VM
         self._skip_parent_setup = False
@@ -210,14 +218,34 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # in main.py::setup_connections() (cross-workspace links live there).
 
         # ── ViewModel → VMapViewer connections ──
-        # Note: map_selected signal removed to avoid duplicate calls to _on_map_data_changed
         self.vm.map_data_updated.connect(self._on_map_data_changed)
-        
+
         # Update parameter lists when fit results change (e.g., computed columns added)
         self.vm.fit_results_updated.connect(self._on_fit_results_updated)
-        
-        # Note: self.vm.spectra_selection_changed is already connected to
-        # self.v_spectra_viewer.set_plot_data in super().setup_connections()
+
+        # ── Live Maps connections ──
+        self.v_spectra_viewer.range_toggled.connect(self._on_range_selector_toggled)
+        self.v_spectra_viewer.range_changed.connect(self._on_range_selector_changed)
+        self.v_live_maps.parameter_change_requested.connect(self.vm_live_maps.set_selector_parameter)
+        self.vm_live_maps.map_data_ready.connect(self.v_live_maps.update_map_data)
+        self.vm.spectra_selection_changed.connect(self._on_selection_changed_for_live_maps)
+
+    def _on_range_selector_toggled(self, color_id: str, is_active: bool):
+        """Handle activation / deactivation of a spectral range selector."""
+        self.v_live_maps.set_selector_active(color_id, is_active)
+        self.vm_live_maps.set_selector_active(color_id, is_active)
+
+    def _on_range_selector_changed(self, color_id: str, x_min: float, x_max: float):
+        """Handle boundary change of a spectral range selector."""
+        self.v_live_maps.set_selector_range(color_id, x_min, x_max)
+        self.vm_live_maps.set_selector_range(color_id, x_min, x_max)
+
+    def _on_selection_changed_for_live_maps(self, selected_data):
+        """Update Live Maps MapData reference on selection change."""
+        if hasattr(self, 'vm_live_maps') and self.vm.current_map_name:
+            md = self.vm.store.get_map_data(self.vm.current_map_name)
+            if md is not None:
+                self.vm_live_maps.set_map_data(md)
 
     def _on_map_viewer_selection(self, selected_points: list):
         """Handle spectrum selection from map viewer (single source of truth)."""

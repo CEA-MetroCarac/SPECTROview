@@ -81,12 +81,12 @@ class LiveMapSubpanel(QFrame):
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(4)
 
-        # ── Header Bar ──
-        header_layout = QHBoxLayout()
-        header_layout.setContentsMargins(2, 2, 2, 2)
-        header_layout.setSpacing(6)
+        # ── Header Bar: 2 compact rows to prevent squeezing sidebar ──
+        # Row 1: Badge + Range + Stretch + Copy
+        row1_layout = QHBoxLayout()
+        row1_layout.setContentsMargins(0, 0, 0, 0)
+        row1_layout.setSpacing(4)
 
-        # Color badge
         self.lbl_badge = QLabel(self)
         self.lbl_badge.setText(f" {self.color_name} ")
         self.lbl_badge.setStyleSheet(f"""
@@ -95,48 +95,55 @@ class LiveMapSubpanel(QFrame):
                 color: white;
                 font-weight: bold;
                 border-radius: 3px;
-                padding: 2px 4px;
+                padding: 1px 4px;
             }}
         """)
-        header_layout.addWidget(self.lbl_badge)
+        row1_layout.addWidget(self.lbl_badge)
 
-        # Range label
         self.lbl_range = QLabel("[0.0, 0.0]", self)
-        self.lbl_range.setStyleSheet("font-size: 11px; color: #666;")
-        header_layout.addWidget(self.lbl_range)
+        self.lbl_range.setFixedWidth(115)
+        self.lbl_range.setAlignment(Qt.AlignCenter)
+        self.lbl_range.setStyleSheet("font-size: 11px; font-weight: 500;")
+        row1_layout.addWidget(self.lbl_range)
 
-        header_layout.addStretch()
+        row1_layout.addStretch(1)
 
-        # Parameter selector
+        self.btn_copy = QPushButton(self)
+        self.btn_copy.setIcon(QIcon(f"{ICON_DIR}/copy.png"))
+        self.btn_copy.setIconSize(QSize(14, 14))
+        self.btn_copy.setFixedSize(22, 22)
+        self.btn_copy.setToolTip("Copy map to clipboard")
+        self.btn_copy.clicked.connect(self._copy_to_clipboard)
+        row1_layout.addWidget(self.btn_copy)
+
+        layout.addLayout(row1_layout)
+
+        # Row 2: Parameter combo + Colormap combo
+        row2_layout = QHBoxLayout()
+        row2_layout.setContentsMargins(0, 0, 0, 0)
+        row2_layout.setSpacing(4)
+
         self.cbb_param = QComboBox(self)
         for param in SPECTRAL_PARAMETERS:
             self.cbb_param.addItem(param)
         self.cbb_param.setCurrentText(PARAM_INTEGRATED_INTENSITY)
         self.cbb_param.setToolTip("Select spectral parameter for this map")
+        self.cbb_param.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.cbb_param.currentTextChanged.connect(
             lambda param: self.parameter_changed.emit(self.color_id, param)
         )
-        header_layout.addWidget(self.cbb_param)
+        row2_layout.addWidget(self.cbb_param, stretch=1)
 
-        # Colormap selector
         self.cbb_palette = QComboBox(self)
         self.cbb_palette.addItems(AVAILABLE_PALETTES)
         default_pal = DEFAULT_PALETTES.get(self.color_id, "viridis")
         self.cbb_palette.setCurrentText(default_pal)
+        self.cbb_palette.setFixedWidth(85)
         self.cbb_palette.setToolTip("Select colormap")
         self.cbb_palette.currentTextChanged.connect(self._on_palette_changed)
-        header_layout.addWidget(self.cbb_palette)
+        row2_layout.addWidget(self.cbb_palette)
 
-        # Copy button
-        self.btn_copy = QPushButton(self)
-        self.btn_copy.setIcon(QIcon(f"{ICON_DIR}/copy.png"))
-        self.btn_copy.setIconSize(QSize(16, 16))
-        self.btn_copy.setFixedSize(24, 24)
-        self.btn_copy.setToolTip("Copy map to clipboard")
-        self.btn_copy.clicked.connect(self._copy_to_clipboard)
-        header_layout.addWidget(self.btn_copy)
-
-        layout.addLayout(header_layout)
+        layout.addLayout(row2_layout)
 
         # ── Matplotlib Figure & Canvas ──
         with plt.style.context(PLOT_POLICY_LIGHT):
@@ -194,6 +201,25 @@ class LiveMapSubpanel(QFrame):
         self._status_msg = status_msg
         self._current_theme = theme
 
+        param_name = self.cbb_param.currentText()
+        title_text = f"{self.color_name}: {param_name}"
+
+        # Fast path: in-place update if image and colorbar already exist and grid is valid
+        if (
+            self.img is not None
+            and self.cbar is not None
+            and grid is not None
+            and not np.all(np.isnan(grid))
+        ):
+            self.img.set_data(grid)
+            self.img.set_extent(extent)
+            self.img.set_clim(vmin, vmax)
+            self.ax.set_title(title_text, fontsize=10, pad=4)
+            self.cbar.update_normal(self.img)
+            self.canvas.draw_idle()
+            return
+
+        # Re-render path for status messages or first draw
         style_path = PLOT_POLICY_DARK if theme == "Dark Mode" else PLOT_POLICY_LIGHT
 
         with plt.style.context(style_path):
@@ -205,6 +231,7 @@ class LiveMapSubpanel(QFrame):
                 except Exception:
                     pass
                 self.cbar = None
+            self.img = None
 
             if grid is None or np.all(np.isnan(grid)):
                 msg = status_msg or "No map data available"
@@ -237,8 +264,7 @@ class LiveMapSubpanel(QFrame):
 
             self.ax.set_xlabel("X (mm)")
             self.ax.set_ylabel("Y (mm)")
-            param_name = self.cbb_param.currentText()
-            self.ax.set_title(f"{self.color_name}: {param_name}", fontsize=10, pad=4)
+            self.ax.set_title(title_text, fontsize=10, pad=4)
 
             self.canvas.draw_idle()
 
@@ -338,6 +364,7 @@ class VLiveMaps(QWidget):
         """Update theme for all subpanels."""
         self._current_theme = theme_name
         for panel in self.panels.values():
+            panel.img = None
             if panel.isVisible():
                 panel.update_map(
                     panel._grid, panel._extent, panel._vmin, panel._vmax,

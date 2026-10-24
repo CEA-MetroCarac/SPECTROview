@@ -40,27 +40,23 @@ def test_map_data():
     )
 
 
-def test_live_maps_tab_position(qapp):
-    """Verify Live Maps tab is located immediately before More tab."""
-    workspace = VWorkspaceSpectra()
+def test_workspace_isolation_and_live_maps_tab_position(qapp):
+    """Verify Live Maps tab and range selectors are in Maps workspace, but NOT Spectra workspace."""
+    # 1. Spectra Workspace: no Live Maps, range selectors hidden
+    ws_spectra = VWorkspaceSpectra()
+    spectra_tab_texts = [ws_spectra.bottom_tabs.tabText(i) for i in range(ws_spectra.bottom_tabs.count())]
+    assert "Live Maps" not in spectra_tab_texts, "Live Maps must NOT be present in Spectra workspace"
+    assert not hasattr(ws_spectra, "v_live_maps")
+    assert ws_spectra.v_spectra_viewer.range_panel.isHidden() is True
+    assert spectra_tab_texts[-1] == "More", "More tab must be at the end"
 
-    # Tab count should be at least 5
-    tabs = workspace.bottom_tabs
-    assert tabs.count() >= 4
-
-    # Find indices
-    live_maps_idx = -1
-    more_idx = -1
-    for i in range(tabs.count()):
-        text = tabs.tabText(i)
-        if text == "Live Maps":
-            live_maps_idx = i
-        elif text == "More":
-            more_idx = i
-
-    assert live_maps_idx >= 0, "Live Maps tab not found"
-    assert more_idx == tabs.count() - 1, f"More tab (index {more_idx}) must be at the end of the list (index {tabs.count() - 1})"
-    assert live_maps_idx == 2, f"Live Maps (index {live_maps_idx}) should be after Fit Results"
+    # 2. Maps Workspace: Live Maps present at index 2, range selectors visible
+    ws_maps = VWorkspaceMaps()
+    maps_tab_texts = [ws_maps.bottom_tabs.tabText(i) for i in range(ws_maps.bottom_tabs.count())]
+    assert "Live Maps" in maps_tab_texts, "Live Maps must be present in Maps workspace"
+    assert maps_tab_texts.index("Live Maps") == 2, "Live Maps must be at index 2 (after Fit Results)"
+    assert maps_tab_texts[-1] == "More", "More tab must be at the end"
+    assert ws_maps.v_spectra_viewer.range_panel.isHidden() is False
 
 
 def test_range_selector_to_live_maps_synchronization(qapp, test_map_data):

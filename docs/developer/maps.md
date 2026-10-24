@@ -136,9 +136,9 @@ Overrides `_add_maps_panel()` to replace the inherited spectra sidebar with:
 - `VMapViewer` — the heatmap canvas with Z-parameter and X-range sliders.
 - `VMapsList` — maps list panel with map management and spectra action buttons.
 
-The left side (SpectraViewer + FitModelBuilder tabs) is inherited unchanged, including the **Spectral Range Selectors** (Red, Blue, Green) on the right edge of `VSpectraViewer` and the **Live Maps** tab (located between `Fit Results` and `MVA`, with `More` placed at the end of the tabs).
+The left side (SpectraViewer + bottom tabs) is inherited from `VWorkspaceSpectra`. `VWorkspaceMaps` activates the **Spectral Range Selectors** (Red, Blue, Green) on the right edge of `VSpectraViewer` (`set_range_selectors_visible(True)`) and inserts the **Live Maps** tab at index 2 (between `Fit Results` and `MVA`, with `More` placed at the end of the tabs). In `VWorkspaceSpectra`, these mapping controls are disabled and hidden.
 
-In the Maps workspace, when a map is loaded or selected, `VWorkspaceMaps` forwards the current active `MapData` block to `self.vm_live_maps.set_map_data(md)`. As the user toggles the range selectors or drags the boundary brackets on the spectrum plot, the three Live Maps subpanels compute and render 2D heatmaps across the map's spatial grid in real time with a 60 ms debounce.
+In the Maps workspace, when a map is loaded or selected, `VWorkspaceMaps` forwards the current active `MapData` block to `self.vm_live_maps.set_map_data(md)`. As the user toggles the range selectors or drags the boundary brackets on the spectrum plot, the three Live Maps subpanels compute and render 2D heatmaps across the map's spatial grid in real time with a 60 ms debounce. Range selector artists use Matplotlib's `ax.add_artist()` so that `ax.dataLim` is never polluted, ensuring that the **Rescale** button (`Ctrl+R`) zooms exclusively to spectral data.
 
 **Centralized map type management:** The `selected_map_type` attribute is the single source of truth for all viewers (main + dialogs). When the user changes the combobox in any viewer, `_on_map_type_changed()` updates all viewers synchronously, preventing drift.
 

@@ -14,6 +14,8 @@ from PySide6.QtWidgets import QVBoxLayout, QToolButton, QWidget
 
 import numpy as np
 import matplotlib.transforms as mtransforms
+import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
 
 from spectroview.model.spectral_parameters import (
     SELECTOR_RED,
@@ -220,6 +222,53 @@ class RangeSelectorManager(QObject):
         self.selectors[SELECTOR_GREEN].x_min = x_start + 0.65 * span
         self.selectors[SELECTOR_GREEN].x_max = x_start + 0.85 * span
 
+    def refresh_or_clamp_ranges(
+        self,
+        curr_xmin: float,
+        curr_xmax: float,
+        target_color_id: Optional[str] = None,
+    ):
+        """Ensure range selectors are positioned within the valid spectrum range [curr_xmin, curr_xmax].
+
+        If a selector lies entirely outside [curr_xmin, curr_xmax] (e.g. after data cropping or
+        file loading), it is repositioned to default proportional sub-intervals. If it partially
+        exceeds bounds, its edges are clamped.
+        """
+        if curr_xmin >= curr_xmax:
+            return
+
+        span = curr_xmax - curr_xmin
+        proportions = {
+            SELECTOR_RED: (0.15, 0.35),
+            SELECTOR_BLUE: (0.40, 0.60),
+            SELECTOR_GREEN: (0.65, 0.85),
+        }
+
+        color_keys = [target_color_id] if target_color_id in self.selectors else SELECTOR_KEYS
+        for color_id in color_keys:
+            sel = self.selectors[color_id]
+            p_start, p_end = proportions.get(color_id, (0.2, 0.4))
+            default_min = curr_xmin + p_start * span
+            default_max = curr_xmin + p_end * span
+
+            # If completely outside or inverted
+            if sel.x_max <= curr_xmin or sel.x_min >= curr_xmax or sel.x_min >= sel.x_max:
+                sel.x_min = default_min
+                sel.x_max = default_max
+                self.range_changed.emit(color_id, sel.x_min, sel.x_max)
+            else:
+                # Partially overlapping: clamp to bounds
+                clamped_min = max(curr_xmin, sel.x_min)
+                clamped_max = min(curr_xmax, sel.x_max)
+                if clamped_min >= clamped_max:
+                    sel.x_min = default_min
+                    sel.x_max = default_max
+                    self.range_changed.emit(color_id, sel.x_min, sel.x_max)
+                elif clamped_min != sel.x_min or clamped_max != sel.x_max:
+                    sel.x_min = clamped_min
+                    sel.x_max = clamped_max
+                    self.range_changed.emit(color_id, sel.x_min, sel.x_max)
+
     def clear_artists(self, ax=None):
         """Remove all selector artists from the axes."""
         for color_id, artist_list in self._artists.items():
@@ -231,7 +280,11 @@ class RangeSelectorManager(QObject):
             artist_list.clear()
 
     def render(self, ax):
-        """Render all active range selectors on the given Matplotlib axes."""
+        """Render all active range selectors on the given Matplotlib axes.
+
+        Uses ax.add_artist for all patches and lines so that ax.dataLim is never
+        polluted, ensuring rescale/autoscale operates exclusively on data lines.
+        """
         self.clear_artists(ax)
 
         # Matplotlib blended transform: x in data coordinates, y in axes coordinates (0 to 1)
@@ -250,38 +303,66 @@ class RangeSelectorManager(QObject):
             x_min = sel.x_min
             x_max = sel.x_max
 
-            # 1. Shaded interval span
-            span = ax.axvspan(x_min, x_max, color=color, alpha=0.18, zorder=3)
-            self._artists[color_id].append(span)
+            # 1. Shaded interval span (mpatches.Rectangle -> does NOT mutate dataLim)
+            rect = mpatches.Rectangle(
+                (x_min, 0.0),
+                x_max - x_min,
+                1.0,
+                transform=trans,
+                facecolor=color,
+                edgecolor="none",
+                alpha=0.18,
+                zorder=3,
+            )
+            ax.add_artist(rect)
+            self._artists[color_id].append(rect)
 
-            # 2. Left boundary line
-            line_left = ax.axvline(x_min, color=color, linestyle="--", linewidth=1.5, zorder=4)
+            # 2. Left boundary line (Line2D -> does NOT mutate dataLim)
+            line_left = mlines.Line2D(
+                [x_min, x_min],
+                [0.0, 1.0],
+                transform=trans,
+                color=color,
+                linestyle="--",
+                linewidth=1.5,
+                zorder=4,
+            )
+            ax.add_artist(line_left)
             self._artists[color_id].append(line_left)
 
             # 3. Right boundary line
-            line_right = ax.axvline(x_max, color=color, linestyle="--", linewidth=1.5, zorder=4)
+            line_right = mlines.Line2D(
+                [x_max, x_max],
+                [0.0, 1.0],
+                transform=trans,
+                color=color,
+                linestyle="--",
+                linewidth=1.5,
+                zorder=4,
+            )
+            ax.add_artist(line_right)
             self._artists[color_id].append(line_right)
 
             # 4. Bracket tick heads (top and bottom)
-            # Left bracket [
-            t_left_top, = ax.plot(
+            t_left_top = mlines.Line2D(
                 [x_min, x_min + tick_w], [0.97, 0.97],
                 transform=trans, color=color, linewidth=2.0, zorder=5
             )
-            t_left_bot, = ax.plot(
+            t_left_bot = mlines.Line2D(
                 [x_min, x_min + tick_w], [0.03, 0.03],
                 transform=trans, color=color, linewidth=2.0, zorder=5
             )
-            # Right bracket ]
-            t_right_top, = ax.plot(
+            t_right_top = mlines.Line2D(
                 [x_max, x_max - tick_w], [0.97, 0.97],
                 transform=trans, color=color, linewidth=2.0, zorder=5
             )
-            t_right_bot, = ax.plot(
+            t_right_bot = mlines.Line2D(
                 [x_max, x_max - tick_w], [0.03, 0.03],
                 transform=trans, color=color, linewidth=2.0, zorder=5
             )
-            self._artists[color_id].extend([t_left_top, t_left_bot, t_right_top, t_right_bot])
+            for t in (t_left_top, t_left_bot, t_right_top, t_right_bot):
+                ax.add_artist(t)
+                self._artists[color_id].append(t)
 
     def hit_test(self, ax, event, zoom_active: bool = False) -> Optional[Tuple[str, str]]:
         """Determine if mouse event is near a selector boundary or body.

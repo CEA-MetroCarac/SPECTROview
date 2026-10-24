@@ -1,6 +1,7 @@
 # view/components/spectra_viewer.py
 import re
 import warnings
+from typing import Optional, Tuple
 import numpy as np
 from PySide6.QtCore import QSettings
 from spectroview.fit_engine.noise import detect_noise_level
@@ -113,7 +114,9 @@ class VSpectraViewer(QWidget):
         self._dragging_peak = None  # Stores (line, info) when dragging
 
         self.zoom_pan_active = True
-        QApplication.instance().focusChanged.connect(self._hide_tooltip)
+        app_inst = QApplication.instance()
+        if app_inst is not None:
+            app_inst.focusChanged.connect(lambda old, now: self._hide_tooltip())
 
         # ── Heatmap mode state ──
         self._heatmap_mode = False
@@ -253,6 +256,7 @@ class VSpectraViewer(QWidget):
         self.btn_range_red = self.range_panel.buttons[SELECTOR_RED]
         self.btn_range_blue = self.range_panel.buttons[SELECTOR_BLUE]
         self.btn_range_green = self.range_panel.buttons[SELECTOR_GREEN]
+        self.range_panel.setVisible(False)  # Hidden by default; active only in Maps workspace
         layout.addWidget(self.range_panel, 0, Qt.AlignHCenter)
 
         layout.addStretch(1)
@@ -661,11 +665,14 @@ class VSpectraViewer(QWidget):
             self._tensor_data = data
             self._current_spectra = data.get("proxies", [])
             x_arr = data.get("x")
-            if x_arr is not None and not getattr(self, "_ranges_initialized", False):
+            if x_arr is not None:
                 first_x = x_arr[0] if isinstance(x_arr, list) and len(x_arr) > 0 else x_arr
                 if hasattr(first_x, "__len__") and len(first_x) > 1:
-                    self.range_manager.initialize_ranges_from_axis(first_x)
-                    self._ranges_initialized = True
+                    if not getattr(self, "_ranges_initialized", False):
+                        self.range_manager.initialize_ranges_from_axis(first_x)
+                        self._ranges_initialized = True
+                    else:
+                        self.range_manager.refresh_or_clamp_ranges(float(np.min(first_x)), float(np.max(first_x)))
         else:
             self._tensor_data = None
             self._current_spectra = []
@@ -2296,7 +2303,7 @@ class VSpectraViewer(QWidget):
         self._tooltip.show()
 
 
-    def _hide_tooltip(self):
+    def _hide_tooltip(self, *args):
         if hasattr(self, "_tooltip"):
             self._tooltip.hide()
 
@@ -2416,6 +2423,49 @@ class VSpectraViewer(QWidget):
     # Spectral Range Selector Tool
     # ═════════════════════════════════════════════════════════════════════
 
+    def set_range_selectors_visible(self, visible: bool):
+        """Show or hide the spectral range selector panel on the right toolbar.
+
+        Active only in the Maps workspace. When hidden, any active selectors
+        are cleanly deactivated.
+        """
+        self.range_panel.setVisible(visible)
+        if not visible:
+            self.deactivate_all_range_selectors()
+
+    def deactivate_all_range_selectors(self):
+        """Deactivate all range selectors and clear their visual markers."""
+        for color_id, btn in self.range_panel.buttons.items():
+            if btn.isChecked():
+                btn.blockSignals(True)
+                btn.setChecked(False)
+                btn.blockSignals(False)
+                self.range_manager.set_active(color_id, False)
+        if self.ax is not None:
+            self.range_manager.render(self.ax)
+            self.canvas.draw_idle()
+
+    def _get_current_data_xrange(self) -> Tuple[Optional[float], Optional[float]]:
+        """Return (min_x, max_x) of currently loaded spectra data."""
+        if self._tensor_data:
+            x_arr = self._tensor_data.get("x")
+            if x_arr is not None:
+                first_x = x_arr[0] if isinstance(x_arr, list) and len(x_arr) > 0 else x_arr
+                if hasattr(first_x, "__len__") and len(first_x) > 1:
+                    return float(np.min(first_x)), float(np.max(first_x))
+        if self._current_spectra:
+            x_vals = []
+            for s in self._current_spectra:
+                if hasattr(s, "x") and s.x is not None and len(s.x) > 0:
+                    x_vals.extend([float(np.min(s.x)), float(np.max(s.x))])
+            if x_vals:
+                return min(x_vals), max(x_vals)
+        if self.ax is not None:
+            xlim = self.ax.get_xlim()
+            if xlim[0] < xlim[1]:
+                return float(xlim[0]), float(xlim[1])
+        return None, None
+
     def _toggle_range_selector(self, color_id: str, checked: bool):
         """Activate or deactivate one of the spectral range selectors."""
         if checked and self.btn_zoom.isChecked():
@@ -2423,6 +2473,11 @@ class VSpectraViewer(QWidget):
             self.btn_zoom.setChecked(False)
             self.btn_zoom.blockSignals(False)
             self._set_zoom_tool_active(False)
+
+        if checked:
+            curr_xmin, curr_xmax = self._get_current_data_xrange()
+            if curr_xmin is not None and curr_xmax is not None:
+                self.range_manager.refresh_or_clamp_ranges(curr_xmin, curr_xmax, target_color_id=color_id)
 
         self.range_manager.set_active(color_id, checked)
         if self.ax is not None:

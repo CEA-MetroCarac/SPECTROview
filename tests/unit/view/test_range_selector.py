@@ -149,3 +149,49 @@ def test_range_selector_hit_test_zoom_active(qapp):
     assert mgr.hit_test(ax, ev_body, zoom_active=True) is None
 
     plt.close(fig)
+
+
+def test_render_does_not_mutate_datalim(qapp):
+    """Ensure range selectors do not alter ax.dataLim or interfere with autoscale / rescale."""
+    mgr = RangeSelectorManager()
+    fig, ax = plt.subplots()
+    ax.plot([500.0, 600.0], [10.0, 20.0])
+
+    initial_datalim_x = list(ax.dataLim.intervalx)
+    assert np.isclose(initial_datalim_x[0], 500.0)
+    assert np.isclose(initial_datalim_x[1], 600.0)
+
+    # Render selector at coordinates far outside [500, 600]
+    mgr.set_active(SELECTOR_RED, True)
+    mgr.set_range(SELECTOR_RED, 100.0, 300.0)
+    mgr.render(ax)
+
+    # dataLim must be completely unaffected
+    assert np.isclose(ax.dataLim.intervalx[0], 500.0)
+    assert np.isclose(ax.dataLim.intervalx[1], 600.0)
+
+    # autoscale must scale purely to the [500, 600] data
+    ax.autoscale()
+    xlim = ax.get_xlim()
+    assert 480.0 <= xlim[0] <= 500.0
+    assert 600.0 <= xlim[1] <= 620.0
+    plt.close(fig)
+
+
+def test_refresh_or_clamp_ranges(qapp):
+    """Ensure selectors are clamped or repositioned when data range changes (e.g. crop)."""
+    mgr = RangeSelectorManager()
+    mgr.set_range(SELECTOR_RED, 100.0, 200.0)
+    mgr.set_range(SELECTOR_BLUE, 550.0, 750.0)
+
+    # Case 1: Red is completely outside [500, 800] -> repositioned to default proportional sub-interval
+    mgr.refresh_or_clamp_ranges(500.0, 800.0, target_color_id=SELECTOR_RED)
+    r_min, r_max = mgr.get_range(SELECTOR_RED)
+    assert 500.0 <= r_min < r_max <= 800.0
+
+    # Case 2: Blue partially overlaps [500, 700] -> clamped to 700.0
+    mgr.refresh_or_clamp_ranges(500.0, 700.0, target_color_id=SELECTOR_BLUE)
+    b_min, b_max = mgr.get_range(SELECTOR_BLUE)
+    assert np.isclose(b_min, 550.0)
+    assert np.isclose(b_max, 700.0)
+

@@ -40,6 +40,14 @@ def test_live_map_subpanel_render(qapp):
     panel.update_map(grid, extent, 0.0, 11.0, status_msg="OK", theme="Light Mode")
     assert panel.img is not None
     assert panel.cbar is not None
+    orig_img = panel.img
+    orig_cbar = panel.cbar
+
+    # In-place update with new grid preserves existing image and colorbar (no redraw bounce)
+    grid2 = np.arange(12, dtype=float).reshape(3, 4) * 2.0
+    panel.update_map(grid2, extent, 0.0, 22.0, status_msg="OK", theme="Light Mode")
+    assert panel.img is orig_img
+    assert panel.cbar is orig_cbar
 
     # Render None / empty grid gracefully
     panel.update_map(None, extent, 0.0, 1.0, status_msg="No data", theme="Dark Mode")

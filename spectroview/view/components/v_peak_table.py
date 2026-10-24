@@ -90,6 +90,8 @@ class VPeakTable(QWidget):
             
         if not fit_model or not fit_model.get("peak_models"):
             self._last_fit_model = None
+            self._current_topology = None
+            self._row_bindings = []
             self._clear_layout(self.main_layout)
             return
 
@@ -110,9 +112,14 @@ class VPeakTable(QWidget):
 
         new_topology = (tuple((pm.key, pm.name2) for pm in peaks), self._show_limits, self._show_expr)
         if getattr(self, "_current_topology", None) == new_topology and getattr(self, "_row_bindings", None):
-            self._update_existing_rows(fit_model, peaks)
-            self._last_fit_model = deepcopy(fit_model)
-            return
+            try:
+                self._update_existing_rows(fit_model, peaks)
+                self._last_fit_model = deepcopy(fit_model)
+                return
+            except RuntimeError:
+                # One or more C++ widgets were deleted; fall back to a full layout rebuild
+                self._current_topology = None
+                self._row_bindings = []
 
         self._clear_layout(self.main_layout)
         self._current_topology = new_topology

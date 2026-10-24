@@ -144,18 +144,21 @@ When Heatmap mode is activated, specialized configuration controls appear direct
 - **Y-Axis Interpolation Points (`Pts:`)**: Specifies the number of interpolated vertical slices (default `300` pts) using smooth interpolation. Setting this value to `0` disables interpolation, displaying raw discrete rows.
 - **Intensity Colormap**: Respects the active color palette chosen under **More Options** (e.g. `jet`, `viridis`, `plasma`).
 
-#### **3.5. Interactive Spectral Range Selectors**
+#### **3.5. Interactive Spectral Range Selectors (Maps Workspace)**
 
-A vertical toolbar panel located on the right edge of the `SpectraViewer` provides three independent, color-coded toggle buttons:
+When working in the **Maps workspace**, a vertical toolbar panel located on the right edge of the `SpectraViewer` provides three independent, color-coded toggle buttons:
 - **Red** (`R`)
 - **Blue** (`B`)
 - **Green** (`G`)
 
+*(Note: These range selector controls are exclusive to the Maps workspace where 2D hyperspectral mapping is performed, keeping the individual Spectra workspace clean and focused on discrete 1D operations).*
+
 Each button activates a corresponding pair of draggable vertical markers (brackets and shaded interval) directly on the spectrum plot:
 - **Interactive Dragging**: Click and drag either vertical boundary line to adjust the minimum or maximum wavenumber. Click and drag the shaded middle area to shift the entire interval without altering its width.
 - **Multiple Simultaneous Ranges**: Any combination of the three selectors can be activated at once. Each maintains its own color, interval, and visibility independently.
-- **Coordinate Synchronization**: The markers automatically adapt when the spectrum plot is zoomed, panned, or rescaled.
-- **Real-Time Map Updating**: When working with hyperspectral map datasets, moving any selector immediately recalculates and updates the corresponding 2D spatial heatmap in the **Live Maps** tab.
+- **Rescale Integrity**: Range selector markers do not expand or pollute the spectrum autoscale boundaries, ensuring the **Rescale** button (`Ctrl+R`) always zooms perfectly to the loaded spectral data.
+- **Auto-Clamping**: When cropping or loading new spectral data, range selectors automatically clamp and reposition within the visible spectrum domain.
+- **Real-Time Map Updating**: Moving any selector immediately recalculates and updates the corresponding 2D spatial heatmap in the **Live Maps** tab.
 
 _______
 
@@ -306,9 +309,9 @@ Once your data table is finalized, you can:
   <img src="../user_manual_images/Spectra_Maps/export_to_csv.png" alt="Export to CSV Button" width="300"><br>
 </div>
 
-### **6. `Live Maps` Tab**
+### **6. `Live Maps` Tab (Maps Workspace)**
 
-The **Live Maps** tab is located between **Fit Results** and **MVA** (with the **More** tab moved to the very end of the bottom tabs). It displays up to three real-time 2D spatial heatmaps (Red, Blue, Green) corresponding directly to the active spectral range selectors.
+The **Live Maps** tab is available exclusively in the **Maps workspace** between **Fit Results** and **MVA** (with the **More** tab positioned at the end of the bottom tabs). It displays up to three real-time 2D spatial heatmaps (Red, Blue, Green) corresponding directly to the active spectral range selectors. In the discrete Spectra workspace, this tab is omitted to preserve focused workflow space.
 
 #### **6.1. Subpanels and Real-Time Visualization**
 - When one or more range selectors are active, their corresponding map panels are displayed side-by-side. If no selectors are currently active, a helpful placeholder message guides you to activate a selector button on the right edge of the `SpectraViewer`.

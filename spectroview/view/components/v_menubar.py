@@ -129,24 +129,9 @@ class VMenuBar(QToolBar):
         self._current_theme = theme_key
 
     def apply_theme(self, theme_key: str) -> None:
-        """Update toolbar icons based on the active theme.
-
-        In Modern Warm, renders a minimalist monochrome charcoal icon set
-        matching the design reference; for Dark, Light, and Classic themes,
-        restores the original icon styling.
-        """
-        if theme_key in ("modern_warm", "warm"):
-            from spectroview.viewmodel.utils import get_tinted_icon
-            tint = "#1C1C1E"
-            for action, path in self._default_icons.items():
-                if action is self.actionSave:
-                    # Clean silhouette save icon for monochrome aesthetic
-                    action.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save.png"), tint))
-                else:
-                    action.setIcon(get_tinted_icon(path, tint))
-        else:
-            for action, path in self._default_icons.items():
-                action.setIcon(QIcon(path))
+        """Keep top menubar icons in their original colorful iconography across all themes."""
+        for action, path in self._default_icons.items():
+            action.setIcon(QIcon(path))
 
     def _show_theme_menu(self, checked=False):
         """Build and display a popup menu below the theme toolbar button."""

@@ -144,21 +144,53 @@ When Heatmap mode is activated, specialized configuration controls appear direct
 - **Y-Axis Interpolation Points (`Pts:`)**: Specifies the number of interpolated vertical slices (default `300` pts) using smooth interpolation. Setting this value to `0` disables interpolation, displaying raw discrete rows.
 - **Intensity Colormap**: Respects the active color palette chosen under **More Options** (e.g. `jet`, `viridis`, `plasma`).
 
-#### **3.5. Interactive Spectral Range Selectors (Maps Workspace)**
+#### **3.5. Interactive Spectral Range Selectors & Live Maps (Maps Workspace)**
 
-When working in the **Maps workspace**, a vertical toolbar panel located on the right edge of the `SpectraViewer` provides three independent, color-coded toggle buttons:
+When working in the **Maps workspace**, you can interactively bracket spectral features in the `SpectraViewer` and visualize their spatial distributions as real-time 2D heatmaps in the dedicated **Live Maps** tab.
+
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/rgb_live_map.png" alt="RGB Live Maps and Spectral Range Selectors" width="800"><br>
+  <i>Interactive Spectral Range Selectors in <code>SpectraViewer</code> (top) paired with real-time 2D spatial heatmaps in the <code>Live Maps</code> tab (bottom).</i>
+</div>
+
+##### **Range Selector Controls (Spectra Viewer)**
+A vertical toolbar panel located on the right edge of the `SpectraViewer` provides three independent, color-coded toggle buttons:
 - **Red** (`R`)
 - **Blue** (`B`)
 - **Green** (`G`)
 
-*(Note: These range selector controls are exclusive to the Maps workspace where 2D hyperspectral mapping is performed, keeping the individual Spectra workspace clean and focused on discrete 1D operations).*
+*(Note: These range selector controls and the companion Live Maps tab are exclusive to the Maps workspace where 2D hyperspectral mapping is performed, keeping the individual Spectra workspace clean and focused on discrete 1D operations).*
 
 Each button activates a corresponding pair of draggable vertical markers (brackets and shaded interval) directly on the spectrum plot:
 - **Interactive Dragging**: Click and drag either vertical boundary line to adjust the minimum or maximum wavenumber. Click and drag the shaded middle area to shift the entire interval without altering its width.
 - **Multiple Simultaneous Ranges**: Any combination of the three selectors can be activated at once. Each maintains its own color, interval, and visibility independently.
 - **Rescale Integrity**: Range selector markers do not expand or pollute the spectrum autoscale boundaries, ensuring the **Rescale** button (`Ctrl+R`) always zooms perfectly to the loaded spectral data.
 - **Auto-Clamping**: When cropping or loading new spectral data, range selectors automatically clamp and reposition within the visible spectrum domain.
-- **Real-Time Map Updating**: Moving any selector immediately recalculates and updates the corresponding 2D spatial heatmap in the **Live Maps** tab.
+- **Real-Time Map Updating**: Moving any selector immediately recalculates and updates the corresponding 2D spatial heatmap in the **Live Maps** tab (with a smooth 60 ms debounce to prevent lagging).
+
+##### **Live Maps Tab Visualization & Subpanels**
+The **Live Maps** tab is located on the bottom tab bar between **Fit Results** and **MVA** (with the **More** tab positioned at the end of the tabs list).
+- **Subpanels Display**: When one or more range selectors are active, their corresponding map panels (Red, Blue, Green) are displayed side-by-side. If no selectors are currently active, a helpful placeholder message guides you to activate a selector button on the right edge of the `SpectraViewer`.
+- **Supported Spectral Parameters**: For each map subpanel, you can select which parameter is extracted and plotted from the dropdown:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **Integrated intensity** | Direct | Integral ($\sum Y \cdot \Delta x$) of intensity across the selected spectral interval. |
+| **Mean intensity** | Direct | Average intensity within the selected interval. |
+| **Maximum intensity** | Direct | Highest intensity value measured within the interval. |
+| **Peak position** | Direct | Wavenumber corresponding to the maximum intensity within the interval. |
+| **Peak height** | Direct | Maximum intensity minus local baseline at interval endpoints. |
+| **Peak position (fit)** | Fit-based | Center wavenumber ($x_0$) of a fitted peak within the interval (requires prior fitting). |
+| **Peak height (fit)** | Fit-based | Fitted amplitude ($A$) of the peak within the interval (requires prior fitting). |
+| **Peak area (fit)** | Fit-based | Analytical integrated area of the fitted peak (requires prior fitting). |
+
+*Note*: If a fit-based parameter is selected but fit results are not yet available, the map gracefully displays a notification banner rather than misleading or corrupted values.
+
+##### **Individual Map Controls**
+Each subpanel provides dedicated controls:
+- **Palette**: Choose any standard colormap (e.g., `viridis`, `plasma`, `inferno`, `jet`, `turbo`, `coolwarm`, `cividis`, `magma`, `Reds`, `Blues`, `Greens`).
+- **Copy**: Quickly copy the rendered heatmap figure to the clipboard as an image.
+- **Range / Status Badge**: Displays the current interval range $[x_{min}, x_{max}]$ or fitting status.
 
 _______
 
@@ -309,39 +341,7 @@ Once your data table is finalized, you can:
   <img src="../user_manual_images/Spectra_Maps/export_to_csv.png" alt="Export to CSV Button" width="300"><br>
 </div>
 
-### **6. `Live Maps` Tab (Maps Workspace)**
-
-The **Live Maps** tab is available exclusively in the **Maps workspace** between **Fit Results** and **MVA** (with the **More** tab positioned at the end of the bottom tabs). It displays up to three real-time 2D spatial heatmaps (Red, Blue, Green) corresponding directly to the active spectral range selectors. In the discrete Spectra workspace, this tab is omitted to preserve focused workflow space.
-
-#### **6.1. Subpanels and Real-Time Visualization**
-- When one or more range selectors are active, their corresponding map panels are displayed side-by-side. If no selectors are currently active, a helpful placeholder message guides you to activate a selector button on the right edge of the `SpectraViewer`.
-- Moving either marker on the spectrum plot updates the corresponding 2D heatmap live (with a smooth 60 ms debounce to prevent lagging).
-
-#### **6.2. Supported Spectral Parameters**
-For each map subpanel, you can select which parameter is extracted and plotted from the dropdown:
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| **Integrated intensity** | Direct | Integral ($\sum Y \cdot \Delta x$) of intensity across the selected spectral interval. |
-| **Mean intensity** | Direct | Average intensity within the selected interval. |
-| **Maximum intensity** | Direct | Highest intensity value measured within the interval. |
-| **Peak position** | Direct | Wavenumber corresponding to the maximum intensity within the interval. |
-| **Peak height** | Direct | Maximum intensity minus local baseline at interval endpoints. |
-| **Peak position (fit)** | Fit-based | Center wavenumber ($x_0$) of a fitted peak within the interval (requires prior fitting). |
-| **Peak height (fit)** | Fit-based | Fitted amplitude ($A$) of the peak within the interval (requires prior fitting). |
-| **Peak area (fit)** | Fit-based | Analytical integrated area of the fitted peak (requires prior fitting). |
-
-*Note*: If a fit-based parameter is selected but fit results are not yet available, the map gracefully displays a notification banner rather than misleading or corrupted values.
-
-#### **6.3. Individual Map Controls**
-Each subpanel provides dedicated controls:
-- **Palette**: Choose any standard colormap (e.g., `viridis`, `plasma`, `inferno`, `jet`, `turbo`, `coolwarm`, `cividis`, `magma`).
-- **Copy**: Quickly copy the rendered heatmap figure to the clipboard as an image.
-- **Range / Status Badge**: Displays the current interval range $[x_{min}, x_{max}]$ or fitting status.
-
-_______
-
-### **7. `More` Tab**
+### **6. `More` Tab**
 
 The `More` tab provides access to auxiliary tools and metadata, divided into three sections:
 <div align="center">

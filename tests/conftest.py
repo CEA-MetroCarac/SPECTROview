@@ -81,6 +81,8 @@ def qapp():
     app = QApplication.instance()
     if app is None:
         app = QApplication(sys.argv)
+    from spectroview.view.theme import setup_application_font
+    setup_application_font(app)
     yield app
 
 

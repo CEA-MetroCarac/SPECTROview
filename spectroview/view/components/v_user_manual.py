@@ -11,6 +11,7 @@ from PySide6.QtGui import (
     QDesktopServices, QTextDocument, QImage,
     QTextCursor, QMovie
 )
+from spectroview.view.theme import get_application_font
 
 class FitImageTextBrowser(QTextBrowser):
     """A QTextBrowser that automatically scales down large images
@@ -242,7 +243,7 @@ class VUserManualDialog(QDialog):
 
     def __init__(self, manual_dir, parent=None):
         super().__init__(parent)
-        self._text_size = 10
+        self._text_size = get_application_font().pointSize()
         self._update_stylesheet()
         
         self.manual_dir = manual_dir
@@ -620,10 +621,13 @@ class VUserManualDialog(QDialog):
         self._update_stylesheet()
 
     def _update_stylesheet(self):
+        base_font = get_application_font()
+        base_size = base_font.pointSize()
+        family = base_font.family()
         self.setStyleSheet(f"""
             QWidget {{
-                font-family: Verdana, Arial;
-                font-size: 10pt;
+                font-family: "{family}", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                font-size: {base_size}pt;
             }}
             QTextBrowser {{
                 font-size: {self._text_size}pt;

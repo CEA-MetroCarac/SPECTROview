@@ -135,7 +135,12 @@ spectroview/
 │           ├── customize_annotations.py      # Annotations tab
 │           ├── customize_more_options.py     # More Options tab (plot options, theme, fonts, sorting, trendline/histogram)
 │           └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
-│       └── theme/                     # Theme architecture (ThemeManager, tokens, palettes, Modern Warm/Dark/Light)
+│       └── theme/                     # Theme & font architecture (ThemeManager, tokens, palettes, fonts)
+│           ├── manager.py             # Single owner of application-wide theme state
+│           ├── fonts.py               # Cross-platform application font configuration (macOS/Windows/Linux)
+│           ├── palettes.py            # QPalette builders for 5 canonical themes
+│           ├── qss_template.py        # Parameterized QSS template
+│           └── tokens.py              # ThemeTokens dataclass and presets
 │
 ├── fit_engine/             # High-performance batch fitting
 │   ├── vbf_engine.py            # Orchestrator (VBFengine)
@@ -280,6 +285,19 @@ Workspaces are composed from **shared components** that follow the same signal-b
 | `VFitResults` | `v_fit_results.py` | Color-coded fit results table |
 | `VMVA` | `v_mva.py` | PCA/NMF controls and embedded plotting |
 | `CustomizeGraphDialog` | `customize_graph/customize_graph_dialog.py` | Singleton dialog for graph annotation, legends, and axis customization |
+
+---
+
+## **Theme & Typography System**
+
+SPECTROview uses a centralised theme and typography architecture (`spectroview/view/theme/`):
+
+- **`ThemeManager` (`manager.py`)**: Owns the canonical active theme state (`dark`, `light`, `modern_warm`, `classic_dark`, `classic_light`), applies QPalette and parameterized stylesheets (`qss_template.py`), and manages runtime switching.
+- **Cross-Platform Fonts (`fonts.py`)**: `setup_application_font(app)` applies the platform-appropriate default font to `QApplication`:
+  - **Windows**: `Segoe UI` at 10pt (standard 96-DPI Windows desktop font, ~13.3px).
+  - **macOS**: `.AppleSystemUIFont` (San Francisco) at 13pt (standard 72-DPI Apple HIG font, 13px).
+  - **Linux / Other**: Desktop environment sans-serif font at >= 10pt.
+- **DPI & Sizing Invariant**: By avoiding universal `QWidget { font-size: ... }` in stylesheets, theme switches avoid expensive font-cache invalidation bottlenecks. Controls inherit their size from the application font, preserving native readability, standard menu metrics, and seamless multi-monitor DPI scaling across platforms.
 
 ---
 

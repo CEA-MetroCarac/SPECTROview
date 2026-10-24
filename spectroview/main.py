@@ -26,7 +26,7 @@ import pandas as pd
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QFileDialog, QMessageBox
 from PySide6.QtCore import Qt, QFileInfo, QUrl, QTimer
-from PySide6.QtGui import QDesktopServices, QFont
+from PySide6.QtGui import QDesktopServices
 
 from spectroview.model.m_file_converter import MFileConverter
 from spectroview.model.m_spc import SpcReader
@@ -50,7 +50,7 @@ from spectroview.view.components.v_user_manual import VUserManualDialog
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.v_workspace_maps import VWorkspaceMaps
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
-from spectroview.view.theme import ThemeManager
+from spectroview.view.theme import ThemeManager, setup_application_font
 
 from spectroview import USER_MANUAL_DIR, get_app_icon
 
@@ -73,6 +73,7 @@ except ImportError as e:      # the ai_agent package itself is absent
 class Main(QMainWindow):
     def __init__(self):
         super().__init__()
+        setup_application_font()
         self.settings = MSettings()
         self.theme_mgr = ThemeManager(self.settings)
 
@@ -956,9 +957,7 @@ def launcher():
     app.setApplicationName("SPECTROview")
     app.setWindowIcon(get_app_icon())
     app.setStyle("Fusion")
-    font = QFont("Segoe UI", 10)
-    font.setStyleHint(QFont.StyleHint.SansSerif)
-    app.setFont(font)
+    setup_application_font(app)
 
     window = Main()
     window.show()

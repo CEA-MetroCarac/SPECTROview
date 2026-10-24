@@ -112,7 +112,7 @@ def on_files(files, config):
     This hook manually re-adds the images to the MkDocs files collection
     so they are copied to the site/ output directory and link validation works.
     """
-    from mkdocs.structure.files import File
+    from mkdocs.structure.files import File  # type: ignore
     
     docs_dir = config['docs_dir']
     site_dir = config['site_dir']

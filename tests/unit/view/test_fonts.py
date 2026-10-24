@@ -70,15 +70,15 @@ def test_user_manual_dialog_font_scaling(qapp, qtbot):
     qtbot.addWidget(dlg)
 
     assert dlg._text_size == expected_size
-    assert dlg.section_list.fontInfo().pointSize() == expected_size
-    assert dlg.content_browser.fontInfo().pointSize() == expected_size
+    assert dlg.section_list.font().pointSize() == expected_size
+    assert dlg.content_browser.font().pointSize() == expected_size
 
     # Verify zoom operations adjust content text size correctly
     dlg._zoom_in()
     assert dlg._text_size == expected_size + 1
-    assert dlg.content_browser.fontInfo().pointSize() == expected_size + 1
+    assert dlg.content_browser.font().pointSize() == expected_size + 1
 
     dlg._zoom_out()
     assert dlg._text_size == expected_size
-    assert dlg.content_browser.fontInfo().pointSize() == expected_size
+    assert dlg.content_browser.font().pointSize() == expected_size
 

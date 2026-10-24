@@ -59,7 +59,7 @@ class VMapViewer(QWidget):
         self._griddata_cache = {}  # {cache_key: (heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col)}
         
         # Debounce timer for plot updates (matches legacy 100ms delay)
-        self.plot_timer = QTimer()
+        self.plot_timer = QTimer(self)
         self.plot_timer.setSingleShot(True)
         self.plot_timer.setInterval(100)
         self.plot_timer.timeout.connect(self._do_plot_heatmap)
@@ -115,7 +115,10 @@ class VMapViewer(QWidget):
 
         class ToolbarEventFilter(QObject):
             def __init__(self, toolbar):
-                super().__init__()
+                # Parented to `toolbar` so Qt cancels the pending single-shot
+                # timer on teardown -- unparented, it could fire 100ms later
+                # against an already-deleted toolbar.
+                super().__init__(toolbar)
                 self.toolbar = toolbar
                 self._timer = QTimer(self)
                 self._timer.setSingleShot(True)
@@ -128,7 +131,10 @@ class VMapViewer(QWidget):
                 return False
 
             def _update_icons(self):
-                action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                try:
+                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                except RuntimeError:
+                    return  # toolbar's C++ object already deleted
                 for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
                     if text in action_dict and image_file is not None:
                         try:

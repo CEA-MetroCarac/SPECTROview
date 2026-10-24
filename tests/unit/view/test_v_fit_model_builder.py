@@ -1,4 +1,6 @@
 """Unit tests for VFitModelBuilder drag and drop."""
+from pathlib import Path
+
 from PySide6.QtCore import Qt, QUrl, QMimeData, QPoint
 from PySide6.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
 
@@ -55,7 +57,7 @@ class TestVFitModelBuilderDragDrop:
         builder.dropEvent(drop_event)
 
         assert drop_event.isAccepted()
-        assert dropped_paths == [str(json_file)]
+        assert [Path(p) for p in dropped_paths] == [json_file]
 
     def test_drop_event_ignores_non_json(self, qapp, tmp_path):
         builder = VFitModelBuilder()

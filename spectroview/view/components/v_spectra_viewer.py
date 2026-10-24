@@ -162,7 +162,10 @@ class VSpectraViewer(QWidget):
 
         class ToolbarEventFilter(QObject):
             def __init__(self, toolbar):
-                super().__init__()
+                # Parented to `toolbar` so Qt cancels the pending single-shot
+                # timer on teardown -- unparented, it could fire 100ms later
+                # against an already-deleted toolbar.
+                super().__init__(toolbar)
                 self.toolbar = toolbar
                 self._timer = QTimer(self)
                 self._timer.setSingleShot(True)
@@ -175,7 +178,10 @@ class VSpectraViewer(QWidget):
                 return False
 
             def _update_icons(self):
-                action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                try:
+                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                except RuntimeError:
+                    return  # toolbar's C++ object already deleted
                 for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
                     if text in action_dict and image_file is not None:
                         try:

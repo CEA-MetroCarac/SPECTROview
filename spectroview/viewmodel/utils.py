@@ -858,6 +858,8 @@ class MetadataTooltipManager(QObject):
             app.installEventFilter(self)
             self._app_filtered = True
 
+        self.list_widget.destroyed.connect(self._on_widget_destroyed)
+
     def set_metadata_provider(self, provider):
         """Update the metadata provider callable."""
         self.metadata_provider = provider
@@ -912,10 +914,18 @@ class MetadataTooltipManager(QObject):
                     pass
             self._app_filtered = False
 
-    @Slot()
+    def _disconnect_list_widget(self):
+        """Disconnect destroyed signal to avoid dead-slot invocations during GC."""
+        try:
+            if hasattr(self, "list_widget") and self.list_widget is not None:
+                self.list_widget.destroyed.disconnect(self._on_widget_destroyed)
+        except Exception:
+            pass
+
     @Slot(object)
     def _on_widget_destroyed(self, obj=None):
         """Cleanly remove application event filter and popup when widget is destroyed."""
+        self._disconnect_list_widget()
         self._cancel_delay()
         self._remove_app_filter()
         popup = getattr(self, "_popup", None)
@@ -926,10 +936,20 @@ class MetadataTooltipManager(QObject):
             except Exception:
                 pass
             self._popup = None
+        self.list_widget = None
 
     def __del__(self):
+        self._disconnect_list_widget()
         self._cancel_delay()
         self._remove_app_filter()
+        popup = getattr(self, "_popup", None)
+        if popup:
+            try:
+                popup.hide()
+                popup.deleteLater()
+            except Exception:
+                pass
+            self._popup = None
 
     @staticmethod
     def _is_ctrl_held() -> bool:

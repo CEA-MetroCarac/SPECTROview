@@ -62,10 +62,10 @@ def on_page_markdown(markdown, page, config, files):
     src_path = page.file.src_path.replace('\\', '/')
     if src_path.endswith("index.md") and "user_manual" in src_path:
         import datetime
-        today_str = datetime.datetime.now().strftime("%d %B %Y")
+        timestamp_str = datetime.datetime.now().strftime("%d %B %Y at %H:%M")
         markdown = re.sub(
             r"\(Last updated:\s*[^)]+\)",
-            f"(Last updated: {today_str})",
+            f"(Last updated: {timestamp_str})",
             markdown,
             flags=re.IGNORECASE
         )
@@ -197,24 +197,24 @@ def _ensure_link(src: str, dest: str, *, label: str = "") -> None:
 
 
 def _update_last_updated_date(src_manual_dir: str) -> None:
-    """Automatically update '(Last updated: DD Month YYYY)' in user_manual/index.md."""
+    """Automatically update '(Last updated: DD Month YYYY at HH:MM)' in user_manual/index.md."""
     import datetime
     index_path = os.path.join(src_manual_dir, "index.md")
     if not os.path.isfile(index_path):
         return
 
-    today_str = datetime.datetime.now().strftime("%d %B %Y")
+    timestamp_str = datetime.datetime.now().strftime("%d %B %Y at %H:%M")
     try:
         with open(index_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         pattern = r"\(Last updated:\s*[^)]+\)"
-        new_text = f"(Last updated: {today_str})"
+        new_text = f"(Last updated: {timestamp_str})"
         new_content, count = re.subn(pattern, new_text, content, flags=re.IGNORECASE)
 
         if count > 0 and new_content != content:
             with open(index_path, "w", encoding="utf-8") as f:
                 f.write(new_content)
-            print(f"  [docs_hook] Automatically updated user manual date to: {today_str}")
+            print(f"  [docs_hook] Automatically updated user manual date and time to: {timestamp_str}")
     except Exception as e:
         print(f"  [docs_hook] Warning: Could not update last updated date: {e}")

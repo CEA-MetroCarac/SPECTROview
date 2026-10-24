@@ -22,9 +22,10 @@ from .tokens import (
     ThemeTokens,
     DARK_TOKENS,
     LIGHT_TOKENS,
+    MODERN_WARM_TOKENS,
     THEME_TOKENS,
 )
-from .palettes import build_palette, dark_palette, light_palette
+from .palettes import build_palette, dark_palette, light_palette, modern_warm_palette
 from .qss_template import build_stylesheet
 
 __all__ = [
@@ -32,9 +33,11 @@ __all__ = [
     "ThemeTokens",
     "DARK_TOKENS",
     "LIGHT_TOKENS",
+    "MODERN_WARM_TOKENS",
     "THEME_TOKENS",
     "build_palette",
     "build_stylesheet",
     "dark_palette",
     "light_palette",
+    "modern_warm_palette",
 ]

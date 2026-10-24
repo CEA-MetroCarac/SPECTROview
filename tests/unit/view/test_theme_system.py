@@ -11,11 +11,11 @@ from spectroview.view.components.v_export_dialog import VExportDialog
 from spectroview.view.components.customize_graph.customize_more_options import CustomizeMoreOptions
 
 
-EXPECTED_THEMES = {"dark", "light", "classic_dark", "classic_light"}
+EXPECTED_THEMES = {"dark", "light", "modern_warm", "classic_dark", "classic_light"}
 
 
-def test_theme_constants_have_exactly_four_themes():
-    """Verify that only the 4 canonical themes exist across all theme definitions."""
+def test_theme_constants_have_exactly_five_themes():
+    """Verify that only the 5 canonical themes exist across all theme definitions."""
     assert set(THEME_TOKENS.keys()) == EXPECTED_THEMES
     assert set(_PALETTE_BUILDERS.keys()) == EXPECTED_THEMES
     assert set(_VIEWER_THEME_NAMES.keys()) == EXPECTED_THEMES
@@ -23,7 +23,7 @@ def test_theme_constants_have_exactly_four_themes():
 
     menubar_keys = {key for key, _ in THEME_OPTIONS if key != "---"}
     assert menubar_keys == EXPECTED_THEMES
-    assert len(menubar_keys) == 4
+    assert len(menubar_keys) == 5
 
 
 def test_theme_manager_is_dark():
@@ -34,6 +34,7 @@ def test_theme_manager_is_dark():
     assert mgr.is_dark is True
     assert mgr.workspace_theme == "dark"
     assert mgr.viewer_theme_name == "Dark Mode"
+    assert mgr.icon_color == "#F0F0F0"
 
     mgr._current = "classic_dark"
     assert mgr.is_dark is True
@@ -44,11 +45,18 @@ def test_theme_manager_is_dark():
     assert mgr.is_dark is False
     assert mgr.workspace_theme == "light"
     assert mgr.viewer_theme_name == "Light Mode"
+    assert mgr.icon_color == "#404040"
 
     mgr._current = "classic_light"
     assert mgr.is_dark is False
     assert mgr.workspace_theme == "light"
     assert mgr.viewer_theme_name == "Light Mode"
+
+    mgr._current = "modern_warm"
+    assert mgr.is_dark is False
+    assert mgr.workspace_theme == "light"
+    assert mgr.viewer_theme_name == "Light Mode"
+    assert mgr.icon_color == "#1C1C1E"
 
 
 def test_theme_manager_migration_from_soft_dark():
@@ -63,7 +71,7 @@ def test_theme_manager_migration_from_soft_dark():
     assert settings.get_theme() == "dark"
 
 
-def test_theme_manager_apply_all_four_themes(qtbot):
+def test_theme_manager_apply_all_five_themes(qtbot):
     settings = MSettings()
     mgr = ThemeManager(settings)
     app = QApplication.instance()
@@ -92,6 +100,10 @@ def test_menubar_theme_selection(qtbot):
     # Soft dark migration in menubar
     menubar.set_current_theme("soft_dark")
     assert menubar._current_theme == "dark"
+
+    # Test apply_theme icon switching and restoration
+    menubar.apply_theme("modern_warm")
+    menubar.apply_theme("dark")
 
 
 def test_msettings_theme_migration():

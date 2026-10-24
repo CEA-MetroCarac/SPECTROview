@@ -9,8 +9,9 @@ from spectroview import ICON_DIR, VERSION
 
 # Available themes: internal key → display label
 THEME_OPTIONS = [
-    ("dark", "Dark"),
-    ("light", "Light"),
+    ("dark", "Modern Dark"),
+    ("light", "Modern Light"),
+    ("modern_warm", "Modern Warm"),
     ("---", ""),  # separator
     ("classic_dark", "Classic Dark"),
     ("classic_light", "Classic Light"),
@@ -27,7 +28,7 @@ class VMenuBar(QToolBar):
     ai_chat_requested = Signal()       # opens the SPECTROview AI Agent panel
     settings_requested = Signal()
     github_requested = Signal()
-    theme_selected = Signal(str)       # emits theme key, e.g. "dark" / "light" / "classic_dark" / "classic_light"
+    theme_selected = Signal(str)       # emits theme key, e.g. "dark" / "light" / "modern_warm" / "classic_dark" / "classic_light"
     manual_requested = Signal()
     about_requested = Signal()
     version_requested = Signal()
@@ -36,6 +37,7 @@ class VMenuBar(QToolBar):
     def __init__(self):
         super().__init__()
         self._current_theme = "dark"
+        self._default_icons = {}
         self.init_ui()
         
     def init_ui(self):
@@ -103,12 +105,48 @@ class VMenuBar(QToolBar):
         version_label.mousePressEvent = lambda event: self.version_requested.emit()
         self.addWidget(version_label)
 
+        # Store baseline icons for non-destructive theme switching
+        self._default_icons = {
+            self.actionOpen: os.path.join(ICON_DIR, "open.png"),
+            self.actionSave: os.path.join(ICON_DIR, "save_color.png"),
+            self.actionClearWS: os.path.join(ICON_DIR, "clear.png"),
+            self.actionConvert: os.path.join(ICON_DIR, "FileConvert.png"),
+            self.actionCalc: os.path.join(ICON_DIR, "calc.png"),
+            self.actionAIChat: os.path.join(ICON_DIR, "llm_ai.png"),
+            self.actionSettings: os.path.join(ICON_DIR, "settings.png"),
+            self.actionCheckUpdate: os.path.join(ICON_DIR, "check_update.png"),
+            self.actionTheme: os.path.join(ICON_DIR, "dark-light.png"),
+            self.actionManual: os.path.join(ICON_DIR, "manual.png"),
+            self.actionGithub: os.path.join(ICON_DIR, "github1.png"),
+            self.actionAbout: os.path.join(ICON_DIR, "about.png"),
+        }
+
     # ── Theme dropdown ────────────────────────────────────────
     def set_current_theme(self, theme_key: str):
         """Update internal state so the checkmark appears on the right item."""
         if theme_key == "soft_dark":
             theme_key = "dark"
         self._current_theme = theme_key
+
+    def apply_theme(self, theme_key: str) -> None:
+        """Update toolbar icons based on the active theme.
+
+        In Modern Warm, renders a minimalist monochrome charcoal icon set
+        matching the design reference; for Dark, Light, and Classic themes,
+        restores the original icon styling.
+        """
+        if theme_key in ("modern_warm", "warm"):
+            from spectroview.viewmodel.utils import get_tinted_icon
+            tint = "#1C1C1E"
+            for action, path in self._default_icons.items():
+                if action is self.actionSave:
+                    # Clean silhouette save icon for monochrome aesthetic
+                    action.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save.png"), tint))
+                else:
+                    action.setIcon(get_tinted_icon(path, tint))
+        else:
+            for action, path in self._default_icons.items():
+                action.setIcon(QIcon(path))
 
     def _show_theme_menu(self, checked=False):
         """Build and display a popup menu below the theme toolbar button."""

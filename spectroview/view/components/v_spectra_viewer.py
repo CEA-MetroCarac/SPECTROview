@@ -1917,6 +1917,8 @@ class VSpectraViewer(QWidget):
         self.ax.title.set_color(label_color)
         
         if not getattr(self, '_is_copying', False):
+            if hasattr(self, 'canvas'):
+                self.canvas.draw_idle()
             self.plotStyleChanged.emit()
             self._emit_view_options()
 
@@ -2530,7 +2532,12 @@ class VSpectraViewer(QWidget):
 
     def apply_global_theme(self, global_theme: str):
         """Update SpectraViewer's icons based on the global application theme, independently of the plot theme."""
-        icon_color = "#404040" if global_theme != "dark" else "#F0F0F0"
+        if global_theme in ("modern_warm", "warm"):
+            icon_color = "#1C1C1E"
+        elif global_theme in ("dark", "classic_dark"):
+            icon_color = "#F0F0F0"
+        else:
+            icon_color = "#404040"
         if hasattr(self, 'btn_rescale'):
             self.btn_rescale.setIcon(get_tinted_icon(f"{ICON_DIR}/rescale.png", icon_color))
             self.btn_zoom.setIcon(get_tinted_icon(f"{ICON_DIR}/zoom.png", icon_color))

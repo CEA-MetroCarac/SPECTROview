@@ -528,7 +528,12 @@ class VWorkspaceGraphs(QWidget):
         Every VGraph action-button icon is a fixed colorful icon (set once
         at creation, see VGraph.create_plot_widget) -- graphs no longer need
         to be notified of theme changes at all."""
-        icon_color = "#404040" if theme != "dark" else "#F0F0F0"
+        if theme in ("modern_warm", "warm"):
+            icon_color = "#1C1C1E"
+        elif theme in ("dark", "classic_dark"):
+            icon_color = "#F0F0F0"
+        else:
+            icon_color = "#404040"
         self.btn_view_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "view.png"), icon_color))
         self.btn_remove_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash.png"), icon_color))
         self.btn_save_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save.png"), icon_color))

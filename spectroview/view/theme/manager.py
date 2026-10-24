@@ -28,6 +28,7 @@ _CLASSIC_THEMES = {"classic_dark", "classic_light"}
 _VIEWER_THEME_NAMES = {
     "dark":          "Dark Mode",
     "light":         "Light Mode",
+    "modern_warm":   "Light Mode",
     "classic_dark":  "Dark Mode",
     "classic_light": "Light Mode",
 }
@@ -66,6 +67,11 @@ class ThemeManager:
     def tokens(self) -> ThemeTokens:
         """Return the active ``ThemeTokens``."""
         return THEME_TOKENS.get(self._current, THEME_TOKENS["dark"])
+
+    @property
+    def icon_color(self) -> str:
+        """Return the hex colour for tinted GUI icons (e.g. ``"#1C1C1E"``)."""
+        return self.tokens.icon_color
 
     @property
     def workspace_theme(self) -> str:

@@ -107,6 +107,7 @@ class ThemeTokens:
     # ── Icon helpers ─────────────────────────────────────────
     arrow_suffix: str            # "" for dark themes, "-dark" for light
     is_dark: bool                # Convenience flag
+    icon_color: str              # Hex colour for tinted GUI icons (e.g. "#F0F0F0")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -205,6 +206,7 @@ DARK_TOKENS = ThemeTokens(
     # Icons
     arrow_suffix="",
     is_dark=True,
+    icon_color="#F0F0F0",
 )
 
 
@@ -304,6 +306,107 @@ LIGHT_TOKENS = ThemeTokens(
     # Icons
     arrow_suffix="-dark",
     is_dark=False,
+    icon_color="#404040",
+)
+
+
+# ═══════════════════════════════════════════════════════════════
+#  MODERN WARM THEME (Warm Sand / Linen & Charcoal)
+# ═══════════════════════════════════════════════════════════════
+MODERN_WARM_TOKENS = ThemeTokens(
+    # Surfaces
+    surface_bg="#EFECE6",
+    surface_card="#F7F4EC",
+    surface_card_border="#DED8CE",
+    surface_input="#FFFFFF",
+    surface_overlay="#FAF7F2",
+    surface_list="#EAE5DC",
+    surface_table="#FFFFFF",
+    surface_table_alt="#F5F1E8",
+    surface_toolbar="#E8E3DB",
+
+    # Text
+    text_primary="#1C1C1E",
+    text_secondary="#6E6A63",
+    text_disabled="#A8A39A",
+    text_placeholder="#9C978E",
+
+    # Borders
+    border_subtle="#DED8CE",
+    border_medium="#BFB9AD",
+    border_strong="#7A756B",
+    border_separator="#DCD5CB",
+
+    # Accent (Authentic Jet Black / Deep Charcoal from Image 2)
+    accent="#18181A",
+    accent_light="#2C2C2E",
+    accent_bg="rgba(24, 24, 26, 0.08)",
+    accent_bg_strong="rgba(24, 24, 26, 0.16)",
+    accent_border="rgba(24, 24, 26, 0.45)",
+
+    # Interactive states
+    hover_bg="rgba(24, 24, 26, 0.05)",
+    hover_bg_strong="rgba(24, 24, 26, 0.09)",
+    pressed_bg="rgba(24, 24, 26, 0.18)",
+    selected_bg="rgba(24, 24, 26, 0.12)",
+    selected_border="#18181A",
+
+    # Scrollbar / slider
+    scrollbar_thumb="rgba(24, 24, 26, 0.16)",
+    scrollbar_thumb_hover="rgba(24, 24, 26, 0.30)",
+    slider_groove="rgba(24, 24, 26, 0.12)",
+    slider_filled="#18181A",
+    slider_handle="#FFFFFF",
+    slider_handle_border="rgba(24, 24, 26, 0.40)",
+
+    # Progress bar
+    progress_bg="rgba(24, 24, 26, 0.08)",
+    progress_chunk_start="#38383A",
+    progress_chunk_mid="#242426",
+    progress_chunk_end="#18181A",
+
+    # Checkbox indicator
+    checkbox_bg="#FFFFFF",
+    checkbox_border="rgba(24, 24, 26, 0.28)",
+    checkbox_checked_bg="#18181A",
+    checkbox_checked_border="#18181A",
+    checkbox_disabled_bg="rgba(24, 24, 26, 0.04)",
+    checkbox_disabled_border="rgba(24, 24, 26, 0.10)",
+    checkbox_checked_disabled_bg="rgba(24, 24, 26, 0.20)",
+    checkbox_checked_disabled_border="rgba(24, 24, 26, 0.20)",
+
+    # Tab bar
+    tab_bg="rgba(24, 24, 26, 0.04)",
+    tab_border="rgba(24, 24, 26, 0.08)",
+    tab_text="#6E6A63",
+    tab_selected_bg="#FAF7F2",
+    tab_selected_border="#DED8CE",
+    tab_selected_bottom="#FAF7F2",
+    tab_hover_bg="rgba(24, 24, 26, 0.06)",
+    tab_hover_text="#1C1C1E",
+    tab_pane_bg="#FAF7F2",
+    tab_pane_border="#DED8CE",
+
+    # Miscellaneous
+    tooltip_bg="#18181A",
+    tooltip_border="#2C2C2E",
+    tooltip_text="#FAF7F2",
+    dialog_bg="#EFECE6",
+    menu_bg="#FAF7F2",
+    menu_border="#DED8CE",
+    menu_item_hover="rgba(24, 24, 26, 0.06)",
+    menu_separator="#E2DDD4",
+    gridline="rgba(24, 24, 26, 0.07)",
+    header_bg="#EAE5DC",
+    header_border_right="#DED8CE",
+    header_border_bottom="#D5CFC3",
+    header_text="#4A463F",
+    frame_line_color="#DED8CE",
+
+    # Icons
+    arrow_suffix="-dark",
+    is_dark=False,
+    icon_color="#1C1C1E",
 )
 
 
@@ -311,6 +414,7 @@ LIGHT_TOKENS = ThemeTokens(
 THEME_TOKENS: dict[str, ThemeTokens] = {
     "dark": DARK_TOKENS,
     "light": LIGHT_TOKENS,
+    "modern_warm": MODERN_WARM_TOKENS,
     # Classic themes reuse the palette-only path; tokens are still
     # available for downstream helpers like icon-color selection.
     "classic_dark": DARK_TOKENS,

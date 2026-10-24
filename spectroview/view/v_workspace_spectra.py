@@ -335,7 +335,12 @@ class VWorkspaceSpectra(QWidget):
 
     def apply_theme(self, theme: str):
         """Called by main.py to update icons based on the global theme."""
-        icon_color = "#404040" if theme != "dark" else "#F0F0F0"
+        if theme in ("modern_warm", "warm"):
+            icon_color = "#1C1C1E"
+        elif theme in ("dark", "classic_dark"):
+            icon_color = "#F0F0F0"
+        else:
+            icon_color = "#404040"
         
         self.btn_select_all.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "select-all.png"), icon_color))
         self.btn_remove.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash.png"), icon_color))

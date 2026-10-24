@@ -187,7 +187,12 @@ class VMapViewer(QWidget):
 
     def apply_global_theme(self, global_theme: str):
         """Update toolbar icons based on the global application theme."""
-        icon_color = "#404040" if global_theme != "dark" else "#F0F0F0"
+        if global_theme in ("modern_warm", "warm"):
+            icon_color = "#1C1C1E"
+        elif global_theme in ("dark", "classic_dark"):
+            icon_color = "#F0F0F0"
+        else:
+            icon_color = "#404040"
         if hasattr(self, 'btn_copy'):
             self.btn_copy.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "copy.png"), icon_color))
         if hasattr(self, 'btn_add_viewer'):

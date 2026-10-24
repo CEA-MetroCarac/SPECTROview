@@ -703,7 +703,12 @@ class VFitModelBuilder(QWidget):
     def apply_theme(self, theme: str):
         """Update icons based on the global application theme."""
         from spectroview.viewmodel.utils import get_tinted_icon
-        icon_color = "#404040" if theme != "dark" else "#F0F0F0"
+        if theme in ("modern_warm", "warm"):
+            icon_color = "#1C1C1E"
+        elif theme in ("dark", "classic_dark"):
+            icon_color = "#F0F0F0"
+        else:
+            icon_color = "#404040"
 
         # X-correction buttons
         self.btn_xcorrect.setIcon(get_tinted_icon(f"{ICON_DIR}/done.png", icon_color))

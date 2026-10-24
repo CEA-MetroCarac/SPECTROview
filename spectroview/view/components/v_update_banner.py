@@ -61,6 +61,33 @@ _LIGHT_STYLE = """
     }
 """
 
+_MODERN_WARM_STYLE = """
+    QWidget#UpdateBanner {
+        background: #E8E3DB;
+        border-bottom: 1px solid #D5CFC3;
+    }
+    QLabel#banner_icon { color: #18181A; font-size: 15px; }
+    QLabel#banner_text { color: #1C1C1E; font-size: 12px; }
+    QLabel#banner_version { color: #18181A; font-weight: bold; font-size: 12px; }
+    QPushButton#btn_update {
+        background: #18181A; color: white; border: none; border-radius: 4px;
+        padding: 3px 10px; font-size: 11px; font-weight: bold;
+    }
+    QPushButton#btn_update:hover { background: #2C2C2E; }
+    QPushButton#btn_download {
+        background: #FAF7F2; color: #1C1C1E; border: 1px solid #D5CFC3;
+        border-radius: 4px; padding: 3px 10px; font-size: 11px; font-weight: bold;
+    }
+    QPushButton#btn_download:hover { background: #FFFFFF; }
+    QPushButton#btn_skip, QPushButton#btn_dismiss {
+        background: transparent; color: #6E6A63; border: 1px solid #D5CFC3;
+        border-radius: 4px; padding: 3px 8px; font-size: 11px;
+    }
+    QPushButton#btn_skip:hover, QPushButton#btn_dismiss:hover {
+        color: #1C1C1E; border-color: #18181A;
+    }
+"""
+
 
 class VUpdateBanner(QWidget):
     """Display release actions and start the supplied automatic-update callback."""
@@ -138,7 +165,12 @@ class VUpdateBanner(QWidget):
 
     def apply_theme(self, theme_key: str) -> None:
         """Switch banner colours to match the application theme."""
-        style = _DARK_STYLE if theme_key in ("dark", "classic_dark") else _LIGHT_STYLE
+        if theme_key in ("modern_warm", "warm"):
+            style = _MODERN_WARM_STYLE
+        elif theme_key in ("dark", "classic_dark"):
+            style = _DARK_STYLE
+        else:
+            style = _LIGHT_STYLE
         self.setStyleSheet(style)
 
     def set_download_progress(self, percent: int) -> None:

@@ -168,7 +168,7 @@ class MSettings:
     
     # ---------- Theme ----------
     def get_theme(self) -> str:
-        """Get current theme (dark, light, classic_dark, classic_light)."""
+        """Get current theme (dark, light, modern_warm, classic_dark, classic_light)."""
         val = self.settings.value("theme", "dark", str)
         if val == "soft_dark":
             self.set_theme("dark")
@@ -176,7 +176,7 @@ class MSettings:
         return val
     
     def set_theme(self, theme: str):
-        """Set theme (dark, light, classic_dark, classic_light)."""
+        """Set theme (dark, light, modern_warm, classic_dark, classic_light)."""
         if theme == "soft_dark":
             theme = "dark"
         self.settings.setValue("theme", theme)

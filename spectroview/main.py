@@ -80,9 +80,8 @@ class Main(QMainWindow):
         self.theme_mgr.apply(self.settings.get_theme())
         
         self.init_ui()
-        self._propagate_theme(self.settings.get_theme())
-        
         self.setup_connections()
+        self._propagate_theme(self.settings.get_theme())
         self.tabWidget.setCurrentWidget(self.v_maps_workspace)
         
         # Lazy chat panel (created on first use)
@@ -682,11 +681,12 @@ class Main(QMainWindow):
     def _propagate_theme(self, theme):
         # Derived helpers
         viewer_theme = self.theme_mgr.viewer_theme_name
-        ws_theme     = self.theme_mgr.workspace_theme
 
-        # Keep menubar checkmark in sync
+        # Keep menubar checkmark and icons in sync
         if hasattr(self, 'menu_bar'):
             self.menu_bar.set_current_theme(theme)
+            if hasattr(self.menu_bar, 'apply_theme'):
+                self.menu_bar.apply_theme(theme)
 
         # Propagate to workspaces (icons, plot backgrounds)
         for ws in (getattr(self, 'v_spectra_workspace', None),
@@ -695,13 +695,15 @@ class Main(QMainWindow):
                 continue
             if hasattr(ws, 'v_spectra_viewer'):
                 ws.v_spectra_viewer.cbb_theme.setCurrentText(viewer_theme)
+                if hasattr(ws.v_spectra_viewer, '_apply_plot_style'):
+                    ws.v_spectra_viewer._apply_plot_style()
                 if hasattr(ws.v_spectra_viewer, 'apply_global_theme'):
-                    ws.v_spectra_viewer.apply_global_theme(ws_theme)
+                    ws.v_spectra_viewer.apply_global_theme(theme)
             if hasattr(ws, 'apply_theme'):
-                ws.apply_theme(ws_theme)
+                ws.apply_theme(theme)
 
         if hasattr(self, 'v_graphs_workspace'):
-            self.v_graphs_workspace.apply_theme(ws_theme)
+            self.v_graphs_workspace.apply_theme(theme)
 
         # Keep update banner in sync with the current theme
         if self._update_banner is not None:

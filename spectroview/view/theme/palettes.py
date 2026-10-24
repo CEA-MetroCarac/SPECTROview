@@ -90,10 +90,45 @@ def light_palette() -> QPalette:
     return p
 
 
+def modern_warm_palette() -> QPalette:
+    """Modern Warm palette — soft linen/sand surfaces, crisp charcoal text."""
+    p = QPalette()
+
+    p.setColor(QPalette.Window,        QColor(239, 236, 230))  # #EFECE6
+    p.setColor(QPalette.Base,          QColor(250, 247, 242))  # #FAF7F2
+    p.setColor(QPalette.AlternateBase, QColor(244, 240, 232))  # #F4F0E8
+
+    p.setColor(QPalette.WindowText,      QColor(28, 28, 30))   # #1C1C1E
+    p.setColor(QPalette.Text,            QColor(28, 28, 30))
+    p.setColor(QPalette.ButtonText,      QColor(28, 28, 30))
+    p.setColor(QPalette.PlaceholderText, QColor(156, 151, 142)) # #9C978E
+
+    p.setColor(QPalette.Button,   QColor(232, 227, 219))       # #E8E3DB
+    p.setColor(QPalette.Light,    QColor(255, 255, 255))
+    p.setColor(QPalette.Midlight, QColor(240, 235, 227))
+    p.setColor(QPalette.Mid,      QColor(220, 215, 206))
+    p.setColor(QPalette.Dark,     QColor(191, 185, 173))
+
+    accent = QColor(24, 24, 26)                                # #18181A
+    p.setColor(QPalette.Highlight,      accent)
+    p.setColor(QPalette.HighlightedText, Qt.white)
+    p.setColor(QPalette.Link,           accent)
+
+    p.setColor(QPalette.ToolTipBase, QColor(24, 24, 26))
+    p.setColor(QPalette.ToolTipText, QColor(250, 247, 242))
+
+    p.setColor(QPalette.Disabled, QPalette.Text,       QColor(168, 163, 154))
+    p.setColor(QPalette.Disabled, QPalette.WindowText,  QColor(168, 163, 154))
+    p.setColor(QPalette.Disabled, QPalette.ButtonText,  QColor(168, 163, 154))
+
+    return p
+
+
 # ── Lookup table ─────────────────────────────────────────────
 _PALETTE_BUILDERS = {
     "dark":          dark_palette,
     "light":         light_palette,
+    "modern_warm":   modern_warm_palette,
     "classic_dark":  dark_palette,
     "classic_light": light_palette,
 }

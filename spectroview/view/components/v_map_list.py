@@ -194,7 +194,12 @@ class VMapsList(QWidget):
 
     def apply_theme(self, theme: str):
         """Update icons based on the global application theme."""
-        icon_color = "#404040" if theme != "dark" else "#F0F0F0"
+        if theme in ("modern_warm", "warm"):
+            icon_color = "#1C1C1E"
+        elif theme in ("dark", "classic_dark"):
+            icon_color = "#F0F0F0"
+        else:
+            icon_color = "#404040"
 
         # Map action buttons
         self.btn_view.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "view.png"), icon_color))

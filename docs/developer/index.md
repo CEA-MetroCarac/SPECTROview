@@ -135,6 +135,7 @@ spectroview/
 │           ├── customize_annotations.py      # Annotations tab
 │           ├── customize_more_options.py     # More Options tab (plot options, theme, fonts, sorting, trendline/histogram)
 │           └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
+│       └── theme/                     # Theme architecture (ThemeManager, tokens, palettes, Modern Warm/Dark/Light)
 │
 ├── fit_engine/             # High-performance batch fitting
 │   ├── vbf_engine.py            # Orchestrator (VBFengine)

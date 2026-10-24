@@ -10,7 +10,7 @@ from typing import Optional, Dict, Tuple, List, Any
 
 from PySide6.QtCore import QObject, Signal, Qt, QSize
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import QVBoxLayout, QToolButton, QFrame
+from PySide6.QtWidgets import QVBoxLayout, QToolButton, QWidget
 
 import numpy as np
 import matplotlib.transforms as mtransforms
@@ -60,7 +60,7 @@ def create_color_icon(color_hex: str, size: int = 16, checked: bool = False) -> 
     return QIcon(pixmap)
 
 
-class VRangeSelectorPanel(QFrame):
+class VRangeSelectorPanel(QWidget):
     """Vertical panel hosting the 3 spectral range toggle buttons."""
 
     selector_toggled = Signal(str, bool)  # (color_id, is_active)
@@ -68,24 +68,31 @@ class VRangeSelectorPanel(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("rangeSelectorPanel")
-        self.setFixedWidth(32)
-        self.setFrameShape(QFrame.NoFrame)
+        self.setFixedWidth(22)
+        self.setStyleSheet("""
+            #rangeSelectorPanel {
+                background: transparent;
+                border: none;
+                margin: 0px;
+                padding: 0px;
+            }
+        """)
 
         self.buttons: Dict[str, QToolButton] = {}
         self._init_ui()
 
     def _init_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(4)
-        layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
+        layout.setAlignment(Qt.AlignHCenter)
 
         for color_id in SELECTOR_KEYS:
             color_hex = SELECTOR_COLORS[color_id]
             btn = QToolButton(self)
             btn.setObjectName(f"btn_range_{color_id}")
             btn.setCheckable(True)
-            btn.setFixedSize(24, 24)
+            btn.setFixedSize(22, 22)
             btn.setIconSize(QSize(16, 16))
             btn.setIcon(create_color_icon(color_hex, size=16))
             btn.setToolTip(f"Toggle {SELECTOR_NAMES[color_id]} Spectral Range Selector")
@@ -95,11 +102,13 @@ class VRangeSelectorPanel(QFrame):
                 QToolButton#btn_range_{color_id} {{
                     border: 1px solid transparent;
                     border-radius: 4px;
-                    padding: 1px;
+                    padding: 0px;
+                    margin: 0px;
+                    background: transparent;
                 }}
                 QToolButton#btn_range_{color_id}:hover {{
                     border: 1px solid {color_hex};
-                    background: rgba(128, 128, 128, 0.15);
+                    background: rgba(128, 128, 128, 0.2);
                 }}
                 QToolButton#btn_range_{color_id}:checked {{
                     border: 1.5px solid {color_hex};
@@ -274,8 +283,18 @@ class RangeSelectorManager(QObject):
             )
             self._artists[color_id].extend([t_left_top, t_left_bot, t_right_top, t_right_bot])
 
-    def hit_test(self, ax, event) -> Optional[Tuple[str, str]]:
+    def hit_test(self, ax, event, zoom_active: bool = False) -> Optional[Tuple[str, str]]:
         """Determine if mouse event is near a selector boundary or body.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            The active plot axes.
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event.
+        zoom_active : bool, default False
+            If True, only boundary lines are testable so that Zoom tool
+            can operate freely across the spectrum body without conflict.
 
         Returns
         -------
@@ -303,16 +322,17 @@ class RangeSelectorManager(QObject):
             if abs(event.x - px_max) <= tol_px:
                 return (color_id, "max")
 
-        # Second check if clicked inside span body
-        for color_id in SELECTOR_KEYS:
-            sel = self.selectors[color_id]
-            if not sel.is_active:
-                continue
+        # Second check if clicked inside span body (only when zoom is NOT active)
+        if not zoom_active:
+            for color_id in SELECTOR_KEYS:
+                sel = self.selectors[color_id]
+                if not sel.is_active:
+                    continue
 
-            x0 = min(sel.x_min, sel.x_max)
-            x1 = max(sel.x_min, sel.x_max)
-            if x0 <= event.xdata <= x1:
-                return (color_id, "body")
+                x0 = min(sel.x_min, sel.x_max)
+                x1 = max(sel.x_min, sel.x_max)
+                if x0 <= event.xdata <= x1:
+                    return (color_id, "body")
 
         return None
 

@@ -146,7 +146,8 @@ graph TD
 - **`spectral_parameters.py`**: Model-level vectorized evaluation over `MapData.Y` (2D array $[N, M]$) without per-spectrum loops. Calculates:
   - *Direct*: `Integrated intensity`, `Mean intensity`, `Maximum intensity`, `Peak position`, `Peak height` (baseline-subtracted).
   - *Fitted*: `Peak position (fit)`, `Peak height (fit)`, `Peak area (fit)` using fitted peak parameters when available.
-- **`VLiveMaps`**: QWidget tab installed in `bottom_tabs` immediately before the `More` tab. Hosts 3 independent subpanels that dynamically hide/show based on active selectors, with dark/light theme support.
+- **`VLiveMaps`**: QWidget tab installed in `bottom_tabs` (between `Fit Results` and `MVA`, with `More` placed at the end of the tabs). Hosts 3 independent subpanels that dynamically hide/show based on active selectors, with dark/light theme support.
+- **Zoom & Range Coordination**: When a range selector is activated, `btn_zoom` is automatically deactivated so bracket adjustment can occur without triggering simultaneous zoom rectangles. The Zoom button can also be toggled off by clicking it, and while Zoom is active, clicking inside the range span performs a zoom rather than moving the range body.
 
 ### `VMWorkspaceSpectra` — The ViewModel
 

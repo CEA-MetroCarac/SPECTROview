@@ -59,8 +59,8 @@ def test_live_maps_tab_position(qapp):
             more_idx = i
 
     assert live_maps_idx >= 0, "Live Maps tab not found"
-    assert more_idx >= 0, "More tab not found"
-    assert live_maps_idx == more_idx - 1, f"Live Maps (index {live_maps_idx}) must precede More (index {more_idx})"
+    assert more_idx == tabs.count() - 1, f"More tab (index {more_idx}) must be at the end of the list (index {tabs.count() - 1})"
+    assert live_maps_idx == 2, f"Live Maps (index {live_maps_idx}) should be after Fit Results"
 
 
 def test_range_selector_to_live_maps_synchronization(qapp, test_map_data):

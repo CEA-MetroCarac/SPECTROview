@@ -409,3 +409,31 @@ def test_legend_outside_round_trip_through_options_state(viewer):
     assert viewer.act_legend_outside.isChecked() is True
 
 
+def test_zoom_button_toggle_and_range_selector_conflict_resolution(viewer):
+    """Test that btn_zoom can be toggled off, and range selector activation turns off zoom."""
+    # Initially zoom is checked
+    assert viewer.btn_zoom.isChecked() is True
+    assert viewer.zoom_pan_active is True
+
+    # Clicking btn_zoom toggles it OFF
+    viewer.btn_zoom.click()
+    assert viewer.btn_zoom.isChecked() is False
+    assert viewer.zoom_pan_active is False
+
+    # Clicking btn_zoom again toggles it ON
+    viewer.btn_zoom.click()
+    assert viewer.btn_zoom.isChecked() is True
+    assert viewer.zoom_pan_active is True
+
+    # Activating a range selector automatically turns off zoom to prevent dual-action conflict
+    viewer.btn_range_red.setChecked(True)
+    assert viewer.btn_range_red.isChecked() is True
+    assert viewer.btn_zoom.isChecked() is False
+    assert viewer.zoom_pan_active is False
+
+    # User can re-enable zoom if desired while range selectors are active
+    viewer.btn_zoom.click()
+    assert viewer.btn_zoom.isChecked() is True
+    assert viewer.zoom_pan_active is True
+
+

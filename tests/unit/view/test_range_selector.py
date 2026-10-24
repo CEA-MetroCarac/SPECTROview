@@ -105,3 +105,47 @@ def test_range_selector_manager_drag_lifecycle(qapp):
     # Finish drag
     mgr.finish_drag()
     assert mgr.is_dragging() is False
+
+
+def test_range_selector_panel_alignment_and_dimensions(qapp):
+    panel = VRangeSelectorPanel()
+    assert panel.width() == 22
+    for cid in SELECTOR_KEYS:
+        btn = panel.buttons[cid]
+        assert btn.width() == 22
+        assert btn.height() == 22
+
+
+def test_range_selector_hit_test_zoom_active(qapp):
+    mgr = RangeSelectorManager()
+    mgr.set_active(SELECTOR_RED, True)
+    mgr.set_range(SELECTOR_RED, 200.0, 400.0)
+
+    fig, ax = plt.subplots()
+    ax.set_xlim(0, 1000)
+    ax.set_ylim(0, 100)
+    fig.canvas.draw()
+
+    class FakeEvent:
+        def __init__(self, x_data, y_val=50):
+            self.inaxes = ax
+            self.xdata = x_data
+            self.ydata = y_val
+            px, py = ax.transData.transform((x_data, y_val))
+            self.x = px
+            self.y = py
+            self.button = 1
+
+    # Click on min boundary line (200.0)
+    ev_boundary = FakeEvent(200.0)
+    assert mgr.hit_test(ax, ev_boundary, zoom_active=False) == (SELECTOR_RED, "min")
+    assert mgr.hit_test(ax, ev_boundary, zoom_active=True) == (SELECTOR_RED, "min")
+
+    # Click on body center (300.0)
+    ev_body = FakeEvent(300.0)
+    # When zoom is NOT active, body is draggable
+    assert mgr.hit_test(ax, ev_body, zoom_active=False) == (SELECTOR_RED, "body")
+    # When zoom IS active, body is ignored so Zoom can operate freely
+    assert mgr.hit_test(ax, ev_body, zoom_active=True) is None
+
+    plt.close(fig)

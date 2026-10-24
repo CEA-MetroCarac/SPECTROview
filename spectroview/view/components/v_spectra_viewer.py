@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QPushButton, QToolButton, QLabel,
     QComboBox, QDialog, QMenu, QWidgetAction,
     QLineEdit, QDoubleSpinBox, QSpinBox,
-    QSlider, QMessageBox, QApplication
+    QSlider, QMessageBox, QApplication, QButtonGroup
 )
 from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer, QPoint
 from PySide6.QtGui import QIcon, QCursor
@@ -313,14 +313,16 @@ class VSpectraViewer(QWidget):
 
         # Tool buttons
         self.btn_zoom = self._tool_btn("zoom.png", "Zoom", True)
-        self.btn_zoom.setCheckable(True)
-        self.btn_zoom.setChecked(True)
-        self.btn_zoom.toggled.connect(self._toggle_zoom_pan)
         self.btn_baseline = self._tool_btn("baseline.png", "Baseline")
         self.btn_peak = self._tool_btn("peak.png", "Peak")
 
+        self._tool_group = QButtonGroup(self)
+        self._tool_group.setExclusive(False)
         for btn in (self.btn_zoom, self.btn_baseline, self.btn_peak):
+            self._tool_group.addButton(btn)
             layout.addWidget(btn)
+        self._tool_group.buttonClicked.connect(self._on_tool_btn_clicked)
+        self.btn_zoom.toggled.connect(self._toggle_zoom_pan)
 
         layout.addSpacing(15)
 
@@ -463,12 +465,29 @@ class VSpectraViewer(QWidget):
         btn = QToolButton()
         btn.setCheckable(True)
         btn.setChecked(checked)
-        btn.setAutoExclusive(True)
+        btn.setAutoExclusive(False)
         btn.setIcon(QIcon(f"{ICON_DIR}/{icon}"))
         btn.setIconSize(QSize(22, 22))
         btn.setFixedSize(30, 30)
         btn.setToolTip(tooltip)
         return btn
+
+    def _on_tool_btn_clicked(self, clicked_btn):
+        """Handle mutual exclusivity across toolbar tools while allowing toggling off."""
+        if clicked_btn.isChecked():
+            for b in (self.btn_zoom, self.btn_baseline, self.btn_peak):
+                if b is not clicked_btn and b.isChecked():
+                    b.blockSignals(True)
+                    b.setChecked(False)
+                    b.blockSignals(False)
+        if clicked_btn is self.btn_zoom:
+            self._set_zoom_tool_active(clicked_btn.isChecked())
+        else:
+            if self.btn_zoom.isChecked():
+                self.btn_zoom.blockSignals(True)
+                self.btn_zoom.setChecked(False)
+                self.btn_zoom.blockSignals(False)
+            self._set_zoom_tool_active(False)
 
     # Options menu
     def _create_options_menu(self):
@@ -2045,8 +2064,18 @@ class VSpectraViewer(QWidget):
 
         # ── Check if clicking on active range selector marker or span ──
         if hasattr(self, "range_manager") and any(s.is_active for s in self.range_manager.selectors.values()):
-            hit = self.range_manager.hit_test(self.ax, event)
+            hit = self.range_manager.hit_test(self.ax, event, zoom_active=self.zoom_pan_active)
             if hit and event.button == 1:
+                # Suppress concurrent Matplotlib zoom interaction if active
+                if hasattr(self.toolbar, "_zoom_info") and self.toolbar._zoom_info is not None:
+                    try:
+                        if hasattr(self.toolbar._zoom_info, "cid"):
+                            self.canvas.mpl_disconnect(self.toolbar._zoom_info.cid)
+                        self.toolbar.remove_rubberband()
+                        self.toolbar._zoom_info = None
+                    except Exception:
+                        pass
+
                 color_id, target = hit
                 self.range_manager.start_drag(color_id, target, event.xdata)
                 self.canvas.setCursor(Qt.ClosedHandCursor if target == "body" else Qt.SizeHorCursor)
@@ -2175,7 +2204,7 @@ class VSpectraViewer(QWidget):
         # ── Range selector hover feedback ──
         if hasattr(self, "range_manager") and any(s.is_active for s in self.range_manager.selectors.values()):
             if not self.range_manager.is_dragging():
-                hit = self.range_manager.hit_test(self.ax, event)
+                hit = self.range_manager.hit_test(self.ax, event, zoom_active=self.zoom_pan_active)
                 if hit:
                     if hit[1] in ("min", "max"):
                         self.canvas.setCursor(Qt.SizeHorCursor)
@@ -2389,6 +2418,12 @@ class VSpectraViewer(QWidget):
 
     def _toggle_range_selector(self, color_id: str, checked: bool):
         """Activate or deactivate one of the spectral range selectors."""
+        if checked and self.btn_zoom.isChecked():
+            self.btn_zoom.blockSignals(True)
+            self.btn_zoom.setChecked(False)
+            self.btn_zoom.blockSignals(False)
+            self._set_zoom_tool_active(False)
+
         self.range_manager.set_active(color_id, checked)
         if self.ax is not None:
             self.range_manager.render(self.ax)
@@ -2414,6 +2449,17 @@ class VSpectraViewer(QWidget):
                 except Exception:
                     pass
             self._range_drag_cids.clear()
+
+        # Suppress any lingering Matplotlib zoom interaction
+        if hasattr(self.toolbar, "_zoom_info") and self.toolbar._zoom_info is not None:
+            try:
+                if hasattr(self.toolbar._zoom_info, "cid"):
+                    self.canvas.mpl_disconnect(self.toolbar._zoom_info.cid)
+                self.toolbar.remove_rubberband()
+                self.toolbar._zoom_info = None
+            except Exception:
+                pass
+
         if hasattr(self, "range_manager") and self.range_manager.is_dragging():
             self.range_manager.finish_drag()
             if self.ax is not None:

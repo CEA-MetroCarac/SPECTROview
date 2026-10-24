@@ -308,7 +308,7 @@ Once your data table is finalized, you can:
 
 ### **6. `Live Maps` Tab**
 
-The **Live Maps** tab is located immediately before the **More** tab. It displays up to three real-time 2D spatial heatmaps (Red, Blue, Green) corresponding directly to the active spectral range selectors.
+The **Live Maps** tab is located between **Fit Results** and **MVA** (with the **More** tab moved to the very end of the bottom tabs). It displays up to three real-time 2D spatial heatmaps (Red, Blue, Green) corresponding directly to the active spectral range selectors.
 
 #### **6.1. Subpanels and Real-Time Visualization**
 - When one or more range selectors are active, their corresponding map panels are displayed side-by-side. If no selectors are currently active, a helpful placeholder message guides you to activate a selector button on the right edge of the `SpectraViewer`.

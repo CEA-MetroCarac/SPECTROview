@@ -104,3 +104,45 @@ class TestMapViewerAutoSelection:
         df = _simple_2dmap_df()
         viewer.set_map_data(df, "m1", selected_points=[(1.0, 0.0)])
         assert viewer.selected_points == [(1.0, 0.0)]
+
+
+class TestMapViewerInterpolation:
+    def test_wafer_map_default_interpolation_is_nearest_neighbor(self, qapp):
+        viewer = VMapViewer()
+        viewer.cbb_map_type.setCurrentText("Wafer_200mm")
+        df1 = _simple_2dmap_df()
+        viewer.set_map_data(df1, "m1")
+        viewer._do_plot_heatmap()
+
+        assert viewer.img is not None
+        assert viewer.img.get_interpolation() == 'none'
+
+    def test_wafer_map_switch_maintains_consistent_interpolation(self, qapp):
+        viewer = VMapViewer()
+        viewer.cbb_map_type.setCurrentText("Wafer_200mm")
+        df1 = _simple_2dmap_df()
+        viewer.set_map_data(df1, "m1")
+        viewer._do_plot_heatmap()
+        assert viewer.img.get_interpolation() == 'none'
+
+        df2 = pd.DataFrame({
+            'X': [0.0, 2.0, 0.0, 2.0],
+            'Y': [0.0, 0.0, 2.0, 2.0],
+            100.0: [10.0, 20.0, 30.0, 40.0],
+            200.0: [10.0, 20.0, 30.0, 40.0],
+        })
+        viewer.set_map_data(df2, "m2")
+        viewer._do_plot_heatmap()
+        assert viewer.img.get_interpolation() == 'none'
+
+    def test_wafer_map_smoothing_toggle(self, qapp):
+        viewer = VMapViewer()
+        viewer.cbb_map_type.setCurrentText("Wafer_200mm")
+        df1 = _simple_2dmap_df()
+        viewer.set_map_data(df1, "m1")
+        viewer.action_smoothing.setChecked(True)
+        viewer._do_plot_heatmap()
+
+        assert viewer.img is not None
+        assert viewer.img.get_interpolation() == 'bilinear'
+

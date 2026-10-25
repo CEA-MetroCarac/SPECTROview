@@ -849,10 +849,10 @@ class VMapViewer(QWidget):
 
             # Plot heatmap - different approaches for wafer vs 2D maps
             if map_type != '2Dmap' and grid_z is not None:
-                # Wafer maps: Use griddata result (already interpolated, smooth)
+                # Wafer maps: Use griddata result with user-selected interpolation (default 'none' / nearest-neighbor)
                 self.img = self.ax.imshow(grid_z, extent=extent,
                                          origin='lower', aspect='equal', cmap=cmap,
-                                         interpolation='bilinear',  # Smooth the 100x100 grid
+                                         interpolation=interpolation,
                                          **color_kwargs)
                                          
                 # Calculate pixel size for wafer map (grid_x is 80x80)

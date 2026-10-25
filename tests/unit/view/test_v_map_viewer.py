@@ -146,3 +146,49 @@ class TestMapViewerInterpolation:
         assert viewer.img is not None
         assert viewer.img.get_interpolation() == 'bilinear'
 
+
+class TestMapViewerOptimization:
+    def test_remove_outliers_on_numpy_array_and_masked_data(self, qapp):
+        viewer = VMapViewer()
+        import numpy as np
+        # 100 normal values and 2 extreme outliers as a NumPy ndarray
+        data = np.ones(100) * 10.0
+        data[0] = 1000.0
+        data[1] = -500.0
+        filtered = viewer._remove_outliers(data)
+        assert isinstance(filtered, (np.ndarray, pd.Series))
+        assert np.max(filtered) < 500.0
+        assert np.min(filtered) > -100.0
+
+    def test_cache_key_generation(self, qapp):
+        viewer = VMapViewer()
+        viewer.set_map_data(_simple_2dmap_df(), "m1")
+        key = viewer._build_cache_key()
+        assert key[0] == "m1"
+        assert key[1] == "Intensity"
+        assert key[3] == "2Dmap"
+
+    def test_stats_box_computation(self, qapp):
+        import numpy as np
+        viewer = VMapViewer()
+        viewer.cbb_map_type.setCurrentText("Wafer_200mm")
+        viewer._last_final_z_col = np.array([10.0, 20.0, 30.0, np.nan])
+        viewer._draw_stats_box()
+        assert viewer._last_stats_text_artist is not None
+        text = viewer._last_stats_text_artist.get_text()
+        assert "mean: 20.00" in text
+        assert "min: 10.00" in text
+        assert "max: 30.00" in text
+
+    def test_profile_extraction_between_two_points(self, qapp):
+        viewer = VMapViewer()
+        viewer.cbb_map_type.setCurrentText("2Dmap")
+        viewer.set_map_data(_simple_2dmap_df(), "m1")
+        viewer.set_selected_points([(0.0, 0.0), (1.0, 1.0)])
+        profile = viewer._extract_profile()
+        assert profile is not None
+        assert len(profile) == 100
+        assert "distance" in profile.columns
+        assert "values" in profile.columns
+
+

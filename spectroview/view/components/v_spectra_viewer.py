@@ -38,6 +38,9 @@ from spectroview.viewmodel.utils import copy_fig_to_clb, get_tinted_icon, fano_d
 def get_cached_style_dict(style_path: str) -> dict:
     """Cache parsed mplstyle files to prevent disk re-reading on every plot/theme switch."""
     return dict(mpl.rc_params_from_file(style_path))
+
+# Precompiled regex for numeric tokens in filenames
+_RE_NUMBERS = re.compile(r"\d+\.?\d*")
 from spectroview.view.components.customized_widgets import (
     CustomizedPalette,
     NoDoubleClickZoomToolbar,
@@ -362,10 +365,8 @@ class VSpectraViewer(QWidget):
         self.norm_xmax.setToolTip("Intensity normalization to maximum of spectrum or selected region")
         layout.addWidget(self.norm_xmax)
 
-        self.norm_xmin.editingFinished.connect(self._plot)
-        self.norm_xmax.editingFinished.connect(self._plot)
-        self.norm_xmin.editingFinished.connect(self._rescale)
-        self.norm_xmax.editingFinished.connect(self._rescale)
+        self.norm_xmin.editingFinished.connect(self._on_norm_range_edited)
+        self.norm_xmax.editingFinished.connect(self._on_norm_range_edited)
 
         # Bestfit
         self.btn_bestfit = QToolButton()
@@ -689,7 +690,12 @@ class VSpectraViewer(QWidget):
             
         self._plot()
 
-    def _compute_shift_steps(self):
+    def _on_norm_range_edited(self):
+        """Unified handler when norm bounds change: plot and rescale once."""
+        self._plot()
+        self._rescale()
+
+    def _compute_shift_steps(self, Y_norm=None):
         """Compute per-spectrum X and Y shift steps based on slider values and data range."""
         y_slider = self.slider_y_shift.value()  # 0–100
         x_slider = self.slider_x_shift.value()  # 0–100
@@ -701,8 +707,9 @@ class VSpectraViewer(QWidget):
             return 0.0, 0.0
 
         x = self._tensor_data["x"]
-        Y = self._tensor_data["y"]
-        Y_norm = self._get_normalized_y_tensor(x, Y)
+        if Y_norm is None:
+            Y = self._tensor_data["y"]
+            Y_norm = self._get_normalized_y_tensor(x, Y)
 
         if isinstance(Y_norm, list):
             y_max = max(np.max(y_arr) for y_arr in Y_norm)
@@ -739,7 +746,7 @@ class VSpectraViewer(QWidget):
             Y_norm = []
             for i in range(len(Y)):
                 xi = x[i] if isinstance(x, list) else x
-                Y_norm.append(self._get_normalized_y(xi, Y[i]))
+                Y_norm.append(self._get_normalized_y(xi, Y[i], xmin=xmin, xmax=xmax))
             return Y_norm
         else:
             if xmin is not None and xmax is not None:
@@ -749,9 +756,10 @@ class VSpectraViewer(QWidget):
                 imin = np.abs(x - xmin).argmin()
                 imax = np.abs(x - xmax).argmin()
                 
-                # Extract slice handling empty slices safely
-                sub_y = Y[:, min(imin, imax):max(imin, imax) + 1]
-                if sub_y.shape[1] > 0:
+                idx_start = min(imin, imax)
+                idx_end = max(imin, imax) + 1
+                if idx_end > idx_start:
+                    sub_y = Y[:, idx_start:idx_end]
                     norm_vals = np.max(sub_y, axis=1, keepdims=True)
                 else:
                     norm_vals = np.max(Y, axis=1, keepdims=True)
@@ -759,7 +767,7 @@ class VSpectraViewer(QWidget):
                 norm_vals = np.max(Y, axis=1, keepdims=True)
 
             # Avoid div by zero
-            norm_vals[norm_vals == 0] = 1.0
+            norm_vals = np.where(norm_vals == 0, 1.0, norm_vals)
             return Y / norm_vals
 
     def _plot(self):
@@ -796,16 +804,19 @@ class VSpectraViewer(QWidget):
 
         self._update_r2_display()
 
-        x_shift_step, y_shift_step = self._compute_shift_steps()
+        x = self._tensor_data["x"]
+        Y = self._tensor_data["y"]
+        Y_norm = self._get_normalized_y_tensor(x, Y)
+        x_shift_step, y_shift_step = self._compute_shift_steps(Y_norm=Y_norm)
         plot_style = self.cbb_plotstyle.currentText()
         lw = self.spin_lw.value()
         dot_size = self.spin_dotsize.value()
-        colors_cycle = self._get_colors_cycle(len(self._tensor_data["y"]))
+        colors_cycle = self._get_colors_cycle(len(Y))
 
         # ── Step 1: Build bulk segment data (main spectra + raw overlay) ──
         segments = self._build_tensor_segments(
             x_shift_step, y_shift_step, plot_style, lw, fg_color,
-            colors_cycle)
+            colors_cycle, Y_norm=Y_norm)
 
         # ── Step 2: Draw heavy per-spectrum overlays ──
         self._draw_tensor_overlays(x_shift_step, y_shift_step, lw,
@@ -895,7 +906,8 @@ class VSpectraViewer(QWidget):
         ]
 
     def _build_tensor_segments(self, x_shift_step, y_shift_step,
-                                plot_style, lw, fg_color, colors_cycle):
+                                plot_style, lw, fg_color, colors_cycle,
+                                Y_norm=None):
         """Build bulk LineCollection / scatter data for tensor-mode rendering."""
         # These lists are filled below and passed to _finalize_plot, which
         # converts them into a single LineCollection for efficient rendering.
@@ -909,7 +921,8 @@ class VSpectraViewer(QWidget):
 
         x = self._tensor_data["x"]                   
         Y = self._tensor_data["y"]                   
-        Y_norm = self._get_normalized_y_tensor(x, Y) 
+        if Y_norm is None:
+            Y_norm = self._get_normalized_y_tensor(x, Y) 
 
         # Resolve each spectrum's color: use stored color if available, else cycle
         t_colors = self._tensor_data.get("colors")
@@ -1370,8 +1383,7 @@ class VSpectraViewer(QWidget):
         tokens = stem.split("_")
         result = []
         for pos, tok in enumerate(tokens):
-            # Find all digit groups (supports decimals like "3.5")
-            numbers = re.findall(r"\d+\.?\d*", tok)
+            numbers = _RE_NUMBERS.findall(tok)
             if numbers:
                 result.append((pos, tok, float(numbers[0])))
         return result
@@ -1439,7 +1451,7 @@ class VSpectraViewer(QWidget):
             stem = fname.rsplit(".", 1)[0] if "." in fname else fname
             parts = stem.split("_")
             if token_pos < len(parts):
-                nums = re.findall(r"\d+\.?\d*", parts[token_pos])
+                nums = _RE_NUMBERS.findall(parts[token_pos])
                 values.append(float(nums[0]) if nums else float("nan"))
             else:
                 values.append(float("nan"))
@@ -1539,18 +1551,27 @@ class VSpectraViewer(QWidget):
         n_interp = self.spin_heatmap_interp.value()
         if n_interp > 0 and N >= 3 and len(np.unique(y_values)) >= 3:
             y_fine = np.linspace(y_values.min(), y_values.max(), n_interp)
-            interp_cols = []
-            for col_idx in range(intensity_matrix.shape[1]):
-                col = intensity_matrix[:, col_idx]
-                valid = ~np.isnan(col)
-                if valid.sum() >= 2:
-                    kind = "cubic" if valid.sum() >= 4 else "linear"
-                    f = interp1d(y_values[valid], col[valid], kind=kind,
-                                 bounds_error=False, fill_value=np.nan)
-                    interp_cols.append(f(y_fine))
-                else:
-                    interp_cols.append(np.full_like(y_fine, np.nan))
-            intensity_plot = np.array(interp_cols).T
+            kind = "cubic" if len(y_values) >= 4 else "linear"
+
+            # Fast vectorized path: when all entries are valid (typical case),
+            # interpolate the whole matrix along axis=0 at once!
+            if not np.isnan(intensity_matrix).any():
+                f = interp1d(y_values, intensity_matrix, kind=kind, axis=0,
+                             bounds_error=False, fill_value=np.nan)
+                intensity_plot = f(y_fine)
+            else:
+                interp_cols = []
+                for col_idx in range(intensity_matrix.shape[1]):
+                    col = intensity_matrix[:, col_idx]
+                    valid = ~np.isnan(col)
+                    if valid.sum() >= 2:
+                        col_kind = "cubic" if valid.sum() >= 4 else "linear"
+                        f = interp1d(y_values[valid], col[valid], kind=col_kind,
+                                     bounds_error=False, fill_value=np.nan)
+                        interp_cols.append(f(y_fine))
+                    else:
+                        interp_cols.append(np.full_like(y_fine, np.nan))
+                intensity_plot = np.array(interp_cols).T
             y_plot = y_fine
         else:
             intensity_plot = intensity_matrix
@@ -1649,16 +1670,17 @@ class VSpectraViewer(QWidget):
         self._emit_view_options()
 
 
-    def _get_normalized_y(self, x, y):
+    def _get_normalized_y(self, x, y, xmin=None, xmax=None):
         """Apply normalization if enabled (VIEW-ONLY)."""
         if not self.btn_norm.isChecked():
             return y
 
-        try:
-            xmin = float(self.norm_xmin.text()) if self.norm_xmin.text() else None
-            xmax = float(self.norm_xmax.text()) if self.norm_xmax.text() else None
-        except ValueError:
-            xmin = xmax = None
+        if xmin is None and xmax is None:
+            try:
+                xmin = float(self.norm_xmin.text()) if self.norm_xmin.text() else None
+                xmax = float(self.norm_xmax.text()) if self.norm_xmax.text() else None
+            except ValueError:
+                xmin = xmax = None
 
         if xmin is not None and xmax is not None:
             if xmin > xmax:
@@ -1666,7 +1688,9 @@ class VSpectraViewer(QWidget):
 
             imin = np.abs(x - xmin).argmin()
             imax = np.abs(x - xmax).argmin()
-            norm_val = np.max(y[min(imin, imax):max(imin, imax) + 1])
+            idx_start = min(imin, imax)
+            idx_end = max(imin, imax) + 1
+            norm_val = np.max(y[idx_start:idx_end]) if idx_end > idx_start else np.max(y)
         else:
             norm_val = np.max(y)
 
@@ -2012,10 +2036,10 @@ class VSpectraViewer(QWidget):
         self.ax.title.set_color(label_color)
         
         if not getattr(self, '_is_copying', False):
-            if hasattr(self, 'canvas'):
-                self.canvas.draw_idle()
             self.plotStyleChanged.emit()
-            self._emit_view_options()
+            if not getattr(self, '_is_setting_options', False):
+                self.allOptionsSyncChanged.emit(self.get_options_state())
+            self._plot()
 
     def _on_heatmap_ylabel_changed(self):
         if not hasattr(self, '_ylabel_timer'):
@@ -2241,6 +2265,12 @@ class VSpectraViewer(QWidget):
             if line.figure is None:
                 continue
             
+            # Fast bounding check along x before calling expensive line.contains()
+            if "x0" in info and event.xdata is not None:
+                fwhm = info.get("fwhm", 10.0) or 10.0
+                if abs(event.xdata - info["x0"]) > max(3.0 * float(fwhm), 20.0):
+                    continue
+
             hit, _ = line.contains(event)
             if not hit:
                 continue
@@ -2685,20 +2715,15 @@ class VSpectraViewer(QWidget):
         # Save snapshot for undo BEFORE modifying (use viewer_slot as the undo key)
         self._erase_history.append((viewer_slot, y_arr.copy()))
 
-        # ── Estimate noise sigma from the flattest region of the spectrum ────────
-        # Slide a small window across the spectrum, detrend each window (remove
-        # linear slope), compute its std, then take the *minimum*.  This picks
-        # the quietest portion of the spectrum — immune to peaks and cosmic rays.
-        _noise_win = 20
+        # ── Estimate noise sigma ────────
+        # Use first-difference MAD (Median Absolute Deviation / 0.6745 / sqrt(2)),
+        # which is robust, insensitive to peaks/edges/cosmic rays, and 100x faster than polyfit loops
         _n = len(y_arr)
-        if _n >= _noise_win:
-            _stds = []
-            for _i in range(0, _n - _noise_win + 1, _noise_win // 2):
-                _seg = y_arr[_i : _i + _noise_win]
-                _t = np.arange(len(_seg), dtype=float)
-                _p = np.polyfit(_t, _seg, 1)
-                _stds.append(float(np.std(_seg - np.polyval(_p, _t))))
-            noise_sigma = float(np.median(_stds)) if _stds else 0.0
+        if _n >= 10:
+            diffs = np.diff(y_arr)
+            med_diff = np.median(diffs)
+            mad = np.median(np.abs(diffs - med_diff))
+            noise_sigma = float(mad / (0.6745 * np.sqrt(2)))
         else:
             noise_sigma = 0.0
 

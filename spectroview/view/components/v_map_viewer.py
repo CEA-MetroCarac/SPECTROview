@@ -8,14 +8,15 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import LogNorm
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT
 from superqt import QLabeledDoubleRangeSlider
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QCheckBox, QDoubleSpinBox,
-    QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction, QApplication, QMessageBox
+    QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction, QApplication, QMessageBox,
+    QSizePolicy
 )
 from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon, QAction
@@ -93,11 +94,7 @@ class VMapViewer(QWidget):
             self.ax.tick_params(axis='both', which='both')
         
         self.canvas = FigureCanvas(self.figure)
-        from PySide6.QtWidgets import QSizePolicy
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # Avoid generic inline stylesheet to prevent cascading to toolbar children
-        # self.canvas.setStyleSheet("border: none; background: transparent;")
-        # self.canvas.setMaximumHeight(350)
         
         # Connect mouse events for interactive selection
         self.canvas.mpl_connect('button_press_event', self._on_mouse_click)
@@ -440,31 +437,39 @@ class VMapViewer(QWidget):
         self.map_df_name = map_name
         self.df_fit_results = df_fit_results if df_fit_results is not None else pd.DataFrame()
         
+        # Cache coordinate arrays for fast reuse across plots and mouse interactions
+        if self.map_df is not None and not self.map_df.empty:
+            col_x = 'X' if 'X' in self.map_df.columns else self.map_df.columns[0]
+            col_y = 'Y' if 'Y' in self.map_df.columns else self.map_df.columns[1]
+            self._sites_x = self.map_df[col_x].values.astype(float)
+            self._sites_y = self.map_df[col_y].values.astype(float)
+            self.number_of_points = len(self._sites_x)
+        else:
+            self._sites_x = np.array([], dtype=float)
+            self._sites_y = np.array([], dtype=float)
+            self.number_of_points = 0
+
         # Auto-select the first coordinate on map open or switch
         if selected_points is not None:
             self.selected_points = list(dict.fromkeys(selected_points))
         elif is_map_change or not self.selected_points:
-            if self.map_df is not None and not self.map_df.empty:
-                col_x = 'X' if 'X' in self.map_df.columns else self.map_df.columns[0]
-                col_y = 'Y' if 'Y' in self.map_df.columns else self.map_df.columns[1]
-                first_x = float(self.map_df[col_x].iloc[0])
-                first_y = float(self.map_df[col_y].iloc[0])
+            if self.number_of_points > 0:
+                first_x = float(self._sites_x[0])
+                first_y = float(self._sites_y[0])
                 self.selected_points = [(first_x, first_y)]
             else:
                 self.selected_points = []
         else:
             # Same map: retain valid selected points
-            if self.map_df is not None and not self.map_df.empty:
-                col_x = 'X' if 'X' in self.map_df.columns else self.map_df.columns[0]
-                col_y = 'Y' if 'Y' in self.map_df.columns else self.map_df.columns[1]
-                valid_coords = set(zip(self.map_df[col_x].round(4), self.map_df[col_y].round(4)))
+            if self.number_of_points > 0:
+                valid_coords = set(zip(np.round(self._sites_x, 4), np.round(self._sites_y, 4)))
                 self.selected_points = [
                     pt for pt in self.selected_points
                     if (round(float(pt[0]), 4), round(float(pt[1]), 4)) in valid_coords
                 ]
                 if not self.selected_points:
-                    first_x = float(self.map_df[col_x].iloc[0])
-                    first_y = float(self.map_df[col_y].iloc[0])
+                    first_x = float(self._sites_x[0])
+                    first_y = float(self._sites_y[0])
                     self.selected_points = [(first_x, first_y)]
             else:
                 self.selected_points = []
@@ -602,14 +607,14 @@ class VMapViewer(QWidget):
         self.plot_heatmap()
     
     def _on_x_slider_changed(self, values):
-        """X-range slider changed - update spinboxes and trigger plot."""
+        """X-range slider changed - update spinboxes and schedule debounced plot."""
         self.spin_xmin.blockSignals(True)
         self.spin_xmax.blockSignals(True)
         self.spin_xmin.setValue(values[0])
         self.spin_xmax.setValue(values[1])
         self.spin_xmin.blockSignals(False)
         self.spin_xmax.blockSignals(False)
-        self._update_z_range()  # Recalculate Z values for new X range
+        self._need_z_range_update = True
         self.plot_heatmap()
     
     def _on_z_slider_changed(self, values):
@@ -628,8 +633,6 @@ class VMapViewer(QWidget):
         xmax = self.spin_xmax.value()
         if xmin <= xmax:
             self.x_range_slider.setValue((xmin, xmax))
-            self._update_z_range()
-            self.plot_heatmap()
     
     def _update_z_slider_from_spins(self):
         """Update Z slider when spinboxes change."""
@@ -637,7 +640,6 @@ class VMapViewer(QWidget):
         zmax = self.spin_zmax.value()
         if zmin <= zmax:
             self.z_range_slider.setValue((zmin, zmax))
-            self.plot_heatmap()
     
     # ═══ Core plotting methods ═══
     
@@ -728,6 +730,13 @@ class VMapViewer(QWidget):
         show_stats = self.action_show_stats.isChecked() if map_type != '2Dmap' else False
         show_grid = self.action_grid.isChecked()
 
+        if getattr(self, '_need_z_range_update', False):
+            self._need_z_range_update = False
+            self._update_z_range()
+
+        cache_key = self._build_cache_key()
+        last_rendered_key = getattr(self, '_last_rendered_cache_key', None)
+
         # Fast path: update existing Artists in-place without rebuilding Figure / tight_layout
         can_fast_update = (
             getattr(self, 'ax', None) is not None
@@ -742,13 +751,27 @@ class VMapViewer(QWidget):
 
         if can_fast_update:
             try:
+                vmin_plot, vmax_plot = self.z_range_slider.value()
+
+                # ULTRA-FAST PATH: if heatmap data parameters did not change,
+                # only update clim/norm and colorbar without touching any data or collections
+                if last_rendered_key == cache_key:
+                    if self.cbb_color_scale.currentText() == "Log" and vmin_plot is not None and vmin_plot > 0:
+                        self.img.set_norm(LogNorm(vmin=vmin_plot, vmax=vmax_plot))
+                    else:
+                        self.img.set_norm(None)
+                        self.img.set_clim(vmin_plot, vmax_plot)
+                    self.cbar.update_normal(self.img)
+                    self.canvas.draw_idle()
+                    return
+
                 heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col = self._get_data_for_heatmap()
                 self._last_final_z_col = final_z_col
+                self._last_rendered_cache_key = cache_key
 
                 cmap = plt.get_cmap(self.cbb_palette.currentText()).copy()
                 cmap.set_bad(color='none')
                 interpolation = 'bilinear' if self.action_smoothing.isChecked() else 'none'
-                vmin_plot, vmax_plot = self.z_range_slider.value()
 
                 if map_type != '2Dmap' and grid_z is not None:
                     img_data = grid_z
@@ -803,6 +826,7 @@ class VMapViewer(QWidget):
         self._last_show_stats = show_stats
         self._last_grid = show_grid
         self._last_style = self.current_style
+        self._last_rendered_cache_key = cache_key
         self._wafer_circle = None
         self._scatter_sites = None
 
@@ -950,20 +974,14 @@ class VMapViewer(QWidget):
             return dict(norm=LogNorm(vmin=vmin, vmax=vmax))
         return dict(vmin=vmin, vmax=vmax)
 
-    def _get_data_for_heatmap(self):
-        """Compute heatmap data from map DataFrame (with caching for wafer griddata).
-        
-        Returns:
-            tuple: (heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col)
-        """
-        # Build cache key from all parameters that affect the result
+    def _build_cache_key(self):
+        """Construct cache key for the current heatmap configuration."""
         xmin, xmax = self.x_range_slider.value()
         parameter = self.cbb_zparameter.currentText()
         map_type = self.cbb_map_type.currentText()
         mask_enabled = self.cb_enable_mask.isChecked() if map_type == '2Dmap' else False
         remove_outliers = self.action_remove_outlier.isChecked()
         
-        # Build mask configuration tuple for cache key
         if mask_enabled:
             mask_config = (
                 self.cbb_mask_param.currentText(),
@@ -973,14 +991,22 @@ class VMapViewer(QWidget):
         else:
             mask_config = None
         
-        cache_key = (
+        return (
             self.map_df_name,
             parameter,
             (xmin, xmax),
             map_type,
-            mask_config,  # Full mask configuration (not just enabled flag)
+            mask_config,
             remove_outliers
         )
+
+    def _get_data_for_heatmap(self):
+        """Compute heatmap data from map DataFrame (with caching for wafer griddata).
+        
+        Returns:
+            tuple: (heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col)
+        """
+        cache_key = self._build_cache_key()
         
         # Check cache first (avoid expensive griddata computation!)
         if cache_key in self._griddata_cache:
@@ -1001,63 +1027,59 @@ class VMapViewer(QWidget):
         column_labels = self.map_df.columns[2:]
         
         try:
-            filtered_columns = column_labels[
-                (column_labels.astype(float) >= xmin) &
-                (column_labels.astype(float) <= xmax)
-            ]
-        except:
+            numeric_cols = column_labels.astype(float)
+            col_mask = (numeric_cols >= xmin) & (numeric_cols <= xmax)
+            filtered_columns = column_labels[col_mask]
+        except Exception:
             filtered_columns = column_labels
         
         if len(filtered_columns) == 0:
             return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
         
-        # Get filtered data
-        filtered_df = self.map_df[['X', 'Y'] + list(filtered_columns)]
-        x_col = filtered_df['X'].values
-        y_col = filtered_df['Y'].values
+        # Coordinates (cached in set_map_data)
+        x_col, y_col = self._get_measurement_sites()
         
         # Compute Z values based on selected parameter
         parameter = self.cbb_zparameter.currentText()
         
         if parameter == 'Area':
-            z_col = (filtered_df[filtered_columns]
-                    .replace([np.inf, -np.inf], np.nan)
-                    .fillna(0).clip(lower=0).sum(axis=1))
+            data_matrix = self.map_df[filtered_columns].to_numpy(dtype=float, copy=False)
+            data_clean = np.nan_to_num(data_matrix, nan=0.0, posinf=0.0, neginf=0.0)
+            np.clip(data_clean, 0, None, out=data_clean)
+            z_col = data_clean.sum(axis=1)
         elif parameter == 'Intensity':
-            z_col = (filtered_df[filtered_columns]
-                    .replace([np.inf, -np.inf], np.nan)
-                    .fillna(0).clip(lower=0).max(axis=1))
+            data_matrix = self.map_df[filtered_columns].to_numpy(dtype=float, copy=False)
+            data_clean = np.nan_to_num(data_matrix, nan=0.0, posinf=0.0, neginf=0.0)
+            np.clip(data_clean, 0, None, out=data_clean)
+            z_col = data_clean.max(axis=1)
         else:
             # Fit parameter - merge with map coordinates to handle filtered (active only) fit results
             if not self.df_fit_results.empty and parameter in self.df_fit_results.columns:
-                filtered_results = self.df_fit_results.query("Filename == @self.map_df_name")
+                filtered_results = self.df_fit_results[self.df_fit_results['Filename'] == self.map_df_name]
                 if not filtered_results.empty and 'X' in filtered_results.columns and 'Y' in filtered_results.columns:
-                    # Create DataFrame with map coordinates
-                    map_coords = pd.DataFrame({'X': x_col, 'Y': y_col})
-                    # To be robust against float precision, we round coordinates temporarily to 6 decimals for the merge comparison.
-                    # This ensures rounded/unrounded floats match perfectly even if there are minor precision discrepancies.
-                    map_coords_temp = map_coords.copy()
-                    filtered_results_temp = filtered_results[['X', 'Y', parameter]].copy()
-                    map_coords_temp['X_round'] = map_coords_temp['X'].round(6)
-                    map_coords_temp['Y_round'] = map_coords_temp['Y'].round(6)
-                    filtered_results_temp['X_round'] = filtered_results_temp['X'].round(6)
-                    filtered_results_temp['Y_round'] = filtered_results_temp['Y'].round(6)
+                    map_coords_temp = pd.DataFrame({
+                        'X_round': np.round(x_col, 6),
+                        'Y_round': np.round(y_col, 6)
+                    })
+                    filtered_results_temp = pd.DataFrame({
+                        'X_round': np.round(filtered_results['X'].values.astype(float), 6),
+                        'Y_round': np.round(filtered_results['Y'].values.astype(float), 6),
+                        parameter: filtered_results[parameter].values
+                    })
                     
                     merged = map_coords_temp.merge(
-                        filtered_results_temp[['X_round', 'Y_round', parameter]], 
+                        filtered_results_temp,
                         on=['X_round', 'Y_round'], how='left'
                     )
                     # Fill missing values (unchecked spectra) with 0 ONLY for amplitude, area, height, or intensity related parameters.
-                    # For center (x0), width (fwhm), alpha, asymmetry, etc. we let them be NaN so they render transparently
-                    # and do not distort the colorbar range.
                     if any(x in parameter.lower() for x in ['ampli', 'area', 'intensity', 'height', 'fraction', 'A', 'B']):
-                        z_col = merged[parameter].fillna(0)
+                        z_col = merged[parameter].fillna(0).values
                     else:
-                        z_col = merged[parameter]
+                        z_col = merged[parameter].values
                 else:
-                    z_col = pd.Series([np.nan] * len(x_col))
+                    z_col = np.full(len(x_col), np.nan)
             else:
-                z_col = pd.Series([np.nan] * len(x_col))
+                z_col = np.full(len(x_col), np.nan)
         
         if z_col is None or len(z_col) == 0:
             return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
@@ -1065,7 +1087,7 @@ class VMapViewer(QWidget):
         # Apply mask (2D map only)
         map_type = self.cbb_map_type.currentText()
         if map_type == '2Dmap' and self.cb_enable_mask.isChecked():
-            z_col = self._apply_mask(z_col, filtered_df)
+            z_col = self._apply_mask(z_col, self.map_df)
         
         # Remove outliers if requested
         if self.action_remove_outlier.isChecked():
@@ -1075,15 +1097,16 @@ class VMapViewer(QWidget):
         
         # Compute vmin/vmax
         try:
-            vmin = float(final_z_col.min())
-            vmax = float(final_z_col.max())
+            valid_z = final_z_col[~np.isnan(final_z_col)]
+            if len(valid_z) > 0:
+                vmin = float(valid_z.min())
+                vmax = float(valid_z.max())
+            else:
+                vmin, vmax = 0.0, 100.0
             if np.isnan(vmin) or np.isnan(vmax):
-                vmin, vmax = 0, 100
-        except:
-            vmin, vmax = 0, 100
-        
-        # Count unique sites
-        self.number_of_points = len(set(zip(x_col, y_col)))
+                vmin, vmax = 0.0, 100.0
+        except Exception:
+            vmin, vmax = 0.0, 100.0
         
         # Different approach for wafer vs 2D maps
         if map_type != '2Dmap' and self.number_of_points >= 4:
@@ -1123,8 +1146,8 @@ class VMapViewer(QWidget):
             u_x = np.sort(np.unique(x_col))
             u_y = np.sort(np.unique(y_col))
             
-            xmin, xmax = 0, 1
-            ymin, ymax = 0, 1
+            xmin, xmax = 0.0, 1.0
+            ymin, ymax = 0.0, 1.0
             
             if len(u_x) > 1:
                 dx = (u_x[1] - u_x[0])
@@ -1165,7 +1188,7 @@ class VMapViewer(QWidget):
             mask_values = filtered_df[mask_param].astype(float).values
         # Or from fit results
         elif not self.df_fit_results.empty and mask_param in self.df_fit_results.columns:
-            filtered_results = self.df_fit_results.query("Filename == @self.map_df_name")
+            filtered_results = self.df_fit_results[self.df_fit_results['Filename'] == self.map_df_name]
             if not filtered_results.empty:
                 mask_values = filtered_results[mask_param].astype(float).values
         
@@ -1192,19 +1215,20 @@ class VMapViewer(QWidget):
     def _remove_outliers(self, z_col):
         """Remove outliers using IQR method with interpolation."""
         try:
-            Q1 = z_col.quantile(0.05)
-            Q3 = z_col.quantile(0.95)
+            s = pd.Series(z_col)
+            Q1 = s.quantile(0.05)
+            Q3 = s.quantile(0.95)
             IQR = Q3 - Q1
             
-            outlier_mask = (z_col < (Q1 - 1.5 * IQR)) | (z_col > (Q3 + 1.5 * IQR))
+            outlier_mask = (s < (Q1 - 1.5 * IQR)) | (s > (Q3 + 1.5 * IQR))
             
-            z_col_interpolated = z_col.copy()
-            z_col_interpolated[outlier_mask] = np.nan
-            z_col_interpolated = z_col_interpolated.interpolate(
+            s_interpolated = s.copy()
+            s_interpolated[outlier_mask] = np.nan
+            s_interpolated = s_interpolated.interpolate(
                 method='linear', limit_direction='both'
             )
-            return z_col_interpolated
-        except:
+            return s_interpolated.to_numpy()
+        except Exception:
             return z_col
     
     def _get_wafer_radius(self, map_type_text):
@@ -1217,7 +1241,9 @@ class VMapViewer(QWidget):
     
     def _get_measurement_sites(self):
         """Get all measurement site coordinates."""
-        if self.map_df is None:
+        if hasattr(self, '_sites_x') and self._sites_x is not None and len(self._sites_x) > 0:
+            return self._sites_x, self._sites_y
+        if self.map_df is None or self.map_df.empty:
             return np.array([]), np.array([])
         return self.map_df['X'].values, self.map_df['Y'].values
     
@@ -1227,22 +1253,22 @@ class VMapViewer(QWidget):
         if self._last_stats_text_artist is not None:
             try:
                 self._last_stats_text_artist.remove()
-            except:
+            except Exception:
                 pass
             self._last_stats_text_artist = None
         
         if self._last_final_z_col is None:
             return
         
-        # Calculate statistics
-        arr_clean = pd.Series(self._last_final_z_col).dropna()
-        if arr_clean.empty:
+        arr = np.asarray(self._last_final_z_col, dtype=float)
+        arr_clean = arr[~np.isnan(arr)]
+        if len(arr_clean) == 0:
             return
         
-        mean = float(arr_clean.mean())
-        mn = float(arr_clean.min())
-        mx = float(arr_clean.max())
-        std = float(arr_clean.std())
+        mean = float(np.mean(arr_clean))
+        mn = float(np.min(arr_clean))
+        mx = float(np.max(arr_clean))
+        std = float(np.std(arr_clean, ddof=1)) if len(arr_clean) > 1 else 0.0
         sigma3 = 3 * std
         
         txt = (f"mean: {mean:.2f}\n"
@@ -1318,7 +1344,9 @@ class VMapViewer(QWidget):
         x1, y1 = event.xdata, event.ydata
         
         all_x, all_y = self._get_measurement_sites()
-        all_x, all_y = np.array(all_x), np.array(all_y)
+        if len(all_x) == 0:
+            self.rect_start = None
+            return
         
         modifiers = QApplication.keyboardModifiers()
         
@@ -1340,14 +1368,14 @@ class VMapViewer(QWidget):
             
             try:
                 self.rect_patch.remove()
-            except:
+            except Exception:
                 pass
             self.rect_patch = None
         else:
             # Single click - nearest point
             if all_x.size > 0:
-                distances = np.sqrt((all_x - x1) ** 2 + (all_y - y1) ** 2)
-                idx = np.argmin(distances)
+                distances_sq = (all_x - x1) ** 2 + (all_y - y1) ** 2
+                idx = np.argmin(distances_sq)
                 pt = (float(all_x[idx]), float(all_y[idx]))
                 
                 if modifiers == Qt.ControlModifier:
@@ -1404,46 +1432,26 @@ class VMapViewer(QWidget):
         # Extract profile values and plot height visualization
         profile_df = self._extract_profile()
         if profile_df is not None and not profile_df.empty:
-            # Calculate the diagonal length of the heatmap for normalization
-            extent = self._get_data_for_heatmap()[1]
+            extent = self.ax.get_xlim() + self.ax.get_ylim()
             diagonal_length = np.sqrt((extent[1] - extent[0])**2 + (extent[3] - extent[2])**2)
             max_normalized_value = 0.3 * diagonal_length
             
             # Calculate height values (normalized)
             values = profile_df['values'].values
-            if values.max() > 0:
-                profile_df['height'] = (values / values.max()) * max_normalized_value
-                profile_df['height'] -= profile_df['height'].min()
+            val_max = values.max()
+            if val_max > 0:
+                height = (values / val_max) * max_normalized_value
+                height -= height.min()
                 
-                x_vals = []
-                y_vals = []
+                dx = x[1] - x[0]
+                dy = y[1] - y[0]
+                length = np.sqrt(dx**2 + dy**2)
                 
-                # Calculate perpendicular points for height visualization
-                for i, row in profile_df.iterrows():
-                    x_val = row['X']
-                    y_val = row['Y']
-                    normalized_distance = row['height']
-                    
-                    # Calculate the direction vector of the line
-                    dx = x[1] - x[0]
-                    dy = y[1] - y[0]
-                    length = np.sqrt(dx**2 + dy**2)
-                    
-                    if length > 0:
-                        # Normalize the direction vector
-                        dx /= length
-                        dy /= length
-                        
-                        # Calculate the perpendicular direction
-                        perp_dx = -dy
-                        perp_dy = dx
-                        
-                        # Calculate the new x and y values
-                        x_vals.append(x_val + perp_dx * normalized_distance)
-                        y_vals.append(y_val + perp_dy * normalized_distance)
-                
-                # Plot the height profile
-                if x_vals and y_vals:
+                if length > 0:
+                    perp_dx = -dy / length
+                    perp_dy = dx / length
+                    x_vals = profile_df['X'].values + perp_dx * height
+                    y_vals = profile_df['Y'].values + perp_dy * height
                     self._profile_height_line, = self.ax.plot(
                         x_vals, y_vals, color='black', linestyle='-', linewidth=2, zorder=11
                     )
@@ -1455,46 +1463,33 @@ class VMapViewer(QWidget):
             DataFrame with columns: X, Y, distance, values
             or None if extraction fails
         """
-        # Ensure exactly two points have been selected
         if len(self.selected_points) != 2:
             return None
         
         (x1, y1), (x2, y2) = self.selected_points
-        
-        # Get heatmap data
         heatmap_pivot, _, _, _, _, _ = self._get_data_for_heatmap()
-        
         if heatmap_pivot.empty:
             return None
         
-        # Extract X and Y coordinates of the heatmap grid
-        x_values = heatmap_pivot.columns.values
-        y_values = heatmap_pivot.index.values
+        x_values = heatmap_pivot.columns.values.astype(float)
+        y_values = heatmap_pivot.index.values.astype(float)
         z_values = heatmap_pivot.values
         
-        # Interpolate Z values at the sampled points along the profile
         from scipy.interpolate import RegularGridInterpolator
-        interpolator = RegularGridInterpolator((y_values, x_values), z_values)
-        
-        num_samples = 100
-        x_samples = np.linspace(x1, x2, num_samples)
-        y_samples = np.linspace(y1, y2, num_samples)
-        sample_points = np.vstack((y_samples, x_samples)).T
-        
         try:
+            interpolator = RegularGridInterpolator((y_values, x_values), z_values)
+            num_samples = 100
+            x_samples = np.linspace(x1, x2, num_samples)
+            y_samples = np.linspace(y1, y2, num_samples)
+            sample_points = np.column_stack((y_samples, x_samples))
             z_samples = interpolator(sample_points)
+            dists_from_start = np.sqrt((x_samples - x1)**2 + (y_samples - y1)**2)
+            return pd.DataFrame({
+                'X': x_samples,
+                'Y': y_samples,
+                'distance': dists_from_start,
+                'values': z_samples
+            })
         except Exception as e:
             print(f"Profile interpolation failed: {e}")
             return None
-        
-        # Calculate the distance from (x1, y1) to each sample point
-        dists_from_start = np.sqrt((x_samples - x1)**2 + (y_samples - y1)**2)
-        
-        profile_df = pd.DataFrame({
-            'X': x_samples,
-            'Y': y_samples,
-            'distance': dists_from_start,
-            'values': z_samples
-        })
-        
-        return profile_df

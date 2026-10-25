@@ -437,3 +437,46 @@ def test_zoom_button_toggle_and_range_selector_conflict_resolution(viewer):
     assert viewer.zoom_pan_active is True
 
 
+def test_norm_range_edited_updates_view(viewer):
+    data = _tensor_data(3)
+    viewer.set_plot_data(data)
+    viewer.btn_norm.setChecked(True)
+    viewer.norm_xmin.setText("0.2")
+    viewer.norm_xmax.setText("0.8")
+    viewer._on_norm_range_edited()
+    assert viewer.ax.get_ylim()[1] > 0
+
+
+def test_compute_shift_steps_with_precomputed_norm(viewer):
+    data = _tensor_data(3)
+    viewer.set_plot_data(data)
+    viewer.slider_y_shift.setValue(50)
+    x = data["x"]
+    Y = data["y"]
+    Y_norm = viewer._get_normalized_y_tensor(x, Y)
+    x_step, y_step = viewer._compute_shift_steps(Y_norm=Y_norm)
+    assert x_step == 0.0
+    assert y_step > 0.0
+
+
+def test_vectorized_heatmap_interpolation(viewer):
+    data = _tensor_data(5)
+    viewer.set_plot_data(data)
+    viewer.btn_heatmap.setChecked(True)
+    viewer.spin_heatmap_interp.setValue(100)
+    viewer._plot_heatmap()
+    assert viewer._heatmap_colorbar is not None
+
+
+def test_filename_token_extraction_with_precompiled_regex(viewer):
+    fname = "sample_test_300K_4.5mW_01.txt"
+    tokens = viewer._extract_filename_tokens(fname)
+    assert len(tokens) >= 3
+    # Verify (pos, text, num) tuples
+    token_dict = {t[1]: t[2] for t in tokens}
+    assert token_dict.get("300K") == 300.0
+    assert token_dict.get("4.5mW") == 4.5
+    assert token_dict.get("01") == 1.0
+
+
+

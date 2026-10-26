@@ -316,10 +316,9 @@ QSS_TEMPLATE = r"""
 
     QTabWidget::pane {
         margin-top: 0px;
-        border: none;
-        border-top: 1px solid @border;
-        border-radius: 0px;
-        background-color: transparent;
+        border: 1px solid @border;
+        border-radius: 8px;
+        background-color: @surface;
         top: -1px;
     }
 

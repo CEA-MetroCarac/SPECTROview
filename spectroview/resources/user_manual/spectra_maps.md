@@ -309,7 +309,7 @@ _______
 Once fitting is complete across your spectra or maps, you need to aggregate the best-fit results:
 
 - Navigate to the **Fit Results** tab.
-- Click the **Collect** button. **SPECTROview** will instantly aggregate all best-fit parameters into a unified, sortable table. Each spectrum's fit quality (**R2**, the coefficient of determination) is included as a column, so you can filter, sort, or plot it (e.g. an R² heatmap in the `Maps` workspace) just like any fitted parameter.
+- Click the **Collect** button. **SPECTROview** will instantly aggregate all best-fit parameters into a unified data table. Each spectrum's fit quality (**R2**, the coefficient of determination) is included as a column, so you can filter or plot it (e.g. an R² heatmap in the `Maps` workspace) just like any fitted parameter. You can click any column header to select the entire column, or drag across headers to select multiple columns for quick clipboard copying.
 
 > **Adjusting decimal precision**: the number of decimal places shown for the numeric results (x0, ampli, fwhm, area, R2, …) is controlled by the **Fit results decimals** spinbox at the top of the **Fit Results** tab, just above the **Collect** button (default 3). Change it, then click **Collect** again to rebuild the table at the new precision. It also applies to computed columns (see below). The X/Y coordinate columns always keep full precision.
 

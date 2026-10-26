@@ -1,7 +1,6 @@
 import pytest
-import numpy as np
 import pandas as pd
-from PySide6.QtCore import Qt, QModelIndex, QItemSelectionModel
+from PySide6.QtCore import Qt, QItemSelectionModel
 from PySide6.QtWidgets import QApplication
 
 from spectroview.view.components.v_dataframe_table import DataFrameTableModel, VDataframeTable
@@ -92,3 +91,70 @@ class TestVDataframeTable:
         clipboard_text = QApplication.clipboard().text()
         assert 'spec_001' in clipboard_text
         assert '20.0' in clipboard_text
+
+    def test_header_sorting_disabled(self, sample_df, qapp):
+        """Sorting on header click is disabled; headers remain clickable for selection."""
+        table = VDataframeTable()
+        table.show(sample_df)
+        assert not table.table_view.isSortingEnabled()
+        assert table.table_view.horizontalHeader().sectionsClickable()
+        assert table.table_view.horizontalHeader().highlightSections()
+        assert table.table_view.verticalHeader().sectionsClickable()
+        assert table.table_view.verticalHeader().highlightSections()
+
+    def test_column_selection_on_header_click_and_drag(self, sample_df, qapp):
+        """Clicking header selects entire column; dragging selects multiple columns."""
+        from PySide6.QtCore import QPoint
+        from PySide6.QtGui import QMouseEvent
+
+        table = VDataframeTable()
+        table.show(sample_df)
+        table.table_view.show()
+
+        tv = table.table_view
+        hh = tv.horizontalHeader()
+
+        # Single click on Column 1 ('X')
+        pos1 = QPoint(hh.sectionViewportPosition(1) + 10, 10)
+        hh.mousePressEvent(QMouseEvent(QMouseEvent.Type.MouseButtonPress, pos1, pos1, Qt.LeftButton, Qt.LeftButton, Qt.NoModifier))
+        hh.mouseReleaseEvent(QMouseEvent(QMouseEvent.Type.MouseButtonRelease, pos1, pos1, Qt.LeftButton, Qt.NoButton, Qt.NoModifier))
+
+        sel_cols = sorted(set(idx.column() for idx in tv.selectionModel().selectedIndexes()))
+        sel_rows = sorted(set(idx.row() for idx in tv.selectionModel().selectedIndexes()))
+        assert sel_cols == [1]
+        assert sel_rows == [0, 1, 2]
+
+        # Drag from Column 1 to Column 3 ('x0_P1')
+        pos3 = QPoint(hh.sectionViewportPosition(3) + 10, 10)
+        hh.mousePressEvent(QMouseEvent(QMouseEvent.Type.MouseButtonPress, pos1, pos1, Qt.LeftButton, Qt.LeftButton, Qt.NoModifier))
+        hh.mouseMoveEvent(QMouseEvent(QMouseEvent.Type.MouseMove, pos3, pos3, Qt.LeftButton, Qt.LeftButton, Qt.NoModifier))
+        hh.mouseReleaseEvent(QMouseEvent(QMouseEvent.Type.MouseButtonRelease, pos3, pos3, Qt.LeftButton, Qt.NoButton, Qt.NoModifier))
+
+        sel_cols_drag = sorted(set(idx.column() for idx in tv.selectionModel().selectedIndexes()))
+        assert sel_cols_drag == [1, 2, 3]
+        assert len(tv.selectionModel().selectedIndexes()) == 3 * 3  # 3 rows x 3 cols
+
+    def test_header_click_does_not_reorder_rows(self, sample_df, qapp):
+        """Clicking header must select columns without reordering underlying row values."""
+        from PySide6.QtCore import QPoint
+        from PySide6.QtGui import QMouseEvent
+
+        table = VDataframeTable()
+        table.show(sample_df)
+        table.table_view.show()
+
+        tv = table.table_view
+        hh = tv.horizontalHeader()
+
+        # Initial order of Filename column: spec_001, spec_002, spec_003
+        initial_order = [table.model.data(table.model.index(r, 0), Qt.DisplayRole) for r in range(3)]
+        assert initial_order == ['spec_001', 'spec_002', 'spec_003']
+
+        # Click on Column 3 ('x0_P1': 520.12, 521.45, 519.88)
+        pos3 = QPoint(hh.sectionViewportPosition(3) + 10, 10)
+        hh.mousePressEvent(QMouseEvent(QMouseEvent.Type.MouseButtonPress, pos3, pos3, Qt.LeftButton, Qt.LeftButton, Qt.NoModifier))
+        hh.mouseReleaseEvent(QMouseEvent(QMouseEvent.Type.MouseButtonRelease, pos3, pos3, Qt.LeftButton, Qt.NoButton, Qt.NoModifier))
+
+        # Order must remain strictly spec_001, spec_002, spec_003 (not sorted by 519.88)
+        post_order = [table.model.data(table.model.index(r, 0), Qt.DisplayRole) for r in range(3)]
+        assert post_order == initial_order

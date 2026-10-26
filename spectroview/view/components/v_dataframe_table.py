@@ -105,7 +105,7 @@ class VDataframeTable(QWidget):
     
     Features:
     - Displays DataFrame using a virtual QAbstractTableModel for O(1) performance
-    - Supports fast sorting on click
+    - Supports selecting entire columns or dragging across headers to select multiple columns
     - Color-codes columns by parameter prefix
     - Fast copy to clipboard (Ctrl+C or context menu)
     - Fast smart auto-resizing of column widths
@@ -138,12 +138,16 @@ class VDataframeTable(QWidget):
 
         # Create QTableView
         self.table_view = QTableView()
-        self.table_view.setSortingEnabled(True)
+        self.table_view.setSortingEnabled(False)
         self.table_view.setAlternatingRowColors(False)
         self.table_view.setSelectionBehavior(QTableView.SelectItems)
         self.table_view.setSelectionMode(QTableView.ExtendedSelection)
         self.table_view.horizontalHeader().setStretchLastSection(False)
         self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.table_view.horizontalHeader().setSectionsClickable(True)
+        self.table_view.horizontalHeader().setHighlightSections(True)
+        self.table_view.verticalHeader().setSectionsClickable(True)
+        self.table_view.verticalHeader().setHighlightSections(True)
         layout.addWidget(self.table_view)
 
         # Alias for backward compatibility

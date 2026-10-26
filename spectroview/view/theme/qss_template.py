@@ -233,11 +233,16 @@ QSS_TEMPLATE = r"""
     }
 
     /* ═══════════════════════════════════════════════
-       SPLITTERS — PLUME 5px handle with SVG grip
+       SPLITTERS — PLUME handle with SVG grip & spacing
        ═══════════════════════════════════════════════ */
 
+    QSplitter {
+        qproperty-handleWidth: 11;
+    }
+
     QSplitter::handle:horizontal {
-        width: 5px;
+        margin-left: 3px;
+        margin-right: 3px;
         background-color: @border_subtle;
         border: none;
         border-radius: 2px;
@@ -245,7 +250,8 @@ QSS_TEMPLATE = r"""
     }
 
     QSplitter::handle:vertical {
-        height: 5px;
+        margin-top: 3px;
+        margin-bottom: 3px;
         background-color: @border_subtle;
         border: none;
         border-radius: 2px;

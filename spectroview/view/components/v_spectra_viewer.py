@@ -143,7 +143,7 @@ class VSpectraViewer(QWidget):
         
     def _init_ui(self):
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setContentsMargins(0, 0, 2, 2)
 
         # ─── Figure ───
         with plt.style.context(PLOT_POLICY_LIGHT):

@@ -16,12 +16,13 @@ from PySide6.QtWidgets import (
     QApplication,
 )
 from PySide6.QtCore import QObject, QEvent, QSize, Signal, QTimer, Qt
-from PySide6.QtGui import QIcon, QAction
+from PySide6.QtGui import QAction
 
 from spectroview import (
-    DEFAULT_COLORS, DEFAULT_MARKERS, ICON_DIR,
+    DEFAULT_COLORS, DEFAULT_MARKERS,
     PLOT_POLICY_LIGHT, PLOT_POLICY_DARK,
 )
+from spectroview.view.theme import Icons
 
 # figure_theme value -> mplstyle file. "light" (the default) reproduces the
 # app's only-ever-existing hardcoded behavior; dark reuses the same
@@ -155,7 +156,7 @@ class VGraph(QWidget):
                     # Our custom icons are colorful and theme-independent, so
                     # re-assert them here instead of re-tinting matplotlib's.
                     if text in _CUSTOM_TOOLBAR_ICONS:
-                        action_dict[text].setIcon(QIcon(f"{ICON_DIR}/{_CUSTOM_TOOLBAR_ICONS[text]}"))
+                        action_dict[text].setIcon(Icons.get(_CUSTOM_TOOLBAR_ICONS[text]))
                     elif image_file is not None:
                         try:
                             action_dict[text].setIcon(self.toolbar._icon(image_file + '.png'))
@@ -171,38 +172,38 @@ class VGraph(QWidget):
             if text in ['Save', 'Back', 'Forward', 'Subplots', 'Customize']:
                 action.setVisible(False)
             elif text in _CUSTOM_TOOLBAR_ICONS:
-                action.setIcon(QIcon(f"{ICON_DIR}/{_CUSTOM_TOOLBAR_ICONS[text]}"))
+                action.setIcon(Icons.get(_CUSTOM_TOOLBAR_ICONS[text]))
             if text == 'Home':
                 action.setToolTip("Rescale plot to fit data (Ctrl+R)")
         
         # Create Replicate button
         self.btn_replicate = QPushButton()
-        self.btn_replicate.setIcon(QIcon(f"{ICON_DIR}/duplicate.png"))
+        self.btn_replicate.setIcon(Icons.duplicate())
         self.btn_replicate.setIconSize(QSize(26, 26))
         self.btn_replicate.setFixedSize(30, 30)
         self.btn_replicate.setToolTip("Duplicate selected graph")
         self.btn_replicate.clicked.connect(lambda *args: self.replicate_requested.emit(self.graph_id))
 
-        # Create Customize button -- colorful icon, same regardless of theme.
+        # Create Customize button
         self.btn_customize = QPushButton()
-        self.btn_customize.setIcon(QIcon(f"{ICON_DIR}/customize2.png"))
+        self.btn_customize.setIcon(Icons.styling())
         self.btn_customize.setIconSize(QSize(26, 26))
         self.btn_customize.setFixedSize(30, 30)
         self.btn_customize.setToolTip("Customize graph (Ctrl + E)")
         self.btn_customize.clicked.connect(lambda: self.customize_requested.emit(self.graph_id))
 
-        # Create Copy button -- colorful icon, same regardless of theme.
+        # Create Copy button
         self.btn_copy_figure = QPushButton()
-        self.btn_copy_figure.setIcon(QIcon(f"{ICON_DIR}/copy3.png"))
+        self.btn_copy_figure.setIcon(Icons.copy())
         self.btn_copy_figure.setIconSize(QSize(26, 26))
         self.btn_copy_figure.setFixedSize(30, 30)
         self.btn_copy_figure.setToolTip("Copy selected figure to clipboard (Ctrl +C)")
         self.btn_copy_figure.clicked.connect(self.copy_to_clipboard)
 
-        # Create Export button -- colorful icon, same regardless of theme.
+        # Create Export button
         # Click exports just this graph; Ctrl+Click exports every open graph.
         self.btn_export = QPushButton()
-        self.btn_export.setIcon(QIcon(f"{ICON_DIR}/export.png"))
+        self.btn_export.setIcon(Icons.export())
         self.btn_export.setIconSize(QSize(26, 26))
         self.btn_export.setFixedSize(30, 30)
         self.btn_export.setToolTip("Export selected graph to file. Hold Ctrl + Click to export all open graphs")
@@ -212,20 +213,21 @@ class VGraph(QWidget):
         # handled centrally by VWorkspaceGraphs.
         self.btn_style_menu = QToolButton()
         self.btn_style_menu.setFixedSize(30, 30)
-        self.btn_style_menu.setIcon(QIcon(f"{ICON_DIR}/styling.png"))
+        self.btn_style_menu.setIcon(Icons.styling())
         self.btn_style_menu.setIconSize(QSize(26, 26))
         self.btn_style_menu.setToolTip("Graph style: save/apply, copy/paste, reset, set default")
         self.btn_style_menu.setPopupMode(QToolButton.InstantPopup)
         style_menu = QMenu(self)
-        for action_text, action_name in [
-            ("Save Style...", "save_template"),
-            ("Apply Style...", "apply_template"),
-            ("Copy Style", "copy"),
-            ("Paste Style", "paste"),
-            ("Reset to Default", "reset"),
-            ("Set as Default Style", "set_default"),
-        ]:
-            action = QAction(action_text, self)
+        _style_actions = [
+            ("Save Style...", "save_template", Icons.save()),
+            ("Apply Style...", "apply_template", Icons.check()),
+            ("Copy Style", "copy", Icons.copy()),
+            ("Paste Style", "paste", Icons.paste()),
+            ("Reset to Default", "reset", Icons.undo()),
+            ("Set as Default Style", "set_default", Icons.settings()),
+        ]
+        for action_text, action_name, action_icon in _style_actions:
+            action = QAction(action_icon, action_text, self)
             action.triggered.connect(
                 lambda checked=False, name=action_name: self.style_action_requested.emit(self.graph_id, name)
             )

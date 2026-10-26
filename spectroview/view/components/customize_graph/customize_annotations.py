@@ -4,16 +4,15 @@ hline, and text annotations on a plot.
 Split out of customize_graph_dialog.py; no behavior changes.
 """
 import time
-import os
 
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon
+from spectroview.view.theme import Icons
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget,
     QListWidgetItem, QLabel, QMessageBox, QDialog,
 )
 
-from spectroview import ICON_DIR
 from spectroview.view.components.customize_graph.customize_annotation_dialogs import (
     EditLineDialog, EditTextDialog, EditArrowDialog, EditSpanDialog,
     EditBoxDialog, EditCalloutDialog,
@@ -62,15 +61,15 @@ class CustomizeAnnotations(QWidget):
         btn_layout2 = QHBoxLayout()
 
         self.btn_add_vline = QPushButton("V-Line")
-        self.btn_add_vline.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_vline.setIcon(Icons.ann_vline())
         self.btn_add_vline.setIconSize(QSize(16, 16))
 
         self.btn_add_hline = QPushButton("H-Line")
-        self.btn_add_hline.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_hline.setIcon(Icons.ann_hline())
         self.btn_add_hline.setIconSize(QSize(16, 16))
 
         self.btn_add_text = QPushButton("Text")
-        self.btn_add_text.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_text.setIcon(Icons.ann_text())
         self.btn_add_text.setIconSize(QSize(16, 16))
 
         btn_layout.addWidget(self.btn_add_vline)
@@ -78,23 +77,23 @@ class CustomizeAnnotations(QWidget):
         btn_layout.addWidget(self.btn_add_text)
 
         self.btn_add_arrow = QPushButton("Arrow")
-        self.btn_add_arrow.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_arrow.setIcon(Icons.ann_arrow())
         self.btn_add_arrow.setIconSize(QSize(16, 16))
 
         self.btn_add_vspan = QPushButton("V-Span")
-        self.btn_add_vspan.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_vspan.setIcon(Icons.ann_vspan())
         self.btn_add_vspan.setIconSize(QSize(16, 16))
 
         self.btn_add_hspan = QPushButton("H-Span")
-        self.btn_add_hspan.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_hspan.setIcon(Icons.ann_hspan())
         self.btn_add_hspan.setIconSize(QSize(16, 16))
 
         self.btn_add_box = QPushButton("Box")
-        self.btn_add_box.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_box.setIcon(Icons.ann_box())
         self.btn_add_box.setIconSize(QSize(16, 16))
 
         self.btn_add_callout = QPushButton("Callout")
-        self.btn_add_callout.setIcon(QIcon(os.path.join(ICON_DIR, "add_color.png")))
+        self.btn_add_callout.setIcon(Icons.ann_callout())
         self.btn_add_callout.setIconSize(QSize(16, 16))
 
         btn_layout2.addWidget(self.btn_add_arrow)
@@ -109,11 +108,11 @@ class CustomizeAnnotations(QWidget):
         # Edit and Delete buttons
         mgmt_layout = QHBoxLayout()
         self.btn_edit = QPushButton("Edit")
-        self.btn_edit.setIcon(QIcon(os.path.join(ICON_DIR, "edit.png")))
+        self.btn_edit.setIcon(Icons.edit())
         self.btn_edit.setIconSize(QSize(16, 16))
 
         self.btn_delete = QPushButton("Delete")
-        self.btn_delete.setIcon(QIcon(os.path.join(ICON_DIR, "trash.png")))
+        self.btn_delete.setIcon(Icons.trash())
         self.btn_delete.setIconSize(QSize(16, 16))
 
         mgmt_layout.addWidget(self.btn_edit)
@@ -335,27 +334,37 @@ class CustomizeAnnotations(QWidget):
         self.annotation_list.clear()
 
         for ann in self.graph_widget.annotations:
-            if ann['type'] == 'vline':
-                text = f"├ VLine @ x={ann['x']:.2f} ({ann.get('color', 'red')})"
-            elif ann['type'] == 'hline':
-                text = f"├ HLine @ y={ann['y']:.2f} ({ann.get('color', 'blue')})"
-            elif ann['type'] == 'text':
-                text = f"└ Text \"{ann['text'][:20]}...\" @ ({ann['x']:.1f},{ann['y']:.1f})"
-            elif ann['type'] == 'arrow':
-                text = (f"├ Arrow ({ann['x1']:.1f},{ann['y1']:.1f}) → "
+            ann_type = ann.get('type')
+            if ann_type == 'vline':
+                icon = Icons.ann_vline()
+                text = f"VLine @ x={ann['x']:.2f} ({ann.get('color', 'red')})"
+            elif ann_type == 'hline':
+                icon = Icons.ann_hline()
+                text = f"HLine @ y={ann['y']:.2f} ({ann.get('color', 'blue')})"
+            elif ann_type == 'text':
+                icon = Icons.ann_text()
+                text = f"Text \"{ann['text'][:20]}...\" @ ({ann['x']:.1f},{ann['y']:.1f})"
+            elif ann_type == 'arrow':
+                icon = Icons.ann_arrow()
+                text = (f"Arrow ({ann['x1']:.1f},{ann['y1']:.1f}) → "
                         f"({ann['x2']:.1f},{ann['y2']:.1f}) ({ann.get('color', 'black')})")
-            elif ann['type'] == 'vspan':
-                text = f"├ V-Span x=[{ann['x1']:.2f}, {ann['x2']:.2f}] ({ann.get('color', 'orange')})"
-            elif ann['type'] == 'hspan':
-                text = f"├ H-Span y=[{ann['y1']:.2f}, {ann['y2']:.2f}] ({ann.get('color', 'orange')})"
-            elif ann['type'] == 'box':
-                text = (f"├ Box @ ({ann['x']:.1f},{ann['y']:.1f}) "
+            elif ann_type == 'vspan':
+                icon = Icons.ann_vspan()
+                text = f"V-Span x=[{ann['x1']:.2f}, {ann['x2']:.2f}] ({ann.get('color', 'orange')})"
+            elif ann_type == 'hspan':
+                icon = Icons.ann_hspan()
+                text = f"H-Span y=[{ann['y1']:.2f}, {ann['y2']:.2f}] ({ann.get('color', 'orange')})"
+            elif ann_type == 'box':
+                icon = Icons.ann_box()
+                text = (f"Box @ ({ann['x']:.1f},{ann['y']:.1f}) "
                         f"{ann['width']:.2f}×{ann['height']:.2f} ({ann.get('facecolor', 'yellow')})")
-            elif ann['type'] == 'callout':
-                text = f"└ Callout \"{ann['text'][:20]}\" @ ({ann['x']:.1f},{ann['y']:.1f})"
+            elif ann_type == 'callout':
+                icon = Icons.ann_callout()
+                text = f"Callout \"{ann['text'][:20]}\" @ ({ann['x']:.1f},{ann['y']:.1f})"
             else:
-                text = f"Unknown type: {ann['type']}"
+                icon = QIcon()
+                text = f"Unknown type: {ann_type}"
 
-            item = QListWidgetItem(text)
+            item = QListWidgetItem(icon, text)
             item.setData(Qt.UserRole, ann['id'])
             self.annotation_list.addItem(item)

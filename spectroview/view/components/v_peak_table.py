@@ -6,9 +6,10 @@ from PySide6.QtWidgets import (
     QComboBox, QPushButton, QCheckBox, QSizePolicy, QSpacerItem
 )
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QIcon, QPalette, QColor
+from PySide6.QtGui import QPalette, QColor
 
-from spectroview import PEAK_MODELS, ICON_DIR
+from spectroview import PEAK_MODELS
+from spectroview.view.theme import Icons
 from spectroview.viewmodel.utils import fano_display_amplitude, fano_internal_amplitude
 
 ROW_HEIGHT = 28
@@ -198,7 +199,7 @@ class VPeakTable(QWidget):
 
             # delete
             btn = QPushButton(pm.prefix)
-            btn.setIcon(QIcon(f"{ICON_DIR}/close.png"))
+            btn.setIcon(Icons.close(size=12))
             btn.setFixedSize(50, ROW_HEIGHT)
             btn.clicked.connect(self._make_delete_callback(int(pm.key)))
             cols["del"].addWidget(btn)

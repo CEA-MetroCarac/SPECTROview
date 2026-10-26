@@ -12,10 +12,9 @@ the individual tab widgets from tests) keep working unchanged.
 import copy
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QTabWidget, QWidget
 
-from spectroview import ICON_DIR
+from spectroview.view.theme import Icons
 from spectroview.model.graph_style import can_restyle_without_replot
 from spectroview.view.components.graph_commit import snapshot, diff
 from spectroview.view.components.customize_graph.customize_legend import CustomizeLegend
@@ -87,12 +86,12 @@ class CustomizeGraphDialog(QDialog):
         btn_layout.addStretch()
 
         btn_cancel = QPushButton("Cancel")
-        btn_cancel.setIcon(QIcon(f"{ICON_DIR}/close.png"))
+        btn_cancel.setIcon(Icons.close())
         btn_cancel.clicked.connect(self.cancel_all)
         btn_layout.addWidget(btn_cancel)
 
         btn_apply = QPushButton("Apply")
-        btn_apply.setIcon(QIcon(f"{ICON_DIR}/done.png"))
+        btn_apply.setIcon(Icons.check())
         btn_apply.clicked.connect(self.apply_all)
         btn_layout.addWidget(btn_apply)
 

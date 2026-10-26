@@ -1,14 +1,12 @@
 # view/components/v_data_filter.py
 """DataFrame filtering widget with checkboxes."""
 
-import os
-from spectroview import ICON_DIR
+from spectroview.view.theme import Icons
 
 from PySide6.QtWidgets import (
     QGroupBox, QVBoxLayout, QHBoxLayout, QPushButton,
     QListWidget, QListWidgetItem, QCheckBox, QMenu, QApplication, QCompleter
 )
-from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt, Signal, QStringListModel, QSize, QEvent
 
 from spectroview.view.components.customized_widgets import ExpressionLineEdit
@@ -52,18 +50,21 @@ class VDataFilter(QGroupBox):
         
         # Add filter button
         self.btn_add = QPushButton()
+        self.btn_add.setIcon(Icons.plus())
         self.btn_add.setToolTip("Add filter")
         self.btn_add.clicked.connect(self._on_add_filter)
         layout_buttons.addWidget(self.btn_add)
         
         # Remove filter button
         self.btn_remove = QPushButton()
+        self.btn_remove.setIcon(Icons.close())
         self.btn_remove.setToolTip("Remove selected filter")
         self.btn_remove.clicked.connect(self._on_remove_filter)
         layout_buttons.addWidget(self.btn_remove)
         
         # Apply filters button
         self.btn_apply = QPushButton("Apply")
+        self.btn_apply.setIcon(Icons.check())
         self.btn_apply.setToolTip("Click to apply checked filters to the selected dataframe")
         self.btn_apply.clicked.connect(self._on_apply)
         layout_buttons.addWidget(self.btn_apply)
@@ -118,7 +119,7 @@ class VDataFilter(QGroupBox):
     def _show_context_menu_for_checkbox(self, pos, checkbox: QCheckBox):
         """Show right-click menu to copy filter text when right-clicking on checkbox."""
         menu = QMenu(self)
-        copy_action = menu.addAction("Copy filter text")
+        copy_action = menu.addAction(Icons.copy(), "Copy filter text")
         action = menu.exec(checkbox.mapToGlobal(pos))
         if action == copy_action:
             QApplication.clipboard().setText(checkbox.text())
@@ -205,7 +206,7 @@ class VDataFilter(QGroupBox):
             return
         
         menu = QMenu(self)
-        copy_action = menu.addAction("Copy filter text")
+        copy_action = menu.addAction(Icons.copy(), "Copy filter text")
         
         action = menu.exec(self.filter_listbox.mapToGlobal(pos))
         if action == copy_action:

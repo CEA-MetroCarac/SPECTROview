@@ -1,5 +1,6 @@
 # spectroview/view/components/v_fit_model_builder.py
-from spectroview import ICON_DIR, PEAK_MODELS
+from spectroview import PEAK_MODELS
+from spectroview.view.theme import Icons
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QGroupBox, QLabel, QPushButton, QComboBox,
@@ -121,6 +122,8 @@ class VFitModelBuilder(QWidget):
 
         # Initial sizes
         splitter.setSizes([390, 650])
+
+        self._apply_initial_icons()
 
     # ======================================================
     # GROUPS
@@ -702,9 +705,27 @@ class VFitModelBuilder(QWidget):
             self.btn_fit.setText("Fit")
             self.btn_apply.setText("Apply")
 
+    def _apply_initial_icons(self):
+        """Set default vector icons with dynamic paint-time theme coloring."""
+        self.btn_xcorrect.setIcon(Icons.check())
+        self.btn_undo_corr.setIcon(Icons.undo())
+        self.btn_extract.setIcon(Icons.cut())
+        self.btn_base_delete.setIcon(Icons.trash())
+        self.btn_base_copy.setIcon(Icons.copy())
+        self.btn_base_paste.setIcon(Icons.paste())
+        self.btn_base_subtract.setIcon(Icons.check())
+        self.btn_peak_delete.setIcon(Icons.trash())
+        self.btn_peak_copy.setIcon(Icons.copy())
+        self.btn_peak_paste.setIcon(Icons.paste())
+        self.btn_copy.setIcon(Icons.copy())
+        self.btn_paste.setIcon(Icons.paste())
+        self.btn_save.setIcon(Icons.save())
+        self.btn_apply.setIcon(Icons.check())
+        self.btn_load.setIcon(Icons.open())
+        self.btn_refresh.setIcon(Icons.refresh())
+
     def apply_theme(self, theme: str):
         """Update icons based on the global application theme."""
-        from spectroview.viewmodel.utils import get_tinted_icon
         if theme in ("modern_warm", "warm"):
             icon_color = "#1C1C1E"
         elif theme in ("dark", "classic_dark"):
@@ -713,26 +734,26 @@ class VFitModelBuilder(QWidget):
             icon_color = "#404040"
 
         # X-correction buttons
-        self.btn_xcorrect.setIcon(get_tinted_icon(f"{ICON_DIR}/done.png", icon_color))
-        self.btn_undo_corr.setIcon(get_tinted_icon(f"{ICON_DIR}/undo.png", icon_color))
+        self.btn_xcorrect.setIcon(Icons.check(color=icon_color))
+        self.btn_undo_corr.setIcon(Icons.undo(color=icon_color))
         # Spectral range
-        self.btn_extract.setIcon(get_tinted_icon(f"{ICON_DIR}/cut.png", icon_color))
+        self.btn_extract.setIcon(Icons.cut(color=icon_color))
         # Baseline buttons
-        self.btn_base_delete.setIcon(get_tinted_icon(f"{ICON_DIR}/trash.png", icon_color))
-        self.btn_base_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
-        self.btn_base_paste.setIcon(get_tinted_icon(f"{ICON_DIR}/paste.png", icon_color))
-        self.btn_base_subtract.setIcon(get_tinted_icon(f"{ICON_DIR}/done.png", icon_color))
+        self.btn_base_delete.setIcon(Icons.trash(color=icon_color))
+        self.btn_base_copy.setIcon(Icons.copy(color=icon_color))
+        self.btn_base_paste.setIcon(Icons.paste(color=icon_color))
+        self.btn_base_subtract.setIcon(Icons.check(color=icon_color))
         # Peak buttons
-        self.btn_peak_delete.setIcon(get_tinted_icon(f"{ICON_DIR}/trash.png", icon_color))
-        self.btn_peak_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
-        self.btn_peak_paste.setIcon(get_tinted_icon(f"{ICON_DIR}/paste.png", icon_color))
+        self.btn_peak_delete.setIcon(Icons.trash(color=icon_color))
+        self.btn_peak_copy.setIcon(Icons.copy(color=icon_color))
+        self.btn_peak_paste.setIcon(Icons.paste(color=icon_color))
         # Fit control buttons
-        self.btn_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
-        self.btn_paste.setIcon(get_tinted_icon(f"{ICON_DIR}/paste.png", icon_color))
-        self.btn_save.setIcon(get_tinted_icon(f"{ICON_DIR}/save.png", icon_color))
-        self.btn_apply.setIcon(get_tinted_icon(f"{ICON_DIR}/done.png", icon_color))
-        self.btn_load.setIcon(get_tinted_icon(f"{ICON_DIR}/load.png", icon_color))
-        self.btn_refresh.setIcon(get_tinted_icon(f"{ICON_DIR}/update.png", icon_color))
+        self.btn_copy.setIcon(Icons.copy(color=icon_color))
+        self.btn_paste.setIcon(Icons.paste(color=icon_color))
+        self.btn_save.setIcon(Icons.save(color=icon_color))
+        self.btn_apply.setIcon(Icons.check(color=icon_color))
+        self.btn_load.setIcon(Icons.open(color=icon_color))
+        self.btn_refresh.setIcon(Icons.refresh(color=icon_color))
 
     # ───── Drag & Drop handling ──────────────────────────────────
     def dragEnterEvent(self, event):

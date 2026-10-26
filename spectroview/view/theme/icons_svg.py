@@ -442,6 +442,47 @@ _SVG_TEMPLATES: dict[str, str] = {
         '<path d="M3 3v5h5"/>'
         '<path d="M12 7v5l4 2"/>'
     ),
+
+    # ── Graph Annotations & Plots ──
+    "ann_vline": (
+        '<rect width="18" height="18" x="3" y="3" rx="2" stroke-dasharray="2 2" opacity="0.4"/>'
+        '<line x1="12" x2="12" y1="2" y2="22"/>'
+    ),
+    "ann_hline": (
+        '<rect width="18" height="18" x="3" y="3" rx="2" stroke-dasharray="2 2" opacity="0.4"/>'
+        '<line x1="2" x2="22" y1="12" y2="12"/>'
+    ),
+    "ann_text": (
+        '<polyline points="4 7 4 4 20 4 20 7"/>'
+        '<line x1="9" x2="15" y1="20" y2="20"/>'
+        '<line x1="12" x2="12" y1="4" y2="20"/>'
+    ),
+    "ann_arrow": (
+        '<line x1="5" x2="19" y1="19" y2="5"/>'
+        '<polyline points="10 5 19 5 19 14"/>'
+    ),
+    "ann_vspan": (
+        '<line x1="7" x2="7" y1="3" y2="21"/>'
+        '<line x1="17" x2="17" y1="3" y2="21"/>'
+        '<rect width="10" height="18" x="7" y="3" fill="currentColor" fill-opacity="0.2" stroke="none"/>'
+    ),
+    "ann_hspan": (
+        '<line x1="3" x2="21" y1="7" y2="7"/>'
+        '<line x1="3" x2="21" y1="17" y2="17"/>'
+        '<rect width="18" height="10" x="3" y="7" fill="currentColor" fill-opacity="0.2" stroke="none"/>'
+    ),
+    "ann_box": '<rect width="16" height="14" x="4" y="5" rx="2" stroke-dasharray="3 3"/>',
+    "ann_callout": (
+        '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'
+        '<line x1="8" x2="16" y1="9" y2="9"/>'
+        '<line x1="8" x2="13" y1="13" y2="13"/>'
+    ),
+    "graph_point": (
+        '<polyline points="3 3 3 21 21 21"/>'
+        '<circle cx="8" cy="15" r="2"/>'
+        '<circle cx="13" cy="8" r="2"/>'
+        '<circle cx="18" cy="12" r="2"/>'
+    ),
 }
 
 # Aliases
@@ -455,6 +496,14 @@ _SVG_TEMPLATES["box"] = _SVG_TEMPLATES["graph_box"]
 _SVG_TEMPLATES["histogram"] = _SVG_TEMPLATES["graph_histogram"]
 _SVG_TEMPLATES["trendline"] = _SVG_TEMPLATES["graph_trendline"]
 _SVG_TEMPLATES["ai_chat"] = _SVG_TEMPLATES["sparkles"]
+_SVG_TEMPLATES["point"] = _SVG_TEMPLATES["graph_point"]
+_SVG_TEMPLATES["vline"] = _SVG_TEMPLATES["ann_vline"]
+_SVG_TEMPLATES["hline"] = _SVG_TEMPLATES["ann_hline"]
+_SVG_TEMPLATES["arrow"] = _SVG_TEMPLATES["ann_arrow"]
+_SVG_TEMPLATES["vspan"] = _SVG_TEMPLATES["ann_vspan"]
+_SVG_TEMPLATES["hspan"] = _SVG_TEMPLATES["ann_hspan"]
+_SVG_TEMPLATES["box_ann"] = _SVG_TEMPLATES["ann_box"]
+_SVG_TEMPLATES["callout"] = _SVG_TEMPLATES["ann_callout"]
 
 # ---------------------------------------------------------------------------
 # Caches & Engine Lifetimes

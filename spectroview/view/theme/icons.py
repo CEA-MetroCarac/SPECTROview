@@ -157,8 +157,30 @@ LEGACY_ICON_MAP: dict[str, str] = {
     "line.png": "graph_line",
     "scatter": "graph_scatter",
     "scatter.png": "graph_scatter",
-    "point": "graph_scatter",
-    "point.png": "graph_scatter",
+    "point": "graph_point",
+    "point.png": "graph_point",
+
+    # Graph Annotations & Scientific
+    "vline": "ann_vline",
+    "vline.png": "ann_vline",
+    "hline": "ann_hline",
+    "hline.png": "ann_hline",
+    "text": "ann_text",
+    "text.png": "ann_text",
+    "arrow": "ann_arrow",
+    "arrow.png": "ann_arrow",
+    "arrow-up": "chevron_up",
+    "arrow-up.svg": "chevron_up",
+    "arrow-down": "chevron_down",
+    "arrow-down.svg": "chevron_down",
+    "vspan": "ann_vspan",
+    "vspan.png": "ann_vspan",
+    "hspan": "ann_hspan",
+    "hspan.png": "ann_hspan",
+    "box_ann": "ann_box",
+    "box_ann.png": "ann_box",
+    "callout": "ann_callout",
+    "callout.png": "ann_callout",
     "bar": "graph_bar",
     "bar.png": "graph_bar",
     "box": "graph_box",
@@ -293,6 +315,10 @@ class Icons:
         return svg_icon("trash", size=size, color=color)
 
     @classmethod
+    def eraser(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("eraser", size=size, color=color)
+
+    @classmethod
     def edit(cls, color: str | None = None, size: int = 16) -> QIcon:
         return svg_icon("edit", size=size, color=color)
 
@@ -417,6 +443,43 @@ class Icons:
     @classmethod
     def graph_scatter(cls, color: str | None = None, size: int = 16) -> QIcon:
         return svg_icon("graph_scatter", size=size, color=color)
+
+    @classmethod
+    def graph_point(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("graph_point", size=size, color=color)
+
+    # ── Graph Annotations ──
+    @classmethod
+    def ann_vline(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("ann_vline", size=size, color=color)
+
+    @classmethod
+    def ann_hline(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("ann_hline", size=size, color=color)
+
+    @classmethod
+    def ann_text(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("ann_text", size=size, color=color)
+
+    @classmethod
+    def ann_arrow(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("ann_arrow", size=size, color=color)
+
+    @classmethod
+    def ann_vspan(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("ann_vspan", size=size, color=color)
+
+    @classmethod
+    def ann_hspan(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("ann_hspan", size=size, color=color)
+
+    @classmethod
+    def ann_box(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("ann_box", size=size, color=color)
+
+    @classmethod
+    def ann_callout(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("ann_callout", size=size, color=color)
 
     @classmethod
     def graph_bar(cls, color: str | None = None, size: int = 16) -> QIcon:

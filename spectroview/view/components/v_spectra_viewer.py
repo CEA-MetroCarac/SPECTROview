@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QSlider, QMessageBox, QApplication, QButtonGroup
 )
 from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer, QPoint
-from PySide6.QtGui import QIcon, QCursor
+from PySide6.QtGui import QCursor
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -31,8 +31,9 @@ import matplotlib as mpl
 from functools import lru_cache
 import matplotlib.lines as mlines
 
-from spectroview import ICON_DIR, X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, DEFAULT_COLORS
-from spectroview.viewmodel.utils import copy_fig_to_clb, get_tinted_icon, fano_display_amplitude
+from spectroview import X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, DEFAULT_COLORS
+from spectroview.view.theme import Icons
+from spectroview.viewmodel.utils import copy_fig_to_clb, fano_display_amplitude
 
 @lru_cache(maxsize=8)
 def get_cached_style_dict(style_path: str) -> dict:
@@ -232,7 +233,7 @@ class VSpectraViewer(QWidget):
         # ── Eraser button ──
         self.btn_eraser = QToolButton()
         self.btn_eraser.setCheckable(True)
-        self.btn_eraser.setIcon(QIcon(f"{ICON_DIR}/eraser.png"))
+        self.btn_eraser.setIcon(Icons.eraser())
         self.btn_eraser.setIconSize(QSize(18, 18))
         self.btn_eraser.setFixedSize(22, 22)
         self.btn_eraser.setToolTip("Erase Cosmic Ray - click and drag over a spike to remove it")
@@ -241,7 +242,7 @@ class VSpectraViewer(QWidget):
 
         # ── Undo button (hidden until eraser is active) ──
         self.btn_erase_undo = QToolButton()
-        self.btn_erase_undo.setIcon(QIcon(f"{ICON_DIR}/undo2.png"))
+        self.btn_erase_undo.setIcon(Icons.undo())
         self.btn_erase_undo.setIconSize(QSize(18, 18))
         self.btn_erase_undo.setFixedSize(22, 22)
         self.btn_erase_undo.setToolTip("Undo last erasure")
@@ -251,7 +252,7 @@ class VSpectraViewer(QWidget):
 
         # ── Validate button (hidden until eraser is active) ──
         self.btn_erase_validate = QToolButton()
-        self.btn_erase_validate.setIcon(QIcon(f"{ICON_DIR}/done.png"))
+        self.btn_erase_validate.setIcon(Icons.check())
         self.btn_erase_validate.setIconSize(QSize(18, 18))
         self.btn_erase_validate.setFixedSize(22, 22)
         self.btn_erase_validate.setToolTip("Validate erasures and save corrections")
@@ -316,7 +317,7 @@ class VSpectraViewer(QWidget):
 
         # Rescale
         self.btn_rescale = QPushButton()
-        self.btn_rescale.setIcon(QIcon(f"{ICON_DIR}/rescale.png"))
+        self.btn_rescale.setIcon(Icons.rescale())
         self.btn_rescale.setIconSize(QSize(22, 22))
         self.btn_rescale.setFixedSize(30, 30)
         self.btn_rescale.setToolTip("Rescale (Ctrl+R)")
@@ -344,7 +345,7 @@ class VSpectraViewer(QWidget):
         self.btn_norm.setCheckable(True)
         self.btn_norm.setObjectName("btn_norm")
         self.btn_norm.setStyleSheet("QToolButton#btn_norm:checked { background-color: red; }")
-        self.btn_norm.setIcon(QIcon(f"{ICON_DIR}/norm.png"))
+        self.btn_norm.setIcon(Icons.norm())
         self.btn_norm.setToolTip("Intensity normalization to maximum of spectrum or selected region.\nNote: This normalization is just for visual change, the actual data is not changed.")
         self.btn_norm.setIconSize(QSize(22, 22))
         self.btn_norm.setFixedSize(30, 30)
@@ -372,7 +373,7 @@ class VSpectraViewer(QWidget):
         self.btn_bestfit = QToolButton()
         self.btn_bestfit.setCheckable(True)
         self.btn_bestfit.setChecked(True)  # Checked by default
-        self.btn_bestfit.setIcon(QIcon(f"{ICON_DIR}/bestfit.png"))
+        self.btn_bestfit.setIcon(Icons.bestfit())
         self.btn_bestfit.setToolTip("Show or hide best-fit lines")
         self.btn_bestfit.setIconSize(QSize(22, 22))
         self.btn_bestfit.setFixedSize(30, 30)
@@ -383,7 +384,7 @@ class VSpectraViewer(QWidget):
         # Legend
         self.btn_legend = QToolButton()
         self.btn_legend.setCheckable(True)
-        self.btn_legend.setIcon(QIcon(f"{ICON_DIR}/legend.png"))
+        self.btn_legend.setIcon(Icons.legend())
         self.btn_legend.setToolTip(
             "Show or hide the legend box. Double-click the legend to edit "
             "all spectrum labels and colors.")
@@ -394,7 +395,7 @@ class VSpectraViewer(QWidget):
 
         # Copy
         self.btn_copy = QPushButton()
-        self.btn_copy.setIcon(QIcon(f"{ICON_DIR}/copy.png"))
+        self.btn_copy.setIcon(Icons.copy())
         self.btn_copy.setToolTip("Copy figure to clipboard. Hold Ctrl + Click to copy data to clipboard")
         self.btn_copy.setIconSize(QSize(22, 22))
         self.btn_copy.setFixedSize(30, 30)
@@ -404,7 +405,7 @@ class VSpectraViewer(QWidget):
         # Heatmap toggle
         self.btn_heatmap = QToolButton()
         self.btn_heatmap.setCheckable(True)
-        self.btn_heatmap.setIcon(QIcon(f"{ICON_DIR}/2Dmap.png"))
+        self.btn_heatmap.setIcon(Icons.map_2d())
         self.btn_heatmap.setToolTip(
             "Plot Heatmap — display multiple spectra as a 2D intensity map.\n"
             "X-axis: spectral axis, Y-axis: varying parameter (see options), "
@@ -453,7 +454,7 @@ class VSpectraViewer(QWidget):
         # Options
         self.options_menu = self._create_options_menu()
         self.btn_options = QToolButton()
-        self.btn_options.setIcon(QIcon(f"{ICON_DIR}/options.png"))
+        self.btn_options.setIcon(Icons.settings())
         self.btn_options.setToolTip("More view options")
         self.btn_options.setIconSize(QSize(22, 22))
         self.btn_options.setFixedSize(30, 30)
@@ -477,7 +478,7 @@ class VSpectraViewer(QWidget):
         btn.setCheckable(True)
         btn.setChecked(checked)
         btn.setAutoExclusive(False)
-        btn.setIcon(QIcon(f"{ICON_DIR}/{icon}"))
+        btn.setIcon(Icons.get(icon))
         btn.setIconSize(QSize(22, 22))
         btn.setFixedSize(30, 30)
         btn.setToolTip(tooltip)
@@ -2811,16 +2812,18 @@ class VSpectraViewer(QWidget):
         else:
             icon_color = "#404040"
         if hasattr(self, 'btn_rescale'):
-            self.btn_rescale.setIcon(get_tinted_icon(f"{ICON_DIR}/rescale.png", icon_color))
-            self.btn_zoom.setIcon(get_tinted_icon(f"{ICON_DIR}/zoom.png", icon_color))
-            self.btn_baseline.setIcon(get_tinted_icon(f"{ICON_DIR}/baseline.png", icon_color))
-            self.btn_peak.setIcon(get_tinted_icon(f"{ICON_DIR}/peak.png", icon_color))
-            self.btn_norm.setIcon(get_tinted_icon(f"{ICON_DIR}/norm.png", icon_color))
-            self.btn_bestfit.setIcon(get_tinted_icon(f"{ICON_DIR}/bestfit.png", icon_color))
-            self.btn_legend.setIcon(get_tinted_icon(f"{ICON_DIR}/legend.png", icon_color))
-            self.btn_copy.setIcon(get_tinted_icon(f"{ICON_DIR}/copy.png", icon_color))
-            self.btn_options.setIcon(get_tinted_icon(f"{ICON_DIR}/options.png", icon_color))
-            self.btn_heatmap.setIcon(get_tinted_icon(f"{ICON_DIR}/2Dmap.png", icon_color))
+            self.btn_rescale.setIcon(Icons.rescale(color=icon_color))
+            self.btn_zoom.setIcon(Icons.zoom(color=icon_color))
+            self.btn_baseline.setIcon(Icons.baseline(color=icon_color))
+            self.btn_peak.setIcon(Icons.peak(color=icon_color))
+            self.btn_norm.setIcon(Icons.norm(color=icon_color))
+            self.btn_bestfit.setIcon(Icons.bestfit(color=icon_color))
+            self.btn_legend.setIcon(Icons.legend(color=icon_color))
+            self.btn_copy.setIcon(Icons.copy(color=icon_color))
+            self.btn_options.setIcon(Icons.settings(color=icon_color))
+            self.btn_heatmap.setIcon(Icons.map_2d(color=icon_color))
         
         if hasattr(self, 'btn_eraser'):
-            self.btn_erase_undo.setIcon(get_tinted_icon(f"{ICON_DIR}/undo2.png", icon_color))
+            self.btn_eraser.setIcon(Icons.eraser(color=icon_color))
+            self.btn_erase_undo.setIcon(Icons.undo(color=icon_color))
+            self.btn_erase_validate.setIcon(Icons.check(color=icon_color))

@@ -1,6 +1,5 @@
 # spectroview/view/components/v_map_viewer.py
 """View component for Map visualization with matplotlib canvas and controls."""
-import os
 import re
 import numpy as np
 import pandas as pd
@@ -19,10 +18,11 @@ from PySide6.QtWidgets import (
     QSizePolicy
 )
 from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer
-from PySide6.QtGui import QIcon, QAction
+from PySide6.QtGui import QAction
 
-from spectroview import ICON_DIR, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
-from spectroview.viewmodel.utils import copy_fig_to_clb, get_tinted_icon
+from spectroview import PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
+from spectroview.view.theme import Icons
+from spectroview.viewmodel.utils import copy_fig_to_clb
 from spectroview.view.components.customized_widgets import CustomizedPalette
 
 
@@ -156,7 +156,7 @@ class VMapViewer(QWidget):
         
         # Add viewer button
         self.btn_add_viewer = QPushButton()
-        self.btn_add_viewer.setIcon(QIcon(os.path.join(ICON_DIR, "add.png")))
+        self.btn_add_viewer.setIcon(Icons.plus())
         self.btn_add_viewer.setIconSize(QSize(20, 20))
         self.btn_add_viewer.setToolTip("Open a new map viewer window")
         self.btn_add_viewer.setFixedSize(28, 28)
@@ -165,7 +165,7 @@ class VMapViewer(QWidget):
         
         # Copy button
         self.btn_copy = QPushButton()
-        self.btn_copy.setIcon(QIcon(os.path.join(ICON_DIR, "copy.png")))
+        self.btn_copy.setIcon(Icons.copy())
         self.btn_copy.setIconSize(QSize(20, 20))
         self.btn_copy.setToolTip("Copy figure to clipboard")
         self.btn_copy.setFixedSize(28, 28)
@@ -197,11 +197,11 @@ class VMapViewer(QWidget):
         else:
             icon_color = "#404040"
         if hasattr(self, 'btn_copy'):
-            self.btn_copy.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "copy.png"), icon_color))
+            self.btn_copy.setIcon(Icons.copy(color=icon_color))
         if hasattr(self, 'btn_add_viewer'):
-            self.btn_add_viewer.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
+            self.btn_add_viewer.setIcon(Icons.plus(color=icon_color))
         if hasattr(self, 'btn_options'):
-            self.btn_options.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "options.png"), icon_color))
+            self.btn_options.setIcon(Icons.settings(color=icon_color))
 
     def _create_map_type_controls(self):
         """Create map type and palette selector controls."""
@@ -343,7 +343,7 @@ class VMapViewer(QWidget):
         self.btn_options = QToolButton()
         self.btn_options.setText("...")
         self.btn_options.setPopupMode(QToolButton.InstantPopup)
-        self.btn_options.setIcon(QIcon(os.path.join(ICON_DIR, "options.png")))
+        self.btn_options.setIcon(Icons.settings())
         self.btn_options.setToolTip("Additional options")
         
         # Create options menu

@@ -101,22 +101,46 @@ class VMapViewer(QWidget):
         self.canvas.mpl_connect('motion_notify_event', self._on_mouse_move)
         self.canvas.mpl_connect('button_release_event', self._on_mouse_release)
         
-        # Matplotlib toolbar
+        # Matplotlib toolbar (kept hidden for zoom/pan/home backend engine and mode tracking)
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
-        
-        original_set_style = self.toolbar.setStyleSheet
-        def custom_set_style(css):
-            original_set_style("QToolBar { background: transparent; border: none; }")
-        self.toolbar.setStyleSheet = custom_set_style
-        self.toolbar.setStyleSheet("")
+        self.toolbar.hide()
+
+        # Dedicated styled navigation buttons (Home/Rescale, Pan/Drag, Zoom) matching SPECTROview controls
+        self.btn_home = QPushButton()
+        self.btn_home.setIcon(Icons.rescale())
+        self.btn_home.setIconSize(QSize(20, 20))
+        self.btn_home.setFixedSize(28, 28)
+        self.btn_home.setToolTip("Rescale / Reset original view (Ctrl+R)")
+        self.btn_home.clicked.connect(self.toolbar.home)
+        self.btn_rescale = self.btn_home  # Alias matching v_spectra_viewer
+
+        self.btn_pan = QToolButton()
+        self.btn_pan.setCheckable(True)
+        self.btn_pan.setIcon(Icons.pan())
+        self.btn_pan.setIconSize(QSize(20, 20))
+        self.btn_pan.setFixedSize(28, 28)
+        self.btn_pan.setToolTip("Pan / Drag axes with left mouse, zoom with right")
+        self.btn_pan.clicked.connect(self.toolbar.pan)
+
+        self.btn_zoom = QToolButton()
+        self.btn_zoom.setCheckable(True)
+        self.btn_zoom.setIcon(Icons.zoom())
+        self.btn_zoom.setIconSize(QSize(20, 20))
+        self.btn_zoom.setFixedSize(28, 28)
+        self.btn_zoom.setToolTip("Zoom to rectangle")
+        self.btn_zoom.clicked.connect(self.toolbar.zoom)
+
+        # Bidirectional sync with matplotlib toolbar action checked states
+        action_dict = {a.text(): a for a in self.toolbar.actions() if a.text()}
+        if 'Pan' in action_dict:
+            action_dict['Pan'].toggled.connect(self.btn_pan.setChecked)
+        if 'Zoom' in action_dict:
+            action_dict['Zoom'].toggled.connect(self.btn_zoom.setChecked)
 
         class ToolbarEventFilter(QObject):
-            def __init__(self, toolbar):
-                # Parented to `toolbar` so Qt cancels the pending single-shot
-                # timer on teardown -- unparented, it could fire 100ms later
-                # against an already-deleted toolbar.
-                super().__init__(toolbar)
-                self.toolbar = toolbar
+            def __init__(self, viewer):
+                super().__init__(viewer)
+                self.viewer = viewer
                 self._timer = QTimer(self)
                 self._timer.setSingleShot(True)
                 self._timer.setInterval(100)
@@ -129,29 +153,21 @@ class VMapViewer(QWidget):
 
             def _update_icons(self):
                 try:
-                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                    if hasattr(self.viewer, 'apply_global_theme'):
+                        self.viewer.apply_global_theme("")
                 except RuntimeError:
-                    return  # toolbar's C++ object already deleted
-                for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
-                    if text in action_dict and image_file is not None:
-                        try:
-                            icon = self.toolbar._icon(image_file + '.png')
-                            action_dict[text].setIcon(icon)
-                        except Exception:
-                            pass
-                
-        self.toolbar_filter = ToolbarEventFilter(self.toolbar)
-        self.toolbar.installEventFilter(self.toolbar_filter)
+                    pass
 
-        # Hide some toolbar actions
-        for action in self.toolbar.actions():
-            if action.text() in ['Customize', 'Save', 'Back', 'Forward', 'Subplots']:
-                action.setVisible(False)
-        
-        # Custom toolbar with add viewer and copy buttons
+        self.toolbar_filter = ToolbarEventFilter(self)
+        self.installEventFilter(self.toolbar_filter)
+
+        # Custom toolbar with navigation, add viewer, and copy buttons
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setContentsMargins(2, 2, 2, 2)
-        toolbar_layout.addWidget(self.toolbar)
+        toolbar_layout.setSpacing(6)
+        toolbar_layout.addWidget(self.btn_home)
+        toolbar_layout.addWidget(self.btn_pan)
+        toolbar_layout.addWidget(self.btn_zoom)
         toolbar_layout.addStretch()
         
         # Add viewer button
@@ -202,6 +218,12 @@ class VMapViewer(QWidget):
         """Update toolbar icons based on the global application theme."""
         tok = current_tokens()
         icon_color = tok.text_primary
+        if hasattr(self, 'btn_home'):
+            self.btn_home.setIcon(Icons.rescale(color=icon_color))
+        if hasattr(self, 'btn_pan'):
+            self.btn_pan.setIcon(Icons.pan(color=icon_color))
+        if hasattr(self, 'btn_zoom'):
+            self.btn_zoom.setIcon(Icons.zoom(color=icon_color))
         if hasattr(self, 'btn_copy'):
             self.btn_copy.setIcon(Icons.copy(color=icon_color))
         if hasattr(self, 'btn_add_viewer'):

@@ -23,6 +23,7 @@ You can easily navigate between loaded 2D maps using the `MapList`. The selected
 
 
 - Dual sliders allow you to quickly adjust the spectral range and the data range of the heatmap plot.
+- Navigation toolbar controls (**Home / Rescale**, **Pan / Drag**, and **Zoom**) let you interactively navigate, pan, and zoom into map regions using unified SPECTROview vector buttons.
 - You can open several `MapViewer` instances simultaneously to compare different fitted parameters.
 - The options (`…`) menu includes a **Color scale** selector to switch the heatmap between **Linear** and **Log** normalization. Log is useful when values span several orders of magnitude; it automatically falls back to linear when the data range is not strictly positive.
 

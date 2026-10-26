@@ -155,7 +155,7 @@ The most complex View component (~1 300 lines). It renders both 2D rectangular m
 - Interactive selection (click, rectangle drag, profile line)
 - **In-Place Artist Updates on Map Switching**: When switching between already-loaded maps of the same type and style, `_do_plot_heatmap_internal()` fast-paths by updating `self.img.set_data(...)`, `self.img.set_extent(...)`, `self.img.set_clim(...)`, and `self.cbar.update_normal(...)` in-place, bypassing destructive `figure.clf()`, subplot re-creation, and expensive `tight_layout()`.
 - **Fast Z-Range Slider Updates**: Real-time slider drag events bypass cache key recomputations and map repaints, updating `set_clim()` / `set_norm()` and colorbar directly in-place.
-- **Vectorized Intensity & Area Computations**: Direct NumPy operations (`to_numpy`, `nan_to_num`, `clip(out=...)`) replace intermediate DataFrame copies, achieving >2.5× faster parameter evaluations on large maps.
+- **Vector Navigation Controls**: Interactive navigation buttons (`btn_home` / `btn_rescale`, `btn_pan`, `btn_zoom`) styled identically to SPECTROview toolbar controls (`28x28`, `@surface_elevated`, rounded corners) and vector SVG icons (`Icons.rescale()`, `Icons.pan()`, `Icons.zoom()`), replacing default matplotlib icons while maintaining bidirectional mode synchronization with `NavigationToolbar2QT`.
 - Multi-viewer dialog spawning
 
 ### `VMapsList` — The Maps List & Actions Panel

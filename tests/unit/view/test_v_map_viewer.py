@@ -192,3 +192,64 @@ class TestMapViewerOptimization:
         assert "values" in profile.columns
 
 
+class TestMapViewerNavigationToolbar:
+    """Tests for the redesigned navigation buttons on VMapViewer."""
+
+    def test_navigation_buttons_initialization(self, qapp):
+        viewer = VMapViewer()
+        assert hasattr(viewer, "btn_home")
+        assert hasattr(viewer, "btn_pan")
+        assert hasattr(viewer, "btn_zoom")
+        assert hasattr(viewer, "btn_rescale")
+
+        assert viewer.btn_pan.isCheckable()
+        assert viewer.btn_zoom.isCheckable()
+        assert not viewer.btn_home.isCheckable()
+
+        assert not viewer.btn_home.icon().isNull()
+        assert not viewer.btn_pan.icon().isNull()
+        assert not viewer.btn_zoom.icon().isNull()
+
+        assert viewer.btn_home.width() == 28 and viewer.btn_home.height() == 28
+        assert viewer.btn_pan.width() == 28 and viewer.btn_pan.height() == 28
+        assert viewer.btn_zoom.width() == 28 and viewer.btn_zoom.height() == 28
+
+    def test_pan_zoom_toggle_and_sync(self, qapp):
+        viewer = VMapViewer()
+
+        # Initial state
+        assert not viewer.btn_pan.isChecked()
+        assert not viewer.btn_zoom.isChecked()
+        assert viewer.toolbar.mode == ""
+
+        # Toggle pan
+        viewer.btn_pan.click()
+        assert viewer.btn_pan.isChecked()
+        assert not viewer.btn_zoom.isChecked()
+        assert viewer.toolbar.mode == "pan/zoom"
+
+        # Toggle zoom while pan active -> zoom should activate, pan deactivate
+        viewer.btn_zoom.click()
+        assert not viewer.btn_pan.isChecked()
+        assert viewer.btn_zoom.isChecked()
+        assert viewer.toolbar.mode == "zoom rect"
+
+        # Toggle zoom off
+        viewer.btn_zoom.click()
+        assert not viewer.btn_pan.isChecked()
+        assert not viewer.btn_zoom.isChecked()
+        assert viewer.toolbar.mode == ""
+
+    def test_apply_global_theme_updates_icons(self, qapp):
+        viewer = VMapViewer()
+        viewer.apply_global_theme("dark")
+        assert not viewer.btn_home.icon().isNull()
+        assert not viewer.btn_pan.icon().isNull()
+        assert not viewer.btn_zoom.icon().isNull()
+
+        viewer.apply_global_theme("light")
+        assert not viewer.btn_home.icon().isNull()
+        assert not viewer.btn_pan.icon().isNull()
+        assert not viewer.btn_zoom.icon().isNull()
+
+

@@ -228,12 +228,12 @@ LEGACY_ICON_MAP: dict[str, str] = {
     "send.png": "send",
     "stop": "stop",
     "stop.png": "stop",
-    "view-details": "history",
-    "view-details.png": "history",
-    "view": "history",
-    "view.png": "history",
-    "view_color": "history",
-    "view_color.png": "history",
+    "view-details": "search",
+    "view-details.png": "search",
+    "view": "search",
+    "view.png": "search",
+    "view_color": "search",
+    "view_color.png": "search",
 }
 
 

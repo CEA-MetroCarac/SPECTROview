@@ -210,7 +210,7 @@ class VWorkspaceGraphs(QWidget):
         df_buttons_layout = QVBoxLayout()
         
         self.btn_view_df = QPushButton()
-        self.btn_view_df.setIcon(Icons.history())
+        self.btn_view_df.setIcon(Icons.search())
         self.btn_view_df.setIconSize(QSize(18, 18))
         self.btn_view_df.setToolTip("View DataFrame\nCtrl+Click: Open source file")
         self.btn_view_df.setMaximumWidth(35)
@@ -532,7 +532,7 @@ class VWorkspaceGraphs(QWidget):
         tok = current_tokens()
         icon_color = tok.text_primary
 
-        self.btn_view_df.setIcon(Icons.history(color=icon_color))
+        self.btn_view_df.setIcon(Icons.search(color=icon_color))
         self.btn_remove_df.setIcon(Icons.trash(color=icon_color))
         self.btn_save_df.setIcon(Icons.save(color=icon_color))
         self.btn_refresh_df.setIcon(Icons.refresh(color=icon_color))

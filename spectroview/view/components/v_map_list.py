@@ -116,7 +116,7 @@ class VMapsList(QWidget):
         
         # --- Map action buttons ---
         self.btn_view = QPushButton()
-        self.btn_view.setIcon(Icons.history())
+        self.btn_view.setIcon(Icons.search())
         self.btn_view.setToolTip("View selected map")
         self.btn_view.setFixedSize(32, 32)
         self.btn_view.clicked.connect(self.view_map_requested.emit)
@@ -215,7 +215,7 @@ class VMapsList(QWidget):
         icon_color = tok.text_primary
 
         # Map action buttons
-        self.btn_view.setIcon(Icons.history(color=icon_color))
+        self.btn_view.setIcon(Icons.search(color=icon_color))
         self.btn_delete.setIcon(Icons.trash(color=icon_color))
         self.btn_save.setIcon(Icons.save(color=icon_color))
 

@@ -318,8 +318,10 @@ _SVG_TEMPLATES: dict[str, str] = {
         '<line x1="12" x2="12" y1="3" y2="20" stroke-dasharray="2 2"/>'
     ),
     "bestfit": (
-        '<path d="M2 19l3-4 3 2 4-13 4 9 3-5 3 11" opacity="0.55"/>'
-        '<path d="M2 20c3-2 6-16 10-16s7 14 10 16"/>'
+        '<line x1="2" y1="20" x2="22" y2="20" opacity="0.35"/>'
+        '<path d="M2 20 C3.8 20 5.5 12 7.5 12 C9.5 12 11.2 20 13 20" stroke-dasharray="2.5 1.5" stroke-width="1.3" opacity="0.75"/>'
+        '<path d="M10 20 C12 20 13.8 5.5 16 5.5 C18.2 5.5 20 20 22 20" stroke-dasharray="2.5 1.5" stroke-width="1.3" opacity="0.75"/>'
+        '<path d="M2 20 C3.5 19.5 5.5 10 7.5 10 C9 10 9.8 12.8 11.2 12.8 C12.8 12.8 13.8 4 16 4 C18.2 4 19.8 17.5 22 20"/>'
     ),
     "norm": (
         '<line x1="2" x2="22" y1="3" y2="3" stroke-dasharray="2.5 2.5"/>'

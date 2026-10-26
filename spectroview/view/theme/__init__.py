@@ -15,6 +15,12 @@ Public API
 - ``modern_dark_palette()``, ``modern_light_palette()`` — token-synchronized palettes.
 - ``classic_dark_palette()``, ``classic_light_palette()`` — legacy Fusion palettes.
 - ``build_stylesheet()``         — render the QSS template for a ThemeTokens instance.
+- ``solid_button_style()``       — PLUME solid CTA button style string.
+- ``primary_button_style()``     — PLUME accent-colored button style string.
+- ``ghost_button_style()``       — transparent secondary button style string.
+- ``danger_button_style()``      — destructive action button style string.
+- ``card_frame_style()``         — themed container frame style string.
+- ``badge_style()``              — pill badge style string.
 - ``get_application_font()``     — platform-appropriate application font.
 - ``setup_application_font()``   — configure and apply default application font.
 """
@@ -37,7 +43,15 @@ from .palettes import (
     classic_dark_palette,
     classic_light_palette,
 )
-from .qss_template import build_stylesheet
+from .qss_template import (
+    build_stylesheet,
+    solid_button_style,
+    primary_button_style,
+    ghost_button_style,
+    danger_button_style,
+    card_frame_style,
+    badge_style,
+)
 from .fonts import (
     get_application_font,
     setup_application_font,
@@ -55,6 +69,12 @@ __all__ = [
     "THEME_TOKENS",
     "build_palette",
     "build_stylesheet",
+    "solid_button_style",
+    "primary_button_style",
+    "ghost_button_style",
+    "danger_button_style",
+    "card_frame_style",
+    "badge_style",
     "get_application_font",
     "setup_application_font",
     "dark_palette",

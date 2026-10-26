@@ -3,7 +3,8 @@
 Single parameterized QSS template for SPECTROview.
 
 Adopts the PLUME design system tokens and component hierarchy, providing
-a crisp, cohesive theme stylesheet with integer-alpha rgba colors and vector SVG subcontrols.
+a crisp, cohesive theme stylesheet with integer-alpha rgba colors, vector SVG subcontrols,
+and reusable component style builders.
 """
 from __future__ import annotations
 
@@ -22,6 +23,14 @@ ICON_DIR_QT = ICON_DIR.replace("\\", "/")
 def _icon_url(filename: str) -> str:
     """Return a forward-slash normalized path for Qt QSS image URLs."""
     return os.path.join(ICON_DIR, filename).replace("\\", "/")
+
+
+def _resolve_tokens(tokens: "ThemeTokens | None" = None) -> "ThemeTokens":
+    """Resolve explicit tokens or fall back to current active application tokens."""
+    if tokens is not None:
+        return tokens
+    from .manager import current_tokens
+    return current_tokens()
 
 
 # ─────────────────────────────────────────────────────────────
@@ -311,33 +320,34 @@ QSS_TEMPLATE = r"""
         margin-top: 2px;
         border: 1px solid @border;
         border-radius: 8px;
-        background: @surface;
+        background-color: @surface;
         top: -1px;
     }
 
     QTabBar::tab {
         margin-top: 4px;
-        background: @background;
+        background-color: @background;
         border: 1px solid @border_subtle;
         border-bottom: none;
         border-top-left-radius: 7px;
         border-top-right-radius: 7px;
-        padding: 3px;
+        padding: 4px 12px;
         margin-right: 2px;
         color: @text_secondary;
         min-width: 70px;
+        font-weight: 500;
     }
 
     QTabBar::tab:selected {
-        background: @surface_elevated;
-        border: 1px solid @border_subtle;
-        border-bottom: 1px solid @surface_elevated;
+        background-color: @surface_elevated;
+        border: 1px solid @border_strong;
+        border-bottom: 2px solid @accent;
         color: @text_primary;
-        font-weight: bold;
+        font-weight: 600;
     }
 
     QTabBar::tab:hover:!selected {
-        background: @surface_hover;
+        background-color: @surface_hover;
         color: @text_primary;
     }
 
@@ -346,7 +356,7 @@ QSS_TEMPLATE = r"""
        ═══════════════════════════════════════════════ */
 
     QGroupBox {
-        background: @surface;
+        background-color: @surface;
         border: 1px solid @border;
         border-radius: 8px;
         margin-top: 10px;
@@ -357,35 +367,38 @@ QSS_TEMPLATE = r"""
     QGroupBox::title {
         subcontrol-origin: margin;
         subcontrol-position: top center;
-        padding: 2px 3px;
+        padding: 2px 5px;
         color: @text_secondary;
+        font-size: 11px;
+        font-weight: 600;
     }
 
     /* ═══════════════════════════════════════════════
-       BUTTONS
+       BUTTONS & SEMANTIC PROPERTY VARIANTS
        ═══════════════════════════════════════════════ */
 
-    QPushButton, QToolButton {
+    QPushButton, QToolButton, QDialogButtonBox QPushButton {
         background-color: @surface_elevated;
         border: 1px solid @border;
         border-radius: 6px;
         padding: 3px 8px;
         color: @text_primary;
+        font-weight: 500;
     }
 
-    QPushButton:hover, QToolButton:hover {
+    QPushButton:hover, QToolButton:hover, QDialogButtonBox QPushButton:hover {
         background-color: @surface_hover;
         border-color: @border_strong;
     }
 
-    QPushButton:pressed, QToolButton:pressed {
+    QPushButton:pressed, QToolButton:pressed, QDialogButtonBox QPushButton:pressed {
         background-color: @surface_pressed;
         border-color: @accent;
     }
 
-    QPushButton:disabled, QToolButton:disabled {
+    QPushButton:disabled, QToolButton:disabled, QDialogButtonBox QPushButton:disabled {
         color: @text_muted;
-        background: transparent;
+        background-color: transparent;
         border: 1px solid @border;
     }
 
@@ -393,6 +406,63 @@ QSS_TEMPLATE = r"""
         background-color: @selection;
         border: 1px solid @accent;
         color: @text_primary;
+    }
+
+    QPushButton[variant="solid"] {
+        background-color: @solid;
+        color: @on_solid;
+        border: none;
+        font-weight: 600;
+    }
+    QPushButton[variant="solid"]:hover {
+        background-color: @solid_hover;
+    }
+    QPushButton[variant="solid"]:pressed {
+        background-color: @solid_pressed;
+    }
+
+    QPushButton[variant="primary"] {
+        background-color: @accent;
+        color: #FFFFFF;
+        border: none;
+        font-weight: 600;
+    }
+    QPushButton[variant="primary"]:hover {
+        background-color: @accent_hover;
+    }
+    QPushButton[variant="primary"]:pressed {
+        background-color: @accent_pressed;
+    }
+
+    QPushButton[variant="ghost"] {
+        background-color: transparent;
+        color: @text_secondary;
+        border: none;
+    }
+    QPushButton[variant="ghost"]:hover {
+        background-color: @surface_hover;
+        color: @text_primary;
+    }
+    QPushButton[variant="ghost"]:pressed {
+        background-color: @surface_pressed;
+    }
+
+    QPushButton[variant="danger"] {
+        background-color: transparent;
+        color: @error;
+        border: 1px solid @error;
+    }
+    QPushButton[variant="danger"]:hover {
+        background-color: @error;
+        color: #FFFFFF;
+    }
+    QPushButton[variant="danger"]:pressed {
+        background-color: @error_tint;
+    }
+
+    QPushButton[variant="pill"] {
+        border-radius: 12px;
+        padding: 2px 10px;
     }
 
     /* ═══════════════════════════════════════════════
@@ -577,15 +647,9 @@ QSS_TEMPLATE = r"""
        TABLE VIEW & HEADER VIEW
        ═══════════════════════════════════════════════ */
 
-    QTableView, QTableWidget {
-        background-color: @surface;
-        alternate-background-color: @surface_elevated;
-        border: 1px solid @border;
-        border-radius: 8px;
-        gridline-color: @border_subtle;
-        color: @text_primary;
-        selection-background-color: @selection;
-        selection-color: @text_primary;
+    QHeaderView {
+        background-color: transparent;
+        border: none;
     }
 
     QHeaderView::section {
@@ -599,12 +663,46 @@ QSS_TEMPLATE = r"""
         font-weight: 500;
     }
 
+    QTableCornerButton::section {
+        background-color: @surface_elevated;
+        border: none;
+        border-bottom: 1px solid @border;
+        border-right: 1px solid @border;
+    }
+
+    QTableView, QTableWidget {
+        background-color: @surface;
+        alternate-background-color: @surface_elevated;
+        border: 1px solid @border;
+        border-radius: 8px;
+        gridline-color: @border_subtle;
+        color: @text_primary;
+        selection-background-color: @selection;
+        selection-color: @text_primary;
+        outline: none;
+    }
+
+    QTableView::item, QTableWidget::item {
+        padding: 3px 6px;
+    }
+
+    QTableView::item:selected, QTableWidget::item:selected {
+        background-color: @selection;
+        color: @text_primary;
+    }
+
     QListView, QTreeView, QListWidget, QTreeWidget {
         background-color: @surface;
         color: @text_primary;
         border: 1px solid @border;
         border-radius: 8px;
         outline: none;
+    }
+
+    QListView::item, QTreeView::item,
+    QListWidget::item, QTreeWidget::item {
+        padding: 4px 6px;
+        border-radius: 4px;
     }
 
     QListView::item:hover, QTreeView::item:hover,
@@ -614,7 +712,7 @@ QSS_TEMPLATE = r"""
 
     QListView::item:selected, QTreeView::item:selected,
     QListWidget::item:selected, QTreeWidget::item:selected {
-        background-color: @surface_elevated;
+        background-color: @selection;
         color: @text_primary;
     }
 
@@ -1036,3 +1134,162 @@ def build_stylesheet(tokens: "ThemeTokens") -> str:
         qss = qss.replace(f"{{{key}}}", str(val))
 
     return qss
+
+
+# ─────────────────────────────────────────────────────────────
+#  PLUME-inspired Reusable Component Style Builders
+# ─────────────────────────────────────────────────────────────
+
+def solid_button_style(radius: int = 6, tokens: "ThemeTokens | None" = None) -> str:
+    """Monochrome solid primary CTA button (PLUME visual language)."""
+    tok = _resolve_tokens(tokens)
+    return f"""
+        QPushButton {{
+            background-color: {tok.solid};
+            color: {tok.on_solid};
+            border: 1px solid {tok.solid};
+            border-radius: {radius}px;
+            padding: 4px 14px;
+            font-weight: 600;
+        }}
+        QPushButton:hover {{
+            background-color: {tok.solid_hover};
+            border-color: {tok.solid_hover};
+        }}
+        QPushButton:pressed {{
+            background-color: {tok.solid_pressed};
+            border-color: {tok.solid_pressed};
+        }}
+        QPushButton:disabled {{
+            background-color: {tok.surface_elevated};
+            color: {tok.text_muted};
+            border-color: {tok.border};
+        }}
+    """
+
+
+def primary_button_style(radius: int = 6, tokens: "ThemeTokens | None" = None) -> str:
+    """Accent-colored CTA button."""
+    tok = _resolve_tokens(tokens)
+    return f"""
+        QPushButton {{
+            background-color: {tok.accent};
+            color: #FFFFFF;
+            border: 1px solid {tok.accent};
+            border-radius: {radius}px;
+            padding: 4px 14px;
+            font-weight: 600;
+        }}
+        QPushButton:hover {{
+            background-color: {tok.accent_hover};
+            border-color: {tok.accent_hover};
+        }}
+        QPushButton:pressed {{
+            background-color: {tok.accent_pressed};
+            border-color: {tok.accent_pressed};
+        }}
+        QPushButton:disabled {{
+            background-color: {tok.surface_elevated};
+            color: {tok.text_muted};
+            border-color: {tok.border};
+        }}
+    """
+
+
+def ghost_button_style(radius: int = 6, tokens: "ThemeTokens | None" = None) -> str:
+    """Transparent background secondary/icon action button."""
+    tok = _resolve_tokens(tokens)
+    return f"""
+        QPushButton {{
+            background-color: transparent;
+            color: {tok.text_secondary};
+            border: 1px solid transparent;
+            border-radius: {radius}px;
+            padding: 4px 10px;
+        }}
+        QPushButton:hover {{
+            background-color: {tok.surface_hover};
+            color: {tok.text_primary};
+            border-color: {tok.border_subtle};
+        }}
+        QPushButton:pressed {{
+            background-color: {tok.surface_pressed};
+            color: {tok.text_primary};
+        }}
+        QPushButton:disabled {{
+            color: {tok.text_muted};
+            background-color: transparent;
+            border-color: transparent;
+        }}
+    """
+
+
+def danger_button_style(radius: int = 6, tokens: "ThemeTokens | None" = None) -> str:
+    """Destructive action button with red error accent."""
+    tok = _resolve_tokens(tokens)
+    return f"""
+        QPushButton {{
+            background-color: transparent;
+            color: {tok.error};
+            border: 1px solid {tok.error};
+            border-radius: {radius}px;
+            padding: 4px 12px;
+            font-weight: 500;
+        }}
+        QPushButton:hover {{
+            background-color: {tok.error};
+            color: #FFFFFF;
+        }}
+        QPushButton:pressed {{
+            background-color: {tok.error_tint};
+            color: {tok.error};
+        }}
+        QPushButton:disabled {{
+            color: {tok.text_muted};
+            border-color: {tok.border};
+            background-color: transparent;
+        }}
+    """
+
+
+def card_frame_style(
+    object_name: str,
+    radius: int = 8,
+    elevated: bool = False,
+    tokens: "ThemeTokens | None" = None,
+) -> str:
+    """Themed card container QSS rule for a specific QFrame objectName."""
+    tok = _resolve_tokens(tokens)
+    bg = tok.surface_elevated if elevated else tok.surface
+    return f"""
+        QFrame#{object_name} {{
+            background-color: {bg};
+            border: 1px solid {tok.border};
+            border-radius: {radius}px;
+        }}
+    """
+
+
+def badge_style(kind: str = "accent", tokens: "ThemeTokens | None" = None) -> str:
+    """Status or category pill badge styling."""
+    tok = _resolve_tokens(tokens)
+    if kind == "success":
+        bg, fg, border = tok.success_tint, tok.success, tok.success
+    elif kind == "warning":
+        bg, fg, border = tok.warning_tint, tok.warning, tok.warning
+    elif kind == "error":
+        bg, fg, border = tok.error_tint, tok.error, tok.error
+    elif kind == "muted":
+        bg, fg, border = tok.surface_elevated, tok.text_muted, tok.border_subtle
+    else:  # "accent" or default
+        bg, fg, border = tok.accent_tint, tok.accent, tok.accent
+
+    return f"""
+        background-color: {bg};
+        color: {fg};
+        border: 1px solid {border};
+        border-radius: 9px;
+        padding: 2px 7px;
+        font-size: 11px;
+        font-weight: 500;
+    """

@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
 )
 from PySide6.QtCore import Qt, Signal, QObject, QEvent, QTimer
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -90,12 +90,13 @@ class _PlotTab(QWidget):
 
     def clear_and_placeholder(self, message: str = "Run an analysis to see results here"):
         """Clear the axes and show a placeholder message."""
+        tok = current_tokens()
         self.ax.clear()
         self.ax.text(
             0.5, 0.5, message,
             transform=self.ax.transAxes,
             ha="center", va="center",
-            fontsize=13, color="#999", style="italic",
+            fontsize=13, color=tok.text_muted, style="italic",
         )
         self.ax.set_axis_off()
         self.canvas.draw_idle()
@@ -251,13 +252,15 @@ class VMVA(QWidget):
         self.ent_df_name.setText("MVA_scores")
         export_layout.addWidget(self.ent_df_name)
         self.btn_send = QPushButton("Send to Graphs")
+        self.btn_send.setIcon(Icons.send())
         export_layout.addWidget(self.btn_send)
         left_layout.addWidget(grp_export)
 
         # Status
+        tok = current_tokens()
         self.lbl_status = QLabel("")
         self.lbl_status.setWordWrap(True)
-        self.lbl_status.setStyleSheet("color: #888; font-style: italic;")
+        self.lbl_status.setStyleSheet(f"color: {tok.text_muted}; font-style: italic;")
         left_layout.addWidget(self.lbl_status)
 
         left_layout.addStretch()
@@ -787,3 +790,10 @@ class VMVA(QWidget):
             ax.set_xticks([0, n // 4, n // 2, 3 * n // 4, n - 1])
 
         self.tab_residuals.redraw()
+
+    def apply_theme(self, theme: str = ""):
+        """Update icons and colors on theme change."""
+        tok = current_tokens()
+        self.btn_run.setIcon(Icons.play(color=tok.text_primary))
+        self.btn_send.setIcon(Icons.send(color=tok.text_primary))
+        self.lbl_status.setStyleSheet(f"color: {tok.text_muted}; font-style: italic;")

@@ -298,6 +298,11 @@ _SVG_TEMPLATES: dict[str, str] = {
         '<line x1="9" x2="9" y1="3" y2="21"/>'
         '<line x1="15" x2="15" y1="3" y2="21"/>'
     ),
+    "multipanel": (
+        '<rect width="18" height="18" x="3" y="3" rx="2"/>'
+        '<line x1="3" x2="21" y1="12" y2="12"/>'
+        '<line x1="12" x2="12" y1="3" y2="21"/>'
+    ),
     "wafer_map": (
         '<circle cx="12" cy="12" r="9"/>'
         '<line x1="10" x2="14" y1="21" y2="21"/>'
@@ -305,16 +310,16 @@ _SVG_TEMPLATES: dict[str, str] = {
         '<line x1="6" x2="18" y1="12" y2="12"/>'
     ),
     "baseline": (
-        '<path d="M3 14c3-1 5-7 9-7s6 6 9 7"/>'
-        '<line x1="2" x2="22" y1="19" y2="19" stroke-dasharray="2 2"/>'
+        '<path d="M2 16c3-2 6-13 10-13s7 11 10 13"/>'
+        '<line x1="2" x2="22" y1="20" y2="20" stroke-dasharray="2.5 2.5"/>'
     ),
     "peak": (
-        '<path d="M3 19c4 0 6-14 9-14s5 14 9 14"/>'
-        '<line x1="12" x2="12" y1="5" y2="19" stroke-dasharray="1.5 1.5"/>'
+        '<path d="M2 20c4 0 6-17 10-17s6 17 10 17"/>'
+        '<line x1="12" x2="12" y1="3" y2="20" stroke-dasharray="2 2"/>'
     ),
     "bestfit": (
-        '<path d="M3 17l3-2 3 1 3-6 3 2 3-4 3 9" opacity="0.6"/>'
-        '<path d="M3 17c3-1 6-9 9-9s6 7 9 9"/>'
+        '<path d="M2 19l3-4 3 2 4-13 4 9 3-5 3 11" opacity="0.55"/>'
+        '<path d="M2 20c3-2 6-16 10-16s7 14 10 16"/>'
     ),
     "norm": (
         '<rect width="18" height="18" x="3" y="3" rx="2"/>'

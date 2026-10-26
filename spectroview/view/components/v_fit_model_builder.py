@@ -1,6 +1,6 @@
 # spectroview/view/components/v_fit_model_builder.py
 from spectroview import PEAK_MODELS
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QGroupBox, QLabel, QPushButton, QComboBox,
@@ -699,10 +699,13 @@ class VFitModelBuilder(QWidget):
         self.btn_apply.setEnabled(enabled)
         self.btn_paste.setEnabled(enabled)
         if not enabled:
+            tok = current_tokens()
             self.btn_fit.setText("Fitting")
+            self.btn_fit.setStyleSheet(f"QPushButton {{ color: {tok.error}; font-weight: 600; }}")
             self.btn_apply.setText("Applying")
         else:
             self.btn_fit.setText("Fit")
+            self.btn_fit.setStyleSheet("")
             self.btn_apply.setText("Apply")
 
     def _apply_initial_icons(self):
@@ -726,12 +729,8 @@ class VFitModelBuilder(QWidget):
 
     def apply_theme(self, theme: str):
         """Update icons based on the global application theme."""
-        if theme in ("modern_warm", "warm"):
-            icon_color = "#1C1C1E"
-        elif theme in ("dark", "classic_dark"):
-            icon_color = "#F0F0F0"
-        else:
-            icon_color = "#404040"
+        tok = current_tokens()
+        icon_color = tok.text_primary
 
         # X-correction buttons
         self.btn_xcorrect.setIcon(Icons.check(color=icon_color))

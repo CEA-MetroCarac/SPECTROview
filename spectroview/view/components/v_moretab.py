@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QHeaderView, QLabel, QGroupBox, QFormLayout, QDoubleSpinBox, QPushButton, QLineEdit
 )
 from PySide6.QtCore import Qt, Signal
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens
 
 
 
@@ -43,9 +43,10 @@ class VMoreTab(QWidget):
         layout_metadata.addWidget(self.table)
         
         # Placeholder label for no data
+        tok = current_tokens()
         self.lbl_placeholder = QLabel("No metadata available\n\nSelect a spectrum to view its metadata")
         self.lbl_placeholder.setAlignment(Qt.AlignCenter)
-        self.lbl_placeholder.setStyleSheet("color: #999; font-size: 14px; padding: 40px;")
+        self.lbl_placeholder.setStyleSheet(f"color: {tok.text_muted}; font-size: 14px; padding: 40px;")
         layout_metadata.addWidget(self.lbl_placeholder)
         
         main_layout.addWidget(self.group_metadata, stretch=2)
@@ -233,3 +234,8 @@ class VMoreTab(QWidget):
         
         self.group_custom.setEnabled(False)
         self.group_norm.setEnabled(False)
+
+    def apply_theme(self, theme: str = ""):
+        """Update styling on theme change."""
+        tok = current_tokens()
+        self.lbl_placeholder.setStyleSheet(f"color: {tok.text_muted}; font-size: 14px; padding: 40px;")

@@ -21,7 +21,7 @@ from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QAction
 
 from spectroview import PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens
 from spectroview.viewmodel.utils import copy_fig_to_clb
 from spectroview.view.components.customized_widgets import CustomizedPalette
 
@@ -190,12 +190,8 @@ class VMapViewer(QWidget):
 
     def apply_global_theme(self, global_theme: str):
         """Update toolbar icons based on the global application theme."""
-        if global_theme in ("modern_warm", "warm"):
-            icon_color = "#1C1C1E"
-        elif global_theme in ("dark", "classic_dark"):
-            icon_color = "#F0F0F0"
-        else:
-            icon_color = "#404040"
+        tok = current_tokens()
+        icon_color = tok.text_primary
         if hasattr(self, 'btn_copy'):
             self.btn_copy.setIcon(Icons.copy(color=icon_color))
         if hasattr(self, 'btn_add_viewer'):
@@ -229,7 +225,7 @@ class VMapViewer(QWidget):
         
         self.cbb_zparameter = QComboBox()
         self.cbb_zparameter.addItems(['Intensity', 'Area'])
-        self.cbb_zparameter.setFixedWidth(50)
+        self.cbb_zparameter.setFixedWidth(68)
         self.cbb_zparameter.setToolTip("Select parameter to plot in heatmap")
         self.cbb_zparameter.currentTextChanged.connect(lambda: self._on_parameter_changed())
         z_slider_layout.addWidget(self.cbb_zparameter)
@@ -273,7 +269,7 @@ class VMapViewer(QWidget):
         x_slider_layout.setContentsMargins(2, 2, 2, 2)
         
         lbl_x_slider = QLabel("X-range:")
-        lbl_x_slider.setFixedWidth(50)
+        lbl_x_slider.setFixedWidth(68)
         x_slider_layout.addWidget(lbl_x_slider)
         
         self.cb_fix_x = QCheckBox("Fix")

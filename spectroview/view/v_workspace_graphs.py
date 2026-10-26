@@ -115,11 +115,10 @@ class VWorkspaceGraphs(QWidget):
 
         # Delete all button
         self.btn_delete_all = QPushButton()
-        self.btn_delete_all.setIcon(Icons.trash())    
-        self.btn_delete_all.setIconSize(QSize(26, 26))
+        self.btn_delete_all.setIcon(Icons.trash(color="#EF4444"))    
+        self.btn_delete_all.setIconSize(QSize(22, 22))
+        self.btn_delete_all.setFixedSize(30, 30)
         self.btn_delete_all.setToolTip("Delete all graphs from workspace")
-        
-        self.btn_delete_all.setMaximumWidth(100)
         toolbar_layout.addWidget(self.btn_delete_all)
 
         # Minimize all button -- icon only, no label.
@@ -154,8 +153,8 @@ class VWorkspaceGraphs(QWidget):
         # so it lives in this fixed part of the bottom toolbar rather than
         # the shared graph toolbar slot below. Moved here from the side panel.
         self.btn_compose_figure = QPushButton()
-        self.btn_compose_figure.setIcon(Icons.edit())
-        self.btn_compose_figure.setIconSize(QSize(26, 26))
+        self.btn_compose_figure.setIcon(Icons.multipanel())
+        self.btn_compose_figure.setIconSize(QSize(22, 22))
         self.btn_compose_figure.setFixedSize(30, 30)
         self.btn_compose_figure.setToolTip("Combine several open graphs into one multi-panel exported figure")
         toolbar_layout.addWidget(self.btn_compose_figure)
@@ -511,13 +510,13 @@ class VWorkspaceGraphs(QWidget):
 
         self.btn_apply_recipe = QPushButton("Plot Recipes")
         self.btn_apply_recipe.setIcon(Icons.get("recipe"))
-        self.btn_apply_recipe.setIconSize(QSize(26, 26))
+        self.btn_apply_recipe.setIconSize(QSize(18, 18))
         self.btn_apply_recipe.setToolTip("Browse & apply saved plot recipes")
         self.btn_apply_recipe.setMinimumHeight(25)
 
         self.btn_save_as_recipe = QPushButton("Save Plot Recipe")
         self.btn_save_as_recipe.setIcon(Icons.save())
-        self.btn_save_as_recipe.setIconSize(QSize(26, 26))
+        self.btn_save_as_recipe.setIconSize(QSize(18, 18))
         self.btn_save_as_recipe.setToolTip("Save all currently open plots as a Plot Recipe")
         self.btn_save_as_recipe.setMinimumHeight(25)
 
@@ -547,6 +546,24 @@ class VWorkspaceGraphs(QWidget):
         self.v_data_filter.btn_add.setIcon(Icons.plus(color=icon_color))
         self.v_data_filter.btn_remove.setIcon(Icons.close(color=icon_color))
         self.v_data_filter.btn_apply.setIcon(Icons.check(color=icon_color))
+
+        # Bottom toolbar buttons
+        if hasattr(self, 'btn_delete_all'):
+            self.btn_delete_all.setIcon(Icons.trash(color=tok.error))
+        if hasattr(self, 'btn_minimize_all'):
+            self.btn_minimize_all.setIcon(Icons.minimize_windows(color=icon_color))
+        if hasattr(self, 'btn_undo'):
+            self.btn_undo.setIcon(Icons.undo(color=icon_color))
+        if hasattr(self, 'btn_redo'):
+            self.btn_redo.setIcon(Icons.redo(color=icon_color))
+        if hasattr(self, 'btn_compose_figure'):
+            self.btn_compose_figure.setIcon(Icons.multipanel(color=icon_color))
+
+        # Refresh plot style item icons
+        if hasattr(self, 'cbb_plot_style'):
+            for i in range(self.cbb_plot_style.count()):
+                style = self.cbb_plot_style.itemText(i)
+                self.cbb_plot_style.setItemIcon(i, Icons.get(style, color=icon_color))
 
     def setup_connections(self):
         """Connect signals and slots."""

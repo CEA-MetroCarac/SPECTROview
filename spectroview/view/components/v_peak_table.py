@@ -199,8 +199,9 @@ class VPeakTable(QWidget):
 
             # delete
             btn = QPushButton(pm.prefix)
-            btn.setIcon(Icons.close(size=12))
-            btn.setFixedSize(50, ROW_HEIGHT)
+            btn.setIcon(Icons.close(color="#EF4444", size=14))
+            btn.setFixedSize(54, ROW_HEIGHT)
+            btn.setStyleSheet("padding: 1px 4px;")
             btn.clicked.connect(self._make_delete_callback(int(pm.key)))
             cols["del"].addWidget(btn)
 
@@ -219,7 +220,7 @@ class VPeakTable(QWidget):
             cmb = QComboBox()
             cmb.addItems(PEAK_MODELS)
             cmb.setCurrentText(pm.name2)
-            cmb.setFixedSize(100, ROW_HEIGHT)
+            cmb.setFixedSize(110, ROW_HEIGHT)
             cmb.currentTextChanged.connect(
                 lambda txt, key=pm.key: self.peak_model_changed.emit(int(key), txt)
             )

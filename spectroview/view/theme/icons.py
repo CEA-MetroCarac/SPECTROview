@@ -129,6 +129,8 @@ LEGACY_ICON_MAP: dict[str, str] = {
     "select-all.png": "check_circle",
     "compose": "edit",
     "compose.png": "edit",
+    "multipanel": "multipanel",
+    "multipanel.png": "multipanel",
     "collect": "database",
     "collect.png": "database",
 
@@ -401,6 +403,10 @@ class Icons:
     @classmethod
     def sliders(cls, color: str | None = None, size: int = 16) -> QIcon:
         return svg_icon("sliders", size=size, color=color)
+
+    @classmethod
+    def multipanel(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("multipanel", size=size, color=color)
 
     # ── Scientific Spectroscopy ──
     @classmethod

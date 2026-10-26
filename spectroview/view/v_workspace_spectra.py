@@ -357,6 +357,14 @@ class VWorkspaceSpectra(QWidget):
         if hasattr(self, 'v_fit_results') and hasattr(self.v_fit_results, 'apply_theme'):
             self.v_fit_results.apply_theme(theme)
 
+        # Propagate to More Tab
+        if hasattr(self, 'v_more_tab') and hasattr(self.v_more_tab, 'apply_theme'):
+            self.v_more_tab.apply_theme(theme)
+
+        # Propagate to MVA
+        if hasattr(self, 'v_mva') and hasattr(self.v_mva, 'apply_theme'):
+            self.v_mva.apply_theme(theme)
+
 
     def _update_fit_results(self, df):
         """Update fit results table display."""

@@ -32,7 +32,7 @@ from functools import lru_cache
 import matplotlib.lines as mlines
 
 from spectroview import X_AXIS_UNIT, Y_AXIS_UNIT, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, DEFAULT_COLORS
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens
 from spectroview.viewmodel.utils import copy_fig_to_clb, fano_display_amplitude
 
 @lru_cache(maxsize=8)
@@ -344,7 +344,7 @@ class VSpectraViewer(QWidget):
         self.btn_norm = QToolButton()
         self.btn_norm.setCheckable(True)
         self.btn_norm.setObjectName("btn_norm")
-        self.btn_norm.setStyleSheet("QToolButton#btn_norm:checked { background-color: red; }")
+        self._update_norm_button_style()
         self.btn_norm.setIcon(Icons.norm())
         self.btn_norm.setToolTip("Intensity normalization to maximum of spectrum or selected region.\nNote: This normalization is just for visual change, the actual data is not changed.")
         self.btn_norm.setIconSize(QSize(22, 22))
@@ -2803,14 +2803,18 @@ class VSpectraViewer(QWidget):
         self.btn_eraser.blockSignals(False)
         self._toggle_erase_mode(False)
 
+    def _update_norm_button_style(self):
+        """Update norm toggle button styling based on current theme tokens."""
+        tok = current_tokens()
+        self.btn_norm.setStyleSheet(
+            f"QToolButton#btn_norm:checked {{ background-color: {tok.warning_tint}; border: 1px solid {tok.warning}; }}"
+        )
+
     def apply_global_theme(self, global_theme: str):
         """Update SpectraViewer's icons based on the global application theme, independently of the plot theme."""
-        if global_theme in ("modern_warm", "warm"):
-            icon_color = "#1C1C1E"
-        elif global_theme in ("dark", "classic_dark"):
-            icon_color = "#F0F0F0"
-        else:
-            icon_color = "#404040"
+        tok = current_tokens()
+        icon_color = tok.text_primary
+        self._update_norm_button_style()
         if hasattr(self, 'btn_rescale'):
             self.btn_rescale.setIcon(Icons.rescale(color=icon_color))
             self.btn_zoom.setIcon(Icons.zoom(color=icon_color))

@@ -334,11 +334,14 @@ def set_spectrum_item_color(item: QListWidgetItem, spectrum_info: dict):
     Status hierarchy:
     1. Fitted (has_fit):
        - Converged: Color 4 (Soft Success Green)
-       - Not Converged: Color 3 (Soft Warning Orange)
-    2. Baselined (has_baseline): Color 2 (Soft Purple)
+       - Not Converged: Color 3 (Soft Warning/Error)
+    2. Baselined (has_baseline): Color 2 (Soft Accent)
     3. Cropped (is_cropped): Color 1 (Distinct Gray)
     4. Original/Reinit: Transparent (no color)
     """
+    from spectroview.view.theme import current_tokens
+    tok = current_tokens()
+
     is_cropped = spectrum_info.get("is_cropped", False)
     has_baseline = spectrum_info.get("has_baseline", False)
     has_fit = spectrum_info.get("has_fit", False)
@@ -346,17 +349,25 @@ def set_spectrum_item_color(item: QListWidgetItem, spectrum_info: dict):
 
     if has_fit:
         if fit_success:
-            # Color 4: Converged Fit (Distinct Green)
-            item.setBackground(QColor(76, 175, 80, 120))
+            # Color 4: Converged Fit (Success tint)
+            c = QColor(tok.success)
+            c.setAlpha(120)
+            item.setBackground(c)
         else:
-            # Color 3: Unconverged Fit (Distinct Red)
-            item.setBackground(QColor(244, 67, 54, 120))
+            # Color 3: Unconverged Fit (Error/Warning tint)
+            c = QColor(tok.error)
+            c.setAlpha(120)
+            item.setBackground(c)
     elif has_baseline:
-        # Color 2: Baselined (Distinct Purple)
-        item.setBackground(QColor(156, 39, 176, 120))
+        # Color 2: Baselined (Theme Accent)
+        c = QColor(tok.accent)
+        c.setAlpha(120)
+        item.setBackground(c)
     elif is_cropped:
-        # Color 1: Cropped (Distinct Gray)
-        item.setBackground(QColor(158, 158, 158, 120))
+        # Color 1: Cropped (Muted Gray)
+        c = QColor(tok.text_muted)
+        c.setAlpha(100)
+        item.setBackground(c)
     else:
         # Original/Reinit: Transparent
         item.setBackground(QColor(0, 0, 0, 0))

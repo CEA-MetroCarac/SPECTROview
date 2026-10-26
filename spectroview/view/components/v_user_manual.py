@@ -11,7 +11,7 @@ from PySide6.QtGui import (
     QDesktopServices, QTextDocument, QImage,
     QTextCursor, QMovie
 )
-from spectroview.view.theme import get_application_font
+from spectroview.view.theme import get_application_font, Icons, current_tokens
 
 class FitImageTextBrowser(QTextBrowser):
     """A QTextBrowser that automatically scales down large images
@@ -271,7 +271,8 @@ class VUserManualDialog(QDialog):
         # ---- Top Bar: Search and Zoom ----
         top_bar = QHBoxLayout()
         self.search_bar = QLineEdit()
-        self.search_bar.setPlaceholderText("🔍 Search all sections (Enter to find next)…")
+        self.search_bar.setPlaceholderText("Search manual (Enter to find next)…")
+        self.search_bar.addAction(Icons.search(), QLineEdit.LeadingPosition)
         self.search_bar.textChanged.connect(self._on_search_text_changed)
         self.search_bar.returnPressed.connect(self._on_search_return_pressed)
         top_bar.addWidget(self.search_bar)
@@ -607,8 +608,10 @@ class VUserManualDialog(QDialog):
 
     def _set_search_style(self, not_found):
         if not_found:
+            tok = current_tokens()
             self.search_bar.setStyleSheet(
-                "QLineEdit { background-color: #ffcccc; color: black; }")
+                f"QLineEdit {{ background-color: {tok.error_tint}; border: 1px solid {tok.error}; }}"
+            )
         else:
             self.search_bar.setStyleSheet("")
 

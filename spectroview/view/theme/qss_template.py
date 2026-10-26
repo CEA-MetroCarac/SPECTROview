@@ -377,13 +377,30 @@ QSS_TEMPLATE = r"""
        BUTTONS & SEMANTIC PROPERTY VARIANTS
        ═══════════════════════════════════════════════ */
 
-    QPushButton, QToolButton, QDialogButtonBox QPushButton {
+    QPushButton, QDialogButtonBox QPushButton {
         background-color: @surface_elevated;
         border: 1px solid @border;
         border-radius: 6px;
-        padding: 3px 8px;
+        padding: 2px 4px;
         color: @text_primary;
         font-weight: 500;
+    }
+
+    QToolButton {
+        background-color: @surface_elevated;
+        border: 1px solid @border;
+        border-radius: 6px;
+        padding: 2px;
+        color: @text_primary;
+        font-weight: 500;
+    }
+
+    QToolButton::menu-indicator {
+        image: url("@chevron_down_url");
+        width: 7px;
+        height: 7px;
+        subcontrol-origin: padding;
+        subcontrol-position: bottom right;
     }
 
     QPushButton:hover, QToolButton:hover, QDialogButtonBox QPushButton:hover {
@@ -473,9 +490,7 @@ QSS_TEMPLATE = r"""
         background-color: @input_bg;
         border: 1px solid @input_border;
         border-radius: 6px;
-        padding: 2px 8px;
-        min-height: 18px;
-        max-height: 22px;
+        padding: 2px 4px;
         color: @text_primary;
         selection-background-color: @selection;
         selection-color: @text_primary;
@@ -493,9 +508,7 @@ QSS_TEMPLATE = r"""
         background-color: @input_bg;
         border: 1px solid @input_border;
         border-radius: 6px;
-        padding: 1px 22px 1px 8px;
-        min-height: 18px;
-        max-height: 22px;
+        padding: 1px 3px;
         color: @text_primary;
     }
 
@@ -510,8 +523,9 @@ QSS_TEMPLATE = r"""
     QComboBox::drop-down {
         subcontrol-origin: padding;
         subcontrol-position: top right;
-        width: 18px;
+        width: 15px;
         border: none;
+        border-left: 1px solid @border_subtle;
         background: transparent;
     }
 
@@ -535,9 +549,7 @@ QSS_TEMPLATE = r"""
         background-color: @input_bg;
         border: 1px solid @input_border;
         border-radius: 6px;
-        padding: 1px 22px 1px 8px;
-        min-height: 18px;
-        max-height: 22px;
+        padding: 1px 2px 1px 4px;
         color: @text_primary;
     }
 
@@ -552,7 +564,7 @@ QSS_TEMPLATE = r"""
     QSpinBox::up-button, QDoubleSpinBox::up-button {
         subcontrol-origin: border;
         subcontrol-position: top right;
-        width: 18px;
+        width: 14px;
         border: none;
         border-left: 1px solid @border;
         border-bottom: 1px solid @border_subtle;
@@ -564,7 +576,7 @@ QSS_TEMPLATE = r"""
     QSpinBox::down-button, QDoubleSpinBox::down-button {
         subcontrol-origin: border;
         subcontrol-position: bottom right;
-        width: 18px;
+        width: 14px;
         border: none;
         border-left: 1px solid @border;
         border-bottom-right-radius: 5px;

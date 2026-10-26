@@ -3,21 +3,77 @@
 QPalette builders for SPECTROview themes.
 
 Each builder produces a fully configured ``QPalette`` for the Fusion style.
-Colours are kept in sync with the ``ThemeTokens`` accent values; the
-palette grays are hand-tuned for best Fusion rendering.
+Modern themes use ``_palette_for(ThemeTokens)`` synchronized with PLUME's
+design tokens; classic themes preserve the legacy hand-tuned Fusion grays.
 """
 from __future__ import annotations
 
 from PySide6.QtGui import QPalette, QColor
 from PySide6.QtCore import Qt
 
+from .tokens import ThemeTokens, DARK_TOKENS, LIGHT_TOKENS
+
 
 # ═══════════════════════════════════════════════════════════════
-#  Individual palette builders
+#  PLUME-synchronized Modern Palette Builder
 # ═══════════════════════════════════════════════════════════════
 
-def dark_palette() -> QPalette:
-    """Dark palette — deep charcoal surfaces, bright white text."""
+def _palette_for(t: ThemeTokens) -> QPalette:
+    """Build a QPalette strictly synchronized with a ThemeTokens instance."""
+    p = QPalette()
+    p.setColor(QPalette.Window, QColor(t.background))
+    p.setColor(QPalette.WindowText, QColor(t.text_primary))
+    p.setColor(QPalette.Base, QColor(t.surface))
+    p.setColor(QPalette.AlternateBase, QColor(t.surface_elevated))
+    p.setColor(QPalette.Text, QColor(t.text_primary))
+    p.setColor(QPalette.BrightText, QColor("#FFFFFF"))
+
+    p.setColor(QPalette.Button, QColor(t.surface_elevated))
+    p.setColor(QPalette.ButtonText, QColor(t.text_primary))
+
+    p.setColor(QPalette.ToolTipBase, QColor(t.surface_elevated))
+    p.setColor(QPalette.ToolTipText, QColor(t.text_primary))
+
+    p.setColor(QPalette.Highlight, QColor(t.accent))
+    p.setColor(QPalette.HighlightedText, QColor("#FFFFFF"))
+
+    p.setColor(QPalette.Link, QColor(t.accent))
+    p.setColor(QPalette.LinkVisited, QColor(t.accent_hover))
+    p.setColor(QPalette.PlaceholderText, QColor(t.text_muted))
+
+    # Disabled state
+    p.setColor(QPalette.Disabled, QPalette.WindowText, QColor(t.text_muted))
+    p.setColor(QPalette.Disabled, QPalette.Text, QColor(t.text_muted))
+    p.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(t.text_muted))
+    p.setColor(QPalette.Disabled, QPalette.Highlight, QColor(t.border))
+    p.setColor(QPalette.Disabled, QPalette.HighlightedText, QColor(t.text_muted))
+
+    # Shadows and bevels
+    p.setColor(QPalette.Light, QColor(t.surface_elevated))
+    p.setColor(QPalette.Midlight, QColor(t.surface))
+    p.setColor(QPalette.Mid, QColor(t.border))
+    p.setColor(QPalette.Dark, QColor(t.border_strong))
+    p.setColor(QPalette.Shadow, QColor(t.background))
+
+    return p
+
+
+def modern_dark_palette() -> QPalette:
+    """Modern Dark palette synchronized with DARK_TOKENS."""
+    return _palette_for(DARK_TOKENS)
+
+
+def modern_light_palette() -> QPalette:
+    """Modern Light palette synchronized with LIGHT_TOKENS."""
+    return _palette_for(LIGHT_TOKENS)
+
+
+# ═══════════════════════════════════════════════════════════════
+#  Classic / Legacy Palette Builders (Unchanged)
+# ═══════════════════════════════════════════════════════════════
+
+def classic_dark_palette() -> QPalette:
+    """Classic dark palette — deep charcoal surfaces, bright white text."""
     p = QPalette()
 
     # Base surfaces
@@ -56,8 +112,8 @@ def dark_palette() -> QPalette:
     return p
 
 
-def light_palette() -> QPalette:
-    """Light palette — soft off-white surfaces, dark text."""
+def classic_light_palette() -> QPalette:
+    """Classic light palette — soft off-white surfaces, dark text."""
     p = QPalette()
 
     p.setColor(QPalette.Window,        QColor(232, 234, 237))
@@ -90,51 +146,23 @@ def light_palette() -> QPalette:
     return p
 
 
-def modern_warm_palette() -> QPalette:
-    """Modern Warm palette — soft linen/sand surfaces, crisp charcoal text."""
-    p = QPalette()
-
-    p.setColor(QPalette.Window,        QColor(239, 236, 230))  # #EFECE6
-    p.setColor(QPalette.Base,          QColor(250, 247, 242))  # #FAF7F2
-    p.setColor(QPalette.AlternateBase, QColor(244, 240, 232))  # #F4F0E8
-
-    p.setColor(QPalette.WindowText,      QColor(28, 28, 30))   # #1C1C1E
-    p.setColor(QPalette.Text,            QColor(28, 28, 30))
-    p.setColor(QPalette.ButtonText,      QColor(28, 28, 30))
-    p.setColor(QPalette.PlaceholderText, QColor(156, 151, 142)) # #9C978E
-
-    p.setColor(QPalette.Button,   QColor(232, 227, 219))       # #E8E3DB
-    p.setColor(QPalette.Light,    QColor(255, 255, 255))
-    p.setColor(QPalette.Midlight, QColor(240, 235, 227))
-    p.setColor(QPalette.Mid,      QColor(220, 215, 206))
-    p.setColor(QPalette.Dark,     QColor(191, 185, 173))
-
-    accent = QColor(24, 24, 26)                                # #18181A
-    p.setColor(QPalette.Highlight,      accent)
-    p.setColor(QPalette.HighlightedText, Qt.white)
-    p.setColor(QPalette.Link,           accent)
-
-    p.setColor(QPalette.ToolTipBase, QColor(24, 24, 26))
-    p.setColor(QPalette.ToolTipText, QColor(250, 247, 242))
-
-    p.setColor(QPalette.Disabled, QPalette.Text,       QColor(168, 163, 154))
-    p.setColor(QPalette.Disabled, QPalette.WindowText,  QColor(168, 163, 154))
-    p.setColor(QPalette.Disabled, QPalette.ButtonText,  QColor(168, 163, 154))
-
-    return p
+# Backward compatibility aliases
+dark_palette = classic_dark_palette
+light_palette = classic_light_palette
 
 
 # ── Lookup table ─────────────────────────────────────────────
 _PALETTE_BUILDERS = {
-    "dark":          dark_palette,
-    "light":         light_palette,
-    "modern_warm":   modern_warm_palette,
-    "classic_dark":  dark_palette,
-    "classic_light": light_palette,
+    "dark":          modern_dark_palette,
+    "light":         modern_light_palette,
+    "classic_dark":  classic_dark_palette,
+    "classic_light": classic_light_palette,
 }
 
 
 def build_palette(theme_key: str) -> QPalette:
     """Return a QPalette for the given *theme_key*."""
-    builder = _PALETTE_BUILDERS.get(theme_key, dark_palette)
+    if theme_key in ("modern_warm", "warm"):
+        return modern_light_palette()
+    builder = _PALETTE_BUILDERS.get(theme_key, modern_dark_palette)
     return builder()

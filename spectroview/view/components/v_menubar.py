@@ -11,7 +11,6 @@ from spectroview import ICON_DIR, VERSION
 THEME_OPTIONS = [
     ("dark", "Modern Dark"),
     ("light", "Modern Light"),
-    ("modern_warm", "Modern Warm"),
     ("---", ""),  # separator
     ("classic_dark", "Classic Dark"),
     ("classic_light", "Classic Light"),
@@ -126,6 +125,8 @@ class VMenuBar(QToolBar):
         """Update internal state so the checkmark appears on the right item."""
         if theme_key == "soft_dark":
             theme_key = "dark"
+        elif theme_key in ("modern_warm", "warm"):
+            theme_key = "light"
         self._current_theme = theme_key
 
     def apply_theme(self, theme_key: str) -> None:

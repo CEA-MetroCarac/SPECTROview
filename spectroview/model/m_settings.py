@@ -170,16 +170,26 @@ class MSettings:
     
     # ---------- Theme ----------
     def get_theme(self) -> str:
-        """Get current theme (dark, light, modern_warm, classic_dark, classic_light)."""
+        """Get current theme (dark, light, classic_dark, classic_light)."""
         val = self.settings.value("theme", "dark", str)
         if val == "soft_dark":
             self.set_theme("dark")
             return "dark"
+        if val in ("modern_warm", "warm"):
+            self.set_theme("light")
+            return "light"
+        if val not in ("dark", "light", "classic_dark", "classic_light"):
+            self.set_theme("dark")
+            return "dark"
         return val
-    
+
     def set_theme(self, theme: str):
-        """Set theme (dark, light, modern_warm, classic_dark, classic_light)."""
+        """Set theme (dark, light, classic_dark, classic_light)."""
         if theme == "soft_dark":
+            theme = "dark"
+        elif theme in ("modern_warm", "warm"):
+            theme = "light"
+        elif theme not in ("dark", "light", "classic_dark", "classic_light"):
             theme = "dark"
         self.settings.setValue("theme", theme)
         self.settings.sync()

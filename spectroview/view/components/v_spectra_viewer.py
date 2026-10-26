@@ -10,7 +10,7 @@ from spectroview.fit_engine.evaluator import eval_peak_initial
 warnings.filterwarnings("ignore", message=".*constrained_layout not applied because axes sizes collapsed to zero.*")
 
 from PySide6.QtWidgets import (
-    QFrame,
+    QFrame, QGroupBox,
     QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QToolButton, QLabel,
     QComboBox, QDialog, QMenu, QWidgetAction,
@@ -208,7 +208,14 @@ class VSpectraViewer(QWidget):
         # ─── Canvas + Sliders row ───
         canvas_row = QHBoxLayout()
         canvas_row.setContentsMargins(0, 0, 0, 0)
-        canvas_row.addWidget(self.canvas, stretch=1)
+        self.canvas_card = QFrame(self)
+        self.canvas_card.setObjectName("canvasCard")
+        self.canvas_card.setFrameShape(QFrame.NoFrame)
+        canvas_card_layout = QVBoxLayout(self.canvas_card)
+        canvas_card_layout.setContentsMargins(5, 5, 5, 5)
+        canvas_card_layout.setSpacing(0)
+        canvas_card_layout.addWidget(self.canvas)
+        canvas_row.addWidget(self.canvas_card, stretch=1)
         canvas_row.addWidget(self.shift_panel)
 
         # ─── Control bar ───
@@ -220,8 +227,8 @@ class VSpectraViewer(QWidget):
     # ─── Vertical right panel (eraser + shift sliders) ───
     def _create_vertical_right_panel(self):
         """Create a vertical panel with eraser tool buttons and Y/X-shift sliders."""
-        panel = QFrame()
-        panel.setFrameShape(QFrame.NoFrame)
+        panel = QGroupBox()
+
         panel.setFixedWidth(32)
         panel.setObjectName("shiftPanel")
        
@@ -308,8 +315,8 @@ class VSpectraViewer(QWidget):
 
     # Control bar
     def _create_control_bar(self):
-        bar = QFrame(self)
-        bar.setFrameShape(QFrame.NoFrame)
+        bar = QGroupBox(self)
+
         bar.setObjectName("controlBarPanel")
         bar.setFixedHeight(38)
         layout = QHBoxLayout(bar)
@@ -2020,7 +2027,14 @@ class VSpectraViewer(QWidget):
         # Parse the style file from cached dict without modifying global rcParams
         style_dict = get_cached_style_dict(style_path)
             
-        self.figure.patch.set_facecolor(style_dict.get('figure.facecolor', 'white'))
+        fig_bg = style_dict.get('figure.facecolor', 'white')
+        self.figure.patch.set_facecolor(fig_bg)
+        if hasattr(self, "canvas_card"):
+            tok = current_tokens()
+            fig_hex = fig_bg if str(fig_bg).startswith("#") or str(fig_bg).isalpha() else f"#{fig_bg}"
+            self.canvas_card.setStyleSheet(
+                f"QFrame#canvasCard {{ background-color: {fig_hex}; border: 1px solid {tok.border}; border-radius: 8px; }}"
+            )
         self.figure.patch.set_edgecolor(style_dict.get('figure.edgecolor', 'white'))
         self.ax.set_facecolor(style_dict.get('axes.facecolor', 'white'))
         

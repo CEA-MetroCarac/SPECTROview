@@ -172,7 +172,14 @@ class VMapViewer(QWidget):
         self.btn_copy.clicked.connect(self._copy_figure_to_clipboard)
         toolbar_layout.addWidget(self.btn_copy)
         
-        canvas_layout.addWidget(self.canvas, stretch=1)
+        self.canvas_card = QFrame(canvas_frame)
+        self.canvas_card.setObjectName("canvasCard")
+        self.canvas_card.setFrameShape(QFrame.NoFrame)
+        card_layout = QVBoxLayout(self.canvas_card)
+        card_layout.setContentsMargins(5, 5, 5, 5)
+        card_layout.setSpacing(0)
+        card_layout.addWidget(self.canvas)
+        canvas_layout.addWidget(self.canvas_card, stretch=1)
         canvas_layout.addLayout(toolbar_layout)
         
         return canvas_frame
@@ -186,7 +193,10 @@ class VMapViewer(QWidget):
             self.current_style = style_name
             
         # Manually replot heatmap to update colorbars and contents with new style
-        self.plot_heatmap()
+        if self.map_df is None or self.map_df.empty:
+            self._do_plot_heatmap()
+        else:
+            self.plot_heatmap()
 
     def apply_global_theme(self, global_theme: str):
         """Update toolbar icons based on the global application theme."""
@@ -595,12 +605,18 @@ class VMapViewer(QWidget):
     def _on_parameter_changed(self):
         """Z parameter changed - update range and refresh plot."""
         self._update_z_range()
-        self.plot_heatmap()
+        if self.map_df is None or self.map_df.empty:
+            self._do_plot_heatmap()
+        else:
+            self.plot_heatmap()
     
     def _on_plot_option_changed(self):
         """Plot option changed - update range if needed and refresh."""
         self._update_z_range()
-        self.plot_heatmap()
+        if self.map_df is None or self.map_df.empty:
+            self._do_plot_heatmap()
+        else:
+            self.plot_heatmap()
     
     def _on_x_slider_changed(self, values):
         """X-range slider changed - update spinboxes and schedule debounced plot."""
@@ -611,7 +627,10 @@ class VMapViewer(QWidget):
         self.spin_xmin.blockSignals(False)
         self.spin_xmax.blockSignals(False)
         self._need_z_range_update = True
-        self.plot_heatmap()
+        if self.map_df is None or self.map_df.empty:
+            self._do_plot_heatmap()
+        else:
+            self.plot_heatmap()
     
     def _on_z_slider_changed(self, values):
         """Z-range slider changed - update spinboxes and trigger plot."""
@@ -621,7 +640,10 @@ class VMapViewer(QWidget):
         self.spin_zmax.setValue(values[1])
         self.spin_zmin.blockSignals(False)
         self.spin_zmax.blockSignals(False)
-        self.plot_heatmap()
+        if self.map_df is None or self.map_df.empty:
+            self._do_plot_heatmap()
+        else:
+            self.plot_heatmap()
     
     def _update_x_slider_from_spins(self):
         """Update X slider when spinboxes change."""
@@ -716,7 +738,14 @@ class VMapViewer(QWidget):
         """Plot 2D heatmap or wafer map based on current data and settings."""
         if self.map_df is None or self.map_df.empty:
             self.figure.clf()
-            self.figure.patch.set_facecolor(plt.rcParams.get('figure.facecolor', 'white'))
+            fig_bg = plt.rcParams.get('figure.facecolor', 'white')
+            self.figure.patch.set_facecolor(fig_bg)
+            if hasattr(self, "canvas_card"):
+                tok = current_tokens()
+                fig_hex = fig_bg if str(fig_bg).startswith("#") or str(fig_bg).isalpha() else f"#{fig_bg}"
+                self.canvas_card.setStyleSheet(
+                    f"QFrame#canvasCard {{ background-color: {fig_hex}; border: 1px solid {tok.border}; border-radius: 8px; }}"
+                )
             self.ax = self.figure.add_subplot(111)
             self.cbar = None
             self.canvas.draw_idle()
@@ -815,7 +844,14 @@ class VMapViewer(QWidget):
         
         # Clear figure and recreate axes to ensure no leftover colorbars and reset sizes
         self.figure.clf()
-        self.figure.patch.set_facecolor(plt.rcParams.get('figure.facecolor', 'white'))
+        fig_bg = plt.rcParams.get('figure.facecolor', 'white')
+        self.figure.patch.set_facecolor(fig_bg)
+        if hasattr(self, "canvas_card"):
+            tok = current_tokens()
+            fig_hex = fig_bg if str(fig_bg).startswith("#") or str(fig_bg).isalpha() else f"#{fig_bg}"
+            self.canvas_card.setStyleSheet(
+                f"QFrame#canvasCard {{ background-color: {fig_hex}; border: 1px solid {tok.border}; border-radius: 8px; }}"
+            )
         self.ax = self.figure.add_subplot(111)
         self.cbar = None
         self._last_map_type = map_type

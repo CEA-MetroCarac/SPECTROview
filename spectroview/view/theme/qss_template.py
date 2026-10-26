@@ -238,23 +238,23 @@ QSS_TEMPLATE = r"""
 
     QSplitter::handle:horizontal {
         width: 5px;
-        background-color: @sidebar_bg;
-        border-left: 1px solid @border_strong;
-        border-right: none;
+        background-color: @border_subtle;
+        border: none;
+        border-radius: 2px;
         image: url("@splitter_grip_v_url");
     }
 
     QSplitter::handle:vertical {
         height: 5px;
-        background-color: @background;
-        border-top: 1px solid @border_strong;
-        border-bottom: none;
+        background-color: @border_subtle;
+        border: none;
+        border-radius: 2px;
         image: url("@splitter_grip_h_url");
     }
 
     QSplitter::handle:hover, QSplitter::handle:pressed {
         background-color: @accent_tint;
-        border-color: @accent;
+        border: none;
     }
 
     /* ═══════════════════════════════════════════════
@@ -293,10 +293,10 @@ QSS_TEMPLATE = r"""
         border-radius: 0px;
     }
 
-    QWidget#controlBarPanel, QWidget#shiftPanel, QWidget#bottomToolbarPanel {
-        background-color: transparent;
-        border: none;
-        border-radius: 0px;
+    QFrame#canvasCard {
+        background-color: @surface;
+        border: 1px solid @border;
+        border-radius: 8px;
     }
 
     QMdiArea {
@@ -355,6 +355,11 @@ QSS_TEMPLATE = r"""
         margin-top: 10px;
         padding: 8px 4px 4px 4px;
         font-weight: bold;
+    }
+
+    QGroupBox#controlBarPanel, QGroupBox#shiftPanel, QGroupBox#bottomToolbarPanel {
+        margin-top: 0px;
+        padding: 0px;
     }
 
     QGroupBox::title {

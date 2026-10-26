@@ -102,9 +102,9 @@ class VWorkspaceGraphs(QWidget):
     
     def _create_bottom_toolbar(self):
         """Create bottom toolbar."""
-        bottom_toolbar = QFrame()
+        bottom_toolbar = QGroupBox()
         bottom_toolbar.setObjectName("bottomToolbarPanel")
-        bottom_toolbar.setFrameShape(QFrame.NoFrame)
+
         bottom_toolbar.setMaximumHeight(44)
         toolbar_layout = QHBoxLayout(bottom_toolbar)
         toolbar_layout.setContentsMargins(4, 2, 4, 2)

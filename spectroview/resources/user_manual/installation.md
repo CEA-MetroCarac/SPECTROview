@@ -87,9 +87,10 @@ pip show spectroview
 - **On startup**, a background thread silently queries the [GitHub Releases page](https://github.com/CEA-MetroCarac/SPECTROview/releases) for the latest version.
 - If a newer version is available, a **blue notification banner** appears at the top of the window:
 
-```
-🔔  A new version of SPECTROview is available:  26.29.0    [ ⬇ Update ]  [ 🔍 Show changelog ]  [ Update later ]  [ Skip this version ]
-```
+<div align="center">
+  <img src="../user_manual_images/Installation/update_banner.png" alt="Automatic update notification banner" width="800"><br>
+  <i>Notification banner displayed when a newer version of SPECTROview is available.</i>
+</div>
 
 > **Privacy Guarantee**: This check only sends a standard anonymous request to the public GitHub API to fetch the latest version number. **Absolutely no personal or usage data is collected or transmitted.**
 
@@ -98,7 +99,7 @@ pip show spectroview
 | Button | Behaviour |
 |--------|-----------|
 | **⬇ Update** | Downloads the `.whl` attached to the announced GitHub release, verifies its SHA-256 checksum when GitHub provides one, closes SPECTROview, runs `pip install --upgrade` with that wheel, and relaunches the app. |
-| **🔍 View changelog** | Opens the GitHub release page in your browser to see what's new. |
+| **🔍 Show changelog** | Opens the GitHub release page in your browser to see what's new. |
 | **Update later** | Hides the banner for the current session only. It will reappear on the next launch if the update is still available. |
 | **Skip this version** | Hides the banner permanently for that specific version. It will not show again until an even newer version is released. |
 

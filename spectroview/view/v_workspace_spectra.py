@@ -342,12 +342,19 @@ class VWorkspaceSpectra(QWidget):
         tok = current_tokens()
         icon_color = tok.text_primary
         
-        self.btn_select_all.setIcon(Icons.check_circle(color=icon_color))
-        self.btn_remove.setIcon(Icons.trash(color=icon_color))
-        self.btn_reinit.setIcon(Icons.undo(color=icon_color))
-        self.btn_stats.setIcon(Icons.stats(color=icon_color))
-        self.btn_save_spectra_data.setIcon(Icons.save(color=icon_color))
-        self.btn_stop_fit.setIcon(Icons.stop(color=icon_color))
+        for btn, icon_fn in (
+            (getattr(self, 'btn_select_all', None), Icons.check_circle),
+            (getattr(self, 'btn_remove', None), Icons.trash),
+            (getattr(self, 'btn_reinit', None), Icons.undo),
+            (getattr(self, 'btn_stats', None), Icons.stats),
+            (getattr(self, 'btn_save_spectra_data', None), Icons.save),
+            (getattr(self, 'btn_stop_fit', None), Icons.stop),
+        ):
+            if btn is not None:
+                try:
+                    btn.setIcon(icon_fn(color=icon_color))
+                except RuntimeError:
+                    pass
 
         # Propagate to Fit Model Builder
         if hasattr(self, 'v_fit_model_builder'):

@@ -1,7 +1,6 @@
-import os
 from PySide6.QtCore import QSize
-from spectroview import ICON_DIR
-from spectroview.view.components.v_menubar import VMenuBar
+from spectroview.view.theme import Icons
+from spectroview.view.components.v_menubar import VMenuBar, THEME_OPTIONS
 
 
 def test_v_menubar_actions_and_icons(qtbot):
@@ -22,5 +21,10 @@ def test_v_menubar_actions_and_icons(qtbot):
     assert pixmap.width() == 30
     assert pixmap.height() == 30
 
-    # Ensure icon files exist on disk
-    assert os.path.exists(os.path.join(ICON_DIR, "llm_ai.png"))
+    # Ensure vector icon exists and renders
+    assert not Icons.get("llm_ai").isNull()
+
+    # Ensure theme options contains the 4 canonical themes
+    theme_keys = {key for key, _ in THEME_OPTIONS if key != "---"}
+    assert theme_keys == {"dark", "light", "classic_dark", "classic_light"}
+    assert len(theme_keys) == 4

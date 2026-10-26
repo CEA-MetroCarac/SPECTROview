@@ -44,8 +44,6 @@ QSS_TEMPLATE = r"""
 
     QWidget {
         color: @text_primary;
-        selection-background-color: @selection;
-        selection-color: @text_primary;
     }
 
     QMainWindow, QDialog, QMessageBox {
@@ -306,12 +304,6 @@ QSS_TEMPLATE = r"""
         border: none;
     }
 
-    QMdiSubWindow {
-        background-color: @surface;
-        border: 1px solid @border;
-        border-radius: 6px;
-    }
-
     /* ═══════════════════════════════════════════════
        MAIN TAB WIDGET — workspace tabs
        ═══════════════════════════════════════════════ */
@@ -551,6 +543,8 @@ QSS_TEMPLATE = r"""
         border-radius: 6px;
         padding: 1px 2px 1px 4px;
         color: @text_primary;
+        selection-background-color: @selection;
+        selection-color: @text_primary;
     }
 
     QSpinBox:hover, QDoubleSpinBox:hover {

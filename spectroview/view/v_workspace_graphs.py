@@ -91,9 +91,7 @@ class VWorkspaceGraphs(QWidget):
         self.mdi_area = QMdiArea()
         self.mdi_area.setMinimumWidth(600)
         self.mdi_area.setBackground(QBrush(Qt.transparent))
-        self.mdi_area.setStyleSheet(
-            "QMdiArea { border: 0px solid rgba(128, 128, 128, 0.2); border-radius: 0.5px; }"
-        )
+        self.mdi_area.setStyleSheet("QMdiArea { border: none; }")
         left_layout.addWidget(self.mdi_area)
         
         # Bottom Toolbar
@@ -541,6 +539,10 @@ class VWorkspaceGraphs(QWidget):
         self.btn_add_plot.setIcon(Icons.plus(color=icon_color))
         self.btn_update_plot.setIcon(Icons.refresh(color=icon_color))
         self.btn_add_multi_wafer.setIcon(Icons.plus(color=icon_color))
+        if hasattr(self, 'btn_apply_recipe'):
+            self.btn_apply_recipe.setIcon(Icons.get('recipe', color=icon_color))
+        if hasattr(self, 'btn_save_as_recipe'):
+            self.btn_save_as_recipe.setIcon(Icons.save(color=icon_color))
 
         # v_data_filter buttons
         self.v_data_filter.btn_add.setIcon(Icons.plus(color=icon_color))

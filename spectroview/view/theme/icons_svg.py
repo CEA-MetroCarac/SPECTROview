@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from PySide6.QtCore import QByteArray, QRect, QRectF, QSize, Qt
-from PySide6.QtGui import QIcon, QIconEngine, QImage, QPainter, QPixmap
+from PySide6.QtGui import QIcon, QIconEngine, QImage, QPainter, QPixmap, QPixmapCache
 from PySide6.QtSvg import QSvgRenderer
 
 # ---------------------------------------------------------------------------
@@ -520,9 +520,31 @@ _ICON_CACHE: dict[tuple[str, str], QIcon] = {}
 _ENGINE_REFS: list[_SvgIconEngine] = []
 
 
+# Theme foreground colors that should resolve dynamically at paint time rather than locking
+_DYNAMIC_FG_COLORS = frozenset({
+    "#ededef",
+    "#141519",
+    "#f0f0f0",
+    "#404040",
+    "#1c1c1e",
+    "#e0e0e0",
+    "#262626",
+})
+
+
+def _normalize_explicit_color(color: str | None) -> str | None:
+    """Return None for standard theme foreground colors so _SvgIconEngine resolves them dynamically."""
+    if not color or not isinstance(color, str):
+        return None
+    if color.strip().lower() in _DYNAMIC_FG_COLORS:
+        return None
+    return color
+
+
 def _resolve_color(color: str | None = None) -> str:
-    if color:
-        return color
+    norm = _normalize_explicit_color(color)
+    if norm:
+        return norm
     from spectroview.view.theme import current_tokens
     return current_tokens().text_primary
 
@@ -531,6 +553,10 @@ def clear_icon_caches() -> None:
     """Clear cached pixmaps and rendered images while keeping live QIconEngine references intact."""
     _PIXMAP_CACHE.clear()
     _IMAGE_CACHE.clear()
+    try:
+        QPixmapCache.clear()
+    except Exception:
+        pass
 
 
 def _render_image_1to1(name: str, phys_dim: int, color: str) -> QImage:
@@ -584,12 +610,12 @@ class _SvgIconEngine(QIconEngine):
     ) -> None:
         super().__init__()
         self._name = name
+        raw_color: str | None = None
         if isinstance(explicit_color, str):
-            self._explicit_color: str | None = explicit_color
+            raw_color = explicit_color
         elif args and isinstance(args[-1], str):
-            self._explicit_color = args[-1]
-        else:
-            self._explicit_color = None
+            raw_color = args[-1]
+        self._explicit_color: str | None = _normalize_explicit_color(raw_color)
         _ENGINE_REFS.append(self)
 
     def clone(self) -> QIconEngine:
@@ -670,12 +696,15 @@ def svg_icon(
     color: str | None = None,
 ) -> QIcon:
     """Return a crisp vector QIcon powered by _SvgIconEngine with dynamic theme color resolution."""
-    key = (name, color or "")
+    norm_color = _normalize_explicit_color(color)
+    from spectroview.view.theme import current_tokens
+    is_dark = current_tokens().is_dark
+    key = (name, norm_color or "", is_dark)
     cached = _ICON_CACHE.get(key)
     if cached is not None:
         return cached
 
-    engine = _SvgIconEngine(name, explicit_color=color)
+    engine = _SvgIconEngine(name, explicit_color=norm_color)
     icon = QIcon(engine)
     _ICON_CACHE[key] = icon
     return icon

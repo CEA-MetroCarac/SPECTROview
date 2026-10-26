@@ -101,6 +101,13 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         if old_right:
             old_right.setParent(None)
             old_right.deleteLater()
+            # Clear inherited references to buttons owned by old_right so
+            # VWorkspaceSpectra.apply_theme() never touches deleted C++ widgets.
+            self.btn_select_all = None
+            self.btn_remove = None
+            self.btn_reinit = None
+            self.btn_stats = None
+            self.btn_save_spectra_data = None
         
         # Create new right panel with Maps features
         right_widget = self._create_maps_right_panel()

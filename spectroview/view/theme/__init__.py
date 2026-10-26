@@ -56,6 +56,15 @@ from .fonts import (
     get_application_font,
     setup_application_font,
 )
+from .icons_svg import (
+    svg_icon,
+    svg_pixmap,
+    clear_icon_caches,
+)
+from .icons import (
+    Icons,
+    LEGACY_ICON_MAP,
+)
 
 __all__ = [
     "ThemeManager",
@@ -83,4 +92,9 @@ __all__ = [
     "modern_light_palette",
     "classic_dark_palette",
     "classic_light_palette",
+    "Icons",
+    "svg_icon",
+    "svg_pixmap",
+    "clear_icon_caches",
+    "LEGACY_ICON_MAP",
 ]

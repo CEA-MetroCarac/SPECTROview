@@ -12,6 +12,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 
 from spectroview.model.m_style_template_store import MStyleTemplateStore, StyleTemplateSummary
+from spectroview.view.theme import Icons
 
 
 class _StyleTemplateItemWidget(QWidget):
@@ -39,8 +40,11 @@ class _StyleTemplateItemWidget(QWidget):
 
         self.btn_apply = QPushButton("Apply")
         self.btn_apply.setStyleSheet("font-weight: bold;")
+        self.btn_apply.setIcon(Icons.check())
         self.btn_rename = QPushButton("Rename")
+        self.btn_rename.setIcon(Icons.edit())
         self.btn_delete = QPushButton("Delete")
+        self.btn_delete.setIcon(Icons.trash())
 
         for btn in (self.btn_apply, self.btn_rename, self.btn_delete):
             btn.setCursor(Qt.PointingHandCursor)
@@ -60,7 +64,7 @@ class VStyleTemplateDialog(QDialog):
         super().__init__(parent)
         self.store = store
         self._cached_summaries: list[StyleTemplateSummary] = []
-        self.setWindowTitle("🎨 Style Templates")
+        self.setWindowTitle("Style Templates")
         self.setMinimumSize(480, 360)
         self.resize(520, 420)
 
@@ -80,6 +84,7 @@ class VStyleTemplateDialog(QDialog):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
         btn_close = QPushButton("Close")
+        btn_close.setIcon(Icons.close())
         btn_close.clicked.connect(self.reject)
         btn_layout.addWidget(btn_close)
         layout.addLayout(btn_layout)

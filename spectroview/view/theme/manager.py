@@ -234,7 +234,14 @@ class ThemeManager:
                 if widget.isWindow() and widget.isVisible():
                     apply_window_title_bar_theme(widget, tokens)
 
-        # 5) Persist
+        # 5) Flush icon caches so theme-dependent icons repaint instantly
+        try:
+            from .icons_svg import clear_icon_caches
+            clear_icon_caches()
+        except Exception:
+            pass
+
+        # 6) Persist
         self._settings.set_theme(theme_key)
 
 

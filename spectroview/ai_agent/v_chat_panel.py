@@ -16,7 +16,6 @@ All data comes in through signals; all actions go out through method calls.
 
 from __future__ import annotations
 
-import os
 from datetime import datetime
 from typing import Optional, Dict, List
 
@@ -28,9 +27,9 @@ from PySide6.QtWidgets import (
 )
 import markdown
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QThread, QObject
-from PySide6.QtGui import QFont, QIcon, QKeyEvent, QTextCursor
+from PySide6.QtGui import QFont, QKeyEvent, QTextCursor
 
-from spectroview import ICON_DIR
+from spectroview.view.theme import Icons
 from spectroview.model.m_settings import MSettings
 from spectroview.ai_agent.vm_chat import VMChat, ChatResult
 from spectroview.ai_agent.m_llm_client import (
@@ -82,7 +81,7 @@ class _MessageCard(QFrame):
         header_layout = QHBoxLayout()
         header_layout.setContentsMargins(0, 0, 0, 0)
 
-        role_label = QLabel("You" if role == "user" else ("⚠ Error" if role == "error" else "🤖 SPECTROview AI Agent"))
+        role_label = QLabel("You" if role == "user" else ("Error" if role == "error" else "SPECTROview AI Agent"))
         role_font = QFont()
         role_font.setBold(True)
         role_font.setPointSize(10)
@@ -97,14 +96,16 @@ class _MessageCard(QFrame):
         header_layout.addStretch()
 
         if role == "assistant":
-            btn_reply = QPushButton("↩ Reply")
+            btn_reply = QPushButton("Reply")
+            btn_reply.setIcon(Icons.reply(size=13))
             btn_reply.setToolTip("Reply to this message")
             btn_reply.setStyleSheet("color: #1976D2; border: none; font-size: 10px; font-weight: bold; background: transparent;")
             btn_reply.setCursor(Qt.PointingHandCursor)
             btn_reply.clicked.connect(lambda: self.reply_clicked.emit(self._raw_text))
             header_layout.addWidget(btn_reply)
 
-        btn_copy = QPushButton("📋 Copy")
+        btn_copy = QPushButton("Copy")
+        btn_copy.setIcon(Icons.copy(size=13))
         btn_copy.setToolTip("Copy message text")
         btn_copy.setStyleSheet("color: gray; border: none; font-size: 10px; background: transparent;")
         btn_copy.setCursor(Qt.PointingHandCursor)
@@ -167,7 +168,7 @@ class _ThinkingDots(QLabel):
     """Animated '...' label shown while the LLM is thinking."""
 
     def __init__(self, parent=None) -> None:
-        super().__init__("🤖  Thinking .", parent)
+        super().__init__("Thinking .", parent)
         self.setObjectName("chatThinkingDots")
         self._dots = 1
         self._text_prefix = "Thinking"
@@ -188,7 +189,7 @@ class _ThinkingDots(QLabel):
 
     def _tick(self):
         self._dots = (self._dots % 3) + 1
-        self.setText(f"🤖  {self._text_prefix} {'.' * self._dots}")
+        self.setText(f"{self._text_prefix} {'.' * self._dots}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -423,21 +424,21 @@ class VChatPanel(QDialog):
         # ── Action buttons in the same line ─────────────────────────
         self.btn_history = QPushButton("")
         self.btn_history.setObjectName("btn_history")
-        self.btn_history.setIcon(QIcon(os.path.join(ICON_DIR, "view-details.png")))
-        self.btn_history.setIconSize(QSize(20, 20))
+        self.btn_history.setIcon(Icons.history(size=18))
+        self.btn_history.setIconSize(QSize(18, 18))
         self.btn_history.setFixedSize(30, 30)
         self.btn_history.setToolTip("Chat History")
 
         self.btn_new_chat = QPushButton("")
         self.btn_new_chat.setObjectName("btn_new_chat")
-        self.btn_new_chat.setIcon(QIcon(os.path.join(ICON_DIR, "ai_chat.png")))
-        self.btn_new_chat.setIconSize(QSize(20, 20))
+        self.btn_new_chat.setIcon(Icons.plus(size=18))
+        self.btn_new_chat.setIconSize(QSize(18, 18))
         self.btn_new_chat.setFixedSize(30, 30)
         self.btn_new_chat.setToolTip("New Chat")
 
         self.btn_clear = QPushButton("")
         self.btn_clear.setObjectName("btn_clear")
-        self.btn_clear.setIcon(QIcon(os.path.join(ICON_DIR, "trash.png")))
+        self.btn_clear.setIcon(Icons.trash(size=18))
         self.btn_clear.setIconSize(QSize(18, 18))
         self.btn_clear.setFixedSize(30, 30)
         self.btn_clear.setToolTip("Clear Chat")
@@ -459,10 +460,11 @@ class VChatPanel(QDialog):
         self.lbl_reply_text.setWordWrap(True)
         layout.addWidget(self.lbl_reply_text, stretch=1)
         
-        btn_close = QPushButton("✕")
+        btn_close = QPushButton("")
+        btn_close.setIcon(Icons.close(size=12))
         btn_close.setFixedSize(20, 20)
         btn_close.setCursor(Qt.PointingHandCursor)
-        btn_close.setStyleSheet("QPushButton { background: transparent; border: none; font-weight: bold; }")
+        btn_close.setStyleSheet("QPushButton { background: transparent; border: none; }")
         btn_close.clicked.connect(self._clear_reply_state)
         layout.addWidget(btn_close)
         
@@ -516,7 +518,7 @@ class VChatPanel(QDialog):
         # Refresh models / test connection button
         self.btn_refresh_models = QPushButton("")
         self.btn_refresh_models.setObjectName("btn_refresh_models")
-        self.btn_refresh_models.setIcon(QIcon(os.path.join(ICON_DIR, "refresh.png")))
+        self.btn_refresh_models.setIcon(Icons.refresh(size=14))
         self.btn_refresh_models.setIconSize(QSize(14, 14))
         self.btn_refresh_models.setFixedSize(23, 23)
         self.btn_refresh_models.setCursor(Qt.PointingHandCursor)
@@ -527,7 +529,8 @@ class VChatPanel(QDialog):
         composer_toolbar.addStretch(1)
 
         # Microphone button (voice dictation)
-        self.btn_mic = QPushButton("🎤")
+        self.btn_mic = QPushButton("")
+        self.btn_mic.setIcon(Icons.mic(size=14))
         self.btn_mic.setObjectName("btn_mic")
         self.btn_mic.setFixedSize(24, 23)
         self.btn_mic.setCheckable(True)
@@ -540,7 +543,8 @@ class VChatPanel(QDialog):
         composer_toolbar.addWidget(self.btn_mic, 0, Qt.AlignVCenter)
 
         # Send / Stop button
-        self.btn_send = QPushButton("Send ▶")
+        self.btn_send = QPushButton("Send")
+        self.btn_send.setIcon(Icons.send(color="#FFFFFF", size=13))
         self.btn_send.setObjectName("btn_send")
         self.btn_send.setFixedHeight(23)
         self.btn_send.setMinimumWidth(55)
@@ -637,14 +641,16 @@ class VChatPanel(QDialog):
 
     def _apply_send_button_style(self) -> None:
         """Switch the action button to 'Send' mode."""
-        self.btn_send.setText("Send ▶")
+        self.btn_send.setIcon(Icons.send(color="#FFFFFF", size=13))
+        self.btn_send.setText("Send")
         has_text = bool(self.edit_input.toPlainText().strip()) if hasattr(self, "edit_input") else False
         self.btn_send.setStyleSheet(self._SEND_ACTIVE_STYLE if has_text else self._SEND_STYLE)
         self.btn_send.setEnabled(True)
 
     def _apply_stop_button_style(self) -> None:
         """Switch the action button to 'Stop' mode (red)."""
-        self.btn_send.setText("Stop ■")
+        self.btn_send.setIcon(Icons.stop(color="#FFFFFF", size=13))
+        self.btn_send.setText("Stop")
         self.btn_send.setStyleSheet(self._STOP_STYLE)
         self.btn_send.setEnabled(True)
 
@@ -888,7 +894,7 @@ class VChatPanel(QDialog):
 
         # ── Package availability guard ──────────────────────────────────
         if is_ollama and not OLLAMA_AVAILABLE:
-            self.lbl_status.setText("🔴  ollama package missing — run: pip install ollama")
+            self.lbl_status.setText("●  ollama package missing — run: pip install ollama")
             self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
             self.edit_input.setEnabled(False)
             self._apply_send_button_style()
@@ -896,7 +902,7 @@ class VChatPanel(QDialog):
             return
 
         if not is_ollama and not OPENAI_AVAILABLE:
-            self.lbl_status.setText("🔴  openai package missing — run: pip install openai")
+            self.lbl_status.setText("●  openai package missing — run: pip install openai")
             self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
             self.edit_input.setEnabled(False)
             self._apply_send_button_style()
@@ -906,7 +912,7 @@ class VChatPanel(QDialog):
         # ── API key missing ─────────────────────────────────────
         has_key = bool(self._settings.get_ai_value(f"api_key_{provider_key}", "", str))
         if not is_ollama and not has_key:
-            self.lbl_status.setText(f"⚪  {provider_key} — configure API key in Settings (AI Tab)")
+            self.lbl_status.setText(f"○  {provider_key} — configure API key in Settings (AI Tab)")
             self.lbl_status.setStyleSheet("color: #FFA726; font-size: 11px;")
             self.edit_input.setEnabled(False)
             self._apply_send_button_style()
@@ -930,9 +936,9 @@ class VChatPanel(QDialog):
 
         # Update status UI immediately to indicate checking without freezing
         if is_ollama:
-            self.lbl_status.setText("🟡  Checking Ollama connection…")
+            self.lbl_status.setText("●  Checking Ollama connection…")
         else:
-            self.lbl_status.setText(f"🟡  Checking {provider_key} connection…")
+            self.lbl_status.setText(f"●  Checking {provider_key} connection…")
         self.lbl_status.setStyleSheet("color: #FFA726; font-size: 11px;")
 
         # Pre-populate model combo with saved or fallback model if currently empty
@@ -1011,11 +1017,11 @@ class VChatPanel(QDialog):
             self._fit_model_popup_width()
 
             if is_ollama:
-                status_text = "🟢  Ollama connected"
+                status_text = "●  Ollama connected"
             elif provider_key == "Custom":
-                status_text = f"🟢  {self._get_custom_label()} API connected"
+                status_text = f"●  {self._get_custom_label()} API connected"
             else:
-                status_text = f"🟢  {provider_key} API connected"
+                status_text = f"●  {provider_key} API connected"
             if self.vm.is_small_model_mode():
                 status_text += "  ·  Simplified prompts"
             self.lbl_status.setText(status_text)
@@ -1025,9 +1031,9 @@ class VChatPanel(QDialog):
 
         else:
             if is_ollama:
-                self.lbl_status.setText("🔴  Ollama not running — run: ollama serve")
+                self.lbl_status.setText("●  Ollama not running — run: ollama serve")
             else:
-                self.lbl_status.setText(f"🔴  {provider_key} API — could not connect or invalid key")
+                self.lbl_status.setText(f"●  {provider_key} API — could not connect or invalid key")
             self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
             self.edit_input.setEnabled(False)
             self._apply_send_button_style()
@@ -1251,8 +1257,9 @@ class VChatPanel(QDialog):
             plot_only_cfgs = [c for c in cfgs if "_graph_update" not in c and "_graph_delete" not in c]
             if plot_only_cfgs:
                 btn = QPushButton(
-                    f"💾 Save {len(plot_only_cfgs)} plot{'s' if len(plot_only_cfgs) > 1 else ''} as Recipe"
+                    f"Save {len(plot_only_cfgs)} plot{'s' if len(plot_only_cfgs) > 1 else ''} as Recipe"
                 )
+                btn.setIcon(Icons.save())
                 btn.setObjectName("btnRowPrimary")
                 btn.setMaximumWidth(220)
                 btn.clicked.connect(lambda: self.prompt_and_save_recipe(plot_only_cfgs))

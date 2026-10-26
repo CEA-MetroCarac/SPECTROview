@@ -13,6 +13,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 
 from spectroview.model.m_plot_recipe_store import MPlotRecipeStore, PlotRecipeSummary
+from spectroview.view.theme import Icons
 
 
 class _PlotRecipeItemWidget(QWidget):
@@ -52,12 +53,16 @@ class _PlotRecipeItemWidget(QWidget):
 
         self.btn_apply = QPushButton("Apply")
         self.btn_apply.setObjectName("btnRowPrimary")
+        self.btn_apply.setIcon(Icons.check())
         self.btn_rename = QPushButton("Rename")
         self.btn_rename.setObjectName("btnRowLink")
+        self.btn_rename.setIcon(Icons.edit())
         self.btn_duplicate = QPushButton("Duplicate")
         self.btn_duplicate.setObjectName("btnRowLink")
+        self.btn_duplicate.setIcon(Icons.copy())
         self.btn_delete = QPushButton("Delete")
         self.btn_delete.setObjectName("btnRowDanger")
+        self.btn_delete.setIcon(Icons.trash())
 
         self.btn_apply.setCursor(Qt.PointingHandCursor)
         self.btn_apply.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -93,7 +98,7 @@ class VPlotRecipeDialog(QDialog):
         super().__init__(parent)
         self.store = store
         self._cached_summaries: list[PlotRecipeSummary] = []
-        self.setWindowTitle("📊 Plot Recipes")
+        self.setWindowTitle("Plot Recipes")
         self.setMinimumSize(600, 400)
         self.resize(700, 500)
 
@@ -113,6 +118,7 @@ class VPlotRecipeDialog(QDialog):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
         btn_close = QPushButton("Close")
+        btn_close.setIcon(Icons.close())
         btn_close.clicked.connect(self.accept)
         btn_layout.addWidget(btn_close)
         layout.addLayout(btn_layout)

@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 
 from spectroview.ai_agent.m_conversation_store import ConversationSummary, MConversationStore
+from spectroview.view.theme import Icons
 
 class _ConversationItemWidget(QWidget):
     """Custom widget for a row in the history list."""
@@ -60,12 +61,16 @@ class _ConversationItemWidget(QWidget):
         # Buttons
         self.btn_open = QPushButton("Open")
         self.btn_open.setObjectName("btnRowPrimary")
+        self.btn_open.setIcon(Icons.open())
         self.btn_rename = QPushButton("Rename")
         self.btn_rename.setObjectName("btnRowLink")
+        self.btn_rename.setIcon(Icons.edit())
         self.btn_duplicate = QPushButton("Duplicate")
         self.btn_duplicate.setObjectName("btnRowLink")
+        self.btn_duplicate.setIcon(Icons.copy())
         self.btn_delete = QPushButton("Delete")
         self.btn_delete.setObjectName("btnRowDanger")
+        self.btn_delete.setIcon(Icons.trash())
 
         self.btn_open.setCursor(Qt.PointingHandCursor)
         self.btn_open.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -109,7 +114,7 @@ class VHistoryDialog(QDialog):
         super().__init__(parent)
         self.store = store
         self._cached_summaries: List[ConversationSummary] = []
-        self.setWindowTitle("📜 Conversation History")
+        self.setWindowTitle("Conversation History")
         self.setMinimumSize(600, 400)
         self.resize(700, 500)
         
@@ -135,12 +140,14 @@ class VHistoryDialog(QDialog):
 
         self.btn_delete_all = QPushButton("Delete All")
         self.btn_delete_all.setObjectName("btnDeleteAllOutline")
+        self.btn_delete_all.setIcon(Icons.trash())
         self.btn_delete_all.setCursor(Qt.PointingHandCursor)
         self.btn_delete_all.clicked.connect(self._on_delete_all)
         btn_layout.addWidget(self.btn_delete_all)
         
         btn_layout.addStretch()
         btn_close = QPushButton("Close")
+        btn_close.setIcon(Icons.close())
         btn_close.clicked.connect(self.accept)
         btn_layout.addWidget(btn_close)
         layout.addLayout(btn_layout)

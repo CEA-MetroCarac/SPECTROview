@@ -3,6 +3,7 @@
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
+from spectroview.view.theme import Icons
 
 
 _DARK_STYLE = """
@@ -122,8 +123,9 @@ class VUpdateBanner(QWidget):
         layout.setContentsMargins(10, 0, 6, 0)
         layout.setSpacing(8)
 
-        icon_label = QLabel("🔔")
+        icon_label = QLabel()
         icon_label.setObjectName("banner_icon")
+        icon_label.setPixmap(Icons.pixmap("bell", size=18, color="#64B5F6"))
         layout.addWidget(icon_label)
 
         text_label = QLabel("A new version of SPECTROview is available:")
@@ -135,8 +137,9 @@ class VUpdateBanner(QWidget):
         layout.addWidget(version_label)
         layout.addStretch(1)
 
-        self.btn_update = QPushButton("⬇ Update")
+        self.btn_update = QPushButton("Update")
         self.btn_update.setObjectName("btn_update")
+        self.btn_update.setIcon(Icons.download(color="#FFFFFF"))
         self.btn_update.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_update.setToolTip("Download, install, and restart with this release.")
         self.btn_update.clicked.connect(self._request_update)
@@ -145,20 +148,23 @@ class VUpdateBanner(QWidget):
             self.btn_update.setToolTip("This release does not include an installable wheel.")
         layout.addWidget(self.btn_update)
 
-        self.btn_download = QPushButton("🔍 Show changelog")
+        self.btn_download = QPushButton("Show changelog")
         self.btn_download.setObjectName("btn_download")
+        self.btn_download.setIcon(Icons.search(color="#E3F2FD"))
         self.btn_download.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_download.clicked.connect(self._open_release_page)
         layout.addWidget(self.btn_download)
 
-        self.btn_dismiss = QPushButton("🕒 Update later")
+        self.btn_dismiss = QPushButton("Update later")
         self.btn_dismiss.setObjectName("btn_dismiss")
+        self.btn_dismiss.setIcon(Icons.history(color="#90A4AE"))
         self.btn_dismiss.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_dismiss.clicked.connect(self._dismiss)
         layout.addWidget(self.btn_dismiss)
 
-        self.btn_skip = QPushButton("🚫 Skip this version")
+        self.btn_skip = QPushButton("Skip this version")
         self.btn_skip.setObjectName("btn_skip")
+        self.btn_skip.setIcon(Icons.close(color="#90A4AE"))
         self.btn_skip.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_skip.clicked.connect(self._skip)
         layout.addWidget(self.btn_skip)
@@ -176,11 +182,13 @@ class VUpdateBanner(QWidget):
     def set_download_progress(self, percent: int) -> None:
         """Show automatic-update download progress and prevent duplicate requests."""
         self.btn_update.setEnabled(False)
-        self.btn_update.setText("⬇ Downloading…" if percent < 0 else f"⬇ Downloading… {percent}%")
+        self.btn_update.setIcon(Icons.download(color="#FFFFFF"))
+        self.btn_update.setText("Downloading…" if percent < 0 else f"Downloading… {percent}%")
 
     def set_update_error(self) -> None:
         """Restore the update control after a recoverable download failure."""
-        self.btn_update.setText("↻ Retry update")
+        self.btn_update.setIcon(Icons.refresh(color="#FFFFFF"))
+        self.btn_update.setText("Retry update")
         self.btn_update.setEnabled(bool(self._wheel_url and self._on_update))
 
     def _request_update(self) -> None:

@@ -1,11 +1,9 @@
 #view/toolbar.py
-import os
-
 from PySide6.QtWidgets import QToolBar, QWidget, QSizePolicy, QLabel, QMenu
 from PySide6.QtCore import QSize, Signal, Qt
-from PySide6.QtGui import  QIcon
 
-from spectroview import ICON_DIR, VERSION
+from spectroview import VERSION
+from spectroview.view.theme import Icons
 
 # Available themes: internal key → display label
 THEME_OPTIONS = [
@@ -40,27 +38,27 @@ class VMenuBar(QToolBar):
         self.init_ui()
         
     def init_ui(self):
-        self.setIconSize(QSize(30, 30))
+        self.setIconSize(QSize(22, 22))
         
-        self.actionOpen = self.addAction(QIcon(os.path.join(ICON_DIR, "open.png")), "Open")
+        self.actionOpen = self.addAction(Icons.open(size=22), "Open")
         self.actionOpen.triggered.connect(self.open_requested.emit)
 
-        self.actionSave = self.addAction(QIcon(os.path.join(ICON_DIR, "save_color.png")), "Save")
+        self.actionSave = self.addAction(Icons.save(size=22), "Save")
         self.actionSave.triggered.connect(self.save_requested.emit)
 
-        self.actionClearWS= self.addAction(QIcon(os.path.join(ICON_DIR, "clear.png")), "Clear current workspace")
+        self.actionClearWS= self.addAction(Icons.clear(size=22), "Clear current workspace")
         self.actionClearWS.triggered.connect(self.clear_requested.emit)
 
         self.addSeparator()
-        self.actionConvert= self.addAction(QIcon(os.path.join(ICON_DIR, "FileConvert.png")), "Convert 2Dmap format")
+        self.actionConvert= self.addAction(Icons.convert(size=22), "Convert 2Dmap format")
         self.actionConvert.triggered.connect(self.convert_requested.emit)
 
-        self.actionCalc = self.addAction(QIcon(os.path.join(ICON_DIR, "calc.png")), "Quick Calculators")
+        self.actionCalc = self.addAction(Icons.calc(size=22), "Quick Calculators")
         self.actionCalc.setShortcut("Ctrl+Shift+C")
         self.actionCalc.triggered.connect(self.calc_requested.emit)
 
         self.addSeparator()
-        self.actionAIChat = self.addAction(QIcon(os.path.join(ICON_DIR, "llm_ai.png")), "SPECTROview AI Agent")
+        self.actionAIChat = self.addAction(Icons.sparkles(size=22), "SPECTROview AI Agent")
         self.actionAIChat.setShortcut("Ctrl+Shift+A")
         self.actionAIChat.setToolTip(
             "Open SPECTROview AI Agent (Ctrl + Shift+ A)\n"
@@ -68,7 +66,7 @@ class VMenuBar(QToolBar):
         )
         self.actionAIChat.triggered.connect(self.ai_chat_requested.emit)
 
-        self.actionSettings= self.addAction(QIcon(os.path.join(ICON_DIR, "settings.png")), "Settings")
+        self.actionSettings= self.addAction(Icons.settings(size=22), "Settings")
         self.actionSettings.setShortcut("Ctrl+Shift+S")
         self.actionSettings.triggered.connect(self.settings_requested.emit)
         
@@ -78,22 +76,22 @@ class VMenuBar(QToolBar):
         self.addWidget(spacer)
 
         # ----- Check for updates -----
-        self.actionCheckUpdate = self.addAction(QIcon(os.path.join(ICON_DIR, "check_update.png")), "Check for updates")
+        self.actionCheckUpdate = self.addAction(Icons.check_update(size=22), "Check for updates")
         self.actionCheckUpdate.triggered.connect(self.check_update_requested.emit)
         
         # ----- Theme dropdown button -----
-        self.actionTheme = self.addAction(QIcon(os.path.join(ICON_DIR, "dark-light.png")), "Select Theme")
+        self.actionTheme = self.addAction(Icons.theme(size=22), "Select Theme")
         self.actionTheme.triggered.connect(self._show_theme_menu)
 
-        self.actionManual= self.addAction(QIcon(os.path.join(ICON_DIR, "manual.png")), "Open User Manual")
+        self.actionManual= self.addAction(Icons.manual(size=22), "Open User Manual")
         self.actionManual.setShortcut("Ctrl+Shift+M")
         self.actionManual.setToolTip("Open User Manual PDF\n(Ctrl + Click to open online web manual)")
         self.actionManual.triggered.connect(self.manual_requested.emit)
 
-        self.actionGithub= self.addAction(QIcon(os.path.join(ICON_DIR, "github1.png")), "Open Github repository")
+        self.actionGithub= self.addAction(Icons.github(size=22), "Open Github repository")
         self.actionGithub.triggered.connect(self.github_requested.emit)
 
-        self.actionAbout= self.addAction(QIcon(os.path.join(ICON_DIR, "about.png")), "About SPECTROview")
+        self.actionAbout= self.addAction(Icons.about(size=22), "About SPECTROview")
         self.actionAbout.triggered.connect(self.about_requested.emit)
         self.addSeparator()
 
@@ -104,20 +102,20 @@ class VMenuBar(QToolBar):
         version_label.mousePressEvent = lambda event: self.version_requested.emit()
         self.addWidget(version_label)
 
-        # Store baseline icons for non-destructive theme switching
+        # Store baseline icons for dynamic theme switching
         self._default_icons = {
-            self.actionOpen: os.path.join(ICON_DIR, "open.png"),
-            self.actionSave: os.path.join(ICON_DIR, "save_color.png"),
-            self.actionClearWS: os.path.join(ICON_DIR, "clear.png"),
-            self.actionConvert: os.path.join(ICON_DIR, "FileConvert.png"),
-            self.actionCalc: os.path.join(ICON_DIR, "calc.png"),
-            self.actionAIChat: os.path.join(ICON_DIR, "llm_ai.png"),
-            self.actionSettings: os.path.join(ICON_DIR, "settings.png"),
-            self.actionCheckUpdate: os.path.join(ICON_DIR, "check_update.png"),
-            self.actionTheme: os.path.join(ICON_DIR, "dark-light.png"),
-            self.actionManual: os.path.join(ICON_DIR, "manual.png"),
-            self.actionGithub: os.path.join(ICON_DIR, "github1.png"),
-            self.actionAbout: os.path.join(ICON_DIR, "about.png"),
+            self.actionOpen: Icons.open(size=22),
+            self.actionSave: Icons.save(size=22),
+            self.actionClearWS: Icons.clear(size=22),
+            self.actionConvert: Icons.convert(size=22),
+            self.actionCalc: Icons.calc(size=22),
+            self.actionAIChat: Icons.sparkles(size=22),
+            self.actionSettings: Icons.settings(size=22),
+            self.actionCheckUpdate: Icons.check_update(size=22),
+            self.actionTheme: Icons.theme(size=22),
+            self.actionManual: Icons.manual(size=22),
+            self.actionGithub: Icons.github(size=22),
+            self.actionAbout: Icons.about(size=22),
         }
 
     # ── Theme dropdown ────────────────────────────────────────
@@ -130,9 +128,9 @@ class VMenuBar(QToolBar):
         self._current_theme = theme_key
 
     def apply_theme(self, theme_key: str) -> None:
-        """Keep top menubar icons in their original colorful iconography across all themes."""
-        for action, path in self._default_icons.items():
-            action.setIcon(QIcon(path))
+        """Update top menubar icons across theme switches."""
+        for action, icon in self._default_icons.items():
+            action.setIcon(icon)
 
     def _show_theme_menu(self, checked=False):
         """Build and display a popup menu below the theme toolbar button."""

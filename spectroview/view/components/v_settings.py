@@ -8,6 +8,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt
 
 from spectroview.viewmodel.vm_settings import VMSettings
+from spectroview.view.theme import Icons
 
 
 class VSettingsDialog(QDialog):
@@ -177,7 +178,8 @@ class VSettingsDialog(QDialog):
 
         folder_row = QHBoxLayout()
         self.btn_working_folder = QPushButton("Browse")
-        self.btn_working_folder.setMaximumWidth(60)
+        self.btn_working_folder.setIcon(Icons.folder())
+        self.btn_working_folder.setMaximumWidth(85)
         self.le_working_folder = QLineEdit()
         folder_row.addWidget(self.btn_working_folder)
         folder_row.addWidget(self.le_working_folder)
@@ -317,7 +319,8 @@ class VSettingsDialog(QDialog):
         
         history_row = QHBoxLayout()
         self.btn_history_folder = QPushButton("Browse")
-        self.btn_history_folder.setMaximumWidth(60)
+        self.btn_history_folder.setIcon(Icons.folder())
+        self.btn_history_folder.setMaximumWidth(85)
         self.le_history_folder = QLineEdit()
         history_row.addWidget(self.btn_history_folder)
         history_row.addWidget(self.le_history_folder)
@@ -365,8 +368,8 @@ class VSettingsDialog(QDialog):
         ok_btn = buttons.button(QDialogButtonBox.Ok)
         cancel_btn = buttons.button(QDialogButtonBox.Cancel)
 
-        ok_btn.setStyleSheet("background-color: rgba(76, 175, 80, 180); color: white; font-weight: bold; border-radius: 6px;")
-        cancel_btn.setStyleSheet("background-color: rgba(220, 60, 60, 180); color: white; font-weight: bold; border-radius: 6px;")
+        ok_btn.setIcon(Icons.check())
+        cancel_btn.setIcon(Icons.close())
 
         buttons.accepted.connect(self._on_accept)
         buttons.rejected.connect(self.reject)

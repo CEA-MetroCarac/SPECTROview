@@ -5,7 +5,27 @@ from PySide6.QtGui import QColor, QPixmap, QImage, QTextCursor, QIcon, QPainter,
 @lru_cache(maxsize=128)
 def get_tinted_icon(path: str, color_str: str) -> QIcon:
     """Return a QIcon created from the image at `path` tinted to `color_str`."""
+    base = os.path.basename(path).lower()
+    from spectroview.view.theme import LEGACY_ICON_MAP, svg_icon
+
+    vec_key = LEGACY_ICON_MAP.get(base)
+    if not vec_key and "." in base:
+        vec_key = LEGACY_ICON_MAP.get(base.rsplit(".", 1)[0])
+
+    if vec_key:
+        is_standard_fg = (
+            not color_str
+            or color_str.upper() in (
+                "#EDEDEF", "#F0F0F0", "#FFFFFF", "#141519", "#404040", "#1C1C1E", "#000000",
+                "#333333", "#E0E0E0", "#EEEEEE", "#222222", "#D8D8D8"
+            )
+        )
+        resolved_color = None if is_standard_fg else color_str
+        return svg_icon(vec_key, color=resolved_color)
+
     pixmap = QPixmap(path)
+    if pixmap.isNull():
+        return QIcon()
     painter = QPainter(pixmap)
     painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
     painter.fillRect(pixmap.rect(), QColor(color_str))

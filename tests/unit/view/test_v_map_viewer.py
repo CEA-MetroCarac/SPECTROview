@@ -252,4 +252,24 @@ class TestMapViewerNavigationToolbar:
         assert not viewer.btn_pan.icon().isNull()
         assert not viewer.btn_zoom.icon().isNull()
 
+    def test_toolbar_customize_action_and_loclabel_visible(self, qapp):
+        viewer = VMapViewer()
+        # Matplotlib toolbar must be visible (not hidden)
+        assert not viewer.toolbar.isHidden()
+
+        # 'Customize' action should remain visible
+        actions = {a.text(): a for a in viewer.toolbar.actions() if a.text()}
+        assert "Customize" in actions
+        assert actions["Customize"].isVisible()
+
+        # Duplicated navigation actions must be hidden
+        for name in ["Home", "Pan", "Zoom", "Save", "Back", "Forward", "Subplots"]:
+            if name in actions:
+                assert not actions[name].isVisible()
+
+        # locLabel must exist and update on mouse move
+        assert hasattr(viewer.toolbar, "locLabel")
+        viewer.toolbar.set_message("x=12.5  y=34.2")
+        assert "12.5" in viewer.toolbar.locLabel.text()
+
 

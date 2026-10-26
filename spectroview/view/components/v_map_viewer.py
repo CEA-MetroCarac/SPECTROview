@@ -101,9 +101,14 @@ class VMapViewer(QWidget):
         self.canvas.mpl_connect('motion_notify_event', self._on_mouse_move)
         self.canvas.mpl_connect('button_release_event', self._on_mouse_release)
         
-        # Matplotlib toolbar (kept hidden for zoom/pan/home backend engine and mode tracking)
+        # Matplotlib toolbar (kept visible with 'Customize' and coordinate locLabel)
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
-        self.toolbar.hide()
+
+        original_set_style = self.toolbar.setStyleSheet
+        def custom_set_style(css):
+            original_set_style("background: transparent; border: none;")
+        self.toolbar.setStyleSheet = custom_set_style
+        self.toolbar.setStyleSheet("")
 
         # Dedicated styled navigation buttons (Home/Rescale, Pan/Drag, Zoom) matching SPECTROview controls
         self.btn_home = QPushButton()
@@ -137,9 +142,15 @@ class VMapViewer(QWidget):
         if 'Zoom' in action_dict:
             action_dict['Zoom'].toggled.connect(self.btn_zoom.setChecked)
 
+        # Hide redundant matplotlib toolbar actions, leaving 'Customize' (like v_spectra_viewer)
+        for action in self.toolbar.actions():
+            if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
+                action.setVisible(False)
+
         class ToolbarEventFilter(QObject):
-            def __init__(self, viewer):
-                super().__init__(viewer)
+            def __init__(self, toolbar, viewer):
+                super().__init__(toolbar)
+                self.toolbar = toolbar
                 self.viewer = viewer
                 self._timer = QTimer(self)
                 self._timer.setSingleShot(True)
@@ -153,21 +164,33 @@ class VMapViewer(QWidget):
 
             def _update_icons(self):
                 try:
+                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                    for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
+                        if text in action_dict and image_file is not None:
+                            try:
+                                icon = self.toolbar._icon(image_file + '.png')
+                                action_dict[text].setIcon(icon)
+                            except Exception:
+                                pass
+                except RuntimeError:
+                    return  # toolbar C++ object deleted
+                try:
                     if hasattr(self.viewer, 'apply_global_theme'):
                         self.viewer.apply_global_theme("")
                 except RuntimeError:
                     pass
 
-        self.toolbar_filter = ToolbarEventFilter(self)
-        self.installEventFilter(self.toolbar_filter)
+        self.toolbar_filter = ToolbarEventFilter(self.toolbar, self)
+        self.toolbar.installEventFilter(self.toolbar_filter)
 
-        # Custom toolbar with navigation, add viewer, and copy buttons
+        # Custom toolbar with navigation, matplotlib toolbar (Customize + locLabel), add viewer, and copy buttons
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setContentsMargins(2, 2, 2, 2)
         toolbar_layout.setSpacing(6)
         toolbar_layout.addWidget(self.btn_home)
         toolbar_layout.addWidget(self.btn_pan)
         toolbar_layout.addWidget(self.btn_zoom)
+        toolbar_layout.addWidget(self.toolbar)
         toolbar_layout.addStretch()
         
         # Add viewer button

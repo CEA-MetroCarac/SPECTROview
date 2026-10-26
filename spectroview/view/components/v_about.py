@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QTextBrowser
 from PySide6.QtGui import QPixmap
 
-from spectroview import VERSION, ICON_DIR
+from spectroview import VERSION, BUILD_NUMBER, ICON_DIR
 
 
 class VAboutDialog(QDialog):
@@ -33,7 +33,8 @@ class VAboutDialog(QDialog):
         <div style="text-align: center;">
             <h2>SPECTROview</h2>
             <p><i>(Tool for Spectroscopic Data Processing and Visualization)</i></p>
-            <p><b>Version {VERSION}</b></p>
+            <p style="margin: 0; padding: 0;"><b>Version {VERSION}</b></p>
+            <p style="margin-top: 3px; font-size: 11px; color: #8e8e93;">Build: {BUILD_NUMBER}</p>
         </div>
         <hr>
         <h3>Features:</h3>

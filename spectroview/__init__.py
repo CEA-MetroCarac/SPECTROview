@@ -8,6 +8,11 @@ os.environ.setdefault("QT_API", "pyside6")
 
 VERSION = "26.44.1"
 
+try:
+    from ._build_info import BUILD_NUMBER
+except ImportError:
+    BUILD_NUMBER = "Dev"
+
 
 TEXT_EXPIRE = (
     "The current SPECTROview version has expired. Checkout the SPECTROview's "

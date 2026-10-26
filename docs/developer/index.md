@@ -61,7 +61,8 @@ class VWorkspaceSpectra(QWidget):
 
 ```
 spectroview/
-├── __init__.py             # Constants, peak models, resource paths
+├── __init__.py             # Constants, peak models, resource paths, VERSION, BUILD_NUMBER
+├── _build_info.py          # Build metadata, populated with timestamp during wheel/sdist packaging
 ├── main.py                 # Entry point, QMainWindow, cross-workspace wiring
 ├── application/            # API facade for the currently running desktop state
 │   ├── service.py          # Dataset/spectra/fit/graph/map domain operations

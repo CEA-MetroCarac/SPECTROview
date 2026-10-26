@@ -103,6 +103,8 @@ class VFitModelBuilder(QWidget):
 
         # ── Peak table in scroll area
         peak_scroll = QScrollArea()
+        peak_scroll.setObjectName("peakScrollArea")
+        self.peak_scroll = peak_scroll
         peak_scroll.setFrameShape(QFrame.NoFrame)
         peak_scroll.setWidgetResizable(True)
         peak_scroll.setContentsMargins(0, 0, 0, 0)

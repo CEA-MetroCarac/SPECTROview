@@ -376,3 +376,62 @@ def test_maps_deferred_delete_theme_switch_and_mdi_contrast(qtbot):
     sub_img = sub.grab().toImage()
     title_px = sub_img.pixelColor(20, 12)
     assert title_px.red() < 90 and title_px.blue() > 190
+
+
+def test_tab_pane_transparent_scroll_rounded_splitter_and_fit_results_buttons(qapp, qtbot, _isolate_qsettings):
+    """Tasks 6, 7, 9, 10: transparent tab pane, rounded peak scroll, symmetric splitter, Fit Results buttons."""
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QApplication, QSplitter, QWidget
+    from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
+    from spectroview.view.components.v_fit_results import VFitResults
+
+    mgr = ThemeManager(MSettings())
+    mgr.apply("dark")
+    qss = qapp.styleSheet()
+
+    # Task 6: QTabWidget::pane has border + transparent background
+    assert "QTabWidget::pane" in qss
+    pane_block = qss.split("QTabWidget::pane")[1].split("}")[0]
+    assert "border: 1px solid" in pane_block
+    assert "border-radius: 8px" in pane_block
+    assert "background-color: transparent" in pane_block
+
+    # Task 7: peakScrollArea rounded card styling
+    assert "QScrollArea#peakScrollArea" in qss
+    fmb = VFitModelBuilder()
+    qtbot.addWidget(fmb)
+    assert fmb.peak_scroll.objectName() == "peakScrollArea"
+
+    # Task 9: Horizontal and Vertical QSplitter handles have identical 11px span (5px bar + 3px margin each side)
+    s_v = QSplitter(Qt.Vertical)
+    s_v.addWidget(QWidget())
+    s_v.addWidget(QWidget())
+    s_v.resize(300, 300)
+    qtbot.addWidget(s_v)
+    s_v.show()
+
+    s_h = QSplitter(Qt.Horizontal)
+    s_h.addWidget(QWidget())
+    s_h.addWidget(QWidget())
+    s_h.resize(300, 300)
+    qtbot.addWidget(s_h)
+    s_h.show()
+    QApplication.processEvents()
+
+    assert s_v.handle(1).height() == 11
+    assert s_h.handle(1).width() == 11
+
+    # Task 10: Fit Results buttons have tooltips and sufficient width for icon + text
+    fr = VFitResults()
+    fr.resize(900, 400)
+    qtbot.addWidget(fr)
+    fr.show()
+    QApplication.processEvents()
+
+    for name in ("btn_collect", "btn_split", "btn_add", "btn_compute", "btn_send", "btn_save"):
+        btn = getattr(fr, name)
+        assert btn.toolTip().strip(), f"{name} is missing a tooltip"
+
+    assert fr.btn_compute.width() >= 130
+    assert fr.btn_send.width() >= 130
+

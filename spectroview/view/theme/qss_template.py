@@ -61,6 +61,18 @@ QSS_TEMPLATE = r"""
 
     QWidget#qt_scrollarea_viewport {
         background: transparent;
+        border-radius: 8px;
+    }
+
+    QWidget#qt_scrollarea_viewport > QWidget {
+        background: transparent;
+        border-radius: 8px;
+    }
+
+    QScrollArea#peakScrollArea {
+        background-color: @surface;
+        border: 1px solid @border;
+        border-radius: 8px;
     }
 
     /* ═══════════════════════════════════════════════
@@ -236,8 +248,12 @@ QSS_TEMPLATE = r"""
        SPLITTERS — PLUME handle with SVG grip & spacing
        ═══════════════════════════════════════════════ */
 
-    QSplitter {
+    QSplitter[orientation="1"] {
         qproperty-handleWidth: 11;
+    }
+
+    QSplitter[orientation="2"] {
+        qproperty-handleWidth: 5;
     }
 
     QSplitter::handle:horizontal {
@@ -318,7 +334,7 @@ QSS_TEMPLATE = r"""
         margin-top: 0px;
         border: 1px solid @border;
         border-radius: 8px;
-        background-color: @surface;
+        background-color: transparent;
         top: -1px;
     }
 

@@ -32,7 +32,8 @@ class VFitResults(QWidget):
         
         # Left panel - Controls
         left_panel = QWidget()
-        left_panel.setMaximumWidth(400)
+        left_panel.setMinimumWidth(360)
+        left_panel.setMaximumWidth(450)
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(10)
@@ -57,6 +58,7 @@ class VFitResults(QWidget):
         self.btn_collect = QPushButton("Collect Fit Results")
         self.btn_collect.setIcon(Icons.get("collect"))
         self.btn_collect.setMinimumHeight(50)
+        self.btn_collect.setToolTip("Collect fit parameters from all fitted spectra into the results table.")
         self.btn_collect.clicked.connect(self.collect_results_requested.emit)
         left_layout.addWidget(self.btn_collect)
         
@@ -68,7 +70,8 @@ class VFitResults(QWidget):
         
         self.btn_split = QPushButton("Split")
         self.btn_split.setIcon(Icons.cut())
-        self.btn_split.setFixedWidth(60)
+        self.btn_split.setMinimumWidth(68)
+        self.btn_split.setToolTip("Split spectrum filenames by underscore ('_') into selectable parts.")
         self.btn_split.clicked.connect(self.split_fname_requested.emit)
         
         self.cbb_split_fname = QComboBox()
@@ -76,18 +79,19 @@ class VFitResults(QWidget):
         
         self.ent_col_name = QLineEdit()
         self.ent_col_name.setPlaceholderText("Column name")
-        self.ent_col_name.setFixedWidth(100)
+        self.ent_col_name.setMinimumWidth(90)
         
         self.btn_add = QPushButton("Add")
         self.btn_add.setIcon(Icons.plus())
-        self.btn_add.setFixedWidth(60)
+        self.btn_add.setMinimumWidth(68)
+        self.btn_add.setToolTip("Add the selected filename part as a new column in the fit results table.")
         self.btn_add.clicked.connect(self._on_add_column)
         
         split_layout.addWidget(self.btn_split)
         split_layout.addWidget(self.cbb_split_fname)
         split_layout.addWidget(self.ent_col_name)
         split_layout.addWidget(self.btn_add)
-        split_layout.addStretch()
+
         
         left_layout.addLayout(split_layout)
         
@@ -104,7 +108,7 @@ class VFitResults(QWidget):
         # Use custom ExpressionLineEdit for smart autocomplete
         self.ent_compute_expression = ExpressionLineEdit()
         self.ent_compute_expression.setPlaceholderText("e.g., column1 - column2 * 2")
-        self.ent_compute_expression.setMinimumWidth(150)
+        self.ent_compute_expression.setMinimumWidth(120)
         
         # Add autocomplete for column names
         self.completer = QCompleter()
@@ -114,13 +118,14 @@ class VFitResults(QWidget):
         
         self.btn_compute = QPushButton("Compute && Add")
         self.btn_compute.setIcon(Icons.calc())
-        self.btn_compute.setFixedWidth(100)
+        self.btn_compute.setMinimumWidth(130)
+        self.btn_compute.setToolTip("Compute a new column from the expression and add it to the fit results table.")
         self.btn_compute.clicked.connect(self._on_compute_column)
         
         compute_layout.addWidget(self.ent_compute_col_name)
         compute_layout.addWidget(self.ent_compute_expression)
         compute_layout.addWidget(self.btn_compute)
-        compute_layout.addStretch()
+
         
         left_layout.addLayout(compute_layout)
         
@@ -136,7 +141,11 @@ class VFitResults(QWidget):
         
         self.btn_send = QPushButton("Send to Graphs")
         self.btn_send.setIcon(Icons.send())
-        self.btn_send.setFixedWidth(100)
+        self.btn_send.setMinimumWidth(130)
+        self.btn_send.setToolTip(
+            "Send fit results DataFrame to the Graphs Workspace for visualization.\n"
+            "Hold Ctrl to force-replace an existing DataFrame with the same name."
+        )
         self.btn_send.clicked.connect(self._on_send_to_viz)
         
         send_layout.addWidget(self.ent_send_df_to_viz)
@@ -167,7 +176,7 @@ class VFitResults(QWidget):
         splitter = QSplitter(Qt.Horizontal)
         splitter.addWidget(left_panel)
         splitter.addWidget(right_panel)
-        splitter.setSizes([250, 750])
+        splitter.setSizes([380, 620])
         
         main_layout.addWidget(splitter)
     

@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QHeaderView, QLabel, QGroupBox, QFormLayout, QDoubleSpinBox, QPushButton, QLineEdit
 )
 from PySide6.QtCore import Qt, Signal
+from spectroview.view.theme import Icons
 
 
 
@@ -103,8 +104,10 @@ class VMoreTab(QWidget):
         self.spin_norm_factor.setValue(1.0)
         
         self.btn_normalize = QPushButton("Normalize")
+        self.btn_normalize.setIcon(Icons.norm())
         self.btn_normalize.setToolTip("Normalize the current spectrum")
         self.btn_undo_norm = QPushButton("Undo")
+        self.btn_undo_norm.setIcon(Icons.undo())
         self.btn_undo_norm.setToolTip("Undo the last normalization")
         
         # Horizontal layout for normalize buttons

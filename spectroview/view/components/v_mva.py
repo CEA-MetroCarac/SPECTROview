@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
 )
 from PySide6.QtCore import Qt, Signal, QObject, QEvent, QTimer
+from spectroview.view.theme import Icons
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -237,7 +238,8 @@ class VMVA(QWidget):
         left_layout.addWidget(self.grp_nmf_params)
 
         # Run button
-        self.btn_run = QPushButton("▶  Run Analysis")
+        self.btn_run = QPushButton("Run Analysis")
+        self.btn_run.setIcon(Icons.play())
         self.btn_run.setMinimumHeight(30)
         left_layout.addWidget(self.btn_run)
 

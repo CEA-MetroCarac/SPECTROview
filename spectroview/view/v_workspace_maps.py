@@ -154,6 +154,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
     def apply_theme(self, theme: str):
         """Update Maps-specific sidebar icons dynamically."""
+        super().apply_theme(theme)
         if hasattr(self, 'v_maps_list'):
             self.v_maps_list.apply_theme(theme)
         

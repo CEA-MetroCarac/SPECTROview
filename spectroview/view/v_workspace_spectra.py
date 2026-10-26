@@ -1,21 +1,20 @@
 """View for Spectra Workspace - main UI coordinator for spectral analysis."""
-import os
 from pathlib import Path
 
 import pandas as pd
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QShortcut, QKeySequence
+from PySide6.QtGui import QShortcut, QKeySequence
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication,
     QPushButton, QCheckBox, QProgressBar, QSplitter, QTabWidget,
     QFrame
 )
 
-from spectroview import ICON_DIR
 from spectroview.model.m_settings import MSettings
 
-from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon
+from spectroview.viewmodel.utils import show_toast_notification
+from spectroview.view.theme import Icons, current_tokens
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
 from spectroview.view.components.v_fit_results import VFitResults
 from spectroview.view.components.v_moretab  import VMoreTab
@@ -97,22 +96,22 @@ class VWorkspaceSpectra(QWidget):
         buttons_layout = QHBoxLayout()
 
         self.btn_select_all = QPushButton()
-        self.btn_select_all.setIcon(QIcon(os.path.join(ICON_DIR, "select-all.png")))
+        self.btn_select_all.setIcon(Icons.check_circle())
         self.btn_select_all.setToolTip("Select all spectra")
         
         self.btn_remove = QPushButton()
-        self.btn_remove.setIcon(QIcon(os.path.join(ICON_DIR, "trash.png")))
+        self.btn_remove.setIcon(Icons.trash())
         self.btn_remove.setToolTip("Remove selected spectra")
 
         self.btn_reinit = QPushButton("Reinit")
-        self.btn_reinit.setIcon(QIcon(os.path.join(ICON_DIR, "undo2.png")))
+        self.btn_reinit.setIcon(Icons.undo())
         self.btn_reinit.setToolTip("Reinitialize selected spectra to original values")
         self.btn_stats = QPushButton("Stats")
-        self.btn_stats.setIcon(QIcon(os.path.join(ICON_DIR, "stats.png")))
+        self.btn_stats.setIcon(Icons.stats())
         self.btn_stats.setToolTip("View fitting statistics of selected spectra")
 
         self.btn_save_spectra_data = QPushButton("Save Data")
-        self.btn_save_spectra_data.setIcon(QIcon(os.path.join(ICON_DIR, "save.png")))
+        self.btn_save_spectra_data.setIcon(Icons.save())
         self.btn_save_spectra_data.setToolTip("Save selected spectra data to TXT file")
 
         for btn in (self.btn_select_all, self.btn_remove, self.btn_reinit, self.btn_stats, self.btn_save_spectra_data):
@@ -139,7 +138,7 @@ class VWorkspaceSpectra(QWidget):
         self.progress_bar.setFixedHeight(17)
         
         self.btn_stop_fit = QPushButton("Stop")
-        self.btn_stop_fit.setIcon(QIcon(os.path.join(ICON_DIR, "stop.png")))
+        self.btn_stop_fit.setIcon(Icons.stop())
         self.btn_stop_fit.setFixedHeight(17)
         self.btn_stop_fit.setFixedWidth(50)
         self.btn_stop_fit.setVisible(False)  # Hidden by default
@@ -340,22 +339,23 @@ class VWorkspaceSpectra(QWidget):
 
     def apply_theme(self, theme: str):
         """Called by main.py to update icons based on the global theme."""
-        if theme in ("modern_warm", "warm"):
-            icon_color = "#1C1C1E"
-        elif theme in ("dark", "classic_dark"):
-            icon_color = "#F0F0F0"
-        else:
-            icon_color = "#404040"
+        tok = current_tokens()
+        icon_color = tok.text_primary
         
-        self.btn_select_all.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "select-all.png"), icon_color))
-        self.btn_remove.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash.png"), icon_color))
-        self.btn_reinit.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "undo2.png"), icon_color))
-        self.btn_stats.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "stats.png"), icon_color))
-        self.btn_save_spectra_data.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save.png"), icon_color))
+        self.btn_select_all.setIcon(Icons.check_circle(color=icon_color))
+        self.btn_remove.setIcon(Icons.trash(color=icon_color))
+        self.btn_reinit.setIcon(Icons.undo(color=icon_color))
+        self.btn_stats.setIcon(Icons.stats(color=icon_color))
+        self.btn_save_spectra_data.setIcon(Icons.save(color=icon_color))
+        self.btn_stop_fit.setIcon(Icons.stop(color=icon_color))
 
         # Propagate to Fit Model Builder
         if hasattr(self, 'v_fit_model_builder'):
             self.v_fit_model_builder.apply_theme(theme)
+
+        # Propagate to Fit Results
+        if hasattr(self, 'v_fit_results') and hasattr(self.v_fit_results, 'apply_theme'):
+            self.v_fit_results.apply_theme(theme)
 
 
     def _update_fit_results(self, df):

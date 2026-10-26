@@ -11,7 +11,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QSize, QUrl
 from PySide6.QtGui import QIcon, QDesktopServices, QBrush, QFont, QShortcut, QKeySequence, QPalette, QPixmap
 
-from spectroview import ICON_DIR, PLOT_STYLES, AXIS_LABELS
+from spectroview import PLOT_STYLES, AXIS_LABELS
+from spectroview.view.theme import Icons, current_tokens
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_plot_recipe_store import MPlotRecipeStore
 from spectroview.model.m_style_template_store import MStyleTemplateStore
@@ -23,7 +24,7 @@ from spectroview.view.components.v_style_template_dialog import VStyleTemplateDi
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.view.components.v_graph import VGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
-from spectroview.viewmodel.utils import show_toast_notification, get_tinted_icon
+from spectroview.viewmodel.utils import show_toast_notification
 from spectroview.view.components.customized_widgets import CustomizedPalette
 from spectroview.view.components.customize_graph.customize_graph_dialog import CustomizeGraphDialog
 from spectroview.view.components.v_export_dialog import VExportDialog, VBatchExportDialog
@@ -114,7 +115,7 @@ class VWorkspaceGraphs(QWidget):
 
         # Delete all button
         self.btn_delete_all = QPushButton()
-        self.btn_delete_all.setIcon(QIcon(os.path.join(ICON_DIR, "trash3.png")))    
+        self.btn_delete_all.setIcon(Icons.trash())    
         self.btn_delete_all.setIconSize(QSize(26, 26))
         self.btn_delete_all.setToolTip("Delete all graphs from workspace")
         
@@ -123,7 +124,7 @@ class VWorkspaceGraphs(QWidget):
 
         # Minimize all button -- icon only, no label.
         self.btn_minimize_all = QPushButton()
-        self.btn_minimize_all.setIcon(QIcon(os.path.join(ICON_DIR, "minimize_windows.png")))
+        self.btn_minimize_all.setIcon(Icons.minimize_windows())
         self.btn_minimize_all.setIconSize(QSize(26, 26))
         self.btn_minimize_all.setFixedSize(30, 30)
         self.btn_minimize_all.setToolTip("Minimize All")
@@ -134,7 +135,7 @@ class VWorkspaceGraphs(QWidget):
         # bottom toolbar rather than inside the shared graph toolbar slot
         # below (which gets swapped out per active graph).
         self.btn_undo = QPushButton()
-        self.btn_undo.setIcon(QIcon(os.path.join(ICON_DIR, "undo.png")))
+        self.btn_undo.setIcon(Icons.undo())
         self.btn_undo.setIconSize(QSize(26, 26))
         self.btn_undo.setFixedSize(30, 30)
         self.btn_undo.setToolTip("Undo the last action (Ctrl+Z)")
@@ -142,7 +143,7 @@ class VWorkspaceGraphs(QWidget):
         toolbar_layout.addWidget(self.btn_undo)
 
         self.btn_redo = QPushButton()
-        self.btn_redo.setIcon(QIcon(os.path.join(ICON_DIR, "redo.png")))
+        self.btn_redo.setIcon(Icons.redo())
         self.btn_redo.setIconSize(QSize(26, 26))
         self.btn_redo.setFixedSize(30, 30)
         self.btn_redo.setToolTip("Redo the last undone action (Ctrl+Shift+Z)")
@@ -153,7 +154,7 @@ class VWorkspaceGraphs(QWidget):
         # so it lives in this fixed part of the bottom toolbar rather than
         # the shared graph toolbar slot below. Moved here from the side panel.
         self.btn_compose_figure = QPushButton()
-        self.btn_compose_figure.setIcon(QIcon(os.path.join(ICON_DIR, "compose.png")))
+        self.btn_compose_figure.setIcon(Icons.edit())
         self.btn_compose_figure.setIconSize(QSize(26, 26))
         self.btn_compose_figure.setFixedSize(30, 30)
         self.btn_compose_figure.setToolTip("Combine several open graphs into one multi-panel exported figure")
@@ -212,24 +213,28 @@ class VWorkspaceGraphs(QWidget):
         df_buttons_layout = QVBoxLayout()
         
         self.btn_view_df = QPushButton()
+        self.btn_view_df.setIcon(Icons.history())
         self.btn_view_df.setIconSize(QSize(18, 18))
         self.btn_view_df.setToolTip("View DataFrame\nCtrl+Click: Open source file")
         self.btn_view_df.setMaximumWidth(35)
         self.btn_view_df.setMaximumHeight(22)
         
         self.btn_remove_df = QPushButton()
+        self.btn_remove_df.setIcon(Icons.trash())
         self.btn_remove_df.setIconSize(QSize(18, 18))
         self.btn_remove_df.setToolTip("Remove DataFrame")
         self.btn_remove_df.setMaximumWidth(35)
         self.btn_remove_df.setMaximumHeight(22)
         
         self.btn_save_df = QPushButton()
+        self.btn_save_df.setIcon(Icons.save())
         self.btn_save_df.setIconSize(QSize(18, 18))
         self.btn_save_df.setToolTip("Save DataFrame to Excel")
         self.btn_save_df.setMaximumWidth(35)
         self.btn_save_df.setMaximumHeight(22)
         
         self.btn_refresh_df = QPushButton()
+        self.btn_refresh_df.setIcon(Icons.refresh())
         self.btn_refresh_df.setIconSize(QSize(18, 18))
         self.btn_refresh_df.setToolTip("Refresh DataFrame from source file")
         self.btn_refresh_df.setMaximumWidth(35)
@@ -311,11 +316,7 @@ class VWorkspaceGraphs(QWidget):
         self.cbb_plot_style = QComboBox()
         self.cbb_plot_style.setIconSize(QSize(30, 30))
         for style in PLOT_STYLES:
-            icon_path = os.path.join(ICON_DIR, f"{style}.png")
-            if os.path.exists(icon_path):
-                self.cbb_plot_style.addItem(QIcon(icon_path), style)
-            else:
-                self.cbb_plot_style.addItem(style)
+            self.cbb_plot_style.addItem(Icons.get(style), style)
         plot_style_layout.addWidget(self.cbb_plot_style)
         
         # Color palette using CustomizedPalette
@@ -480,17 +481,20 @@ class VWorkspaceGraphs(QWidget):
         action_buttons_layout = QHBoxLayout()
 
         self.btn_add_plot = QPushButton("Add plot")
+        self.btn_add_plot.setIcon(Icons.plus())
         self.btn_add_plot.setIconSize(QSize(20, 20))
         self.btn_add_plot.setToolTip("Add new plot with current configuration")
         self.btn_add_plot.setMinimumHeight(25)
         
         self.btn_update_plot = QPushButton("Update plot")
+        self.btn_update_plot.setIcon(Icons.refresh())
         self.btn_update_plot.setIconSize(QSize(20, 20))
         self.btn_update_plot.setToolTip("Update selected plot with current configuration")
         self.btn_update_plot.setMinimumHeight(25)
         
         # Multi-wafer plot button (shown when Slot column exists)
         self.btn_add_multi_wafer = QPushButton("Add Multi-Wafer")
+        self.btn_add_multi_wafer.setIcon(Icons.plus())
         self.btn_add_multi_wafer.setIconSize(QSize(20, 20))
         self.btn_add_multi_wafer.setToolTip("Create wafer plots for selected slots")
         self.btn_add_multi_wafer.setMinimumHeight(25)
@@ -506,13 +510,13 @@ class VWorkspaceGraphs(QWidget):
         template_buttons_layout = QHBoxLayout()
 
         self.btn_apply_recipe = QPushButton("Plot Recipes")
-        self.btn_apply_recipe.setIcon(QIcon(f"{ICON_DIR}/recipe.png"))
+        self.btn_apply_recipe.setIcon(Icons.get("recipe"))
         self.btn_apply_recipe.setIconSize(QSize(26, 26))
         self.btn_apply_recipe.setToolTip("Browse & apply saved plot recipes")
         self.btn_apply_recipe.setMinimumHeight(25)
 
         self.btn_save_as_recipe = QPushButton("Save Plot Recipe")
-        self.btn_save_as_recipe.setIcon(QIcon(f"{ICON_DIR}/save-recipe.png"))
+        self.btn_save_as_recipe.setIcon(Icons.save())
         self.btn_save_as_recipe.setIconSize(QSize(26, 26))
         self.btn_save_as_recipe.setToolTip("Save all currently open plots as a Plot Recipe")
         self.btn_save_as_recipe.setMinimumHeight(25)
@@ -528,24 +532,21 @@ class VWorkspaceGraphs(QWidget):
         Every VGraph action-button icon is a fixed colorful icon (set once
         at creation, see VGraph.create_plot_widget) -- graphs no longer need
         to be notified of theme changes at all."""
-        if theme in ("modern_warm", "warm"):
-            icon_color = "#1C1C1E"
-        elif theme in ("dark", "classic_dark"):
-            icon_color = "#F0F0F0"
-        else:
-            icon_color = "#404040"
-        self.btn_view_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "view.png"), icon_color))
-        self.btn_remove_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash.png"), icon_color))
-        self.btn_save_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save.png"), icon_color))
-        self.btn_refresh_df.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "update.png"), icon_color))
-        self.btn_add_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
-        self.btn_update_plot.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "update.png"), icon_color))
-        self.btn_add_multi_wafer.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
+        tok = current_tokens()
+        icon_color = tok.text_primary
+
+        self.btn_view_df.setIcon(Icons.history(color=icon_color))
+        self.btn_remove_df.setIcon(Icons.trash(color=icon_color))
+        self.btn_save_df.setIcon(Icons.save(color=icon_color))
+        self.btn_refresh_df.setIcon(Icons.refresh(color=icon_color))
+        self.btn_add_plot.setIcon(Icons.plus(color=icon_color))
+        self.btn_update_plot.setIcon(Icons.refresh(color=icon_color))
+        self.btn_add_multi_wafer.setIcon(Icons.plus(color=icon_color))
 
         # v_data_filter buttons
-        self.v_data_filter.btn_add.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "add.png"), icon_color))
-        self.v_data_filter.btn_remove.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "close.png"), icon_color))
-        self.v_data_filter.btn_apply.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "done.png"), icon_color))
+        self.v_data_filter.btn_add.setIcon(Icons.plus(color=icon_color))
+        self.v_data_filter.btn_remove.setIcon(Icons.close(color=icon_color))
+        self.v_data_filter.btn_apply.setIcon(Icons.check(color=icon_color))
 
     def setup_connections(self):
         """Connect signals and slots."""
@@ -683,7 +684,7 @@ class VWorkspaceGraphs(QWidget):
                 self.df_listbox.addItem(spacer)
             
             # Add the centered placeholder item with larger text
-            placeholder = QListWidgetItem("📂 Drag and drop file(s) anywhere to open")
+            placeholder = QListWidgetItem("Drag and drop file(s) anywhere to open")
             placeholder.setFlags(Qt.NoItemFlags)  # Make it non-selectable and non-editable
             placeholder.setForeground(Qt.gray)
             placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally

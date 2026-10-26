@@ -99,7 +99,7 @@ class VSpectraList(QListWidget):
                 self.addItem(spacer)
             
             # Add the centered placeholder item with larger text
-            placeholder = QListWidgetItem("📂 Drag and drop file(s) anywhere to open")
+            placeholder = QListWidgetItem("Drag and drop file(s) anywhere to open")
             placeholder.setFlags(Qt.NoItemFlags)  # Make it non-selectable and non-editable
             placeholder.setForeground(Qt.gray)
             placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally

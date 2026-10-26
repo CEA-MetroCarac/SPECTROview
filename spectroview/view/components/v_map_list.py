@@ -1,6 +1,5 @@
 # spectroview/view/components/v_map_list.py
 """View component for Maps list and spectrum action controls."""
-import os 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
     QListWidgetItem, QAbstractItemView, QPushButton
@@ -8,8 +7,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 
-from spectroview import ICON_DIR
-from spectroview.viewmodel.utils import MetadataTooltipManager, get_tinted_icon
+from spectroview.viewmodel.utils import MetadataTooltipManager
+from spectroview.view.theme import Icons, current_tokens
 
 
 class VMapsList(QWidget):
@@ -84,21 +83,25 @@ class VMapsList(QWidget):
         
         # --- Spectra action buttons (operating on heatmap-selected spectra) ---
         self.btn_select_all = QPushButton()
+        self.btn_select_all.setIcon(Icons.check_circle())
         self.btn_select_all.setToolTip("Select all spectra in current map")
         self.btn_select_all.setFixedSize(32, 32)
         self.btn_select_all.clicked.connect(self.select_all_requested.emit)
         
         self.btn_reinit = QPushButton()
+        self.btn_reinit.setIcon(Icons.undo())
         self.btn_reinit.setToolTip("Reinitialize selected spectra (Ctrl for all maps)")
         self.btn_reinit.setFixedSize(32, 32)
         self.btn_reinit.clicked.connect(self.reinitialize_requested.emit)
         
         self.btn_stats = QPushButton()
+        self.btn_stats.setIcon(Icons.stats())
         self.btn_stats.setToolTip("Show fitting statistics of selected spectrum")
         self.btn_stats.setFixedSize(32, 32)
         self.btn_stats.clicked.connect(self.stats_requested.emit)
         
         self.btn_send_to_spectra = QPushButton()
+        self.btn_send_to_spectra.setIcon(Icons.send())
         self.btn_send_to_spectra.setToolTip("Send selected spectra to 'Spectra' Workspace")
         self.btn_send_to_spectra.setFixedSize(32, 32)
         self.btn_send_to_spectra.clicked.connect(self.send_to_spectra_requested.emit)
@@ -113,16 +116,19 @@ class VMapsList(QWidget):
         
         # --- Map action buttons ---
         self.btn_view = QPushButton()
+        self.btn_view.setIcon(Icons.history())
         self.btn_view.setToolTip("View selected map")
         self.btn_view.setFixedSize(32, 32)
         self.btn_view.clicked.connect(self.view_map_requested.emit)
         
         self.btn_delete = QPushButton()
+        self.btn_delete.setIcon(Icons.trash())
         self.btn_delete.setToolTip("Delete selected map")
         self.btn_delete.setFixedSize(32, 32)
         self.btn_delete.clicked.connect(self.delete_map_requested.emit)
         
         self.btn_save = QPushButton()
+        self.btn_save.setIcon(Icons.save())
         self.btn_save.setToolTip("Save the selected map")
         self.btn_save.setFixedSize(32, 32)
         self.btn_save.clicked.connect(self.save_requested.emit)
@@ -143,7 +149,7 @@ class VMapsList(QWidget):
                 spacer.setFlags(Qt.NoItemFlags)
                 self.maps_list.addItem(spacer)
             
-            placeholder = QListWidgetItem("📂 Drag and drop file(s) anywhere to open")
+            placeholder = QListWidgetItem("Drag and drop file(s) anywhere to open")
             placeholder.setFlags(Qt.NoItemFlags)
             placeholder.setForeground(Qt.gray)
             placeholder.setTextAlignment(Qt.AlignCenter)
@@ -205,20 +211,16 @@ class VMapsList(QWidget):
 
     def apply_theme(self, theme: str):
         """Update icons based on the global application theme."""
-        if theme in ("modern_warm", "warm"):
-            icon_color = "#1C1C1E"
-        elif theme in ("dark", "classic_dark"):
-            icon_color = "#F0F0F0"
-        else:
-            icon_color = "#404040"
+        tok = current_tokens()
+        icon_color = tok.text_primary
 
         # Map action buttons
-        self.btn_view.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "view.png"), icon_color))
-        self.btn_delete.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "trash.png"), icon_color))
-        self.btn_save.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "save.png"), icon_color))
+        self.btn_view.setIcon(Icons.history(color=icon_color))
+        self.btn_delete.setIcon(Icons.trash(color=icon_color))
+        self.btn_save.setIcon(Icons.save(color=icon_color))
 
         # Spectra action buttons
-        self.btn_select_all.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "select-all.png"), icon_color))
-        self.btn_reinit.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "undo2.png"), icon_color))
-        self.btn_stats.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "stats.png"), icon_color))
-        self.btn_send_to_spectra.setIcon(get_tinted_icon(os.path.join(ICON_DIR, "send.png"), icon_color))
+        self.btn_select_all.setIcon(Icons.check_circle(color=icon_color))
+        self.btn_reinit.setIcon(Icons.undo(color=icon_color))
+        self.btn_stats.setIcon(Icons.stats(color=icon_color))
+        self.btn_send_to_spectra.setIcon(Icons.send(color=icon_color))

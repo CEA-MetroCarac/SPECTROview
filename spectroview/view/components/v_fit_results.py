@@ -1,14 +1,12 @@
 # view/components/v_fit_results.py
-import os
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit,
     QLabel, QComboBox, QSplitter, QCompleter, QSpinBox
 )
 from PySide6.QtCore import Qt, Signal, QSize, QStringListModel
-from PySide6.QtGui import QIcon
 
-from spectroview import ICON_DIR
+from spectroview.view.theme import Icons, current_tokens
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.view.components.customized_widgets import ExpressionLineEdit
 
@@ -57,6 +55,7 @@ class VFitResults(QWidget):
 
         # Row 1: Collect Results button
         self.btn_collect = QPushButton("Collect Fit Results")
+        self.btn_collect.setIcon(Icons.get("collect"))
         self.btn_collect.setMinimumHeight(50)
         self.btn_collect.clicked.connect(self.collect_results_requested.emit)
         left_layout.addWidget(self.btn_collect)
@@ -68,6 +67,7 @@ class VFitResults(QWidget):
         split_layout = QHBoxLayout()
         
         self.btn_split = QPushButton("Split")
+        self.btn_split.setIcon(Icons.cut())
         self.btn_split.setFixedWidth(60)
         self.btn_split.clicked.connect(self.split_fname_requested.emit)
         
@@ -79,6 +79,7 @@ class VFitResults(QWidget):
         self.ent_col_name.setFixedWidth(100)
         
         self.btn_add = QPushButton("Add")
+        self.btn_add.setIcon(Icons.plus())
         self.btn_add.setFixedWidth(60)
         self.btn_add.clicked.connect(self._on_add_column)
         
@@ -112,6 +113,7 @@ class VFitResults(QWidget):
         self.ent_compute_expression.setCompleter(self.completer)
         
         self.btn_compute = QPushButton("Compute && Add")
+        self.btn_compute.setIcon(Icons.calc())
         self.btn_compute.setFixedWidth(100)
         self.btn_compute.clicked.connect(self._on_compute_column)
         
@@ -133,6 +135,7 @@ class VFitResults(QWidget):
         self.ent_send_df_to_viz.setText("best_fit_results")
         
         self.btn_send = QPushButton("Send to Graphs")
+        self.btn_send.setIcon(Icons.send())
         self.btn_send.setFixedWidth(100)
         self.btn_send.clicked.connect(self._on_send_to_viz)
         
@@ -146,7 +149,7 @@ class VFitResults(QWidget):
         
         self.btn_save = QPushButton("Save Fit Results")
         self.btn_save.setToolTip("Save fit results to Excel file")
-        self.btn_save.setIcon(QIcon(os.path.join(ICON_DIR, "save_color.png")))
+        self.btn_save.setIcon(Icons.save())
         self.btn_save.setIconSize(QSize(24, 24))
         self.btn_save.setMinimumHeight(40)
         self.btn_save.clicked.connect(self.save_results_requested.emit)
@@ -217,3 +220,14 @@ class VFitResults(QWidget):
         self.ent_col_name.clear()
         self.ent_compute_col_name.clear()
         self.ent_compute_expression.clear()
+
+    def apply_theme(self, theme: str):
+        """Update button icons on theme change."""
+        tok = current_tokens()
+        c = tok.text_primary
+        self.btn_collect.setIcon(Icons.get("collect", color=c))
+        self.btn_split.setIcon(Icons.cut(color=c))
+        self.btn_add.setIcon(Icons.plus(color=c))
+        self.btn_compute.setIcon(Icons.calc(color=c))
+        self.btn_send.setIcon(Icons.send(color=c))
+        self.btn_save.setIcon(Icons.save(color=c))

@@ -13,13 +13,13 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from PySide6.QtCore import Qt, Signal, QSize
-from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
     QPushButton, QFrame, QSizePolicy
 )
 
-from spectroview import ICON_DIR, PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
+from spectroview import PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
+from spectroview.view.theme import Icons, current_tokens
 from spectroview.viewmodel.utils import copy_fig_to_clb
 from spectroview.model.spectral_parameters import (
     SPECTRAL_PARAMETERS,
@@ -109,7 +109,7 @@ class LiveMapSubpanel(QFrame):
         row1_layout.addStretch(1)
 
         self.btn_copy = QPushButton(self)
-        self.btn_copy.setIcon(QIcon(f"{ICON_DIR}/copy.png"))
+        self.btn_copy.setIcon(Icons.copy())
         self.btn_copy.setIconSize(QSize(14, 14))
         self.btn_copy.setFixedSize(22, 22)
         self.btn_copy.setToolTip("Copy map to clipboard")
@@ -300,7 +300,7 @@ class VLiveMaps(QWidget):
 
         # ── Placeholder when all selectors are off ──
         self.lbl_placeholder = QLabel(
-            "🗺️ Live Spectral Mapping\n\n"
+            "Live Spectral Mapping\n\n"
             "Activate one or more spectral range selectors (Red, Blue, Green)\n"
             "in the Spectra viewer right panel to display live 2D heatmaps.",
             self
@@ -363,7 +363,10 @@ class VLiveMaps(QWidget):
     def apply_theme(self, theme_name: str):
         """Update theme for all subpanels."""
         self._current_theme = theme_name
+        tok = current_tokens()
+        icon_color = tok.text_primary
         for panel in self.panels.values():
+            panel.btn_copy.setIcon(Icons.copy(color=icon_color))
             panel.img = None
             if panel.isVisible():
                 panel.update_map(

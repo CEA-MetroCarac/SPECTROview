@@ -288,15 +288,15 @@ QSS_TEMPLATE = r"""
        ═══════════════════════════════════════════════ */
 
     QWidget#workspaceRightPanel {
-        background-color: @surface;
-        border: 1px solid @border;
-        border-radius: 8px;
+        background-color: transparent;
+        border: none;
+        border-radius: 0px;
     }
 
     QWidget#controlBarPanel, QWidget#shiftPanel, QWidget#bottomToolbarPanel {
-        background-color: @surface_elevated;
-        border: 1px solid @border;
-        border-radius: 6px;
+        background-color: transparent;
+        border: none;
+        border-radius: 0px;
     }
 
     QMdiArea {
@@ -309,10 +309,11 @@ QSS_TEMPLATE = r"""
        ═══════════════════════════════════════════════ */
 
     QTabWidget::pane {
-        margin-top: 2px;
-        border: 1px solid @border;
-        border-radius: 8px;
-        background-color: @surface;
+        margin-top: 0px;
+        border: none;
+        border-top: 1px solid @border;
+        border-radius: 0px;
+        background-color: transparent;
         top: -1px;
     }
 
@@ -686,6 +687,11 @@ QSS_TEMPLATE = r"""
         selection-background-color: @selection;
         selection-color: @text_primary;
         outline: none;
+    }
+
+    QGroupBox QTableView, QGroupBox QTableWidget {
+        border: none;
+        background-color: transparent;
     }
 
     QTableView::item, QTableWidget::item {

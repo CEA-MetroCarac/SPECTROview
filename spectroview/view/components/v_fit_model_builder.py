@@ -4,7 +4,7 @@ from spectroview.view.theme import Icons, current_tokens
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QGroupBox, QLabel, QPushButton, QComboBox,
-    QDoubleSpinBox, QSpinBox, QScrollArea, QCheckBox, QApplication, QSlider, QSizePolicy
+    QDoubleSpinBox, QSpinBox, QScrollArea, QCheckBox, QApplication, QSlider, QSizePolicy, QFrame
 )
 from PySide6.QtCore import Qt, Signal, QTimer
 
@@ -74,6 +74,7 @@ class VFitModelBuilder(QWidget):
         # LEFT SIDE – Fit settings (scrollable)
         # ==================================================
         left_scroll = QScrollArea()
+        left_scroll.setFrameShape(QFrame.NoFrame)
         left_scroll.setMaximumWidth(400) 
         left_scroll.setMinimumWidth(300) 
         left_scroll.setWidgetResizable(True)
@@ -102,6 +103,7 @@ class VFitModelBuilder(QWidget):
 
         # ── Peak table in scroll area
         peak_scroll = QScrollArea()
+        peak_scroll.setFrameShape(QFrame.NoFrame)
         peak_scroll.setWidgetResizable(True)
         peak_scroll.setContentsMargins(0, 0, 0, 0)
 

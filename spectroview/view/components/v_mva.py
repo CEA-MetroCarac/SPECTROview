@@ -146,6 +146,7 @@ class VMVA(QWidget):
 
         # ── LEFT PANEL: Controls ──────────────────────────────────────
         left_scroll_area = QScrollArea()
+        left_scroll_area.setFrameShape(QScrollArea.NoFrame)
         left_scroll_area.setWidgetResizable(True)
         left_scroll_area.setMaximumWidth(340)
         

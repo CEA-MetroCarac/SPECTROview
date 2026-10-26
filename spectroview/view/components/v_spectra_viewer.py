@@ -221,7 +221,7 @@ class VSpectraViewer(QWidget):
     def _create_vertical_right_panel(self):
         """Create a vertical panel with eraser tool buttons and Y/X-shift sliders."""
         panel = QFrame()
-        panel.setFrameShape(QFrame.StyledPanel)
+        panel.setFrameShape(QFrame.NoFrame)
         panel.setFixedWidth(32)
         panel.setObjectName("shiftPanel")
        
@@ -309,7 +309,7 @@ class VSpectraViewer(QWidget):
     # Control bar
     def _create_control_bar(self):
         bar = QFrame(self)
-        bar.setFrameShape(QFrame.StyledPanel)
+        bar.setFrameShape(QFrame.NoFrame)
         bar.setObjectName("controlBarPanel")
         bar.setFixedHeight(38)
         layout = QHBoxLayout(bar)

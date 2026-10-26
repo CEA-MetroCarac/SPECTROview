@@ -210,8 +210,10 @@ _SVG_TEMPLATES: dict[str, str] = {
         '<path d="M9 13h6M9 17h4"/>'
     ),
     "duplicate": (
-        '<rect width="12" height="12" x="9" y="9" rx="2"/>'
-        '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'
+        '<rect width="13" height="13" x="8" y="8" rx="2" ry="2"/>'
+        '<path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>'
+        '<line x1="14.5" x2="14.5" y1="11.5" y2="17.5"/>'
+        '<line x1="11.5" x2="17.5" y1="14.5" y2="14.5"/>'
     ),
     "trash": (
         '<path d="M3 6h18"/>'

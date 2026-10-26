@@ -30,6 +30,7 @@ class VMoreTab(QWidget):
         layout_metadata = QVBoxLayout(self.group_metadata)
         layout_metadata.setContentsMargins(0, 0, 0, 0)
         self.table = QTableWidget()
+        self.table.setFrameShape(QTableWidget.NoFrame)
         self.table.setColumnCount(2)
         self.table.setHorizontalHeaderLabels(["Parameter", "Value"])
         self.table.horizontalHeader().setStretchLastSection(True)

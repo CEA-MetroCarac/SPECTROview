@@ -186,7 +186,7 @@ class VGraph(QWidget):
 
         # Create Customize button
         self.btn_customize = QPushButton()
-        self.btn_customize.setIcon(Icons.styling())
+        self.btn_customize.setIcon(Icons.settings())
         self.btn_customize.setIconSize(QSize(26, 26))
         self.btn_customize.setFixedSize(30, 30)
         self.btn_customize.setToolTip("Customize graph (Ctrl + E)")

@@ -163,13 +163,6 @@ class VSettingsDialog(QDialog):
             QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Expanding)
         )
 
-        # Separation line
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
-        fitting_tab_layout.addWidget(line)
-        fitting_tab_layout.addSpacing(10)
-
         # ───── Working folder ─────
         grp_working = QGroupBox("SPECTROview Working Folder:")
         working_layout = QVBoxLayout(grp_working)
@@ -264,6 +257,7 @@ class VSettingsDialog(QDialog):
         api_layout.addWidget(self.btn_toggle_providers, alignment=Qt.AlignLeft)
 
         self.frame_provider_presets = QFrame()
+        self.frame_provider_presets.setFrameShape(QFrame.NoFrame)
         provider_layout = QVBoxLayout(self.frame_provider_presets)
         provider_layout.setContentsMargins(4, 4, 4, 4)
         provider_layout.setSpacing(8)

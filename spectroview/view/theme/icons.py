@@ -293,8 +293,32 @@ class Icons:
         return svg_icon("bell", size=size, color=color)
 
     @classmethod
-    def theme(cls, color: str | None = None, size: int = 16) -> QIcon:
+    def sun(cls, color: str | None = None, size: int = 16) -> QIcon:
         return svg_icon("sun", size=size, color=color)
+
+    @classmethod
+    def moon(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("moon", size=size, color=color)
+
+    @classmethod
+    def theme(cls, theme: str | None = None, color: str | None = None, size: int = 16) -> QIcon:
+        """Return theme icon: 'moon' for dark themes, 'sun' for light themes."""
+        if theme is not None and (theme.startswith("#") or theme.startswith("rgb")):
+            color = theme
+            theme = None
+
+        if theme is None:
+            try:
+                from .manager import ThemeManager
+                mgr = ThemeManager.instance()
+                is_dark = mgr.is_dark if mgr is not None else True
+            except Exception:
+                is_dark = True
+        else:
+            is_dark = theme in ("dark", "classic_dark", "soft_dark") or "dark" in str(theme).lower()
+
+        icon_name = "moon" if is_dark else "sun"
+        return svg_icon(icon_name, size=size, color=color)
 
     @classmethod
     def manual(cls, color: str | None = None, size: int = 16) -> QIcon:

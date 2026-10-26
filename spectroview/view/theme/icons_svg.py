@@ -625,6 +625,9 @@ class _SvgIconEngine(QIconEngine):
     def clone(self) -> QIconEngine:
         return _SvgIconEngine(self._name, self._explicit_color)
 
+    def iconName(self) -> str:
+        return self._name
+
     def _active_color(self, mode: QIcon.Mode) -> str:
         from spectroview.view.theme import current_tokens
         tok = current_tokens()

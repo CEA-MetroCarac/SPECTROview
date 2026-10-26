@@ -108,7 +108,9 @@ def test_menubar_theme_selection(qtbot):
 
     # Test apply_theme icon switching and restoration
     menubar.apply_theme("light")
+    assert menubar.actionTheme.icon().name() == "sun"
     menubar.apply_theme("dark")
+    assert menubar.actionTheme.icon().name() == "moon"
 
 
 def test_msettings_theme_migration():
@@ -311,7 +313,7 @@ def test_resources_icons_only_contains_active_files():
         "splitter_grip_v_dark.svg",
         "splitter_grip_v_light.svg",
     }
-    actual = set(os.listdir(ICON_DIR))
+    actual = {f for f in os.listdir(ICON_DIR) if f != ".DS_Store"}
     assert actual == expected, f"Mismatch in active icon files: {actual ^ expected}"
 
 

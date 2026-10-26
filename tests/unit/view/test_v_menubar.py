@@ -28,3 +28,35 @@ def test_v_menubar_actions_and_icons(qtbot):
     theme_keys = {key for key, _ in THEME_OPTIONS if key != "---"}
     assert theme_keys == {"dark", "light", "classic_dark", "classic_light"}
     assert len(theme_keys) == 4
+
+
+def test_v_menubar_theme_icon_switching(qtbot):
+    """Verify that theme button shows moon for dark themes and sun for light themes."""
+    menubar = VMenuBar()
+    qtbot.addWidget(menubar)
+
+    # Initial default is dark -> moon icon
+    assert menubar.actionTheme.icon().name() == "moon"
+
+    # Switching to light -> sun icon
+    menubar.set_current_theme("light")
+    assert menubar.actionTheme.icon().name() == "sun"
+
+    # Switching to classic_light -> sun icon
+    menubar.set_current_theme("classic_light")
+    assert menubar.actionTheme.icon().name() == "sun"
+
+    # Switching to dark -> moon icon
+    menubar.set_current_theme("dark")
+    assert menubar.actionTheme.icon().name() == "moon"
+
+    # Switching to classic_dark -> moon icon
+    menubar.set_current_theme("classic_dark")
+    assert menubar.actionTheme.icon().name() == "moon"
+
+    # apply_theme propagates and maintains proper moon/sun icon
+    menubar.apply_theme("light")
+    assert menubar.actionTheme.icon().name() == "sun"
+
+    menubar.apply_theme("dark")
+    assert menubar.actionTheme.icon().name() == "moon"

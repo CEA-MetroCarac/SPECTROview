@@ -80,7 +80,8 @@ class VMenuBar(QToolBar):
         self.actionCheckUpdate.triggered.connect(self.check_update_requested.emit)
         
         # ----- Theme dropdown button -----
-        self.actionTheme = self.addAction(Icons.theme(size=22), "Select Theme")
+        self.actionTheme = self.addAction(Icons.theme(self._current_theme, size=22), "Select Theme")
+        self.actionTheme.setToolTip("Select Theme (Dark / Light)")
         self.actionTheme.triggered.connect(self._show_theme_menu)
 
         self.actionManual= self.addAction(Icons.manual(size=22), "Open User Manual")
@@ -112,13 +113,21 @@ class VMenuBar(QToolBar):
             self.actionAIChat: Icons.sparkles(size=22),
             self.actionSettings: Icons.settings(size=22),
             self.actionCheckUpdate: Icons.check_update(size=22),
-            self.actionTheme: Icons.theme(size=22),
+            self.actionTheme: Icons.theme(self._current_theme, size=22),
             self.actionManual: Icons.manual(size=22),
             self.actionGithub: Icons.github(size=22),
             self.actionAbout: Icons.about(size=22),
         }
+        self._update_theme_icon()
 
     # ── Theme dropdown ────────────────────────────────────────
+    def _update_theme_icon(self) -> None:
+        """Update theme action icon based on active theme (moon for dark, sun for light)."""
+        is_dark = self._current_theme in ("dark", "classic_dark", "soft_dark") or "dark" in str(self._current_theme).lower()
+        icon = Icons.moon(size=22) if is_dark else Icons.sun(size=22)
+        self.actionTheme.setIcon(icon)
+        self._default_icons[self.actionTheme] = icon
+
     def set_current_theme(self, theme_key: str):
         """Update internal state so the checkmark appears on the right item."""
         if theme_key == "soft_dark":
@@ -126,11 +135,14 @@ class VMenuBar(QToolBar):
         elif theme_key in ("modern_warm", "warm"):
             theme_key = "light"
         self._current_theme = theme_key
+        self._update_theme_icon()
 
     def apply_theme(self, theme_key: str) -> None:
         """Update top menubar icons across theme switches."""
+        self.set_current_theme(theme_key)
         for action, icon in self._default_icons.items():
-            action.setIcon(icon)
+            if action is not self.actionTheme:
+                action.setIcon(icon)
 
     def _show_theme_menu(self, checked=False):
         """Build and display a popup menu below the theme toolbar button."""
@@ -154,7 +166,7 @@ class VMenuBar(QToolBar):
         menu.exec(pos)
 
     def _on_theme_chosen(self, theme_key: str):
-        self._current_theme = theme_key
+        self.set_current_theme(theme_key)
         self.theme_selected.emit(theme_key)
 
     

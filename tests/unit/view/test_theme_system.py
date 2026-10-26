@@ -435,3 +435,26 @@ def test_tab_pane_transparent_scroll_rounded_splitter_and_fit_results_buttons(qa
     assert fr.btn_compute.width() >= 130
     assert fr.btn_send.width() >= 130
 
+    # Verify Modern Dark uses Neutral Dark / Charcoal gray surfaces & borders (R == G == B)
+    from PySide6.QtGui import QColor
+    for field in (
+        "background",
+        "rail_bg",
+        "sidebar_bg",
+        "surface",
+        "surface_sunken",
+        "surface_elevated",
+        "surface_hover",
+        "surface_pressed",
+        "input_bg",
+        "input_border",
+        "border",
+        "border_subtle",
+        "border_strong",
+        "text_secondary",
+        "text_muted",
+    ):
+        col = QColor(getattr(DARK_TOKENS, field))
+        assert col.red() == col.green() == col.blue(), f"Token {field}={getattr(DARK_TOKENS, field)} is not neutral gray"
+
+

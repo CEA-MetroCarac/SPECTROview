@@ -56,7 +56,7 @@ You can select one or multiple spectra simultaneously; the selected spectra are 
   <i>The <code>SpectraList</code> alongside the progress bar in the <code>Maps</code> workspace.</i>
 </div>
 
-**Coloring Rules**: Each spectrum in the list is automatically assigned a unique, consistent color indicator. These colors are strictly preserved even when you use the search/filter box to narrow down the list, ensuring you never lose track of which spectrum corresponds to which curve in the viewer.
+**Processing Status Indicators**: A neat circular status indicator dot on the right side of each item indicates its current processing state at a glance (green for converged fit, red for unconverged fit, blue for baselined, gray for cropped, and transparent/no dot for unedited spectra).
 
 The **Progress Bar** under the `SpectraList` displays real-time fitting progress (%), number of converged spectra, and elapsed time (s). A "Stop" button is provided to safely halt an ongoing fitting process.
 

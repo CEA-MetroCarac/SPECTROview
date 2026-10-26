@@ -1,7 +1,9 @@
-# spectroview/view/components/v_spectra_list.py
-from PySide6.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QStyledItemDelegate
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QListWidget, QListWidgetItem, QAbstractItemView, QStyledItemDelegate,
+    QStyleOptionViewItem,
+)
+from PySide6.QtCore import Qt, Signal, QRectF
+from PySide6.QtGui import QFont, QPainter, QColor
 
 from spectroview.viewmodel.utils import set_spectrum_item_color, MetadataTooltipManager
 from spectroview.view.components.v_range_selector import (
@@ -28,24 +30,58 @@ __all__ = [
 
 
 class SpectrumItemDelegate(QStyledItemDelegate):
-    """Custom delegate to draw background colors that Qt Stylesheets hide."""
+    """Custom delegate to draw status indicator dots on the right side of spectra items.
+
+    Instead of filling the entire item background with color, this delegate renders
+    a neat circular or square indicator dot on the right side of each item, preserving
+    theme backgrounds and selection styling while clearly displaying processing status.
+    """
+
+    def __init__(self, parent=None, shape: str = "circle", size: int = 8, margin_right: int = 10):
+        super().__init__(parent)
+        self.shape = shape
+        self.size = size
+        self.margin_right = margin_right
+
     def paint(self, painter, option, index):
-        from PySide6.QtWidgets import QStyle
-        is_selected = option.state & QStyle.State_Selected
-        
+        # Anchor to visible viewport width so dots stay pinned on the right even with long names
+        parent = self.parent()
+        visible_right = parent.viewport().width() if (parent and hasattr(parent, 'viewport')) else option.rect.right()
+        right_edge = min(option.rect.right(), visible_right)
+        reserve = self.size + self.margin_right + 6
+
+        # Reserve space on right for indicator so long filename text does not collide
+        opt = QStyleOptionViewItem(option)
+        if opt.rect.right() > right_edge - reserve:
+            opt.rect.setRight(right_edge - reserve)
+        super().paint(painter, opt, index)
+
         bg_brush = index.data(Qt.BackgroundRole)
-        # Only draw the custom state background if the item is NOT selected.
-        # This allows the bright blue selection highlight to be fully visible.
-        if bg_brush and not is_selected:
-            color = bg_brush.color() if hasattr(bg_brush, 'color') else bg_brush
-            if hasattr(color, 'alpha') and color.alpha() > 0:
-                painter.save()
-                painter.setPen(Qt.NoPen)
-                painter.setBrush(bg_brush)
-                # Match the margin: 1px 2px and border-radius: 4px from stylesheet
-                painter.drawRoundedRect(option.rect.adjusted(2, 1, -2, -1), 4, 4)
-                painter.restore()
-        super().paint(painter, option, index)
+        if not bg_brush:
+            return
+        color = bg_brush.color() if hasattr(bg_brush, 'color') else QColor(bg_brush)
+        if not (hasattr(color, 'alpha') and color.alpha() > 0):
+            return
+
+        painter.save()
+        painter.setClipping(False)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setPen(Qt.NoPen)
+        # Draw status indicator badge with full opacity
+        painter.setBrush(QColor(color.red(), color.green(), color.blue(), 255))
+
+        s = self.size
+        x = right_edge - self.margin_right - s
+        y = option.rect.center().y() - s / 2.0
+
+        if self.shape == "circle":
+            painter.drawEllipse(QRectF(x, y, s, s))
+        elif self.shape == "rounded_square":
+            painter.drawRoundedRect(QRectF(x, y, s, s), 2.0, 2.0)
+        elif self.shape == "square":
+            painter.drawRect(QRectF(x, y, s, s))
+        painter.restore()
+
 
 class VSpectraList(QListWidget):
     # ───── View → ViewModel signals ─────
@@ -77,6 +113,13 @@ class VSpectraList(QListWidget):
     def set_metadata_provider(self, provider):
         """Set a custom metadata provider callable for tooltips."""
         self._metadata_provider = provider
+
+    def set_indicator_shape(self, shape: str):
+        """Set status indicator shape ('circle', 'square', or 'rounded_square')."""
+        delegate = self.itemDelegate()
+        if isinstance(delegate, SpectrumItemDelegate):
+            delegate.shape = shape
+            self.viewport().update()
 
     def _get_item_metadata(self, item):
         """Retrieve metadata for a spectrum item."""

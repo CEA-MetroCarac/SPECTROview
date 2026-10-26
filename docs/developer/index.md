@@ -292,7 +292,8 @@ Workspaces are composed from **shared components** that follow the same signal-b
 
 SPECTROview uses a centralised theme and typography architecture (`spectroview/view/theme/`):
 
-- **`ThemeManager` (`manager.py`)**: Owns the canonical active theme state (`dark`, `light`, `modern_warm`, `classic_dark`, `classic_light`), applies QPalette and parameterized stylesheets (`qss_template.py`), and manages runtime switching.
+- **`ThemeManager` (`manager.py`)**: Owns the canonical active theme state (`dark`, `light`, `classic_dark`, `classic_light`), applies QPalette and parameterized stylesheets (`qss_template.py`), and manages runtime switching.
+- **Vector SVG Icon Architecture (`icons_svg.py` & `icons.py`)**: Real-time vector rendering engine (`_SvgIconEngine(QIconEngine)`) replacing pre-rasterized PNGs with crisp vector rendering at 1:1 physical device pixels, dynamic paint-time color tinting to theme tokens, and a unified `Icons` facade.
 - **Cross-Platform Fonts (`fonts.py`)**: `setup_application_font(app)` applies the platform-appropriate default font to `QApplication`:
   - **Windows**: `Segoe UI` at 10pt (standard 96-DPI Windows desktop font, ~13.3px).
   - **macOS**: `.AppleSystemUIFont` (San Francisco) at 13pt (standard 72-DPI Apple HIG font, 13px).

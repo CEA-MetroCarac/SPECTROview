@@ -158,8 +158,8 @@ QSS_TEMPLATE = r"""
         background-color: @surface_elevated;
         color: @text_primary;
         border: 1px solid @border_strong;
-        border-radius: 6px;
-        padding: 5px 8px;
+        border-radius: 4px;
+        padding: 1px 2px;
     }
 
     QFrame#MetadataTooltipPopup {
@@ -1100,8 +1100,6 @@ def _build_token_dict(tokens: "ThemeTokens") -> dict[str, str]:
         "checkbox_disabled_border": tokens.border,
         "checkbox_checked_disabled_bg": tokens.surface_elevated,
         "checkbox_checked_disabled_border": tokens.border,
-        "checkbox_checked_disabled_image": "check-white-disabled.svg",
-        "checkbox_indeterminate_image": "check-white.svg",
         "tab_bg": tokens.background,
         "tab_border": tokens.border_subtle,
         "tab_text": tokens.text_secondary,

@@ -13,6 +13,8 @@ The `Settings Panel` is organized into two tabs:
 - **General** — fitting behavior and file locations: **`Fit Parameters`**, **`Global Peak Limits`**, and the **`SPECTROview Working Folder`** (sections 1–3 below).
 - **AI** — API keys, chat history, and the optional local MCP endpoint (sections 4–5 below).
 
+> **Theme**: Interface theme selection (**Modern Dark**, **Modern Light**, **Classic Dark**, or **Classic Light**) is toggled directly from the **Theme** button in the top menu bar.
+
 ---
 
 ### **1. Fit Parameters** *(General tab)*

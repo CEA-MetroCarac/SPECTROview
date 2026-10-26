@@ -5,7 +5,6 @@
 The wafer/2Dmap color-scale (colormap normalization) control lives in the
 Axis tab's "Axis properties" group instead -- see customize_axis.py.
 """
-from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QLabel, QPushButton,
     QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QRadioButton,
@@ -13,7 +12,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView, QHeaderView,
 )
 
-from spectroview import ICON_DIR
+from spectroview.view.theme import Icons
 
 # Text <-> MGraph.figure_theme value.
 _THEME_TEXT_MAP = {"Light": "light", "Dark": "dark"}
@@ -242,7 +241,7 @@ class CustomizeMoreOptions(QWidget):
         eq_label_row = QHBoxLayout()
         eq_label_row.addWidget(QLabel("Fit equation(s):"))
         self._btn_copy_eq = QPushButton("Copy")
-        self._btn_copy_eq.setIcon(QIcon(f"{ICON_DIR}/copy.png"))
+        self._btn_copy_eq.setIcon(Icons.copy())
         self._btn_copy_eq.setMaximumWidth(80)
         self._btn_copy_eq.clicked.connect(self._copy_equations)
         eq_label_row.addStretch()

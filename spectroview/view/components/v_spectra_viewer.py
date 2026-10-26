@@ -355,13 +355,13 @@ class VSpectraViewer(QWidget):
         layout.addWidget(self.btn_norm)
 
         self.norm_xmin = QLineEdit()
-        self.norm_xmin.setFixedSize(45, 30)
+        self.norm_xmin.setFixedSize(50, 30)
         self.norm_xmin.setPlaceholderText("Xmin")
         self.norm_xmin.setToolTip("Intensity normalization to maximum of spectrum or selected region")
         layout.addWidget(self.norm_xmin)
 
         self.norm_xmax = QLineEdit()
-        self.norm_xmax.setFixedSize(45, 30)
+        self.norm_xmax.setFixedSize(50, 30)
         self.norm_xmax.setPlaceholderText("Xmax")
         self.norm_xmax.setToolTip("Intensity normalization to maximum of spectrum or selected region")
         layout.addWidget(self.norm_xmax)

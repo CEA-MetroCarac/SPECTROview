@@ -1,5 +1,6 @@
 .venv*/
 .venv_clean/
+.venv_old/
 .spectroview/
 SPECTROview_AICHAT/
 TEMPLATE/

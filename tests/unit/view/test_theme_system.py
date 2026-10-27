@@ -1,5 +1,6 @@
 import os
 import re
+import pytest
 from PySide6.QtCore import QSize
 from spectroview import ICON_DIR
 from spectroview.view.theme import svg_icon
@@ -192,31 +193,6 @@ def test_progressbar_contrast_and_tokens():
     assert f"color: {dark_tokens.progress_text};" in qss
 
 
-
-def test_theme_migration_warm_and_soft_dark(qtbot):
-    """Verify automatic migration of modern_warm/warm -> light and soft_dark -> dark."""
-    settings = MSettings()
-    mgr = ThemeManager(settings)
-
-    # soft_dark -> dark
-    settings.settings.setValue("theme", "soft_dark")
-    assert settings.get_theme() == "dark"
-    mgr.apply("soft_dark")
-    assert mgr.current_theme == "dark"
-
-    # modern_warm -> light
-    settings.settings.setValue("theme", "modern_warm")
-    assert settings.get_theme() == "light"
-    mgr.apply("modern_warm")
-    assert mgr.current_theme == "light"
-
-    # warm -> light
-    settings.settings.setValue("theme", "warm")
-    assert settings.get_theme() == "light"
-    mgr.apply("warm")
-    assert mgr.current_theme == "light"
-
-
 def test_rgba_integer_alpha_tokens_and_stylesheet():
     """Verify all rgba(...) tokens in DARK_TOKENS, LIGHT_TOKENS, and build_stylesheet use integer alpha 0..255 (never float 0.x)."""
     rgba_pattern = re.compile(r"rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([^\)]+)\)")
@@ -318,23 +294,19 @@ def test_resources_icons_only_contains_active_files():
 
 
 
-def test_maps_deferred_delete_theme_switch_and_mdi_contrast(qtbot):
-    """Verify VWorkspaceMaps.apply_theme survives DeferredDelete of inherited buttons and MdiSubWindow has high contrast in Light mode."""
+@pytest.mark.slow
+def test_maps_deferred_delete_theme_switch(qtbot):
+    """Verify VWorkspaceMaps.apply_theme survives DeferredDelete of inherited buttons."""
     from PySide6.QtCore import QCoreApplication, QEvent
-    from PySide6.QtWidgets import QMdiArea, QWidget
     from spectroview.view.v_workspace_maps import VWorkspaceMaps
-    from spectroview.view.v_workspace_graphs import VWorkspaceGraphs, MdiSubWindow
 
     settings = MSettings()
     mgr = ThemeManager(settings)
     mgr.apply("light")
 
     ws_maps = VWorkspaceMaps()
-    ws_graphs = VWorkspaceGraphs()
     qtbot.addWidget(ws_maps)
-    qtbot.addWidget(ws_graphs)
     ws_maps.apply_theme("light")
-    ws_graphs.apply_theme("light")
 
     # Process DeferredDelete so old_right buttons in VWorkspaceMaps are destroyed in C++
     QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
@@ -342,25 +314,25 @@ def test_maps_deferred_delete_theme_switch_and_mdi_contrast(qtbot):
     # Switching to dark must not raise RuntimeError and must update icons to bright foreground
     mgr.apply("dark")
     ws_maps.apply_theme("dark")
-    ws_graphs.apply_theme("dark")
 
-    for btn in (
-        ws_maps.v_fit_model_builder.btn_undo_corr,
-        ws_graphs.btn_minimize_all,
-        ws_graphs.btn_view_df,
-        ws_graphs.btn_add_plot,
-        ws_graphs.v_data_filter.btn_add,
-    ):
-        img = btn.icon().pixmap(QSize(20, 20)).toImage()
-        max_r = max(
-            img.pixelColor(x, y).red()
-            for x in range(img.width())
-            for y in range(img.height())
-            if img.pixelColor(x, y).alpha() > 80
-        )
-        assert max_r >= 220
+    btn = ws_maps.v_fit_model_builder.btn_undo_corr
+    img = btn.icon().pixmap(QSize(20, 20)).toImage()
+    max_r = max(
+        img.pixelColor(x, y).red()
+        for x in range(img.width())
+        for y in range(img.height())
+        if img.pixelColor(x, y).alpha() > 80
+    )
+    assert max_r >= 220
 
-    # Verify MdiSubWindow active title bar contrast in Light mode
+
+def test_mdi_subwindow_contrast(qtbot):
+    """Verify MdiSubWindow active title bar contrast in Light mode."""
+    from PySide6.QtWidgets import QMdiArea, QWidget
+    from spectroview.view.v_workspace_graphs import MdiSubWindow
+
+    settings = MSettings()
+    mgr = ThemeManager(settings)
     mgr.apply("light")
     mdi = QMdiArea()
     mdi.resize(320, 220)

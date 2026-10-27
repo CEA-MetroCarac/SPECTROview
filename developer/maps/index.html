@@ -1257,10 +1257,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#vmapslist-the-dual-panel-list" class="md-nav__link">
+  <a href="#vmapslist-the-maps-list-actions-panel" class="md-nav__link">
     <span class="md-ellipsis">
       
-        VMapsList — The Dual-Panel List
+        VMapsList — The Maps List &amp; Actions Panel
       
     </span>
   </a>
@@ -2155,7 +2155,7 @@
 <pre class="mermaid"><code>graph LR
     subgraph View ["View Layer"]
         VWM["VWorkspaceMaps&lt;br/&gt;(extends VWorkspaceSpectra)"]
-        ML["VMapsList&lt;br/&gt;(maps + spectra list)"]
+        ML["VMapsList&lt;br/&gt;(maps list + actions)"]
         MV["VMapViewer&lt;br/&gt;(Matplotlib heatmap)"]
         MVD["VMapViewerDialog&lt;br/&gt;(detachable viewer)"]
         SV_inh["VSpectraViewer&lt;br/&gt;(inherited)"]
@@ -2284,10 +2284,10 @@
 <p>Overrides <code>_add_maps_panel()</code> to replace the inherited spectra sidebar with:</p>
 <ul>
 <li><code>VMapViewer</code> — the heatmap canvas with Z-parameter and X-range sliders.</li>
-<li><code>VMapsList</code> — dual-panel list (maps on top, spectra in map below) with action buttons.</li>
+<li><code>VMapsList</code> — maps list panel with map management and spectra action buttons.</li>
 </ul>
-<p>The left side (SpectraViewer + FitModelBuilder tabs) is inherited unchanged.</p>
-<p>The inherited SpectraViewer also provides the batch legend editor. Map selections can contain thousands of spectra, so the shared editor instantiates at most 100 spectrum rows and displays the full selection count as <strong>“showing 100 of N”</strong>. Labels and explicit colors are committed through <code>SpectrumProxy(md, idx, fname)</code>, preserving the correct row mapping into the map's <code>MapData</code> block; spectra outside the displayed batch are not changed.</p>
+<p>The left side (SpectraViewer + bottom tabs) is inherited from <code>VWorkspaceSpectra</code>. <code>VWorkspaceMaps</code> activates the <strong>Spectral Range Selectors</strong> (Red, Blue, Green) on the right edge of <code>VSpectraViewer</code> (<code>set_range_selectors_visible(True)</code>) and inserts the <strong>Live Maps</strong> tab at index 2 (between <code>Fit Results</code> and <code>MVA</code>, with <code>More</code> placed at the end of the tabs). In <code>VWorkspaceSpectra</code>, these mapping controls are disabled and hidden.</p>
+<p>In the Maps workspace, when a map is loaded or selected, <code>VWorkspaceMaps</code> forwards the current active <code>MapData</code> block to <code>self.vm_live_maps.set_map_data(md)</code>. As the user toggles the range selectors or drags the boundary brackets on the spectrum plot, the three Live Maps subpanels compute and render 2D heatmaps across the map's spatial grid in real time with a 60 ms debounce. Range selector artists use Matplotlib's <code>ax.add_artist()</code> so that <code>ax.dataLim</code> is never polluted, ensuring that the <strong>Rescale</strong> button (<code>Ctrl+R</code>) zooms exclusively to spectral data.</p>
 <p><strong>Centralized map type management:</strong> The <code>selected_map_type</code> attribute is the single source of truth for all viewers (main + dialogs). When the user changes the combobox in any viewer, <code>_on_map_type_changed()</code> updates all viewers synchronously, preventing drift.</p>
 <h3 id="vmapviewer-the-heatmap-canvas"><code>VMapViewer</code> — The Heatmap Canvas<a class="headerlink" href="#vmapviewer-the-heatmap-canvas" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <a href="file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_map_viewer.py"><code>v_map_viewer.py</code></a></p>
@@ -2298,11 +2298,14 @@
 <li>Outlier removal toggle</li>
 <li><strong>Color-scale combobox (Linear / Log)</strong> in the options (<code>…</code>) menu — <code>_build_color_kwargs()</code> returns a <code>matplotlib.colors.LogNorm</code> for "Log" (falling back to plain linear <code>vmin</code>/<code>vmax</code> when the Z-range isn't strictly positive, since intensity/area are clipped <code>&gt;=0</code> and fit parameters can be <code>&lt;=0</code>); applies to both the 2Dmap <code>imshow</code> and the wafer griddata <code>imshow</code></li>
 <li>Interactive selection (click, rectangle drag, profile line)</li>
+<li><strong>In-Place Artist Updates on Map Switching</strong>: When switching between already-loaded maps of the same type and style, <code>_do_plot_heatmap_internal()</code> fast-paths by updating <code>self.img.set_data(...)</code>, <code>self.img.set_extent(...)</code>, <code>self.img.set_clim(...)</code>, and <code>self.cbar.update_normal(...)</code> in-place, bypassing destructive <code>figure.clf()</code>, subplot re-creation, and expensive <code>tight_layout()</code>.</li>
+<li><strong>Fast Z-Range Slider Updates</strong>: Real-time slider drag events bypass cache key recomputations and map repaints, updating <code>set_clim()</code> / <code>set_norm()</code> and colorbar directly in-place.</li>
+<li><strong>Vector Navigation Controls &amp; Built-in Coordinates</strong>: Interactive navigation buttons (<code>btn_home</code> / <code>btn_rescale</code>, <code>btn_pan</code>, <code>btn_zoom</code>) styled identically to SPECTROview toolbar controls (<code>28x28</code>, <code>@surface_elevated</code>, rounded corners) and vector SVG icons (<code>Icons.rescale()</code>, <code>Icons.pan()</code>, <code>Icons.zoom()</code>), replacing default matplotlib icons while maintaining bidirectional mode synchronization with <code>NavigationToolbar2QT</code>. The native matplotlib toolbar is completely hidden in the background, and live coordinates are rendered cleanly using a dedicated native <code>lbl_coordinates</code> label (<code>min-width: 180px</code>, <code>@text_secondary</code>, right-aligned) without clipping or layout shifting.</li>
 <li>Multi-viewer dialog spawning</li>
 </ul>
-<h3 id="vmapslist-the-dual-panel-list"><code>VMapsList</code> — The Dual-Panel List<a class="headerlink" href="#vmapslist-the-dual-panel-list" title="Permanent link">&para;</a></h3>
+<h3 id="vmapslist-the-maps-list-actions-panel"><code>VMapsList</code> — The Maps List &amp; Actions Panel<a class="headerlink" href="#vmapslist-the-maps-list-actions-panel" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <a href="file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_map_list.py"><code>v_map_list.py</code></a></p>
-<p>Contains two <code>QListWidget</code>s and action buttons. The top list shows loaded map names; the bottom list shows spectra within the selected map, with checkboxes controlling <code>md.is_active</code>. Also provides a "Check All" checkbox that updates <code>is_active</code> for all N spectra in a single bulk operation.</p>
+<p>Displays loaded map names with quick management buttons (View, Delete, Export CSV) alongside unified spectra action buttons (Select All, Reinitialize, Fitting Statistics, Send to Spectra Workspace) targeting the currently active map and its spatially selected spectra. Directly operates on 2D heatmap selections without overhead from redundant list widgets.</p>
 <h3 id="vmapviewerdialog-detachable-window"><code>VMapViewerDialog</code> — Detachable Window<a class="headerlink" href="#vmapviewerdialog-detachable-window" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <a href="file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_map_viewer_dialog.py"><code>v_map_viewer_dialog.py</code></a></p>
 <p>A <code>QDialog</code> wrapper around a second <code>VMapViewer</code> instance. Uses <code>Qt.WindowStaysOnTopHint</code> so the user can select pixels in the floating window while the main window shows the spectrum. Multiple dialogs can be open simultaneously, each showing a different Z-parameter on the same spatial data. Data is shared by reference — no duplication.</p>
@@ -2344,14 +2347,13 @@ When a new developer is confused about "where is the data?", the answer is: <str
 </ol>
 <p><code>_extract_spectra_from_map()</code> performs one critical operation: it drops the <strong>last wavenumber column</strong> before building <code>x0</code>. This follows a legacy convention from early SPC/WDF parsers that include an artifact value at the upper bound.</p>
 <h3 id="map-selection">Map Selection<a class="headerlink" href="#map-selection" title="Permanent link">&para;</a></h3>
-<p>When the user clicks a map name in <code>VMapsList</code>:</p>
+<p>When the user clicks a map name in <code>VMapsList</code> or opens a new map:</p>
 <ol>
-<li><strong>User Action</strong>: The user clicks a map name in the <code>VMapsList</code> UI widget.</li>
+<li><strong>User Action</strong>: The user opens a map file or clicks a map name in the <code>VMapsList</code> UI widget.</li>
 <li><strong>View → ViewModel</strong>: The View captures this and calls <code>vm.select_map(map_name)</code>.</li>
-<li><strong>State Update</strong>: The ViewModel sets <code>current_map_name = map_name</code>.</li>
-<li><strong>Spectra List Refresh</strong>: The ViewModel reads the <code>fnames</code>, <code>is_active</code> flags, and fit status from the MapData, then emits <code>spectra_list_changed(spectra_info)</code> to update the bottom list pane.</li>
+<li><strong>State Update &amp; Auto-Selection</strong>: The ViewModel sets <code>current_map_name = map_name</code>, populates <code>_show_map_spectra(map_name)</code>, and automatically selects the first spectrum <code>self.selected_fnames = [md.fnames[0]]</code>, emitting <code>spectra_selection_changed</code> to immediately plot the first spectrum in <code>VSpectraViewer</code>.</li>
 <li><strong>Map Viewer Refresh</strong>: The ViewModel emits <code>map_data_updated(current_map_df)</code>.</li>
-<li><strong>Canvas Redraw</strong>: <code>VWorkspaceMaps</code> forwards the updated data to the <code>VMapViewer</code>, which calls <code>plot_heatmap()</code> to render the spatial data.</li>
+<li><strong>Canvas Redraw &amp; Selection Overlay</strong>: <code>VWorkspaceMaps</code> forwards the updated data to <code>VMapViewer.set_map_data()</code>, which automatically highlights the first coordinate <code>(x_0, y_0)</code> with the red selection overlay and calls <code>plot_heatmap()</code> to render the spatial data. Floating viewer dialogs are kept in sync.</li>
 </ol>
 <h3 id="fitting-workflow-maps-override">Fitting Workflow (Maps Override)<a class="headerlink" href="#fitting-workflow-maps-override" title="Permanent link">&para;</a></h3>
 <p>The Maps workspace overrides <a href="../spectra/#fitting-workflow"><code>fit()</code></a> to construct <strong>multi-task batches</strong> that can span the entire map:</p>

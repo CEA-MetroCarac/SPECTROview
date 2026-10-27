@@ -1687,7 +1687,7 @@
   <h1>Installation</h1>
 
 <h2 id="installation"><strong>Installation</strong><a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<p><strong>SPECTROview</strong> requires <strong>Python 3.8 – 3.12</strong> and runs on <strong>Windows</strong>, <strong>macOS</strong>, and <strong>Linux</strong>. It can be installed and managed entirely from your system's command-line interface (e.g., Command Prompt or PowerShell on Windows, or Terminal on macOS/Linux).</p>
+<p><strong>SPECTROview</strong> requires <strong>Python &ge; 3.12</strong> (tested on Python 3.12, 3.13, and 3.14) and runs on <strong>Windows</strong>, <strong>macOS</strong>, and <strong>Linux</strong>. It can be installed and managed entirely from your system's command-line interface (e.g., Command Prompt or PowerShell on Windows, or Terminal on macOS/Linux).</p>
 <hr />
 <h3 id="1-install-from-pypi-recommended"><strong>1. Install from PyPI (Recommended)</strong><a class="headerlink" href="#1-install-from-pypi-recommended" title="Permanent link">&para;</a></h3>
 <p>The simplest way to install <strong>SPECTROview</strong> is from the <a href="https://pypi.org/project/spectroview/">Python Package Index (PyPI)</a>:</p>
@@ -1743,10 +1743,14 @@
 <li><strong>On startup</strong>, a background thread silently queries the <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases">GitHub Releases page</a> for the latest version.</li>
 <li>If a newer version is available, a <strong>blue notification banner</strong> appears at the top of the window:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>🔔  A new version of SPECTROview is available:  26.29.0    [ ⬇ Update ]  [ 🔍 Show changelog ]  [ Update later ]  [ Skip this version ]
-</code></pre></div>
+<div align="center">
+  <img src="../../user_manual_images/Installation/update_banner.png" alt="Automatic update notification banner" width="800"><br>
+  <i>Notification banner displayed when a newer version of SPECTROview is available.</i>
+</div>
+
 <blockquote>
 <p><strong>Privacy Guarantee</strong>: This check only sends a standard anonymous request to the public GitHub API to fetch the latest version number. <strong>Absolutely no personal or usage data is collected or transmitted.</strong></p>
+<p><strong>Security &amp; TLS Verification</strong>: Network operations use the operating system's native certificate trust store (<code>truststore</code>) or a patched certificate bundle (<code>certifi &gt;= 2026.10.19</code>), ensuring immediate protection against compromised intermediate Certificate Authorities and connection spoofing.</p>
 </blockquote>
 <h4 id="banner-actions">Banner actions<a class="headerlink" href="#banner-actions" title="Permanent link">&para;</a></h4>
 <table>
@@ -1762,7 +1766,7 @@
 <td>Downloads the <code>.whl</code> attached to the announced GitHub release, verifies its SHA-256 checksum when GitHub provides one, closes SPECTROview, runs <code>pip install --upgrade</code> with that wheel, and relaunches the app.</td>
 </tr>
 <tr>
-<td><strong>🔍 View changelog</strong></td>
+<td><strong>🔍 Show changelog</strong></td>
 <td>Opens the GitHub release page in your browser to see what's new.</td>
 </tr>
 <tr>
@@ -1784,41 +1788,41 @@
 <details class="question">
 <summary><strong>pip: command not found</strong></summary>
 <p>This means <code>pip</code> is not on your system's PATH. Try one of the following:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>spectroview
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>spectroview
 </code></pre></div>
 <p>Or, if you have multiple Python versions installed:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>spectroview
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>spectroview
 </code></pre></div>
 </details>
 <details class="question">
 <summary><strong>Permission denied / Access is denied</strong></summary>
 <p>You may not have write permission to the global Python site-packages directory. Use the <code>--user</code> flag to install for your user only:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>spectroview
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>spectroview
 </code></pre></div>
 <p>Alternatively, use a <strong>virtual environment</strong> (recommended):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>spectroview_env
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nb">source</span><span class="w"> </span>spectroview_env/bin/activate<span class="w">    </span><span class="c1"># macOS/Linux</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>spectroview_env<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">       </span><span class="c1"># Windows</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>spectroview_env
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nb">source</span><span class="w"> </span>spectroview_env/bin/activate<span class="w">    </span><span class="c1"># macOS/Linux</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>spectroview_env<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">       </span><span class="c1"># Windows</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
 </code></pre></div>
 </details>
 <details class="question">
 <summary><strong>PySide6 fails to install or <code>qt.qpa.plugin: Could not load the Qt platform plugin</code></strong></summary>
 <p>PySide6 is the GUI framework used by <strong>SPECTROview</strong>. If you encounter issues:</p>
 <ul>
-<li><strong>Ensure you are using Python 3.8 – 3.12</strong>. PySide6 does not support Python 3.7 or older.</li>
+<li><strong>Ensure you are using Python &ge; 3.12</strong>.</li>
 <li><strong>On Linux</strong>, you may need to install system-level Qt dependencies:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libxcb-xinerama0<span class="w"> </span>libxkbcommon-x11-0<span class="w">  </span><span class="c1"># Ubuntu/Debian</span>
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libxcb-xinerama0<span class="w"> </span>libxkbcommon-x11-0<span class="w">  </span><span class="c1"># Ubuntu/Debian</span>
 </code></pre></div></li>
 <li><strong>Try reinstalling PySide6</strong> separately:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--force-reinstall<span class="w"> </span>PySide6
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--force-reinstall<span class="w"> </span>PySide6
 </code></pre></div></li>
 </ul>
 </details>
 <details class="question">
 <summary><strong><code>spectroview</code> command not found after installation</strong></summary>
 <p>The <code>spectroview</code> command-line entry point may not be on your PATH. Try launching it as a Python module instead:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>python<span class="w"> </span>-m<span class="w"> </span>spectroview.main
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>python<span class="w"> </span>-m<span class="w"> </span>spectroview.main
 </code></pre></div>
 <p>If you installed with <code>--user</code>, ensure your user's local <code>bin</code> directory is on your PATH:</p>
 <ul>
@@ -1828,11 +1832,11 @@
 </details>
 <details class="question">
 <summary><strong><code>numpy</code> or <code>matplotlib</code> version conflict errors</strong></summary>
-<p><strong>SPECTROview</strong> requires <code>numpy &lt; 2.0.0</code> and <code>matplotlib &gt;= 3.6.2, &lt; 3.10.9</code>. If you see version conflict errors, try installing in a clean virtual environment:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>spectroview_env
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nb">source</span><span class="w"> </span>spectroview_env/bin/activate<span class="w">    </span><span class="c1"># macOS/Linux</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>spectroview_env<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">       </span><span class="c1"># Windows</span>
-<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
+<p><strong>SPECTROview</strong> requires <code>numpy &gt;= 2.0.2</code> and <code>matplotlib &gt;= 3.8.0, &lt; 3.10.9</code>. If you see version conflict errors, try installing in a clean virtual environment:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>spectroview_env
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nb">source</span><span class="w"> </span>spectroview_env/bin/activate<span class="w">    </span><span class="c1"># macOS/Linux</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>spectroview_env<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">       </span><span class="c1"># Windows</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
 </code></pre></div>
 <p>This avoids conflicts with other packages in your global Python installation.</p>
 </details>
@@ -1841,12 +1845,12 @@
 <p>This is typically a GPU/driver issue with Qt's rendering backend. Try disabling hardware acceleration:</p>
 <ul>
 <li><strong>Windows</strong>: Set the environment variable before launching:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">set</span><span class="w"> </span><span class="nv">QT_QUICK_BACKEND</span><span class="o">=</span>software
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>spectroview
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">set</span><span class="w"> </span><span class="nv">QT_QUICK_BACKEND</span><span class="o">=</span>software
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>spectroview
 </code></pre></div></li>
 <li><strong>macOS/Linux</strong>:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">QT_QUICK_BACKEND</span><span class="o">=</span>software
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>spectroview
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">QT_QUICK_BACKEND</span><span class="o">=</span>software
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>spectroview
 </code></pre></div></li>
 </ul>
 </details>

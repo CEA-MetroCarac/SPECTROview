@@ -1173,6 +1173,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#interactive-spectral-mapping-live-maps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interactive Spectral Mapping &amp; Live Maps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#vmworkspacespectra-the-viewmodel" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1239,6 +1250,28 @@
     <span class="md-ellipsis">
       
         Batch Legend Editing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#legend-placement-outside-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legend Placement &amp; Outside Option
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heatmap-signal-processing-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heatmap &amp; Signal Processing Optimizations
       
     </span>
   </a>
@@ -2023,7 +2056,22 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 <tr>
 <td><strong>View</strong></td>
 <td><code>VSpectraViewer</code></td>
-<td>Matplotlib canvas — renders 1D spectra, baselines, peaks, best-fit, residuals, and 2D heatmaps</td>
+<td>Matplotlib canvas — renders 1D spectra, baselines, peaks, best-fit, residuals, 2D heatmaps, and interactive range selectors</td>
+</tr>
+<tr>
+<td><strong>View</strong></td>
+<td><code>VRangeSelectorPanel</code></td>
+<td>Vertical right-side panel with red, blue, and green toggle buttons for spectral intervals</td>
+</tr>
+<tr>
+<td><strong>View</strong></td>
+<td><code>RangeSelectorManager</code></td>
+<td>Canvas overlay managing draggable bracket markers and shaded spans for active selectors</td>
+</tr>
+<tr>
+<td><strong>View</strong></td>
+<td><code>VLiveMaps</code></td>
+<td>Live Maps tab hosting three synchronized 2D heatmap subpanels (Red, Blue, Green)</td>
 </tr>
 <tr>
 <td><strong>View</strong></td>
@@ -2049,6 +2097,16 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 <td><strong>ViewModel</strong></td>
 <td><code>VMWorkspaceSpectra</code></td>
 <td>Business logic: orchestrates loading, preprocessing, fitting, persistence</td>
+</tr>
+<tr>
+<td><strong>ViewModel</strong></td>
+<td><code>VMLiveMaps</code></td>
+<td>Computes 2D spatial parameter arrays from MapData on selector interval/parameter updates</td>
+</tr>
+<tr>
+<td><strong>Model</strong></td>
+<td><code>spectral_parameters</code></td>
+<td>Vectorized calculations for integrated/mean/max intensity, peak position, height, and area</td>
 </tr>
 <tr>
 <td><strong>Model</strong></td>
@@ -2093,6 +2151,42 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 <li><strong>Y-Axis Token Extraction</strong>: Automatically parses numeric parameters embedded in filenames (e.g. <code>_100C_</code>, <code>_250K_</code>) using regex tokenization, or defaults to index-based ordering (<code>0..N-1</code>).</li>
 <li><strong>Smooth Vertical Interpolation</strong>: Supports 1D cubic/linear interpolation along the vertical axis when <code>spin_heatmap_interp &gt; 0</code> (default 300 points).</li>
 <li><strong>Dynamic Toolbar Adaptation</strong>: Activating heatmap mode toggles toolbar state: standard 1D tools (<code>btn_peak</code>, <code>btn_baseline</code>, <code>btn_eraser</code>, <code>btn_norm</code>, <code>btn_bestfit</code>, and <code>shift_panel</code>) are hidden via <code>setVisible(False)</code>, while heatmap-specific controls (<code>cbb_heatmap_yaxis</code>, <code>le_heatmap_ylabel</code>, <code>spin_heatmap_interp</code>) become visible. Unchecking the mode restores the 1D tools immediately.</li>
+</ul>
+<h3 id="interactive-spectral-mapping-live-maps">Interactive Spectral Mapping &amp; Live Maps<a class="headerlink" href="#interactive-spectral-mapping-live-maps" title="Permanent link">&para;</a></h3>
+<p>The interactive spectral mapping subsystem allows users to select up to three independent spectral ranges on the 1D spectrum viewer and see live-updating 2D parameter heatmaps in real time.</p>
+<pre class="mermaid"><code>graph TD
+    subgraph Spectra Viewer
+        RP["VRangeSelectorPanel&lt;br/&gt;(Red, Blue, Green toggle buttons)"]
+        RSM["RangeSelectorManager&lt;br/&gt;(Interactive brackets &amp; shaded spans)"]
+    end
+
+    subgraph ViewModel
+        VMLM["VMLiveMaps&lt;br/&gt;(60 ms debounce timer, active states, intervals)"]
+    end
+
+    subgraph Model
+        SP["spectral_parameters.py&lt;br/&gt;(Vectorized numpy parameter calculation)"]
+    end
+
+    subgraph Live Maps Tab
+        VLM["VLiveMaps&lt;br/&gt;(Tab placed immediately before More)"]
+        Sub["LiveMapSubpanel x 3&lt;br/&gt;(Canvas, colorbar, parameter dropdown, palette dropdown)"]
+    end
+
+    RP --&gt;|"range_toggled(key, active)"| RSM &amp; VMLM
+    RSM --&gt;|"range_changed(key, xmin, xmax)"| VMLM
+    VMLM --&gt;|"compute_spectral_parameter()"| SP
+    VMLM --&gt;|"map_updated(key, grid, coords, ...)"| VLM
+    VLM --&gt; Sub</code></pre>
+<ul>
+<li><strong><code>VRangeSelectorPanel</code></strong>: Positioned as a dedicated vertical panel on the right side of <code>VSpectraViewer</code>. Contains three independent toggle buttons identified by Red (<code>#e74c3c</code>), Blue (<code>#3498db</code>), and Green (<code>#2ecc71</code>) circular badges and labels.</li>
+<li><strong><code>RangeSelectorManager</code></strong>: Manages interactive vertical boundary lines, inward bracket annotations, and transparent spans for each selector. Dragging either line or the center span smoothly translates or resizes the interval. Hit testing uses pixel tolerance with coordinate translation from Matplotlib transforms.</li>
+<li><strong><code>VMLiveMaps</code></strong>: Owns selector intervals, parameter selections, and colormap choices. Uses a 60ms debounce timer to prevent full-dataset recalculations during continuous mouse drag.</li>
+<li><strong><code>spectral_parameters.py</code></strong>: Model-level vectorized evaluation over <code>MapData.Y</code> (2D array <span class="arithmatex">\([N, M]\)</span>) without per-spectrum loops. Calculates:</li>
+<li><em>Direct</em>: <code>Integrated intensity</code>, <code>Mean intensity</code>, <code>Maximum intensity</code>, <code>Peak position</code>, <code>Peak height</code> (baseline-subtracted).</li>
+<li><em>Fitted</em>: <code>Peak position (fit)</code>, <code>Peak height (fit)</code>, <code>Peak area (fit)</code> using fitted peak parameters when available.</li>
+<li><strong><code>VLiveMaps</code></strong>: QWidget tab installed in <code>bottom_tabs</code> (between <code>Fit Results</code> and <code>MVA</code>, with <code>More</code> placed at the end of the tabs). Hosts 3 independent subpanels that dynamically hide/show based on active selectors, with dark/light theme support.</li>
+<li><strong>Zoom &amp; Range Coordination</strong>: When a range selector is activated, <code>btn_zoom</code> is automatically deactivated so bracket adjustment can occur without triggering simultaneous zoom rectangles. The Zoom button can also be toggled off by clicking it, and while Zoom is active, clicking inside the range span performs a zoom rather than moving the range body.</li>
 </ul>
 <h3 id="vmworkspacespectra-the-viewmodel"><code>VMWorkspaceSpectra</code> — The ViewModel<a class="headerlink" href="#vmworkspacespectra-the-viewmodel" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <a href="file:///Users/HoanLe/Documents/SPECTROview/spectroview/viewmodel/vm_workspace_spectra.py"><code>vm_workspace_spectra.py</code></a></p>
@@ -2160,7 +2254,7 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 </tr>
 <tr>
 <td><strong>Display</strong></td>
-<td><code>view_stats()</code>, <code>save_spectra_data()</code>, <code>copy_spectrum_data_to_clipboard()</code></td>
+<td><code>save_spectra_data()</code>, <code>copy_spectrum_data_to_clipboard()</code></td>
 </tr>
 </tbody>
 </table>
@@ -2266,12 +2360,21 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 </ol>
 <p>A color value of <code>None</code> represents <strong>Automatic</strong> and is resolved from the active palette during rendering. Explicit per-spectrum colors continue to take precedence when the palette changes. Continuous palettes are sampled across the complete selection; the editor offers a bounded selection of representative swatches.</p>
 <p>Both workspaces enforce <code>LEGEND_EDITOR_MAX_ROWS = 100</code>. Only those editor rows are instantiated, preventing large map or spectrum selections from creating thousands of Qt widgets. The dialog receives the full selection count so automatic gradient previews still match their plotted spectrum positions. Values outside the current batch remain untouched.</p>
+<h4 id="legend-placement-outside-option">Legend Placement &amp; Outside Option<a class="headerlink" href="#legend-placement-outside-option" title="Permanent link">&para;</a></h4>
+<p>The View Option menu includes <strong>Move legend box outside</strong> (<code>act_legend_outside</code>). When checked, <code>VSpectraViewer</code> positions the legend outside the primary axes via <code>loc="center left"</code> and <code>bbox_to_anchor=(1.02, 0.5)</code>. The figure's <code>compressed</code> layout dynamically adjusts plot margins so the legend fits cleanly without overlapping spectral traces. This setting is synchronized between Spectra and Maps workspaces and persisted across sessions in <code>view_options/legend_outside</code>. Legend double-click bounds detection dynamically refreshes window extents from the underlying legend artist to guarantee accurate hit-testing regardless of layout compression.</p>
+<h4 id="heatmap-signal-processing-optimizations">Heatmap &amp; Signal Processing Optimizations<a class="headerlink" href="#heatmap-signal-processing-optimizations" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Vectorized Heatmap Matrix Interpolation</strong>: When 2D heatmap mode is active, cubic/linear Y-axis interpolation processes the entire intensity matrix simultaneously (<code>scipy.interpolate.interp1d(..., axis=0)</code>) rather than looping per spectral column, slashing heatmap render times by over 4× on large batches.</li>
+<li><strong>Fast Cosmic Ray / Eraser Noise Estimation</strong>: Replaced iterative sliding-window polynomial fitting with first-difference Median Absolute Deviation (<span class="arithmatex">\(MAD / (0.6745 \sqrt{2})\)</span>), providing robust baseline noise estimation in <span class="arithmatex">\(O(N)\)</span> vectorized NumPy time.</li>
+<li><strong>Hover Hit-Testing Pre-filter</strong>: <code>_on_hover</code> uses an x-range bounding pre-filter to skip expensive <code>contains(event)</code> line computations on irrelevant peak markers.</li>
+</ul>
 <h3 id="vfitmodelbuilder-the-controls-panel"><code>VFitModelBuilder</code> — The Controls Panel<a class="headerlink" href="#vfitmodelbuilder-the-controls-panel" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <a href="file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_fit_model_builder.py"><code>v_fit_model_builder.py</code></a></p>
 <p>A splitter panel containing the full preprocessing and fitting control surface:</p>
 <ul>
 <li><strong>Left pane</strong>: X-correction, spectral range, baseline mode selector, baseline action buttons.</li>
 <li><strong>Right pane</strong>: <code>VPeakTable</code> (editable parameter rows) + fit action buttons (Fit, Copy model, Paste model, Save model, Apply model).</li>
+<li><strong>Drag-and-Drop Model Loading</strong>: Accepts dropped <code>.json</code> fit model files directly onto the panel or via the parent workspace. When dropped, <code>fit_model_dropped(path)</code> triggers <code>load_fit_model_file()</code>, delegating to <code>VMFitModelBuilder.load_model_file()</code>. This loads the external model into memory, updates the model dropdown, selects it, activates the <code>Fit Model Builder</code> tab, and displays a toast notification. Both Spectra and Maps workspaces inherit and support this functionality.</li>
 </ul>
 <h3 id="vpeaktable-the-parameter-table"><code>VPeakTable</code> — The Parameter Table<a class="headerlink" href="#vpeaktable-the-parameter-table" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <a href="file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_peak_table.py"><code>v_peak_table.py</code></a></p>

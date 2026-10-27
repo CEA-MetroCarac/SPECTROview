@@ -91,40 +91,54 @@ _qt_cleanup_count = 0
 
 @pytest.fixture(autouse=True)
 def _release_qt_widgets_between_tests(request):
-    """Release Qt resources after tests which actually use ``qapp``.
+    """Release Qt resources and top-level widgets after tests.
 
     Real GUI tests each construct several native-backed widgets (VGraph's
     matplotlib canvas, CustomizeAxis's range sliders, ...) as plain local
     variables with no explicit teardown; left to Python's lazy GC, hundreds
-    of them can stay alive simultaneously across a full run and exhaust the
-    platform's native surface budget (a real crash seen in practice: a
-    segfault deep inside FigureCanvasQTAgg.__init__ once enough dead-but-
-    not-yet-collected canvases had piled up). A full-generation collection
-    twice after *every* test fixed that crash, but made the suite increasingly
-    slow by repeatedly scanning every long-lived pytest/Qt/Matplotlib object.
-
-    New widgets and their reference cycles start in generation 0, so a young-
-    generation collection is sufficient between GUI tests. A periodic full
-    collection keeps promoted cycles bounded without imposing that scan on
-    every pure model/numerical test.
+    of them stay alive simultaneously across a full run and exhaust the
+    platform's native surface budget or accumulate thousands of event-filtering
+    targets that cause setStyleSheet() and event dispatch to crawl exponentially.
     """
     global _qt_cleanup_count
+    app = QApplication.instance()
+    pre_existing_top_levels = set(app.topLevelWidgets()) if app is not None else set()
+
     yield
 
-    if "qapp" not in request.fixturenames:
+    if "qapp" not in request.fixturenames and app is None:
         return
 
     import gc
     from PySide6.QtCore import QEvent
 
-    gc.collect(0)
+    # 1. Close matplotlib figures to avoid Gcf retaining canvases and toolbars
+    try:
+        import matplotlib.pyplot as plt
+        plt.close("all")
+    except Exception:
+        pass
+
+    # 2. Close and delete newly created top-level widgets from this test
     app = QApplication.instance()
     if app is not None:
+        from shiboken6 import isValid
+        for widget in list(app.topLevelWidgets()):
+            if widget not in pre_existing_top_levels:
+                try:
+                    if isValid(widget) and widget.parent() is None:
+                        widget.close()
+                        widget.deleteLater()
+                except Exception:
+                    pass
+
         app.sendPostedEvents(None, QEvent.DeferredDelete)
         app.processEvents()
 
+    gc.collect(0)
+
     _qt_cleanup_count += 1
-    if _qt_cleanup_count % 50 == 0:
+    if _qt_cleanup_count % 25 == 0:
         gc.collect()
         if app is not None:
             app.sendPostedEvents(None, QEvent.DeferredDelete)

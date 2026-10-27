@@ -1053,11 +1053,14 @@ class MetadataTooltipManager(QObject):
         try:
             lw = self.list_widget
             if lw is None:
+                self._remove_app_filter()
                 return False
             viewport = lw.viewport()
             if viewport is None:
+                self._remove_app_filter()
                 return False
         except (RuntimeError, AttributeError):
+            self._remove_app_filter()
             return False
 
         # 1. Mouse move on viewport

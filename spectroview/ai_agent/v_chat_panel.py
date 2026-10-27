@@ -1135,7 +1135,12 @@ class VChatPanel(QDialog):
         self._insert_before_stretch(card)
         self._scroll_to_bottom()
         # Auto-remove after 5 seconds
-        QTimer.singleShot(5000, card.deleteLater)
+        def _cleanup_voice_card():
+            try:
+                card.deleteLater()
+            except (RuntimeError, AttributeError):
+                pass
+        QTimer.singleShot(5000, card, _cleanup_voice_card)
 
     def _clear_message_cards(self) -> None:
         """Remove every message widget, preserving the trailing stretch."""
@@ -1344,12 +1349,16 @@ class VChatPanel(QDialog):
         self.messages_layout.insertWidget(self.messages_layout.count() - 1, widget)
 
     def _scroll_to_bottom(self) -> None:
-        QTimer.singleShot(
-            30,
-            lambda: self.scroll_area.verticalScrollBar().setValue(
-                self.scroll_area.verticalScrollBar().maximum()
-            ),
-        )
+        def _do_scroll():
+            try:
+                if hasattr(self, "scroll_area") and self.scroll_area is not None:
+                    bar = self.scroll_area.verticalScrollBar()
+                    if bar is not None:
+                        bar.setValue(bar.maximum())
+            except (RuntimeError, AttributeError):
+                pass
+
+        QTimer.singleShot(30, self, _do_scroll)
 
     def _update_scroll_to_bottom_visibility(self) -> None:
         bar = self.scroll_area.verticalScrollBar()

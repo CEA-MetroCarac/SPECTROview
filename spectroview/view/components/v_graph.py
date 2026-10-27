@@ -13,7 +13,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PySide6.QtWidgets import (
     QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QDialog, QToolButton, QMenu, QFrame,
-    QApplication, QSizePolicy,
+    QApplication,
 )
 from PySide6.QtCore import QObject, QEvent, QSize, Signal, QTimer, Qt
 from PySide6.QtGui import QAction
@@ -153,9 +153,14 @@ class VGraph(QWidget):
                             action_dict[name].setIcon(Icons.get(icon_file))
                     if 'Home' in action_dict:
                         action_dict['Home'].setToolTip("Rescale plot to fit data (Ctrl+R)")
+                    sep_count = 0
                     for action in self.toolbar.actions():
                         if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
                             action.setVisible(False)
+                        elif action.isSeparator():
+                            sep_count += 1
+                            if sep_count == 1:
+                                action.setVisible(False)
                 except RuntimeError:
                     return  # toolbar's C++ object already deleted
 
@@ -169,13 +174,22 @@ class VGraph(QWidget):
                 action_dict[name].setIcon(Icons.get(icon_file))
         if 'Home' in action_dict:
             action_dict['Home'].setToolTip("Rescale plot to fit data (Ctrl+R)")
+        sep_count = 0
         for action in self.toolbar.actions():
             if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
                 action.setVisible(False)
+            elif action.isSeparator():
+                sep_count += 1
+                if sep_count == 1:
+                    action.setVisible(False)
 
-        # Allow coordinate locLabel to expand smoothly next to navigation buttons
-        self.toolbar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.toolbar.setMinimumWidth(180)
+        # Stable fixed width and font for locLabel so 2-line coordinates and values
+        # render fully without clipping and prevent button-shifting / flickering on mouse hover
+        self.toolbar.setIconSize(QSize(20, 20))
+        self.toolbar.locLabel.setFixedWidth(240)
+        self.toolbar.locLabel.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.toolbar.locLabel.setStyleSheet("font-size: 11px; padding: 0px; margin: 0px;")
+        self.toolbar.setFixedWidth(300)
 
         # Dedicated navigation buttons (Home/Rescale, Pan/Drag, Zoom) matching 30x30 SPECTROview controls
         self.btn_home = QPushButton()
@@ -303,7 +317,7 @@ class VGraph(QWidget):
         # it into the shared toolbar slot when this graph is the active one.
         toolbar_container = QWidget()
         toolbar_container.setLayout(toolbar_layout)
-        toolbar_container.setFixedHeight(35)
+        toolbar_container.setFixedHeight(38)
         toolbar_container.hide()
         self.toolbar_container = toolbar_container
         if old_toolbar_container is not None:

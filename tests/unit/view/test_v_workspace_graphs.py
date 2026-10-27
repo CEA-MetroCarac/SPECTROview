@@ -1129,6 +1129,16 @@ class TestGraphToolbarUnifiedControls:
         actions = {a.text(): a for a in widget.toolbar.actions() if a.text()}
         assert actions['Customize'].isVisible()
 
+        # Fixed width and comfortable height prevent button-shifting/flicker and 2-line clipping
+        assert widget.toolbar.locLabel.width() == 240
+        assert widget.toolbar.width() == 300
+        assert widget.toolbar_container.height() == 38
+
+        # 2-line coordinates message displays fully without clipping
+        widget.toolbar.set_message('(x, y) = (-12.345, 18.234)\n[3.8916]')
+        assert '(x, y) = (-12.345, 18.234)' in widget.toolbar.locLabel.text()
+        assert '[3.8916]' in widget.toolbar.locLabel.text()
+
     def test_navigation_buttons_interactivity(self, ws, excel_df, monkeypatch):
         cfg = {'df_name': 'sheet1', 'plot_style': 'scatter', 'x': 'x0_Si', 'y': ['ampli_Si']}
         graph_model = ws.vm.create_graph(cfg)

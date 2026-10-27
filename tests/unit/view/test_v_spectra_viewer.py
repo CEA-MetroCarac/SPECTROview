@@ -479,4 +479,40 @@ def test_filename_token_extraction_with_precompiled_regex(viewer):
     assert token_dict.get("01") == 1.0
 
 
+def test_control_bar_layout_options_and_copy_on_far_right(viewer):
+    """Verify that 'More view options' and 'Copy' buttons are at the very right end of the control bar, preceded by a separator."""
+    from PySide6.QtWidgets import QFrame
 
+    assert viewer.btn_options.width() == 30 and viewer.btn_options.height() == 30
+    assert viewer.btn_options.iconSize().width() == 22 and viewer.btn_options.iconSize().height() == 22
+    assert "More view options" in viewer.btn_options.toolTip()
+
+    assert viewer.btn_copy.width() == 30 and viewer.btn_copy.height() == 30
+    assert viewer.btn_copy.iconSize().width() == 22 and viewer.btn_copy.iconSize().height() == 22
+    assert "Copy" in viewer.btn_copy.toolTip()
+
+    layout = viewer.control_bar.layout()
+    widgets = []
+    has_stretch_before_toolbar = False
+    toolbar_index = -1
+
+    for i in range(layout.count()):
+        item = layout.itemAt(i)
+        w = item.widget()
+        if w is not None:
+            widgets.append(w)
+            if w is viewer.toolbar:
+                toolbar_index = i
+        else:
+            # Spacer / stretch item
+            if toolbar_index == -1:
+                has_stretch_before_toolbar = True
+
+    # Check right-end placement
+    assert widgets[-1] is viewer.btn_copy
+    assert widgets[-2] is viewer.btn_options
+    # Preceded by vertical separator
+    assert isinstance(widgets[-3], QFrame)
+    assert widgets[-3].frameShape() == QFrame.VLine
+    # Stretch is present to push items across the bar
+    assert has_stretch_before_toolbar

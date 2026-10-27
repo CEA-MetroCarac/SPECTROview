@@ -400,15 +400,6 @@ class VSpectraViewer(QWidget):
         self.btn_legend.toggled.connect(self._emit_view_options)
         layout.addWidget(self.btn_legend)
 
-        # Copy
-        self.btn_copy = QPushButton()
-        self.btn_copy.setIcon(Icons.copy())
-        self.btn_copy.setToolTip("Copy figure to clipboard. Hold Ctrl + Click to copy data to clipboard")
-        self.btn_copy.setIconSize(QSize(22, 22))
-        self.btn_copy.setFixedSize(30, 30)
-        self.btn_copy.clicked.connect(self._emit_copy)
-        layout.addWidget(self.btn_copy)
-
         # Heatmap toggle
         self.btn_heatmap = QToolButton()
         self.btn_heatmap.setCheckable(True)
@@ -458,7 +449,24 @@ class VSpectraViewer(QWidget):
         self.spin_heatmap_interp.setVisible(False)
         layout.addWidget(self.spin_heatmap_interp)
 
-        # Options
+        layout.addStretch()
+
+        # Matplotlib toolbar & stats
+        layout.addWidget(self.toolbar)
+        # R²
+        self.lbl_r2 = QLabel("R²=0")
+        layout.addWidget(self.lbl_r2)
+        # Noise level
+        self.lbl_noise = QLabel("Noise=0")
+        layout.addWidget(self.lbl_noise)
+
+        # Vertical separator between navigation/coordinates and options/copy actions
+        separator = QFrame()
+        separator.setFrameShape(QFrame.VLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        layout.addWidget(separator)
+
+        # Very right side: More view options and Copy to clipboard
         self.options_menu = self._create_options_menu()
         self.btn_options = QToolButton()
         self.btn_options.setIcon(Icons.settings())
@@ -469,14 +477,13 @@ class VSpectraViewer(QWidget):
         self.btn_options.setMenu(self.options_menu)
         layout.addWidget(self.btn_options)
 
-        # layout.addStretch()
-        layout.addWidget(self.toolbar)
-        # R²
-        self.lbl_r2 = QLabel("R²=0")
-        layout.addWidget(self.lbl_r2)
-        # Noise level
-        self.lbl_noise = QLabel("Noise=0")
-        layout.addWidget(self.lbl_noise)
+        self.btn_copy = QPushButton()
+        self.btn_copy.setIcon(Icons.copy())
+        self.btn_copy.setToolTip("Copy figure to clipboard. Hold Ctrl + Click to copy data to clipboard")
+        self.btn_copy.setIconSize(QSize(22, 22))
+        self.btn_copy.setFixedSize(30, 30)
+        self.btn_copy.clicked.connect(self._emit_copy)
+        layout.addWidget(self.btn_copy)
 
         return bar
 

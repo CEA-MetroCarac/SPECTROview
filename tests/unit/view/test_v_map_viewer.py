@@ -252,24 +252,27 @@ class TestMapViewerNavigationToolbar:
         assert not viewer.btn_pan.icon().isNull()
         assert not viewer.btn_zoom.icon().isNull()
 
-    def test_toolbar_customize_action_and_loclabel_visible(self, qapp):
+    def test_built_in_live_coordinates_displayed_and_toolbar_hidden(self, qapp):
         viewer = VMapViewer()
-        # Matplotlib toolbar must be visible (not hidden)
-        assert not viewer.toolbar.isHidden()
+        viewer.show()
 
-        # 'Customize' action should remain visible
-        actions = {a.text(): a for a in viewer.toolbar.actions() if a.text()}
-        assert "Customize" in actions
-        assert actions["Customize"].isVisible()
+        # Matplotlib toolbar must be hidden (background interaction helper)
+        assert viewer.toolbar.isHidden()
 
-        # Duplicated navigation actions must be hidden
-        for name in ["Home", "Pan", "Zoom", "Save", "Back", "Forward", "Subplots"]:
-            if name in actions:
-                assert not actions[name].isVisible()
+        # Built-in live coordinate display must be visible and have stable minimum width
+        assert not viewer.lbl_coordinates.isHidden()
+        assert viewer.lbl_coordinates.minimumWidth() >= 180
 
-        # locLabel must exist and update on mouse move
+        # locLabel must exist and update on set_message
         assert hasattr(viewer.toolbar, "locLabel")
         viewer.toolbar.set_message("x=12.5  y=34.2")
         assert "12.5" in viewer.toolbar.locLabel.text()
+        assert "12.5" in viewer.lbl_coordinates.text()
+
+        # Leaving figure canvas clears live coordinates
+        import matplotlib.backend_bases as mbb
+        leave_event = mbb.LocationEvent("figure_leave_event", viewer.canvas, 0, 0)
+        viewer._on_figure_leave(leave_event)
+        assert viewer.lbl_coordinates.text() == ""
 
 

@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction, QApplication, QMessageBox,
     QSizePolicy
 )
-from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer
+from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QAction
 
 from spectroview import PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
@@ -100,15 +100,11 @@ class VMapViewer(QWidget):
         self.canvas.mpl_connect('button_press_event', self._on_mouse_click)
         self.canvas.mpl_connect('motion_notify_event', self._on_mouse_move)
         self.canvas.mpl_connect('button_release_event', self._on_mouse_release)
+        self.canvas.mpl_connect('figure_leave_event', self._on_figure_leave)
         
-        # Matplotlib toolbar (kept visible with 'Customize' and coordinate locLabel)
+        # Matplotlib toolbar kept hidden as a background interaction helper for pan/zoom/rescale
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
-
-        original_set_style = self.toolbar.setStyleSheet
-        def custom_set_style(css):
-            original_set_style("background: transparent; border: none;")
-        self.toolbar.setStyleSheet = custom_set_style
-        self.toolbar.setStyleSheet("")
+        self.toolbar.hide()
 
         # Dedicated styled navigation buttons (Home/Rescale, Pan/Drag, Zoom) matching SPECTROview controls
         self.btn_home = QPushButton()
@@ -142,56 +138,38 @@ class VMapViewer(QWidget):
         if 'Zoom' in action_dict:
             action_dict['Zoom'].toggled.connect(self.btn_zoom.setChecked)
 
-        # Hide redundant matplotlib toolbar actions, leaving 'Customize' (like v_spectra_viewer)
-        for action in self.toolbar.actions():
-            if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
-                action.setVisible(False)
+        # Forward any matplotlib toolbar message events to our built-in coordinate label
+        def _on_toolbar_message(s):
+            clean_s = " ".join(s.split()) if s else ""
+            if hasattr(self, "lbl_coordinates"):
+                self.lbl_coordinates.setText(clean_s)
+            if hasattr(self.toolbar, "locLabel"):
+                self.toolbar.locLabel.setText(s)
 
-        class ToolbarEventFilter(QObject):
-            def __init__(self, toolbar, viewer):
-                super().__init__(toolbar)
-                self.toolbar = toolbar
-                self.viewer = viewer
-                self._timer = QTimer(self)
-                self._timer.setSingleShot(True)
-                self._timer.setInterval(100)
-                self._timer.timeout.connect(self._update_icons)
+        self.toolbar.set_message = _on_toolbar_message
 
-            def eventFilter(self, obj, event):
-                if event.type() == QEvent.PaletteChange:
-                    self._timer.start()
-                return False
-
-            def _update_icons(self):
-                try:
-                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
-                    for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
-                        if text in action_dict and image_file is not None:
-                            try:
-                                icon = self.toolbar._icon(image_file + '.png')
-                                action_dict[text].setIcon(icon)
-                            except Exception:
-                                pass
-                except RuntimeError:
-                    return  # toolbar C++ object deleted
-                try:
-                    if hasattr(self.viewer, 'apply_global_theme'):
-                        self.viewer.apply_global_theme("")
-                except RuntimeError:
-                    pass
-
-        self.toolbar_filter = ToolbarEventFilter(self.toolbar, self)
-        self.toolbar.installEventFilter(self.toolbar_filter)
-
-        # Custom toolbar with navigation, matplotlib toolbar (Customize + locLabel), add viewer, and copy buttons
+        # Custom toolbar with navigation, built-in coordinates, add viewer, and copy buttons
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setContentsMargins(2, 2, 2, 2)
         toolbar_layout.setSpacing(6)
         toolbar_layout.addWidget(self.btn_home)
         toolbar_layout.addWidget(self.btn_pan)
         toolbar_layout.addWidget(self.btn_zoom)
-        toolbar_layout.addWidget(self.toolbar)
         toolbar_layout.addStretch()
+
+        # Built-in live coordinates display
+        self.lbl_coordinates = QLabel("")
+        self.lbl_coordinates.setObjectName("lblCoordinates")
+        self.lbl_coordinates.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.lbl_coordinates.setMinimumWidth(180)
+        self.lbl_coordinates.setStyleSheet("font-size: 11px; padding: 0px 4px;")
+        toolbar_layout.addWidget(self.lbl_coordinates)
+
+        # Vertical separator between coordinates and action buttons
+        separator = QFrame()
+        separator.setFrameShape(QFrame.VLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        toolbar_layout.addWidget(separator)
         
         # Add viewer button
         self.btn_add_viewer = QPushButton()
@@ -253,6 +231,8 @@ class VMapViewer(QWidget):
             self.btn_add_viewer.setIcon(Icons.plus(color=icon_color))
         if hasattr(self, 'btn_options'):
             self.btn_options.setIcon(Icons.settings(color=icon_color))
+        if hasattr(self, 'lbl_coordinates'):
+            self.lbl_coordinates.setStyleSheet(f"font-size: 11px; padding: 0px 4px; color: {tok.text_secondary};")
 
     def _create_map_type_controls(self):
         """Create map type and palette selector controls."""
@@ -1382,8 +1362,31 @@ class VMapViewer(QWidget):
                 pass
             self.rect_patch = None
     
+    def _update_coordinates(self, event):
+        """Update built-in live coordinate display label under the map canvas."""
+        if hasattr(self, "lbl_coordinates"):
+            if event.inaxes and event.xdata is not None and event.ydata is not None:
+                try:
+                    coord_str = event.inaxes.format_coord(event.xdata, event.ydata)
+                    clean_str = " ".join(coord_str.split())
+                    self.lbl_coordinates.setText(clean_str)
+                    if hasattr(self.toolbar, "locLabel"):
+                        self.toolbar.locLabel.setText(clean_str)
+                except Exception:
+                    self.lbl_coordinates.setText("")
+            else:
+                self.lbl_coordinates.setText("")
+
+    def _on_figure_leave(self, event):
+        """Clear live coordinate display when cursor leaves the map canvas."""
+        if hasattr(self, "lbl_coordinates"):
+            self.lbl_coordinates.setText("")
+        if hasattr(self.toolbar, "locLabel"):
+            self.toolbar.locLabel.setText("")
+
     def _on_mouse_move(self, event):
         """Update rectangle during drag."""
+        self._update_coordinates(event)
         if self.toolbar.mode:
             return
             

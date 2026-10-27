@@ -13,16 +13,16 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PySide6.QtWidgets import (
     QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QDialog, QToolButton, QMenu, QFrame,
-    QApplication,
+    QApplication, QLabel,
 )
-from PySide6.QtCore import QObject, QEvent, QSize, Signal, QTimer, Qt
+from PySide6.QtCore import QSize, Signal, Qt
 from PySide6.QtGui import QAction
 
 from spectroview import (
     DEFAULT_COLORS, DEFAULT_MARKERS,
     PLOT_POLICY_LIGHT, PLOT_POLICY_DARK,
 )
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens
 
 # figure_theme value -> mplstyle file. "light" (the default) reproduces the
 # app's only-ever-existing hardcoded behavior; dark reuses the same
@@ -31,10 +31,6 @@ _THEME_STYLE_MAP = {
     "light": PLOT_POLICY_LIGHT,
     "dark": PLOT_POLICY_DARK,
 }
-
-# matplotlib nav-toolbar action text -> our own colorful icon (theme-independent,
-# so it needs no tinting), mirroring the Spectra viewer's rescale/zoom buttons.
-_CUSTOM_TOOLBAR_ICONS = {"Home": "rescale2.png", "Zoom": "magnify2.png", "Pan": "pan2.png"}
 from spectroview.view.components.customize_graph.customize_graph_dialog import (
     EditLineDialog, EditTextDialog, EditArrowDialog, EditSpanDialog,
     EditBoxDialog, EditCalloutDialog,
@@ -120,76 +116,19 @@ class VGraph(QWidget):
             
         self.canvas = FigureCanvas(self.figure)
         
+        # Matplotlib toolbar kept hidden as a background interaction helper for zoom/pan/rescale
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
-        
-        original_set_style = self.toolbar.setStyleSheet
-        def custom_set_style(css):
-            original_set_style("QToolBar { background: transparent; border: none; }")
-        self.toolbar.setStyleSheet = custom_set_style
-        self.toolbar.setStyleSheet("")
+        self.toolbar.hide()
 
-        class ToolbarEventFilter(QObject):
-            def __init__(self, toolbar):
-                # Parented to `toolbar` so Qt cancels the pending single-shot
-                # timer on teardown -- unparented, it could fire 100ms later
-                # against an already-deleted toolbar (real segfault).
-                super().__init__(toolbar)
-                self.toolbar = toolbar
-                self._timer = QTimer(self)
-                self._timer.setSingleShot(True)
-                self._timer.setInterval(100)
-                self._timer.timeout.connect(self._update_icons)
+        # Forward any matplotlib toolbar message events to our built-in coordinate label
+        def _on_toolbar_message(s):
+            clean_s = " ".join(s.split()) if s else ""
+            if hasattr(self, "lbl_coordinates"):
+                self.lbl_coordinates.setText(clean_s)
+            if hasattr(self.toolbar, "locLabel"):
+                self.toolbar.locLabel.setText(s)
 
-            def eventFilter(self, obj, event):
-                if event.type() == QEvent.PaletteChange:
-                    self._timer.start()
-                return False
-
-            def _update_icons(self):
-                try:
-                    action_dict = {a.text(): a for a in self.toolbar.actions() if a.text()}
-                    for name, icon_file in _CUSTOM_TOOLBAR_ICONS.items():
-                        if name in action_dict:
-                            action_dict[name].setIcon(Icons.get(icon_file))
-                    if 'Home' in action_dict:
-                        action_dict['Home'].setToolTip("Rescale plot to fit data (Ctrl+R)")
-                    sep_count = 0
-                    for action in self.toolbar.actions():
-                        if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
-                            action.setVisible(False)
-                        elif action.isSeparator():
-                            sep_count += 1
-                            if sep_count == 1:
-                                action.setVisible(False)
-                except RuntimeError:
-                    return  # toolbar's C++ object already deleted
-
-        self.toolbar_filter = ToolbarEventFilter(self.toolbar)
-        self.toolbar.installEventFilter(self.toolbar_filter)
-
-        # Configure custom action icons and hide redundant actions, leaving Customize (like v_map_viewer / v_spectra_viewer)
-        action_dict = {a.text(): a for a in self.toolbar.actions() if a.text()}
-        for name, icon_file in _CUSTOM_TOOLBAR_ICONS.items():
-            if name in action_dict:
-                action_dict[name].setIcon(Icons.get(icon_file))
-        if 'Home' in action_dict:
-            action_dict['Home'].setToolTip("Rescale plot to fit data (Ctrl+R)")
-        sep_count = 0
-        for action in self.toolbar.actions():
-            if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
-                action.setVisible(False)
-            elif action.isSeparator():
-                sep_count += 1
-                if sep_count == 1:
-                    action.setVisible(False)
-
-        # Stable fixed width and font for locLabel so 2-line coordinates and values
-        # render fully without clipping and prevent button-shifting / flickering on mouse hover
-        self.toolbar.setIconSize(QSize(20, 20))
-        self.toolbar.locLabel.setFixedWidth(240)
-        self.toolbar.locLabel.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.toolbar.locLabel.setStyleSheet("font-size: 11px; padding: 0px; margin: 0px;")
-        self.toolbar.setFixedWidth(300)
+        self.toolbar.set_message = _on_toolbar_message
 
         # Dedicated navigation buttons (Home/Rescale, Pan/Drag, Zoom) matching 30x30 SPECTROview controls
         self.btn_home = QPushButton()
@@ -299,8 +238,14 @@ class VGraph(QWidget):
         toolbar_layout.addWidget(self.btn_pan)
         toolbar_layout.addWidget(self.btn_zoom)
 
-        # Matplotlib toolbar (Customize button + live coordinate locLabel)
-        toolbar_layout.addWidget(self.toolbar)
+        # Built-in live coordinates display
+        self.lbl_coordinates = QLabel("")
+        self.lbl_coordinates.setObjectName("lblCoordinates")
+        self.lbl_coordinates.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.lbl_coordinates.setMinimumWidth(180)
+        tok = current_tokens()
+        self.lbl_coordinates.setStyleSheet(f"font-size: 11px; padding: 0px 4px; color: {tok.text_secondary};")
+        toolbar_layout.addWidget(self.lbl_coordinates)
 
         # Vertical separator between navigation/coordinates and edit/copy actions
         separator = QFrame()
@@ -328,10 +273,11 @@ class VGraph(QWidget):
         # Connect pick event for legend customization
         self.canvas.mpl_connect('pick_event', self._on_legend_pick)
         
-        # Connect annotation drag events
+        # Connect annotation drag events and canvas hover/leave
         self.canvas.mpl_connect('motion_notify_event', self._on_annotation_drag)
         self.canvas.mpl_connect('button_release_event', self._on_annotation_release)
         self.canvas.mpl_connect('button_press_event', self._on_annotation_click)
+        self.canvas.mpl_connect('figure_leave_event', self._on_figure_leave)
         
         self.canvas.draw_idle()
     
@@ -1686,6 +1632,28 @@ class VGraph(QWidget):
             if self.df is not None:
                 self.plot(self.df)
 
+    def _update_coordinates(self, event):
+        """Update built-in live coordinate display label under the graph canvas."""
+        if hasattr(self, "lbl_coordinates"):
+            if event.inaxes and event.xdata is not None and event.ydata is not None:
+                try:
+                    coord_str = event.inaxes.format_coord(event.xdata, event.ydata)
+                    clean_str = " ".join(coord_str.split())
+                    self.lbl_coordinates.setText(clean_str)
+                    if hasattr(self.toolbar, "locLabel"):
+                        self.toolbar.locLabel.setText(clean_str)
+                except Exception:
+                    self.lbl_coordinates.setText("")
+            else:
+                self.lbl_coordinates.setText("")
+
+    def _on_figure_leave(self, event):
+        """Clear live coordinate display when cursor leaves the graph canvas."""
+        if hasattr(self, "lbl_coordinates"):
+            self.lbl_coordinates.setText("")
+        if hasattr(self.toolbar, "locLabel"):
+            self.toolbar.locLabel.setText("")
+
     def _on_annotation_drag(self, event):
         """Handle annotation drag (mouse move while dragging).
 
@@ -1693,6 +1661,7 @@ class VGraph(QWidget):
         event.ydata -- see that method's docstring for why those are
         unreliable whenever a secondary Y-axis overlaps self.ax.
         """
+        self._update_coordinates(event)
         if event.x is None or event.y is None:
             return
         xdata, ydata = self._ax_data_coords(event)

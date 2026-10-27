@@ -1120,24 +1120,24 @@ class TestGraphToolbarUnifiedControls:
             if item.widget():
                 widgets.append(item.widget())
 
-        # Toolbar is next to navigation buttons, followed by separator, and Customize + Copy at the very right end
-        assert widgets[-4] is widget.toolbar
+        # Built-in live coordinates display is next to navigation buttons, followed by separator, and Customize + Copy at the very right end
+        assert widgets[-4] is widget.lbl_coordinates
         assert widgets[-2] is widget.btn_customize
         assert widgets[-1] is widget.btn_copy_figure
 
-        # Matplotlib toolbar keeps Customize action visible (not hidden, like v_map_viewer)
-        actions = {a.text(): a for a in widget.toolbar.actions() if a.text()}
-        assert actions['Customize'].isVisible()
+        # Matplotlib toolbar is hidden as a background interaction helper
+        assert widget.toolbar.isHidden()
 
-        # Fixed width and comfortable height prevent button-shifting/flicker and 2-line clipping
-        assert widget.toolbar.locLabel.width() == 240
-        assert widget.toolbar.width() == 300
+        # Built-in coordinates label has comfortable width and height matching toolbar container
+        assert widget.lbl_coordinates.minimumWidth() >= 180
         assert widget.toolbar_container.height() == 38
 
         # 2-line coordinates message displays fully without clipping
         widget.toolbar.set_message('(x, y) = (-12.345, 18.234)\n[3.8916]')
         assert '(x, y) = (-12.345, 18.234)' in widget.toolbar.locLabel.text()
         assert '[3.8916]' in widget.toolbar.locLabel.text()
+        assert '(x, y) = (-12.345, 18.234)' in widget.lbl_coordinates.text()
+        assert '[3.8916]' in widget.lbl_coordinates.text()
 
     def test_navigation_buttons_interactivity(self, ws, excel_df, monkeypatch):
         cfg = {'df_name': 'sheet1', 'plot_style': 'scatter', 'x': 'x0_Si', 'y': ['ampli_Si']}

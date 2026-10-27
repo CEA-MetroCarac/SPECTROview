@@ -106,7 +106,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             self.btn_select_all = None
             self.btn_remove = None
             self.btn_reinit = None
-            self.btn_stats = None
             self.btn_save_spectra_data = None
         
         # Create new right panel with Maps features
@@ -203,7 +202,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.v_maps_list.select_all_requested.connect(self._on_select_all_spectra)
         self.v_maps_list.reinitialize_requested.connect(self._on_reinit_spectra)
         self.v_maps_list.reinitialize_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after reinit
-        self.v_maps_list.stats_requested.connect(lambda: self.vm.view_stats(parent_widget=self))
         self.v_maps_list.send_to_spectra_requested.connect(self._on_send_to_spectra)
         
         # ── VMapViewer → ViewModel connections ──

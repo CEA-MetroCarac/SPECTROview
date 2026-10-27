@@ -184,7 +184,7 @@ send_df_to_graphs       = Signal(str, object)   # forward DataFrame to Graphs
 | **Fit model** | `copy_fit_model()`, `paste_fit_model()`, `save_fit_model()`, `apply_fit_model()` |
 | **Workspace** | `reinit_spectra()`, `remove_selected_spectra()`, `reorder_spectra()`, `clear_workspace()` |
 | **Persistence** | `save_work()`, `load_work()`, `_load_legacy_spectra()` |
-| **Display** | `view_stats()`, `save_spectra_data()`, `copy_spectrum_data_to_clipboard()` |
+| **Display** | `save_spectra_data()`, `copy_spectrum_data_to_clipboard()` |
 
 #### Template Method Hooks
 

@@ -25,7 +25,8 @@ class TestVMapsListUnit:
         assert hasattr(w, "btn_save")
         assert hasattr(w, "btn_select_all")
         assert hasattr(w, "btn_reinit")
-        assert hasattr(w, "btn_stats")
+        assert not hasattr(w, "btn_stats")
+        assert not hasattr(w, "stats_requested")
         assert hasattr(w, "btn_send_to_spectra")
         # Ensure spectra_list is no longer present
         assert not hasattr(w, "spectra_list")
@@ -53,9 +54,6 @@ class TestVMapsListUnit:
 
         with qtbot.waitSignal(w.reinitialize_requested, timeout=1000):
             w.btn_reinit.click()
-
-        with qtbot.waitSignal(w.stats_requested, timeout=1000):
-            w.btn_stats.click()
 
         with qtbot.waitSignal(w.send_to_spectra_requested, timeout=1000):
             w.btn_send_to_spectra.click()
@@ -94,7 +92,6 @@ class TestVWorkspaceMapsHeatmapSelection:
         workspace.show()
 
         import pandas as pd
-        import numpy as np
 
         map_df = pd.DataFrame({
             'X': [12.0, 14.0],

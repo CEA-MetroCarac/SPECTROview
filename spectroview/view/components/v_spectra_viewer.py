@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QLineEdit, QDoubleSpinBox, QSpinBox,
     QSlider, QMessageBox, QApplication, QButtonGroup
 )
-from PySide6.QtCore import QObject, QEvent, Qt, Signal, QSize, QTimer, QPoint
+from PySide6.QtCore import Qt, Signal, QSize, QPoint
 from PySide6.QtGui import QCursor
 
 import matplotlib.pyplot as plt
@@ -154,53 +154,22 @@ class VSpectraViewer(QWidget):
         self.canvas.mpl_connect("button_press_event", self._on_mouse_click)
         self.canvas.mpl_connect("scroll_event", self._on_scroll)
         self.canvas.mpl_connect("motion_notify_event", self._on_hover)
+        self.canvas.mpl_connect("figure_leave_event", self._on_figure_leave)
 
-
+        # Matplotlib toolbar kept hidden as a background helper for zoom and rubberband
         self.toolbar = NoDoubleClickZoomToolbar(self.canvas, self)
-        
-        original_set_style = self.toolbar.setStyleSheet
-        def custom_set_style(css):
-            original_set_style("background: transparent; border: none;")
-        self.toolbar.setStyleSheet = custom_set_style
-        self.toolbar.setStyleSheet("")
+        self.toolbar.hide()
+        self.toolbar.zoom()  # Start with zoom enabled
 
-        class ToolbarEventFilter(QObject):
-            def __init__(self, toolbar):
-                # Parented to `toolbar` so Qt cancels the pending single-shot
-                # timer on teardown -- unparented, it could fire 100ms later
-                # against an already-deleted toolbar.
-                super().__init__(toolbar)
-                self.toolbar = toolbar
-                self._timer = QTimer(self)
-                self._timer.setSingleShot(True)
-                self._timer.setInterval(100)
-                self._timer.timeout.connect(self._update_icons)
+        # Forward any matplotlib toolbar message events to our built-in coordinate label
+        def _on_toolbar_message(s):
+            clean_s = " ".join(s.split()) if s else ""
+            if hasattr(self, "lbl_coordinates"):
+                self.lbl_coordinates.setText(clean_s)
+            if hasattr(self.toolbar, "locLabel"):
+                self.toolbar.locLabel.setText(s)
 
-            def eventFilter(self, obj, event):
-                if event.type() == QEvent.PaletteChange:
-                    self._timer.start()
-                return False
-
-            def _update_icons(self):
-                try:
-                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
-                except RuntimeError:
-                    return  # toolbar's C++ object already deleted
-                for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
-                    if text in action_dict and image_file is not None:
-                        try:
-                            icon = self.toolbar._icon(image_file + '.png')
-                            action_dict[text].setIcon(icon)
-                        except Exception:
-                            pass
-                
-        self.toolbar_filter = ToolbarEventFilter(self.toolbar)
-        self.toolbar.installEventFilter(self.toolbar_filter)
-
-        self.toolbar.zoom() # Start with zoom enabled
-        for action in self.toolbar.actions():
-            if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
-                action.setVisible(False)
+        self.toolbar.set_message = _on_toolbar_message
 
         # ─── Vertical right panel (eraser buttons + shift sliders) ───
         self.shift_panel = self._create_vertical_right_panel()
@@ -451,8 +420,13 @@ class VSpectraViewer(QWidget):
 
         layout.addStretch()
 
-        # Matplotlib toolbar & stats
-        layout.addWidget(self.toolbar)
+        # Built-in live coordinates display
+        self.lbl_coordinates = QLabel("")
+        self.lbl_coordinates.setObjectName("lblCoordinates")
+        self.lbl_coordinates.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.lbl_coordinates.setMinimumWidth(180)
+        self.lbl_coordinates.setStyleSheet("font-size: 11px; padding: 0px 4px;")
+        layout.addWidget(self.lbl_coordinates)
         # R²
         self.lbl_r2 = QLabel("R²=0")
         layout.addWidget(self.lbl_r2)
@@ -2253,7 +2227,31 @@ class VSpectraViewer(QWidget):
         self.ax.set_ylim(y_min, y_max)
         self.canvas.draw_idle()
 
+    def _update_coordinates(self, event):
+        """Update built-in live coordinate display label under the plot canvas."""
+        if hasattr(self, "lbl_coordinates"):
+            if event.inaxes and event.xdata is not None and event.ydata is not None:
+                try:
+                    coord_str = event.inaxes.format_coord(event.xdata, event.ydata)
+                    clean_str = " ".join(coord_str.split())
+                    self.lbl_coordinates.setText(clean_str)
+                    if hasattr(self.toolbar, "locLabel"):
+                        self.toolbar.locLabel.setText(clean_str)
+                except Exception:
+                    self.lbl_coordinates.setText("")
+            else:
+                self.lbl_coordinates.setText("")
+
+    def _on_figure_leave(self, event):
+        """Clear live coordinate display when cursor leaves the plot canvas."""
+        if hasattr(self, "lbl_coordinates"):
+            self.lbl_coordinates.setText("")
+        if hasattr(self.toolbar, "locLabel"):
+            self.toolbar.locLabel.setText("")
+
     def _on_hover(self, event):
+        self._update_coordinates(event)
+
         # Same early exits as legacy
         if event.inaxes != self.ax:
             self._hide_tooltip()
@@ -2847,6 +2845,9 @@ class VSpectraViewer(QWidget):
             self.btn_copy.setIcon(Icons.copy(color=icon_color))
             self.btn_options.setIcon(Icons.settings(color=icon_color))
             self.btn_heatmap.setIcon(Icons.map_2d(color=icon_color))
+        
+        if hasattr(self, 'lbl_coordinates'):
+            self.lbl_coordinates.setStyleSheet(f"font-size: 11px; padding: 0px 4px; color: {tok.text_secondary};")
         
         if hasattr(self, 'btn_eraser'):
             self.btn_eraser.setIcon(Icons.eraser(color=icon_color))

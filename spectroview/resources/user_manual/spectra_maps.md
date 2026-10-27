@@ -49,7 +49,7 @@ _________
 
 The `SpectraList` displays all loaded discrete spectra (in the `Spectra` workspace) or all spectra for the currently selected map (in the `Maps` workspace) (see fig below).
 
-You can select one or multiple spectra simultaneously; the selected spectra are immediately visualized in the `SpectraViewer`. Dedicated buttons allow you to select all spectra, clear your selection, display a comprehensive fit statistics report, or send the currently selected spectra to the `Spectra` workspace for isolated analysis.
+You can select one or multiple spectra simultaneously; the selected spectra are immediately visualized in the `SpectraViewer`. Dedicated buttons allow you to select all spectra, reinitialize spectra, save selected data to TXT, or send the currently selected spectra to the `Spectra` workspace for isolated analysis.
 
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/spectralist.png" alt="SpectraList Widget" width="400"><br>

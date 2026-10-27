@@ -16,7 +16,7 @@ class VMapsList(QWidget):
     
     Provides navigation across loaded maps (view, delete, save) and actions
     operating on spectra selected via the 2D Map Viewer (select all, reinit,
-    stats, send to Spectra workspace).
+    send to Spectra workspace).
     """
     
     # ═══ View → ViewModel signals ═══
@@ -26,7 +26,6 @@ class VMapsList(QWidget):
     save_requested = Signal()                     # Save map to Excel / CSV
     select_all_requested = Signal()               # Select all spectra
     reinitialize_requested = Signal()             # Reinitialize selected spectra
-    stats_requested = Signal()                    # Show fitting statistics
     send_to_spectra_requested = Signal()          # Send to Spectra workspace
     
     def __init__(self, parent=None):
@@ -94,12 +93,6 @@ class VMapsList(QWidget):
         self.btn_reinit.setFixedSize(32, 32)
         self.btn_reinit.clicked.connect(self.reinitialize_requested.emit)
         
-        self.btn_stats = QPushButton()
-        self.btn_stats.setIcon(Icons.stats())
-        self.btn_stats.setToolTip("Show fitting statistics of selected spectrum")
-        self.btn_stats.setFixedSize(32, 32)
-        self.btn_stats.clicked.connect(self.stats_requested.emit)
-        
         self.btn_send_to_spectra = QPushButton()
         self.btn_send_to_spectra.setIcon(Icons.send())
         self.btn_send_to_spectra.setToolTip("Send selected spectra to 'Spectra' Workspace")
@@ -108,7 +101,6 @@ class VMapsList(QWidget):
         
         buttons_layout.addWidget(self.btn_select_all)
         buttons_layout.addWidget(self.btn_reinit)
-        buttons_layout.addWidget(self.btn_stats)
         buttons_layout.addWidget(self.btn_send_to_spectra)
         
         # Visual spacing between spectra actions and map actions
@@ -222,5 +214,4 @@ class VMapsList(QWidget):
         # Spectra action buttons
         self.btn_select_all.setIcon(Icons.check_circle(color=icon_color))
         self.btn_reinit.setIcon(Icons.undo(color=icon_color))
-        self.btn_stats.setIcon(Icons.stats(color=icon_color))
         self.btn_send_to_spectra.setIcon(Icons.send(color=icon_color))

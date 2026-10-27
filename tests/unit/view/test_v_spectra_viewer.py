@@ -495,13 +495,12 @@ def test_control_bar_layout_options_and_copy_on_far_right(viewer):
     widgets = []
     has_stretch_before_toolbar = False
     toolbar_index = -1
-
     for i in range(layout.count()):
         item = layout.itemAt(i)
         w = item.widget()
         if w is not None:
             widgets.append(w)
-            if w is viewer.toolbar:
+            if w is viewer.lbl_coordinates:
                 toolbar_index = i
         else:
             # Spacer / stretch item
@@ -516,3 +515,43 @@ def test_control_bar_layout_options_and_copy_on_far_right(viewer):
     assert widgets[-3].frameShape() == QFrame.VLine
     # Stretch is present to push items across the bar
     assert has_stretch_before_toolbar
+
+
+def test_built_in_live_coordinates_displayed_and_toolbar_hidden(viewer):
+    """Verify that matplotlib's native toolbar is hidden, while built-in
+    live coordinate display (lbl_coordinates) remains visible, unclipped,
+    and updates on cursor hover."""
+    import matplotlib.backend_bases as mbb
+
+    viewer.show()
+
+    # Native matplotlib toolbar widget is hidden
+    assert viewer.toolbar.isHidden()
+
+    # Built-in live coordinate label is visible with proper dimensions
+    assert not viewer.lbl_coordinates.isHidden()
+    assert viewer.lbl_coordinates.minimumWidth() >= 180
+
+    # Live coordinate updates work on hover over axes
+    event = mbb.MouseEvent("motion_notify_event", viewer.canvas, 100, 100)
+    event.inaxes = viewer.ax
+    event.xdata = 520.123
+    event.ydata = 145.678
+    viewer._on_hover(event)
+    assert "520" in viewer.lbl_coordinates.text()
+    assert "145" in viewer.lbl_coordinates.text()
+    assert "520" in viewer.toolbar.locLabel.text()
+
+    # Matplotlib toolbar mouse_move also synchronizes with lbl_coordinates
+    event.xdata = 630.456
+    event.ydata = 250.789
+    viewer.toolbar.mouse_move(event)
+    assert "630" in viewer.lbl_coordinates.text()
+    assert "250" in viewer.lbl_coordinates.text()
+
+    # Leaving figure canvas clears live coordinates
+    leave_event = mbb.LocationEvent("figure_leave_event", viewer.canvas, 0, 0)
+    viewer._on_figure_leave(leave_event)
+    assert viewer.lbl_coordinates.text() == ""
+
+

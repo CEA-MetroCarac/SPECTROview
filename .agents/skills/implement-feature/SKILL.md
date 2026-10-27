@@ -45,21 +45,31 @@ Outline:
    - Use theme variables and ensure dark-theme compatibility.
    - Connect View $\leftrightarrow$ ViewModel strictly via Qt signals.
    - For bulk operations, implement the `_apply_with_ctrl(fn)` pattern.
+   - **Qt Lifetime**: Always parent `QTimer`, event filters, and helpers. For single-shot timers, ALWAYS use `QTimer.singleShot(msec, context, slot)`; never use 2-arg lambdas referencing widgets.
 2. **Handle Edge Cases**:
    - Check boundary conditions (empty datasets, single-spectrum vs map data, NaNs, missing columns).
    - Provide graceful non-blocking feedback (status bar, notifications).
 
 ---
 
-## Phase 4: Add Unit & Integration Tests
+## Phase 4: Add Unit & Integration Tests (Mandatory)
 
-1. Create or update tests in the matching test directory:
+**Strict Policy**: Do not defer test writing. Every new feature, component, dialog, or method MUST be accompanied by new or updated tests authored in the same task before completing the milestone.
+
+1. **Author Matching Tests**:
+   - For Views / Dialogs: Test instantiation, interactions, signal emissions, and clean teardown in `tests/unit/view/`. Mock modal dialogs (`QMessageBox`, `QFileDialog`, `QColorDialog`) with `monkeypatch` so headless execution never blocks.
+   - For ViewModels: Test methods, state transformations, and signal emission sequences in `tests/unit/viewmodel/`.
+   - For Models: Test schema validation, serialization, and round-tripping in `tests/unit/model/`. If adding fields to `MGraph`, update `ALL_SAVE_KEYS` in `tests/unit/model/test_m_graph.py` to keep `TestModelSchemaSync` passing.
+   - For Fit Engine: Test peak models in `tests/unit/fit_engine/test_models.py` (register in `_SAMPLE_PARAMS`).
+   - For Public API: Test signatures and contracts in `tests/unit/api/`.
+2. **Execute Targeted and Fast Suites**:
    ```powershell
    # Run the newly authored test
-   python -m pytest tests/unit/view/test_customize_graph_dialog.py -v
+   python -m pytest tests/unit/view/test_<new_feature>.py -v
+
+   # Run fast test suite to ensure zero regressions
+   python -m pytest tests/ -m "not slow" -q
    ```
-2. For GUI tests, utilize shared fixtures from `tests/conftest.py` (`qapp`, synthetic builders).
-3. If adding fields to `MGraph`, update `ALL_SAVE_KEYS` in `tests/unit/model/test_m_graph.py` to keep `TestModelSchemaSync` passing.
 
 ---
 

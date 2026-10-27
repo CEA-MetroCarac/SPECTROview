@@ -34,7 +34,10 @@ The application strictly enforces Model-View-ViewModel separation across all wor
    - All GUI widget manipulations must execute on the main Qt thread.
    - Worker threads (e.g. `VBFthread`) communicate with UI strictly via Qt signals.
    - Always parent `QTimer`, event filters, and helper `QObject`s to their host widget to prevent segfaults when C++ objects are destroyed.
+   - For single-shot timers, always use the 3-argument form with a context object: `QTimer.singleShot(msec, context_qobject, slot)`. Never fire unparented lambdas touching widget state.
+   - Event filters installed on `QApplication` must cleanly auto-deregister when their target widget is destroyed to prevent $O(N \times M)$ event-loop slowdowns.
 4. **Heavy Import Deferral**: Keep heavy third-party packages (`scipy.*`, LLM SDKs `anthropic`/`openai`/`ollama`/`mcp`) off startup import graph. Import inside functions or prewarm on background threads (`Main._prewarm_heavy_imports()`).
+5. **Mandatory Synchronous Testing**: Every new feature, UI widget, ViewModel method, API endpoint, or data processing routine MUST include corresponding unit/integration tests authored in the exact same task. No feature code is complete or committable without passing test coverage.
 
 ---
 
@@ -79,9 +82,11 @@ For every task, execute these steps proportionally:
 3. **Implement**:
    - Make the smallest complete change that satisfies the requirements.
    - Follow MVVM boundaries, PySide6 idioms, and vectorization practices.
+   - Author corresponding unit or integration tests alongside the feature code in the same session.
    - Preserve existing public API signatures and backward compatibility.
 4. **Test & Verify**:
-   - Run relevant unit/integration tests with headless Qt enabled.
+   - Run newly authored tests and relevant unit/integration suites with headless Qt enabled.
+   - Ensure tests execute cleanly without event loop exceptions (`RuntimeError: Internal C++ object already deleted`).
    - Run static check on changed files (`python -m pyflakes spectroview/<file>.py`).
    - Review git diff to ensure no unintended edits, leftover debug prints, or unwanted files.
 5. **Document**:
@@ -101,14 +106,14 @@ For every task, execute these steps proportionally:
 Always use the project's actual commands:
 
 ```powershell
-# Fast test suite (skips slow real-data benchmarks; ~1-2 min)
+# Fast test suite (skips slow real-data benchmarks; ~1 min)
 python -m pytest tests/ -m "not slow" -q
 
 # Run a focused test subtree or file
 python -m pytest tests/unit/view -q
 python -m pytest tests/unit/fit_engine/test_optimizer.py -v
 
-# Run full test suite (including real benchmark datasets; ~7-8 min)
+# Run full test suite (~1-1.5 min across all 1,600+ tests)
 python -m pytest tests/ -q
 
 # Static syntax and import check on modified files
@@ -144,7 +149,7 @@ python -m spectroview.main
 
 A task is complete only when:
 1. The implementation satisfies all acceptance criteria without breaking contracts or introducing regressions.
-2. New or updated tests cover the change and pass cleanly.
+2. New or updated unit/integration tests cover the new feature and pass cleanly without event loop warnings or memory leaks.
 3. Relevant documentation across the three doc surfaces has been synchronized in the same task.
 4. The final diff has been inspected and contains no unrelated changes.
 5. Completed milestones are committed with a meaningful Conventional Commit.

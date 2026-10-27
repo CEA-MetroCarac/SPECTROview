@@ -41,10 +41,17 @@ Review test patterns in the relevant subdirectory:
    - **Setup**: Use fixtures and synthetic builders rather than mocking the unit under test.
    - **Execution**: Call ViewModel methods or drive View handlers.
    - **Assertions**: Assert on emitted Qt signals, Model array values, or dataclass attributes.
-3. **Headless Execution Rules**:
+3. **Headless Execution & Qt Lifetime Rules**:
    - Ensure `QT_QPA_PLATFORM=offscreen` is active.
    - In MDI tests, explicitly call `mdi_area.setActiveSubWindow(sub_window)`.
-   - Only mock modal dialogs that would block headless execution (`QColorDialog`, `QMessageBox`, `QFileDialog`).
+   - **Mock Modal Dialogs**: Never allow modal blocking dialogs to execute in headless tests. Mock them with `monkeypatch`:
+     ```python
+     monkeypatch.setattr(QMessageBox, "exec", lambda *args: QMessageBox.StandardButton.Ok)
+     monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args: ("/tmp/test.csv", "CSV Files (*.csv)"))
+     monkeypatch.setattr(QColorDialog, "getColor", lambda *args: QColor(255, 0, 0))
+     ```
+   - **Clean Teardown**: Top-level widgets instantiated in tests should be closed or scheduled for deferred deletion (`widget.close()`, `widget.deleteLater()`).
+   - **Signal Waiting**: Use `qtbot.waitSignal(signal, timeout=...)` or connect to a tracking list rather than arbitrary `time.sleep()`.
 
 ---
 

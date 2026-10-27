@@ -36,6 +36,8 @@ The fundamental principles are in [AGENTS.md](../../AGENTS.md) (reuse-first, sim
 - **Signals for View $\leftrightarrow$ ViewModel**: Never call across the architectural boundary directly.
 - **Widget Lifetime & Memory Safety**:
   - Parent all `QTimer`, event filters, and `QObject` helpers to the widget they serve so Qt destroys them together. Unparented timers firing on deleted C++ objects cause segfaults.
+  - **Single-Shot Timers**: ALWAYS specify a context `QObject`: `QTimer.singleShot(delay_ms, context_qobject, slot)`. Never use the 2-argument form with lambdas referencing widget state (`QTimer.singleShot(delay, lambda: self.foo())`). Inside the callback, wrap accesses defensively with `try...except (RuntimeError, AttributeError)` to cleanly ignore invocations during teardown.
+  - **Event Filters**: Event filters installed on `QApplication.instance()` or long-lived parent widgets must auto-remove themselves (`app.removeEventFilter(self)`) when their host or monitored widget is destroyed to prevent $O(N \times M)$ event-dispatch slowdowns and crashes.
   - Use `deleteLater()` for deferred cleanup of Qt widgets.
 - **Keyboard Shortcuts**:
   - Implement shortcuts via `QShortcut` using `Qt.ShortcutContext.WidgetWithChildrenShortcut`, scoped to the workspace container (e.g. `self.mdi_area` for Graphs). This prevents shortcuts from firing when another tab is active or shadowing native `QLineEdit` clipboard shortcuts.
@@ -70,3 +72,11 @@ The fundamental principles are in [AGENTS.md](../../AGENTS.md) (reuse-first, sim
   ```powershell
   python -m pyflakes spectroview/<modified_file>.py
   ```
+
+---
+
+## 7. Feature & Test Co-Development
+
+- **Never write code without matching tests**: Every new View, ViewModel method, Model structure, peak model, or public API function must have corresponding unit or integration tests written and passing in the same session.
+- **Update existing tests when modifying features**: Never disable, skip, or delete failing tests when altering existing behavior unless the underlying contract was intentionally replaced; update tests to assert the new behavior.
+- **Run verification commands**: Validate changes locally with `python -m pytest tests/ -m "not slow" -q` before declaring work complete.

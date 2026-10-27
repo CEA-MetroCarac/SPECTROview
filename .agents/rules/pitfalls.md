@@ -10,11 +10,22 @@ Hard-won gotchas that have bitten this codebase. The guards described below are 
 
 ---
 
-## 1. Qt Object Lifetime $\rightarrow$ Segfault
+## 1. Qt Object Lifetime $\rightarrow$ Segfault & Test Failure
 
-- **Trap**: An unparented `QTimer` or helper `QObject` (e.g. an event filter or single-shot timer) can fire after the underlying C++ widget has been destroyed, causing an immediate hard segfault.
-- **Rule**: **Always parent `QTimer`, event filters, and worker helpers to the widget they serve** so Qt destroys and cancels them together.
-- **Example**: `v_graph.py` parents `ToolbarEventFilter` to the toolbar, and its `_update_icons` method guards against `RuntimeError` ("wrapped C/C++ object has been deleted").
+- **Trap**:
+  1. An unparented `QTimer` or helper `QObject` can fire after the underlying C++ widget has been destroyed, causing an immediate hard segfault.
+  2. Calling `QTimer.singleShot(msec, lambda: widget.method())` registers the lambda on the global Qt event loop without binding it to the widget's lifetime. When the widget is destroyed at test teardown, the timer fires during subsequent tests, raising:
+     ```text
+     RuntimeError: Internal C++ object (PySide6.QtWidgets.QScrollArea) already deleted
+     ```
+- **Rule**:
+  1. **Always parent `QTimer`, event filters, and worker helpers to the widget they serve** so Qt destroys and cancels them together.
+  2. **Always bind single-shot timers to a context QObject**:
+     ```python
+     # Correct: Qt automatically disarms the timer if `self` is deleted
+     QTimer.singleShot(msec, self, self._on_timeout)
+     ```
+  3. Inside the callback method, wrap accesses defensively with `try...except (RuntimeError, AttributeError)`.
 
 ---
 
@@ -61,3 +72,13 @@ Hard-won gotchas that have bitten this codebase. The guards described below are 
 
 - **Trap**: `matplotlib` is pinned to `>=3.6.2,<3.10.9`. Certain artist return types differ across versions (for instance, `axvspan` returns a `Rectangle` in this version range, but a polygon in newer releases).
 - **Rule**: Verify artist types and methods empirically rather than assuming newer matplotlib signatures.
+
+---
+
+## 8. $O(N \times M)$ Event Filter & Leaked Top-Level Widget Trap $\rightarrow$ Test Hang
+
+- **Trap**: Installing an event filter on `QApplication.instance()` (e.g. for global tooltips or drag-drop monitoring) without auto-deregistration leaks filter instances into the global event dispatcher. If GUI tests instantiate top-level widgets (`QWidget()`, `QMainWindow()`) without closing them, $N$ unclosed widgets and $M$ orphaned event filters accumulate. When any subsequent test or theme update calls `app.setStyleSheet(...)`, Qt dispatches `FontChange`/`PaletteChange`/`StyleChange` events to all $N$ widgets through all $M$ filters across the Shiboken C++/Python boundary, triggering millions of redundant Python calls ($N \times M \approx 35,000 \times 500 = 17,500,000$ calls) and stalling the test suite for 10+ minutes.
+- **Rule**:
+  1. Any event filter installed on `QApplication.instance()` must monitor the destruction of its target widget/viewport and call `app.removeEventFilter(self)`.
+  2. Inside `eventFilter(watched, event)`, guard against deleted C++ objects with `isValid(watched)` and return early.
+  3. `tests/conftest.py`'s `_release_qt_widgets_between_tests` fixture snapshots and closes newly created root widgets and matplotlib figures between tests. Test authors should still explicitly call `widget.close()` and `widget.deleteLater()`.

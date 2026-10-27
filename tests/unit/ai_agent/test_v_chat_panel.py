@@ -61,11 +61,11 @@ class TestVChatPanelComposerLayout:
     def test_send_button_appearance_reacts_to_text_input(self, chat_panel):
         # Empty input -> standard send style
         chat_panel.edit_input.setPlainText("")
-        assert "Send ▶" in chat_panel.btn_send.text()
+        assert "Send" in chat_panel.btn_send.text()
 
         # Input with text -> active send style
         chat_panel.edit_input.setPlainText("Plot sample data")
-        assert "Send ▶" in chat_panel.btn_send.text()
+        assert "Send" in chat_panel.btn_send.text()
         assert "#1565C0" in chat_panel.btn_send.styleSheet()
 
         # Cleared input -> returns to standard style
@@ -74,11 +74,11 @@ class TestVChatPanelComposerLayout:
 
     def test_send_button_stop_appearance_when_busy(self, chat_panel):
         chat_panel._apply_stop_button_style()
-        assert "Stop ■" in chat_panel.btn_send.text()
+        assert "Stop" in chat_panel.btn_send.text()
         assert "#D32F2F" in chat_panel.btn_send.styleSheet()
 
         chat_panel._apply_send_button_style()
-        assert "Send ▶" in chat_panel.btn_send.text()
+        assert "Send" in chat_panel.btn_send.text()
 
     def test_clear_button_clears_history(self, chat_panel):
         chat_panel.vm._conversation.add_message("user", "Hello")

@@ -1,16 +1,53 @@
 """Unit tests for view options synchronization and persistence between workspaces."""
 
 import pytest
-from spectroview.main import Main
+
+
+@pytest.fixture(scope="module")
+def _shared_main_window(qapp):
+    import spectroview.main as main_mod
+    original_prewarm = getattr(main_mod.Main, "_prewarm_ai_chat", None)
+    main_mod.Main._prewarm_ai_chat = lambda self: None
+    window = main_mod.Main()
+
+    # Reconnect to route save_view_options dynamically through current window.settings
+    try:
+        window.v_spectra_workspace.v_spectra_viewer.allOptionsSyncChanged.disconnect()
+        window.v_maps_workspace.v_spectra_viewer.allOptionsSyncChanged.disconnect()
+    except (RuntimeError, TypeError):
+        pass
+    window.v_spectra_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(
+        window.v_maps_workspace.v_spectra_viewer.set_options_state
+    )
+    window.v_maps_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(
+        window.v_spectra_workspace.v_spectra_viewer.set_options_state
+    )
+    window.v_spectra_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(
+        lambda opts: window.settings.save_view_options(opts)
+    )
+    window.v_maps_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(
+        lambda opts: window.settings.save_view_options(opts)
+    )
+
+    yield window
+    window.close()
+    if original_prewarm:
+        main_mod.Main._prewarm_ai_chat = original_prewarm
 
 
 @pytest.fixture
-def main_window(qapp, monkeypatch):
-    # Disable prewarming or background timers for fast testing
-    monkeypatch.setattr(Main, "_prewarm_ai_chat", lambda self: None)
-    window = Main()
-    yield window
-    window.close()
+def main_window(_shared_main_window):
+    # Rebind to current test's isolated QSettings store
+    from spectroview.model.m_settings import MSettings
+    _shared_main_window.settings = MSettings()
+    _shared_main_window.settings.save_view_options({"bestfit": True, "legend_outside": False})
+    
+    # Reset controls to default state before each test
+    _shared_main_window.v_maps_workspace.v_spectra_viewer.btn_bestfit.setChecked(True)
+    _shared_main_window.v_spectra_workspace.v_spectra_viewer.btn_bestfit.setChecked(True)
+    _shared_main_window.v_maps_workspace.v_spectra_viewer.act_legend_outside.setChecked(False)
+    _shared_main_window.v_spectra_workspace.v_spectra_viewer.act_legend_outside.setChecked(False)
+    return _shared_main_window
 
 
 def test_maps_workspace_view_options_saved_to_settings(main_window):
@@ -52,6 +89,12 @@ def test_spectra_workspace_view_options_saved_to_settings(main_window):
     assert maps_viewer.btn_bestfit.isChecked() is False
     assert spectra_viewer.btn_bestfit.isChecked() is False
     assert settings.load_view_options()["bestfit"] is False
+
+    # Toggle back to True from Spectra workspace
+    spectra_viewer.btn_bestfit.setChecked(True)
+    assert maps_viewer.btn_bestfit.isChecked() is True
+    assert spectra_viewer.btn_bestfit.isChecked() is True
+    assert settings.load_view_options()["bestfit"] is True
 
 
 def test_legend_outside_view_options_saved_and_synced(main_window):

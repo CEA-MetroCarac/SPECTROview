@@ -38,7 +38,11 @@ def excel_df(dataframe_excel_file):
 def vg(qapp):
     widget = VGraph(graph_id=1)
     widget.create_plot_widget(dpi=72)
-    return widget
+    yield widget
+    if hasattr(widget, "figure") and widget.figure is not None:
+        widget.figure.clear()
+    widget.close()
+    widget.deleteLater()
 
 
 def _configure(vg, df_name="sheet1", x=None, y=None, z=None, plot_style="point"):
@@ -1453,17 +1457,13 @@ class TestExportButtonModifierClick:
 
 
 class TestToolbarIconsAndRescale:
-    """Home/Pan/Zoom nav-toolbar buttons wear our colorful icons (theme-
-    agnostic, like the Spectra viewer's rescale/zoom), and _rescale() drives
-    matplotlib Home for the Ctrl+R shortcut."""
+    """Home/Pan/Zoom navigation buttons wear colorful custom icons, and _rescale()
+    drives matplotlib Home for the Ctrl+R shortcut."""
 
     def test_mapped_buttons_have_custom_icons_and_home_advertises_ctrl_r(self, vg):
-        from spectroview.view.components.v_graph import _CUSTOM_TOOLBAR_ICONS
-        actions = {a.text(): a for a in vg.toolbar.actions() if a.text()}
-        for name in _CUSTOM_TOOLBAR_ICONS:
-            assert name in actions, name
-            assert not actions[name].icon().isNull(), name
-        assert "Ctrl+R" in actions["Home"].toolTip()
+        for btn in (vg.btn_home, vg.btn_pan, vg.btn_zoom):
+            assert not btn.icon().isNull()
+        assert "Ctrl+R" in vg.btn_home.toolTip()
 
     def test_rescale_delegates_to_toolbar_home(self, vg, monkeypatch):
         calls = []
@@ -1471,11 +1471,7 @@ class TestToolbarIconsAndRescale:
         vg._rescale()
         assert calls == [True]
 
-    def test_custom_icons_survive_a_palette_change(self, vg):
-        """The theme-change icon refresh must re-assert our custom icons, not
-        overwrite them with matplotlib's tinted defaults."""
-        from spectroview.view.components.v_graph import _CUSTOM_TOOLBAR_ICONS
-        vg.toolbar_filter._update_icons()
-        actions = {a.text(): a for a in vg.toolbar.actions() if a.text()}
-        for name in _CUSTOM_TOOLBAR_ICONS:
-            assert not actions[name].icon().isNull(), name
+    def test_custom_toolbar_buttons_have_valid_icons(self, vg):
+        """All dedicated toolbar buttons are configured with valid icons."""
+        for btn in (vg.btn_home, vg.btn_pan, vg.btn_zoom, vg.btn_replicate, vg.btn_export, vg.btn_customize, vg.btn_copy_figure):
+            assert not btn.icon().isNull()

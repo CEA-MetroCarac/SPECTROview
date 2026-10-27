@@ -39,6 +39,24 @@ def excel_df(dataframe_excel_file):
     return pd.read_excel(dataframe_excel_file, sheet_name="sheet1")
 
 
+_active_test_widgets = []
+
+
+@pytest.fixture(autouse=True)
+def _cleanup_test_widgets():
+    """Ensure all VGraph instances and figure canvases are cleared and destroyed after each test."""
+    yield
+    while _active_test_widgets:
+        w = _active_test_widgets.pop()
+        try:
+            if hasattr(w, "figure") and w.figure is not None:
+                w.figure.clear()
+            w.close()
+            w.deleteLater()
+        except Exception:
+            pass
+
+
 def _plotted_graph(qapp, excel_df, plot_style="scatter", x="x0_Si", y=None, z="Quadrant"):
     # Copy every MGraph field onto the widget first (mirroring
     # v_workspace_graphs.py's _configure_graph_from_model()), not just the
@@ -57,6 +75,7 @@ def _plotted_graph(qapp, excel_df, plot_style="scatter", x="x0_Si", y=None, z="Q
         setattr(vg, key, value)
     vg.create_plot_widget(dpi=72)
     vg.plot(excel_df)
+    _active_test_widgets.append(vg)
     return vg
 
 

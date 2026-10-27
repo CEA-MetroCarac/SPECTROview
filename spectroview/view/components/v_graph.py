@@ -1647,9 +1647,12 @@ class VGraph(QWidget):
             except Exception:
                 pass
         if hasattr(self, "lbl_coordinates"):
-            if event.inaxes and event.xdata is not None and event.ydata is not None:
+            inaxes = getattr(event, "inaxes", None)
+            xdata = getattr(event, "xdata", None)
+            ydata = getattr(event, "ydata", None)
+            if inaxes and xdata is not None and ydata is not None:
                 try:
-                    coord_str = event.inaxes.format_coord(event.xdata, event.ydata)
+                    coord_str = inaxes.format_coord(xdata, ydata)
                     clean_str = " ".join(coord_str.split())
                     self.lbl_coordinates.setText(clean_str)
                     if hasattr(self.toolbar, "locLabel"):

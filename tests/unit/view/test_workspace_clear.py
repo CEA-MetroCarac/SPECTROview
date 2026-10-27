@@ -4,15 +4,27 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from spectroview.main import Main
+
+@pytest.fixture(scope="module")
+def _shared_clear_window(qapp):
+    import spectroview.main as main_mod
+    original_prewarm = getattr(main_mod.Main, "_prewarm_ai_chat", None)
+    main_mod.Main._prewarm_ai_chat = lambda self: None
+    window = main_mod.Main()
+    yield window
+    window.close()
+    if original_prewarm:
+        main_mod.Main._prewarm_ai_chat = original_prewarm
 
 
 @pytest.fixture
-def main_window(qapp, monkeypatch):
-    monkeypatch.setattr(Main, "_prewarm_ai_chat", lambda self: None)
-    window = Main()
-    yield window
-    window.close()
+def main_window(_shared_clear_window, qapp):
+    # Ensure all workspaces are clean before test starts
+    _shared_clear_window.v_spectra_workspace.clear_workspace()
+    _shared_clear_window.v_maps_workspace.clear_workspace()
+    _shared_clear_window.v_graphs_workspace.clear_workspace()
+    qapp.processEvents()
+    return _shared_clear_window
 
 
 def test_clear_spectra_workspace_clears_fit_results(main_window, qapp):

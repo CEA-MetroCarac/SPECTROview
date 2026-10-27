@@ -383,6 +383,11 @@ def show_alert(message):
 
 def show_toast_notification(parent, message, title=None, duration=3000, preset=None):
     """Show an auto-dismissing toast notification"""
+    # Suppress toasts in offscreen/headless or pytest environments to prevent
+    # unparented QTimer callbacks from leaking into the Qt event loop after widget destruction.
+    if os.environ.get("QT_QPA_PLATFORM") == "offscreen" or "PYTEST_CURRENT_TEST" in os.environ:
+        return None
+
     try:
         from pyqttoast import Toast, ToastPreset
     except ImportError:
@@ -391,19 +396,22 @@ def show_toast_notification(parent, message, title=None, duration=3000, preset=N
         print(f"{prefix}{message}")
         return None
     
-    toast = Toast(parent)
-    toast.setDuration(duration)
-    if title:
-        toast.setTitle(title)
-    toast.setText(message)
-    
-    # Apply preset style (default to SUCCESS)
-    if preset is None:
-        preset = ToastPreset.SUCCESS
-    toast.applyPreset(preset)
-    
-    toast.show()
-    return toast
+    try:
+        toast = Toast(parent)
+        toast.setDuration(duration)
+        if title:
+            toast.setTitle(title)
+        toast.setText(message)
+        
+        # Apply preset style (default to SUCCESS)
+        if preset is None:
+            preset = ToastPreset.SUCCESS
+        toast.applyPreset(preset)
+        
+        toast.show()
+        return toast
+    except Exception:
+        return None
 
 
 

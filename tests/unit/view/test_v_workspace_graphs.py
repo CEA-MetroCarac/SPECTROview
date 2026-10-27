@@ -1154,3 +1154,25 @@ class TestGraphToolbarUnifiedControls:
         assert widget.btn_pan.isChecked()
         widget.btn_pan.click()
         assert not widget.btn_pan.isChecked()
+
+    def test_2dmap_coordinates_show_z_value(self, ws, qapp):
+        """Hovering mouse over 2Dmap in Graphs workspace displays X, Y, and Z value."""
+        import numpy as np
+        import pandas as pd
+        from matplotlib.backend_bases import MouseEvent
+
+        x, y = np.meshgrid(np.linspace(-10, 10, 5), np.linspace(-10, 10, 5))
+        df = pd.DataFrame({'X': x.ravel(), 'Y': y.ravel(), 'Z': np.arange(25, dtype=float) + 100.0})
+        cfg = {'df_name': 'map_df', 'plot_style': '2Dmap', 'x': 'X', 'y': 'Y', 'z': 'Z'}
+        graph_model = ws.vm.create_graph(cfg)
+        widget = ws._build_graph_widget(graph_model, df, lambda e: None)
+
+        widget.canvas.draw()
+        x_disp, y_disp = widget.ax.transData.transform((0, 0))
+        ev = MouseEvent('motion_notify_event', widget.canvas, x_disp, y_disp)
+        widget.canvas.callbacks.process('motion_notify_event', ev)
+
+        text = widget.lbl_coordinates.text()
+        assert '(x, y)' in text
+        assert '[' in text and ']' in text
+        assert '112' in text or '100' in text

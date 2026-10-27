@@ -2228,7 +2228,18 @@ class VSpectraViewer(QWidget):
         self.canvas.draw_idle()
 
     def _update_coordinates(self, event):
-        """Update built-in live coordinate display label under the plot canvas."""
+        """Update built-in live coordinate display label under the plot canvas.
+
+        Uses toolbar._mouse_event_to_message when available so that any artist cursor
+        data is formatted and preserved along with the spatial (X, Y) coordinates.
+        """
+        if hasattr(self, "toolbar") and hasattr(self.toolbar, "_mouse_event_to_message"):
+            try:
+                msg = self.toolbar._mouse_event_to_message(event)
+                self.toolbar.set_message(msg)
+                return
+            except Exception:
+                pass
         if hasattr(self, "lbl_coordinates"):
             if event.inaxes and event.xdata is not None and event.ydata is not None:
                 try:

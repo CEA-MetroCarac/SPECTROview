@@ -507,7 +507,7 @@ mkdocs serve
 ```
 
 > [!NOTE]
-> For detailed developer and pair programming guidelines, refer to the [AI Development Framework (AGENTS.md)](../../AGENTS.md) and the test suite guide in [tests/README.md](../../tests/README.md).
+> For detailed developer and pair programming guidelines, refer to the [AI Development Framework (AGENTS.md)](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/AGENTS.md) and the test suite guide in [tests/README.md](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/tests/README.md).
 
 
 ---

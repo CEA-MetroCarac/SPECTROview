@@ -94,6 +94,8 @@ pip show spectroview
 
 > **Privacy Guarantee**: This check only sends a standard anonymous request to the public GitHub API to fetch the latest version number. **Absolutely no personal or usage data is collected or transmitted.**
 
+> **Security & TLS Verification**: Network operations use the operating system's native certificate trust store (`truststore`) or a patched certificate bundle (`certifi >= 2026.10.19`), ensuring immediate protection against compromised intermediate Certificate Authorities and connection spoofing.
+
 #### Banner actions
 
 | Button | Behaviour |

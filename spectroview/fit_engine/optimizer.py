@@ -48,7 +48,7 @@ def _batched_solve(A, b):
     # For Na > ~500 or K < ~10, np.linalg.solve's batched path is faster.
     if Na > 500 or K < 10:
         try:
-            return np.linalg.solve(A, b)
+            return np.linalg.solve(A, b[..., None])[..., 0]
         except np.linalg.LinAlgError:
             # Fall through to per-matrix solve
             pass

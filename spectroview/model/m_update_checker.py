@@ -50,7 +50,30 @@ def _parse_version(version_str: str) -> tuple[int, ...]:
 
 
 def _ssl_context():
-    """Use certifi when available, while keeping the stdlib-only fallback."""
+    """Build an SSL context using the OS trust store, certifi, or stdlib default.
+
+    Prioritises custom CA environment variables (``SSL_CERT_FILE`` /
+    ``REQUESTS_CA_BUNDLE``) if set. Otherwise prioritises the native OS
+    certificate store (via ``truststore``) so system-level CA revocations
+    apply immediately, with ``certifi`` and stdlib default as safe fallbacks.
+    """
+    ca_bundle = os.environ.get("SSL_CERT_FILE") or os.environ.get("REQUESTS_CA_BUNDLE")
+    if ca_bundle and os.path.isfile(ca_bundle):
+        try:
+            import ssl
+
+            return ssl.create_default_context(cafile=ca_bundle)
+        except Exception:
+            pass
+
+    try:
+        import ssl
+        import truststore
+
+        return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    except Exception:
+        pass
+
     try:
         import certifi
         import ssl

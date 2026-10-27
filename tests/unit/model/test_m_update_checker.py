@@ -10,6 +10,7 @@ from spectroview.model.m_update_checker import (
     UpdateCheckerWorker,
     _find_wheel_asset,
     _parse_version,
+    _ssl_context,
     _update_script_content,
     _wheel_filename_from_url,
 )
@@ -111,3 +112,71 @@ def test_update_helper_installs_the_wheel_and_relaunches_from_temp_directory():
     assert "cwd=tempfile.gettempdir()" in content
     assert 'restart_environment.pop("PYTHONPATH", None)' in content
     assert "wheel_path.parent.rmdir()" in content
+
+
+def test_ssl_context_returns_valid_context():
+    import ssl
+
+    ctx = _ssl_context()
+    assert ctx is not None
+    assert isinstance(ctx, ssl.SSLContext)
+
+
+def test_ssl_context_prioritises_env_ca_bundle(monkeypatch, tmp_path):
+    import ssl
+
+    dummy_ca = tmp_path / "custom_ca.pem"
+    dummy_ca.write_text("-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----", encoding="utf-8")
+    monkeypatch.setenv("SSL_CERT_FILE", str(dummy_ca))
+
+    calls = []
+    original_create = ssl.create_default_context
+
+    def fake_create_default_context(*args, **kwargs):
+        calls.append(kwargs)
+        return original_create(*args, **kwargs)
+
+    monkeypatch.setattr(ssl, "create_default_context", fake_create_default_context)
+
+    ctx = _ssl_context()
+    assert ctx is not None
+    assert any(c.get("cafile") == str(dummy_ca) for c in calls)
+
+
+def test_ssl_context_falls_back_to_certifi_when_truststore_fails(monkeypatch):
+    import builtins
+    import ssl
+
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "truststore":
+            raise ImportError("truststore not installed")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    monkeypatch.delenv("SSL_CERT_FILE", raising=False)
+    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
+
+    ctx = _ssl_context()
+    assert ctx is not None
+    assert isinstance(ctx, ssl.SSLContext)
+
+
+def test_ssl_context_returns_none_when_all_fail(monkeypatch):
+    import builtins
+
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name in ("truststore", "certifi"):
+            raise ImportError(f"{name} not available")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    monkeypatch.delenv("SSL_CERT_FILE", raising=False)
+    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
+
+    ctx = _ssl_context()
+    assert ctx is None
+

@@ -453,6 +453,7 @@ sequenceDiagram
 | **Release asset source** | GitHub provides the version, release notes, wheel URL, and integrity digest in one public API response; PyPI remains the normal package-install channel |
 | **Detached helper** | The helper waits for Qt to exit, installs with the launching interpreter, then clears `PYTHONPATH`/`PYTHONHOME` and restarts from a temporary working directory so a checkout cannot shadow the freshly installed package |
 | **Skip vs Dismiss** | *Skip* persists the exact tag — the banner re-appears for the next release. *Dismiss* hides only for the session |
+| **Secure TLS verification** | Release checks and downloads prioritise custom CA environment variables (`SSL_CERT_FILE` / `REQUESTS_CA_BUNDLE`), the native OS trust store (`truststore`), and patched `certifi>=2026.10.19` fallback to guard against compromised intermediate CAs and TLS interception |
 
 ### Adding / Modifying the Checker
 

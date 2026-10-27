@@ -662,10 +662,11 @@ class TestFigureStyle:
 
     def test_dark_theme_changes_background(self, vg, excel_df):
         import matplotlib.colors as mcolors
+        from spectroview.view.theme.tokens import DARK_TOKENS
         _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
         vg.figure_theme = "dark"
         vg.plot(excel_df)
-        assert mcolors.to_hex(vg.ax.get_facecolor()) == "#242424"
+        assert mcolors.to_hex(vg.ax.get_facecolor()) == DARK_TOKENS.surface.lower()
 
     def test_dark_theme_recolors_labels_ticks_and_spines(self, vg, excel_df):
         """Regression: ax.clear() doesn't retroactively repaint an Axes
@@ -697,9 +698,10 @@ class TestFigureStyle:
         not just at plot() time, since the mplstyle context governs figure-level
         rcParams (e.g. figure.facecolor) captured when the Figure is constructed."""
         import matplotlib.colors as mcolors
+        from spectroview.view.theme.tokens import DARK_TOKENS
         vg.figure_theme = "dark"
         vg.create_plot_widget(dpi=72)
-        assert mcolors.to_hex(vg.figure.get_facecolor()) == "#242424"
+        assert mcolors.to_hex(vg.figure.get_facecolor()) == DARK_TOKENS.surface.lower()
 
     def test_subtitle_renders_as_text_below_title(self, vg, excel_df):
         _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")

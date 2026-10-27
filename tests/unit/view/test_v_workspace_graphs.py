@@ -1083,3 +1083,64 @@ class TestKeyboardShortcuts:
         by_key["Ctrl+Shift+Z"].activated.emit()
 
         assert calls == ['undo', 'redo']
+
+
+class TestGraphToolbarUnifiedControls:
+    """Verify that VGraph toolbar buttons have unified 30x30 sizes, Customize uses the Edit icon,
+    and Customize + Copy are positioned at the very right side of the toolbar."""
+
+    def test_graph_toolbar_button_sizes_and_icons(self, ws, excel_df):
+        cfg = {'df_name': 'sheet1', 'plot_style': 'scatter', 'x': 'x0_Si', 'y': ['ampli_Si']}
+        graph_model = ws.vm.create_graph(cfg)
+        widget = ws._build_graph_widget(graph_model, excel_df, lambda e: None)
+
+        # Unified 30x30 button sizes
+        for btn in (
+            widget.btn_replicate,
+            widget.btn_export,
+            widget.btn_style_menu,
+            widget.btn_home,
+            widget.btn_pan,
+            widget.btn_zoom,
+            widget.btn_customize,
+            widget.btn_copy_figure,
+        ):
+            assert btn.width() == 30 and btn.height() == 30
+            assert btn.iconSize().width() == 22 and btn.iconSize().height() == 22
+
+        # Customize button icon uses edit icon (not gear)
+        assert widget.btn_customize.icon().name() == "edit"
+
+        # Check right-side layout order:
+        # Layout: Replicate, Export, Style, Stretch, Home, Pan, Zoom, Toolbar, Separator, Customize, Copy
+        layout = widget.toolbar_container.layout()
+        widgets = []
+        for i in range(layout.count()):
+            item = layout.itemAt(i)
+            if item.widget():
+                widgets.append(item.widget())
+
+        # Toolbar is next to navigation buttons, followed by separator, and Customize + Copy at the very right end
+        assert widgets[-4] is widget.toolbar
+        assert widgets[-2] is widget.btn_customize
+        assert widgets[-1] is widget.btn_copy_figure
+
+        # Matplotlib toolbar keeps Customize action visible (not hidden, like v_map_viewer)
+        actions = {a.text(): a for a in widget.toolbar.actions() if a.text()}
+        assert actions['Customize'].isVisible()
+
+    def test_navigation_buttons_interactivity(self, ws, excel_df, monkeypatch):
+        cfg = {'df_name': 'sheet1', 'plot_style': 'scatter', 'x': 'x0_Si', 'y': ['ampli_Si']}
+        graph_model = ws.vm.create_graph(cfg)
+        widget = ws._build_graph_widget(graph_model, excel_df, lambda e: None)
+
+        home_called = []
+        monkeypatch.setattr(widget.toolbar, 'home', lambda: home_called.append(True))
+        widget.btn_home.click()
+        assert len(home_called) == 1
+
+        # Pan and Zoom toggle
+        widget.btn_pan.click()
+        assert widget.btn_pan.isChecked()
+        widget.btn_pan.click()
+        assert not widget.btn_pan.isChecked()

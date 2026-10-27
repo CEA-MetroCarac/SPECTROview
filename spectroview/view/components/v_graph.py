@@ -13,7 +13,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PySide6.QtWidgets import (
     QVBoxLayout, QWidget, QPushButton, QHBoxLayout, QDialog, QToolButton, QMenu, QFrame,
-    QApplication,
+    QApplication, QSizePolicy,
 )
 from PySide6.QtCore import QObject, QEvent, QSize, Signal, QTimer, Qt
 from PySide6.QtGui import QAction
@@ -147,64 +147,81 @@ class VGraph(QWidget):
 
             def _update_icons(self):
                 try:
-                    action_dict = {action.text(): action for action in self.toolbar.actions() if action.text()}
+                    action_dict = {a.text(): a for a in self.toolbar.actions() if a.text()}
+                    for name, icon_file in _CUSTOM_TOOLBAR_ICONS.items():
+                        if name in action_dict:
+                            action_dict[name].setIcon(Icons.get(icon_file))
+                    if 'Home' in action_dict:
+                        action_dict['Home'].setToolTip("Rescale plot to fit data (Ctrl+R)")
+                    for action in self.toolbar.actions():
+                        if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
+                            action.setVisible(False)
                 except RuntimeError:
                     return  # toolbar's C++ object already deleted
-                for text, tooltip_text, image_file, name_of_method in self.toolbar.toolitems:
-                    if text not in action_dict:
-                        continue
-                    # Our custom icons are colorful and theme-independent, so
-                    # re-assert them here instead of re-tinting matplotlib's.
-                    if text in _CUSTOM_TOOLBAR_ICONS:
-                        action_dict[text].setIcon(Icons.get(_CUSTOM_TOOLBAR_ICONS[text]))
-                    elif image_file is not None:
-                        try:
-                            action_dict[text].setIcon(self.toolbar._icon(image_file + '.png'))
-                        except Exception:
-                            pass
 
         self.toolbar_filter = ToolbarEventFilter(self.toolbar)
         self.toolbar.installEventFilter(self.toolbar_filter)
 
-        self.toolbar.setIconSize(QSize(30, 30))  # Set larger icon size
+        # Configure custom action icons and hide redundant actions, leaving Customize (like v_map_viewer / v_spectra_viewer)
+        action_dict = {a.text(): a for a in self.toolbar.actions() if a.text()}
+        for name, icon_file in _CUSTOM_TOOLBAR_ICONS.items():
+            if name in action_dict:
+                action_dict[name].setIcon(Icons.get(icon_file))
+        if 'Home' in action_dict:
+            action_dict['Home'].setToolTip("Rescale plot to fit data (Ctrl+R)")
         for action in self.toolbar.actions():
-            text = action.text()
-            if text in ['Save', 'Back', 'Forward', 'Subplots', 'Customize']:
+            if action.text() in ['Home', 'Save', 'Pan', 'Back', 'Forward', 'Subplots', 'Zoom']:
                 action.setVisible(False)
-            elif text in _CUSTOM_TOOLBAR_ICONS:
-                action.setIcon(Icons.get(_CUSTOM_TOOLBAR_ICONS[text]))
-            if text == 'Home':
-                action.setToolTip("Rescale plot to fit data (Ctrl+R)")
-        
+
+        # Allow coordinate locLabel to expand smoothly next to navigation buttons
+        self.toolbar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.toolbar.setMinimumWidth(180)
+
+        # Dedicated navigation buttons (Home/Rescale, Pan/Drag, Zoom) matching 30x30 SPECTROview controls
+        self.btn_home = QPushButton()
+        self.btn_home.setIcon(Icons.rescale())
+        self.btn_home.setIconSize(QSize(22, 22))
+        self.btn_home.setFixedSize(30, 30)
+        self.btn_home.setToolTip("Rescale plot to fit data (Ctrl+R)")
+        self.btn_home.clicked.connect(self.toolbar.home)
+        self.btn_rescale = self.btn_home  # Alias matching v_spectra_viewer / v_map_viewer
+
+        self.btn_pan = QToolButton()
+        self.btn_pan.setCheckable(True)
+        self.btn_pan.setIcon(Icons.pan())
+        self.btn_pan.setIconSize(QSize(22, 22))
+        self.btn_pan.setFixedSize(30, 30)
+        self.btn_pan.setToolTip("Pan / Drag axes with left mouse, zoom with right")
+        self.btn_pan.clicked.connect(self.toolbar.pan)
+
+        self.btn_zoom = QToolButton()
+        self.btn_zoom.setCheckable(True)
+        self.btn_zoom.setIcon(Icons.zoom())
+        self.btn_zoom.setIconSize(QSize(22, 22))
+        self.btn_zoom.setFixedSize(30, 30)
+        self.btn_zoom.setToolTip("Zoom to rectangle")
+        self.btn_zoom.clicked.connect(self.toolbar.zoom)
+
+        # Bidirectional sync with matplotlib toolbar action checked states
+        action_dict = {a.text(): a for a in self.toolbar.actions() if a.text()}
+        if 'Pan' in action_dict:
+            action_dict['Pan'].toggled.connect(self.btn_pan.setChecked)
+        if 'Zoom' in action_dict:
+            action_dict['Zoom'].toggled.connect(self.btn_zoom.setChecked)
+
         # Create Replicate button
         self.btn_replicate = QPushButton()
         self.btn_replicate.setIcon(Icons.duplicate())
-        self.btn_replicate.setIconSize(QSize(26, 26))
+        self.btn_replicate.setIconSize(QSize(22, 22))
         self.btn_replicate.setFixedSize(30, 30)
         self.btn_replicate.setToolTip("Duplicate selected graph")
         self.btn_replicate.clicked.connect(lambda *args: self.replicate_requested.emit(self.graph_id))
-
-        # Create Customize button
-        self.btn_customize = QPushButton()
-        self.btn_customize.setIcon(Icons.settings())
-        self.btn_customize.setIconSize(QSize(26, 26))
-        self.btn_customize.setFixedSize(30, 30)
-        self.btn_customize.setToolTip("Customize graph (Ctrl + E)")
-        self.btn_customize.clicked.connect(lambda: self.customize_requested.emit(self.graph_id))
-
-        # Create Copy button
-        self.btn_copy_figure = QPushButton()
-        self.btn_copy_figure.setIcon(Icons.copy())
-        self.btn_copy_figure.setIconSize(QSize(26, 26))
-        self.btn_copy_figure.setFixedSize(30, 30)
-        self.btn_copy_figure.setToolTip("Copy selected figure to clipboard (Ctrl +C)")
-        self.btn_copy_figure.clicked.connect(self.copy_to_clipboard)
 
         # Create Export button
         # Click exports just this graph; Ctrl+Click exports every open graph.
         self.btn_export = QPushButton()
         self.btn_export.setIcon(Icons.export())
-        self.btn_export.setIconSize(QSize(26, 26))
+        self.btn_export.setIconSize(QSize(22, 22))
         self.btn_export.setFixedSize(30, 30)
         self.btn_export.setToolTip("Export selected graph to file. Hold Ctrl + Click to export all open graphs")
         self.btn_export.clicked.connect(self._on_export_clicked)
@@ -214,7 +231,7 @@ class VGraph(QWidget):
         self.btn_style_menu = QToolButton()
         self.btn_style_menu.setFixedSize(30, 30)
         self.btn_style_menu.setIcon(Icons.styling())
-        self.btn_style_menu.setIconSize(QSize(26, 26))
+        self.btn_style_menu.setIconSize(QSize(22, 22))
         self.btn_style_menu.setToolTip("Graph style: save/apply, copy/paste, reset, set default")
         self.btn_style_menu.setPopupMode(QToolButton.InstantPopup)
         style_menu = QMenu(self)
@@ -234,25 +251,52 @@ class VGraph(QWidget):
             style_menu.addAction(action)
         self.btn_style_menu.setMenu(style_menu)
 
-        # Create toolbar layout with customize and copy buttons
+        # Create Customize button (Editing icon instead of gear)
+        self.btn_customize = QPushButton()
+        self.btn_customize.setIcon(Icons.edit())
+        self.btn_customize.setIconSize(QSize(22, 22))
+        self.btn_customize.setFixedSize(30, 30)
+        self.btn_customize.setToolTip("Customize graph (Ctrl + E)")
+        self.btn_customize.clicked.connect(lambda: self.customize_requested.emit(self.graph_id))
+
+        # Create Copy button
+        self.btn_copy_figure = QPushButton()
+        self.btn_copy_figure.setIcon(Icons.copy())
+        self.btn_copy_figure.setIconSize(QSize(22, 22))
+        self.btn_copy_figure.setFixedSize(30, 30)
+        self.btn_copy_figure.setToolTip("Copy selected figure to clipboard (Ctrl + C)")
+        self.btn_copy_figure.clicked.connect(self.copy_to_clipboard)
+
+        # Create toolbar layout:
+        # Left: Replicate, Export, Style
+        # Stretch (center)
+        # Right: Home, Pan, Zoom, Separator, Customize, Copy, Coordinates
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
         toolbar_layout.setSpacing(8)
         toolbar_layout.addWidget(self.btn_replicate)
-        toolbar_layout.addWidget(self.btn_customize)
-        toolbar_layout.addWidget(self.btn_copy_figure)
         toolbar_layout.addWidget(self.btn_export)
         toolbar_layout.addWidget(self.btn_style_menu)
 
         toolbar_layout.addStretch()
 
-        # Vertical separator between our own action buttons and the matplotlib nav buttons
+        # Dedicated 30x30 navigation controls matching left buttons
+        toolbar_layout.addWidget(self.btn_home)
+        toolbar_layout.addWidget(self.btn_pan)
+        toolbar_layout.addWidget(self.btn_zoom)
+
+        # Matplotlib toolbar (Customize button + live coordinate locLabel)
+        toolbar_layout.addWidget(self.toolbar)
+
+        # Vertical separator between navigation/coordinates and edit/copy actions
         separator = QFrame()
         separator.setFrameShape(QFrame.VLine)
         separator.setFrameShadow(QFrame.Sunken)
         toolbar_layout.addWidget(separator)
 
-        toolbar_layout.addWidget(self.toolbar)
+        # Very right side: Customize Graph and Copy to clipboard
+        toolbar_layout.addWidget(self.btn_customize)
+        toolbar_layout.addWidget(self.btn_copy_figure)
         
         # Create container widget for toolbar layout -- kept parentless and
         # hidden here; VWorkspaceGraphs.sync_active_graph_toolbar() reparents

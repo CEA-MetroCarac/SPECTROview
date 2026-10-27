@@ -193,10 +193,10 @@ LEGACY_ICON_MAP: dict[str, str] = {
     "trendline.png": "graph_trendline",
     "styling": "styling",
     "styling.png": "styling",
-    "customize": "styling",
-    "customize.png": "styling",
-    "customize2": "styling",
-    "customize2.png": "styling",
+    "customize": "edit",
+    "customize.png": "edit",
+    "customize2": "edit",
+    "customize2.png": "edit",
     "legend": "legend",
     "legend.png": "legend",
     "zoom": "zoom",
@@ -346,6 +346,10 @@ class Icons:
 
     @classmethod
     def edit(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("edit", size=size, color=color)
+
+    @classmethod
+    def customize(cls, color: str | None = None, size: int = 16) -> QIcon:
         return svg_icon("edit", size=size, color=color)
 
     @classmethod

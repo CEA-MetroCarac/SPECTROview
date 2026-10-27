@@ -1,6 +1,6 @@
 ## **Installation**
 
-**SPECTROview** requires **Python 3.8 – 3.12** and runs on **Windows**, **macOS**, and **Linux**. It can be installed and managed entirely from your system's command-line interface (e.g., Command Prompt or PowerShell on Windows, or Terminal on macOS/Linux).
+**SPECTROview** requires **Python &ge; 3.12** (tested on Python 3.12, 3.13, and 3.14) and runs on **Windows**, **macOS**, and **Linux**. It can be installed and managed entirely from your system's command-line interface (e.g., Command Prompt or PowerShell on Windows, or Terminal on macOS/Linux).
 
 ---
 
@@ -148,7 +148,7 @@ pip show spectroview
 
     PySide6 is the GUI framework used by **SPECTROview**. If you encounter issues:
 
-    - **Ensure you are using Python 3.8 – 3.12**. PySide6 does not support Python 3.7 or older.
+    - **Ensure you are using Python &ge; 3.12**.
     - **On Linux**, you may need to install system-level Qt dependencies:
       ```bash
       sudo apt install libxcb-xinerama0 libxkbcommon-x11-0  # Ubuntu/Debian
@@ -173,7 +173,7 @@ pip show spectroview
 
 ??? question "**`numpy` or `matplotlib` version conflict errors**"
 
-    **SPECTROview** requires `numpy < 2.0.0` and `matplotlib >= 3.6.2, < 3.10.9`. If you see version conflict errors, try installing in a clean virtual environment:
+    **SPECTROview** requires `numpy >= 2.0.2` and `matplotlib >= 3.8.0, < 3.10.9`. If you see version conflict errors, try installing in a clean virtual environment:
 
     ```bash
     python -m venv spectroview_env

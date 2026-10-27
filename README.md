@@ -70,7 +70,7 @@
 
 ## 🚀 Quick Start
 
-**SPECTROview** requires Python 3.8 – 3.12.
+**SPECTROview** requires Python &ge; 3.12.
 
 **Install from PyPI:**
 ```bash

@@ -74,6 +74,28 @@ def _isolate_qsettings(tmp_path, monkeypatch):
     # MSettings. Route any new QSettings call site through it too.
     monkeypatch.setattr(m_settings_module, "QSettings", _isolated_qsettings, raising=False)
     monkeypatch.setattr(settings_m_settings, "QSettings", _isolated_qsettings, raising=False)
+
+    # Isolate keyring so tests never touch native OS credential store
+    try:
+        import keyring
+        import keyring.backend
+
+        class _InMemoryKeyring(keyring.backend.KeyringBackend):
+            priority = 10
+            def __init__(self):
+                self._storage = {}
+            def set_password(self, service, username, password):
+                self._storage[(service, username)] = str(password)
+            def get_password(self, service, username):
+                return self._storage.get((service, username))
+            def delete_password(self, service, username):
+                self._storage.pop((service, username), None)
+
+        test_keyring = _InMemoryKeyring()
+        keyring.set_keyring(test_keyring)
+    except Exception:
+        pass
+
     yield
 
 

@@ -10,6 +10,7 @@ class MConversation:
     def __init__(self, filepath: Optional[str] = None):
         self.id: str = str(uuid.uuid4())
         self.title: str = "New Conversation"
+        self.pinned: bool = False
         self.created_at: str = datetime.now().isoformat()
         self.modified_at: str = self.created_at
         self.messages: List[Dict[str, Any]] = []
@@ -52,10 +53,15 @@ class MConversation:
         self.title = new_title
         self.modified_at = datetime.now().isoformat()
 
+    def set_pinned(self, pinned: bool) -> None:
+        self.pinned = bool(pinned)
+        self.modified_at = datetime.now().isoformat()
+
     def duplicate(self) -> 'MConversation':
         """Create a deep copy with a new ID and timestamps."""
         new_conv = MConversation()
         new_conv.title = f"{self.title} (Copy)"
+        new_conv.pinned = False
         # Deep copy messages
         import copy
         new_conv.messages = copy.deepcopy(self.messages)
@@ -104,6 +110,7 @@ class MConversation:
         data = {
             "id": self.id,
             "title": self.title,
+            "pinned": self.pinned,
             "created_at": self.created_at,
             "modified_at": self.modified_at,
             "messages": self.messages
@@ -124,6 +131,7 @@ class MConversation:
                 
             self.id = data.get("id", self.id)
             self.title = data.get("title", self.title)
+            self.pinned = bool(data.get("pinned", False))
             self.created_at = data.get("created_at", self.created_at)
             self.modified_at = data.get("modified_at", self.modified_at)
             self.messages = data.get("messages", [])

@@ -7,13 +7,14 @@ from spectroview.ai_agent.m_conversation import MConversation
 
 class ConversationSummary:
     """Lightweight representation of a conversation for lists."""
-    def __init__(self, id: str, title: str, created_at: str, modified_at: str, message_count: int, filepath: str = ""):
+    def __init__(self, id: str, title: str, created_at: str, modified_at: str, message_count: int, filepath: str = "", pinned: bool = False):
         self.id = id
         self.title = title
         self.created_at = created_at
         self.modified_at = modified_at
         self.message_count = message_count
         self.filepath = filepath
+        self.pinned = pinned
 
 class MConversationStore:
     """Manages all conversations in the history folder."""
@@ -57,17 +58,18 @@ class MConversationStore:
                     created_at=data.get("created_at", ""),
                     modified_at=data.get("modified_at", ""),
                     message_count=len(data.get("messages", [])),
-                    filepath=filepath
+                    filepath=filepath,
+                    pinned=bool(data.get("pinned", False)),
                 )
                 self._index[conv_id] = summary
             except Exception as e:
                 print(f"Error scanning {filepath}: {e}")
 
     def list_conversations(self) -> List[ConversationSummary]:
-        """Returns summaries sorted by modified_at descending."""
+        """Returns summaries sorted by pinned descending, then modified_at descending."""
         summaries = list(self._index.values())
-        # Sort by modified_at desc, then created_at desc
-        summaries.sort(key=lambda s: (s.modified_at, s.created_at), reverse=True)
+        # Sort by pinned desc, then modified_at desc, then created_at desc
+        summaries.sort(key=lambda s: (s.pinned, s.modified_at or s.created_at, s.created_at), reverse=True)
         return summaries
 
     def get_summary(self, conv_id: str) -> Optional[ConversationSummary]:
@@ -113,6 +115,28 @@ class MConversationStore:
             print(f"Error deleting conversation {conv_id}: {e}")
             return False
 
+    def set_pinned(self, conv_id: str, pinned: bool) -> bool:
+        """Toggle or update pinned state of a conversation on disk and in index."""
+        conv = self.load_conversation(conv_id)
+        if not conv:
+            return False
+        conv.set_pinned(pinned)
+        conv.save(self.folder_path)
+        if conv_id in self._index:
+            self._index[conv_id].pinned = conv.pinned
+            self._index[conv_id].modified_at = conv.modified_at
+        return True
+
+    def delete_all(self, keep_pinned: bool = True) -> int:
+        """Delete all conversations, optionally preserving pinned ones. Returns count deleted."""
+        deleted = 0
+        for conv_id, summary in list(self._index.items()):
+            if keep_pinned and summary.pinned:
+                continue
+            if self.delete_conversation(conv_id):
+                deleted += 1
+        return deleted
+
     def create_conversation(self) -> MConversation:
         """Create a new blank conversation."""
         conv = MConversation()
@@ -126,7 +150,8 @@ class MConversationStore:
             created_at=conv.created_at,
             modified_at=conv.modified_at,
             message_count=0,
-            filepath=conv._filepath or ""
+            filepath=conv._filepath or "",
+            pinned=False,
         )
         return conv
 

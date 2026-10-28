@@ -24,7 +24,7 @@ warnings.filterwarnings("ignore", category=UserWarning, message=".*Glyph.*")
 
 import pandas as pd
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QFileDialog, QMessageBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QFileDialog, QMessageBox, QSplitter
 from PySide6.QtCore import Qt, QFileInfo, QUrl, QTimer
 from PySide6.QtGui import QDesktopServices
 
@@ -123,8 +123,12 @@ class Main(QMainWindow):
         self._update_banner = None
         self._update_download_worker = None
 
+        # Horizontal Splitter between Workspaces and Embedded AI Chat Panel
+        self.workspace_splitter = QSplitter(Qt.Horizontal, central)
+        self.workspace_splitter.setChildrenCollapsible(False)
+
         # Main Tab Widget
-        self.tabWidget = QTabWidget(central)
+        self.tabWidget = QTabWidget(self.workspace_splitter)
 
         self.v_spectra_workspace = VWorkspaceSpectra()
         self.v_graphs_workspace = VWorkspaceGraphs()
@@ -134,10 +138,12 @@ class Main(QMainWindow):
         self.tabWidget.addTab(self.v_maps_workspace, "Maps")
         self.tabWidget.addTab(self.v_graphs_workspace, "Graphs")
         
+        self.workspace_splitter.addWidget(self.tabWidget)
+
         # Enable Drag & Drop
         self.setAcceptDrops(True)
 
-        layout.addWidget(self.tabWidget)
+        layout.addWidget(self.workspace_splitter)
         self.setCentralWidget(central)
 
         # Toolbar
@@ -498,7 +504,7 @@ class Main(QMainWindow):
         self._quick_calc_dlg.activateWindow()
 
     def _ensure_chat_panel(self) -> bool:
-        """Create and wire the chat panel if not already created."""
+        """Create and wire the embedded chat panel if not already created."""
         if self._chat_panel is not None:
             return True
         try:
@@ -510,6 +516,16 @@ class Main(QMainWindow):
 
         self._chat_panel = VChatPanel(self)
         self._chat_panel.plot_requested.connect(self._on_chat_plot_requested)
+        self.workspace_splitter.addWidget(self._chat_panel)
+        self._chat_panel.hide()
+
+        def _on_splitter_moved(pos, index):
+            if self._chat_panel is not None and self._chat_panel.isVisible():
+                sizes = self.workspace_splitter.sizes()
+                if len(sizes) >= 2 and sizes[1] > 100:
+                    self._chat_panel_width = sizes[1]
+
+        self.workspace_splitter.splitterMoved.connect(_on_splitter_moved)
 
         # Keep chat panel in sync with workspace dataframes
         def sync_chat_dfs_full(*args):
@@ -543,12 +559,10 @@ class Main(QMainWindow):
             pass
 
     def open_ai_chat(self):
-        """Open (or raise) the SPECTROview AI Agent panel.
+        """Open (or toggle) the embedded SPECTROview AI Agent panel on the far right.
 
         The panel is created lazily on first use (or pre-warmed during idle)
-        and then kept alive so the conversation history is preserved across
-        multiple open/close cycles. The active DataFrame from the Graphs
-        workspace is injected each time the panel is shown.
+        and embedded directly alongside the main workspace tab widget.
         """
         if not self._ensure_chat_panel():
             QMessageBox.information(
@@ -562,7 +576,7 @@ class Main(QMainWindow):
             return
 
         # Toggle: clicking the toolbar button again while the panel is
-        # already open closes it, instead of just re-focusing it.
+        # already open closes it.
         if self._chat_panel.isVisible():
             self._chat_panel.hide()
             return
@@ -574,8 +588,11 @@ class Main(QMainWindow):
         self._chat_panel.vm.set_graphs(vm_graphs.graphs)
 
         self._chat_panel.show()
-        self._chat_panel.raise_()
-        self._chat_panel.activateWindow()
+        total_w = self.workspace_splitter.width()
+        chat_w = getattr(self, "_chat_panel_width", 420)
+        if total_w > 600:
+            chat_w = max(340, min(chat_w, int(total_w * 0.4)))
+            self.workspace_splitter.setSizes([total_w - chat_w, chat_w])
 
     def _on_chat_plot_requested(self, plot_config: dict):
         """Apply the AI-suggested plot configuration or graph update to the Graphs workspace.

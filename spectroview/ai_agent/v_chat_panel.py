@@ -294,26 +294,25 @@ class _StatusWorker(QThread):
         self.status_ready.emit(self.provider_key, available, models)
 
 
-class VChatPanel(QDialog):
-    """Floating AI Chat panel — opened from the toolbar button.
+class VChatPanel(QWidget):
+    """Embedded AI Chat panel — positioned on the far right of the main workspace.
 
     Signals
     -------
     plot_requested(dict)
         Emitted when the AI suggests a plot.  The dict contains keys
         compatible with ``VWorkspaceGraphs`` plot configuration.
+    close_requested()
+        Emitted when the user collapses/closes the embedded chat panel.
     """
 
     plot_requested = Signal(dict)
+    close_requested = Signal()
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("SPECTROview AI Agent")
-        self.setWindowFlags(
-            Qt.Dialog | Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint
-        )
-        self.setMinimumSize(400, 500)
-        self.resize(450, 740)
+        self.setMinimumWidth(320)
 
         self.vm = VMChat(self)
         self._settings = MSettings()
@@ -443,11 +442,23 @@ class VChatPanel(QDialog):
         self.btn_clear.setFixedSize(30, 30)
         self.btn_clear.setToolTip("Clear Chat")
 
-        for btn in (self.btn_history, self.btn_new_chat, self.btn_clear):
+        self.btn_close = QPushButton("")
+        self.btn_close.setObjectName("btn_close_panel")
+        self.btn_close.setIcon(Icons.close(size=16))
+        self.btn_close.setIconSize(QSize(16, 16))
+        self.btn_close.setFixedSize(30, 30)
+        self.btn_close.setToolTip("Close AI Agent panel")
+        self.btn_close.clicked.connect(self._on_close_clicked)
+
+        for btn in (self.btn_history, self.btn_new_chat, self.btn_clear, self.btn_close):
             btn.setCursor(Qt.PointingHandCursor)
             main_layout.addWidget(btn)
 
         return header
+
+    def _on_close_clicked(self) -> None:
+        self.hide()
+        self.close_requested.emit()
 
     def _make_reply_preview(self) -> QFrame:
         frame = QFrame()

@@ -58,14 +58,6 @@ class VMenuBar(QToolBar):
         self.actionCalc.triggered.connect(self.calc_requested.emit)
 
         self.addSeparator()
-        self.actionAIChat = self.addAction(Icons.sparkles(size=22), "SPECTROview AI Agent")
-        self.actionAIChat.setShortcut("Ctrl+Shift+A")
-        self.actionAIChat.setToolTip(
-            "Open SPECTROview AI Agent (Ctrl + Shift+ A)\n"
-            "Query your fit results using natural language and get instant answers.\n"
-        )
-        self.actionAIChat.triggered.connect(self.ai_chat_requested.emit)
-
         self.actionSettings= self.addAction(Icons.settings(size=22), "Settings")
         self.actionSettings.setShortcut("Ctrl+Shift+S")
         self.actionSettings.triggered.connect(self.settings_requested.emit)
@@ -74,6 +66,15 @@ class VMenuBar(QToolBar):
         spacer = QWidget(self)
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.addWidget(spacer)
+
+        # ----- SPECTROview AI Agent -----
+        self.actionAIChat = self.addAction(Icons.sparkles(size=22), "SPECTROview AI Agent")
+        self.actionAIChat.setShortcut("Ctrl+Shift+A")
+        self.actionAIChat.setToolTip(
+            "Toggle SPECTROview AI Agent (Ctrl+Shift+A)\n"
+            "Query your fit results using natural language and get instant answers.\n"
+        )
+        self.actionAIChat.triggered.connect(self.ai_chat_requested.emit)
 
         # ----- Check for updates -----
         self.actionCheckUpdate = self.addAction(Icons.check_update(size=22), "Check for updates")

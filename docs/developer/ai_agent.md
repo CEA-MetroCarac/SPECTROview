@@ -197,8 +197,8 @@ spectroview/ai_agent/
 │   └── config.py            # servers.yaml -> validated ServerSpec list
 ├── m_prompt_manager.py      # Prompt caching and assembly: loads and merges the Markdown fragments
 ├── vm_chat.py               # ViewModel: prompt-tier selection, small-model detection, request tuning, agentic loop
-├── v_chat_panel.py          # View: floating chat dialog (QDialog), incl. the Auto/Full/Simplified selector
-└── v_history_dialog.py      # View: history browser dialog (QDialog)
+├── v_chat_panel.py          # View: embedded chat panel (QWidget) beside workspace tabs, incl. Auto/Full/Simplified selector
+└── v_history_dialog.py      # View: history browser dialog (QDialog) with timestamps, pinning, search, and batch delete
 ```
 
 ### **File Roles**
@@ -616,18 +616,16 @@ Queued commands are normalized **once**, in `VMChat._commands_to_configs()`, bef
 
 ## **Toolbar Entry Point**
 
-The AI Chat button is added to the main toolbar in `VMenuBar`:
+The AI Chat toggle action is added to the main toolbar in `VMenuBar` on the right side immediately before the Update Check button:
 
 ```python
 # v_menubar.py
-self.actionAIChat = self.addAction(
-    QIcon(os.path.join(ICON_DIR, "llm_ai.png")),
-    "AI Data Chat"
-)
+self.actionAIChat = self.addAction(Icons.sparkles(size=22), "SPECTROview AI Agent")
+self.actionAIChat.setShortcut("Ctrl+Shift+A")
 self.actionAIChat.triggered.connect(self.ai_chat_requested.emit)
 ```
 
-The `ai_chat_requested` signal is connected to `Main.open_ai_chat()` in `setup_connections()`.
+The `ai_chat_requested` signal is connected to `Main.open_ai_chat()` in `setup_connections()`, which toggles the visibility of `VChatPanel` embedded directly in `Main.workspace_splitter` on the far right side of the main workspace tabs.
 
 ---
 

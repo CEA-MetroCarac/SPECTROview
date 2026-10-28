@@ -13,10 +13,12 @@ The **SPECTROview AI Agent** is a built-in AI assistant that lets you query, fil
 
 ### **1. Opening the AI Chat Agent**
 
-You can open the AI Chat panel in two ways:
+You can toggle the embedded AI Chat panel in two ways:
 
-- Click the **AI Chat Agent** button in the top menu bar.
+- Click the **AI Chat Agent** button on the right side of the top menu bar (placed right before **Check for updates**).
 - Use the keyboard shortcut **`Ctrl + Shift + A`**.
+
+The panel is embedded directly on the far right side of the main GUI, next to the workspace tab widget (Spectra, Maps, Graphs). You can drag the splitter handle to adjust its width freely, or click the close button (`✕`) in the panel header to hide it and give full width back to the workspaces.
 
 ---
 
@@ -62,11 +64,19 @@ Small local models (roughly under ~10 billion parameters — such as `qwen2.5:7b
 
 The chat interface features an intuitive, unified layout:
 
-- **Top Header Bar**: A clean, single-row header bar containing the editable **Conversation Title** on the left (takes available width) and quick-action icon buttons on the right: **Chat History**, **New Chat**, and **Clear Chat**.
+- **Top Header Bar**: A clean, single-row header bar containing the editable **Conversation Title** on the left (takes available width) and quick-action icon buttons on the right: **Chat History**, **New Chat**, **Clear Chat**, and **Close Panel (`✕`)**.
 - **Conversation Thread**: Displays color-coded message cards (User, AI replies with formatted Markdown/tables/equations, and error alerts).
 - **Embedded Composer Card**: A rounded composer box at the bottom containing:
   - An auto-expanding multi-line text input (press `Enter` to send, `Shift + Enter` for new lines).
   - An embedded bottom toolbar hosting the **AI Provider selector**, **Model selector**, **Refresh button**, **Voice dictation mic (`🎤`)**, and **Send ▶ / Stop ■ button**.
+
+#### **Conversation History Dialog**
+Clicking the **Chat History** icon button opens a management dialog inspired by PLUME:
+- **Search filter**: Real-time text search across conversation titles.
+- **Section organization**: Pinned conversations are organized at the top under a **PINNED** section; others are grouped chronologically (**TODAY**, **YESTERDAY**, **THIS WEEK**, **OLDER**).
+- **Exact Timestamps & Message Counts**: Each conversation card displays precise timestamping (`YYYY-MM-DD HH:MM:SS`) and message counts.
+- **Actions**: Pin/Unpin, Rename, Duplicate, and Delete conversations via dedicated row action buttons or right-click context menu.
+- **Safe Delete All**: The **Delete All** button cleans up unpinned conversations while safely keeping pinned items.
 
 The chat panel shows messages in chronological order with clear color-coded bubbles:
 

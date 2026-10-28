@@ -599,5 +599,9 @@ class Icons:
         return svg_icon("history", size=size, color=color)
 
     @classmethod
+    def pin(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("pin", size=size, color=color)
+
+    @classmethod
     def notification(cls, color: str | None = None, size: int = 16) -> QIcon:
         return svg_icon("bell", size=size, color=color)

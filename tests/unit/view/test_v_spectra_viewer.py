@@ -555,3 +555,10 @@ def test_built_in_live_coordinates_displayed_and_toolbar_hidden(viewer):
     assert viewer.lbl_coordinates.text() == ""
 
 
+def test_x_axis_unit_options_include_energy_kev(viewer):
+    """Verify that 'Energy (keV)' is included in X-axis unit dropdown options."""
+    items = [viewer.cbb_xaxis.itemText(i) for i in range(viewer.cbb_xaxis.count())]
+    assert "Energy (keV)" in items
+
+
+

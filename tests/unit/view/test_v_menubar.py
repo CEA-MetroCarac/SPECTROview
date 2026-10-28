@@ -60,3 +60,14 @@ def test_v_menubar_theme_icon_switching(qtbot):
 
     menubar.apply_theme("dark")
     assert menubar.actionTheme.icon().name() == "moon"
+
+
+def test_v_menubar_aichat_position(qtbot):
+    """Verify that actionAIChat is positioned on the right side just before actionCheckUpdate."""
+    menubar = VMenuBar()
+    qtbot.addWidget(menubar)
+    actions = menubar.actions()
+    idx_ai = actions.index(menubar.actionAIChat)
+    idx_update = actions.index(menubar.actionCheckUpdate)
+    assert idx_ai == idx_update - 1
+

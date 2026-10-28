@@ -70,6 +70,10 @@ class AISettingsTabPage(QWidget):
         api_layout.setContentsMargins(8, 8, 8, 8)
         api_layout.setSpacing(6)
 
+        lbl_vault_note = QLabel("🔒 API keys are securely stored in the system credential vault and excluded from config backups.")
+        lbl_vault_note.setStyleSheet("color: gray; font-size: 11px; font-style: italic; margin-bottom: 4px;")
+        api_layout.addWidget(lbl_vault_note)
+
         def add_api_row(
             box_layout: QVBoxLayout,
             label: str,

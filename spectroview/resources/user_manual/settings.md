@@ -35,11 +35,13 @@ Specify a single universal root folder for all of SPECTROview's templates, recip
 | `plot_style/` | Style Templates — saved appearance-only styles that can be applied to any existing graph. |
 | `ai_chat_history/` | AI chat conversation logs (JSON). Conversations are automatically saved here. |
 | `template/` | General plot templates and workspace templates. |
-| `config.json` | Portable configuration backup. Application settings are mirrored to this JSON file. |
+| `config.json` | Portable configuration backup. Non-secret application settings are mirrored to this JSON file. |
 
 - Click **Browse** to select a folder, or type the path directly.
 - Click **Open** to open the configured folder directly in **Windows Explorer** or **macOS Finder** with one click.
 
+> **Credential Security**: AI provider API keys entered in Settings are securely stored in the operating system credential vault (**Windows Credential Manager** via `keyring`) and are strictly excluded from `config.json` backups. This prevents sensitive credentials from being leaked if you share or commit your working directory.
+>
 > **Backup & PC Migration**: If you move to a new PC or want to make a backup, simply copy this single Working Folder to the new PC. In SPECTROview's Settings panel on the new machine, point the **SPECTROview Working Folder** to that folder: all fit models, plot recipes, style templates, AI chat history, and configuration (`config.json`) will be restored automatically!
 >
 > You can also use the **Export Config...** and **Restore Config...** buttons at any time to export or restore settings to/from a standalone JSON file.

@@ -15,6 +15,8 @@ class MSettings:
 
     def __init__(self):
         self.settings = QSettings("CEA-Leti", "SPECTROview")
+        from spectroview.settings.secrets import SecretStore
+        self._secrets = SecretStore()
         self._is_importing = False
         self._batch_saving = False
         self._migrate_legacy_ai_settings()
@@ -180,11 +182,16 @@ class MSettings:
 
     # ---------- Portable JSON Configuration (Backup & Restore) ----------
     def get_config_dict(self) -> dict:
-        """Assemble persistent application configuration into a dictionary."""
+        """Assemble persistent application configuration into a dictionary.
+
+        Note: API keys and secret credentials are intentionally excluded and stored
+        exclusively in the OS credential vault (keyring / Windows Credential Manager)
+        to prevent accidental cleartext leakage in backups and shared directories.
+        """
         ai_data = {}
         self.settings.beginGroup(self.AI_GROUP)
         for k in self.settings.allKeys():
-            if not k.startswith("_") and k != "history_folder":
+            if not k.startswith("_") and k != "history_folder" and not k.startswith("api_key_"):
                 ai_data[k] = self.settings.value(k)
         self.settings.endGroup()
 
@@ -200,7 +207,7 @@ class MSettings:
         }
 
     def apply_config_dict(self, data: dict) -> None:
-        """Apply a configuration dictionary into QSettings."""
+        """Apply a configuration dictionary into QSettings / SecretStore."""
         if not isinstance(data, dict):
             return
 
@@ -232,7 +239,10 @@ class MSettings:
             if "ai_settings" in data and isinstance(data["ai_settings"], dict):
                 for k, v in data["ai_settings"].items():
                     if not k.startswith("_") and k != "history_folder":
-                        self.set_ai_value(k, v)
+                        if k.startswith("api_key_") and v:
+                            self._secrets.set_api_key(k, str(v))
+                        else:
+                            self.set_ai_value(k, v)
         finally:
             self._is_importing = False
 
@@ -394,23 +404,42 @@ class MSettings:
     )
 
     def _migrate_legacy_ai_settings(self):
-        """Copy the old QSettings("SPECTROview", "AIChat") values over once."""
+        """Copy the old QSettings("SPECTROview", "AIChat") values over once, moving API keys to SecretStore."""
         if self.settings.value(self._AI_MIGRATED_KEY, False, bool):
             return
 
         legacy = QSettings(*self._LEGACY_AI_STORE)
         legacy.beginGroup(self.AI_GROUP)
         for key in legacy.allKeys():
-            target = f"{self.AI_GROUP}/{key}"
-            if not self.settings.contains(target):
-                self.settings.setValue(target, legacy.value(key))
+            val = legacy.value(key)
+            if key.startswith("api_key_") and val:
+                self._secrets.set_api_key(key, str(val))
+            else:
+                target = f"{self.AI_GROUP}/{key}"
+                if not self.settings.contains(target):
+                    self.settings.setValue(target, val)
         legacy.endGroup()
+
+        # Also migrate any existing api_key in current QSettings to SecretStore
+        for key in self.AI_SETTING_KEYS:
+            if key.startswith("api_key_"):
+                target = f"{self.AI_GROUP}/{key}"
+                if self.settings.contains(target):
+                    val = str(self.settings.value(target, ""))
+                    if val:
+                        self._secrets.set_api_key(key, val)
+                    self.settings.remove(target)
 
         self.settings.setValue(self._AI_MIGRATED_KEY, True)
         self.settings.sync()
 
     def get_ai_value(self, key: str, default=None, value_type=None):
         """Read one ``ai_chat/<key>`` setting."""
+        if key.startswith("api_key_"):
+            val = self._secrets.get_api_key(key)
+            if val:
+                return val
+            return default if default is not None else ""
         path = f"{self.AI_GROUP}/{key}"
         if value_type is not None:
             return self.settings.value(path, default, value_type)
@@ -418,6 +447,9 @@ class MSettings:
 
     def set_ai_value(self, key: str, value):
         """Write one ``ai_chat/<key>`` setting."""
+        if key.startswith("api_key_"):
+            self._secrets.set_api_key(key, str(value) if value else "")
+            return
         self.settings.setValue(f"{self.AI_GROUP}/{key}", value)
         self.settings.sync()
         if not getattr(self, "_batch_saving", False):

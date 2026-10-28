@@ -248,10 +248,16 @@ class TestPortableConfiguration:
         assert saved_file == export_path
         assert (tmp_path / "my_backup.json").is_file()
 
+        # Verify that secret API keys are NOT stored in the JSON backup
+        with open(export_path, "r", encoding="utf-8") as f:
+            backup_content = f.read()
+        assert "my-custom-key" not in backup_content
+        assert "api_key_Custom" not in backup_content
+        assert "https://api.test/v1" in backup_content
+
         # Reset / mutate settings
         settings.save_fit_settings({"max_ite": 100, "fit_negative": False})
         settings.set_theme("dark")
-        settings.save_ai_settings({"api_key_Custom": ""})
 
         # Import backup
         success = settings.import_config(export_path)
@@ -264,8 +270,25 @@ class TestPortableConfiguration:
         assert settings.get_theme() == "light"
         assert settings.get_default_graph_style() == {"grid": True, "title_fontsize": 18}
         ai = settings.load_ai_settings()
-        assert ai["api_key_Custom"] == "my-custom-key"
         assert ai["custom_base_url"] == "https://api.test/v1"
+
+    def test_api_keys_never_written_to_config_json(self, settings, tmp_path):
+        """Verify API keys are never stored in cleartext JSON files."""
+        settings.save_ai_settings({
+            "api_key_OpenAI": "sk-secret-open-ai",
+            "api_key_Gemini": "AIza-secret-gemini",
+            "custom_base_url": "https://api.test/v1",
+        })
+        export_file = str(tmp_path / "config.json")
+        settings.export_config(export_file)
+
+        with open(export_file, "r", encoding="utf-8") as f:
+            content = f.read()
+        assert "sk-secret-open-ai" not in content
+        assert "AIza-secret-gemini" not in content
+        assert "api_key_OpenAI" not in content
+        assert "api_key_Gemini" not in content
+        assert "https://api.test/v1" in content
 
     def test_transfer_folder_to_new_pc_restores_everything(self, settings, tmp_path):
         """Simulate copying the working folder from PC A to PC B."""
@@ -273,9 +296,16 @@ class TestPortableConfiguration:
         pc_a_folder = tmp_path / "pc_a_working"
         settings.set_working_folder(str(pc_a_folder))
         settings.save_fit_settings({"max_ite": 888, "loss": "huber"})
-        settings.save_ai_settings({"api_key_Gemini": "AIza-secret-123"})
+        settings.save_ai_settings({"api_key_Gemini": "AIza-secret-123", "custom_base_url": "https://pc-a.local/v1"})
         # Working folder now has config.json, fit_model, plot_recipe, plot_style, ai_chat_history
         assert (pc_a_folder / "config.json").is_file()
+
+        # Ensure API key is NOT written to config.json
+        with open(pc_a_folder / "config.json", "r", encoding="utf-8") as f:
+            cfg_text = f.read()
+        assert "AIza-secret-123" not in cfg_text
+        assert "api_key_Gemini" not in cfg_text
+        assert "https://pc-a.local/v1" in cfg_text
 
         # 2. Simulate copying the whole folder to PC B at a completely different path
         import shutil
@@ -289,12 +319,12 @@ class TestPortableConfiguration:
         fresh_settings.save_fit_settings({"max_ite": 200, "loss": "linear"})
         fresh_settings.set_working_folder(str(pc_b_folder))
 
-        # 4. Verify everything is restored
+        # 4. Verify configuration is restored (excluding machine-local secrets)
         loaded_fit = fresh_settings.load_fit_settings()
         assert loaded_fit["max_ite"] == 888
         assert loaded_fit["loss"] == "huber"
         loaded_ai = fresh_settings.load_ai_settings()
-        assert loaded_ai["api_key_Gemini"] == "AIza-secret-123"
+        assert loaded_ai["custom_base_url"] == "https://pc-a.local/v1"
 
         # 5. Verify all subfolder getters now point to PC B's folder (not PC A)
         assert fresh_settings.get_working_folder() == str(pc_b_folder)

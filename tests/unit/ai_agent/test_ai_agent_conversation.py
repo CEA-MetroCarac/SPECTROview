@@ -104,6 +104,42 @@ class TestToolCallMessageShape:
         assert tool_msg["tool_call_id"] == "c1"
 
 
+class TestConversationPinningAndHistory:
+    def test_pinned_round_trip_and_summary(self, tmp_path):
+        from spectroview.ai_agent.m_conversation_store import MConversationStore
+
+        store = MConversationStore(str(tmp_path))
+        conv1 = store.create_conversation()
+        conv1.add_message("user", "Hello world")
+        conv1.save(str(tmp_path))
+
+        conv2 = store.create_conversation()
+        conv2.add_message("user", "Important analysis")
+        conv2.save(str(tmp_path))
+
+        # Initially unpinned
+        store.scan_folder()
+        assert not store.get_summary(conv1.id).pinned
+        assert not store.get_summary(conv2.id).pinned
+
+        # Pin conv2
+        store.set_pinned(conv2.id, True)
+        summaries = store.list_conversations()
+        assert summaries[0].id == conv2.id
+        assert summaries[0].pinned is True
+        assert summaries[1].pinned is False
+
+        # Reload from disk
+        reloaded_conv2 = store.load_conversation(conv2.id)
+        assert reloaded_conv2.pinned is True
+
+        # Test delete_all with keep_pinned=True
+        store.delete_all(keep_pinned=True)
+        assert store.get_summary(conv2.id) is not None
+        assert store.get_summary(conv1.id) is None
+
+
+
 class TestReplyContext:
     def test_reply_prefix_is_injected(self):
         conv = MConversation()

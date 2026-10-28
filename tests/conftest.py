@@ -62,6 +62,7 @@ def _isolate_qsettings(tmp_path, monkeypatch):
     QSettings.setPath(QSettings.IniFormat, QSettings.SystemScope, str(ini_dir))
 
     import spectroview.model.m_settings as m_settings_module
+    import spectroview.settings.m_settings as settings_m_settings
 
     def _isolated_qsettings(organization, application, *args, **kwargs):
         return QSettings(QSettings.IniFormat, QSettings.UserScope, organization, application)
@@ -71,7 +72,8 @@ def _isolate_qsettings(tmp_path, monkeypatch):
     # QSettings("SPECTROview", "AIChat") pair that escaped this fixture and
     # read/wrote the developer's real configuration -- now goes through
     # MSettings. Route any new QSettings call site through it too.
-    monkeypatch.setattr(m_settings_module, "QSettings", _isolated_qsettings)
+    monkeypatch.setattr(m_settings_module, "QSettings", _isolated_qsettings, raising=False)
+    monkeypatch.setattr(settings_m_settings, "QSettings", _isolated_qsettings, raising=False)
     yield
 
 

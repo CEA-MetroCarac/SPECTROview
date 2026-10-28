@@ -30,7 +30,7 @@ from PySide6.QtGui import QDesktopServices
 
 from spectroview.model.m_file_converter import MFileConverter
 from spectroview.model.m_spc import SpcReader
-from spectroview.model.m_settings import MSettings
+from spectroview.settings import MSettings, VMSettings, VSettingsDialog
 from spectroview.model.m_update_checker import (
     UpdateCheckerWorker,
     UpdateDownloadWorker,
@@ -39,9 +39,7 @@ from spectroview.model.m_update_checker import (
     install_update_and_restart,
 )
 
-from spectroview.viewmodel.vm_settings import VMSettings
 
-from spectroview.view.components.v_settings import VSettingsDialog
 from spectroview.view.components.v_about import VAboutDialog
 from spectroview.view.components.v_update_banner import VUpdateBanner
 from spectroview.view.components.v_quick_calculators import MQuickCalc
@@ -426,10 +424,13 @@ class Main(QMainWindow):
         else:
             QMessageBox.warning(self, "No Tab Selected", "Nothing to clear.")
 
-    def _open_settings(self):
-        """   Open settings dialog. """
+    def _open_settings(self, section: str = "general"):
+        """Open settings dialog, optionally selecting a specific section."""
+        if not isinstance(section, str):
+            section = "general"
         vm = VMSettings()
         dlg = VSettingsDialog(vm, self)
+        dlg.select_section(section)
         if dlg.exec():
             # Refresh viewers to reflect settings changes (e.g. coef_noise)
             if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):
@@ -652,9 +653,8 @@ class Main(QMainWindow):
             self.v_graphs_workspace.vm.notify.emit(f"AI graph deletion failed: {exc}")
 
     def about(self):
-        """Show About dialog."""
-        dlg = VAboutDialog(self)
-        dlg.exec()
+        """Show About section within the Settings dialog."""
+        self._open_settings(section="about")
 
     def manual(self):
         """Open integrated user manual MD viewer or web documentation."""

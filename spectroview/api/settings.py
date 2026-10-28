@@ -1,6 +1,6 @@
 """Headless access to SPECTROview's persistent configuration.
 
-Backed by `spectroview.model.m_settings.MSettings`, which stores values in
+Backed by `spectroview.settings.MSettings`, which stores values in
 Qt's `QSettings` (native OS-backed store: plist on macOS, registry on
 Windows, INI on Linux). Constructing `MSettings()` never requires a running
 `QApplication` event loop — only `PySide6.QtCore` importable, which is
@@ -9,7 +9,7 @@ already a hard dependency of the `spectroview` package.
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
-from spectroview.model.m_settings import MSettings
+from spectroview.settings import MSettings
 
 
 def get_fit_defaults() -> Dict[str, Any]:

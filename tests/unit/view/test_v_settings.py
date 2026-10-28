@@ -140,3 +140,105 @@ class TestUnifiedWorkingFolderUI:
         dialog._on_import_config()
         assert len(info_called) == 1
         assert "restored successfully" in info_called[0]
+
+
+class TestTwoPanelNavigationAndSearch:
+    def test_sidebar_contains_all_four_sections(self, qapp):
+        dialog = _dialog(qapp)
+        assert dialog._nav_list.count() == 4
+        items = [dialog._nav_list.item(i).text() for i in range(4)]
+        assert items == ["General", "Fit Settings", "AI Settings", "About"]
+
+    def test_search_filters_navigation_items(self, qapp):
+        dialog = _dialog(qapp)
+        # Search for "tolerance" -> only "Fit Settings" matches
+        dialog._search_edit.setText("tolerance")
+        assert dialog._nav_list.item(0).isHidden() is True
+        assert dialog._nav_list.item(1).isHidden() is False
+        assert dialog._nav_list.item(2).isHidden() is True
+        assert dialog._nav_list.item(3).isHidden() is True
+        assert dialog._stack.currentIndex() == 1
+
+        # Search for "mcp" -> only "AI Settings" matches
+        dialog._search_edit.setText("mcp")
+        assert dialog._nav_list.item(1).isHidden() is True
+        assert dialog._nav_list.item(2).isHidden() is False
+        assert dialog._stack.currentIndex() == 2
+
+        # Search for "citation" -> only "About" matches
+        dialog._search_edit.setText("citation")
+        assert dialog._nav_list.item(2).isHidden() is True
+        assert dialog._nav_list.item(3).isHidden() is False
+        assert dialog._stack.currentIndex() == 3
+
+        # Clear search -> all visible
+        dialog._search_edit.setText("")
+        for i in range(4):
+            assert dialog._nav_list.item(i).isHidden() is False
+
+    def test_select_section_and_open_about_tab(self, qapp):
+        dialog = _dialog(qapp)
+        dialog.select_section("fit")
+        assert dialog._stack.currentIndex() == 1
+        assert dialog._content_title.text() == "Fit Settings"
+
+        dialog.select_section("ai")
+        assert dialog._stack.currentIndex() == 2
+        assert dialog._content_title.text() == "AI Settings"
+
+        dialog.open_about_tab()
+        assert dialog._stack.currentIndex() == 3
+        assert dialog._content_title.text() == "About"
+
+        dialog.select_section("general")
+        assert dialog._stack.currentIndex() == 0
+        assert dialog._content_title.text() == "General"
+
+
+class TestAboutTabPage:
+    def test_about_tab_displays_python_and_dependencies(self, qapp):
+        from PySide6.QtWidgets import QLabel
+        import platform
+        from spectroview import VERSION, BUILD_NUMBER
+        dialog = _dialog(qapp)
+        about_page = dialog._tab_about
+        assert about_page is not None
+
+        labels = [lbl.text() for lbl in about_page.findChildren(QLabel)]
+        combined_text = " ".join(labels)
+
+        assert f"Version {VERSION}" in combined_text
+        assert f"Build: {BUILD_NUMBER}" in combined_text
+        assert f"Python:</b> {platform.python_version()}" in combined_text
+        assert "PySide6:" in combined_text
+        assert "numpy:" in combined_text
+        assert "scipy:" in combined_text
+
+    def test_runtime_package_versions_helper(self):
+        from spectroview.settings.ui import get_runtime_package_versions
+        versions = get_runtime_package_versions()
+        assert "PySide6" in versions
+        assert "numpy" in versions
+        assert "scipy" in versions
+        assert "matplotlib" in versions
+        assert "pandas" in versions
+        for pkg, ver in versions.items():
+            assert isinstance(ver, str)
+            assert len(ver) > 0
+
+
+def test_main_about_opens_settings_about_section(qapp, monkeypatch):
+    from spectroview.main import Main
+    from spectroview.settings import VSettingsDialog
+    main_win = Main()
+    section_opened = []
+
+    def mock_select(self, sec):
+        section_opened.append(sec)
+
+    monkeypatch.setattr(VSettingsDialog, "select_section", mock_select)
+    monkeypatch.setattr(VSettingsDialog, "exec", lambda self: 0)
+
+    main_win.about()
+    assert len(section_opened) == 1
+    assert section_opened[0] == "about"

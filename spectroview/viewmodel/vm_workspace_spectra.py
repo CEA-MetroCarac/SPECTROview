@@ -2063,9 +2063,9 @@ class VMWorkspaceSpectra(QObject):
         
         # Drop X and Y columns for Spectra Workspace only
         if type(self).__name__ == 'VMWorkspaceSpectra':
-            for col in ['X', 'Y']:
-                if col in df_all.columns:
-                    df_all.drop(columns=[col], inplace=True)
+            cols_to_drop = [col for col in ['X', 'Y'] if col in df_all.columns]
+            if cols_to_drop:
+                df_all = df_all.drop(columns=cols_to_drop)
 
         # Numeric fit columns are already rounded to self.results_decimals by
         # build_fit_results_df (X/Y coords kept at full precision there).

@@ -86,10 +86,10 @@ def load_map_file(path: Path) -> pd.DataFrame:
         if len(line1_tokens) > 2:
             # New format: multiple columns
             map_df = pd.read_csv(path, skiprows=1, delimiter=";")
-            map_df.rename(columns={
+            map_df = map_df.rename(columns={
                 map_df.columns[0]: "X", 
                 map_df.columns[1]: "Y"
-            }, inplace=True)
+            })
         else:
             # Old format: alternating rows
             # Line 1: X;Y;
@@ -137,7 +137,7 @@ def load_map_file(path: Path) -> pd.DataFrame:
         else:
             map_df = pd.read_csv(path, delimiter=delimiter)
             if isinstance(map_df.index, pd.MultiIndex):
-                map_df.reset_index(inplace=True)
+                map_df = map_df.reset_index()
             map_df.columns = ['Y', 'X'] + list(map_df.columns[2:])
 
         # Reorder columns by increasing wavenumber

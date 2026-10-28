@@ -47,7 +47,7 @@ def convert_action(input_path, output_path):
     dfr_spectrum = pd.concat([dfr_spectrum[['#Y', '#X']].reset_index(drop=True), dfr_intensity_matrix], axis=1)
 
     # Cleanup
-    dfr_spectrum.rename(columns={'#X': '', '#Y': ''}, inplace=True)
+    dfr_spectrum = dfr_spectrum.rename(columns={'#X': '', '#Y': ''})
 
     # Export
     dfr_spectrum.to_csv(output_path, sep='\t', encoding='utf-8', index=False)

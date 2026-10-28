@@ -172,6 +172,9 @@ class _TabsCompatibilityProxy:
 class SettingsDialog(QDialog):
     """Modern two-panel Settings dialog with search filtering and modular section pages."""
 
+    theme_selected = Signal(str)
+    check_updates_requested = Signal()
+
     def __init__(self, vm: VMSettings, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.vm = vm
@@ -230,8 +233,8 @@ class SettingsDialog(QDialog):
         # -- Right Content Area ----------------------------------------------
         self._content_container = QWidget()
         content_layout = QVBoxLayout(self._content_container)
-        content_layout.setContentsMargins(16, 12, 16, 10)
-        content_layout.setSpacing(8)
+        content_layout.setContentsMargins(10, 6, 10, 6)
+        content_layout.setSpacing(4)
 
         # Section Title Header
         self._content_title = QLabel()
@@ -290,7 +293,7 @@ class SettingsDialog(QDialog):
         # Sections definition: (widget, title, icon, keywords)
         self._sections: list[tuple[QWidget, str, QIcon, list[str]]] = [
             (self._tab_general, "General", Icons.settings(size=20), self._tab_general.KEYWORDS),
-            (self._tab_fit, "Fit Settings", Icons.calc(size=20), self._tab_fit.KEYWORDS),
+            (self._tab_fit, "Fit Settings", Icons.fit_curve(size=20), self._tab_fit.KEYWORDS),
             (self._tab_ai, "AI Settings", Icons.sparkles(size=20), self._tab_ai.KEYWORDS),
             (self._tab_about, "About", Icons.about(size=20), self._tab_about.KEYWORDS),
         ]
@@ -314,10 +317,13 @@ class SettingsDialog(QDialog):
         self.btn_export_config.clicked.connect(self._on_export_config)
         self.btn_import_config.clicked.connect(self._on_import_config)
         self.btn_test_connection.clicked.connect(self._on_test_connection)
+        self._tab_general.theme_changed.connect(self.theme_selected.emit)
+        self._tab_about.check_updates_requested.connect(self.check_updates_requested.emit)
 
     def _bind_compat_properties(self) -> None:
         """Bind widget attributes directly on dialog for test suite and caller backward compatibility."""
         # General tab
+        self.cbb_theme = self._tab_general.cbb_theme
         self.le_working_folder = self._tab_general.le_working_folder
         self.btn_working_folder = self._tab_general.btn_working_folder
         self.btn_open_working_folder = self._tab_general.btn_open_working_folder
@@ -383,6 +389,9 @@ class SettingsDialog(QDialog):
             item = self._nav_list.item(row)
             if item:
                 self._content_title.setText(item.text())
+            curr_page = self._stack.currentWidget()
+            if hasattr(curr_page, "highlight_search"):
+                curr_page.highlight_search(self._search_edit.text())
 
     def _on_search_text_changed(self, query: str) -> None:
         q = query.strip().lower()
@@ -404,6 +413,10 @@ class SettingsDialog(QDialog):
 
         if not current_visible and first_visible >= 0:
             self._nav_list.setCurrentRow(first_visible)
+
+        curr_page = self._stack.currentWidget()
+        if hasattr(curr_page, "highlight_search"):
+            curr_page.highlight_search(q)
 
     def _on_search_return_pressed(self) -> None:
         current_row = self._nav_list.currentRow()

@@ -431,6 +431,9 @@ class Main(QMainWindow):
         vm = VMSettings()
         dlg = VSettingsDialog(vm, self)
         dlg.select_section(section)
+        dlg.check_updates_requested.connect(self._manual_update_check)
+        dlg.theme_selected.connect(self.toggle_theme)
+        initial_theme = self.settings.get_theme()
         if dlg.exec():
             # Refresh viewers to reflect settings changes (e.g. coef_noise)
             if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):
@@ -440,6 +443,9 @@ class Main(QMainWindow):
             self._sync_mcp_runtime()
             if self._chat_panel is not None:
                 self._chat_panel.reload_settings()
+        else:
+            if self.settings.get_theme() != initial_theme:
+                self.toggle_theme(initial_theme)
 
     def _sync_mcp_runtime(self):
         """Apply the opt-in localhost MCP setting without restarting the app."""

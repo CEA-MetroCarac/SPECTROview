@@ -63,6 +63,7 @@ class VMSettings(QObject):
         data.update(ai_data)
         data.update(self.settings.load_mcp_settings())
         data["check_updates_startup"] = self.settings.get_check_for_updates()
+        data["theme"] = self.settings.get_theme()
         self.settings_loaded.emit(data)
 
     # ---------- Save ----------
@@ -72,6 +73,9 @@ class VMSettings(QObject):
 
         if "check_updates_startup" in data:
             self.settings.set_check_for_updates(bool(data.pop("check_updates_startup")))
+
+        if "theme" in data:
+            self.settings.set_theme(str(data.pop("theme")))
 
         current_mcp = self.settings.load_mcp_settings()
         mcp_enabled = bool(data.pop("mcp_enabled", current_mcp["mcp_enabled"]))

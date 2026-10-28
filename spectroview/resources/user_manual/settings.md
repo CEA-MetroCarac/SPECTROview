@@ -11,16 +11,16 @@ Access the **Settings** menu via the gear icon in the main toolbar (or press `Ct
 The `Settings Panel` features a modern two-panel interface with real-time search filtering:
 
 - **Left Sidebar**:
-  - **Search Bar**: Type any keyword (e.g. `working folder`, `tolerance`, `loss`, `mcp`, `python`, `citation`) to instantly filter the navigation list.
+  - **Search Bar**: Type any keyword (e.g. `working folder`, `theme`, `tolerance`, `loss`, `mcp`, `python`, `citation`) to instantly filter the navigation list and highlight matching options directly on the page with automatic scroll-to-view.
   - **Navigation Tabs**:
-    1. **General** — SPECTROview Working Folder, portable configuration backup/restore, and update preferences.
-    2. **Fit Settings** — Optimizer convergence parameters, robust loss function, peak polarity, and global peak limits.
+    1. **General** — SPECTROview Working Folder, Interface Theme, portable configuration backup/restore, and update preferences.
+    2. **Fit Settings** — Optimizer convergence parameters, robust loss function, peak polarity, and global peak limits (with dedicated curve-fitting icon).
     3. **AI Settings** — LLM provider credentials, connection testing, and local MCP server.
     4. **About** — Application version, build number, Python environment, runtime dependency versions, documentation, and citation.
-- **Right Content Area**: Displays all options for the selected tab.
+- **Right Content Area**: Displays all options for the selected tab. All informational text, environment details, and citations are selectable with the mouse for easy copying.
 - **Footer**: Shows application version with standard **Save** and **Cancel** buttons.
 
-> **Theme**: Interface theme selection (**Modern Dark**, **Modern Light**, **Classic Dark**, or **Classic Light**) is toggled directly from the **Theme** button in the top menu bar.
+> **Theme Synchronization**: The **Interface Theme** can be selected either within the **General** tab (`Modern Dark`, `Modern Light`, `Classic Dark`, or `Classic Light`) or directly via the **Theme** button in the top menu bar. Both selectors are fully synchronized in real time.
 
 ---
 
@@ -43,6 +43,9 @@ Specify a single universal root folder for all of SPECTROview's templates, recip
 > **Backup & PC Migration**: If you move to a new PC or want to make a backup, simply copy this single Working Folder to the new PC. In SPECTROview's Settings panel on the new machine, point the **SPECTROview Working Folder** to that folder: all fit models, plot recipes, style templates, AI chat history, and configuration (`config.json`) will be restored automatically!
 >
 > You can also use the **Export Config...** and **Restore Config...** buttons at any time to export or restore settings to/from a standalone JSON file.
+
+#### **Interface Theme**
+- **Theme**: Select between **Modern Dark**, **Modern Light**, **Classic Dark**, or **Classic Light**. Selection updates the active theme immediately and keeps the top menu bar theme button in perfect synchronization.
 
 #### **Application Updates**
 - **Check for updates automatically on application startup**: When checked (default), SPECTROview will periodically check for new releases in the background upon application launch.

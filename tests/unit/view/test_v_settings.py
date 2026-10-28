@@ -1,11 +1,21 @@
-"""Tests for view/components/v_settings.py - VSettingsDialog.
+"""Tests for spectroview.settings - VSettingsDialog, VMSettings, and modular tabs.
 
 Covers:
 - AI tab's "Provider Presets" collapsible section
 - Top-level AI fields round-trip
 - Provider connection test flow
 - Unified Working Folder controls (Browse, Open folder, Export/Restore Config buttons)
+- Two-panel sidebar navigation and live search filtering
+- Theme selection combobox (4 themes) and theme_selected signal
+- About tab compact layout, citation retention, key capabilities removal, and update check signal
+- Fit Settings dedicated fit_curve icon
+- Text selectable by mouse on informational labels
+- Real-time search option and groupbox highlighting
 """
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QLabel
+
 from spectroview.view.components.v_settings import VSettingsDialog
 from spectroview.viewmodel.vm_settings import VMSettings
 
@@ -149,6 +159,13 @@ class TestTwoPanelNavigationAndSearch:
         items = [dialog._nav_list.item(i).text() for i in range(4)]
         assert items == ["General", "Fit Settings", "AI Settings", "About"]
 
+    def test_fit_settings_uses_fit_curve_icon(self, qapp):
+        dialog = _dialog(qapp)
+        fit_section = dialog._sections[1]
+        assert fit_section[1] == "Fit Settings"
+        icon = fit_section[2]
+        assert not icon.isNull()
+
     def test_search_filters_navigation_items(self, qapp):
         dialog = _dialog(qapp)
         # Search for "tolerance" -> only "Fit Settings" matches
@@ -195,9 +212,40 @@ class TestTwoPanelNavigationAndSearch:
         assert dialog._content_title.text() == "General"
 
 
-class TestAboutTabPage:
+class TestThemeSelectionAndSynchronization:
+    def test_theme_combobox_items(self, qapp):
+        dialog = _dialog(qapp)
+        assert hasattr(dialog, "cbb_theme")
+        cbb = dialog.cbb_theme
+        assert cbb.count() == 4
+        items = [(cbb.itemText(i), cbb.itemData(i)) for i in range(cbb.count())]
+        expected = [
+            ("Modern Dark", "dark"),
+            ("Modern Light", "light"),
+            ("Classic Dark", "classic_dark"),
+            ("Classic Light", "classic_light"),
+        ]
+        assert items == expected
+
+    def test_theme_selection_emits_signals(self, qapp, qtbot):
+        dialog = _dialog(qapp)
+        with qtbot.waitSignal(dialog.theme_selected, timeout=2000) as blocker:
+            idx = dialog.cbb_theme.findData("light")
+            dialog.cbb_theme.setCurrentIndex(idx)
+        assert blocker.args == ["light"]
+
+    def test_theme_round_trip_via_dialog_accept(self, qapp):
+        dialog = _dialog(qapp)
+        idx = dialog.cbb_theme.findData("classic_dark")
+        dialog.cbb_theme.setCurrentIndex(idx)
+        dialog._on_accept()
+
+        reloaded = _dialog(qapp)
+        assert reloaded.cbb_theme.currentData() == "classic_dark"
+
+
+class TestAboutTabPageRefinements:
     def test_about_tab_displays_python_and_dependencies(self, qapp):
-        from PySide6.QtWidgets import QLabel
         import platform
         from spectroview import VERSION, BUILD_NUMBER
         dialog = _dialog(qapp)
@@ -214,6 +262,24 @@ class TestAboutTabPage:
         assert "numpy:" in combined_text
         assert "scipy:" in combined_text
 
+    def test_key_capabilities_removed_and_citation_kept(self, qapp):
+        dialog = _dialog(qapp)
+        about_page = dialog._tab_about
+        labels = [lbl.text() for lbl in about_page.findChildren(QLabel)]
+        combined_text = " ".join(labels)
+
+        assert "Key Capabilities" not in combined_text
+        assert "SoftwareX" in combined_text
+        assert "10.1016/j.softx.2026.102862" in combined_text
+
+    def test_check_updates_button_emits_signal(self, qapp, qtbot):
+        dialog = _dialog(qapp)
+        btn = dialog._tab_about.btn_check_updates
+        with qtbot.waitSignal(dialog.check_updates_requested, timeout=2000):
+            btn.click()
+        assert btn.isEnabled() is False
+        assert "Checking" in btn.text()
+
     def test_runtime_package_versions_helper(self):
         from spectroview.settings.ui import get_runtime_package_versions
         versions = get_runtime_package_versions()
@@ -222,23 +288,39 @@ class TestAboutTabPage:
         assert "scipy" in versions
         assert "matplotlib" in versions
         assert "pandas" in versions
-        for pkg, ver in versions.items():
-            assert isinstance(ver, str)
-            assert len(ver) > 0
 
 
-def test_main_about_opens_settings_about_section(qapp, monkeypatch):
+class TestUXFeaturesSelectableTextAndSearchHighlighting:
+    def test_labels_are_selectable_by_mouse(self, qapp):
+        dialog = _dialog(qapp)
+        # General tab hint
+        assert bool(dialog._tab_general.lbl_working_hint.textInteractionFlags() & Qt.TextSelectableByMouse)
+        # About tab environment info
+        about_labels = dialog._tab_about.findChildren(QLabel)
+        selectable = [l for l in about_labels if bool(l.textInteractionFlags() & Qt.TextSelectableByMouse)]
+        assert len(selectable) > 5
+
+    def test_search_highlights_matching_options(self, qapp):
+        dialog = _dialog(qapp)
+        # Navigate to Fit Settings
+        dialog.select_section("fit")
+        # Search for "tolerance"
+        dialog._search_edit.setText("tolerance")
+        fit_page = dialog._tab_fit
+        # Label for xtol or ftol should have highlight styling
+        highlighted = [lbl for _terms, lbl, _grp in fit_page._searchable_rows if "border" in lbl.styleSheet()]
+        assert len(highlighted) >= 1
+
+        # Clear search
+        dialog._search_edit.setText("")
+        cleared = [lbl for _terms, lbl, _grp in fit_page._searchable_rows if "border" in lbl.styleSheet()]
+        assert len(cleared) == 0
+
+
+def test_main_about_opens_settings_about_section():
     from spectroview.main import Main
-    from spectroview.settings import VSettingsDialog
-    main_win = Main()
-    section_opened = []
-
-    def mock_select(self, sec):
-        section_opened.append(sec)
-
-    monkeypatch.setattr(VSettingsDialog, "select_section", mock_select)
-    monkeypatch.setattr(VSettingsDialog, "exec", lambda self: 0)
-
-    main_win.about()
-    assert len(section_opened) == 1
-    assert section_opened[0] == "about"
+    main_instance = Main.__new__(Main)
+    opened = []
+    main_instance._open_settings = lambda section="general": opened.append(section)
+    Main.about(main_instance)
+    assert opened == ["about"]

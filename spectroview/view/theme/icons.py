@@ -148,6 +148,8 @@ LEGACY_ICON_MAP: dict[str, str] = {
     "peak": "peak",
     "peak.png": "peak",
     "bestfit": "bestfit",
+    "fit_curve": "fit_curve",
+    "fit_curve.png": "fit_curve",
     "bestfit.png": "bestfit",
     "norm": "norm",
     "norm.png": "norm",
@@ -456,6 +458,10 @@ class Icons:
     @classmethod
     def peak(cls, color: str | None = None, size: int = 16) -> QIcon:
         return svg_icon("peak", size=size, color=color)
+
+    @classmethod
+    def fit_curve(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("fit_curve", size=size, color=color)
 
     @classmethod
     def bestfit(cls, color: str | None = None, size: int = 16) -> QIcon:

@@ -317,6 +317,15 @@ _SVG_TEMPLATES: dict[str, str] = {
         '<path d="M2 20c4 0 6-17 10-17s6 17 10 17"/>'
         '<line x1="12" x2="12" y1="3" y2="20" stroke-dasharray="2 2"/>'
     ),
+    "fit_curve": (
+        '<path d="M2 19 C5 19 8 5 12 5 C16 5 19 19 22 19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
+        '<circle cx="5" cy="18" r="1.3" fill="currentColor"/>'
+        '<circle cx="8" cy="12" r="1.3" fill="currentColor"/>'
+        '<circle cx="12" cy="5" r="1.3" fill="currentColor"/>'
+        '<circle cx="16" cy="12" r="1.3" fill="currentColor"/>'
+        '<circle cx="19" cy="18" r="1.3" fill="currentColor"/>'
+        '<line x1="2" y1="21" x2="22" y2="21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>'
+    ),
     "bestfit": (
         '<line x1="2" y1="20" x2="22" y2="20" opacity="0.35"/>'
         '<path d="M2 20 C3.8 20 5.5 12 7.5 12 C9.5 12 11.2 20 13 20" stroke-dasharray="2.5 1.5" stroke-width="1.3" opacity="0.75"/>'

@@ -40,6 +40,8 @@ def main_window(_shared_main_window):
     # Rebind to current test's isolated QSettings store
     from spectroview.model.m_settings import MSettings
     _shared_main_window.settings = MSettings()
+    if hasattr(_shared_main_window, 'theme_mgr'):
+        _shared_main_window.theme_mgr._settings = _shared_main_window.settings
     _shared_main_window.settings.save_view_options({"bestfit": True, "legend_outside": False})
     
     # Reset controls to default state before each test
@@ -121,4 +123,49 @@ def test_legend_outside_view_options_saved_and_synced(main_window):
     assert maps_viewer.act_legend_outside.isChecked() is False
     assert spectra_viewer.act_legend_outside.isChecked() is False
     assert settings.load_view_options()["legend_outside"] is False
+
+
+
+def test_plot_theme_persists_across_app_restart(main_window):
+    """Confirm user-selected plot theme persists across application startup even when app theme is different."""
+    settings = main_window.settings
+    settings.set_theme("dark")
+    settings.save_view_options({"theme": "Light Mode"})
+
+    # Simulate application startup sequence: setup_connections loads persisted options, then propagates theme
+    main_window.setup_connections()
+    main_window._propagate_theme(main_window.settings.get_theme(), sync_plot_theme=False)
+
+    assert main_window.settings.get_theme() == "dark"
+    assert main_window.v_spectra_workspace.v_spectra_viewer.cbb_theme.currentText() == "Light Mode"
+    assert main_window.v_maps_workspace.v_spectra_viewer.cbb_theme.currentText() == "Light Mode"
+    assert main_window.v_maps_workspace.v_map_viewer.current_style == "Light Mode"
+    assert main_window.settings.load_view_options()["theme"] == "Light Mode"
+
+    # User modifies plot theme to "Dark Mode"
+    main_window.v_spectra_workspace.v_spectra_viewer.cbb_theme.setCurrentText("Dark Mode")
+    assert main_window.v_spectra_workspace.v_spectra_viewer.cbb_theme.currentText() == "Dark Mode"
+    assert main_window.v_maps_workspace.v_spectra_viewer.cbb_theme.currentText() == "Dark Mode"
+    assert main_window.v_maps_workspace.v_map_viewer.current_style == "Dark Mode"
+    assert main_window.settings.load_view_options()["theme"] == "Dark Mode"
+
+
+def test_app_theme_toggle_updates_plot_theme(main_window):
+    """Confirm changing application theme via toggle_theme (menubar/settings) updates plot theme."""
+    # Switch app theme to light via toggle_theme (as menubar does)
+    main_window.toggle_theme("light")
+    assert main_window.settings.get_theme() == "light"
+    assert main_window.v_spectra_workspace.v_spectra_viewer.cbb_theme.currentText() == "Light Mode"
+    assert main_window.v_maps_workspace.v_spectra_viewer.cbb_theme.currentText() == "Light Mode"
+    assert main_window.v_maps_workspace.v_map_viewer.current_style == "Light Mode"
+    assert main_window.settings.load_view_options()["theme"] == "Light Mode"
+
+    # Switch back to dark
+    main_window.toggle_theme("dark")
+    assert main_window.settings.get_theme() == "dark"
+    assert main_window.v_spectra_workspace.v_spectra_viewer.cbb_theme.currentText() == "Dark Mode"
+    assert main_window.v_maps_workspace.v_spectra_viewer.cbb_theme.currentText() == "Dark Mode"
+    assert main_window.v_maps_workspace.v_map_viewer.current_style == "Dark Mode"
+    assert main_window.settings.load_view_options()["theme"] == "Dark Mode"
+
 

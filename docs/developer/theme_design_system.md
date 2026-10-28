@@ -73,6 +73,11 @@ flowchart TD
 - The experimental `"modern_warm"` theme is deprecated and removed.
 - **Automatic Migration**: When `MSettings.get_theme()` or `ThemeManager.apply()` encounters `"modern_warm"`, it automatically migrates the setting to `"light"`, updates persistent storage, and applies Modern Light.
 
+### 5. Plot Theme vs. Application UI Theme Decoupling
+- **Matplotlib Canvas Theme**: In addition to the application-wide Qt UI theme, the plot canvas theme (`"Dark Mode"` or `"Light Mode"`) can be independently configured via the **Plot theme** selector in `VSpectraViewer`.
+- **Decoupled Startup Restoration**: On application startup, the user's persisted plot theme (`view_options/theme`) is restored and preserved independently of the active global application UI theme (`Main._propagate_theme(..., sync_plot_theme=False)`).
+- **Explicit UI Theme Synchronization**: When the user explicitly changes the global application theme (e.g. via the Menubar theme toggle or Settings dialog), `Main.toggle_theme()` propagates the matching plot style to all workspaces and viewers (`sync_plot_theme=True`).
+
 ---
 
 ## 3. Design Tokens (`DARK_TOKENS` & `LIGHT_TOKENS`)

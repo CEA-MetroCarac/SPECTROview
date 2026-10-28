@@ -47,7 +47,7 @@ Specify a single universal root folder for all of SPECTROview's templates, recip
 > You can also use the **Export Config...** and **Restore Config...** buttons at any time to export or restore settings to/from a standalone JSON file.
 
 #### **Interface Theme**
-- **Theme**: Select between **Modern Dark**, **Modern Light**, **Classic Dark**, or **Classic Light**. Selection updates the active theme immediately and keeps the top menu bar theme button in perfect synchronization.
+- **Theme**: Select between **Modern Dark**, **Modern Light**, **Classic Dark**, or **Classic Light**. Selection updates the active theme immediately and keeps the top menu bar theme button in perfect synchronization. Changing the interface theme also automatically aligns the plot canvas theme to match. To customize the plot canvas independently, adjust the **Plot theme** selector in the `View Options` toolbar under the spectrum canvas (your selection persists across application sessions).
 
 #### **Application Updates**
 - **Check for updates automatically on application startup**: When checked (default), SPECTROview will periodically check for new releases in the background upon application launch.

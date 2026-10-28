@@ -251,9 +251,12 @@ A color value of `None` represents **Automatic** and is resolved from the active
 
 Both workspaces enforce `LEGEND_EDITOR_MAX_ROWS = 100`. Only those editor rows are instantiated, preventing large map or spectrum selections from creating thousands of Qt widgets. The dialog receives the full selection count so automatic gradient previews still match their plotted spectrum positions. Values outside the current batch remain untouched.
 
-#### Legend Placement & Outside Option
+#### View Options Synchronization & Persistence
 
-The View Option menu includes **Move legend box outside** (`act_legend_outside`). When checked, `VSpectraViewer` positions the legend outside the primary axes via `loc="center left"` and `bbox_to_anchor=(1.02, 0.5)`. The figure's `compressed` layout dynamically adjusts plot margins so the legend fits cleanly without overlapping spectral traces. This setting is synchronized between Spectra and Maps workspaces and persisted across sessions in `view_options/legend_outside`. Legend double-click bounds detection dynamically refreshes window extents from the underlying legend artist to guarantee accurate hit-testing regardless of layout compression.
+The View Option menu and bottom toolbar provide user-configurable display settings synchronized across workspaces and persisted across sessions:
+
+- **Plot Theme (`cbb_theme`)**: Configures the Matplotlib canvas theme (`"Dark Mode"` or `"Light Mode"`), synchronized across the Spectra workspace, Maps workspace, and secondary 2D map viewer dialogs. The selection is persisted in `view_options/theme`. On application startup, the saved plot theme is restored and preserved independently of the global application UI theme (`sync_plot_theme=False` during startup theme propagation). When the user explicitly changes the global application theme via the menubar or Settings dialog, the plot theme is automatically synchronized to match (`sync_plot_theme=True`).
+- **Legend Placement & Outside Option (`act_legend_outside`)**: When checked, `VSpectraViewer` positions the legend outside the primary axes via `loc="center left"` and `bbox_to_anchor=(1.02, 0.5)`. The figure's `compressed` layout dynamically adjusts plot margins so the legend fits cleanly without overlapping spectral traces. This setting is synchronized between Spectra and Maps workspaces and persisted across sessions in `view_options/legend_outside`. Legend double-click bounds detection dynamically refreshes window extents from the underlying legend artist to guarantee accurate hit-testing regardless of layout compression.
 
 #### Heatmap & Signal Processing Optimizations
 

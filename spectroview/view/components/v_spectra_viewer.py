@@ -1942,7 +1942,7 @@ class VSpectraViewer(QWidget):
             return
             
         current_state = self.get_options_state()
-        if current_state == state:
+        if current_state == state and getattr(self, "_has_applied_plot_style", False):
             return
             
         self._is_setting_options = True
@@ -1999,6 +1999,7 @@ class VSpectraViewer(QWidget):
         self._is_setting_options = False
         
     def _apply_plot_style(self):
+        self._has_applied_plot_style = True
         style_name = self.cbb_theme.currentText()
         if style_name == "Dark Mode":
             style_path = PLOT_POLICY_DARK

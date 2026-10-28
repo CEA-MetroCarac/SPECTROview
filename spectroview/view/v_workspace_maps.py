@@ -173,7 +173,10 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             self.v_live_maps.apply_theme(theme)
 
         # Map viewer toolbar icons and plot style
-        plot_style = "Dark Mode" if theme in ("dark", "classic_dark") else "Light Mode"
+        if hasattr(self, 'v_spectra_viewer') and hasattr(self.v_spectra_viewer, 'cbb_theme'):
+            plot_style = self.v_spectra_viewer.cbb_theme.currentText()
+        else:
+            plot_style = "Dark Mode" if theme in ("dark", "classic_dark") else "Light Mode"
         if hasattr(self, 'v_map_viewer'):
             if hasattr(self.v_map_viewer, 'apply_global_theme'):
                 self.v_map_viewer.apply_global_theme(theme)
@@ -292,6 +295,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Create a new dialog viewer
         dialog = VMapViewerDialog(self, viewer_number=self.next_viewer_number)
         self.next_viewer_number += 1
+        if hasattr(self, 'v_spectra_viewer') and hasattr(self.v_spectra_viewer, 'cbb_theme'):
+            dialog.map_viewer.apply_plot_style(self.v_spectra_viewer.cbb_theme.currentText())
         
         # Track the dialog
         self.viewer_dialogs.append(dialog)

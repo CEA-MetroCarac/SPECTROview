@@ -204,6 +204,7 @@ class Main(QMainWindow):
             self.v_spectra_workspace.v_spectra_viewer.set_options_state(persisted_view_options)
             # The above will sync to the maps workspace automatically, but we can do it explicitly just in case
             self.v_maps_workspace.v_spectra_viewer.set_options_state(persisted_view_options)
+            update_map_viewers()
             
             # Save view options whenever they change in either workspace
             self.v_spectra_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(self.settings.save_view_options)
@@ -717,9 +718,9 @@ class Main(QMainWindow):
 
         # Apply palette + QSS + Fusion refresh via the manager
         self.theme_mgr.apply(theme)
-        self._propagate_theme(theme)
+        self._propagate_theme(theme, sync_plot_theme=True)
 
-    def _propagate_theme(self, theme):
+    def _propagate_theme(self, theme, sync_plot_theme: bool = False):
         # Derived helpers
         viewer_theme = self.theme_mgr.viewer_theme_name
 
@@ -734,12 +735,12 @@ class Main(QMainWindow):
                    getattr(self, 'v_maps_workspace', None)):
             if ws is None:
                 continue
-            if hasattr(ws, 'v_spectra_viewer'):
+            if sync_plot_theme and hasattr(ws, 'v_spectra_viewer'):
                 ws.v_spectra_viewer.cbb_theme.setCurrentText(viewer_theme)
                 if hasattr(ws.v_spectra_viewer, '_apply_plot_style'):
                     ws.v_spectra_viewer._apply_plot_style()
-                if hasattr(ws.v_spectra_viewer, 'apply_global_theme'):
-                    ws.v_spectra_viewer.apply_global_theme(theme)
+            if hasattr(ws, 'v_spectra_viewer') and hasattr(ws.v_spectra_viewer, 'apply_global_theme'):
+                ws.v_spectra_viewer.apply_global_theme(theme)
             if hasattr(ws, 'apply_theme'):
                 ws.apply_theme(theme)
 

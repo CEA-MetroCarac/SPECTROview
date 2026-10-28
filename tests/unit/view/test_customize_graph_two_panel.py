@@ -60,10 +60,10 @@ class TestCustomizeGraphTwoPanelUI:
             "General & Typography",
             "Axes & Limits",
             "Ticks & Spines",
-            "Secondary & Inset Axes",
             "Legend & Series",
             "Plot Style & Fitting",
             "Annotations",
+            "Secondary & Inset Axes",
         ]
         actual_titles = [dialog._nav_list.item(i).text() for i in range(7)]
         assert actual_titles == expected_titles
@@ -77,10 +77,15 @@ class TestCustomizeGraphTwoPanelUI:
         assert dialog._stack.currentIndex() == 1
         assert dialog._content_title.text() == "Axes & Limits"
 
-        # Switch to Annotations (index 6)
+        # Switch to Annotations (index 5)
+        dialog._nav_list.setCurrentRow(5)
+        assert dialog._stack.currentIndex() == 5
+        assert dialog._content_title.text() == "Annotations"
+
+        # Switch to Secondary & Inset Axes (index 6)
         dialog._nav_list.setCurrentRow(6)
         assert dialog._stack.currentIndex() == 6
-        assert dialog._content_title.text() == "Annotations"
+        assert dialog._content_title.text() == "Secondary & Inset Axes"
 
     def test_select_section_shortcuts(self, qapp, excel_df):
         vg = _make_graph(qapp, excel_df)
@@ -130,14 +135,14 @@ class TestGlobalSearchAndFiltering:
         assert not dialog._nav_list.item(1).isHidden()
         assert dialog._nav_list.item(0).isHidden()
         assert dialog._nav_list.item(2).isHidden()
-        assert dialog._nav_list.item(6).isHidden()
+        assert dialog._nav_list.item(5).isHidden()
         assert dialog._stack.currentIndex() == 1
 
-        # Search for "arrow" -> matches Annotations (index 6)
+        # Search for "arrow" -> matches Annotations (index 5)
         dialog._search_edit.setText("arrow")
-        assert not dialog._nav_list.item(6).isHidden()
+        assert not dialog._nav_list.item(5).isHidden()
         assert dialog._nav_list.item(1).isHidden()
-        assert dialog._stack.currentIndex() == 6
+        assert dialog._stack.currentIndex() == 5
 
         # Clear search -> all visible
         dialog._search_edit.setText("")
@@ -152,10 +157,10 @@ class TestGlobalSearchAndFiltering:
             ("typography", 0),  # General & Typography
             ("symlog", 1),      # Axes & Limits
             ("spines", 2),      # Ticks & Spines
-            ("twin", 3),        # Secondary & Inset Axes
-            ("palette", 4),     # Legend & Series
-            ("trendline", 5),   # Plot Style & Fitting
-            ("callout", 6),     # Annotations
+            ("palette", 3),     # Legend & Series
+            ("trendline", 4),   # Plot Style & Fitting
+            ("callout", 5),     # Annotations
+            ("twin", 6),        # Secondary & Inset Axes
         ]
 
         for query, expected_idx in queries_to_expected_index:
@@ -230,3 +235,4 @@ class TestUnifiedErrorBarsAndOptions:
         assert vg.show_bar_plot_error_bar is True
         assert vg.bar_error_bar_type == "sem"
         assert vg.error_bar_capsize == 5.5
+

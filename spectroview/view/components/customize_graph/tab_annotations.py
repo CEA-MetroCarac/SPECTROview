@@ -85,24 +85,28 @@ class TabAnnotations(QWidget):
         self.grp_add = QGroupBox("Add New Annotation:")
         add_layout = QVBoxLayout(self.grp_add)
         add_layout.setContentsMargins(8, 8, 8, 8)
-        add_layout.setSpacing(8)
+        add_layout.setSpacing(6)
 
         row1 = QHBoxLayout()
         self.btn_add_vline = QPushButton("V-Line")
         self.btn_add_vline.setIcon(Icons.ann_vline())
         self.btn_add_vline.setIconSize(QSize(16, 16))
+        self.btn_add_vline.setToolTip("Add vertical reference line at a specific X coordinate.")
 
         self.btn_add_hline = QPushButton("H-Line")
         self.btn_add_hline.setIcon(Icons.ann_hline())
         self.btn_add_hline.setIconSize(QSize(16, 16))
+        self.btn_add_hline.setToolTip("Add horizontal reference line at a specific Y coordinate.")
 
         self.btn_add_text = QPushButton("Text")
         self.btn_add_text.setIcon(Icons.ann_text())
         self.btn_add_text.setIconSize(QSize(16, 16))
+        self.btn_add_text.setToolTip("Add text annotation at a specific (X, Y) coordinate.")
 
         self.btn_add_arrow = QPushButton("Arrow")
         self.btn_add_arrow.setIcon(Icons.ann_arrow())
         self.btn_add_arrow.setIconSize(QSize(16, 16))
+        self.btn_add_arrow.setToolTip("Add directional indicator arrow pointing between two points.")
 
         row1.addWidget(self.btn_add_vline)
         row1.addWidget(self.btn_add_hline)
@@ -114,18 +118,22 @@ class TabAnnotations(QWidget):
         self.btn_add_vspan = QPushButton("V-Span")
         self.btn_add_vspan.setIcon(Icons.ann_vspan())
         self.btn_add_vspan.setIconSize(QSize(16, 16))
+        self.btn_add_vspan.setToolTip("Add shaded vertical span region between two X coordinates.")
 
         self.btn_add_hspan = QPushButton("H-Span")
         self.btn_add_hspan.setIcon(Icons.ann_hspan())
         self.btn_add_hspan.setIconSize(QSize(16, 16))
+        self.btn_add_hspan.setToolTip("Add shaded horizontal span region between two Y coordinates.")
 
         self.btn_add_box = QPushButton("Box")
         self.btn_add_box.setIcon(Icons.ann_box())
         self.btn_add_box.setIconSize(QSize(16, 16))
+        self.btn_add_box.setToolTip("Add rectangular bounding box highlight.")
 
         self.btn_add_callout = QPushButton("Callout")
         self.btn_add_callout.setIcon(Icons.ann_callout())
         self.btn_add_callout.setIconSize(QSize(16, 16))
+        self.btn_add_callout.setToolTip("Add text box with an arrow pointing to a feature.")
 
         row2.addWidget(self.btn_add_vspan)
         row2.addWidget(self.btn_add_hspan)
@@ -139,10 +147,11 @@ class TabAnnotations(QWidget):
         self.grp_list = QGroupBox("Active Annotations:")
         list_layout = QVBoxLayout(self.grp_list)
         list_layout.setContentsMargins(8, 8, 8, 8)
-        list_layout.setSpacing(8)
+        list_layout.setSpacing(6)
 
         self.annotation_list = QListWidget()
         self.annotation_list.setMinimumHeight(180)
+        self.annotation_list.setToolTip("List of active annotations. Double-click any item to edit its properties.")
         self.annotation_list.itemDoubleClicked.connect(self._on_item_double_clicked)
         list_layout.addWidget(self.annotation_list)
 
@@ -150,11 +159,13 @@ class TabAnnotations(QWidget):
         self.btn_edit = QPushButton("Edit Annotation")
         self.btn_edit.setIcon(Icons.edit())
         self.btn_edit.setIconSize(QSize(16, 16))
+        self.btn_edit.setToolTip("Edit properties of the selected annotation.")
         self.btn_edit.clicked.connect(self._edit_annotation)
 
         self.btn_delete = QPushButton("Delete")
         self.btn_delete.setIcon(Icons.trash())
         self.btn_delete.setIconSize(QSize(16, 16))
+        self.btn_delete.setToolTip("Delete the selected annotation.")
         self.btn_delete.clicked.connect(self._delete_annotation)
 
         mgmt_row.addWidget(self.btn_edit)
@@ -405,3 +416,4 @@ class TabAnnotations(QWidget):
 
         if first_match:
             self._scroll.ensureWidgetVisible(first_match, 0, 30)
+

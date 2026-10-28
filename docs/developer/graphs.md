@@ -264,13 +264,13 @@ When a DataFrame contains a `Slot` column (common in semiconductor datasets):
 
 | Category | Class | Module | Scope |
 |---|---|---|---|
-| General & Typography | `TabGeneral` | `tab_general.py` | Figure theme (Light/Dark), Grid, X-label rotation, Font sizes (Title/Axis/Tick/Colorbar), Data sorting |
-| Axes & Limits | `TabAxesLimits` | `tab_axes_limits.py` | X/Y scales (Linear/Log/Symlog), Data types, Inverted, Z color-scale, Limits with range sliders, Broken axis |
-| Ticks & Spines | `TabTicksSpines` | `tab_ticks_spines.py` | Tick direction, label format presets, Minor ticks (T/R/B/L), Spines/Borders (T/R/B/L) |
-| Secondary & Inset Axes | `TabSecondaryInset` | `tab_secondary_inset.py` | Secondary twin axes (Y2/Y3/X2 with label/min/max/log/color/marker), Inset zoom axes |
-| Legend & Series | `TabLegendSeries` | `tab_legend_series.py` | Legend box layout/font/alpha/position, Unify marker style, per-series styling table |
-| Plot Style & Fitting | `TabPlotStyles` | `tab_plot_styles.py` | Style options (point/scatter/wafer), unified error bars, trendline polynomial/anchor/equations, histogram |
-| Annotations | `TabAnnotations` | `tab_annotations.py` | Visual annotations (V-Line, H-Line, Text, Arrow, V-Span, H-Span, Box, Callout) & modal edit dialogs |
+| General & Typography | TabGeneral | 	ab_general.py | Figure theme (Light/Dark), Grid, X-label rotation, Font sizes (Title/Axis/Tick/Colorbar), Data sorting |
+| Axes & Limits | TabAxesLimits | 	ab_axes_limits.py | Axis limits with range sliders (on top), X/Y scales (Linear/Log/Symlog), Data types, Inverted, Z color-scale, Broken axis |
+| Ticks & Spines | TabTicksSpines | 	ab_ticks_spines.py | Tick direction, label format presets, Minor ticks (T/R/B/L), Spines/Borders (T/R/B/L) |
+| Legend & Series | TabLegendSeries | 	ab_legend_series.py | Legend box layout/font/alpha/position, Unify marker style, left-aligned per-series styling table |
+| Plot Style & Fitting | TabPlotStyles | 	ab_plot_styles.py | Style options (point/scatter/wafer), unified error bars, trendline polynomial/anchor/equations, histogram |
+| Annotations | TabAnnotations | 	ab_annotations.py | Visual annotations (V-Line, H-Line, Text, Arrow, V-Span, H-Span, Box, Callout) & modal edit dialogs |
+| Secondary & Inset Axes | TabSecondaryInset | 	ab_secondary_inset.py | Secondary twin axes (Y2/Y3/X2 with label/min/max/log/color/marker), Inset zoom axes |
 
 A workspace-level singleton dialog that auto-switches context when the user activates a different MDI subwindow (`switch_graph(graph_widget, graph_id)`). Contains `_TabsCompatibilityProxy` and backward-compatible property facades (`legend_widget`, `axis_widget`, `more_options_widget`, `annotations_widget`).
 

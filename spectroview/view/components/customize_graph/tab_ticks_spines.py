@@ -62,19 +62,33 @@ class TabTicksSpines(QWidget):
         self.grp_ticks = QGroupBox("Tick Appearance:")
         ticks_layout = QVBoxLayout(self.grp_ticks)
         ticks_layout.setContentsMargins(8, 8, 8, 8)
-        ticks_layout.setSpacing(8)
+        ticks_layout.setSpacing(6)
 
         tick_row = QHBoxLayout()
-        tick_row.addWidget(QLabel("Tick direction:"))
+        lbl_td = QLabel("Tick direction:")
+        lbl_td.setToolTip("Direction of tick marks relative to the axes spine: In (pointing inward), Out (outward), or In & Out.")
+        tick_row.addWidget(lbl_td)
         self.combo_tick_direction = QComboBox()
         self.combo_tick_direction.addItems(list(_TICK_DIRECTION_MAP.keys()))
+        self.combo_tick_direction.setMinimumWidth(120)
+        self.combo_tick_direction.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        if self.combo_tick_direction.view():
+            self.combo_tick_direction.view().setMinimumWidth(120)
+        self.combo_tick_direction.setToolTip("Direction of tick marks relative to the axes spine: In (pointing inward), Out (outward), or In & Out.")
         tick_row.addWidget(self.combo_tick_direction)
 
         tick_row.addSpacing(16)
-        tick_row.addWidget(QLabel("Tick label format:"))
+        lbl_tf = QLabel("Tick label format:")
+        lbl_tf.setToolTip("Numeric formatting applied to major tick values (integer, decimal places, or scientific notation).")
+        tick_row.addWidget(lbl_tf)
         self.combo_tick_format = QComboBox()
         for label, value in _TICK_FORMAT_PRESETS:
             self.combo_tick_format.addItem(label, value)
+        self.combo_tick_format.setMinimumWidth(180)
+        self.combo_tick_format.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        if self.combo_tick_format.view():
+            self.combo_tick_format.view().setMinimumWidth(180)
+        self.combo_tick_format.setToolTip("Numeric formatting applied to major tick values (integer, decimal places, or scientific notation).")
         tick_row.addWidget(self.combo_tick_format)
 
         tick_row.addStretch()
@@ -85,12 +99,16 @@ class TabTicksSpines(QWidget):
         self.grp_minor = QGroupBox("Show Minor Ticks:")
         minor_layout = QHBoxLayout(self.grp_minor)
         minor_layout.setContentsMargins(8, 8, 8, 8)
-        minor_layout.setSpacing(12)
+        minor_layout.setSpacing(16)
 
-        self.cb_minor_top = QCheckBox("Top")
         self.cb_minor_bottom = QCheckBox("Bottom")
+        self.cb_minor_bottom.setToolTip("Show minor subdivision tick marks along the bottom X axis.")
         self.cb_minor_left = QCheckBox("Left")
+        self.cb_minor_left.setToolTip("Show minor subdivision tick marks along the left Y axis.")
+        self.cb_minor_top = QCheckBox("Top")
+        self.cb_minor_top.setToolTip("Show minor subdivision tick marks along the top X axis.")
         self.cb_minor_right = QCheckBox("Right")
+        self.cb_minor_right.setToolTip("Show minor subdivision tick marks along the right Y axis.")
 
         minor_layout.addWidget(self.cb_minor_bottom)
         minor_layout.addWidget(self.cb_minor_left)
@@ -103,12 +121,16 @@ class TabTicksSpines(QWidget):
         self.grp_spines = QGroupBox("Show Spines (Frame Borders):")
         spines_layout = QHBoxLayout(self.grp_spines)
         spines_layout.setContentsMargins(8, 8, 8, 8)
-        spines_layout.setSpacing(12)
+        spines_layout.setSpacing(16)
 
-        self.cb_spine_top = QCheckBox("Top")
         self.cb_spine_bottom = QCheckBox("Bottom")
+        self.cb_spine_bottom.setToolTip("Draw the bottom bounding spine line.")
         self.cb_spine_left = QCheckBox("Left")
+        self.cb_spine_left.setToolTip("Draw the left bounding spine line.")
+        self.cb_spine_top = QCheckBox("Top")
+        self.cb_spine_top.setToolTip("Draw the top bounding spine line.")
         self.cb_spine_right = QCheckBox("Right")
+        self.cb_spine_right.setToolTip("Draw the right bounding spine line.")
 
         spines_layout.addWidget(self.cb_spine_bottom)
         spines_layout.addWidget(self.cb_spine_left)
@@ -212,3 +234,4 @@ class TabTicksSpines(QWidget):
 
         if first_match:
             self._scroll.ensureWidgetVisible(first_match, 0, 30)
+

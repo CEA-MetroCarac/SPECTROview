@@ -257,8 +257,8 @@ class CustomizeGraphDialog(QDialog):
         # -- Right Content Area ----------------------------------------------
         self._content_container = QWidget()
         content_layout = QVBoxLayout(self._content_container)
-        content_layout.setContentsMargins(12, 10, 12, 10)
-        content_layout.setSpacing(6)
+        content_layout.setContentsMargins(10, 6, 10, 6)
+        content_layout.setSpacing(4)
 
         # Section Title Header
         self._content_title = QLabel()
@@ -327,10 +327,10 @@ class CustomizeGraphDialog(QDialog):
             (self.tab_general, "General & Typography", Icons.settings(size=20), self.tab_general.KEYWORDS),
             (self.tab_axes_limits, "Axes & Limits", Icons.rescale(size=20), self.tab_axes_limits.KEYWORDS),
             (self.tab_ticks_spines, "Ticks & Spines", Icons.sliders(size=20), self.tab_ticks_spines.KEYWORDS),
-            (self.tab_secondary_inset, "Secondary & Inset Axes", Icons.duplicate(size=20), self.tab_secondary_inset.KEYWORDS),
             (self.tab_legend, "Legend & Series", Icons.legend(size=20), self.tab_legend.KEYWORDS),
             (self.tab_plot_styles, "Plot Style & Fitting", Icons.fit_curve(size=20), self.tab_plot_styles.KEYWORDS),
             (self.tab_annotations, "Annotations", Icons.edit(size=20), self.tab_annotations.KEYWORDS),
+            (self.tab_secondary_inset, "Secondary & Inset Axes", Icons.duplicate(size=20), self.tab_secondary_inset.KEYWORDS),
         ]
 
         for page, title, icon, _kw in self._sections:

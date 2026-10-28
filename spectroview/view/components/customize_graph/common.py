@@ -110,10 +110,11 @@ def create_scrollable_container(parent: QWidget) -> tuple[QScrollArea, QWidget, 
 
     container = QWidget()
     layout = QVBoxLayout(container)
-    layout.setContentsMargins(8, 8, 8, 8)
-    layout.setSpacing(8)
+    layout.setContentsMargins(6, 6, 6, 6)
+    layout.setSpacing(6)
 
     scroll.setWidget(container)
     outer.addWidget(scroll)
 
     return scroll, container, layout
+

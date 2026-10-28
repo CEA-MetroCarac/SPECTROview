@@ -60,25 +60,35 @@ class TabGeneral(QWidget):
         self.grp_display = QGroupBox("Display & Grid:")
         display_layout = QVBoxLayout(self.grp_display)
         display_layout.setContentsMargins(8, 8, 8, 8)
-        display_layout.setSpacing(8)
+        display_layout.setSpacing(6)
+
+        grid_row = QHBoxLayout()
+        self._cb_grid = QCheckBox("Show grid lines")
+        self._cb_grid.setToolTip("Toggle Cartesian grid lines on the plot canvas (G key shortcut).")
+        grid_row.addWidget(self._cb_grid)
+        grid_row.addStretch()
+        display_layout.addLayout(grid_row)
 
         theme_row = QHBoxLayout()
         theme_row.addWidget(QLabel("Figure theme:"))
         self._combo_figure_theme = QComboBox()
         self._combo_figure_theme.addItems(["Light", "Dark"])
+        self._combo_figure_theme.setMinimumWidth(110)
+        self._combo_figure_theme.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        if self._combo_figure_theme.view():
+            self._combo_figure_theme.view().setMinimumWidth(110)
+        self._combo_figure_theme.setToolTip("Select the Matplotlib figure theme for this graph (Light or Dark).")
         theme_row.addWidget(self._combo_figure_theme)
 
-        theme_row.addSpacing(12)
+        theme_row.addSpacing(16)
         theme_row.addWidget(QLabel("X label rotation:"))
         self._spin_xlabel_rotation = QSpinBox()
         self._spin_xlabel_rotation.setRange(0, 90)
         self._spin_xlabel_rotation.setSingleStep(10)
-        self._spin_xlabel_rotation.setMaximumWidth(60)
+        self._spin_xlabel_rotation.setSuffix("°")
+        self._spin_xlabel_rotation.setMaximumWidth(75)
+        self._spin_xlabel_rotation.setToolTip("Rotate X-axis tick labels between 0° (horizontal) and 90° (vertical).")
         theme_row.addWidget(self._spin_xlabel_rotation)
-
-        theme_row.addSpacing(12)
-        self._cb_grid = QCheckBox("Grid lines")
-        theme_row.addWidget(self._cb_grid)
 
         theme_row.addStretch()
         display_layout.addLayout(theme_row)
@@ -89,6 +99,13 @@ class TabGeneral(QWidget):
         fonts_layout = QHBoxLayout(self.grp_fonts)
         fonts_layout.setContentsMargins(8, 8, 8, 8)
         fonts_layout.setSpacing(8)
+
+        tooltips_fonts = {
+            "_spin_title_fontsize": "Font size for the plot title in points (pt).",
+            "_spin_axis_label_fontsize": "Font size for X and Y axis labels in points (pt).",
+            "_spin_tick_fontsize": "Font size for numeric tick labels in points (pt).",
+            "_spin_colorbar_fontsize": "Font size for colorbar tick labels on wafer/2Dmap plots in points (pt).",
+        }
 
         for label_text, attr, default in [
             ("Title:", "_spin_title_fontsize", _DEFAULT_TITLE_FONTSIZE),
@@ -102,6 +119,7 @@ class TabGeneral(QWidget):
             spin.setSingleStep(1)
             spin.setValue(default)
             spin.setMaximumWidth(60)
+            spin.setToolTip(tooltips_fonts.get(attr, ""))
             setattr(self, attr, spin)
             fonts_layout.addWidget(spin)
 
@@ -112,11 +130,12 @@ class TabGeneral(QWidget):
         self._sorting_group = QGroupBox("Data Sorting:")
         sort_layout = QVBoxLayout(self._sorting_group)
         sort_layout.setContentsMargins(8, 8, 8, 8)
-        sort_layout.setSpacing(8)
+        sort_layout.setSpacing(6)
 
         sort_row = QHBoxLayout()
         self._cb_sort_enabled = QCheckBox("Enable intelligent data sorting")
         self._cb_sort_enabled.setChecked(True)
+        self._cb_sort_enabled.setToolTip("Sort legend and series drawing order automatically for consistent, deterministic plots.")
         self._cb_sort_enabled.toggled.connect(self._on_sort_enabled_toggled)
         sort_row.addWidget(self._cb_sort_enabled)
 
@@ -126,7 +145,9 @@ class TabGeneral(QWidget):
         self._cbb_sort_by = QComboBox()
         self._cbb_sort_by.addItems(["Z (hue values)", "X values", "Y values"])
         self._cbb_sort_by.setCurrentIndex(0)
-        self._cbb_sort_by.setMaximumWidth(160)
+        self._cbb_sort_by.setMinimumWidth(140)
+        self._cbb_sort_by.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self._cbb_sort_by.setToolTip("Select the field used to order series: Z (hue values), X values, or Y values.")
         sort_row.addWidget(self._cbb_sort_by)
 
         sort_row.addStretch()
@@ -241,3 +262,4 @@ class TabGeneral(QWidget):
 
         if first_match:
             self._scroll.ensureWidgetVisible(first_match, 0, 30)
+

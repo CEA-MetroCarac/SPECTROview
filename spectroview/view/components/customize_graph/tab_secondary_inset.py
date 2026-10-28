@@ -69,39 +69,56 @@ class TabSecondaryInset(QWidget):
         secondary_layout.setHorizontalSpacing(8)
         secondary_layout.setVerticalSpacing(6)
 
-        headers = ["Axis", "Label", "Min", "Max", "Log", "Color", "Marker"]
-        for col, text in enumerate(headers):
-            secondary_layout.addWidget(QLabel(f"<b>{text}</b>"), 0, col)
+        headers = [
+            ("Axis", "Axis identifier (Y2/Y3: twin vertical axes, X2: twin horizontal axis)"),
+            ("Label", "Custom axis label title"),
+            ("Min", "Minimum axis limit (blank for auto-scale)"),
+            ("Max", "Maximum axis limit (blank for auto-scale)"),
+            ("Log", "Logarithmic scale toggle"),
+            ("Color", "Axis ticks, label, and trace color"),
+            ("Marker", "Marker shape symbol for this secondary trace"),
+        ]
+        for col, (text, tip) in enumerate(headers):
+            lbl = QLabel(f"<b>{text}</b>")
+            lbl.setToolTip(tip)
+            secondary_layout.addWidget(lbl, 0, col)
 
         self._secondary_axis_rows: dict[str, dict[str, QWidget]] = {}
         for row, (axis_key, axis_display) in enumerate(
             [("y2", "Y2"), ("y3", "Y3"), ("x2", "X2")], start=1
         ):
-            secondary_layout.addWidget(QLabel(axis_display), row, 0)
+            lbl_ax = QLabel(axis_display)
+            secondary_layout.addWidget(lbl_ax, row, 0)
 
             edit_label = QLineEdit()
             edit_label.setMaximumWidth(90)
+            edit_label.setToolTip(f"{axis_display} axis label text")
             secondary_layout.addWidget(edit_label, row, 1)
 
             spin_min = self._make_limit_spinbox()
             spin_min.setMaximumWidth(_PLACEHOLDER_SPIN_WIDTH)
+            spin_min.setToolTip(f"{axis_display} minimum limit")
             secondary_layout.addWidget(spin_min, row, 2)
 
             spin_max = self._make_limit_spinbox()
             spin_max.setMaximumWidth(_PLACEHOLDER_SPIN_WIDTH)
+            spin_max.setToolTip(f"{axis_display} maximum limit")
             secondary_layout.addWidget(spin_max, row, 3)
 
             cb_log = QCheckBox()
+            cb_log.setToolTip(f"Enable logarithmic scale on {axis_display}")
             secondary_layout.addWidget(cb_log, row, 4)
 
             btn_color = QPushButton()
             btn_color.setFixedWidth(70)
+            btn_color.setToolTip(f"Choose color for {axis_display} axis and trace")
             btn_color.clicked.connect(lambda *_a, k=axis_key: self._pick_secondary_axis_color(k))
             secondary_layout.addWidget(btn_color, row, 5)
 
             combo_marker = QComboBox()
             combo_marker.addItems(MARKERS)
             combo_marker.setMaximumWidth(60)
+            combo_marker.setToolTip(f"Marker shape for {axis_display} series")
             secondary_layout.addWidget(combo_marker, row, 6)
 
             self._secondary_axis_rows[axis_key] = {
@@ -114,65 +131,83 @@ class TabSecondaryInset(QWidget):
         # ───── Inset (Zoom) Axes ─────
         self.inset_group = QGroupBox("Inset (Zoom) Axes:")
         self.inset_group.setCheckable(True)
+        self.inset_group.setToolTip("Enable an inset zoom sub-axis on top of the main figure.")
         inset_layout = QVBoxLayout(self.inset_group)
         inset_layout.setContentsMargins(8, 8, 8, 8)
-        inset_layout.setSpacing(8)
+        inset_layout.setSpacing(6)
 
         bounds_row = QHBoxLayout()
-        bounds_row.addWidget(QLabel("Position (x₀, y₀):"))
+        lbl_pos = QLabel("Position (x₀, y₀):")
+        lbl_pos.setToolTip("Normalized bottom-left corner of the inset axes (0.0 to 1.0).")
+        bounds_row.addWidget(lbl_pos)
         self.spin_inset_x0 = QDoubleSpinBox()
         self.spin_inset_x0.setRange(0.0, 1.0)
         self.spin_inset_x0.setDecimals(2)
         self.spin_inset_x0.setSingleStep(0.05)
+        self.spin_inset_x0.setToolTip("Normalized X coordinate of the bottom-left corner (0.0 = left, 1.0 = right).")
         bounds_row.addWidget(self.spin_inset_x0)
 
         self.spin_inset_y0 = QDoubleSpinBox()
         self.spin_inset_y0.setRange(0.0, 1.0)
         self.spin_inset_y0.setDecimals(2)
         self.spin_inset_y0.setSingleStep(0.05)
+        self.spin_inset_y0.setToolTip("Normalized Y coordinate of the bottom-left corner (0.0 = bottom, 1.0 = top).")
         bounds_row.addWidget(self.spin_inset_y0)
 
         bounds_row.addSpacing(16)
-        bounds_row.addWidget(QLabel("Size (w, h):"))
+        lbl_sz = QLabel("Size (w, h):")
+        lbl_sz.setToolTip("Normalized width and height of the inset axes (0.05 to 1.0).")
+        bounds_row.addWidget(lbl_sz)
         self.spin_inset_w = QDoubleSpinBox()
         self.spin_inset_w.setRange(0.05, 1.0)
         self.spin_inset_w.setDecimals(2)
         self.spin_inset_w.setSingleStep(0.05)
+        self.spin_inset_w.setToolTip("Normalized width of the inset axes.")
         bounds_row.addWidget(self.spin_inset_w)
 
         self.spin_inset_h = QDoubleSpinBox()
         self.spin_inset_h.setRange(0.05, 1.0)
         self.spin_inset_h.setDecimals(2)
         self.spin_inset_h.setSingleStep(0.05)
+        self.spin_inset_h.setToolTip("Normalized height of the inset axes.")
         bounds_row.addWidget(self.spin_inset_h)
 
         bounds_row.addStretch()
         inset_layout.addLayout(bounds_row)
 
         xlim_row = QHBoxLayout()
-        xlim_row.addWidget(QLabel("X limits:"))
+        lbl_xlim = QLabel("X limits:")
+        lbl_xlim.setToolTip("Data X limits displayed inside the zoomed inset axes.")
+        xlim_row.addWidget(lbl_xlim)
         self.spin_inset_xmin = self._make_limit_spinbox()
         self.spin_inset_xmin.setMaximumWidth(_PLACEHOLDER_SPIN_WIDTH)
+        self.spin_inset_xmin.setToolTip("Inset data X minimum limit (blank for auto).")
         xlim_row.addWidget(self.spin_inset_xmin)
         self.spin_inset_xmax = self._make_limit_spinbox()
         self.spin_inset_xmax.setMaximumWidth(_PLACEHOLDER_SPIN_WIDTH)
+        self.spin_inset_xmax.setToolTip("Inset data X maximum limit (blank for auto).")
         xlim_row.addWidget(self.spin_inset_xmax)
         xlim_row.addStretch()
         inset_layout.addLayout(xlim_row)
 
         ylim_row = QHBoxLayout()
-        ylim_row.addWidget(QLabel("Y limits:"))
+        lbl_ylim = QLabel("Y limits:")
+        lbl_ylim.setToolTip("Data Y limits displayed inside the zoomed inset axes.")
+        ylim_row.addWidget(lbl_ylim)
         self.spin_inset_ymin = self._make_limit_spinbox()
         self.spin_inset_ymin.setMaximumWidth(_PLACEHOLDER_SPIN_WIDTH)
+        self.spin_inset_ymin.setToolTip("Inset data Y minimum limit (blank for auto).")
         ylim_row.addWidget(self.spin_inset_ymin)
         self.spin_inset_ymax = self._make_limit_spinbox()
         self.spin_inset_ymax.setMaximumWidth(_PLACEHOLDER_SPIN_WIDTH)
+        self.spin_inset_ymax.setToolTip("Inset data Y maximum limit (blank for auto).")
         ylim_row.addWidget(self.spin_inset_ymax)
         ylim_row.addStretch()
         inset_layout.addLayout(ylim_row)
 
         self.cb_inset_zoom_indicator = QCheckBox("Show zoom indicator (connector lines on main plot)")
         self.cb_inset_zoom_indicator.setChecked(True)
+        self.cb_inset_zoom_indicator.setToolTip("Draw connector lines linking the inset box to the zoomed region on the main plot.")
         inset_layout.addWidget(self.cb_inset_zoom_indicator)
 
         layout.addWidget(self.inset_group)
@@ -318,3 +353,4 @@ class TabSecondaryInset(QWidget):
 
         if first_match:
             self._scroll.ensureWidgetVisible(first_match, 0, 30)
+

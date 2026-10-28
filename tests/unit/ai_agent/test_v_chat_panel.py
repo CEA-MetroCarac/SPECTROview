@@ -1,9 +1,11 @@
 """Tests for spectroview.ai_agent.v_chat_panel - VChatPanel UI layout and interactions."""
 
 import pytest
+from PySide6.QtCore import Qt, QPointF, QEvent
+from PySide6.QtGui import QKeyEvent, QMouseEvent
 from PySide6.QtWidgets import QFrame
 
-from spectroview.ai_agent.v_chat_panel import VChatPanel
+from spectroview.ai_agent.v_chat_panel import VChatPanel, _ChatLineEdit, _ComposerFrame
 
 
 @pytest.fixture
@@ -114,6 +116,73 @@ class TestVChatPanelComposerLayout:
         assert "ABC" in items
         assert "Custom" not in items
         assert chat_panel.cbb_provider.currentData() == "Custom"
+
+    def test_composer_enabled_and_accepts_typing(self, chat_panel, qapp):
+        # Composer must always be enabled
+        assert chat_panel.edit_input.isEnabled() is True
+        assert isinstance(chat_panel.edit_input, _ChatLineEdit)
+        assert isinstance(chat_panel.composer_frame, _ComposerFrame)
+
+        # Typing into edit_input
+        ev = QKeyEvent(QKeyEvent.KeyPress, Qt.Key_H, Qt.NoModifier, "H")
+        qapp.sendEvent(chat_panel.edit_input, ev)
+        ev2 = QKeyEvent(QKeyEvent.KeyPress, Qt.Key_I, Qt.NoModifier, "i")
+        qapp.sendEvent(chat_panel.edit_input, ev2)
+
+        assert chat_panel.edit_input.toPlainText() == "Hi"
+
+    def test_composer_frame_click_routes_focus(self, chat_panel, qapp):
+        chat_panel.show()
+        chat_panel.activateWindow()
+        chat_panel.edit_title.setFocus()
+        qapp.processEvents()
+        assert chat_panel.edit_input.hasFocus() is False
+
+        mouse_ev = QMouseEvent(
+            QEvent.Type.MouseButtonPress,
+            QPointF(5, 5),
+            QPointF(5, 5),
+            Qt.MouseButton.LeftButton,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
+        qapp.sendEvent(chat_panel.composer_frame, mouse_ev)
+        qapp.processEvents()
+        assert chat_panel.edit_input.hasFocus() is True
+
+    def test_shift_enter_inserts_newline(self, chat_panel, qapp):
+        chat_panel.edit_input.setPlainText("Line 1")
+        shift_enter = QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Return, Qt.ShiftModifier, "\n")
+        qapp.sendEvent(chat_panel.edit_input, shift_enter)
+        assert "\n" in chat_panel.edit_input.toPlainText()
+
+    def test_send_unconfigured_preserves_prompt_text(self, chat_panel, monkeypatch):
+        monkeypatch.setattr(chat_panel.vm, "is_available", lambda: False)
+        chat_panel.edit_input.setPlainText("Important question")
+        chat_panel._on_send()
+        # Text must NOT be wiped out
+        assert chat_panel.edit_input.toPlainText() == "Important question"
+
+    def test_send_when_available_clears_and_dispatches(self, chat_panel, monkeypatch):
+        monkeypatch.setattr(chat_panel.vm, "is_available", lambda: True)
+        dispatched = []
+        monkeypatch.setattr(chat_panel.vm, "process_query", lambda text, reply_to_index=None: dispatched.append(text))
+
+        chat_panel.edit_input.setPlainText("Valid query")
+        chat_panel._on_send()
+
+        assert dispatched == ["Valid query"]
+        assert chat_panel.edit_input.toPlainText() == ""
+
+    def test_focus_input_method(self, chat_panel, qapp):
+        chat_panel.show()
+        chat_panel.activateWindow()
+        chat_panel.edit_title.setFocus()
+        qapp.processEvents()
+        chat_panel.focus_input()
+        qapp.processEvents()
+        assert chat_panel.edit_input.hasFocus() is True
+
 
 
 

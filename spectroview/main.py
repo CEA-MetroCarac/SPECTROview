@@ -594,6 +594,8 @@ class Main(QMainWindow):
         if total_w > 600:
             chat_w = max(340, min(chat_w, int(total_w * 0.4)))
             self.workspace_splitter.setSizes([total_w - chat_w, chat_w])
+        if hasattr(self._chat_panel, "focus_input"):
+            self._chat_panel.focus_input()
 
     def _on_chat_plot_requested(self, plot_config: dict):
         """Apply the AI-suggested plot configuration or graph update to the Graphs workspace.

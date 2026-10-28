@@ -23,7 +23,8 @@ import pandas as pd
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QScrollArea, QFrame, QComboBox, QSizePolicy,
-    QTextEdit, QApplication, QTextBrowser, QInputDialog, QMessageBox
+    QTextEdit, QApplication, QTextBrowser, QInputDialog, QMessageBox,
+    QPlainTextEdit
 )
 import markdown
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QThread, QObject
@@ -190,6 +191,61 @@ class _ThinkingDots(QLabel):
     def _tick(self):
         self._dots = (self._dots % 3) + 1
         self.setText(f"{self._text_prefix} {'.' * self._dots}")
+
+
+class _ChatLineEdit(QPlainTextEdit):
+    """A QPlainTextEdit that emits ``send_requested`` on Enter / Return (Shift+Enter adds newline)
+    and dynamically resizes its height based on its content."""
+
+    send_requested = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._min_height = 44
+        self._max_height = 150
+        self.setFixedHeight(self._min_height)
+        self.textChanged.connect(self._adjust_height)
+
+    def _adjust_height(self) -> None:
+        doc = self.document()
+        lines = 0
+        for i in range(self.blockCount()):
+            block = doc.findBlockByNumber(i)
+            layout = block.layout()
+            if layout is not None:
+                lines += max(1, layout.lineCount())
+            else:
+                lines += 1
+        line_height = self.fontMetrics().lineSpacing()
+        total_height = lines * line_height + 14
+        new_height = max(self._min_height, min(total_height, self._max_height))
+        if self.height() != new_height:
+            self.setFixedHeight(new_height)
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            if event.modifiers() & Qt.ShiftModifier:
+                super().keyPressEvent(event)
+            else:
+                event.accept()
+                self.send_requested.emit()
+        else:
+            super().keyPressEvent(event)
+
+
+class _ComposerFrame(QFrame):
+    """Card frame hosting the prompt composer that focuses the editor on click."""
+
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
+        super().__init__(parent)
+        self.editor: Optional[QWidget] = None
+
+    def mousePressEvent(self, event) -> None:
+        super().mousePressEvent(event)
+        if self.editor is not None and self.editor.isEnabled():
+            self.editor.setFocus()
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -484,18 +540,35 @@ class VChatPanel(QWidget):
     def _make_composer(self) -> QFrame:
         """Create the modern composer frame embedding the text input,
         provider & model selectors, voice dictation, and send/stop button."""
-        self.composer_frame = QFrame()
+        self.composer_frame = _ComposerFrame()
         self.composer_frame.setObjectName("chatComposerFrame")
+        self.composer_frame.setStyleSheet("""
+            QFrame#chatComposerFrame {
+                background: rgba(128, 128, 128, 0.08);
+                border: 1px solid rgba(128, 128, 128, 0.28);
+                border-radius: 8px;
+            }
+        """)
 
         composer_layout = QVBoxLayout(self.composer_frame)
         composer_layout.setContentsMargins(10, 8, 10, 6)
         composer_layout.setSpacing(4)
 
-        # Auto-resizing multi-line text input
+        # Auto-resizing multi-line text input (always enabled so users can compose prompts)
         self.edit_input = _ChatLineEdit()
         self.edit_input.setObjectName("chatComposerInput")
         self.edit_input.setPlaceholderText("Ask a question about your data…")
-        self.edit_input.setStyleSheet("QTextEdit { border: none; background: transparent; padding: 0px; }")
+        self.edit_input.setStyleSheet("""
+            QPlainTextEdit, QTextEdit {
+                border: none;
+                background: transparent;
+                padding: 0px;
+            }
+        """)
+        font = self.edit_input.font()
+        font.setPointSize(max(10, font.pointSize()))
+        self.edit_input.setFont(font)
+        self.composer_frame.editor = self.edit_input
         composer_layout.addWidget(self.edit_input)
 
         # Embedded bottom toolbar inside composer
@@ -777,10 +850,17 @@ class VChatPanel(QWidget):
         self.vm.refresh_history_store()
         self._refresh_status()
 
+    def focus_input(self) -> None:
+        """Set keyboard focus to the prompt composer."""
+        if hasattr(self, "edit_input") and self.edit_input is not None:
+            self.edit_input.setFocus()
+
     def showEvent(self, event) -> None:
-        """Reload settings whenever the dialog is displayed."""
+        """Reload settings whenever the dialog is displayed and focus the composer."""
         super().showEvent(event)
         self.reload_settings()
+        if hasattr(self, "edit_input") and self.edit_input is not None:
+            QTimer.singleShot(50, self.edit_input, self.edit_input.setFocus)
 
     def _load_settings(self) -> None:
         """Restore provider and model from the app settings."""
@@ -909,17 +989,15 @@ class VChatPanel(QWidget):
         if is_ollama and not OLLAMA_AVAILABLE:
             self.lbl_status.setText("●  ollama package missing — run: pip install ollama")
             self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
-            self.edit_input.setEnabled(False)
             self._apply_send_button_style()
-            self.btn_send.setEnabled(False)
+            self.btn_send.setToolTip("ollama package missing — run: pip install ollama")
             return
 
         if not is_ollama and not OPENAI_AVAILABLE:
             self.lbl_status.setText("●  openai package missing — run: pip install openai")
             self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
-            self.edit_input.setEnabled(False)
             self._apply_send_button_style()
-            self.btn_send.setEnabled(False)
+            self.btn_send.setToolTip("openai package missing — run: pip install openai")
             return
 
         # ── API key missing ─────────────────────────────────────
@@ -927,9 +1005,8 @@ class VChatPanel(QWidget):
         if not is_ollama and not has_key:
             self.lbl_status.setText(f"○  {provider_key} — configure API key in Settings (AI Tab)")
             self.lbl_status.setStyleSheet("color: #FFA726; font-size: 11px;")
-            self.edit_input.setEnabled(False)
             self._apply_send_button_style()
-            self.btn_send.setEnabled(False)
+            self.btn_send.setToolTip(f"{provider_key} — configure API key in Settings (AI Tab)")
             return
 
         # Cancel any pending worker safely
@@ -1039,18 +1116,18 @@ class VChatPanel(QWidget):
                 status_text += "  ·  Simplified prompts"
             self.lbl_status.setText(status_text)
             self.lbl_status.setStyleSheet("color: #66BB6A; font-size: 11px;")
-            self.edit_input.setEnabled(True)
+            self.btn_send.setToolTip("Send query (Enter, Shift+Enter for newline)")
             self._apply_send_button_style()
 
         else:
             if is_ollama:
                 self.lbl_status.setText("●  Ollama not running — run: ollama serve")
+                self.btn_send.setToolTip("Ollama not running (run: ollama serve)")
             else:
                 self.lbl_status.setText(f"●  {provider_key} API — could not connect or invalid key")
+                self.btn_send.setToolTip(f"Could not connect to {provider_key}")
             self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
-            self.edit_input.setEnabled(False)
             self._apply_send_button_style()
-            self.btn_send.setEnabled(False)
 
     def closeEvent(self, event) -> None:
         """Clean up background workers and persist state on close."""
@@ -1079,6 +1156,49 @@ class VChatPanel(QWidget):
     def _on_send(self) -> None:
         text = self.edit_input.toPlainText().strip()
         if not text or self.vm.is_busy():
+            return
+
+        current_data = self.cbb_provider.currentData()
+        provider_key = (
+            str(current_data)
+            if current_data
+            else self._display_to_provider(self.cbb_provider.currentText())
+        )
+        is_ollama = (provider_key == "Ollama")
+
+        if is_ollama and not OLLAMA_AVAILABLE:
+            self._on_error(
+                "⚠️ The **ollama** Python package is not installed.\n\n"
+                "Please run `pip install ollama` to use local models."
+            )
+            return
+
+        if not is_ollama and not OPENAI_AVAILABLE:
+            self._on_error(
+                "⚠️ The **openai** Python package is not installed.\n\n"
+                "Please run `pip install openai` to use cloud models."
+            )
+            return
+
+        has_key = bool(self._settings.get_ai_value(f"api_key_{provider_key}", "", str))
+        if not is_ollama and not has_key:
+            self._on_error(
+                f"⚠️ **API key missing for {provider_key}**\n\n"
+                f"Please open **Settings ▸ AI** to configure your API key for {provider_key}."
+            )
+            return
+
+        if not self.vm.is_available():
+            if is_ollama:
+                self._on_error(
+                    "⚠️ **Ollama is not reachable.**\n\n"
+                    "Make sure Ollama is running (`ollama serve`) or select another provider in the dropdown below."
+                )
+            else:
+                self._on_error(
+                    f"⚠️ **{provider_key} is not reachable or API key is invalid.**\n\n"
+                    f"Please check your API key in **Settings ▸ AI** or verify your network connection."
+                )
             return
 
         self.edit_input.clear()
@@ -1393,38 +1513,4 @@ class VChatPanel(QWidget):
 
 
 
-# ─────────────────────────────────────────────────────────────────────────
-# Subclassed QLineEdit to emit Enter-key as a signal
-# ─────────────────────────────────────────────────────────────────────────
 
-class _ChatLineEdit(QTextEdit):
-    """A QTextEdit that emits ``send_requested`` on Enter / Return (Shift+Enter adds newline)
-    and dynamically resizes its height based on its content."""
-
-    send_requested = Signal()
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setAcceptRichText(False)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self._min_height = 42
-        self._max_height = 150
-        self.setFixedHeight(self._min_height)
-        self.textChanged.connect(self._adjust_height)
-
-    def _adjust_height(self) -> None:
-        doc_height = int(self.document().size().height())
-        margins = self.contentsMargins()
-        total_height = doc_height + margins.top() + margins.bottom() + 4
-        new_height = max(self._min_height, min(total_height, self._max_height))
-        if self.height() != new_height:
-            self.setFixedHeight(new_height)
-
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
-            if event.modifiers() & Qt.ShiftModifier:
-                super().keyPressEvent(event)
-            else:
-                self.send_requested.emit()
-        else:
-            super().keyPressEvent(event)

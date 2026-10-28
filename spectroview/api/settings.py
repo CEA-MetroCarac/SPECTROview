@@ -7,7 +7,7 @@ Windows, INI on Linux). Constructing `MSettings()` never requires a running
 already a hard dependency of the `spectroview` package.
 """
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
 from spectroview.model.m_settings import MSettings
 
@@ -26,18 +26,21 @@ def set_fit_defaults(**kwargs: Any) -> None:
 
 
 def get_working_folder() -> str:
-    """Return the configured SPECTROview Working Folder.
+    """Return the configured universal SPECTROview Working Folder.
 
-    Three subfolders are auto-created under it by `set_working_folder()`:
+    Four subfolders are auto-created under it by `set_working_folder()`:
     fit_model/ (fit-model JSON templates), plot_recipe/ (Graph Workspace
-    plot recipes), plot_style/ (Graph Workspace style templates).
+    plot recipes), plot_style/ (Graph Workspace style templates),
+    ai_chat_history/ (AI chat logs), and config.json (portable settings backup).
     """
     return MSettings().get_working_folder()
 
 
 def set_working_folder(path: Union[str, Path]) -> None:
-    """Set the Working Folder, creating its fit_model/plot_recipe/plot_style
-    subfolders if they don't already exist."""
+    """Set the universal Working Folder, creating its fit_model/, plot_recipe/,
+    plot_style/, and ai_chat_history/ subfolders and config.json if they don't already exist.
+    If an existing config.json is present in the specified folder, settings are automatically restored.
+    """
     MSettings().set_working_folder(str(path))
 
 
@@ -45,6 +48,45 @@ def get_fit_model_folder() -> str:
     """Return the folder SPECTROview scans for fit-model JSON templates
     (the `fit_model` subfolder of the Working Folder)."""
     return MSettings().get_fit_model_folder()
+
+
+def get_plot_recipe_folder() -> str:
+    """Return the folder for Graph Workspace plot recipes
+    (the `plot_recipe` subfolder of the Working Folder)."""
+    return MSettings().get_plot_recipe_folder()
+
+
+def get_plot_style_folder() -> str:
+    """Return the folder for Graph Workspace style templates
+    (the `plot_style` subfolder of the Working Folder)."""
+    return MSettings().get_plot_style_folder()
+
+
+def get_template_folder() -> str:
+    """Return the folder for templates
+    (the `template` subfolder of the Working Folder)."""
+    return MSettings().get_template_folder()
+
+
+def get_history_folder() -> str:
+    """Return the folder where AI chat history JSON files are stored
+    (the `ai_chat_history` subfolder of the Working Folder)."""
+    return MSettings().get_history_folder()
+
+
+def get_ai_history_folder() -> str:
+    """Alias for get_history_folder()."""
+    return MSettings().get_history_folder()
+
+
+def export_config(filepath: Optional[Union[str, Path]] = None) -> Optional[str]:
+    """Export configuration to a JSON file (defaults to config.json in Working Folder)."""
+    return MSettings().export_config(str(filepath) if filepath else None)
+
+
+def import_config(filepath: Optional[Union[str, Path]] = None) -> bool:
+    """Import configuration from a JSON file (defaults to config.json in Working Folder)."""
+    return MSettings().import_config(str(filepath) if filepath else None)
 
 
 def get_last_directory() -> str:

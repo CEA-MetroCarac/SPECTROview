@@ -27,8 +27,8 @@ Both fit models and plot configurations are plain JSON files in a folder you con
 from spectroview.api import fitting, graphs, settings
 
 # Fit-model templates live under the SPECTROview Working Folder. Point it at a
-# shared location — set_working_folder() creates fit_model/plot_recipe/plot_style
-# subfolders under it:
+# shared location — set_working_folder() creates fit_model/plot_recipe/plot_style/ai_chat_history
+# subfolders and config.json under it:
 settings.set_working_folder("./shared_spectroview")
 # ...then any *.json dropped into the fit_model folder (by this API, the GUI, or
 # hand-written) is immediately visible:

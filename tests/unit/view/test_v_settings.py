@@ -1,8 +1,10 @@
 """Tests for view/components/v_settings.py - VSettingsDialog.
 
-Covers the AI tab's "Provider Presets" collapsible section: collapsed by
-default, toggled by its button, and functionality (load/save round-trip)
-unaffected by being nested inside the collapsible frame.
+Covers:
+- AI tab's "Provider Presets" collapsible section
+- Top-level AI fields round-trip
+- Provider connection test flow
+- Unified Working Folder controls (Browse, Open folder, Export/Restore Config buttons)
 """
 from spectroview.view.components.v_settings import VSettingsDialog
 from spectroview.viewmodel.vm_settings import VMSettings
@@ -89,3 +91,52 @@ class TestAIConnectionTest:
         vm.cancel_test_connection()
 
 
+class TestUnifiedWorkingFolderUI:
+    def test_chat_history_groupbox_removed_from_ai_tab(self, qapp):
+        dialog = _dialog(qapp)
+        assert not hasattr(dialog, "le_history_folder")
+        assert not hasattr(dialog, "btn_history_folder")
+
+    def test_open_working_folder_button_exists(self, qapp):
+        dialog = _dialog(qapp)
+        assert hasattr(dialog, "btn_open_working_folder")
+        assert "Open" in dialog.btn_open_working_folder.text()
+
+    def test_open_working_folder_triggers_desktop_services(self, qapp, tmp_path, monkeypatch):
+        import os
+        from PySide6.QtGui import QDesktopServices
+        opened_urls = []
+        monkeypatch.setattr(QDesktopServices, "openUrl", lambda url: opened_urls.append(url.toLocalFile()))
+        dialog = _dialog(qapp)
+        target_dir = str(tmp_path / "work_dir")
+        dialog.le_working_folder.setText(target_dir)
+        dialog._on_open_working_folder()
+        assert len(opened_urls) == 1
+        assert os.path.normpath(opened_urls[0]) == os.path.normpath(target_dir)
+
+    def test_config_backup_restore_buttons_exist(self, qapp):
+        dialog = _dialog(qapp)
+        assert hasattr(dialog, "btn_export_config")
+        assert hasattr(dialog, "btn_import_config")
+        assert "Export Config" in dialog.btn_export_config.text()
+        assert "Restore Config" in dialog.btn_import_config.text()
+
+    def test_export_config_flow(self, qapp, monkeypatch):
+        from PySide6.QtWidgets import QMessageBox
+        dialog = _dialog(qapp)
+        monkeypatch.setattr(dialog.vm, "export_config_dialog", lambda parent: "/path/to/backup.json")
+        info_called = []
+        monkeypatch.setattr(QMessageBox, "information", lambda p, t, m: info_called.append(m))
+        dialog._on_export_config()
+        assert len(info_called) == 1
+        assert "/path/to/backup.json" in info_called[0]
+
+    def test_import_config_flow(self, qapp, monkeypatch):
+        from PySide6.QtWidgets import QMessageBox
+        dialog = _dialog(qapp)
+        monkeypatch.setattr(dialog.vm, "import_config_dialog", lambda parent: True)
+        info_called = []
+        monkeypatch.setattr(QMessageBox, "information", lambda p, t, m: info_called.append(m))
+        dialog._on_import_config()
+        assert len(info_called) == 1
+        assert "restored successfully" in info_called[0]

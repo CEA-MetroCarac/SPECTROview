@@ -1,11 +1,13 @@
 # spectroview/view/components/v_settings.py
+import os
+
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox, QLineEdit, QDialogButtonBox,
-    QSpacerItem, QSizePolicy, QFrame, QGroupBox, QTabWidget, QWidget, QToolButton
+    QSpacerItem, QSizePolicy, QFrame, QGroupBox, QTabWidget, QWidget, QToolButton, QMessageBox
 )
-from PySide6.QtGui import QFont
-from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QDesktopServices
+from PySide6.QtCore import Qt, QUrl
 
 from spectroview.viewmodel.vm_settings import VMSettings
 from spectroview.view.theme import Icons
@@ -18,7 +20,7 @@ class VSettingsDialog(QDialog):
         self.vm = vm
 
         self.setWindowTitle("Settings")
-        self.resize(500, 720)
+        self.resize(500, 680)
 
         self._init_ui()
         self._connect_vm()
@@ -48,75 +50,80 @@ class VSettingsDialog(QDialog):
         fitting_tab_layout.setContentsMargins(4, 4, 4, 4)
         fitting_tab_layout.setSpacing(8)
 
-        # ───── Fitting & Data Settings ─────
-        grp_fitting = QGroupBox("Fit Parameters")
-        fitting_layout = QVBoxLayout(grp_fitting)
-        fitting_layout.setContentsMargins(4, 4, 4, 4)
-        fitting_layout.setSpacing(8)
+        # ───── Negative Fitting ─────
+        grp_neg = QGroupBox("Peak Polarity")
+        neg_layout = QVBoxLayout(grp_neg)
+        neg_layout.setContentsMargins(4, 4, 4, 4)
+        neg_layout.setSpacing(8)
+
+        self.chk_fit_negative = QCheckBox("Fit Negative Peaks (absorption/dips)")
+        neg_layout.addWidget(self.chk_fit_negative)
+        fitting_tab_layout.addWidget(grp_neg)
+
+        fitting_tab_layout.addSpacing(10)
+
+        # ───── Solver Options ─────
+        grp_solver = QGroupBox("Fitting Convergence")
+        solver_layout = QVBoxLayout(grp_solver)
+        solver_layout.setContentsMargins(4, 4, 4, 4)
+        solver_layout.setSpacing(8)
 
         # Max iterations
         row = QHBoxLayout()
-        row.addWidget(QLabel("Maximum iterations:"))
+        row.addWidget(QLabel("Max iterations:"))
         self.spin_max_iter = QSpinBox()
-        self.spin_max_iter.setRange(1, 10000)
-        self.spin_max_iter.setSingleStep(20)
+        self.spin_max_iter.setRange(10, 10000)
+        self.spin_max_iter.setSingleStep(50)
         row.addWidget(self.spin_max_iter)
-        fitting_layout.addLayout(row)
+        solver_layout.addLayout(row)
 
-        # x-tolerance
+        # X tolerance
         row = QHBoxLayout()
-        row.addWidget(QLabel("x-tolerance (xtol):"))
+        row.addWidget(QLabel("X tolerance (xtol):"))
         self.spin_x_tol = QDoubleSpinBox()
+        self.spin_x_tol.setRange(1e-10, 1.0)
         self.spin_x_tol.setDecimals(6)
-        self.spin_x_tol.setRange(1e-6, 1e-1)
-        self.spin_x_tol.setSingleStep(1e-5)
         row.addWidget(self.spin_x_tol)
-        fitting_layout.addLayout(row)
+        solver_layout.addLayout(row)
 
-        # f-tolerance
+        # F tolerance
         row = QHBoxLayout()
-        row.addWidget(QLabel("f-tolerance (ftol):"))
+        row.addWidget(QLabel("Function tolerance (ftol):"))
         self.spin_f_tol = QDoubleSpinBox()
+        self.spin_f_tol.setRange(1e-10, 1.0)
         self.spin_f_tol.setDecimals(6)
-        self.spin_f_tol.setRange(1e-6, 1e-1)
-        self.spin_f_tol.setSingleStep(1e-5)
         row.addWidget(self.spin_f_tol)
-        fitting_layout.addLayout(row)
+        solver_layout.addLayout(row)
 
-        # Noise coeff
+        # Coef Noise (residual weight)
         row = QHBoxLayout()
-        row.addWidget(QLabel("Noise threshold coeff:"))
+        row.addWidget(QLabel("Noise threshold (× noise):"))
         self.spin_coef_noise = QDoubleSpinBox()
-        self.spin_coef_noise.setDecimals(2)
-        self.spin_coef_noise.setRange(0, 100)
+        self.spin_coef_noise.setRange(0.0, 10.0)
         self.spin_coef_noise.setSingleStep(0.5)
-        self.spin_coef_noise.setValue(1.0)
+        self.spin_coef_noise.setDecimals(2)
         row.addWidget(self.spin_coef_noise)
-        fitting_layout.addLayout(row)
+        solver_layout.addLayout(row)
 
         # Loss function
         row = QHBoxLayout()
         row.addWidget(QLabel("Loss function:"))
         self.combo_loss = QComboBox()
-        self.combo_loss.addItems(["linear", "soft_l1", "huber"])
+        self.combo_loss.addItems(["linear", "soft_l1", "huber", "cauchy", "arctan"])
         row.addWidget(self.combo_loss)
-        fitting_layout.addLayout(row)
+        solver_layout.addLayout(row)
 
         # Loss scale (f_scale)
         row = QHBoxLayout()
         row.addWidget(QLabel("Loss scale (f_scale):"))
         self.spin_f_scale = QDoubleSpinBox()
+        self.spin_f_scale.setRange(0.01, 100.0)
+        self.spin_f_scale.setSingleStep(0.1)
         self.spin_f_scale.setDecimals(3)
-        self.spin_f_scale.setRange(1e-4, 1e4)
-        self.spin_f_scale.setSingleStep(0.5)
-        self.spin_f_scale.setValue(1.0)
         row.addWidget(self.spin_f_scale)
-        fitting_layout.addLayout(row)
+        solver_layout.addLayout(row)
 
-        self.chk_fit_negative = QCheckBox("Fit negative values")
-        fitting_layout.addWidget(self.chk_fit_negative)
-
-        fitting_tab_layout.addWidget(grp_fitting)
+        fitting_tab_layout.addWidget(grp_solver)
 
         fitting_tab_layout.addSpacing(10)
 
@@ -173,17 +180,47 @@ class VSettingsDialog(QDialog):
         self.btn_working_folder = QPushButton("Browse")
         self.btn_working_folder.setIcon(Icons.folder())
         self.btn_working_folder.setMaximumWidth(85)
+        self.btn_working_folder.setToolTip("Select or change the SPECTROview working folder")
+
         self.le_working_folder = QLineEdit()
+
+        self.btn_open_working_folder = QPushButton("Open")
+        self.btn_open_working_folder.setIcon(Icons.open())
+        self.btn_open_working_folder.setMaximumWidth(75)
+        self.btn_open_working_folder.setToolTip("Open working folder in system file manager")
+        self.btn_open_working_folder.clicked.connect(self._on_open_working_folder)
+
         folder_row.addWidget(self.btn_working_folder)
         folder_row.addWidget(self.le_working_folder)
+        folder_row.addWidget(self.btn_open_working_folder)
         working_layout.addLayout(folder_row)
 
         lbl_working_hint = QLabel(
-            "Creates fit_model/, plot_recipe/, and plot_style/ subfolders automatically."
+            "Universal working folder. Automatically manages:\n"
+            "• fit_model/ (peak fitting models)\n"
+            "• plot_recipe/ & plot_style/ (graph recipes and styles)\n"
+            "• ai_chat_history/ (AI chat logs)\n"
+            "• template/ (templates)\n"
+            "• config.json (portable settings backup for easy migration)"
         )
         lbl_working_hint.setStyleSheet("color: gray; font-style: italic; font-size: 10px;")
         lbl_working_hint.setWordWrap(True)
         working_layout.addWidget(lbl_working_hint)
+
+        btn_config_row = QHBoxLayout()
+        self.btn_export_config = QPushButton("Export Config...")
+        self.btn_export_config.setIcon(Icons.export())
+        self.btn_export_config.setToolTip("Export application settings to a custom JSON backup file")
+        self.btn_export_config.clicked.connect(self._on_export_config)
+
+        self.btn_import_config = QPushButton("Restore Config...")
+        self.btn_import_config.setIcon(Icons.refresh())
+        self.btn_import_config.setToolTip("Restore application settings from a JSON backup file")
+        self.btn_import_config.clicked.connect(self._on_import_config)
+
+        btn_config_row.addWidget(self.btn_export_config)
+        btn_config_row.addWidget(self.btn_import_config)
+        working_layout.addLayout(btn_config_row)
 
         fitting_tab_layout.addWidget(grp_working)
 
@@ -269,7 +306,7 @@ class VSettingsDialog(QDialog):
         self.frame_provider_presets.setVisible(False)
         api_layout.addWidget(self.frame_provider_presets)
 
-        # ── Test Connection row (similar to PLUME AI settings) ─────
+        # ── Test Connection row ─────
         test_row = QHBoxLayout()
         test_row.setContentsMargins(0, 4, 0, 0)
         test_row.setSpacing(6)
@@ -301,26 +338,6 @@ class VSettingsDialog(QDialog):
         api_layout.addLayout(test_row)
 
         ai_tab_layout.addWidget(grp_api)
-
-        # Chat History Folder
-        grp_history = QGroupBox("Chat History")
-        history_layout = QVBoxLayout(grp_history)
-        history_layout.setContentsMargins(4, 4, 4, 4)
-        history_layout.setSpacing(8)
-        
-        lbl_history = QLabel("History Folder:")
-        history_layout.addWidget(lbl_history)
-        
-        history_row = QHBoxLayout()
-        self.btn_history_folder = QPushButton("Browse")
-        self.btn_history_folder.setIcon(Icons.folder())
-        self.btn_history_folder.setMaximumWidth(85)
-        self.le_history_folder = QLineEdit()
-        history_row.addWidget(self.btn_history_folder)
-        history_row.addWidget(self.le_history_folder)
-        history_layout.addLayout(history_row)
-
-        ai_tab_layout.addWidget(grp_history)
 
         # Local MCP endpoint (opt-in; bind address intentionally fixed).
         grp_mcp = QGroupBox("Local MCP Server")
@@ -372,7 +389,6 @@ class VSettingsDialog(QDialog):
 
         # Folder picker
         self.btn_working_folder.clicked.connect(self.vm.pick_working_folder)
-        self.btn_history_folder.clicked.connect(self.vm.pick_history_folder)
 
     # ──────────────────────────────────────────────
     # VM Connections
@@ -380,7 +396,6 @@ class VSettingsDialog(QDialog):
     def _connect_vm(self):
         self.vm.settings_loaded.connect(self._apply_settings)
         self.vm.working_folder_changed.connect(self.le_working_folder.setText)
-        self.vm.history_folder_changed.connect(self.le_history_folder.setText)
         self.vm.connection_test_finished.connect(self._on_connection_test_finished)
         self.vm.settings_saved.connect(self.accept)
 
@@ -417,9 +432,42 @@ class VSettingsDialog(QDialog):
         self.edit_custom_url.setText(data.get("custom_base_url", ""))
         self.edit_custom_models.setText(data.get("custom_models", ""))
         self.edit_custom_label.setText(data.get("custom_label", ""))
-        self.le_history_folder.setText(data.get("history_folder", ""))
         self.chk_mcp_enabled.setChecked(data.get("mcp_enabled", False))
         self.spin_mcp_port.setValue(data.get("mcp_port", 8765))
+
+    def _on_open_working_folder(self):
+        folder = self.le_working_folder.text().strip()
+        if folder:
+            if not os.path.exists(folder):
+                try:
+                    os.makedirs(folder, exist_ok=True)
+                except OSError:
+                    pass
+            QDesktopServices.openUrl(QUrl.fromLocalFile(folder))
+
+    def _on_export_config(self):
+        filepath = self.vm.export_config_dialog(self)
+        if filepath:
+            QMessageBox.information(
+                self,
+                "Config Exported",
+                f"Configuration successfully exported to:\n{filepath}",
+            )
+
+    def _on_import_config(self):
+        success = self.vm.import_config_dialog(self)
+        if success:
+            QMessageBox.information(
+                self,
+                "Config Restored",
+                "Configuration restored successfully from JSON file.",
+            )
+        else:
+            QMessageBox.warning(
+                self,
+                "Restore Failed",
+                "Could not restore configuration from the selected file.",
+            )
 
     def _on_toggle_providers(self, checked: bool):
         self.frame_provider_presets.setVisible(checked)
@@ -449,7 +497,6 @@ class VSettingsDialog(QDialog):
             "custom_base_url": self.edit_custom_url.text(),
             "custom_models": self.edit_custom_models.text(),
             "custom_label": self.edit_custom_label.text(),
-            "history_folder": self.le_history_folder.text(),
             "mcp_enabled": self.chk_mcp_enabled.isChecked(),
             "mcp_port": self.spin_mcp_port.value(),
         })
@@ -510,5 +557,3 @@ class VSettingsDialog(QDialog):
         if hasattr(self.vm, "cancel_test_connection"):
             self.vm.cancel_test_connection()
         super().closeEvent(event)
-
-

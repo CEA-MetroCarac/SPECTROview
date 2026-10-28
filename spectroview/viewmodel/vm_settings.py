@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 from PySide6.QtCore import QObject, Signal, QThread
@@ -41,7 +42,6 @@ class VMSettings(QObject):
     settings_loaded = Signal(dict)
     settings_saved = Signal()
     working_folder_changed = Signal(str)
-    history_folder_changed = Signal(str)
     connection_test_started = Signal()
     connection_test_finished = Signal(bool, str)
 
@@ -62,6 +62,7 @@ class VMSettings(QObject):
     # ---------- Save ----------
     def save(self, data: dict):
         working_folder = data.pop("working_folder", "")
+        data.pop("history_folder", None)
 
         current_mcp = self.settings.load_mcp_settings()
         mcp_enabled = bool(data.pop("mcp_enabled", current_mcp["mcp_enabled"]))
@@ -69,7 +70,7 @@ class VMSettings(QObject):
 
         ai_keys = ["api_key_OpenAI", "api_key_Anthropic", "api_key_Gemini",
                    "api_key_DeepSeek", "api_key_Mistral", "api_key_Custom",
-                   "custom_base_url", "custom_models", "custom_label", "history_folder"]
+                   "custom_base_url", "custom_models", "custom_label"]
         ai_data = {k: data.pop(k, "") for k in ai_keys if k in data}
 
         self.settings.save_fit_settings(data)
@@ -78,29 +79,44 @@ class VMSettings(QObject):
 
         if working_folder:
             self.settings.set_working_folder(working_folder)
+        else:
+            self.settings.export_config()
 
         self.settings_saved.emit()
 
     # ---------- Folder picker ----------
     def pick_working_folder(self):
-        """Persists immediately (unlike the old pick_template_folder(),
-        which only emitted the signal to update the line edit and waited
-        for the Settings dialog's OK button) -- part of the fix for
-        recipe/style dialogs never seeing a folder configured after the
-        Graph Workspace tab was already built."""
+        """Persists immediately and auto-imports config.json if present in the picked folder."""
         folder = QFileDialog.getExistingDirectory(
             None, "Select SPECTROview Working Folder", ""
         )
         if folder:
             self.settings.set_working_folder(folder)
             self.working_folder_changed.emit(folder)
+            self.load()
 
-    def pick_history_folder(self):
-        folder = QFileDialog.getExistingDirectory(
-            None, "Select Chat History Folder", ""
+    # ---------- Config Import / Export dialogs ----------
+    def export_config_dialog(self, parent=None) -> Optional[str]:
+        default_dir = self.settings.get_working_folder() or self.settings.get_last_directory()
+        default_file = os.path.join(default_dir, "spectroview_config.json")
+        filepath, _ = QFileDialog.getSaveFileName(
+            parent, "Export SPECTROview Settings", default_file, "JSON Files (*.json)"
         )
-        if folder:
-            self.history_folder_changed.emit(folder)
+        if filepath:
+            return self.settings.export_config(filepath)
+        return None
+
+    def import_config_dialog(self, parent=None) -> bool:
+        default_dir = self.settings.get_working_folder() or self.settings.get_last_directory()
+        filepath, _ = QFileDialog.getOpenFileName(
+            parent, "Restore SPECTROview Settings", default_dir, "JSON Files (*.json)"
+        )
+        if filepath:
+            success = self.settings.import_config(filepath)
+            if success:
+                self.load()
+            return success
+        return False
 
     # ---------- Connection testing ----------
     def test_connection(
@@ -149,4 +165,3 @@ class VMSettings(QObject):
             worker.quit()
             worker.wait(1000)
         self._test_worker = None
-

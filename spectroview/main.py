@@ -75,6 +75,8 @@ class Main(QMainWindow):
         super().__init__()
         setup_application_font()
         self.settings = MSettings()
+        # Restore configuration from working folder if config.json exists
+        self.settings.import_config()
         self.theme_mgr = ThemeManager(self.settings)
 
         # Apply global application style BEFORE creating widgets to avoid expensive unpolish/polish

@@ -2,6 +2,7 @@
 
 import json
 import os
+from typing import Any, Dict, Optional, Union
 
 from PySide6.QtCore import QSettings
 
@@ -10,6 +11,8 @@ class MSettings:
 
     def __init__(self):
         self.settings = QSettings("CEA-Leti", "SPECTROview")
+        self._is_importing = False
+        self._batch_saving = False
         self._migrate_legacy_ai_settings()
 
     # ---------- Fit settings ----------
@@ -31,6 +34,7 @@ class MSettings:
         for key, value in data.items():
             self.settings.setValue(f"fit_settings/{key}", value)
         self.settings.sync()
+        self._auto_export_config()
 
     # ---------- View Options ----------
     def load_view_options(self) -> dict:
@@ -72,6 +76,7 @@ class MSettings:
         for key, value in data.items():
             self.settings.setValue(f"view_options/{key}", value)
         self.settings.sync()
+        self._auto_export_config()
 
     # ---------- Export Options (Graph Workspace figure export) ----------
     def load_export_options(self) -> dict:
@@ -90,12 +95,14 @@ class MSettings:
         for key, value in data.items():
             self.settings.setValue(f"export_options/{key}", value)
         self.settings.sync()
+        self._auto_export_config()
 
     # ---------- Working folder ----------
-    # One user-configured root folder with 3 auto-created subfolders,
-    # replacing the old separate "Fit model folder"/"Plot template folder"
-    # settings so the user only configures one path.
-    _WORKING_SUBFOLDERS = ("fit_model", "plot_recipe", "plot_style")
+    # Universal user-configured root folder with 4 auto-created subfolders:
+    # fit_model/ (fit models), plot_recipe/ (recipes), plot_style/ (styles),
+    # and ai_chat_history/ (chat logs), plus config.json (portable backup).
+    _WORKING_SUBFOLDERS = ("fit_model", "plot_recipe", "plot_style", "ai_chat_history", "template")
+    CONFIG_FILENAME = "config.json"
 
     def get_working_folder(self) -> str:
         working_folder = self.settings.value("working_folder", "", str)
@@ -121,9 +128,19 @@ class MSettings:
                 subfolder = os.path.join(path, name)
                 if not os.path.exists(subfolder):
                     try:
-                        os.makedirs(subfolder)
+                        os.makedirs(subfolder, exist_ok=True)
                     except OSError as e:
                         print(f"Error creating {subfolder}: {e}")
+
+            # Restore existing config or save initial config into working folder
+            config_file = os.path.join(path, self.CONFIG_FILENAME)
+            alt_config_file = os.path.join(path, "spectroview_config.json")
+            if os.path.isfile(config_file):
+                self.import_config(config_file)
+            elif os.path.isfile(alt_config_file):
+                self.import_config(alt_config_file)
+            else:
+                self.export_config(config_file)
 
     def get_fit_model_folder(self) -> str:
         working_folder = self.get_working_folder()
@@ -136,6 +153,145 @@ class MSettings:
     def get_plot_style_folder(self) -> str:
         working_folder = self.get_working_folder()
         return os.path.join(working_folder, "plot_style") if working_folder else ""
+
+    def get_template_folder(self) -> str:
+        """Return the folder for templates (the 'template' subfolder of the Working Folder)."""
+        working_folder = self.get_working_folder()
+        return os.path.join(working_folder, "template") if working_folder else ""
+
+    def get_history_folder(self) -> str:
+        """Return the folder where AI chat history JSON files are stored.
+
+        Derives from the universal working folder's 'ai_chat_history' subfolder.
+        Falls back to legacy 'ai_chat/history_folder' if working folder is unset.
+        """
+        working_folder = self.get_working_folder()
+        if working_folder:
+            return os.path.join(working_folder, "ai_chat_history")
+        return self.get_ai_value("history_folder", "", str)
+
+    def get_ai_history_folder(self) -> str:
+        """Alias for get_history_folder()."""
+        return self.get_history_folder()
+
+    # ---------- Portable JSON Configuration (Backup & Restore) ----------
+    def get_config_dict(self) -> dict:
+        """Assemble persistent application configuration into a dictionary."""
+        ai_data = {}
+        self.settings.beginGroup(self.AI_GROUP)
+        for k in self.settings.allKeys():
+            if not k.startswith("_") and k != "history_folder":
+                ai_data[k] = self.settings.value(k)
+        self.settings.endGroup()
+
+        return {
+            "version": "1.0",
+            "fit_settings": self.load_fit_settings(),
+            "view_options": self.load_view_options(),
+            "export_options": self.load_export_options(),
+            "theme": self.get_theme(),
+            "default_graph_style": self.get_default_graph_style(),
+            "mcp": self.load_mcp_settings(),
+            "ai_settings": ai_data,
+        }
+
+    def apply_config_dict(self, data: dict) -> None:
+        """Apply a configuration dictionary into QSettings."""
+        if not isinstance(data, dict):
+            return
+
+        self._is_importing = True
+        try:
+            if "fit_settings" in data and isinstance(data["fit_settings"], dict):
+                self.save_fit_settings(data["fit_settings"])
+
+            if "view_options" in data and isinstance(data["view_options"], dict):
+                self.save_view_options(data["view_options"])
+
+            if "export_options" in data and isinstance(data["export_options"], dict):
+                self.save_export_options(data["export_options"])
+
+            if "theme" in data and isinstance(data["theme"], str):
+                self.set_theme(data["theme"])
+
+            if "default_graph_style" in data and isinstance(data["default_graph_style"], dict):
+                self.set_default_graph_style(data["default_graph_style"])
+
+            if "mcp" in data and isinstance(data["mcp"], dict):
+                mcp = data["mcp"]
+                if "mcp_enabled" in mcp and "mcp_port" in mcp:
+                    try:
+                        self.save_mcp_settings(bool(mcp["mcp_enabled"]), int(mcp["mcp_port"]))
+                    except Exception:
+                        pass
+
+            if "ai_settings" in data and isinstance(data["ai_settings"], dict):
+                for k, v in data["ai_settings"].items():
+                    if not k.startswith("_") and k != "history_folder":
+                        self.set_ai_value(k, v)
+        finally:
+            self._is_importing = False
+
+    def export_config(self, filepath: Optional[str] = None) -> Optional[str]:
+        """Export settings to a JSON file. Defaults to config.json in working folder."""
+        if getattr(self, "_is_importing", False):
+            return None
+        if not filepath:
+            working = self.get_working_folder()
+            if not working or not os.path.isdir(working):
+                return None
+            filepath = os.path.join(working, self.CONFIG_FILENAME)
+
+        try:
+            config_dict = self.get_config_dict()
+            tmp_path = f"{filepath}.tmp"
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                json.dump(config_dict, f, indent=2, ensure_ascii=False)
+            if os.path.exists(filepath):
+                os.replace(tmp_path, filepath)
+            else:
+                os.rename(tmp_path, filepath)
+            return filepath
+        except Exception as e:
+            print(f"Error exporting config to {filepath}: {e}")
+            if os.path.exists(f"{filepath}.tmp"):
+                try:
+                    os.remove(f"{filepath}.tmp")
+                except OSError:
+                    pass
+            return None
+
+    def import_config(self, filepath: Optional[str] = None) -> bool:
+        """Import settings from a JSON file. Defaults to config.json in working folder."""
+        if not filepath:
+            working = self.get_working_folder()
+            if not working or not os.path.isdir(working):
+                return False
+            filepath = os.path.join(working, self.CONFIG_FILENAME)
+            if not os.path.exists(filepath):
+                alt = os.path.join(working, "spectroview_config.json")
+                if os.path.exists(alt):
+                    filepath = alt
+
+        if not os.path.isfile(filepath):
+            return False
+
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            self.apply_config_dict(data)
+            return True
+        except Exception as e:
+            print(f"Error importing config from {filepath}: {e}")
+            return False
+
+    def _auto_export_config(self) -> None:
+        """Silently sync settings to config.json if a working folder exists."""
+        if getattr(self, "_is_importing", False):
+            return
+        working = self.get_working_folder()
+        if working and os.path.isdir(working):
+            self.export_config()
 
     # ---------- Default graph style ----------
     # User-chosen baseline style new graphs start with -- separate from
@@ -153,10 +309,12 @@ class MSettings:
     def set_default_graph_style(self, style: dict):
         self.settings.setValue("default_graph_style", json.dumps(style))
         self.settings.sync()
+        self._auto_export_config()
 
     def clear_default_graph_style(self):
         self.settings.remove("default_graph_style")
         self.settings.sync()
+        self._auto_export_config()
 
     # ---------- Last directory ----------
     def get_last_directory(self) -> str:
@@ -193,6 +351,7 @@ class MSettings:
             theme = "dark"
         self.settings.setValue("theme", theme)
         self.settings.sync()
+        self._auto_export_config()
 
     # ---------- Update checker ----------
     def get_check_for_updates(self) -> bool:
@@ -220,14 +379,6 @@ class MSettings:
         self.settings.sync()
 
     # ---------- AI Settings ----------
-    #
-    # Everything the AI agent persists lives under the "ai_chat/" prefix of the
-    # single application store. It used to sit in a second, separate
-    # QSettings("SPECTROview", "AIChat") pair, which meant the agent's settings
-    # were invisible to the rest of the app and, in tests, escaped the QSettings
-    # isolation fixture and read/wrote the developer's real configuration.
-    # _migrate_legacy_ai_settings() carries the old values over once.
-
     AI_GROUP = "ai_chat"
 
     #: The pre-unification store, kept readable for the one-time migration.
@@ -242,13 +393,7 @@ class MSettings:
     )
 
     def _migrate_legacy_ai_settings(self):
-        """Copy the old QSettings("SPECTROview", "AIChat") values over once.
-
-        Runs at most once per installation (guarded by a marker key) and never
-        overwrites a value already present in the unified store, so it cannot
-        undo a change made after the upgrade. The legacy store is left in place
-        rather than deleted — harmless, and it keeps an older build working.
-        """
+        """Copy the old QSettings("SPECTROview", "AIChat") values over once."""
         if self.settings.value(self._AI_MIGRATED_KEY, False, bool):
             return
 
@@ -264,11 +409,7 @@ class MSettings:
         self.settings.sync()
 
     def get_ai_value(self, key: str, default=None, value_type=None):
-        """Read one ``ai_chat/<key>`` setting.
-
-        Keys are partly dynamic (``api_key_<provider>``, ``model_<provider>``),
-        so this stays generic rather than growing a getter per provider.
-        """
+        """Read one ``ai_chat/<key>`` setting."""
         path = f"{self.AI_GROUP}/{key}"
         if value_type is not None:
             return self.settings.value(path, default, value_type)
@@ -278,14 +419,25 @@ class MSettings:
         """Write one ``ai_chat/<key>`` setting."""
         self.settings.setValue(f"{self.AI_GROUP}/{key}", value)
         self.settings.sync()
+        if not getattr(self, "_batch_saving", False):
+            self._auto_export_config()
 
     def load_ai_settings(self) -> dict:
-        return {key: self.get_ai_value(key, "", str) for key in self.AI_SETTING_KEYS}
+        res = {key: self.get_ai_value(key, "", str) for key in self.AI_SETTING_KEYS}
+        working = self.get_working_folder()
+        if working:
+            res["history_folder"] = self.get_history_folder()
+        return res
 
     def save_ai_settings(self, data: dict):
-        for key, value in data.items():
-            if key in self.AI_SETTING_KEYS:
-                self.set_ai_value(key, value)
+        self._batch_saving = True
+        try:
+            for key, value in data.items():
+                if key in self.AI_SETTING_KEYS:
+                    self.set_ai_value(key, value)
+        finally:
+            self._batch_saving = False
+        self._auto_export_config()
 
     # ---------- Local MCP server ----------
 
@@ -294,7 +446,6 @@ class MSettings:
         return {
             "mcp_enabled": self.settings.value("mcp/enabled", False, bool),
             "mcp_port": self.settings.value("mcp/port", 8765, int),
-            # Deliberately not user-configurable in this iteration.
             "mcp_host": "127.0.0.1",
         }
 
@@ -305,3 +456,4 @@ class MSettings:
         self.settings.setValue("mcp/enabled", bool(enabled))
         self.settings.setValue("mcp/port", port)
         self.settings.sync()
+        self._auto_export_config()

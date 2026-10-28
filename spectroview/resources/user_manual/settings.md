@@ -56,17 +56,21 @@ These parameters define **absolute boundary conditions** that are applied global
 
 ### **3. SPECTROview Working Folder** *(General tab)*
 
-Specify a single root folder for all of SPECTROview's saved templates. When you set it, three subfolders are created automatically inside it:
+Specify a single universal root folder for all of SPECTROview's templates, recipes, styles, AI chat history, and configuration backup. When you set it, four subfolders and a portable configuration file are created automatically inside it:
 
-| Subfolder | Contents |
-|-----------|----------|
+| Subfolder / File | Contents |
+|------------------|----------|
 | `fit_model/` | Custom fit models (JSON). The `Fit Model Builder` scans this folder and lists every model here for one-click reuse. |
 | `plot_recipe/` | Plot Recipes — saved sets of full plot configurations (data bindings + style) for the `Graphs` workspace. |
 | `plot_style/` | Style Templates — saved appearance-only styles that can be applied to any existing graph. |
+| `ai_chat_history/` | AI chat conversation logs (JSON). Conversations are automatically saved here. |
+| `config.json` | Portable configuration backup. Application settings are mirrored to this JSON file. |
 
-Click **Browse** to select a folder, or type the path directly.
+Click **Browse** to select a folder, **Open** to open it in Windows Explorer or macOS Finder, or type the path directly.
 
-> **Note**: This single Working Folder replaces the older separate "Fit model folder" / "Plot template folder" settings. If you had one of those configured previously, it is migrated automatically the first time the Working Folder is read.
+> **Backup & PC Migration**: If you move to a new PC or want to make a backup, simply copy this single Working Folder to the new PC. In SPECTROview's Settings panel on the new machine, point the **SPECTROview Working Folder** to that folder: all fit models, plot recipes, style templates, AI chat history, and configuration (`config.json`) will be restored automatically!
+>
+> You can also use the **Export Config...** and **Restore Config...** buttons at any time to export or restore settings to/from a standalone JSON file.
 
 ---
 
@@ -93,12 +97,6 @@ Keys for the built-in cloud providers are tucked under the collapsible **▸ Oth
 > workspace, and cannot be committed to a Git repository by accident. They are
 > stored in plain text there, so treat them like any other saved credential:
 > they are readable by anything running under your user account.
-
-#### **Chat History**
-
-| Field | Description |
-|-------|-------------|
-| **History Folder** | Where AI chat conversations are saved (as JSON). Click **Browse** to choose a folder. |
 
 ---
 

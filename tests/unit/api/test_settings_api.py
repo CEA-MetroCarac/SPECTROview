@@ -28,6 +28,31 @@ class TestWorkingFolder:
         settings.set_working_folder(tmp_path)
         assert settings.get_fit_model_folder() == str(tmp_path / "fit_model")
 
+    def test_all_subfolders_of_working_folder(self, tmp_path):
+        settings.set_working_folder(tmp_path)
+        assert settings.get_plot_recipe_folder() == str(tmp_path / "plot_recipe")
+        assert settings.get_plot_style_folder() == str(tmp_path / "plot_style")
+        assert settings.get_template_folder() == str(tmp_path / "template")
+        assert settings.get_history_folder() == str(tmp_path / "ai_chat_history")
+        assert settings.get_ai_history_folder() == str(tmp_path / "ai_chat_history")
+
+    def test_export_and_import_config_api(self, tmp_path):
+        settings.set_working_folder(tmp_path)
+        settings.set_fit_defaults(max_ite=333)
+        export_file = tmp_path / "api_backup.json"
+        res = settings.export_config(export_file)
+        assert res == str(export_file)
+        assert export_file.is_file()
+
+        # Modify setting
+        settings.set_fit_defaults(max_ite=100)
+        assert settings.get_fit_defaults()["max_ite"] == 100
+
+        # Import config
+        success = settings.import_config(export_file)
+        assert success is True
+        assert settings.get_fit_defaults()["max_ite"] == 333
+
 
 class TestLastDirectory:
     def test_round_trip(self, tmp_path):

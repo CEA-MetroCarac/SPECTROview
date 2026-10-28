@@ -180,7 +180,7 @@ class VMChat(QObject):
         self._loop_count: int = 0
 
         self._settings = MSettings()
-        self._history_folder = self._settings.get_ai_value("history_folder", "", str)
+        self._history_folder = self._settings.get_history_folder()
         self._recipe_folder = self._settings.get_plot_recipe_folder()
 
         self.conversation_store = MConversationStore(self._history_folder)
@@ -233,6 +233,11 @@ class VMChat(QObject):
         as the Graphs workspace does."""
         self._recipe_folder = self._settings.get_plot_recipe_folder()
         self.recipe_store = MPlotRecipeStore(self._recipe_folder)
+
+    def refresh_history_store(self) -> None:
+        """Rebuild self.conversation_store from current Working Folder setting."""
+        self._history_folder = self._settings.get_history_folder()
+        self.conversation_store = MConversationStore(self._history_folder)
 
     def set_dataframes(self, dfs: Dict[str, pd.DataFrame], active_name: str = "") -> None:
         """Update the available DataFrames.
@@ -503,7 +508,9 @@ class VMChat(QObject):
         """Save the current conversation history to the configured folder."""
         # Only save if there's actual conversation history
         if self._conversation.message_count > 0:
-            self._conversation.save(self._history_folder)
+            history_folder = self._settings.get_history_folder()
+            self._history_folder = history_folder
+            self._conversation.save(history_folder)
 
     def _build_messages(self) -> List[Dict[str, str]]:
         """Assemble the full message list = system prompt + conversation history."""

@@ -426,13 +426,15 @@ When a graph is selected via the combobox or by clicking its subwindow:
 
 ### **SPECTROview Working Folder**
 
-A single user-configured root folder (Settings panel) with three subfolders auto-created under it (`os.makedirs(..., exist_ok=True)`) on first configuration:
+A single universal user-configured root folder (Settings panel) with four subfolders and a portable configuration file auto-created under it (`os.makedirs(..., exist_ok=True)`) on first configuration:
 
-| Subfolder | Purpose | `MSettings` getter |
+| Subfolder / File | Purpose | `MSettings` getter |
 |---|---|---|
 | `fit_model/` | Fit-model JSON templates (Spectra/Maps workspaces) | `get_fit_model_folder()` |
 | `plot_recipe/` | Plot Recipes | `get_plot_recipe_folder()` |
 | `plot_style/` | Style Templates | `get_plot_style_folder()` |
+| `ai_chat_history/` | AI chat conversation history | `get_history_folder()` / `get_ai_history_folder()` |
+| `config.json` | Portable configuration backup | `export_config()` / `import_config()` |
 
 `get_working_folder()` one-time-migrates from the older, separate "Fit model folder"/"Plot template folder" settings if either was previously configured, so existing setups aren't orphaned. A separate setting, `get_default_graph_style()`/`set_default_graph_style()`, stores the "Set as Default Style" baseline (see [Style Templates & Plot Recipes](#style-templates-plot-recipes)) — unrelated to the working folder, but persisted the same way (`QSettings`, disk-backed, survives restarts).
 

@@ -762,6 +762,8 @@ class VChatPanel(QDialog):
                 current_key, api_key=api_key, base_url=base_url, model=saved_model
             )
 
+        self.vm.refresh_recipe_store()
+        self.vm.refresh_history_store()
         self._refresh_status()
 
     def showEvent(self, event) -> None:
@@ -1156,6 +1158,7 @@ class VChatPanel(QDialog):
         self._clear_message_cards()
 
     def _on_history_clicked(self) -> None:
+        self.vm.refresh_history_store()
         dialog = VHistoryDialog(self.vm.conversation_store, self)
         dialog.conversation_opened.connect(self._on_conversation_opened)
         dialog.exec()

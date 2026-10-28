@@ -59,17 +59,31 @@ class TestWorkingFolder:
         assert (working / "fit_model").is_dir()
         assert (working / "plot_recipe").is_dir()
         assert (working / "plot_style").is_dir()
+        assert (working / "ai_chat_history").is_dir()
+        assert (working / "template").is_dir()
+        assert (working / "config.json").is_file()
+
+    def test_derived_history_subfolder_getter(self, settings, tmp_path):
+        settings.set_working_folder(str(tmp_path))
+        assert settings.get_history_folder() == str(tmp_path / "ai_chat_history")
+        assert settings.get_ai_history_folder() == str(tmp_path / "ai_chat_history")
+
+    def test_history_folder_empty_when_unconfigured_and_no_legacy(self, settings):
+        assert settings.get_history_folder() == ""
+        assert settings.get_ai_history_folder() == ""
 
     def test_derived_subfolder_getters(self, settings, tmp_path):
         settings.set_working_folder(str(tmp_path))
         assert settings.get_fit_model_folder() == str(tmp_path / "fit_model")
         assert settings.get_plot_recipe_folder() == str(tmp_path / "plot_recipe")
         assert settings.get_plot_style_folder() == str(tmp_path / "plot_style")
+        assert settings.get_template_folder() == str(tmp_path / "template")
 
     def test_derived_subfolder_getters_empty_when_unconfigured(self, settings):
         assert settings.get_fit_model_folder() == ""
         assert settings.get_plot_recipe_folder() == ""
         assert settings.get_plot_style_folder() == ""
+        assert settings.get_template_folder() == ""
 
     def test_migrates_from_legacy_template_folder(self, settings, tmp_path):
         """One-time migration: an existing "template_folder" setting (from
@@ -216,3 +230,76 @@ class TestAiSettings:
         settings.save_ai_settings({"not_a_real_key": "value"})
         reloaded = MSettings().load_ai_settings()
         assert "not_a_real_key" not in reloaded
+
+
+class TestPortableConfiguration:
+    """Tests for export_config, import_config, and portable backup/restore across PCs."""
+
+    def test_export_and_import_round_trip(self, settings, tmp_path):
+        # Configure non-default settings
+        settings.save_fit_settings({"max_ite": 432, "fit_negative": True})
+        settings.save_view_options({"theme": "Light Mode", "lw": 2.5})
+        settings.set_theme("light")
+        settings.set_default_graph_style({"grid": True, "title_fontsize": 18})
+        settings.save_ai_settings({"api_key_Custom": "my-custom-key", "custom_base_url": "https://api.test/v1"})
+
+        export_path = str(tmp_path / "my_backup.json")
+        saved_file = settings.export_config(export_path)
+        assert saved_file == export_path
+        assert (tmp_path / "my_backup.json").is_file()
+
+        # Reset / mutate settings
+        settings.save_fit_settings({"max_ite": 100, "fit_negative": False})
+        settings.set_theme("dark")
+        settings.save_ai_settings({"api_key_Custom": ""})
+
+        # Import backup
+        success = settings.import_config(export_path)
+        assert success is True
+
+        # Verify restoration
+        fit = settings.load_fit_settings()
+        assert fit["max_ite"] == 432
+        assert fit["fit_negative"] is True
+        assert settings.get_theme() == "light"
+        assert settings.get_default_graph_style() == {"grid": True, "title_fontsize": 18}
+        ai = settings.load_ai_settings()
+        assert ai["api_key_Custom"] == "my-custom-key"
+        assert ai["custom_base_url"] == "https://api.test/v1"
+
+    def test_transfer_folder_to_new_pc_restores_everything(self, settings, tmp_path):
+        """Simulate copying the working folder from PC A to PC B."""
+        # 1. On PC A: User sets working folder and customizes settings
+        pc_a_folder = tmp_path / "pc_a_working"
+        settings.set_working_folder(str(pc_a_folder))
+        settings.save_fit_settings({"max_ite": 888, "loss": "huber"})
+        settings.save_ai_settings({"api_key_Gemini": "AIza-secret-123"})
+        # Working folder now has config.json, fit_model, plot_recipe, plot_style, ai_chat_history
+        assert (pc_a_folder / "config.json").is_file()
+
+        # 2. Simulate copying the whole folder to PC B at a completely different path
+        import shutil
+        pc_b_folder = tmp_path / "pc_b_transferred"
+        shutil.copytree(pc_a_folder, pc_b_folder)
+
+        # 3. On PC B: User opens fresh SPECTROview (represented by isolated settings)
+        # and specifies the transferred folder as their Working Folder:
+        fresh_settings = MSettings()
+        # Clear settings to simulate fresh machine
+        fresh_settings.save_fit_settings({"max_ite": 200, "loss": "linear"})
+        fresh_settings.set_working_folder(str(pc_b_folder))
+
+        # 4. Verify everything is restored
+        loaded_fit = fresh_settings.load_fit_settings()
+        assert loaded_fit["max_ite"] == 888
+        assert loaded_fit["loss"] == "huber"
+        loaded_ai = fresh_settings.load_ai_settings()
+        assert loaded_ai["api_key_Gemini"] == "AIza-secret-123"
+
+        # 5. Verify all subfolder getters now point to PC B's folder (not PC A)
+        assert fresh_settings.get_working_folder() == str(pc_b_folder)
+        assert fresh_settings.get_fit_model_folder() == str(pc_b_folder / "fit_model")
+        assert fresh_settings.get_plot_recipe_folder() == str(pc_b_folder / "plot_recipe")
+        assert fresh_settings.get_plot_style_folder() == str(pc_b_folder / "plot_style")
+        assert fresh_settings.get_history_folder() == str(pc_b_folder / "ai_chat_history")
+        assert fresh_settings.get_template_folder() == str(pc_b_folder / "template")

@@ -166,7 +166,7 @@ class TestUpdateChecker:
 class TestViewOptions:
     def test_defaults(self, settings):
         data = settings.load_view_options()
-        assert data["theme"] == "Dark Mode"
+        assert data["theme"] == "Light Mode"
         assert data["legend"] is False
         assert data["legend_outside"] is False
         assert data["bestfit"] is True

@@ -172,22 +172,14 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         if hasattr(self, 'v_live_maps'):
             self.v_live_maps.apply_theme(theme)
 
-        # Map viewer toolbar icons and plot style
-        if hasattr(self, 'v_spectra_viewer') and hasattr(self.v_spectra_viewer, 'cbb_theme'):
-            plot_style = self.v_spectra_viewer.cbb_theme.currentText()
-        else:
-            plot_style = "Dark Mode" if theme in ("dark", "classic_dark") else "Light Mode"
+        # Map viewer toolbar icons
         if hasattr(self, 'v_map_viewer'):
             if hasattr(self.v_map_viewer, 'apply_global_theme'):
                 self.v_map_viewer.apply_global_theme(theme)
-            if hasattr(self.v_map_viewer, 'apply_plot_style'):
-                self.v_map_viewer.apply_plot_style(plot_style)
         for dialog in getattr(self, 'viewer_dialogs', []):
             if hasattr(dialog, 'map_viewer'):
                 if hasattr(dialog.map_viewer, 'apply_global_theme'):
                     dialog.map_viewer.apply_global_theme(theme)
-                if hasattr(dialog.map_viewer, 'apply_plot_style'):
-                    dialog.map_viewer.apply_plot_style(plot_style)
     
     def _on_spectra_list_changed(self, spectra: list):
         """Handle spectra list update from ViewModel (no-op: selection is heatmap-driven)."""

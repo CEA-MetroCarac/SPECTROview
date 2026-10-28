@@ -887,6 +887,7 @@ class MetadataTooltipManager(QObject):
 
         self.list_widget.setMouseTracking(True)
         viewport = self.list_widget.viewport()
+        self._viewport = viewport
         if viewport:
             viewport.setMouseTracking(True)
             viewport.installEventFilter(self)
@@ -1031,8 +1032,15 @@ class MetadataTooltipManager(QObject):
 
     def eventFilter(self, watched, event):
         """Handle mouse movement, leave, and events."""
+        # Fast path: ignore events on unrelated widgets if no tooltip is active or pending
+        lw = getattr(self, "list_widget", None)
+        vp = getattr(self, "_viewport", None)
+        if watched != lw and watched != vp:
+            if not getattr(self, "_is_showing", False) and getattr(self, "_pending_item", None) is None and not getattr(self, "require_ctrl", False):
+                return False
+
         etype = event.type()
-        if etype == QEvent.Destroy and watched == getattr(self, "list_widget", None):
+        if etype == QEvent.Destroy and watched == lw:
             self._on_widget_destroyed()
             return False
 

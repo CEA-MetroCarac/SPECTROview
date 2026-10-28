@@ -22,9 +22,13 @@ class SecretStore:
     def __init__(self, service: str = SERVICE_NAME) -> None:
         self._service = service
         self._settings = QSettings("CEA-Leti", "SPECTROview")
+        self._cache: dict[str, str] = {}
 
     def get_api_key(self, key_name: str) -> str:
         """Retrieve an API key for key_name (e.g. 'api_key_OpenAI')."""
+        if key_name in self._cache:
+            return self._cache[key_name]
+
         val: Optional[str] = None
         try:
             import keyring
@@ -46,12 +50,15 @@ class SecretStore:
                 except Exception:
                     pass
 
-        return val or ""
+        result = val or ""
+        self._cache[key_name] = result
+        return result
 
     def set_api_key(self, key_name: str, value: str) -> None:
         """Store or delete an API key for key_name."""
         val = str(value).strip() if value else ""
         if val:
+            self._cache[key_name] = val
             try:
                 import keyring
                 keyring.set_password(self._service, key_name, val)
@@ -71,6 +78,7 @@ class SecretStore:
 
     def delete_api_key(self, key_name: str) -> None:
         """Remove an API key from both keyring and QSettings."""
+        self._cache.pop(key_name, None)
         try:
             import keyring
             keyring.delete_password(self._service, key_name)

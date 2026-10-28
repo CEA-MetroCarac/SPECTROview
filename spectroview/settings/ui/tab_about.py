@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 import importlib.metadata
 import os
 import platform
@@ -39,6 +40,7 @@ def _highlight_label_style() -> str:
     return "background-color: rgba(59, 130, 246, 0.2); border: 1px solid #3B82F6; border-radius: 4px; padding: 1px 3px; color: #3B82F6; font-weight: bold;"
 
 
+@lru_cache(maxsize=1)
 def get_runtime_package_versions() -> dict[str, str]:
     """Retrieve runtime versions of key SPECTROview dependencies via importlib.metadata."""
     tracked_packages = [

@@ -720,27 +720,20 @@ class Main(QMainWindow):
 
         # Apply palette + QSS + Fusion refresh via the manager
         self.theme_mgr.apply(theme)
-        self._propagate_theme(theme, sync_plot_theme=True)
+        self._propagate_theme(theme)
 
-    def _propagate_theme(self, theme, sync_plot_theme: bool = False):
-        # Derived helpers
-        viewer_theme = self.theme_mgr.viewer_theme_name
-
+    def _propagate_theme(self, theme):
         # Keep menubar checkmark and icons in sync
         if hasattr(self, 'menu_bar'):
             self.menu_bar.set_current_theme(theme)
             if hasattr(self.menu_bar, 'apply_theme'):
                 self.menu_bar.apply_theme(theme)
 
-        # Propagate to workspaces (icons, plot backgrounds)
+        # Propagate to workspaces (icons, stylesheets)
         for ws in (getattr(self, 'v_spectra_workspace', None),
                    getattr(self, 'v_maps_workspace', None)):
             if ws is None:
                 continue
-            if sync_plot_theme and hasattr(ws, 'v_spectra_viewer'):
-                ws.v_spectra_viewer.cbb_theme.setCurrentText(viewer_theme)
-                if hasattr(ws.v_spectra_viewer, '_apply_plot_style'):
-                    ws.v_spectra_viewer._apply_plot_style()
             if hasattr(ws, 'v_spectra_viewer') and hasattr(ws.v_spectra_viewer, 'apply_global_theme'):
                 ws.v_spectra_viewer.apply_global_theme(theme)
             if hasattr(ws, 'apply_theme'):
@@ -936,6 +929,16 @@ class Main(QMainWindow):
                     importlib.import_module(name)
                 except Exception:           # noqa: BLE001 - prewarm is best-effort
                     pass
+            try:
+                import keyring
+                keyring.get_keyring()
+            except Exception:
+                pass
+            try:
+                from spectroview.settings.ui.tab_about import get_runtime_package_versions
+                get_runtime_package_versions()
+            except Exception:
+                pass
 
         threading.Thread(target=_warm, name="prewarm-scipy", daemon=True).start()
 

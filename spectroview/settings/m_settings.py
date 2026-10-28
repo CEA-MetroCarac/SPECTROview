@@ -45,7 +45,7 @@ class MSettings:
     # ---------- View Options ----------
     def load_view_options(self) -> dict:
         """Load view options of spectra viewer from settings"""
-        theme = self.settings.value("view_options/theme", "Dark Mode", str)
+        theme = self.settings.value("view_options/theme", "Light Mode", str)
         if theme == "Soft Dark Mode":
             theme = "Dark Mode"
         copy_theme = self.settings.value("view_options/copy_fig_theme", "Light Mode", str)

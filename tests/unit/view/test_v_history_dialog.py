@@ -24,6 +24,16 @@ def test_v_history_dialog_render_and_filter(tmp_path, qapp):
     assert dlg.list_widget.count() >= 2
     assert dlg.btn_delete_all.isEnabled()
 
+    # Verify item and header size hints to prevent vertical clipping regressions
+    for i in range(dlg.list_widget.count()):
+        item = dlg.list_widget.item(i)
+        w = dlg.list_widget.itemWidget(item)
+        if isinstance(w, _ConversationItemWidget):
+            assert item.sizeHint().height() >= 48
+        else:
+            # Section header
+            assert item.sizeHint().height() >= 28
+
     # Filter by search
     dlg.search_input.setText("Second")
     # Only Second should be displayed

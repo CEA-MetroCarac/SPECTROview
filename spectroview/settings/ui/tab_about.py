@@ -85,7 +85,7 @@ class AboutTabPage(QWidget):
     KEYWORDS = [
         "about", "version", "build", "python", "environment", "dependency",
         "dependencies", "packages", "pyside6", "qt", "numpy", "scipy",
-        "matplotlib", "pandas", "pybaselines", "citation", "documentation",
+        "matplotlib", "pandas", "pybaselines", "citation",
         "author", "license", "doi", "paper", "softwarex"
     ]
 
@@ -109,20 +109,20 @@ class AboutTabPage(QWidget):
 
         # ───── Header & Logo ─────
         header_row = QHBoxLayout()
-        header_row.setSpacing(10)
+        header_row.setSpacing(12)
         header_row.setAlignment(Qt.AlignCenter)
 
         logo_label = QLabel()
         logo_path = os.path.join(ICON_DIR, "logo_spectroview.png")
         if os.path.exists(logo_path):
-            pixmap = QPixmap(logo_path).scaled(48, 48, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap = QPixmap(logo_path).scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             logo_label.setPixmap(pixmap)
         header_row.addWidget(logo_label)
 
         title_col = QVBoxLayout()
-        title_col.setSpacing(1)
+        title_col.setSpacing(2)
         title_label = QLabel("SPECTROview")
-        title_label.setStyleSheet("font-size: 17px; font-weight: bold;")
+        title_label.setStyleSheet("font-size: 18px; font-weight: bold;")
         title_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         title_col.addWidget(title_label)
 
@@ -134,20 +134,15 @@ class AboutTabPage(QWidget):
         header_row.addLayout(title_col)
         layout.addLayout(header_row)
 
-        # Version & Build row
+        # Version & Check for Updates row
         version_row = QHBoxLayout()
         version_row.setAlignment(Qt.AlignCenter)
-        version_row.setSpacing(10)
+        version_row.setSpacing(12)
 
         ver_lbl = QLabel(f"Version {VERSION}")
-        ver_lbl.setStyleSheet("font-weight: bold; font-size: 12px;")
+        ver_lbl.setStyleSheet("font-weight: bold; font-size: 13px;")
         ver_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
         version_row.addWidget(ver_lbl)
-
-        build_lbl = QLabel(f"Build: {BUILD_NUMBER}")
-        build_lbl.setStyleSheet("color: #888888; font-size: 11px;")
-        build_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        version_row.addWidget(build_lbl)
 
         self.btn_check_updates = QPushButton("Check for Updates")
         self.btn_check_updates.setIcon(Icons.check_update())
@@ -157,6 +152,13 @@ class AboutTabPage(QWidget):
         version_row.addWidget(self.btn_check_updates)
 
         layout.addLayout(version_row)
+
+        # Separate line for Build number (under Version and Check for Updates)
+        build_lbl = QLabel(f"Build: {BUILD_NUMBER}")
+        build_lbl.setAlignment(Qt.AlignCenter)
+        build_lbl.setStyleSheet("color: #888888; font-size: 11px;")
+        build_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        layout.addWidget(build_lbl)
 
         # ───── Python Environment & Dependencies ─────
         self.grp_env = QGroupBox("Environment & Dependencies")
@@ -210,22 +212,21 @@ class AboutTabPage(QWidget):
         env_layout.addLayout(grid)
         layout.addWidget(self.grp_env)
 
-        # ───── Citation & Documentation ─────
-        self.grp_citation = QGroupBox("Citation & Documentation")
+        # ───── Citation ─────
+        self.grp_citation = QGroupBox("Citation")
         citation_layout = QVBoxLayout(self.grp_citation)
         citation_layout.setContentsMargins(8, 6, 8, 6)
         citation_layout.setSpacing(4)
 
-        lbl_doc = QLabel(
-            '<b>Documentation:</b> <a href="https://CEA-MetroCarac.github.io/SPECTROview" style="color: #3B82F6;">https://CEA-MetroCarac.github.io/SPECTROview</a>'
+        lbl_prompt = QLabel(
+            "If you use SPECTROview in your research or publications, please consider citing:"
         )
-        lbl_doc.setStyleSheet("font-size: 11px;")
-        lbl_doc.setOpenExternalLinks(True)
-        lbl_doc.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.LinksAccessibleByMouse)
-        citation_layout.addWidget(lbl_doc)
+        lbl_prompt.setStyleSheet("color: gray; font-style: italic; font-size: 11px;")
+        lbl_prompt.setWordWrap(True)
+        lbl_prompt.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        citation_layout.addWidget(lbl_prompt)
 
         lbl_cite = QLabel(
-            '<b>Citation:</b><br>'
             'Le, Van Hoan. "SPECTROview: An Open-Source Application for Interactive Spectroscopic Data Processing, Fitting, and Visualization." '
             '<i>SoftwareX</i> 35 (September 2026): 102862.<br>'
             '<a href="https://doi.org/10.1016/j.softx.2026.102862" style="color: #3B82F6;">https://doi.org/10.1016/j.softx.2026.102862</a>'
@@ -275,7 +276,7 @@ class AboutTabPage(QWidget):
             self.btn_check_updates.setStyleSheet("border: 1.5px solid #3B82F6; font-weight: bold;")
             first_match = self.btn_check_updates
 
-        cite_terms = ["citation", "cite", "doc", "documentation", "doi", "paper", "softwarex", "author", "le"]
+        cite_terms = ["citation", "cite", "doi", "paper", "softwarex", "author", "le"]
         if any(term in q or q in term for term in cite_terms):
             self.grp_citation.setStyleSheet(_highlight_group_style())
             if first_match is None:

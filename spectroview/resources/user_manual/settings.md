@@ -135,4 +135,4 @@ The **About** tab provides comprehensive runtime and reference information:
 - **Application Details**: Official SPECTROview logo, title, version number (`Version {VERSION}`), and build number (`Build: {BUILD_NUMBER}`).
 - **Environment & Dependencies**: Dynamically lists the exact Python version, operating system architecture, and runtime package versions in use by SPECTROview (e.g. `PySide6` with Qt runtime version, `numpy`, `scipy`, `matplotlib`, `pandas`, `pybaselines`, `openpyxl`, `superqt`, `pyarrow`, AI SDKs, and data readers).
 - **Check for Updates**: Direct action to check GitHub releases for new versions.
-- **Documentation & Paper Citation**: Quick links to the online web documentation and the canonical SoftwareX peer-reviewed citation with DOI.
+- **Paper Citation**: The canonical SoftwareX peer-reviewed citation with DOI.

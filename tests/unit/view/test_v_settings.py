@@ -265,10 +265,13 @@ class TestAboutTabPageRefinements:
     def test_key_capabilities_removed_and_citation_kept(self, qapp):
         dialog = _dialog(qapp)
         about_page = dialog._tab_about
+        assert about_page.grp_citation.title() == "Citation"
         labels = [lbl.text() for lbl in about_page.findChildren(QLabel)]
         combined_text = " ".join(labels)
 
         assert "Key Capabilities" not in combined_text
+        assert "Documentation" not in combined_text
+        assert "please consider citing" in combined_text.lower()
         assert "SoftwareX" in combined_text
         assert "10.1016/j.softx.2026.102862" in combined_text
 

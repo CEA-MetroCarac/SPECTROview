@@ -81,7 +81,14 @@ You can quickly modify the **labels** of the axes and the **title** of the plot 
 
 <br>
 
-For advanced customization, click the **Customize** button (⚙) to open the **Customize Graph Dialog**. This dialog provides deep, granular control through four dedicated tabs: **Axis**, **Legend / Color**, **Annotations**, and **More Options**.
+For advanced customization, click the **Customize** button (⚙) to open the **Customize Graph Dialog** (`Ctrl + E`). The dialog features a modern Settings-like two-panel interface with real-time global search across all options, responsive left category navigation, and in-page option highlighting with automatic scroll-to-view across seven modular categories:
+- **General & Typography**: Figure theme (Light/Dark), Grid lines, X-axis label rotation, and font sizes (Title, Axis label, Tick label, Colorbar), and data sorting.
+- **Axes & Limits**: Primary X/Y/Z scales (Linear, Logarithmic, Symlog, Centered), numerical/categorical data types, axis inversion, interactive limit sliders, and broken axis ranges.
+- **Ticks & Spines**: Tick mark direction, tick label formatting presets, minor ticks (Top, Bottom, Left, Right), and spine frame border visibility.
+- **Secondary & Inset Axes**: Secondary twin axes (Y2, Y3, X2 with dedicated labels, limits, log scales, colors, and markers) and Inset zoom sub-axes with connector lines.
+- **Legend & Series**: Legend box placement (inside/outside), borders, columns count, title, font size, alpha transparency, location, global marker styling, and per-series style overrides.
+- **Plot Style & Fitting**: Specialized plot options (join points, dodge points, wafer stats), unified error bar controls (show, statistic type, capsize), trendline polynomial fitting with anchor points and live equation tables, and histogram binning/KDE curves.
+- **Annotations**: Visual plot annotations (V-Line, H-Line, Text, Arrow, V-Span, H-Span, Box, Callout) with interactive canvas dragging and modal editing.
 
 All changes across tabs are applied together via the unified **Apply** button at the bottom of the dialog, or discarded via **Cancel**.
 

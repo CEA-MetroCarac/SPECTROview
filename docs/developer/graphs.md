@@ -260,18 +260,19 @@ When a DataFrame contains a `Slot` column (common in semiconductor datasets):
 
 ### **`CustomizeGraphDialog` (Singleton)**
 
-**Package**: `spectroview/view/components/customize_graph/` — `CustomizeGraphDialog` (in `customize_graph_dialog.py`) hosts four tab widgets, each in its own module, plus the small shared `customize_annotation_dialogs.py` (per-annotation-type edit dialogs, color delegate):
+**Package**: `spectroview/view/components/customize_graph/` — `CustomizeGraphDialog` (in `customize_graph_dialog.py`) adopts a modern Settings-like two-panel layout featuring a responsive left navigation sidebar with real-time keyword search, styled item delegate with selection pill and left accent indicator, and modular scrollable tab pages with groupbox highlighting and scroll-to-view:
 
-| Tab | Class | Module |
-|---|---|---|
-| Axis | `CustomizeAxis` | `customize_axis.py` |
-| Legend / Color | `CustomizeLegend` | `customize_legend.py` |
-| Annotations | `CustomizeAnnotations` | `customize_annotations.py` |
-| More options | `CustomizeMoreOptions` | `customize_more_options.py` |
+| Category | Class | Module | Scope |
+|---|---|---|---|
+| General & Typography | `TabGeneral` | `tab_general.py` | Figure theme (Light/Dark), Grid, X-label rotation, Font sizes (Title/Axis/Tick/Colorbar), Data sorting |
+| Axes & Limits | `TabAxesLimits` | `tab_axes_limits.py` | X/Y scales (Linear/Log/Symlog), Data types, Inverted, Z color-scale, Limits with range sliders, Broken axis |
+| Ticks & Spines | `TabTicksSpines` | `tab_ticks_spines.py` | Tick direction, label format presets, Minor ticks (T/R/B/L), Spines/Borders (T/R/B/L) |
+| Secondary & Inset Axes | `TabSecondaryInset` | `tab_secondary_inset.py` | Secondary twin axes (Y2/Y3/X2 with label/min/max/log/color/marker), Inset zoom axes |
+| Legend & Series | `TabLegendSeries` | `tab_legend_series.py` | Legend box layout/font/alpha/position, Unify marker style, per-series styling table |
+| Plot Style & Fitting | `TabPlotStyles` | `tab_plot_styles.py` | Style options (point/scatter/wafer), unified error bars, trendline polynomial/anchor/equations, histogram |
+| Annotations | `TabAnnotations` | `tab_annotations.py` | Visual annotations (V-Line, H-Line, Text, Arrow, V-Span, H-Span, Box, Callout) & modal edit dialogs |
 
-`CustomizeAxis` also owns the Inset (zoom) axes and Secondary axes (Y2/Y3/X2) sections — these used to be their own tabs, but were folded back into the Axis tab since axis-shaped controls belong together and a 7-tab dialog wasn't actually easier to navigate. Given how much that adds, the tab wraps its content in a `QScrollArea` (matching `CustomizeMoreOptions`'s own pattern) so the dialog's minimum height stays reasonable on smaller screens. `CustomizeMoreOptions` similarly owns Font sizes (Title/Axis label/Tick label/Colorbar, one row) and the figure Theme selector (folded into "Plot options:"), consolidated from a former standalone Text Size tab and a since-removed "Figure style" groupbox.
-
-A workspace-level singleton dialog that auto-switches context when the user activates a different MDI subwindow. Its initial size (560×760) is a starting point only — Qt's layout system clamps both dimensions upward as needed for whichever tab's content is largest (e.g. the Legend tab's per-series columns when Unify is unchecked), so the literal numbers don't need to be exact.
+A workspace-level singleton dialog that auto-switches context when the user activates a different MDI subwindow (`switch_graph(graph_widget, graph_id)`). Contains `_TabsCompatibilityProxy` and backward-compatible property facades (`legend_widget`, `axis_widget`, `more_options_widget`, `annotations_widget`).
 
 ### **Live Preview & Restyle Fast Path**
 

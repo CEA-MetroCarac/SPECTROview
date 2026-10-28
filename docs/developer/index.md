@@ -138,12 +138,16 @@ spectroview/
 │       ├── v_update_banner.py         # Update notification banner widget
 │       ├── v_user_manual.py           # Built-in user manual viewer
 │       ├── customized_widgets.py      # Palette combobox, custom toolbar
-│       └── customize_graph/           # Graph customization dialog (package)
-│           ├── customize_graph_dialog.py     # CustomizeGraphDialog (singleton, tab host)
-│           ├── customize_legend.py           # Legend/Color tab
-│           ├── customize_axis.py             # Axis tab (scale/limits/breaks; incl. wafer/2Dmap Z color-scale)
-│           ├── customize_annotations.py      # Annotations tab
-│           ├── customize_more_options.py     # More Options tab (plot options, theme, fonts, sorting, trendline/histogram)
+│       └── customize_graph/           # Graph customization dialog (two-panel Settings-like package)
+│           ├── customize_graph_dialog.py     # CustomizeGraphDialog (two-panel host with search & live preview)
+│           ├── common.py                     # NavItemDelegate and highlight styling helpers
+│           ├── tab_general.py                # General & Typography tab (theme, grid, rotation, fonts, sorting)
+│           ├── tab_axes_limits.py            # Axes & Limits tab (scales, limits, sliders, breaks)
+│           ├── tab_ticks_spines.py           # Ticks & Spines tab (direction, format, minor ticks, borders)
+│           ├── tab_secondary_inset.py        # Secondary & Inset tab (Y2/Y3/X2 twin axes, zoom insets)
+│           ├── tab_legend_series.py          # Legend & Series tab (legend box, unify markers, series table)
+│           ├── tab_plot_styles.py            # Plot Style & Fitting tab (style options, unified error bars, trendlines, histograms)
+│           ├── tab_annotations.py            # Annotations tab (add, edit, list, canvas drag sync)
 │           └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
 │       └── theme/                     # Theme & font architecture (ThemeManager, tokens, palettes, fonts)
 │           ├── manager.py             # Single owner of application-wide theme state

@@ -1,264 +1,572 @@
-"""Top-level "Customize Graph" dialog: hosts the Axis / Legend-Colors /
-Annotations / More-options tabs and coordinates their shared Apply/Cancel.
+# spectroview/view/components/customize_graph/customize_graph_dialog.py
+"""Modern two-panel Customize Graph dialog with left sidebar navigation, real-time search, and modular tabs."""
 
-The tab widgets themselves used to live in this file too (~1700 lines across
-8 largely independent classes); they've been split into their own modules,
-all living together under the `customize_graph/` package for maintainability.
-Everything is re-imported and re-exported here so existing imports of
-`spectroview.view.components.customize_graph.customize_graph_dialog`
-(e.g. `EditLineDialog`/`EditTextDialog` from view/components/v_graph.py, or
-the individual tab widgets from tests) keep working unchanged.
-"""
+from __future__ import annotations
+
 import copy
+from typing import Optional
 
-from PySide6.QtCore import Qt, QTimer
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QTabWidget, QWidget
-
-from spectroview.view.theme import Icons
-from spectroview.model.graph_style import can_restyle_without_replot
-from spectroview.view.components.graph_commit import snapshot, diff
-from spectroview.view.components.customize_graph.customize_legend import CustomizeLegend
-from spectroview.view.components.customize_graph.customize_annotations import CustomizeAnnotations
-from spectroview.view.components.customize_graph.customize_axis import CustomizeAxis
-from spectroview.view.components.customize_graph.customize_more_options import CustomizeMoreOptions
-from spectroview.view.components.customize_graph.customize_annotation_dialogs import (
-    EditLineDialog, EditTextDialog, EditArrowDialog, EditSpanDialog,
-    EditBoxDialog, EditCalloutDialog, ColorDelegate,
+from PySide6.QtCore import QEvent, QObject, Qt, QTimer
+from PySide6.QtGui import QKeyEvent
+from PySide6.QtWidgets import (
+    QDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QPushButton,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
 )
 
+from spectroview.model.graph_style import can_restyle_without_replot
+from spectroview.view.components.customize_graph.common import NavItemDelegate
+from spectroview.view.components.customize_graph.customize_annotation_dialogs import (
+    ColorDelegate,
+    EditArrowDialog,
+    EditBoxDialog,
+    EditCalloutDialog,
+    EditLineDialog,
+    EditSpanDialog,
+    EditTextDialog,
+)
+from spectroview.view.components.customize_graph.customize_annotations import CustomizeAnnotations
+from spectroview.view.components.customize_graph.customize_axis import CustomizeAxis
+from spectroview.view.components.customize_graph.customize_legend import CustomizeLegend
+from spectroview.view.components.customize_graph.customize_more_options import CustomizeMoreOptions
+from spectroview.view.components.customize_graph.tab_annotations import TabAnnotations
+from spectroview.view.components.customize_graph.tab_axes_limits import TabAxesLimits
+from spectroview.view.components.customize_graph.tab_general import TabGeneral
+from spectroview.view.components.customize_graph.tab_legend_series import TabLegendSeries
+from spectroview.view.components.customize_graph.tab_plot_styles import TabPlotStyles
+from spectroview.view.components.customize_graph.tab_secondary_inset import TabSecondaryInset
+from spectroview.view.components.customize_graph.tab_ticks_spines import TabTicksSpines
+from spectroview.view.components.graph_commit import diff, snapshot
+from spectroview.view.theme import Icons
+
 __all__ = [
-    "CustomizeGraphDialog", "CustomizeLegend", "CustomizeAnnotations",
-    "CustomizeAxis", "CustomizeMoreOptions",
-    "EditLineDialog", "EditTextDialog", "EditArrowDialog", "EditSpanDialog",
-    "EditBoxDialog", "EditCalloutDialog", "ColorDelegate",
+    "CustomizeGraphDialog",
+    "TabGeneral",
+    "TabAxesLimits",
+    "TabTicksSpines",
+    "TabSecondaryInset",
+    "TabLegendSeries",
+    "TabPlotStyles",
+    "TabAnnotations",
+    # Backward compatibility exports
+    "CustomizeAxis",
+    "CustomizeLegend",
+    "CustomizeMoreOptions",
+    "CustomizeAnnotations",
+    "EditLineDialog",
+    "EditTextDialog",
+    "EditArrowDialog",
+    "EditSpanDialog",
+    "EditBoxDialog",
+    "EditCalloutDialog",
+    "ColorDelegate",
 ]
 
 
-class CustomizeGraphDialog(QDialog):
-    """Dialog for customizing graph"""
 
-    def __init__(self, graph_widget, graph_id, parent=None):
+# ---------------------------------------------------------------------------
+# Compatibility Proxy for Legacy QTabWidget Access
+# ---------------------------------------------------------------------------
+
+class _TabsCompatibilityProxy:
+    """Provides backward-compatibility for callers or tests expecting QTabWidget methods on dialog.tabs."""
+
+    def __init__(self, dialog: CustomizeGraphDialog) -> None:
+        self._dialog = dialog
+
+    def count(self) -> int:
+        return self._dialog._stack.count()
+
+    def widget(self, index: int) -> Optional[QWidget]:
+        return self._dialog._stack.widget(index)
+
+    def indexOf(self, widget: QWidget) -> int:
+        return self._dialog._stack.indexOf(widget)
+
+    def tabText(self, index: int) -> str:
+        if 0 <= index < self._dialog._nav_list.count():
+            item = self._dialog._nav_list.item(index)
+            return item.text() if item else ""
+        return ""
+
+    def setCurrentWidget(self, widget: QWidget) -> None:
+        idx = self._dialog._stack.indexOf(widget)
+        if idx >= 0:
+            self._dialog._nav_list.setCurrentRow(idx)
+
+    def currentWidget(self) -> Optional[QWidget]:
+        return self._dialog._stack.currentWidget()
+
+    def currentIndex(self) -> int:
+        return self._dialog._stack.currentIndex()
+
+    def setCurrentIndex(self, index: int) -> None:
+        if 0 <= index < self._dialog._nav_list.count():
+            self._dialog._nav_list.setCurrentRow(index)
+
+
+# ---------------------------------------------------------------------------
+# Facades for Backward Compatibility with Sub-Widget References
+# ---------------------------------------------------------------------------
+
+class _AxisCompatibilityFacade:
+    """Combines TabAxesLimits, TabTicksSpines, and TabSecondaryInset attributes."""
+
+    def __init__(self, dialog: CustomizeGraphDialog) -> None:
+        self._dialog = dialog
+
+    @property
+    def graph_widget(self):
+        return self._dialog.graph_widget
+
+    def __getattr__(self, name: str):
+        for tab in (self._dialog.tab_axes_limits, self._dialog.tab_ticks_spines, self._dialog.tab_secondary_inset):
+            if hasattr(tab, name):
+                return getattr(tab, name)
+        raise AttributeError(f"'_AxisCompatibilityFacade' has no attribute '{name}'")
+
+    def _apply_axis_settings(self, silent: bool = False, replot: bool = True):
+        self._dialog.tab_axes_limits.apply_settings(silent=silent, replot=False)
+        self._dialog.tab_ticks_spines.apply_settings(replot=False)
+        self._dialog.tab_secondary_inset.apply_settings(replot=replot)
+
+    def load_axis_settings(self):
+        self._dialog.tab_axes_limits.load_settings()
+        self._dialog.tab_ticks_spines.load_settings()
+        self._dialog.tab_secondary_inset.load_settings()
+
+    def switch_graph(self, gw):
+        self._dialog.tab_axes_limits.switch_graph(gw)
+        self._dialog.tab_ticks_spines.switch_graph(gw)
+        self._dialog.tab_secondary_inset.switch_graph(gw)
+
+
+class _MoreOptionsCompatibilityFacade:
+    """Combines TabGeneral and TabPlotStyles attributes."""
+
+    def __init__(self, dialog: CustomizeGraphDialog) -> None:
+        self._dialog = dialog
+
+    @property
+    def graph_widget(self):
+        return self._dialog.graph_widget
+
+    def __getattr__(self, name: str):
+        for tab in (self._dialog.tab_general, self._dialog.tab_plot_styles):
+            if hasattr(tab, name):
+                return getattr(tab, name)
+        raise AttributeError(f"'_MoreOptionsCompatibilityFacade' has no attribute '{name}'")
+
+    def _apply(self, replot: bool = True):
+        self._dialog.tab_general.apply_settings(replot=False)
+        self._dialog.tab_plot_styles.apply_settings(replot=replot)
+
+    def load_settings(self):
+        self._dialog.tab_general.load_settings()
+        self._dialog.tab_plot_styles.load_settings()
+
+    def switch_graph(self, gw):
+        self._dialog.tab_general.switch_graph(gw)
+        self._dialog.tab_plot_styles.switch_graph(gw)
+
+
+# ---------------------------------------------------------------------------
+# Main CustomizeGraphDialog
+# ---------------------------------------------------------------------------
+
+class CustomizeGraphDialog(QDialog):
+    """Modern two-panel Customize Graph dialog with left sidebar navigation and search."""
+
+    _LIVE_PREVIEW_SIGNALS = ("valueChanged", "toggled", "currentIndexChanged", "textChanged")
+
+    def __init__(self, graph_widget: QWidget, graph_id: int, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.graph_widget = graph_widget
         self.graph_id = graph_id
 
-        self.setWindowTitle(f"Customize Graph {graph_id}")
+        self.setWindowTitle(f"Customize Graph #{graph_id}")
         self.setModal(False)
         self.setWindowFlags(
             Qt.Window | Qt.Tool | Qt.CustomizeWindowHint
             | Qt.WindowTitleHint | Qt.WindowCloseButtonHint
         )
-        # Prevent the tool window from hiding when switching to another app on macOS.
         self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
-        self.resize(560, 760)
+        self.resize(840, 680)
+        self.setMinimumSize(740, 560)
 
         self._setup_ui()
 
         self._original_snapshot = snapshot(self.graph_widget)
 
+        # Debounced live preview timer (~400ms)
         self._preview_timer = QTimer(self)
         self._preview_timer.setSingleShot(True)
         self._preview_timer.setInterval(400)
         self._preview_timer.timeout.connect(self._preview_apply)
         self._wire_live_preview()
 
+    def _setup_ui(self) -> None:
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
-    def _setup_ui(self):
-        """Setup dialog UI with tabs."""
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(8)
+        # Center Split: Left Sidebar + Right Content Area
+        split_widget = QWidget()
+        split_layout = QHBoxLayout(split_widget)
+        split_layout.setContentsMargins(0, 0, 0, 0)
+        split_layout.setSpacing(0)
 
-        self.tabs = QTabWidget()
-        layout.addWidget(self.tabs)
+        # -- Left Sidebar ---------------------------------------------------
+        self._sidebar = QWidget()
+        self._sidebar.setFixedWidth(230)
+        sidebar_layout = QVBoxLayout(self._sidebar)
+        sidebar_layout.setContentsMargins(10, 14, 10, 10)
+        sidebar_layout.setSpacing(10)
 
-        tab_axis = self._create_axis_tab()
-        tab_legend = self._create_legend_tab()
-        tab_annotations = self._create_annotations_tab()
-        tab_general = self._create_general_tab()
+        # Top Search Bar
+        self._search_edit = QLineEdit()
+        self._search_edit.setPlaceholderText("Search options...")
+        self._search_edit.setClearButtonEnabled(True)
+        self._search_edit.textChanged.connect(self._on_search_text_changed)
+        self._search_edit.returnPressed.connect(self._on_search_return_pressed)
+        self._search_edit.installEventFilter(self)
+        sidebar_layout.addWidget(self._search_edit)
 
-        self.tabs.addTab(tab_axis, "Axis")
-        self.tabs.addTab(tab_legend, "Legend/Colors")
-        self.tabs.addTab(tab_annotations, "Annotations")
-        self.tabs.addTab(tab_general, "More options")
+        # Navigation List
+        self._nav_list = QListWidget()
+        self._nav_list.setFrameShape(QFrame.NoFrame)
+        self._nav_list.setItemDelegate(NavItemDelegate(self))
+        self._nav_list.currentRowChanged.connect(self._on_nav_row_changed)
+        sidebar_layout.addWidget(self._nav_list, 1)
 
-        btn_layout = QHBoxLayout()
-        btn_layout.addStretch()
+        split_layout.addWidget(self._sidebar)
+
+        # Vertical Divider
+        self._v_divider = QFrame()
+        self._v_divider.setFrameShape(QFrame.VLine)
+        split_layout.addWidget(self._v_divider)
+
+        # -- Right Content Area ----------------------------------------------
+        self._content_container = QWidget()
+        content_layout = QVBoxLayout(self._content_container)
+        content_layout.setContentsMargins(12, 10, 12, 10)
+        content_layout.setSpacing(6)
+
+        # Section Title Header
+        self._content_title = QLabel()
+        self._content_title.setStyleSheet("font-size: 18px; font-weight: bold; padding: 2px 0;")
+        content_layout.addWidget(self._content_title)
+
+        self._header_divider = QFrame()
+        self._header_divider.setFrameShape(QFrame.HLine)
+        content_layout.addWidget(self._header_divider)
+
+        # Stacked Pages
+        self._stack = QStackedWidget()
+        content_layout.addWidget(self._stack, 1)
+
+        split_layout.addWidget(self._content_container, 1)
+        main_layout.addWidget(split_widget, 1)
+
+        # -- Bottom Action Bar -----------------------------------------------
+        self._bottom_divider = QFrame()
+        self._bottom_divider.setFrameShape(QFrame.HLine)
+        main_layout.addWidget(self._bottom_divider)
+
+        bottom_bar = QHBoxLayout()
+        bottom_bar.setContentsMargins(16, 10, 16, 10)
+
+        self._graph_info_label = QLabel()
+        self._graph_info_label.setStyleSheet("color: gray; font-size: 11px;")
+        bottom_bar.addWidget(self._graph_info_label)
+
+        bottom_bar.addStretch(1)
 
         btn_cancel = QPushButton("Cancel")
         btn_cancel.setIcon(Icons.close())
+        btn_cancel.setCursor(Qt.PointingHandCursor)
         btn_cancel.clicked.connect(self.cancel_all)
-        btn_layout.addWidget(btn_cancel)
+        bottom_bar.addWidget(btn_cancel)
 
         btn_apply = QPushButton("Apply")
         btn_apply.setIcon(Icons.check())
+        btn_apply.setCursor(Qt.PointingHandCursor)
         btn_apply.clicked.connect(self.apply_all)
-        btn_layout.addWidget(btn_apply)
+        bottom_bar.addWidget(btn_apply)
 
-        layout.addLayout(btn_layout)
+        bottom_widget = QWidget()
+        bottom_widget.setLayout(bottom_bar)
+        main_layout.addWidget(bottom_widget)
+
+        # -- Initialize Tab Pages --------------------------------------------
+        self.tab_general = TabGeneral(self.graph_widget, self)
+        self.tab_axes_limits = TabAxesLimits(self.graph_widget, self)
+        self.tab_ticks_spines = TabTicksSpines(self.graph_widget, self)
+        self.tab_secondary_inset = TabSecondaryInset(self.graph_widget, self)
+        self.tab_legend = TabLegendSeries(self.graph_widget, self)
+        self.tab_plot_styles = TabPlotStyles(self.graph_widget, self)
+        self.tab_annotations = TabAnnotations(self.graph_widget, self)
+
+        # Backward compatibility properties
+        self.tabs = _TabsCompatibilityProxy(self)
+        self.legend_widget = self.tab_legend
+        self.annotations_widget = self.tab_annotations
+        self.axis_widget = _AxisCompatibilityFacade(self)
+        self.more_options_widget = _MoreOptionsCompatibilityFacade(self)
+
+        # Sections definition: (widget, title, icon, keywords)
+        self._sections: list[tuple[QWidget, str, any, list[str]]] = [
+            (self.tab_general, "General & Typography", Icons.settings(size=20), self.tab_general.KEYWORDS),
+            (self.tab_axes_limits, "Axes & Limits", Icons.rescale(size=20), self.tab_axes_limits.KEYWORDS),
+            (self.tab_ticks_spines, "Ticks & Spines", Icons.sliders(size=20), self.tab_ticks_spines.KEYWORDS),
+            (self.tab_secondary_inset, "Secondary & Inset Axes", Icons.duplicate(size=20), self.tab_secondary_inset.KEYWORDS),
+            (self.tab_legend, "Legend & Series", Icons.legend(size=20), self.tab_legend.KEYWORDS),
+            (self.tab_plot_styles, "Plot Style & Fitting", Icons.fit_curve(size=20), self.tab_plot_styles.KEYWORDS),
+            (self.tab_annotations, "Annotations", Icons.edit(size=20), self.tab_annotations.KEYWORDS),
+        ]
+
+        for page, title, icon, _kw in self._sections:
+            self._stack.addWidget(page)
+            item = QListWidgetItem(icon, title)
+            self._nav_list.addItem(item)
+
+        # Select first tab initially
+        self._nav_list.setCurrentRow(0)
+        self._update_graph_info()
+
+    def _update_graph_info(self) -> None:
+        style = getattr(self.graph_widget, "plot_style", "standard")
+        self._graph_info_label.setText(f"Target: Graph #{self.graph_id} • {style.capitalize()} plot")
 
     def _vm(self):
-        """The owning VMWorkspaceGraphs, when this dialog was opened from
-        the real app (parent=VWorkspaceGraphs) -- None in the handful of
-        tests that construct this dialog standalone, where undo-batching is
-        simply skipped rather than raising on a missing parent."""
-        return getattr(self.parent(), 'vm', None)
+        return getattr(self.parent(), "vm", None)
 
-    _LIVE_PREVIEW_SIGNALS = ('valueChanged', 'toggled', 'currentIndexChanged', 'textChanged')
-
-    def _wire_live_preview(self):
+    # ──────────────────────────────────────────────
+    # Live Preview & Debouncing
+    # ──────────────────────────────────────────────
+    def _wire_live_preview(self) -> None:
         seen = set()
         for w in self.findChildren(QWidget):
             if id(w) in seen:
                 continue
             seen.add(id(w))
             for signal_name in self._LIVE_PREVIEW_SIGNALS:
-                signal = getattr(w, signal_name, None)
-                if signal is not None and hasattr(signal, 'connect'):
+                sig = getattr(w, signal_name, None)
+                if sig is not None and hasattr(sig, "connect"):
                     try:
-                        signal.connect(self._schedule_preview)
+                        sig.connect(self._schedule_preview)
                     except (TypeError, RuntimeError):
                         pass
 
-    def _schedule_preview(self, *_args):
+    def _schedule_preview(self, *_args) -> None:
         self._preview_timer.start()
 
-    def _preview_apply(self):
-        """Debounced live preview, fired ~400ms after the user stops
-        interacting with any control.
-
-        A preview must stay purely visual -- mutate the widget and repaint,
-        but commit nothing -- so that cancel_all() reverting the widget to
-        _original_snapshot."""
-
+    def _preview_apply(self) -> None:
         gw = self.graph_widget
         before = snapshot(gw)
         gw.blockSignals(True)
         try:
-            self.legend_widget.apply_changes(replot=False)
-            self.axis_widget._apply_axis_settings(silent=True, replot=False)
-            self.more_options_widget._apply(replot=False)
+            self.tab_general.apply_settings(replot=False)
+            self.tab_axes_limits.apply_settings(silent=True, replot=False)
+            self.tab_ticks_spines.apply_settings(replot=False)
+            self.tab_secondary_inset.apply_settings(replot=False)
+            self.tab_legend.apply_settings(replot=False)
+            self.tab_plot_styles.apply_settings(replot=False)
+            self.tab_annotations.apply_settings(replot=False)
         finally:
             gw.blockSignals(False)
 
         changed = set(diff(gw, before).keys())
         if not changed:
-            return  # nothing actually changed this tick
+            return
 
         if can_restyle_without_replot(changed) and gw.restyle():
             return
 
-        if gw.df is not None:
+        if getattr(gw, "df", None) is not None:
             gw.plot(gw.df)
-        else:
+        elif hasattr(gw, "canvas") and gw.canvas is not None:
             gw.canvas.draw_idle()
 
-        if gw.plot_style == 'trendline':
-            self.more_options_widget._refresh_equation_table()
+        if getattr(gw, "plot_style", "") == "trendline":
+            self.tab_plot_styles._refresh_equation_table()
 
-    def apply_all(self):
-        """Apply changes from all tabs and close dialog."""
+    # ──────────────────────────────────────────────
+    # Navigation & Real-Time Search Filtering
+    # ──────────────────────────────────────────────
+    def _on_nav_row_changed(self, row: int) -> None:
+        if 0 <= row < self._stack.count():
+            self._stack.setCurrentIndex(row)
+            item = self._nav_list.item(row)
+            if item:
+                self._content_title.setText(item.text())
+            curr_page = self._stack.currentWidget()
+            if hasattr(curr_page, "highlight_search"):
+                curr_page.highlight_search(self._search_edit.text())
+
+    def _on_search_text_changed(self, query: str) -> None:
+        q = query.strip().lower()
+        first_visible = -1
+        current_visible = False
+        current_row = self._nav_list.currentRow()
+
+        for idx, (_page, title, _icon, keywords) in enumerate(self._sections):
+            item = self._nav_list.item(idx)
+            if not item:
+                continue
+            matches = not q or q in title.lower() or any(q in kw.lower() for kw in keywords)
+            item.setHidden(not matches)
+            if matches:
+                if first_visible < 0:
+                    first_visible = idx
+                if idx == current_row:
+                    current_visible = True
+
+        if not current_visible and first_visible >= 0:
+            self._nav_list.setCurrentRow(first_visible)
+
+        curr_page = self._stack.currentWidget()
+        if hasattr(curr_page, "highlight_search"):
+            curr_page.highlight_search(q)
+
+    def _on_search_return_pressed(self) -> None:
+        current_row = self._nav_list.currentRow()
+        if 0 <= current_row < self._nav_list.count():
+            item = self._nav_list.item(current_row)
+            if item and not item.isHidden():
+                self._nav_list.setFocus()
+                return
+        for idx in range(self._nav_list.count()):
+            item = self._nav_list.item(idx)
+            if item and not item.isHidden():
+                self._nav_list.setCurrentRow(idx)
+                self._nav_list.setFocus()
+                break
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if watched is self._search_edit and event.type() == QEvent.KeyPress:
+            key_event = event  # type: ignore[assignment]
+            if key_event.key() in (Qt.Key_Return, Qt.Key_Enter):
+                self._on_search_return_pressed()
+                return True
+        return super().eventFilter(watched, event)
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            if self._search_edit.hasFocus():
+                self._on_search_return_pressed()
+                event.accept()
+                return
+            focused = self.focusWidget()
+            if not isinstance(focused, QPushButton):
+                event.accept()
+                return
+        super().keyPressEvent(event)
+
+    def select_section(self, name: str) -> None:
+        """Select a section by name: 'general', 'axes', 'ticks', 'secondary', 'legend', 'plot_styles', 'annotations'."""
+        name_lower = name.lower()
+        if name_lower in ("general", "gen", "typography", "fonts"):
+            idx = self._stack.indexOf(self.tab_general)
+        elif name_lower in ("axes", "axis", "limits", "scale"):
+            idx = self._stack.indexOf(self.tab_axes_limits)
+        elif name_lower in ("ticks", "spines", "borders"):
+            idx = self._stack.indexOf(self.tab_ticks_spines)
+        elif name_lower in ("secondary", "inset", "twin", "multi"):
+            idx = self._stack.indexOf(self.tab_secondary_inset)
+        elif name_lower in ("legend", "series", "colors"):
+            idx = self._stack.indexOf(self.tab_legend)
+        elif name_lower in ("plot_styles", "style", "fitting", "trendline", "histogram"):
+            idx = self._stack.indexOf(self.tab_plot_styles)
+        elif name_lower in ("annotations", "shapes", "annotation"):
+            idx = self._stack.indexOf(self.tab_annotations)
+        else:
+            idx = 0
+
+        if idx >= 0:
+            self._nav_list.setCurrentRow(idx)
+
+    # ──────────────────────────────────────────────
+    # Apply, Cancel, Switch Graph
+    # ──────────────────────────────────────────────
+    def apply_all(self) -> None:
+        """Apply changes from all tabs and commit undo batch."""
         self._preview_timer.stop()
         vm = self._vm()
         if vm:
             vm.begin_undo_batch()
         try:
-            self.legend_widget.apply_changes()
-            self.axis_widget._apply_axis_settings()
-            self.more_options_widget._apply()
+            self.tab_general.apply_settings(replot=False)
+            self.tab_axes_limits.apply_settings(silent=False, replot=False)
+            self.tab_ticks_spines.apply_settings(replot=False)
+            self.tab_secondary_inset.apply_settings(replot=False)
+            self.tab_legend.apply_settings(replot=False)
+            self.tab_plot_styles.apply_settings(replot=False)
+            self.tab_annotations.apply_settings(replot=False)
         finally:
             if vm:
                 vm.end_undo_batch()
 
-        self.legend_widget.load_legend_properties()
+        gw = self.graph_widget
+        if getattr(gw, "df", None) is not None:
+            gw.plot(gw.df)
+        elif hasattr(gw, "canvas") and gw.canvas is not None:
+            gw.canvas.draw()
 
+        if getattr(gw, "plot_style", "") == "trendline":
+            self.tab_plot_styles._refresh_equation_table()
+
+        self.tab_legend.load_settings()
         self._original_snapshot = snapshot(self.graph_widget)
         self._preview_timer.stop()
 
-    def cancel_all(self):
-        """Discard every live-previewed change made since the dialog was
-        opened (or since the last Apply) and restore that baseline."""
+    def cancel_all(self) -> None:
+        """Discard changes and restore baseline snapshot."""
         self._preview_timer.stop()
         gw = self.graph_widget
         for field, value in self._original_snapshot.items():
             setattr(gw, field, copy.deepcopy(value))
-        if gw.df is not None:
+
+        if getattr(gw, "df", None) is not None:
             gw.plot(gw.df)
-        else:
+        elif hasattr(gw, "canvas") and gw.canvas is not None:
             gw.canvas.draw()
 
-        self.axis_widget.load_axis_settings()
-        self.more_options_widget.load_settings()
-        self.legend_widget.load_legend_properties()
-        self.annotations_widget.load_annotations()
+        self.tab_general.load_settings()
+        self.tab_axes_limits.load_settings()
+        self.tab_ticks_spines.load_settings()
+        self.tab_secondary_inset.load_settings()
+        self.tab_legend.load_settings()
+        self.tab_plot_styles.load_settings()
+        self.tab_annotations.load_settings()
         self._preview_timer.stop()
 
-
-    def _create_legend_tab(self):
-        """Create legend customization tab."""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(8)
-
-        self.legend_widget = CustomizeLegend(self.graph_widget, parent=tab)
-        layout.addWidget(self.legend_widget)
-        layout.addStretch()
-
-        return tab
-
-    def _create_annotations_tab(self):
-        """Create annotations customization tab."""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(8)
-
-        self.annotations_widget = CustomizeAnnotations(self.graph_widget, parent=tab)
-        layout.addWidget(self.annotations_widget)
-        return tab
-
-    def _create_general_tab(self):
-        """Create general settings tab."""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(8)
-
-        self.more_options_widget = CustomizeMoreOptions(self.graph_widget, parent=tab)
-        layout.addWidget(self.more_options_widget)
-        return tab
-
-    def _create_axis_tab(self):
-        """Create axis customization tab (scale/limits/breaks/inset/secondary axes)."""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(8)
-
-        self.axis_widget = CustomizeAxis(self.graph_widget, parent=tab)
-        layout.addWidget(self.axis_widget)
-        return tab
-
-    def switch_graph(self, graph_widget, graph_id):
-        """Switch the dialog to a different graph widget.
-
-        Re-binds all child widgets (legend, annotations, axis, more_options)
-        to the new graph and reloads their content.
-        """
-        if self.graph_id == graph_id:
+    def switch_graph(self, graph_widget: QWidget, graph_id: int) -> None:
+        """Switch dialog to a different graph widget and reload all tabs."""
+        if self.graph_id == graph_id and self.graph_widget is graph_widget:
             return
 
         self._preview_timer.stop()
-
         self.graph_widget = graph_widget
         self.graph_id = graph_id
-        self.setWindowTitle(f"Customize Graph {graph_id}")
+        self.setWindowTitle(f"Customize Graph #{graph_id}")
+        self._update_graph_info()
 
-        self.legend_widget.switch_graph(graph_widget)
-        self.annotations_widget.switch_graph(graph_widget)
-        self.axis_widget.switch_graph(graph_widget)
-        self.more_options_widget.switch_graph(graph_widget)
+        self.tab_general.switch_graph(graph_widget)
+        self.tab_axes_limits.switch_graph(graph_widget)
+        self.tab_ticks_spines.switch_graph(graph_widget)
+        self.tab_secondary_inset.switch_graph(graph_widget)
+        self.tab_legend.switch_graph(graph_widget)
+        self.tab_plot_styles.switch_graph(graph_widget)
+        self.tab_annotations.switch_graph(graph_widget)
 
         self._original_snapshot = snapshot(self.graph_widget)
         self._preview_timer.stop()

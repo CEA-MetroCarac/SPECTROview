@@ -10,6 +10,7 @@ from typing import Optional
 from PySide6.QtCore import QTimer, Qt, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
+    QApplication,
     QFrame,
     QGridLayout,
     QGroupBox,
@@ -53,8 +54,15 @@ class AboutTabPage(QWidget):
         "dependencies", "packages", "pyside6", "qt", "numpy", "scipy",
         "matplotlib", "pandas", "pybaselines", "citation",
         "author", "license", "doi", "paper", "softwarex",
-        "exe", "whl", "standalone", "mode"
+        "exe", "whl", "standalone", "mode", "copy"
     ]
+
+    CITATION_TEXT = (
+        'Le, Van Hoan. "SPECTROview: An Open-Source Application for Interactive '
+        'Spectroscopic Data Processing, Fitting, and Visualization." '
+        'SoftwareX 35 (September 2026): 102862. '
+        'https://doi.org/10.1016/j.softx.2026.102862'
+    )
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -210,13 +218,26 @@ class AboutTabPage(QWidget):
         citation_layout.setContentsMargins(8, 6, 8, 6)
         citation_layout.setSpacing(4)
 
+        prompt_row = QHBoxLayout()
+        prompt_row.setSpacing(6)
+
         lbl_prompt = QLabel(
             "If you use SPECTROview in your research or publications, please consider citing:"
         )
         lbl_prompt.setStyleSheet("color: gray; font-style: italic; font-size: 11px;")
         lbl_prompt.setWordWrap(True)
         lbl_prompt.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        citation_layout.addWidget(lbl_prompt)
+        prompt_row.addWidget(lbl_prompt, 1)
+
+        self.btn_copy_citation = QPushButton("Copy")
+        self.btn_copy_citation.setIcon(Icons.copy())
+        self.btn_copy_citation.setFixedHeight(24)
+        self.btn_copy_citation.setCursor(Qt.PointingHandCursor)
+        self.btn_copy_citation.setToolTip("Copy citation to clipboard")
+        self.btn_copy_citation.clicked.connect(self._on_copy_citation_clicked)
+        prompt_row.addWidget(self.btn_copy_citation)
+
+        citation_layout.addLayout(prompt_row)
 
         lbl_cite = QLabel(
             'Le, Van Hoan. "SPECTROview: An Open-Source Application for Interactive Spectroscopic Data Processing, Fitting, and Visualization." '
@@ -235,6 +256,19 @@ class AboutTabPage(QWidget):
 
         self._scroll.setWidget(container)
         outer_layout.addWidget(self._scroll)
+
+    def _on_copy_citation_clicked(self) -> None:
+        """Copy formatted citation to system clipboard with temporary visual feedback."""
+        clipboard = QApplication.clipboard()
+        if clipboard is not None:
+            clipboard.setText(self.CITATION_TEXT)
+        self.btn_copy_citation.setText("Copied!")
+        self.btn_copy_citation.setIcon(Icons.check())
+        QTimer.singleShot(1500, self, self._reset_copy_citation_btn)
+
+    def _reset_copy_citation_btn(self) -> None:
+        self.btn_copy_citation.setText("Copy")
+        self.btn_copy_citation.setIcon(Icons.copy())
 
     def _on_check_updates_clicked(self) -> None:
         """Trigger update check and provide immediate visual feedback on button."""
@@ -256,6 +290,7 @@ class AboutTabPage(QWidget):
         self.grp_env.setStyleSheet("")
         self.grp_citation.setStyleSheet("")
         self.btn_check_updates.setStyleSheet("")
+        self.btn_copy_citation.setStyleSheet("")
         for _pkg, lbl in self._pkg_labels:
             lbl.setStyleSheet("font-size: 11px;")
 
@@ -268,7 +303,7 @@ class AboutTabPage(QWidget):
             self.btn_check_updates.setStyleSheet("border: 1.5px solid #3B82F6; font-weight: bold;")
             first_match = self.btn_check_updates
 
-        cite_terms = ["citation", "cite", "doi", "paper", "softwarex", "author", "le"]
+        cite_terms = ["citation", "cite", "doi", "paper", "softwarex", "author", "le", "copy"]
         if any(term in q or q in term for term in cite_terms):
             self.grp_citation.setStyleSheet(_highlight_group_style())
             if first_match is None:

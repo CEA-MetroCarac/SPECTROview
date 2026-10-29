@@ -58,6 +58,8 @@ Specify a single universal root folder for all of SPECTROview's templates, recip
 
 These parameters control the behavior of the **Vectorized Batch Fit (`VBF`) engine** — the mathematical optimizer that performs curve fitting on your spectra. Adjusting these values directly affects fitting speed, precision, and convergence.
 
+- **Reset to Default**: Click the **Reset all fit settings to default** button at the top of the tab to instantly restore all convergence parameters and global peak limits back to their factory defaults.
+
 | Parameter | Setting | Default | Range | Description & Behavior |
 |-----------|---------|---------|-------|------------------------|
 | **Maximum Iterations** | `max_ite` | 200 | 1 – 10,000 | The maximum number of Levenberg-Marquardt iterations per spectrum. <br>• **Lower (50–100)**: Faster fitting for previews.<br>• **Higher (200+)**: Better convergence for complex spectra. |
@@ -140,4 +142,4 @@ The **About** tab provides comprehensive runtime and reference information:
   - **Installed Package (.whl / pip)**: Dynamically queries and displays the live package versions active on the local machine.
   - Lists `PySide6` (with Qt runtime version), scientific stack (`numpy`, `scipy`, `matplotlib`, `pandas`, `pybaselines`), export engines (`openpyxl`, `pyarrow`), UI extensions (`superqt`, `pyqt-toast-notification`), and optional AI SDKs.
 - **Check for Updates**: Direct action to check GitHub releases for new versions.
-- **Paper Citation**: The canonical SoftwareX peer-reviewed citation with DOI.
+- **Paper Citation**: The canonical SoftwareX peer-reviewed citation with DOI, along with a **Copy** button to quickly copy the citation into your clipboard.

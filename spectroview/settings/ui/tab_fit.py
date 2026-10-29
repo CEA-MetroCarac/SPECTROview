@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QPushButton,
     QScrollArea,
     QSizePolicy,
     QSpacerItem,
@@ -20,6 +21,22 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from spectroview.view.theme import Icons
+
+
+DEFAULT_FIT_SETTINGS: dict[str, Any] = {
+    "fit_negative": False,
+    "max_ite": 200,
+    "xtol": 1e-4,
+    "ftol": 1e-4,
+    "coef_noise": 0.0,
+    "loss": "linear",
+    "f_scale": 1.0,
+    "maxshift": 20.0,
+    "minfwhm": 0.1,
+    "maxfwhm": 200.0,
+}
 
 
 def _highlight_group_style() -> str:
@@ -39,7 +56,8 @@ class FitSettingsTabPage(QWidget):
     KEYWORDS = [
         "fit", "fitting", "solver", "convergence", "negative", "absorption",
         "iterations", "tolerance", "xtol", "ftol", "noise", "threshold",
-        "loss", "scale", "f_scale", "bounds", "limits", "fwhm", "shift"
+        "loss", "scale", "f_scale", "bounds", "limits", "fwhm", "shift",
+        "reset", "default", "defaults"
     ]
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -59,6 +77,17 @@ class FitSettingsTabPage(QWidget):
         layout = QVBoxLayout(container)
         layout.setContentsMargins(6, 6, 6, 6)
         layout.setSpacing(8)
+
+        # ───── Reset to Defaults Action ─────
+        top_bar = QHBoxLayout()
+        top_bar.addStretch()
+        self.btn_reset_defaults = QPushButton("Reset all fit settings to default")
+        self.btn_reset_defaults.setIcon(Icons.refresh())
+        self.btn_reset_defaults.setCursor(Qt.PointingHandCursor)
+        self.btn_reset_defaults.setToolTip("Reset all fit parameters and peak limits to default values")
+        self.btn_reset_defaults.clicked.connect(self.reset_to_defaults)
+        top_bar.addWidget(self.btn_reset_defaults)
+        layout.addLayout(top_bar)
 
         # ───── Negative Peak Fitting ─────
         self.grp_neg = QGroupBox("Peak Polarity")
@@ -176,21 +205,25 @@ class FitSettingsTabPage(QWidget):
         outer_layout.addWidget(self._scroll)
 
     def apply_settings(self, data: dict) -> None:
-        self.chk_fit_negative.setChecked(data.get("fit_negative", False))
-        self.spin_max_iter.setValue(data.get("max_ite", 200))
-        self.spin_x_tol.setValue(data.get("xtol", 1e-4))
-        self.spin_f_tol.setValue(data.get("ftol", 1e-4))
-        self.spin_coef_noise.setValue(data.get("coef_noise", 1.0))
+        self.chk_fit_negative.setChecked(data.get("fit_negative", DEFAULT_FIT_SETTINGS["fit_negative"]))
+        self.spin_max_iter.setValue(data.get("max_ite", DEFAULT_FIT_SETTINGS["max_ite"]))
+        self.spin_x_tol.setValue(data.get("xtol", DEFAULT_FIT_SETTINGS["xtol"]))
+        self.spin_f_tol.setValue(data.get("ftol", DEFAULT_FIT_SETTINGS["ftol"]))
+        self.spin_coef_noise.setValue(data.get("coef_noise", DEFAULT_FIT_SETTINGS["coef_noise"]))
 
-        loss = str(data.get("loss", "linear"))
+        loss = str(data.get("loss", DEFAULT_FIT_SETTINGS["loss"]))
         idx = self.combo_loss.findText(loss)
         if idx >= 0:
             self.combo_loss.setCurrentIndex(idx)
-        self.spin_f_scale.setValue(float(data.get("f_scale", 1.0)))
+        self.spin_f_scale.setValue(float(data.get("f_scale", DEFAULT_FIT_SETTINGS["f_scale"])))
 
-        self.spin_maxshift.setValue(data.get("maxshift", 20.0))
-        self.spin_minfwhm.setValue(data.get("minfwhm", 0.1))
-        self.spin_maxfwhm.setValue(data.get("maxfwhm", 200.0))
+        self.spin_maxshift.setValue(data.get("maxshift", DEFAULT_FIT_SETTINGS["maxshift"]))
+        self.spin_minfwhm.setValue(data.get("minfwhm", DEFAULT_FIT_SETTINGS["minfwhm"]))
+        self.spin_maxfwhm.setValue(data.get("maxfwhm", DEFAULT_FIT_SETTINGS["maxfwhm"]))
+
+    def reset_to_defaults(self) -> None:
+        """Reset all fit settings and peak limits to factory default values."""
+        self.apply_settings(DEFAULT_FIT_SETTINGS)
 
     def get_settings(self) -> dict:
         return {
@@ -212,6 +245,7 @@ class FitSettingsTabPage(QWidget):
         q = query.strip().lower()
 
         # Clear existing styles
+        self.btn_reset_defaults.setStyleSheet("")
         self.grp_neg.setStyleSheet("")
         self.grp_solver.setStyleSheet("")
         self.grp_bounds.setStyleSheet("")
@@ -223,9 +257,14 @@ class FitSettingsTabPage(QWidget):
 
         first_match: Optional[QWidget] = None
 
+        if "reset" in q or "default" in q:
+            self.btn_reset_defaults.setStyleSheet("border: 1.5px solid #3B82F6; font-weight: bold;")
+            first_match = self.btn_reset_defaults
+
         if "negative" in q or "polarity" in q or "absorption" in q or "dip" in q:
             self.grp_neg.setStyleSheet(_highlight_group_style())
-            first_match = self.grp_neg
+            if first_match is None:
+                first_match = self.grp_neg
 
         for terms, lbl, grp in self._searchable_rows:
             if any(q in t or t in q for t in terms):

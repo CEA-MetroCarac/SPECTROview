@@ -319,6 +319,89 @@ class TestUXFeaturesSelectableTextAndSearchHighlighting:
         cleared = [lbl for _terms, lbl, _grp in fit_page._searchable_rows if "border" in lbl.styleSheet()]
         assert len(cleared) == 0
 
+    def test_fit_settings_reset_to_defaults(self, qapp):
+        dialog = _dialog(qapp)
+        fit_page = dialog._tab_fit
+
+        # Verify button exists and has correct label and icon
+        assert fit_page.btn_reset_defaults is not None
+        assert fit_page.btn_reset_defaults.text() == "Reset all fit settings to default"
+        assert not fit_page.btn_reset_defaults.icon().isNull()
+
+        # Mutate values away from defaults
+        fit_page.chk_fit_negative.setChecked(True)
+        fit_page.spin_max_iter.setValue(999)
+        fit_page.spin_x_tol.setValue(1e-2)
+        fit_page.spin_f_tol.setValue(1e-2)
+        fit_page.spin_coef_noise.setValue(5.0)
+        fit_page.combo_loss.setCurrentText("huber")
+        fit_page.spin_f_scale.setValue(8.5)
+        fit_page.spin_maxshift.setValue(55.0)
+        fit_page.spin_minfwhm.setValue(12.0)
+        fit_page.spin_maxfwhm.setValue(500.0)
+
+        # Trigger reset
+        fit_page.btn_reset_defaults.click()
+
+        # Verify all values were reset to defaults
+        settings = fit_page.get_settings()
+        assert settings["fit_negative"] is False
+        assert settings["max_ite"] == 200
+        assert settings["xtol"] == 1e-4
+        assert settings["ftol"] == 1e-4
+        assert settings["coef_noise"] == 0.0
+        assert settings["loss"] == "linear"
+        assert settings["f_scale"] == 1.0
+        assert settings["maxshift"] == 20.0
+        assert settings["minfwhm"] == 0.1
+        assert settings["maxfwhm"] == 200.0
+
+    def test_fit_settings_search_highlights_reset_button(self, qapp):
+        dialog = _dialog(qapp)
+        dialog.select_section("fit")
+        dialog._search_edit.setText("reset")
+        fit_page = dialog._tab_fit
+        assert "border" in fit_page.btn_reset_defaults.styleSheet()
+
+        dialog._search_edit.setText("")
+        assert fit_page.btn_reset_defaults.styleSheet() == ""
+
+    def test_about_copy_citation_to_clipboard(self, qapp):
+        from PySide6.QtWidgets import QApplication
+
+        dialog = _dialog(qapp)
+        about_page = dialog._tab_about
+
+        assert about_page.btn_copy_citation is not None
+        assert about_page.btn_copy_citation.text() == "Copy"
+        assert not about_page.btn_copy_citation.icon().isNull()
+
+        # Click Copy button
+        about_page.btn_copy_citation.click()
+
+        clipboard = QApplication.clipboard()
+        if clipboard is not None:
+            assert "Le, Van Hoan" in clipboard.text()
+            assert "SoftwareX" in clipboard.text()
+            assert "10.1016/j.softx.2026.102862" in clipboard.text()
+
+        assert about_page.btn_copy_citation.text() == "Copied!"
+
+    def test_about_search_highlights_citation_and_copy(self, qapp):
+        dialog = _dialog(qapp)
+        dialog.select_section("about")
+        dialog._search_edit.setText("copy")
+        about_page = dialog._tab_about
+        assert "border" in about_page.grp_citation.styleSheet()
+
+        dialog._search_edit.setText("")
+        assert about_page.grp_citation.styleSheet() == ""
+
+    def test_dialog_compat_properties_for_new_buttons(self, qapp):
+        dialog = _dialog(qapp)
+        assert dialog.btn_reset_fit_defaults is dialog._tab_fit.btn_reset_defaults
+        assert dialog.btn_copy_citation is dialog._tab_about.btn_copy_citation
+
 
 def test_main_about_opens_settings_about_section():
     from spectroview.main import Main

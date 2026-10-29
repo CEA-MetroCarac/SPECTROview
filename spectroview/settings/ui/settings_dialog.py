@@ -333,6 +333,7 @@ class SettingsDialog(QDialog):
         self.chk_check_updates_startup = self._tab_general.chk_check_updates_startup
 
         # Fit tab
+        self.btn_reset_fit_defaults = self._tab_fit.btn_reset_defaults
         self.chk_fit_negative = self._tab_fit.chk_fit_negative
         self.spin_max_iter = self._tab_fit.spin_max_iter
         self.spin_x_tol = self._tab_fit.spin_x_tol
@@ -365,6 +366,7 @@ class SettingsDialog(QDialog):
 
         # About tab
         self.btn_check_updates = self._tab_about.btn_check_updates
+        self.btn_copy_citation = self._tab_about.btn_copy_citation
 
     # ──────────────────────────────────────────────
     # VM Connections

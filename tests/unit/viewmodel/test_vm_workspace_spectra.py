@@ -320,7 +320,13 @@ class TestPeaks:
         _add_spectrum(vm, "s2", x, y)
         vm.set_selected_fnames(["s1"])
         vm.add_peak_at(500.0)
+
+        notifies = []
+        vm.notify.connect(notifies.append)
         vm.copy_peaks()
+        # Verify no redundant toast notification emitted on copy
+        assert len(notifies) == 0
+
         vm.set_selected_fnames(["s2"])
         vm.paste_peaks(apply_all=False)
         md2 = vm.store.get_map_data("s2")

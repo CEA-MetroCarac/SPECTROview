@@ -103,6 +103,10 @@ class TestVFitModelBuilderCopyPasteFeedback:
         builder.btn_peak_paste.click()
         assert len(peak_paste_emitted) == 1
 
+        # Fit button size (increased by 50% from 54px to 81px)
+        assert builder.btn_fit.width() == 81
+        assert builder.btn_fit.height() == 24
+
         # Fit model copy/paste (icon feedback without changing button text)
         fit_copy_emitted = []
         builder.fitmodel_copy_requested.connect(lambda: fit_copy_emitted.append(True))

@@ -1131,7 +1131,6 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No peaks to copy.")
             return
         self._peaks_clipboard = deepcopy(md.fit_model)
-        self.notify.emit("Peaks copied to clipboard.")
 
     def paste_peaks(self, apply_all: bool = False):
         if not hasattr(self, "_peaks_clipboard") or self._peaks_clipboard is None:
@@ -1309,7 +1308,6 @@ class VMWorkspaceSpectra(QObject):
         self._sync_fit_model_metadata(md)
 
         self._fitmodel_clipboard = deepcopy(build_clean_fit_model(md.fit_model))
-        self.notify.emit("Fit model copied to clipboard.")
 
     def paste_fit_model(self, apply_all: bool = False):
         if not hasattr(self, "_fitmodel_clipboard") or self._fitmodel_clipboard is None:

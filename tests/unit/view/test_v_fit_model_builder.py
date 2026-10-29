@@ -110,6 +110,10 @@ class TestVFitModelBuilderCopyPasteFeedback:
         # Apply fit model button size (increased by 30% from 66px to 86px)
         assert builder.btn_apply.width() == 86
 
+        # Fit model combobox size (reduced maximum width by 10% from 336px to 302px)
+        assert builder.cbb_model.maximumWidth() == 302
+        assert builder.btn_refresh.width() == 30
+
         # Fit model copy/paste (icon feedback without changing button text)
         fit_copy_emitted = []
         builder.fitmodel_copy_requested.connect(lambda: fit_copy_emitted.append(True))

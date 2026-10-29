@@ -708,6 +708,7 @@ class VFitModelBuilder(QWidget):
 
         self.cbb_model = QComboBox()
         self.cbb_model.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.cbb_model.setMaximumWidth(302)
 
         self.cbb_model.setToolTip("Select fit model, or drag and drop a JSON model file here.")
 
@@ -723,6 +724,7 @@ class VFitModelBuilder(QWidget):
         self.btn_load.clicked.connect(self.load_fit_models_requested.emit)  
 
         self.btn_refresh = QPushButton()
+        self.btn_refresh.setFixedSize(30, 24)
         self.btn_refresh.setToolTip("Refresh fit model list.")
         self.btn_refresh.clicked.connect(self.refresh_fit_models_requested.emit)    
 
@@ -730,6 +732,7 @@ class VFitModelBuilder(QWidget):
         row2.addWidget(self.btn_apply)
         row2.addWidget(self.btn_load)
         row2.addWidget(self.btn_refresh)
+        row2.addStretch()
 
         v.addLayout(row1)
         v.addLayout(row2)

@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -33,10 +33,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1644,8 +1644,8 @@
 <p>Baseline evaluation (<code>spectroview.api.preprocessing.subtract_baseline</code>, and every workspace's <code>set_baseline</code>) dispatches on <code>config["mode"]</code> by string name. Beyond the built-in <code>None</code>, <code>"Linear"</code>, <code>"Polynomial"</code>, and <code>"arpls"</code> modes, <strong>any <a href="https://pybaselines.readthedocs.io/">pybaselines</a> <code>Baseline</code> method name works out of the box</strong> — no registration step:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">preprocessing</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># &quot;asls&quot;, &quot;airpls&quot;, &quot;modpoly&quot;, &quot;snip&quot;, ... any pybaselines.Baseline method name</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">Y_corrected</span><span class="p">,</span> <span class="n">Y_baseline</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">subtract_baseline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;asls&quot;</span><span class="p">,</span> <span class="s2">&quot;lam&quot;</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">})</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># "asls", "airpls", "modpoly", "snip", ... any pybaselines.Baseline method name</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">Y_corrected</span><span class="p">,</span> <span class="n">Y_baseline</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">subtract_baseline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="p">{</span><span class="s2">"mode"</span><span class="p">:</span> <span class="s2">"asls"</span><span class="p">,</span> <span class="s2">"lam"</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">})</span>
 </code></pre></div>
 <p>If pybaselines adds a new method in a future release, it becomes available to SPECTROview immediately with no code change on either side.</p>
 <hr />
@@ -1654,15 +1654,15 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">fitting</span><span class="p">,</span> <span class="n">graphs</span><span class="p">,</span> <span class="n">settings</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Fit-model templates live under the SPECTROview Working Folder. Point it at a</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># shared location — set_working_folder() creates fit_model/plot_recipe/plot_style</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># subfolders under it:</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">settings</span><span class="o">.</span><span class="n">set_working_folder</span><span class="p">(</span><span class="s2">&quot;./shared_spectroview&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># shared location — set_working_folder() creates fit_model/plot_recipe/plot_style/ai_chat_history</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># subfolders and config.json under it:</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">settings</span><span class="o">.</span><span class="n">set_working_folder</span><span class="p">(</span><span class="s2">"./shared_spectroview"</span><span class="p">)</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># ...then any *.json dropped into the fit_model folder (by this API, the GUI, or</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="c1"># hand-written) is immediately visible:</span>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">names</span> <span class="o">=</span> <span class="n">fitting</span><span class="o">.</span><span class="n">list_fit_model_templates</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">get_fit_model_folder</span><span class="p">())</span>
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1"># Plot recipes work the same way, via a folder-backed store:</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">graphs</span><span class="o">.</span><span class="n">save_plot_recipe</span><span class="p">(</span><span class="s2">&quot;./shared_spectroview/plot_recipe&quot;</span><span class="p">,</span> <span class="s2">&quot;QC Dashboard&quot;</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">])</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">graphs</span><span class="o">.</span><span class="n">save_plot_recipe</span><span class="p">(</span><span class="s2">"./shared_spectroview/plot_recipe"</span><span class="p">,</span> <span class="s2">"QC Dashboard"</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">])</span>
 </code></pre></div>
 <p>A fit-model template's JSON shape is <code>{"0": {"peak_labels": [...], "peak_models": {...}, "baseline": {...}, "range_min": ..., "range_max": ..., "fit_params": {...}}}</code> — write one directly if you're generating templates from an external system, or build one with <code>fitting.build_fit_model()</code> / <code>fitting.save_fit_model_template()</code> and inspect the output.</p>
 <hr />
@@ -1800,10 +1800,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       

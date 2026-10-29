@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -33,10 +33,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -2136,13 +2136,13 @@
 </table>
 <p>Because the underlying <a href="../spectra_store/#mapdata-the-tensor-block">tensor model</a> is identical, a single vectorized fit that works for 1 spectrum also works for 100 000, with no code change in the engine.</p>
 <h3 id="mapdata-in-maps-context">MapData in Maps Context<a class="headerlink" href="#mapdata-in-maps-context" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>MapData (&quot;wafer_300mm&quot;) — 50×50 wafer (2500 spectra, 1000 wavenumbers)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>MapData ("wafer_300mm") — 50×50 wafer (2500 spectra, 1000 wavenumbers)
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── x0:          float64[1000]          1 shared wavenumber axis
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── Y0:          float32[2500, 1000]    raw intensities — 10 MB
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>├── x:           float64[800]           after spectral crop
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── Y:           float32[2500, 800]     after crop + baseline sub — 8 MB
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├── coords:      float64[2500, 2]       (X, Y) stage positions in µm
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>├── fnames:      list[str] × 2500       &quot;wafer_300mm_(x_pos, y_pos)&quot;
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>├── fnames:      list[str] × 2500       "wafer_300mm_(x_pos, y_pos)"
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>├── is_active:   bool[2500]             checkbox state
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>├── peak_params: float64[2500, K]       after VBF fit — all 2500 at once
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>├── fit_success: bool[2500]
@@ -2323,8 +2323,8 @@ When a new developer is confused about "where is the data?", the answer is: <str
 </blockquote>
 <h3 id="filename-convention">Filename Convention<a class="headerlink" href="#filename-convention" title="Permanent link">&para;</a></h3>
 <p>Each spectrum row in a <code>MapData</code> block gets a unique <code>fname</code> constructed from its coordinates:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">fname</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">map_name</span><span class="si">}</span><span class="s2">_(</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">x_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">y_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># Example: &quot;wafer_300mm_(12.5, -7.0)&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">fname</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">map_name</span><span class="si">}</span><span class="s2">_(</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">x_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">y_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># Example: "wafer_300mm_(12.5, -7.0)"</span>
 </code></pre></div>
 <p>This convention is used throughout the codebase to:</p>
 <ul>
@@ -2477,11 +2477,11 @@ When a new developer is confused about "where is the data?", the answer is: <str
 <p>Called <strong>after each individual <code>MapData</code> is modified</strong> within a bulk loop.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Maps workspace override:</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">_on_map_data_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">md</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;reinit_spectra&quot;</span><span class="p">:</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">"reinit_spectra"</span><span class="p">:</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">clear_preprocess</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="k">elif</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;delete_baseline&quot;</span><span class="p">,</span> <span class="s2">&quot;subtract_baseline&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_spectral_range&quot;</span><span class="p">):</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="k">elif</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"delete_baseline"</span><span class="p">,</span> <span class="s2">"subtract_baseline"</span><span class="p">,</span> <span class="s2">"apply_spectral_range"</span><span class="p">):</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">batch_preprocess</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">md</span><span class="o">.</span><span class="n">baseline_config</span><span class="p">,</span> <span class="n">md</span><span class="o">.</span><span class="n">range_min</span><span class="p">,</span> <span class="n">md</span><span class="o">.</span><span class="n">range_max</span><span class="p">)</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;paste_peaks&quot;</span><span class="p">:</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">"paste_peaks"</span><span class="p">:</span>
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruct_y_peaks</span><span class="p">(</span><span class="n">md</span><span class="p">)</span>
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="c1"># Always invalidate heatmap cache</span>
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">clear_map_cache_requested</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -2492,10 +2492,10 @@ When a new developer is confused about "where is the data?", the answer is: <str
 <p>The Maps override builds a <code>"type": "tensor"</code> payload (shared x-axis batch) instead of the Spectra workspace's <code>"type": "tensor_list"</code> (independent arrays per spectrum):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Maps workspace:</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">batch_data</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;tensor&#39;</span><span class="p">,</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>             <span class="c1"># shared float64[M_proc]</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">Y</span><span class="p">,</span>             <span class="c1"># float32[n_selected, M_proc]</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="n">indices</span><span class="p">,</span> <span class="c1"># which rows within the map</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'tensor'</span><span class="p">,</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="s1">'x'</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>             <span class="c1"># shared float64[M_proc]</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="s1">'y'</span><span class="p">:</span> <span class="n">Y</span><span class="p">,</span>             <span class="c1"># float32[n_selected, M_proc]</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="s1">'indices'</span><span class="p">:</span> <span class="n">indices</span><span class="p">,</span> <span class="c1"># which rows within the map</span>
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="o">...</span>
 <a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">}</span>
 </code></pre></div>
@@ -2503,7 +2503,7 @@ When a new developer is confused about "where is the data?", the answer is: <str
 <hr />
 <h2 id="cross-workspace-communication">Cross-Workspace Communication<a class="headerlink" href="#cross-workspace-communication" title="Permanent link">&para;</a></h2>
 <h3 id="maps-spectra-workspace">Maps → Spectra Workspace<a class="headerlink" href="#maps-spectra-workspace" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># User selects spectra in Maps workspace and clicks &quot;Send to Spectra&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># User selects spectra in Maps workspace and clicks "Send to Spectra"</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">vm</span><span class="o">.</span><span class="n">send_selected_spectra_to_spectra_workspace</span><span class="p">()</span>
 </code></pre></div>
 <p>For each selected spectrum:
@@ -2747,10 +2747,10 @@ When a new developer is confused about "where is the data?", the answer is: <str
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       

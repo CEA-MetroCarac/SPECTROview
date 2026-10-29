@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -33,10 +33,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -852,10 +852,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-fit-parameters-general-tab" class="md-nav__link">
+  <a href="#1-spectroview-working-folder-preferences-general-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Fit Parameters (General tab)
+        1. SPECTROview Working Folder &amp; Preferences (General tab)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. SPECTROview Working Folder &amp; Preferences (General tab)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interface-theme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface Theme
       
     </span>
   </a>
@@ -863,10 +875,26 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-global-peak-limits-general-tab" class="md-nav__link">
+  <a href="#application-updates" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Global Peak Limits (General tab)
+        Application Updates
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-fit-convergence-parameters-fit-settings-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Fit Convergence Parameters (Fit Settings tab)
       
     </span>
   </a>
@@ -874,10 +902,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-spectroview-working-folder-general-tab" class="md-nav__link">
+  <a href="#3-global-peak-limits-fit-settings-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. SPECTROview Working Folder (General tab)
+        3. Global Peak Limits (Fit Settings tab)
       
     </span>
   </a>
@@ -885,15 +913,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-ai-settings-ai-tab" class="md-nav__link">
+  <a href="#4-ai-settings-ai-settings-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. AI Settings (AI tab)
+        4. AI Settings (AI Settings tab)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="4. AI Settings (AI tab)">
+    <nav class="md-nav" aria-label="4. AI Settings (AI Settings tab)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -908,10 +936,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#chat-history" class="md-nav__link">
+  <a href="#local-mcp-server" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Chat History
+        Local MCP Server
       
     </span>
   </a>
@@ -924,10 +952,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#5-local-mcp-server-ai-tab" class="md-nav__link">
+  <a href="#5-about-environment-about-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Local MCP Server (AI tab)
+        5. About &amp; Environment (About tab)
       
     </span>
   </a>
@@ -1708,22 +1736,85 @@
   <h1>Settings</h1>
 
 <h2 id="settings-preferences"><strong>Settings &amp; Preferences</strong><a class="headerlink" href="#settings-preferences" title="Permanent link">&para;</a></h2>
-<p>Access the <strong>Settings</strong> menu via the gear icon in the main toolbar (or press <code>Ctrl + Shift + S</code>).</p>
+<p>Access the <strong>Settings</strong> menu via the gear icon in the main toolbar (or press <code>Ctrl + Shift + S</code>). You can also click <strong>About SPECTROview</strong> in the top menu bar to jump directly to the <strong>About</strong> section.</p>
 <div align="center">
-  <img src="../../user_manual_images/Settings/settings.png" alt="Settings Panel" width="380"><br>
+  <img src="../../user_manual_images/Settings/settings.png" alt="Settings Panel" width="460"><br>
 </div>
 
 <p><br></p>
-<p>The <code>Settings Panel</code> is organized into two tabs:</p>
+<p>The <code>Settings Panel</code> features a modern two-panel interface with real-time search filtering:</p>
 <ul>
-<li><strong>General</strong> — fitting behavior and file locations: <strong><code>Fit Parameters</code></strong>, <strong><code>Global Peak Limits</code></strong>, and the <strong><code>SPECTROview Working Folder</code></strong> (sections 1–3 below).</li>
-<li><strong>AI</strong> — API keys, chat history, and the optional local MCP endpoint (sections 4–5 below).</li>
+<li><strong>Left Sidebar</strong>:</li>
+<li><strong>Search Bar</strong>: Type any keyword (e.g. <code>working folder</code>, <code>theme</code>, <code>tolerance</code>, <code>loss</code>, <code>mcp</code>, <code>python</code>, <code>citation</code>) to instantly filter the navigation list and highlight matching options directly on the page with automatic scroll-to-view.</li>
+<li><strong>Navigation Tabs</strong>:<ol>
+<li><strong>General</strong> — SPECTROview Working Folder, Interface Theme, portable configuration backup/restore, and update preferences.</li>
+<li><strong>Fit Settings</strong> — Optimizer convergence parameters, robust loss function, peak polarity, and global peak limits (with dedicated curve-fitting icon).</li>
+<li><strong>AI Settings</strong> — LLM provider credentials, connection testing, and local MCP server.</li>
+<li><strong>About</strong> — Application version, build number, Python environment, runtime dependency versions, documentation, and citation.</li>
+</ol>
+</li>
+<li><strong>Right Content Area</strong>: Displays all options for the selected tab. All informational text, environment details, and citations are selectable with the mouse for easy copying.</li>
+<li><strong>Footer</strong>: Shows application version with standard <strong>Save</strong> and <strong>Cancel</strong> buttons.</li>
 </ul>
 <blockquote>
-<p><strong>Theme</strong>: Interface theme selection (<strong>Modern Dark</strong>, <strong>Modern Light</strong>, <strong>Classic Dark</strong>, or <strong>Classic Light</strong>) is toggled directly from the <strong>Theme</strong> button in the top menu bar.</p>
+<p><strong>Theme Synchronization</strong>: The <strong>Interface Theme</strong> can be selected either within the <strong>General</strong> tab (<code>Modern Dark</code>, <code>Modern Light</code>, <code>Classic Dark</code>, or <code>Classic Light</code>) or directly via the <strong>Theme</strong> button in the top menu bar. Both selectors are fully synchronized in real time.</p>
 </blockquote>
 <hr />
-<h3 id="1-fit-parameters-general-tab"><strong>1. Fit Parameters</strong> <em>(General tab)</em><a class="headerlink" href="#1-fit-parameters-general-tab" title="Permanent link">&para;</a></h3>
+<h3 id="1-spectroview-working-folder-preferences-general-tab"><strong>1. SPECTROview Working Folder &amp; Preferences</strong> <em>(General tab)</em><a class="headerlink" href="#1-spectroview-working-folder-preferences-general-tab" title="Permanent link">&para;</a></h3>
+<p>Specify a single universal root folder for all of SPECTROview's templates, recipes, styles, AI chat history, and configuration backup. When you set it, five subfolders and a portable configuration file are created automatically inside it:</p>
+<table>
+<thead>
+<tr>
+<th>Subfolder / File</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fit_model/</code></td>
+<td>Custom fit models (JSON). The <code>Fit Model Builder</code> scans this folder and lists every model here for one-click reuse.</td>
+</tr>
+<tr>
+<td><code>plot_recipe/</code></td>
+<td>Plot Recipes — saved sets of full plot configurations (data bindings + style) for the <code>Graphs</code> workspace.</td>
+</tr>
+<tr>
+<td><code>plot_style/</code></td>
+<td>Style Templates — saved appearance-only styles that can be applied to any existing graph.</td>
+</tr>
+<tr>
+<td><code>ai_chat_history/</code></td>
+<td>AI chat conversation logs (JSON). Conversations are automatically saved here.</td>
+</tr>
+<tr>
+<td><code>template/</code></td>
+<td>General plot templates and workspace templates.</td>
+</tr>
+<tr>
+<td><code>config.json</code></td>
+<td>Portable configuration backup. Non-secret application settings are mirrored to this JSON file.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Click <strong>Browse</strong> to select a folder, or type the path directly.</li>
+<li>Click <strong>Open</strong> to open the configured folder directly in <strong>Windows Explorer</strong> or <strong>macOS Finder</strong> with one click.</li>
+</ul>
+<blockquote>
+<p><strong>Credential Security</strong>: AI provider API keys entered in Settings are securely stored in the operating system credential vault (<strong>Windows Credential Manager</strong> via <code>keyring</code>) and are strictly excluded from <code>config.json</code> backups. This prevents sensitive credentials from being leaked if you share or commit your working directory.</p>
+<p><strong>Backup &amp; PC Migration</strong>: If you move to a new PC or want to make a backup, simply copy this single Working Folder to the new PC. In SPECTROview's Settings panel on the new machine, point the <strong>SPECTROview Working Folder</strong> to that folder: all fit models, plot recipes, style templates, AI chat history, and configuration (<code>config.json</code>) will be restored automatically!</p>
+<p>You can also use the <strong>Export Config...</strong> and <strong>Restore Config...</strong> buttons at any time to export or restore settings to/from a standalone JSON file.</p>
+</blockquote>
+<h4 id="interface-theme"><strong>Interface Theme</strong><a class="headerlink" href="#interface-theme" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Theme</strong>: Select between <strong>Modern Dark</strong>, <strong>Modern Light</strong>, <strong>Classic Dark</strong>, or <strong>Classic Light</strong>. Selection updates the active theme immediately and keeps the top menu bar theme button in perfect synchronization. The plot canvas theme is independent of the interface theme, defaulting to <strong>Light Mode</strong>; you can switch it to <strong>Dark Mode</strong> at any time via the <strong>Plot theme</strong> selector in the <code>View Options</code> toolbar under the spectrum canvas (your selection persists across sessions).</li>
+</ul>
+<h4 id="application-updates"><strong>Application Updates</strong><a class="headerlink" href="#application-updates" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Check for updates automatically on application startup</strong>: When checked (default), SPECTROview will periodically check for new releases in the background upon application launch.</li>
+</ul>
+<hr />
+<h3 id="2-fit-convergence-parameters-fit-settings-tab"><strong>2. Fit Convergence Parameters</strong> <em>(Fit Settings tab)</em><a class="headerlink" href="#2-fit-convergence-parameters-fit-settings-tab" title="Permanent link">&para;</a></h3>
 <p>These parameters control the behavior of the <strong>Vectorized Batch Fit (<code>VBF</code>) engine</strong> — the mathematical optimizer that performs curve fitting on your spectra. Adjusting these values directly affects fitting speed, precision, and convergence.</p>
 <table>
 <thead>
@@ -1748,14 +1839,14 @@
 <td><code>xtol</code></td>
 <td>1×10⁻⁴</td>
 <td>1×10⁻⁶ – 1×10⁻¹</td>
-<td>Relative tolerance for the parameter step size. Convergence requires: <br> mean(|&delta;<i>p</i>| / |<i>p</i>|) &lt; <code>xtol</code></td>
+<td>Relative tolerance for the parameter step size. Convergence requires: <br> mean(</td>
 </tr>
 <tr>
 <td><strong>f-tolerance</strong></td>
 <td><code>ftol</code></td>
 <td>1×10⁻⁴</td>
 <td>1×10⁻⁶ – 1×10⁻¹</td>
-<td>Relative tolerance for the cost function. Convergence requires: <br> |cost<sub>n</sub> - cost<sub>n-1</sub>| / |cost<sub>n</sub>| &lt; <code>ftol</code></td>
+<td>Relative tolerance for the cost function. Convergence requires: <br></td>
 </tr>
 <tr>
 <td><strong>Noise Threshold Coefficient</strong></td>
@@ -1783,7 +1874,7 @@
 <td>-</td>
 <td>Unchecked</td>
 <td>-</td>
-<td>When checked, negative intensity values are included in the fit. When unchecked, they are assigned zero weight.</td>
+<td>When checked, negative intensity values (absorption or inverted peaks) are included in the fit. When unchecked, they are assigned zero weight.</td>
 </tr>
 </tbody>
 </table>
@@ -1792,7 +1883,7 @@
 <p><strong>Weighting Composition Order</strong>: Hard exclusions (<code>fit_negative</code> and <code>coef_noise</code> noise-floor masking) are evaluated first to assign zero weight to excluded points. For active points, robust loss weighting (<code>soft_l1</code> or <code>huber</code>) is applied second, smoothly down-weighting outlier residuals via Iteratively Reweighted Least Squares (IRLS).</p>
 </blockquote>
 <hr />
-<h3 id="2-global-peak-limits-general-tab"><strong>2. Global Peak Limits</strong> <em>(General tab)</em><a class="headerlink" href="#2-global-peak-limits-general-tab" title="Permanent link">&para;</a></h3>
+<h3 id="3-global-peak-limits-fit-settings-tab"><strong>3. Global Peak Limits</strong> <em>(Fit Settings tab)</em><a class="headerlink" href="#3-global-peak-limits-fit-settings-tab" title="Permanent link">&para;</a></h3>
 <p>These parameters define <strong>absolute boundary conditions</strong> that are applied globally to all peaks across the application. When you add a new peak to a fit model, these limits are used to set the initial parameter bounds automatically.</p>
 <blockquote>
 <p><strong>Note</strong>: You can check the "Limits" checkbox under the <code>PeakTable</code> to display the actual bounds of each peak.</p>
@@ -1834,37 +1925,8 @@
 </tbody>
 </table>
 <hr />
-<h3 id="3-spectroview-working-folder-general-tab"><strong>3. SPECTROview Working Folder</strong> <em>(General tab)</em><a class="headerlink" href="#3-spectroview-working-folder-general-tab" title="Permanent link">&para;</a></h3>
-<p>Specify a single root folder for all of SPECTROview's saved templates. When you set it, three subfolders are created automatically inside it:</p>
-<table>
-<thead>
-<tr>
-<th>Subfolder</th>
-<th>Contents</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>fit_model/</code></td>
-<td>Custom fit models (JSON). The <code>Fit Model Builder</code> scans this folder and lists every model here for one-click reuse.</td>
-</tr>
-<tr>
-<td><code>plot_recipe/</code></td>
-<td>Plot Recipes — saved sets of full plot configurations (data bindings + style) for the <code>Graphs</code> workspace.</td>
-</tr>
-<tr>
-<td><code>plot_style/</code></td>
-<td>Style Templates — saved appearance-only styles that can be applied to any existing graph.</td>
-</tr>
-</tbody>
-</table>
-<p>Click <strong>Browse</strong> to select a folder, or type the path directly.</p>
-<blockquote>
-<p><strong>Note</strong>: This single Working Folder replaces the older separate "Fit model folder" / "Plot template folder" settings. If you had one of those configured previously, it is migrated automatically the first time the Working Folder is read.</p>
-</blockquote>
-<hr />
-<h3 id="4-ai-settings-ai-tab"><strong>4. AI Settings</strong> <em>(AI tab)</em><a class="headerlink" href="#4-ai-settings-ai-tab" title="Permanent link">&para;</a></h3>
-<p>The <strong>AI</strong> tab configures the <a href="../ai_agent/">AI Chat Agent</a>. Nothing here is required to use the rest of SPECTROview.</p>
+<h3 id="4-ai-settings-ai-settings-tab"><strong>4. AI Settings</strong> <em>(AI Settings tab)</em><a class="headerlink" href="#4-ai-settings-ai-settings-tab" title="Permanent link">&para;</a></h3>
+<p>The <strong>AI Settings</strong> tab configures the <a href="../ai_agent/">AI Chat Agent</a>. Nothing here is required to use the rest of SPECTROview.</p>
 <h4 id="api-keys"><strong>API Keys</strong><a class="headerlink" href="#api-keys" title="Permanent link">&para;</a></h4>
 <p>The fields for a <strong>Custom</strong> (OpenAI-compatible) endpoint are shown by default:</p>
 <table>
@@ -1887,35 +1949,24 @@
 <td><strong>Model Name</strong></td>
 <td>A comma-separated list of model names (e.g. <code>model-a, model-b</code>). These populate the model dropdown in the chat panel — handy for endpoints that don't expose a model-listing API.</td>
 </tr>
+<tr>
+<td><strong>Display Label</strong></td>
+<td>Label shown in the AI chat composer for this custom endpoint.</td>
+</tr>
 </tbody>
 </table>
 <p>Keys for the built-in cloud providers are tucked under the collapsible <strong>▸ Other cloud providers</strong> section (click to expand): <strong>OpenAI</strong>, <strong>Anthropic</strong>, <strong>Gemini</strong>, <strong>DeepSeek</strong>, and <strong>Mistral</strong>. All keys are stored masked and remembered between sessions.</p>
+<ul>
+<li><strong>Test Connection</strong>: Select any provider from the dropdown and click <strong>Test Connection</strong> to verify API endpoint availability, credentials, and network connectivity without saving.</li>
+</ul>
 <blockquote>
-<p><strong>Where your keys are stored.</strong> API keys go into your operating system's
+<p><strong>Where your keys are stored</strong>: API keys go into your operating system's
 per-user settings store — the registry (<code>HKEY_CURRENT_USER\Software\CEA-Leti\SPECTROview</code>)
 on Windows, <code>~/Library/Preferences</code> on macOS. They are <strong>never</strong> written to a
 file inside the SPECTROview project folder, are not included in an exported
-workspace, and cannot be committed to a Git repository by accident. They are
-stored in plain text there, so treat them like any other saved credential:
-they are readable by anything running under your user account.</p>
+workspace, and cannot be committed to a Git repository by accident.</p>
 </blockquote>
-<h4 id="chat-history"><strong>Chat History</strong><a class="headerlink" href="#chat-history" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>History Folder</strong></td>
-<td>Where AI chat conversations are saved (as JSON). Click <strong>Browse</strong> to choose a folder.</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h3 id="5-local-mcp-server-ai-tab"><strong>5. Local MCP Server</strong> <em>(AI tab)</em><a class="headerlink" href="#5-local-mcp-server-ai-tab" title="Permanent link">&para;</a></h3>
+<h4 id="local-mcp-server"><strong>Local MCP Server</strong><a class="headerlink" href="#local-mcp-server" title="Permanent link">&para;</a></h4>
 <p>Enable this only when a trusted MCP client on the same computer needs access
 to the currently running SPECTROview session. The default endpoint is
 <code>http://127.0.0.1:8765/mcp</code> and starts as soon as you select <strong>OK</strong>.</p>
@@ -1941,8 +1992,16 @@ to the currently running SPECTROview session. The default endpoint is
 </tbody>
 </table>
 <p>The bind address is fixed to localhost (<code>127.0.0.1</code>); it is not exposed to the
-LAN or internet. Keep SPECTROview running while the client is connected. The
-endpoint stops when SPECTROview closes or the checkbox is cleared.</p>
+LAN or internet. Keep SPECTROview running while the client is connected.</p>
+<hr />
+<h3 id="5-about-environment-about-tab"><strong>5. About &amp; Environment</strong> <em>(About tab)</em><a class="headerlink" href="#5-about-environment-about-tab" title="Permanent link">&para;</a></h3>
+<p>The <strong>About</strong> tab provides comprehensive runtime and reference information:</p>
+<ul>
+<li><strong>Application Details</strong>: Official SPECTROview logo, title, version number (<code>Version {VERSION}</code>), and build number (<code>Build: {BUILD_NUMBER}</code>).</li>
+<li><strong>Environment &amp; Dependencies</strong>: Dynamically lists the exact Python version, operating system architecture, and runtime package versions in use by SPECTROview (e.g. <code>PySide6</code> with Qt runtime version, <code>numpy</code>, <code>scipy</code>, <code>matplotlib</code>, <code>pandas</code>, <code>pybaselines</code>, <code>openpyxl</code>, <code>superqt</code>, <code>pyarrow</code>, AI SDKs, and data readers).</li>
+<li><strong>Check for Updates</strong>: Direct action to check GitHub releases for new versions.</li>
+<li><strong>Paper Citation</strong>: The canonical SoftwareX peer-reviewed citation with DOI.</li>
+</ul>
 
 
 
@@ -2075,10 +2134,10 @@ endpoint stops when SPECTROview closes or the checkbox is cleared.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       

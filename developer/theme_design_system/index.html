@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -29,10 +29,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1583,6 +1583,12 @@
 <li>The experimental <code>"modern_warm"</code> theme is deprecated and removed.</li>
 <li><strong>Automatic Migration</strong>: When <code>MSettings.get_theme()</code> or <code>ThemeManager.apply()</code> encounters <code>"modern_warm"</code>, it automatically migrates the setting to <code>"light"</code>, updates persistent storage, and applies Modern Light.</li>
 </ul>
+<h3 id="5-plot-theme-vs-application-ui-theme-decoupling">5. Plot Theme vs. Application UI Theme Decoupling<a class="headerlink" href="#5-plot-theme-vs-application-ui-theme-decoupling" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Matplotlib Canvas Theme</strong>: In addition to the application-wide Qt UI theme, the plot canvas theme (<code>"Dark Mode"</code> or <code>"Light Mode"</code>) is independently configured via the <strong>Plot theme</strong> selector in <code>VSpectraViewer</code>.</li>
+<li><strong>Default &amp; Independence</strong>: The plot canvas theme defaults to <code>"Light Mode"</code> across all viewers and operates completely independently from the global application UI theme. Toggling the UI theme between dark and light does not alter the canvas plot theme.</li>
+<li><strong>Persistence</strong>: Explicit user selections in the plot theme selector persist across application sessions in <code>view_options/theme</code>.</li>
+</ul>
 <hr />
 <h2 id="3-design-tokens-dark_tokens-light_tokens">3. Design Tokens (<code>DARK_TOKENS</code> &amp; <code>LIGHT_TOKENS</code>)<a class="headerlink" href="#3-design-tokens-dark_tokens-light_tokens" title="Permanent link">&para;</a></h2>
 <p>The core token system defines 36 semantic variables. All translucent colors use integer alpha <code>0..255</code>.</p>
@@ -1825,11 +1831,11 @@
 <h3 id="typography-stack">Typography Stack<a class="headerlink" href="#typography-stack" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Standard UI Typography</strong>:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">font-family</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Inter&quot;</span><span class="o">,</span><span class="w"> </span><span class="s2">&quot;Segoe UI Variable Text&quot;</span><span class="o">,</span><span class="w"> </span><span class="s2">&quot;Segoe UI&quot;</span><span class="o">,</span><span class="w"> </span><span class="nt">sans-serif</span><span class="o">;</span>
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">font-family</span><span class="o">:</span><span class="w"> </span><span class="s2">"Inter"</span><span class="o">,</span><span class="w"> </span><span class="s2">"Segoe UI Variable Text"</span><span class="o">,</span><span class="w"> </span><span class="s2">"Segoe UI"</span><span class="o">,</span><span class="w"> </span><span class="nt">sans-serif</span><span class="o">;</span>
 </code></pre></div>
   Provides clean legibility across dense scientific property sheets and menus without requiring external bundled TTF/OTF dependencies.</li>
 <li><strong>Monospace Numerical &amp; Code Stack</strong>:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">font-family</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;JetBrains Mono&quot;</span><span class="o">,</span><span class="w"> </span><span class="s2">&quot;Cascadia Code&quot;</span><span class="o">,</span><span class="w"> </span><span class="s2">&quot;Consolas&quot;</span><span class="o">,</span><span class="w"> </span><span class="nt">monospace</span><span class="o">;</span>
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">font-family</span><span class="o">:</span><span class="w"> </span><span class="s2">"JetBrains Mono"</span><span class="o">,</span><span class="w"> </span><span class="s2">"Cascadia Code"</span><span class="o">,</span><span class="w"> </span><span class="s2">"Consolas"</span><span class="o">,</span><span class="w"> </span><span class="nt">monospace</span><span class="o">;</span>
 </code></pre></div>
   Used in spectral coordinate readouts, VBF parameter tables, fit residual reports, and embedded AI code snippets.</li>
 <li><strong>Font Size Safety</strong>: Application initialization guarantees positive point size (<code>setPointSizeF(9.0)</code>) to eliminate negative-size layout warnings during Qt Markdown rendering.</li>
@@ -1861,13 +1867,13 @@
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="k">width</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="kt">px</span><span class="p">;</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="k">background-color</span><span class="p">:</span><span class="w"> </span><span class="o">@</span><span class="n">sidebar_bg</span><span class="p">;</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="k">border-left</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="kt">px</span><span class="w"> </span><span class="kc">solid</span><span class="w"> </span><span class="o">@</span><span class="n">border_strong</span><span class="p">;</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="n">image</span><span class="p">:</span><span class="w"> </span><span class="nb">url</span><span class="p">(</span><span class="s2">&quot;splitter_grip_v_dark.svg&quot;</span><span class="p">);</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="n">image</span><span class="p">:</span><span class="w"> </span><span class="nb">url</span><span class="p">(</span><span class="s2">"splitter_grip_v_dark.svg"</span><span class="p">);</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nt">QSplitter</span><span class="p">::</span><span class="nd">handle</span><span class="p">:</span><span class="nd">vertical</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="kt">px</span><span class="p">;</span>
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="k">background-color</span><span class="p">:</span><span class="w"> </span><span class="o">@</span><span class="k">background</span><span class="p">;</span>
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="k">border-top</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="kt">px</span><span class="w"> </span><span class="kc">solid</span><span class="w"> </span><span class="o">@</span><span class="n">border_strong</span><span class="p">;</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="n">image</span><span class="p">:</span><span class="w"> </span><span class="nb">url</span><span class="p">(</span><span class="s2">&quot;splitter_grip_h_dark.svg&quot;</span><span class="p">);</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="n">image</span><span class="p">:</span><span class="w"> </span><span class="nb">url</span><span class="p">(</span><span class="s2">"splitter_grip_h_dark.svg"</span><span class="p">);</span>
 <a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="p">}</span>
 <a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="nt">QSplitter</span><span class="p">::</span><span class="nd">handle</span><span class="p">:</span><span class="nd">hover</span><span class="o">,</span><span class="w"> </span><span class="nt">QSplitter</span><span class="p">::</span><span class="nd">handle</span><span class="p">:</span><span class="nd">pressed</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">    </span><span class="k">background-color</span><span class="p">:</span><span class="w"> </span><span class="o">@</span><span class="n">accent_tint</span><span class="p">;</span>
@@ -2094,10 +2100,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       

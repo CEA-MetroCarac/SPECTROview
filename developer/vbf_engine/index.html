@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -33,10 +33,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -2309,12 +2309,12 @@ where <span class="arithmatex">\(W = \text{diag}(w_{\text{hard}}^2 \cdot w_{\tex
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>fit_model dict                    VBFevaluator                  Optimizer
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>┌─────────────────┐     ┌────────────────────────────┐     ┌──────────────┐
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│ peak_models:    │     │ _param_names:              │     │              │
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   &quot;0&quot;:          │     │   [&quot;m01_ampli&quot;,            │     │  p_free      │
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│     Gaussian:   │ ──► │    &quot;m01_fwhm&quot;,             │ ──► │  (N, K_free) │
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│       ampli: .. │     │    &quot;m01_x0&quot;,               │     │              │
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│       fwhm:  .. │     │    &quot;m02_ampli&quot;, ...]       │     │              │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   "0":          │     │   ["m01_ampli",            │     │  p_free      │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│     Gaussian:   │ ──► │    "m01_fwhm",             │ ──► │  (N, K_free) │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│       ampli: .. │     │    "m01_x0",               │     │              │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│       fwhm:  .. │     │    "m02_ampli", ...]       │     │              │
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│       x0:    .. │     │                            │     │              │
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│   &quot;1&quot;:          │     │ _free_idx:  [0, 1, 2, 3]   │     │              │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│   "1":          │     │ _free_idx:  [0, 1, 2, 3]   │     │              │
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│     Lorentzian: │     │ _fixed_idx: [4]            │     │              │
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│       ampli: .. │     │ _fixed_values: [0.5]       │     │              │
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│       ...       │     │                            │     │              │
@@ -2343,14 +2343,14 @@ where <span class="arithmatex">\(W = \text{diag}(w_{\text{hard}}^2 \cdot w_{\tex
 <h3 id="71-tensor-conventions"><strong>7.1. Tensor Conventions</strong><a class="headerlink" href="#71-tensor-conventions" title="Permanent link">&para;</a></h3>
 <p>All batched functions follow the same signature:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">batched_shape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">"""</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="sd">    x:      (M,) shared axis  OR  (N, M) per-spectrum axis</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="sd">    params: (N, n_p) parameter matrix</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="sd">    Returns: (N, M) predicted values</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="sd">    """</span>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">batched_shape_jac</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns: (N, M, n_p) Jacobian tensor&quot;&quot;&quot;</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="sd">"""Returns: (N, M, n_p) Jacobian tensor"""</span>
 </code></pre></div>
 <p>Internally, every function follows the same efficiency pattern (§2.4): compute each repeated quantity once (typically a reciprocal like <code>1/w²</code>), reuse it via broadcasted multiplication instead of re-dividing, and write into pre-allocated Jacobian slices in place.</p>
 <h3 id="72-registered-models-batched_models"><strong>7.2. Registered Models (<code>BATCHED_MODELS</code>)</strong><a class="headerlink" href="#72-registered-models-batched_models" title="Permanent link">&para;</a></h3>
@@ -2530,7 +2530,7 @@ where <span class="arithmatex">\(W = \text{diag}(w_{\text{hard}}^2 \cdot w_{\tex
 <p><code>VBFevaluator.compute_noise_stats(Y, coef_noise)</code> applies the same <code>diff</code>/<code>median</code> logic along <code>axis=1</code> to estimate one noise level per spectrum simultaneously across the whole map, and additionally computes a 5-point moving average of the signal (<code>ymean</code>) used to decide, point-by-point, whether the <em>signal itself</em> — not just the noise — is above the floor:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">dy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">ampli_noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dy</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.6745</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>      <span class="c1"># (N,)</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">Y_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;edge&#39;</span><span class="p">)</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">Y_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'edge'</span><span class="p">)</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">ymean</span> <span class="o">=</span> <span class="p">(</span><span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>         <span class="o">+</span> <span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">:])</span> <span class="o">/</span> <span class="mf">5.0</span>                   <span class="c1"># 5-point moving average</span>
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">noise_level</span> <span class="o">=</span> <span class="n">coef_noise</span> <span class="o">*</span> <span class="n">ampli_noise</span>                                   <span class="c1"># (N,)</span>
@@ -2650,11 +2650,11 @@ where <span class="arithmatex">\(W = \text{diag}(w_{\text{hard}}^2 \cdot w_{\tex
 <p>To add a new peak shape with maximum performance:</p>
 <p><strong>Step 1</strong> — Define the batched evaluation function in <code>models.py</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">batched_newshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="sd">"""</span>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="sd">    x:      (M,) or (N, M)</span>
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="sd">    params: (N, n_p) where columns are [param1, param2, ...]</span>
 <a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="sd">    Returns: (N, M)</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="sd">    """</span>
 <a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">p1</span> <span class="o">=</span> <span class="n">params</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>    <span class="c1"># (N, 1) — broadcasts over M</span>
 <a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">p2</span> <span class="o">=</span> <span class="n">params</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
 <a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -2665,7 +2665,7 @@ where <span class="arithmatex">\(W = \text{diag}(w_{\text{hard}}^2 \cdot w_{\tex
 </code></pre></div>
 <p><strong>Step 2</strong> — Derive and define the analytical Jacobian:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">batched_newshape_jac</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns: (N, M, n_p) — partial derivatives w.r.t. each parameter.&quot;&quot;&quot;</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="sd">"""Returns: (N, M, n_p) — partial derivatives w.r.t. each parameter."""</span>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="c1"># ... compute intermediates ...</span>
 <a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">N</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">shape</span>
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">n_p</span><span class="p">))</span>
@@ -2676,7 +2676,7 @@ where <span class="arithmatex">\(W = \text{diag}(w_{\text{hard}}^2 \cdot w_{\tex
 <p><strong>Step 3</strong> — Register in the <code>BATCHED_MODELS</code> dictionary:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">BATCHED_MODELS</span> <span class="o">=</span> <span class="p">{</span>
 <a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="c1"># ... existing ...</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="s2">&quot;NewShape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">batched_newshape</span><span class="p">,</span> <span class="n">batched_newshape_jac</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;param1&quot;</span><span class="p">,</span> <span class="s2">&quot;param2&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">]),</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="s2">"NewShape"</span><span class="p">:</span> <span class="p">(</span><span class="n">batched_newshape</span><span class="p">,</span> <span class="n">batched_newshape_jac</span><span class="p">,</span> <span class="p">[</span><span class="s2">"param1"</span><span class="p">,</span> <span class="s2">"param2"</span><span class="p">,</span> <span class="o">...</span><span class="p">]),</span>
 <a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">}</span>
 </code></pre></div>
 <p>When deriving the Jacobian, follow the efficiency pattern used throughout <code>models.py</code> (§2.4, §7.1): compute any repeated <code>1/w</code>-style term once as a reciprocal and reuse it, and prefer in-place ops (<code>*=</code>, <code>+=</code>) for large <code>(N,M)</code> intermediates. Validate the analytical Jacobian against <code>numerical_jacobian()</code> on random parameter sets before relying on it.</p>
@@ -2684,22 +2684,22 @@ where <span class="arithmatex">\(W = \text{diag}(w_{\text{hard}}^2 \cdot w_{\tex
 <p>If deriving an analytical Jacobian is impractical:</p>
 <p><strong>Step 1</strong> — Define a scalar function in <code>scalar_models.py</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">newshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">param1</span><span class="p">,</span> <span class="n">param2</span><span class="p">):</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;x is a 1D array, params are scalars. Returns 1D array.&quot;&quot;&quot;</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="sd">"""x is a 1D array, params are scalars. Returns 1D array."""</span>
 <a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="k">return</span> <span class="n">param1</span> <span class="o">*</span> <span class="n">some_function</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">param2</span><span class="p">)</span>
 </code></pre></div>
 <p><strong>Step 2</strong> — Register in <code>PEAK_MODEL_REGISTRY</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">PEAK_MODEL_REGISTRY</span> <span class="o">=</span> <span class="p">{</span>
 <a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="c1"># ... existing ...</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="s2">&quot;NewShape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">newshape</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;param1&quot;</span><span class="p">,</span> <span class="s2">&quot;param2&quot;</span><span class="p">]),</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="s2">"NewShape"</span><span class="p">:</span> <span class="p">(</span><span class="n">newshape</span><span class="p">,</span> <span class="p">[</span><span class="s2">"param1"</span><span class="p">,</span> <span class="s2">"param2"</span><span class="p">]),</span>
 <a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="p">}</span>
 </code></pre></div>
 <p>The evaluator will automatically wrap it via <code>_make_batched_scalar()</code> and use <code>numerical_jacobian()</code>. This is functional but significantly slower (~10–50× per peak per iteration).</p>
 <h3 id="113-registration-in-the-application"><strong>11.3. Registration in the Application</strong><a class="headerlink" href="#113-registration-in-the-application" title="Permanent link">&para;</a></h3>
 <p>After adding the model to the engine, register it in <code>spectroview/__init__.py</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">PEAK_MODELS</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="s2">&quot;Gaussian&quot;</span><span class="p">,</span> <span class="s2">&quot;Lorentzian&quot;</span><span class="p">,</span> <span class="s2">&quot;PseudoVoigt&quot;</span><span class="p">,</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="s2">"Gaussian"</span><span class="p">,</span> <span class="s2">"Lorentzian"</span><span class="p">,</span> <span class="s2">"PseudoVoigt"</span><span class="p">,</span>
 <a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="c1"># ... existing ...</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="s2">&quot;NewShape&quot;</span><span class="p">,</span>  <span class="c1"># Add here to appear in the UI dropdown</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="s2">"NewShape"</span><span class="p">,</span>  <span class="c1"># Add here to appear in the UI dropdown</span>
 <a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="p">]</span>
 </code></pre></div>
 <hr />
@@ -2854,10 +2854,10 @@ R^2 = 1 - \frac{\sum_i w_i (y_i - \hat{y}_i)^2}{\sum_i w_i (y_i - \bar{y}_w)^2}
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       

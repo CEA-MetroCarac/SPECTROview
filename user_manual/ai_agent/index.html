@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -33,10 +33,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -996,6 +996,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#conversation-history-dialog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conversation History Dialog
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#voice-dictation-optional" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1759,11 +1770,12 @@
 
 <hr />
 <h3 id="1-opening-the-ai-chat-agent"><strong>1. Opening the AI Chat Agent</strong><a class="headerlink" href="#1-opening-the-ai-chat-agent" title="Permanent link">&para;</a></h3>
-<p>You can open the AI Chat panel in two ways:</p>
+<p>You can toggle the embedded AI Chat panel in two ways:</p>
 <ul>
-<li>Click the <strong>AI Chat Agent</strong> button in the top menu bar.</li>
+<li>Click the <strong>AI Chat Agent</strong> button on the right side of the top menu bar (placed right before <strong>Check for updates</strong>).</li>
 <li>Use the keyboard shortcut <strong><code>Ctrl + Shift + A</code></strong>.</li>
 </ul>
+<p>The panel is embedded directly on the far right side of the main GUI, next to the workspace tab widget (Spectra, Maps, Graphs). You can drag the splitter handle to adjust its width freely, or click the close button (<code>✕</code>) in the panel header to hide it and give full width back to the workspaces.</p>
 <hr />
 <h3 id="2-supported-providers"><strong>2. Supported Providers</strong><a class="headerlink" href="#2-supported-providers" title="Permanent link">&para;</a></h3>
 <p>The AI Agent supports multiple LLM backends out of the box — no extra packages to install:</p>
@@ -1837,12 +1849,19 @@
 <h3 id="5-modern-chat-composer-interface-overview"><strong>5. Modern Chat Composer &amp; Interface Overview</strong><a class="headerlink" href="#5-modern-chat-composer-interface-overview" title="Permanent link">&para;</a></h3>
 <p>The chat interface features an intuitive, unified layout:</p>
 <ul>
-<li><strong>Top Header Bar</strong>: A clean, single-row header bar containing the editable <strong>Conversation Title</strong> on the left (takes available width) and quick-action icon buttons on the right: <strong>Chat History</strong>, <strong>New Chat</strong>, and <strong>Clear Chat</strong>.</li>
+<li><strong>Top Header Bar</strong>: A clean, single-row header bar containing the editable <strong>Conversation Title</strong> on the left (takes available width) and quick-action icon buttons on the right: <strong>Chat History</strong>, <strong>New Chat</strong>, <strong>Clear Chat</strong>, and <strong>Close Panel (<code>✕</code>)</strong>.</li>
 <li><strong>Conversation Thread</strong>: Displays color-coded message cards (User, AI replies with formatted Markdown/tables/equations, and error alerts).</li>
 <li><strong>Embedded Composer Card</strong>: A rounded composer box at the bottom containing:</li>
 <li>An auto-expanding multi-line text input (press <code>Enter</code> to send, <code>Shift + Enter</code> for new lines).</li>
 <li>An embedded bottom toolbar hosting the <strong>AI Provider selector</strong>, <strong>Model selector</strong>, <strong>Refresh button</strong>, <strong>Voice dictation mic (<code>🎤</code>)</strong>, and <strong>Send ▶ / Stop ■ button</strong>.</li>
 </ul>
+<h4 id="conversation-history-dialog"><strong>Conversation History Dialog</strong><a class="headerlink" href="#conversation-history-dialog" title="Permanent link">&para;</a></h4>
+<p>Clicking the <strong>Chat History</strong> icon button opens a management dialog inspired by PLUME:
+- <strong>Search filter</strong>: Real-time text search across conversation titles.
+- <strong>Section organization</strong>: Pinned conversations are organized at the top under a <strong>PINNED</strong> section; others are grouped chronologically (<strong>TODAY</strong>, <strong>YESTERDAY</strong>, <strong>THIS WEEK</strong>, <strong>OLDER</strong>).
+- <strong>Exact Timestamps &amp; Message Counts</strong>: Each conversation card displays precise timestamping (<code>YYYY-MM-DD HH:MM:SS</code>) and message counts.
+- <strong>Actions</strong>: Pin/Unpin, Rename, Duplicate, and Delete conversations via dedicated row action buttons or right-click context menu.
+- <strong>Safe Delete All</strong>: The <strong>Delete All</strong> button cleans up unpinned conversations while safely keeping pinned items.</p>
 <p>The chat panel shows messages in chronological order with clear color-coded bubbles:</p>
 <ul>
 <li>🔵 <strong>Blue bubble</strong> — Your messages (User)</li>
@@ -1893,16 +1912,16 @@ their appearance all at once.</p>
 </code></pre></div></p>
 <p><strong>Plot and customize in the same request:</strong>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Make a scatter plot of Slot vs center_Si colored by Zone, set the title to
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>&quot;Si peak position&quot;, label the Y-axis &quot;Raman shift (cm⁻¹)&quot;, set the Y range to
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>"Si peak position", label the Y-axis "Raman shift (cm⁻¹)", set the Y range to
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>[520, 522], use the viridis palette, and turn on the grid.
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Plot FWHM_Si vs temperature as a trendline, filter to Zone == &quot;center&quot;, move the
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Plot FWHM_Si vs temperature as a trendline, filter to Zone == "center", move the
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>legend to the upper right, and use a log scale on the X-axis.
 </code></pre></div></p>
 <p><strong>Everything together:</strong>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Filter the data to R_squared &gt; 0.95, then create a scatter plot and a box plot
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>of center_Si vs Zone side by side, colored by wafer, both with the title
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>&quot;High-quality fits only&quot; and the grid enabled.
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>"High-quality fits only" and the grid enabled.
 </code></pre></div></p>
 <hr />
 <h4 id="simple-single-action-prompts">🧩 Simple / Single-Action Prompts<a class="headerlink" href="#simple-single-action-prompts" title="Permanent link">&para;</a></h4>
@@ -2112,10 +2131,10 @@ ask. Combine them freely into the complex prompts above.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       

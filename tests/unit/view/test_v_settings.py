@@ -373,8 +373,9 @@ class TestUXFeaturesSelectableTextAndSearchHighlighting:
         about_page = dialog._tab_about
 
         assert about_page.btn_copy_citation is not None
-        assert about_page.btn_copy_citation.text() == "Copy"
+        assert about_page.btn_copy_citation.text() == ""
         assert not about_page.btn_copy_citation.icon().isNull()
+        assert about_page.btn_copy_citation.toolTip() == "Copy citation to clipboard"
 
         # Click Copy button
         about_page.btn_copy_citation.click()
@@ -385,7 +386,8 @@ class TestUXFeaturesSelectableTextAndSearchHighlighting:
             assert "SoftwareX" in clipboard.text()
             assert "10.1016/j.softx.2026.102862" in clipboard.text()
 
-        assert about_page.btn_copy_citation.text() == "Copied!"
+        assert about_page.btn_copy_citation.text() == ""
+        assert about_page.btn_copy_citation.toolTip() == "Copied!"
 
     def test_about_search_highlights_citation_and_copy(self, qapp):
         dialog = _dialog(qapp)

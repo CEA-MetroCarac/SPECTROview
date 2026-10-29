@@ -229,9 +229,9 @@ class AboutTabPage(QWidget):
         lbl_prompt.setTextInteractionFlags(Qt.TextSelectableByMouse)
         prompt_row.addWidget(lbl_prompt, 1)
 
-        self.btn_copy_citation = QPushButton("Copy")
+        self.btn_copy_citation = QPushButton()
         self.btn_copy_citation.setIcon(Icons.copy())
-        self.btn_copy_citation.setFixedHeight(24)
+        self.btn_copy_citation.setFixedSize(24, 24)
         self.btn_copy_citation.setCursor(Qt.PointingHandCursor)
         self.btn_copy_citation.setToolTip("Copy citation to clipboard")
         self.btn_copy_citation.clicked.connect(self._on_copy_citation_clicked)
@@ -262,13 +262,13 @@ class AboutTabPage(QWidget):
         clipboard = QApplication.clipboard()
         if clipboard is not None:
             clipboard.setText(self.CITATION_TEXT)
-        self.btn_copy_citation.setText("Copied!")
         self.btn_copy_citation.setIcon(Icons.check())
+        self.btn_copy_citation.setToolTip("Copied!")
         QTimer.singleShot(1500, self, self._reset_copy_citation_btn)
 
     def _reset_copy_citation_btn(self) -> None:
-        self.btn_copy_citation.setText("Copy")
         self.btn_copy_citation.setIcon(Icons.copy())
+        self.btn_copy_citation.setToolTip("Copy citation to clipboard")
 
     def _on_check_updates_clicked(self) -> None:
         """Trigger update check and provide immediate visual feedback on button."""

@@ -3,13 +3,11 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
-import importlib.metadata
 import os
 import platform
 from typing import Optional
 
-from PySide6.QtCore import QTimer, Qt, Signal, qVersion
+from PySide6.QtCore import QTimer, Qt, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QFrame,
@@ -25,7 +23,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from spectroview import BUILD_NUMBER, ICON_DIR, VERSION
+from spectroview import ICON_DIR, VERSION
+from spectroview.settings.build_info import (
+    get_build_number,
+    get_environment_summary,
+    get_runtime_package_versions,
+)
 from spectroview.view.theme import Icons
 
 
@@ -40,45 +43,6 @@ def _highlight_label_style() -> str:
     return "background-color: rgba(59, 130, 246, 0.2); border: 1px solid #3B82F6; border-radius: 4px; padding: 1px 3px; color: #3B82F6; font-weight: bold;"
 
 
-@lru_cache(maxsize=1)
-def get_runtime_package_versions() -> dict[str, str]:
-    """Retrieve runtime versions of key SPECTROview dependencies via importlib.metadata."""
-    tracked_packages = [
-        "PySide6",
-        "numpy",
-        "scipy",
-        "matplotlib",
-        "pandas",
-        "pybaselines",
-        "openpyxl",
-        "superqt",
-        "pyarrow",
-        "pyqt-toast-notification",
-        "openai",
-        "anthropic",
-        "ollama",
-        "mcp",
-        "pyyaml",
-        "markdown",
-        "renishawWiRE",
-        "pywin32",
-    ]
-
-    versions: dict[str, str] = {}
-    for pkg in tracked_packages:
-        try:
-            ver = importlib.metadata.version(pkg)
-            if pkg == "PySide6":
-                ver = f"{ver} (Qt {qVersion()})"
-            versions[pkg] = ver
-        except importlib.metadata.PackageNotFoundError:
-            versions[pkg] = "Not installed"
-        except Exception:
-            versions[pkg] = "Unknown"
-
-    return versions
-
-
 class AboutTabPage(QWidget):
     """The About tab displaying logo, version, Python & package dependencies, and citation."""
 
@@ -88,7 +52,8 @@ class AboutTabPage(QWidget):
         "about", "version", "build", "python", "environment", "dependency",
         "dependencies", "packages", "pyside6", "qt", "numpy", "scipy",
         "matplotlib", "pandas", "pybaselines", "citation",
-        "author", "license", "doi", "paper", "softwarex"
+        "author", "license", "doi", "paper", "softwarex",
+        "exe", "whl", "standalone", "mode"
     ]
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -156,7 +121,7 @@ class AboutTabPage(QWidget):
         layout.addLayout(version_row)
 
         # Separate line for Build number (under Version and Check for Updates)
-        build_lbl = QLabel(f"Build: {BUILD_NUMBER}")
+        build_lbl = QLabel(f"Build: {get_build_number()}")
         build_lbl.setAlignment(Qt.AlignCenter)
         build_lbl.setStyleSheet("color: #888888; font-size: 11px;")
         build_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -168,12 +133,37 @@ class AboutTabPage(QWidget):
         env_layout.setContentsMargins(8, 6, 8, 6)
         env_layout.setSpacing(4)
 
-        # Python and OS info
-        py_ver = platform.python_version()
-        arch = platform.architecture()[0]
-        os_info = f"{platform.system()} {platform.release()}"
-        env_info_lbl = QLabel(f"<b>Python:</b> {py_ver} ({arch}) &nbsp;|&nbsp; <b>OS:</b> {os_info}")
-        env_info_lbl.setStyleSheet("font-size: 11px;")
+        env_summary = get_environment_summary()
+        is_frozen = env_summary["is_frozen"]
+        py_ver = env_summary["python_version"]
+        arch = env_summary["python_architecture"]
+        host_os = env_summary["host_os"]
+
+        if is_frozen:
+            mode_str = "Standalone Executable (.exe)"
+            build_os = env_summary.get("build_os") or "Unknown"
+            build_py = env_summary.get("build_python") or py_ver
+            build_arch = env_summary.get("build_architecture") or arch
+
+            self.grp_env.setToolTip(
+                "Dependencies and build environment bundled into this standalone executable."
+            )
+            env_info_text = (
+                f"<b>Mode:</b> {mode_str} &nbsp;|&nbsp; <b>Host OS:</b> {host_os}<br>"
+                f"<b>Python:</b> {build_py} ({build_arch}) [Bundled] &nbsp;|&nbsp; <b>Built on:</b> {build_os}"
+            )
+        else:
+            mode_str = "Python Package (.whl / local)"
+            self.grp_env.setToolTip(
+                "Runtime dependencies detected in your local Python environment."
+            )
+            env_info_text = (
+                f"<b>Mode:</b> {mode_str} &nbsp;|&nbsp; <b>OS:</b> {host_os} &nbsp;|&nbsp; "
+                f"<b>Python:</b> {py_ver} ({arch})"
+            )
+
+        env_info_lbl = QLabel(env_info_text)
+        env_info_lbl.setStyleSheet("font-size: 11px; line-height: 1.3;")
         env_info_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
         env_layout.addWidget(env_info_lbl)
 
@@ -187,7 +177,7 @@ class AboutTabPage(QWidget):
         grid.setHorizontalSpacing(14)
         grid.setVerticalSpacing(2)
 
-        versions = get_runtime_package_versions()
+        versions = env_summary["packages"]
         row = 0
         col = 0
         for pkg, ver in versions.items():

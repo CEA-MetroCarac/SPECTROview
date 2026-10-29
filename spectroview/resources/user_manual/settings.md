@@ -135,6 +135,9 @@ LAN or internet. Keep SPECTROview running while the client is connected.
 The **About** tab provides comprehensive runtime and reference information:
 
 - **Application Details**: Official SPECTROview logo, title, version number (`Version {VERSION}`), and build number (`Build: {BUILD_NUMBER}`).
-- **Environment & Dependencies**: Dynamically lists the exact Python version, operating system architecture, and runtime package versions in use by SPECTROview (e.g. `PySide6` with Qt runtime version, `numpy`, `scipy`, `matplotlib`, `pandas`, `pybaselines`, `openpyxl`, `superqt`, `pyarrow`, AI SDKs, and data readers).
+- **Environment & Dependencies**: Automatically detects execution mode and displays dependency versions:
+  - **Standalone Executable (.exe)**: Shows the exact dependencies bundled at build time from the packaging machine, along with bundled Python and host/build OS.
+  - **Installed Package (.whl / pip)**: Dynamically queries and displays the live package versions active on the local machine.
+  - Lists `PySide6` (with Qt runtime version), scientific stack (`numpy`, `scipy`, `matplotlib`, `pandas`, `pybaselines`), export engines (`openpyxl`, `pyarrow`), UI extensions (`superqt`, `pyqt-toast-notification`), and optional AI SDKs.
 - **Check for Updates**: Direct action to check GitHub releases for new versions.
 - **Paper Citation**: The canonical SoftwareX peer-reviewed citation with DOI.

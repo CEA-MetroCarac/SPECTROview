@@ -72,11 +72,13 @@ spectroview/
 ├── settings/               # Unified settings architecture (Model, ViewModel, & 2-panel Settings UI)
 │   ├── m_settings.py          # Persistent app settings & portable config.json
 │   ├── vm_settings.py         # Settings ViewModel
-│   ├── settings_dialog.py     # Two-panel settings dialog with sidebar & instant search
-│   ├── tab_general.py         # General preferences & Working Folder
-│   ├── tab_fit.py             # Fitting solver convergence & peak bounds
-│   ├── tab_ai.py              # LLM credentials, connection tests, & local MCP
-│   └── tab_about.py           # Application details, Python env, & runtime package dependencies
+│   ├── build_info.py          # Dual-mode runtime dependency resolution & build snapshot capture
+│   └── ui/                    # Two-panel settings dialog with sidebar & instant search
+│       ├── settings_dialog.py # Host dialog with sidebar navigation & instant search
+│       ├── tab_general.py     # General preferences & Working Folder
+│       ├── tab_fit.py         # Fitting solver convergence & peak bounds
+│       ├── tab_ai.py          # LLM credentials, connection tests, & local MCP
+│       └── tab_about.py       # Application details, Python env, & runtime package dependencies
 │
 ├── model/                  # Data models (no Qt deps)
 │   ├── spectra_store.py    # Tensor-centric SpectraStore & MapData structures

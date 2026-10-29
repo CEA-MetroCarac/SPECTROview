@@ -23,6 +23,36 @@ is_windows = sys.platform.startswith("win")
 is_macos = sys.platform == "darwin"
 
 # ------------------------------------------------------------
+# Build Environment Snapshot & Distribution Metadata
+# ------------------------------------------------------------
+spec_dir = os.path.dirname(os.path.abspath(SPEC)) if 'SPEC' in locals() else os.getcwd()
+if spec_dir not in sys.path:
+    sys.path.insert(0, spec_dir)
+
+try:
+    from spectroview.settings.build_info import generate_build_snapshot
+    snapshot = generate_build_snapshot()
+    pkg_count = len(snapshot.get("packages", {}))
+    print(f"[main.spec] Captured build environment snapshot: {pkg_count} packages recorded.")
+except Exception as exc:
+    print(f"[main.spec] Warning: Could not generate build snapshot: {exc}")
+
+extra_datas = []
+try:
+    from PyInstaller.utils.hooks import copy_metadata
+    for pkg in [
+        'PySide6', 'scipy', 'matplotlib', 'pandas', 'pybaselines',
+        'openpyxl', 'pyarrow', 'pyqt-toast-notification', 'openai',
+        'anthropic', 'mcp', 'pyyaml', 'renishawWiRE', 'pywin32'
+    ]:
+        try:
+            extra_datas += copy_metadata(pkg)
+        except Exception:
+            pass
+except Exception as exc:
+    print(f"[main.spec] Warning: copy_metadata unavailable: {exc}")
+
+# ------------------------------------------------------------
 # Icon handling (platform specific)
 # ------------------------------------------------------------
 if is_windows:
@@ -42,7 +72,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ('spectroview/resources', 'spectroview/resources'),
-    ],
+    ] + extra_datas,
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -141,4 +171,3 @@ elif is_windows:
         upx_exclude=[],
         name=APP_NAME,
     )
-

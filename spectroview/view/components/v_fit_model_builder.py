@@ -712,6 +712,7 @@ class VFitModelBuilder(QWidget):
         self.cbb_model.setToolTip("Select fit model, or drag and drop a JSON model file here.")
 
         self.btn_apply = QPushButton("Apply")
+        self.btn_apply.setFixedWidth(86)
         self.btn_apply.setToolTip("Apply selected fit model to current selected spectrum(s).")
         self.btn_apply.clicked.connect(
             lambda: self._emit_with_ctrl(self.apply_loaded_fit_model_requested)

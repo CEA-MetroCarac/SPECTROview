@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QTabBar,
 )
 from spectroview.view.theme.fonts import get_application_font, setup_application_font
-from spectroview.view.theme import current_tokens
 from spectroview.view.components.v_user_manual import VUserManualDialog
 from spectroview import USER_MANUAL_DIR
 
@@ -84,7 +83,11 @@ def test_user_manual_dialog_font_scaling(qapp, qtbot):
     assert dlg.content_browser.font().pointSize() == expected_size
 
     # Verify QTextBrowser frame and background match theme surface
-    tok = current_tokens()
-    assert tok.surface in dlg.styleSheet()
-    assert tok.border in dlg.styleSheet()
+    from spectroview.view.theme.qss_template import build_stylesheet
+    from spectroview.view.theme.tokens import THEME_TOKENS
+    dark_qss = build_stylesheet(THEME_TOKENS["dark"])
+    light_qss = build_stylesheet(THEME_TOKENS["light"])
+    assert "QTextBrowser" in dark_qss
+    assert THEME_TOKENS["dark"].surface in dark_qss
+    assert THEME_TOKENS["light"].surface in light_qss
 

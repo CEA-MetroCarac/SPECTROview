@@ -623,13 +623,9 @@ class VFitModelBuilder(QWidget):
         self,
         btn: QPushButton,
         icon_type: str,
-        temp_text: str | None = None,
-        original_text: str | None = None,
     ) -> None:
         """Provide 1-second visual checkmark feedback on an action button."""
         btn.setIcon(Icons.check())
-        if temp_text is not None:
-            btn.setText(temp_text)
 
         def _reset() -> None:
             try:
@@ -639,8 +635,6 @@ class VFitModelBuilder(QWidget):
                     btn.setIcon(Icons.copy(color=icon_color))
                 elif icon_type == "paste":
                     btn.setIcon(Icons.paste(color=icon_color))
-                if original_text is not None:
-                    btn.setText(original_text)
             except (RuntimeError, AttributeError, TypeError):
                 pass
 
@@ -664,11 +658,11 @@ class VFitModelBuilder(QWidget):
 
     def _on_fitmodel_copy_clicked(self) -> None:
         self.fitmodel_copy_requested.emit()
-        self._flash_button_feedback(self.btn_copy, icon_type="copy", temp_text="Copied!", original_text="Copy")
+        self._flash_button_feedback(self.btn_copy, icon_type="copy")
 
     def _on_fitmodel_paste_clicked(self) -> None:
         self._emit_with_ctrl(self.fitmodel_paste_requested)
-        self._flash_button_feedback(self.btn_paste, icon_type="paste", temp_text="Pasted!", original_text="Paste")
+        self._flash_button_feedback(self.btn_paste, icon_type="paste")
 
     def _fit_control_panel(self):
         gb = QWidget()

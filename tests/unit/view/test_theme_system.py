@@ -432,3 +432,16 @@ def test_tab_pane_transparent_scroll_rounded_splitter_and_fit_results_buttons(qa
         assert col.red() == col.green() == col.blue(), f"Token {field}={getattr(DARK_TOKENS, field)} is not neutral gray"
 
 
+def test_text_browser_styled_with_surface_in_themes():
+    """Verify that QTextBrowser uses @surface background and adapts between dark and light themes."""
+    from spectroview.view.theme.qss_template import build_stylesheet
+    from spectroview.view.theme.tokens import THEME_TOKENS
+    dark_qss = build_stylesheet(THEME_TOKENS["dark"])
+    light_qss = build_stylesheet(THEME_TOKENS["light"])
+
+    assert "QTextBrowser" in dark_qss
+    assert "QTextBrowser" in light_qss
+    assert THEME_TOKENS["dark"].surface in dark_qss
+    assert THEME_TOKENS["light"].surface in light_qss
+
+

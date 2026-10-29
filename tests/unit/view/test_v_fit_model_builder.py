@@ -103,15 +103,17 @@ class TestVFitModelBuilderCopyPasteFeedback:
         builder.btn_peak_paste.click()
         assert len(peak_paste_emitted) == 1
 
-        # Fit model copy/paste
+        # Fit model copy/paste (icon feedback without changing button text)
         fit_copy_emitted = []
         builder.fitmodel_copy_requested.connect(lambda: fit_copy_emitted.append(True))
         builder.btn_copy.click()
         assert len(fit_copy_emitted) == 1
-        assert builder.btn_copy.text() == "Copied!"
+        assert builder.btn_copy.text() == "Copy"
+        assert not builder.btn_copy.icon().isNull()
 
         fit_paste_emitted = []
         builder.fitmodel_paste_requested.connect(fit_paste_emitted.append)
         builder.btn_paste.click()
         assert len(fit_paste_emitted) == 1
-        assert builder.btn_paste.text() == "Pasted!"
+        assert builder.btn_paste.text() == "Paste"
+        assert not builder.btn_paste.icon().isNull()

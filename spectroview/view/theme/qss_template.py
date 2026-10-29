@@ -729,7 +729,7 @@ QSS_TEMPLATE = r"""
         color: @text_primary;
     }
 
-    QListView, QTreeView, QListWidget, QTreeWidget {
+    QListView, QTreeView, QListWidget, QTreeWidget, QTextBrowser {
         background-color: @surface;
         color: @text_primary;
         border: 1px solid @border;
@@ -758,7 +758,7 @@ QSS_TEMPLATE = r"""
        TEXT EDIT & TEXT BROWSER
        ═══════════════════════════════════════════════ */
 
-    QTextEdit, QPlainTextEdit, QTextBrowser {
+    QTextEdit, QPlainTextEdit {
         background-color: @surface_sunken;
         color: @text_primary;
         border: 1px solid @border;
@@ -766,7 +766,7 @@ QSS_TEMPLATE = r"""
         padding: 4px 8px;
     }
 
-    QTextEdit:focus, QPlainTextEdit:focus, QTextBrowser:focus {
+    QTextEdit:focus, QPlainTextEdit:focus {
         border: 1px solid @accent;
     }
 

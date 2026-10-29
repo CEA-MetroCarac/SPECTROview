@@ -115,7 +115,8 @@ class NavItemDelegate(QStyledItemDelegate):
             painter.restore()
 
     def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex) -> QSize:
-        return QSize(210, 40)
+        w = option.rect.width() if option.rect.width() > 0 else 200
+        return QSize(w, 40)
 
 
 # ---------------------------------------------------------------------------
@@ -219,6 +220,7 @@ class SettingsDialog(QDialog):
         # Navigation List
         self._nav_list = QListWidget()
         self._nav_list.setFrameShape(QFrame.NoFrame)
+        self._nav_list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self._nav_list.setItemDelegate(NavItemDelegate(self))
         self._nav_list.currentRowChanged.connect(self._on_nav_row_changed)
         sidebar_layout.addWidget(self._nav_list, 1)

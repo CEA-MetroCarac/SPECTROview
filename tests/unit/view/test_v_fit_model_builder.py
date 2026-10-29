@@ -75,3 +75,43 @@ class TestVFitModelBuilderDragDrop:
 
         assert not drop_event.isAccepted()
         assert dropped_paths == []
+
+
+class TestVFitModelBuilderCopyPasteFeedback:
+    def test_copy_paste_visual_feedback(self, qapp):
+        builder = VFitModelBuilder()
+
+        # Baseline copy/paste
+        base_copy_emitted = []
+        builder.baseline_copy_requested.connect(lambda: base_copy_emitted.append(True))
+        builder.btn_base_copy.click()
+        assert len(base_copy_emitted) == 1
+
+        base_paste_emitted = []
+        builder.baseline_paste_requested.connect(base_paste_emitted.append)
+        builder.btn_base_paste.click()
+        assert len(base_paste_emitted) == 1
+
+        # Peak copy/paste
+        peak_copy_emitted = []
+        builder.peaks_copy_requested.connect(lambda: peak_copy_emitted.append(True))
+        builder.btn_peak_copy.click()
+        assert len(peak_copy_emitted) == 1
+
+        peak_paste_emitted = []
+        builder.peaks_paste_requested.connect(peak_paste_emitted.append)
+        builder.btn_peak_paste.click()
+        assert len(peak_paste_emitted) == 1
+
+        # Fit model copy/paste
+        fit_copy_emitted = []
+        builder.fitmodel_copy_requested.connect(lambda: fit_copy_emitted.append(True))
+        builder.btn_copy.click()
+        assert len(fit_copy_emitted) == 1
+        assert builder.btn_copy.text() == "Copied!"
+
+        fit_paste_emitted = []
+        builder.fitmodel_paste_requested.connect(fit_paste_emitted.append)
+        builder.btn_paste.click()
+        assert len(fit_paste_emitted) == 1
+        assert builder.btn_paste.text() == "Pasted!"

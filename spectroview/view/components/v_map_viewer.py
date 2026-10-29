@@ -1508,6 +1508,20 @@ class VMapViewer(QWidget):
                 self._do_plot_heatmap()
         else:
             copy_fig_to_clb(self.canvas)
+        self._flash_copy_feedback()
+
+    def _flash_copy_feedback(self) -> None:
+        """Provide 1-second visual checkmark feedback on copy button."""
+        self.btn_copy.setIcon(Icons.check())
+        QTimer.singleShot(1000, self, self._reset_copy_feedback)
+
+    def _reset_copy_feedback(self) -> None:
+        try:
+            from spectroview.view.theme import ThemeManager
+            icon_color = ThemeManager.instance().icon_color if ThemeManager.instance() else None
+            self.btn_copy.setIcon(Icons.copy(color=icon_color))
+        except (RuntimeError, AttributeError, TypeError):
+            pass
     
     def _plot_height_profile_on_map(self):
         """Plot height profile directly on heatmap when exactly 2 points selected."""

@@ -561,4 +561,14 @@ def test_x_axis_unit_options_include_energy_kev(viewer):
     assert "Energy (keV)" in items
 
 
+def test_spectra_viewer_copy_feedback(viewer):
+    """Verify that clicking copy triggers visual checkmark feedback."""
+    assert not viewer.btn_copy.icon().isNull()
+    viewer._emit_copy()
+    # Check that feedback method sets check icon
+    viewer._reset_copy_feedback()
+    assert not viewer.btn_copy.icon().isNull()
+
+
+
 

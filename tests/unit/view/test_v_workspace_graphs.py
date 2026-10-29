@@ -1029,6 +1029,13 @@ class TestKeyboardShortcuts:
 
         assert calls == [gw.graph_id]
 
+    def test_graph_copy_figure_visual_feedback(self, ws, excel_df):
+        gw = self._graph(ws, excel_df)
+        assert not gw.btn_copy_figure.icon().isNull()
+        gw.copy_to_clipboard()
+        gw._reset_copy_feedback()
+        assert not gw.btn_copy_figure.icon().isNull()
+
     def test_paste_style_shortcut_applies_a_style_copied_via_the_style_menu(self, ws, excel_df):
         source = self._graph(ws, excel_df)
         source.color_palette = "viridis"

@@ -156,6 +156,8 @@ class TestTwoPanelNavigationAndSearch:
     def test_sidebar_contains_all_four_sections(self, qapp):
         dialog = _dialog(qapp)
         assert dialog._nav_list.count() == 4
+        # Verify horizontal scroll bar is disabled to keep sidebar clean
+        assert dialog._nav_list.horizontalScrollBarPolicy() == Qt.ScrollBarAlwaysOff
         items = [dialog._nav_list.item(i).text() for i in range(4)]
         assert items == ["General", "Fit Settings", "AI Settings", "About"]
 

@@ -627,12 +627,17 @@ class VUserManualDialog(QDialog):
         base_font = get_application_font()
         base_size = base_font.pointSize()
         family = base_font.family()
+        tok = current_tokens()
         self.setStyleSheet(f"""
             QWidget {{
                 font-family: "{family}", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
                 font-size: {base_size}pt;
             }}
             QTextBrowser {{
+                background-color: {tok.surface};
+                color: {tok.text_primary};
+                border: 1px solid {tok.border};
+                border-radius: 8px;
                 font-size: {self._text_size}pt;
             }}
         """)

@@ -337,14 +337,12 @@ class VFitModelBuilder(QWidget):
         self.btn_base_copy = QPushButton()
         self.btn_base_copy.setFixedSize(30, 24)
         self.btn_base_copy.setToolTip("Copy baseline")
-        self.btn_base_copy.clicked.connect(lambda: self.baseline_copy_requested.emit())
+        self.btn_base_copy.clicked.connect(self._on_base_copy_clicked)
 
         self.btn_base_paste = QPushButton()
         self.btn_base_paste.setFixedSize(30, 24)
         self.btn_base_paste.setToolTip("Paste baseline. Hold Ctrl to paste to all spectra.")
-        self.btn_base_paste.clicked.connect(
-            lambda: self._emit_with_ctrl(self.baseline_paste_requested)
-        )
+        self.btn_base_paste.clicked.connect(self._on_base_paste_clicked)
 
         self.btn_base_subtract = QPushButton("Subtract")
         self.btn_base_subtract.setFixedSize(80, 24)
@@ -601,14 +599,12 @@ class VFitModelBuilder(QWidget):
         self.btn_peak_copy = QPushButton()
         self.btn_peak_copy.setFixedSize(30, 24)
         self.btn_peak_copy.setToolTip("Copy peaks.")
-        self.btn_peak_copy.clicked.connect(self.peaks_copy_requested.emit)
+        self.btn_peak_copy.clicked.connect(self._on_peak_copy_clicked)
 
         self.btn_peak_paste = QPushButton()
         self.btn_peak_paste.setFixedSize(30, 24)
         self.btn_peak_paste.setToolTip("Paste peaks. Hold Ctrl to paste to all spectra.")
-        self.btn_peak_paste.clicked.connect(
-            lambda: self._emit_with_ctrl(self.peaks_paste_requested)
-        )
+        self.btn_peak_paste.clicked.connect(self._on_peak_paste_clicked)
 
         for b in (self.btn_peak_delete, self.btn_peak_copy, self.btn_peak_paste):
             row2.addWidget(b)
@@ -623,6 +619,56 @@ class VFitModelBuilder(QWidget):
         apply_all = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)
         signal.emit(apply_all)
 
+    def _flash_button_feedback(
+        self,
+        btn: QPushButton,
+        icon_type: str,
+        temp_text: str | None = None,
+        original_text: str | None = None,
+    ) -> None:
+        """Provide 1-second visual checkmark feedback on an action button."""
+        btn.setIcon(Icons.check())
+        if temp_text is not None:
+            btn.setText(temp_text)
+
+        def _reset() -> None:
+            try:
+                from spectroview.view.theme import ThemeManager
+                icon_color = ThemeManager.instance().icon_color if ThemeManager.instance() else None
+                if icon_type == "copy":
+                    btn.setIcon(Icons.copy(color=icon_color))
+                elif icon_type == "paste":
+                    btn.setIcon(Icons.paste(color=icon_color))
+                if original_text is not None:
+                    btn.setText(original_text)
+            except (RuntimeError, AttributeError, TypeError):
+                pass
+
+        QTimer.singleShot(1000, self, _reset)
+
+    def _on_base_copy_clicked(self) -> None:
+        self.baseline_copy_requested.emit()
+        self._flash_button_feedback(self.btn_base_copy, icon_type="copy")
+
+    def _on_base_paste_clicked(self) -> None:
+        self._emit_with_ctrl(self.baseline_paste_requested)
+        self._flash_button_feedback(self.btn_base_paste, icon_type="paste")
+
+    def _on_peak_copy_clicked(self) -> None:
+        self.peaks_copy_requested.emit()
+        self._flash_button_feedback(self.btn_peak_copy, icon_type="copy")
+
+    def _on_peak_paste_clicked(self) -> None:
+        self._emit_with_ctrl(self.peaks_paste_requested)
+        self._flash_button_feedback(self.btn_peak_paste, icon_type="paste")
+
+    def _on_fitmodel_copy_clicked(self) -> None:
+        self.fitmodel_copy_requested.emit()
+        self._flash_button_feedback(self.btn_copy, icon_type="copy", temp_text="Copied!", original_text="Copy")
+
+    def _on_fitmodel_paste_clicked(self) -> None:
+        self._emit_with_ctrl(self.fitmodel_paste_requested)
+        self._flash_button_feedback(self.btn_paste, icon_type="paste", temp_text="Pasted!", original_text="Paste")
 
     def _fit_control_panel(self):
         gb = QWidget()
@@ -640,13 +686,11 @@ class VFitModelBuilder(QWidget):
 
         self.btn_copy = QPushButton("Copy")
         self.btn_copy.setToolTip("Copy fit model of selected spectrum.")
-        self.btn_copy.clicked.connect(self.fitmodel_copy_requested.emit)
+        self.btn_copy.clicked.connect(self._on_fitmodel_copy_clicked)
 
         self.btn_paste = QPushButton("Paste")
         self.btn_paste.setToolTip("Paste fit model of selected spectrum. Hold Ctrl to paste to all spectra.")
-        self.btn_paste.clicked.connect(
-            lambda: self._emit_with_ctrl(self.fitmodel_paste_requested)
-        )
+        self.btn_paste.clicked.connect(self._on_fitmodel_paste_clicked)
 
         self.btn_save = QPushButton("Save")
         self.btn_save.setToolTip("Save the current fit model.")

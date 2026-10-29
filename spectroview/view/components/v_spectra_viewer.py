@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QLineEdit, QDoubleSpinBox, QSpinBox,
     QSlider, QMessageBox, QApplication, QButtonGroup
 )
-from PySide6.QtCore import Qt, Signal, QSize, QPoint
+from PySide6.QtCore import Qt, Signal, QSize, QPoint, QTimer
 from PySide6.QtGui import QCursor
 
 import matplotlib.pyplot as plt
@@ -2091,6 +2091,21 @@ class VSpectraViewer(QWidget):
                     self._is_copying = False
             else:
                 copy_fig_to_clb(self.canvas, size_ratio=(width, height))
+        
+        self._flash_copy_feedback()
+
+    def _flash_copy_feedback(self) -> None:
+        """Provide 1-second visual checkmark feedback on copy button."""
+        self.btn_copy.setIcon(Icons.check())
+        QTimer.singleShot(1000, self, self._reset_copy_feedback)
+
+    def _reset_copy_feedback(self) -> None:
+        try:
+            from spectroview.view.theme import ThemeManager
+            icon_color = ThemeManager.instance().icon_color if ThemeManager.instance() else None
+            self.btn_copy.setIcon(Icons.copy(color=icon_color))
+        except (RuntimeError, AttributeError, TypeError):
+            pass
 
     def _on_mouse_click(self, event):
         if event.inaxes != self.ax:

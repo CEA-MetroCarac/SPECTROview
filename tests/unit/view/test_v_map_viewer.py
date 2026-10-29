@@ -275,4 +275,11 @@ class TestMapViewerNavigationToolbar:
         viewer._on_figure_leave(leave_event)
         assert viewer.lbl_coordinates.text() == ""
 
+    def test_map_viewer_copy_feedback(self, qapp):
+        viewer = VMapViewer()
+        assert not viewer.btn_copy.icon().isNull()
+        viewer._copy_figure_to_clipboard()
+        viewer._reset_copy_feedback()
+        assert not viewer.btn_copy.icon().isNull()
+
 

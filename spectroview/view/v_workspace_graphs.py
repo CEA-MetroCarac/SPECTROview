@@ -1784,8 +1784,7 @@ class VWorkspaceGraphs(QWidget):
         toolbar_container all just leave the slot empty)."""
         gid = self._get_active_graph_id()
         if gid is None:
-            if not self.mdi_area.subWindowList():
-                self._clear_graph_toolbar_slot()
+            self._clear_graph_toolbar_slot()
             return
 
         graph_widget = self.graph_widgets.get(gid, (None,))[0]
@@ -1815,8 +1814,7 @@ class VWorkspaceGraphs(QWidget):
     def _on_subwindow_activated(self, sub_window):
         """Handle subwindow activation."""
         if not sub_window:
-            if not self.mdi_area.subWindowList():
-                self._sync_active_graph_toolbar()
+            self._sync_active_graph_toolbar()
             return
 
         gid = self._graph_id_for_subwindow(sub_window)

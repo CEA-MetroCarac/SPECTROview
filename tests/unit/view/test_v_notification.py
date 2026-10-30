@@ -118,6 +118,63 @@ def test_notification_badge_theme_adaptation(qtbot):
     assert badge._is_dark_theme is True
 
 
+def test_notification_badge_frame_colors(qtbot):
+    """Verify distinct thin frame colors for warning (yellow), success (green), info (blue), and error (red)."""
+    from PySide6.QtWidgets import QFrame
+
+    # Warning -> yellow frame
+    b_warn = VNotificationBadge("Warning msg", notification_type=NotificationType.WARNING, is_dark_theme=True)
+    qtbot.addWidget(b_warn)
+    assert isinstance(b_warn, QFrame)
+    assert b_warn.frame_color == "#f59e0b"
+    assert "border: 1px solid #f59e0b" in b_warn.styleSheet()
+
+    # Success -> green frame
+    b_succ = VNotificationBadge("Success msg", notification_type=NotificationType.SUCCESS, is_dark_theme=True)
+    qtbot.addWidget(b_succ)
+    assert isinstance(b_succ, QFrame)
+    assert b_succ.frame_color == "#10b981"
+    assert "border: 1px solid #10b981" in b_succ.styleSheet()
+
+    # Info / Notification -> blue frame
+    b_info = VNotificationBadge("Info msg", notification_type=NotificationType.INFO, is_dark_theme=True)
+    qtbot.addWidget(b_info)
+    assert isinstance(b_info, QFrame)
+    assert b_info.frame_color == "#38bdf8"
+    assert "border: 1px solid #38bdf8" in b_info.styleSheet()
+
+    # Error -> red frame
+    b_err = VNotificationBadge("Error msg", notification_type=NotificationType.ERROR, is_dark_theme=True)
+    qtbot.addWidget(b_err)
+    assert isinstance(b_err, QFrame)
+    assert b_err.frame_color == "#ef4444"
+    assert "border: 1px solid #ef4444" in b_err.styleSheet()
+
+    # Light theme adaptation
+    b_warn.apply_theme(is_dark=False)
+    assert b_warn.frame_color == "#d97706"
+    assert "border: 1px solid #d97706" in b_warn.styleSheet()
+
+    b_succ.apply_theme(is_dark=False)
+    assert b_succ.frame_color == "#059669"
+    assert "border: 1px solid #059669" in b_succ.styleSheet()
+
+    b_info.apply_theme(is_dark=False)
+    assert b_info.frame_color == "#0284c7"
+    assert "border: 1px solid #0284c7" in b_info.styleSheet()
+
+    b_err.apply_theme(is_dark=False)
+    assert b_err.frame_color == "#dc2626"
+    assert "border: 1px solid #dc2626" in b_err.styleSheet()
+
+    # Hover highlight
+    b_warn.apply_theme(is_dark=True)
+    enter_evt = QEvent(QEvent.Type.Enter)
+    b_warn.enterEvent(enter_evt)
+    assert b_warn.frame_color == "#fbbf24"
+    assert "border: 1px solid #fbbf24" in b_warn.styleSheet()
+
+
 def test_notification_badge_hover_pause_and_resume(qtbot):
     """Verify that mouse hover pauses the auto-dismiss timer and leaving resumes it."""
     badge = VNotificationBadge(

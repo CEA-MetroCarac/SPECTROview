@@ -5,6 +5,7 @@ Provides a unified, lightweight, floating pill-badge notification system
 integrated into the application toolbar (VMenuBar). Replaces third-party toast
 notifications with a native PySide6 implementation that supports:
 - Automatic placement in the available blank space of the top toolbar/header.
+- Semantic thin frames: yellow (warning), green (success), blue (info/notification), red (error).
 - Smooth horizontal sliding animations when multiple notifications arrive.
 - Auto-dismiss countdown with hover-pause and manual close buttons.
 - Light and Dark theme compatibility.
@@ -40,6 +41,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QApplication,
+    QFrame,
     QGraphicsOpacityEffect,
     QHBoxLayout,
     QLabel,
@@ -126,23 +128,39 @@ class ToastPreset:
 _TYPE_COLORS: dict[NotificationType, dict[str, str]] = {
     NotificationType.SUCCESS: {
         "icon": "check_circle",
-        "accent_dark": "#10b981",    # Emerald
+        "accent_dark": "#10b981",        # Emerald green
         "accent_light": "#059669",
+        "frame_dark": "#10b981",         # Green thin frame
+        "frame_light": "#059669",
+        "frame_hover_dark": "#34d399",
+        "frame_hover_light": "#047857",
     },
     NotificationType.INFO: {
         "icon": "info",
-        "accent_dark": "#38bdf8",    # Sky blue
+        "accent_dark": "#38bdf8",        # Sky blue
         "accent_light": "#0284c7",
+        "frame_dark": "#38bdf8",         # Blue thin frame
+        "frame_light": "#0284c7",
+        "frame_hover_dark": "#7dd3fc",
+        "frame_hover_light": "#0369a1",
     },
     NotificationType.WARNING: {
         "icon": "alert_triangle",
-        "accent_dark": "#f59e0b",    # Amber
+        "accent_dark": "#f59e0b",        # Amber yellow
         "accent_light": "#d97706",
+        "frame_dark": "#f59e0b",         # Yellow thin frame
+        "frame_light": "#d97706",
+        "frame_hover_dark": "#fbbf24",
+        "frame_hover_light": "#b45309",
     },
     NotificationType.ERROR: {
         "icon": "alert_circle",
-        "accent_dark": "#ef4444",    # Rose red
+        "accent_dark": "#ef4444",        # Rose red
         "accent_light": "#dc2626",
+        "frame_dark": "#ef4444",         # Red thin frame
+        "frame_light": "#dc2626",
+        "frame_hover_dark": "#f87171",
+        "frame_hover_light": "#b91c1c",
     },
 }
 
@@ -150,7 +168,7 @@ _TYPE_COLORS: dict[NotificationType, dict[str, str]] = {
 # ---------------------------------------------------------------------------
 # Individual Floating Notification Badge Widget
 # ---------------------------------------------------------------------------
-class VNotificationBadge(QWidget):
+class VNotificationBadge(QFrame):
     """Floating pill-badge representing a single notification item."""
 
     dismissed = Signal(object)  # Emits self when dismissed
@@ -176,6 +194,8 @@ class VNotificationBadge(QWidget):
         self._is_dark_theme = is_dark_theme
         self._is_dismissing = False
         self._is_hovered = False
+
+        self.setAttribute(Qt.WA_StyledBackground, True)
 
         # Countdown tracking for hover pause/resume
         self._remaining_ms = max(0, duration)
@@ -237,6 +257,17 @@ class VNotificationBadge(QWidget):
 
         self.adjustSize()
 
+    @property
+    def frame_color(self) -> str:
+        """Return the active thin frame border color for this notification badge."""
+        cfg = _TYPE_COLORS.get(self._type, _TYPE_COLORS[NotificationType.INFO])
+        if self._is_hovered:
+            return cfg.get(
+                "frame_hover_dark" if self._is_dark_theme else "frame_hover_light",
+                cfg["frame_dark" if self._is_dark_theme else "frame_light"],
+            )
+        return cfg["frame_dark"] if self._is_dark_theme else cfg["frame_light"]
+
     def apply_theme(self, is_dark: bool) -> None:
         """Apply theme-specific styling and icon colors."""
         self._is_dark_theme = is_dark
@@ -251,18 +282,17 @@ class VNotificationBadge(QWidget):
         close_color = "#94a3b8" if is_dark else "#64748b"
         self._close_btn.setIcon(QIcon(svg_pixmap("close", size=10, color=close_color)))
 
-        if is_dark:
-            bg = "rgba(28, 32, 40, 0.94)"
-            border = "rgba(255, 255, 255, 0.15)"
-            text_color = "#f1f5f9"
-            hover_border = "rgba(255, 255, 255, 0.35)"
-        else:
-            bg = "rgba(255, 255, 255, 0.96)"
-            border = "rgba(0, 0, 0, 0.16)"
-            text_color = "#0f172a"
-            hover_border = "rgba(0, 0, 0, 0.35)"
+        # Frame/border color: yellow for WARNING, green for SUCCESS, blue for INFO, red for ERROR
+        frame_color = cfg.get("frame_dark" if is_dark else "frame_light", accent)
+        hover_frame = cfg.get("frame_hover_dark" if is_dark else "frame_hover_light", frame_color)
+        active_border = hover_frame if self._is_hovered else frame_color
 
-        active_border = hover_border if self._is_hovered else border
+        if is_dark:
+            bg = "rgba(22, 26, 34, 0.95)"
+            text_color = "#f1f5f9"
+        else:
+            bg = "rgba(255, 255, 255, 0.98)"
+            text_color = "#0f172a"
 
         self.setStyleSheet(f"""
             VNotificationBadge {{

@@ -14,7 +14,8 @@ from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.view.components.v_live_maps import VLiveMaps
 from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
 from spectroview.viewmodel.vm_live_maps import VMLiveMaps
-from spectroview.viewmodel.utils import show_toast_notification, parse_coords_from_fname
+from spectroview.view.components.v_notification import show_notification
+from spectroview.viewmodel.utils import parse_coords_from_fname
 
 
 class VWorkspaceMaps(VWorkspaceSpectra):
@@ -546,10 +547,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         profile_df = self.v_map_viewer._extract_profile()
         
         if profile_df is None or profile_df.empty:
-            show_toast_notification(
-                parent=self,
-                message="Select exactly 2 points in 2D map mode to extract a profile.",
-                duration=3000
+            self._show_notification(
+                "Select exactly 2 points in 2D map mode to extract a profile.",
+                notification_type="warning",
             )
             return
         
@@ -562,10 +562,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         profile_df = dialog.map_viewer._extract_profile()
         
         if profile_df is None or profile_df.empty:
-            show_toast_notification(
-                parent=self,
-                message="Select exactly 2 points in 2D map mode to extract a profile.",
-                duration=3000
+            self._show_notification(
+                "Select exactly 2 points in 2D map mode to extract a profile.",
+                notification_type="warning",
             )
             return
         
@@ -573,13 +572,19 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.vm.extract_and_send_profile_to_graphs(profile_name, profile_df)
     
 
-    def _show_toast_notification(self, message: str):
-        """Show auto-dismissing toast notification."""
-        show_toast_notification(
-            parent=self,
+    def _show_notification(self, message: str, notification_type=None, duration: int = 3500, title: str | None = None):
+        """Show native floating notification in the application toolbar."""
+        show_notification(
             message=message,
-            duration=3000
+            notification_type=notification_type,
+            duration=duration,
+            title=title,
+            parent=self,
         )
+
+    def _show_toast_notification(self, message: str):
+        """Backward-compatible alias for _show_notification."""
+        self._show_notification(message)
     
     def clear_workspace(self):
         """Clear the Maps workspace (called from main window)."""

@@ -94,6 +94,16 @@ _SVG_TEMPLATES: dict[str, str] = {
         '<line x1="12" x2="12" y1="16" y2="12"/>'
         '<line x1="12" x2="12.01" y1="8" y2="8"/>'
     ),
+    "alert_triangle": (
+        '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>'
+        '<line x1="12" x2="12" y1="9" y2="13"/>'
+        '<line x1="12" x2="12.01" y1="17" y2="17"/>'
+    ),
+    "alert_circle": (
+        '<circle cx="12" cy="12" r="10"/>'
+        '<line x1="12" x2="12" y1="8" y2="12"/>'
+        '<line x1="12" x2="12.01" y1="16" y2="16"/>'
+    ),
     "help_circle": (
         '<circle cx="12" cy="12" r="10"/>'
         '<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>'
@@ -523,6 +533,8 @@ _SVG_TEMPLATES["vspan"] = _SVG_TEMPLATES["ann_vspan"]
 _SVG_TEMPLATES["hspan"] = _SVG_TEMPLATES["ann_hspan"]
 _SVG_TEMPLATES["box_ann"] = _SVG_TEMPLATES["ann_box"]
 _SVG_TEMPLATES["callout"] = _SVG_TEMPLATES["ann_callout"]
+_SVG_TEMPLATES["warning"] = _SVG_TEMPLATES["alert_triangle"]
+_SVG_TEMPLATES["error"] = _SVG_TEMPLATES["alert_circle"]
 
 # ---------------------------------------------------------------------------
 # Caches & Engine Lifetimes

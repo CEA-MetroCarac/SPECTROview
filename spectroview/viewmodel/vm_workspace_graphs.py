@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QFileDialog, QMessageBox
+from PySide6.QtWidgets import QFileDialog
 
 from spectroview.model.m_graph import MGraph
 from spectroview.model.graph_control import (
@@ -312,7 +312,7 @@ class VMWorkspaceGraphs(QObject):
                 # Update last_directory setting
                 self.settings.set_last_directory(str(Path(file_path).parent))
             except Exception as e:
-                QMessageBox.critical(None, "Error", f"Error saving DataFrame: {e}")
+                self.notify.emit(f"Error saving DataFrame: {e}")
     
     # ═════════════════════════════════════════════════════════════════════
     # Filter Management
@@ -341,7 +341,7 @@ class VMWorkspaceGraphs(QObject):
             try:
                 df = df.query(expression)
             except Exception as e:
-                QMessageBox.critical(None, "Error", f"Filter error: {e}")
+                self.notify.emit(f"Filter error: {e}")
                 return None
 
         return df
@@ -533,7 +533,7 @@ class VMWorkspaceGraphs(QObject):
             
             self.notify.emit(f"Workspace saved: {Path(file_path).name}")
         except Exception as e:
-            QMessageBox.critical(None, "Error", f"Error saving workspace: {e}")
+            self.notify.emit(f"Error saving workspace: {e}")
     
     def load_workspace(self, file_path: str):
         """Load workspace supporting both legacy JSON and new ZIP formats."""
@@ -573,7 +573,7 @@ class VMWorkspaceGraphs(QObject):
             self._emit_dataframes_list()
             self._emit_graphs_list()
         except Exception as e:
-            QMessageBox.critical(None, "Error", f"Error loading workspace: {e}")
+            self.notify.emit(f"Error loading workspace: {e}")
             
     def load_workspace_legacy(self, file_path: str):
         """Legacy JSON loader for backward compatibility with old .graphs files."""
@@ -611,7 +611,7 @@ class VMWorkspaceGraphs(QObject):
             self._emit_graphs_list()
             
         except Exception as e:
-            QMessageBox.critical(None, "Error", f"Error loading legacy workspace: {e}")
+            self.notify.emit(f"Error loading legacy workspace: {e}")
     
     def clear_workspace(self):
         """Clear workspace."""

@@ -24,7 +24,7 @@ from spectroview.view.components.v_style_template_dialog import VStyleTemplateDi
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.view.components.v_graph import VGraph
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
-from spectroview.viewmodel.utils import show_toast_notification
+from spectroview.view.components.v_notification import show_notification
 from spectroview.view.components.customized_widgets import CustomizedPalette
 from spectroview.view.components.customize_graph.customize_graph_dialog import CustomizeGraphDialog
 from spectroview.view.components.v_export_dialog import VExportDialog, VBatchExportDialog
@@ -613,7 +613,7 @@ class VWorkspaceGraphs(QWidget):
         vm.dataframe_columns_changed.connect(self._update_slot_selector)
         vm.graphs_changed.connect(self._update_graph_list)
         vm.undo_state_changed.connect(self._on_undo_state_changed)
-        vm.notify.connect(self._show_toast_notification)
+        vm.notify.connect(self._show_notification)
 
         self._setup_keyboard_shortcuts()
 
@@ -753,7 +753,7 @@ class VWorkspaceGraphs(QWidget):
         """View DataFrame in table, or open source file if Ctrl is held."""
         current_item = self.df_listbox.currentItem()
         if not current_item:
-            QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame to view.")
+            self._show_notification("Please select a DataFrame to view.", notification_type="warning")
             return
         
         df_name = current_item.text()
@@ -771,22 +771,18 @@ class VWorkspaceGraphs(QWidget):
                     if QDesktopServices.openUrl(file_url):
                         self.vm.notify.emit(f"Opening file: {os.path.basename(source_path)}")
                     else:
-                        QMessageBox.warning(self, "Error", f"Could not open file: {source_path}")
+                        self._show_notification(f"Could not open file: {source_path}", notification_type="error")
                 except Exception as e:
-                    QMessageBox.critical(self, "Error", f"Could not open file: {str(e)}")
+                    self._show_notification(f"Could not open file: {str(e)}", notification_type="error")
             else:
-                QMessageBox.warning(
-                    self, 
-                    "No Source File", 
-                    f"No source file found for '{df_name}'."
-                )
+                self._show_notification(f"No source file found for '{df_name}'.", notification_type="warning")
             return
         
         # Normal click - show DataFrame in dialog
         df = self.vm.get_dataframe(df_name)
         
         if df is None or df.empty:
-            QMessageBox.warning(self, "Empty DataFrame", "Selected DataFrame is empty.")
+            self._show_notification("Selected DataFrame is empty.", notification_type="warning")
             return
         
         # Apply current filters if any
@@ -797,7 +793,7 @@ class VWorkspaceGraphs(QWidget):
             # Apply filters to get filtered DataFrame
             df = self.vm.apply_filters(df_name, filters)
             if df is None or df.empty:
-                QMessageBox.warning(self, "Empty Result", "No data after applying filters.")
+                self._show_notification("No data after applying filters.", notification_type="warning")
                 return
         
         # Create dialog to show DataFrame
@@ -837,7 +833,7 @@ class VWorkspaceGraphs(QWidget):
         """Refresh DataFrame from source file."""
         current_item = self.df_listbox.currentItem()
         if not current_item:
-            QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame to refresh.")
+            self._show_notification("Please select a DataFrame to refresh.", notification_type="warning")
             return
         
         df_name = current_item.text()
@@ -859,10 +855,9 @@ class VWorkspaceGraphs(QWidget):
                 if graph_model and graph_model.df_name == df_name:
                     self._sync_gui_from_graph(graph_model)
         else:
-            QMessageBox.warning(
-                self, 
-                "Refresh Failed", 
-                f"Could not refresh DataFrame '{df_name}'. Source file may not exist or be accessible."
+            self._show_notification(
+                f"Could not refresh DataFrame '{df_name}'. Source file may not exist or be accessible.",
+                notification_type="warning",
             )
     
     def _on_apply_filters(self):
@@ -873,13 +868,19 @@ class VWorkspaceGraphs(QWidget):
         filters = self.v_data_filter.get_filters()
         self.vm.apply_filters(self.vm.selected_df_name, filters)
     
-    def _show_toast_notification(self, message: str):
-        """Show toast notification."""
-        show_toast_notification(
-            parent=self,
+    def _show_notification(self, message: str, notification_type=None, duration: int = 3500, title: str | None = None):
+        """Show native floating notification in the application toolbar."""
+        show_notification(
             message=message,
-            duration=3000
+            notification_type=notification_type,
+            duration=duration,
+            title=title,
+            parent=self,
         )
+
+    def _show_toast_notification(self, message: str):
+        """Backward-compatible alias for _show_notification."""
+        self._show_notification(message)
     
     def _on_add_plot(self):
         """Add new plot."""
@@ -891,7 +892,7 @@ class VWorkspaceGraphs(QWidget):
         
         plot_config = self._collect_plot_config(include_labels=False)
         if not plot_config['x'] or not plot_config['y']:
-            QMessageBox.warning(self, "Missing Axes", "Please select X and Y axes.")
+            self._show_notification("Please select X and Y axes.", notification_type="warning")
             return
         self._apply_default_style_to_config(plot_config)
 
@@ -943,12 +944,12 @@ class VWorkspaceGraphs(QWidget):
     def _validate_plot_request(self) -> bool:
         """Validate DataFrame selection."""
         if not self.vm.selected_df_name:
-            QMessageBox.warning(self, "No DataFrame", "Please select a DataFrame first.")
+            self._show_notification("Please select a DataFrame first.", notification_type="warning")
             return False
         
         df = self.vm.get_dataframe(self.vm.selected_df_name)
         if df is None or df.empty:
-            QMessageBox.warning(self, "Empty DataFrame", "Selected DataFrame is empty.")
+            self._show_notification("Selected DataFrame is empty.", notification_type="warning")
             return False
         return True
     
@@ -976,7 +977,7 @@ class VWorkspaceGraphs(QWidget):
         graph_widget.export_all_requested.connect(self._on_export_all_clicked)
         graph_widget.style_action_requested.connect(self._on_style_action_requested)
         graph_widget.properties_changed.connect(self._on_graph_properties_changed)
-        graph_widget.notify.connect(self._show_toast_notification)
+        graph_widget.notify.connect(self._show_notification)
 
         self._configure_graph_from_model(graph_widget, graph_model)
         graph_widget.create_plot_widget(graph_model.dpi)
@@ -1025,7 +1026,7 @@ class VWorkspaceGraphs(QWidget):
             filtered_df = self.vm.apply_filters(plot_config['df_name'], filters)
 
             def _on_render_error(e):
-                QMessageBox.critical(self, "Plot Error", f"Error rendering plot: {str(e)}")
+                self._show_notification(f"Error rendering plot: {str(e)}", notification_type="error")
 
             if self._build_graph_widget(graph_model, filtered_df, _on_render_error) is None:
                 return
@@ -1117,9 +1118,9 @@ class VWorkspaceGraphs(QWidget):
                     self._refresh_graph_from_model(gid, set())
                 except Exception:
                     pass
-            QMessageBox.warning(
-                self, "Graph Update Error",
-                f"The graph update was rolled back because it could not be rendered:\n{exc}",
+            self._show_notification(
+                f"Graph update rolled back: {exc}",
+                notification_type="warning",
             )
             return []
         finally:
@@ -1183,25 +1184,21 @@ class VWorkspaceGraphs(QWidget):
             configs.append(cfg)
 
         if not configs:
-            QMessageBox.information(
-                self, "No Graphs", "There are no open graphs to save as a recipe."
-            )
+            self._show_notification("No open graphs to save as a recipe.", notification_type="warning")
             return
 
         name, ok = QInputDialog.getText(self, "Save Plot Recipe", "Recipe name:")
         if ok and name:
             self.recipe_store.save_recipe(name, configs)
-            QMessageBox.information(
-                self, "Recipe Saved",
-                f"Saved '{name}' with {len(configs)} plot{'s' if len(configs) > 1 else ''}."
+            self._show_notification(
+                f"Saved plot recipe '{name}' with {len(configs)} plot{'s' if len(configs) > 1 else ''}.",
+                notification_type="success",
             )
 
     def _on_export_all_clicked(self) -> None:
         """Export every currently open graph to a folder in one pass."""
         if not self.graph_widgets:
-            QMessageBox.information(
-                self, "No Graphs", "There are no open graphs to export."
-            )
+            self._show_notification("No open graphs to export.", notification_type="warning")
             return
 
         widgets = {gid: gw for gid, (gw, _, _) in self.graph_widgets.items()}
@@ -1212,9 +1209,7 @@ class VWorkspaceGraphs(QWidget):
         """Open the multi-panel composer to combine several open graphs
         into one exported figure."""
         if not self.graph_widgets:
-            QMessageBox.information(
-                self, "No Graphs", "There are no open graphs to compose."
-            )
+            self._show_notification("No open graphs to compose.", notification_type="warning")
             return
 
         widgets = {gid: gw for gid, (gw, _, _) in self.graph_widgets.items()}
@@ -1238,17 +1233,17 @@ class VWorkspaceGraphs(QWidget):
             self._apply_style_template_dialog(gw)
         elif action == "copy":
             self._copied_style = extract_style(vars(gw))
-            self._show_toast_notification(f"Style copied from graph {graph_id}.")
+            self._show_notification(f"Style copied from graph {graph_id}.")
         elif action == "paste":
             if not self._copied_style:
-                QMessageBox.information(self, "Nothing to Paste", "Copy a graph's style first.")
+                self._show_notification("Nothing to paste. Copy a graph's style first.", notification_type="warning")
                 return
             self._apply_style_to_graph(gw, self._copied_style)
         elif action == "reset":
             self._apply_style_to_graph(gw, default_style())
         elif action == "set_default":
             self.m_settings.set_default_graph_style(extract_style(vars(gw)))
-            self._show_toast_notification(
+            self._show_notification(
                 f"Graph {graph_id}'s style is now the default for new plots."
             )
 
@@ -1260,7 +1255,7 @@ class VWorkspaceGraphs(QWidget):
         style = extract_style(vars(gw))
         tpl_id = self.style_template_store.save_template(name, style)
         if tpl_id:
-            self._show_toast_notification(f"Saved style '{name}'.")
+            self._show_notification(f"Saved style '{name}'.")
         else:
             QMessageBox.warning(
                 self, "Could Not Save",
@@ -1368,7 +1363,7 @@ class VWorkspaceGraphs(QWidget):
         
         # We need to make sure df_name is correct
         if not plot_config.get('df_name'):
-            QMessageBox.warning(self, "Error", "Cannot replicate a plot without a valid DataFrame.")
+            self._show_notification("Cannot replicate a plot without a valid DataFrame.", notification_type="warning")
             return
             
         self._create_and_display_plot(plot_config, select_in_list=True, filters=plot_config.get('filters', []))
@@ -1415,7 +1410,7 @@ class VWorkspaceGraphs(QWidget):
             # Get currently active MDI subwindow
             active_subwindow = self.mdi_area.activeSubWindow()
             if not active_subwindow:
-                QMessageBox.warning(self, "No Plot Selected", "Please select a plot to update.")
+                self._show_notification("Please select a plot to update.", notification_type="warning")
                 return
 
             gid = self._graph_id_for_subwindow(active_subwindow)
@@ -1490,10 +1485,7 @@ class VWorkspaceGraphs(QWidget):
             try:
                 self._render_plot(graph_widget, filtered_df, graph_model)
             except Exception as e:
-                QMessageBox.critical(
-                    self, "Plot Update Error",
-                    f"Error updating plot: {str(e)}"
-                )
+                self._show_notification(f"Error updating plot: {str(e)}", notification_type="error")
                 return
 
             # Save legend properties back to model after rendering
@@ -1653,7 +1645,7 @@ class VWorkspaceGraphs(QWidget):
         checked_slots = [int(float(cb.text())) for cb in self.slot_checkboxes if cb.isChecked()]
 
         if not checked_slots:
-            QMessageBox.warning(self, "No Slots Selected", "Please select at least one slot.")
+            self._show_notification("Please select at least one slot.", notification_type="warning")
             return
 
         if not self._validate_plot_request():
@@ -1683,9 +1675,9 @@ class VWorkspaceGraphs(QWidget):
 
                 def _on_render_error(e, graph_model=graph_model):
                     slot_expr = graph_model.filters[-1].get('expression', 'unknown') if graph_model.filters else 'unknown'
-                    QMessageBox.warning(
-                        self, "Plot Error",
-                        f"Error rendering plot for {slot_expr}: {str(e)}"
+                    self._show_notification(
+                        f"Error rendering plot for {slot_expr}: {str(e)}",
+                        notification_type="warning",
                     )
 
                 if self._build_graph_widget(graph_model, filtered_df, _on_render_error) is None:

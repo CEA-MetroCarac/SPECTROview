@@ -667,13 +667,13 @@ class TestResultsExtraction:
         # a/b = 0.333.. and 0.666.. rounded to the configured 1 decimal place
         assert vm.df_fit_results["ratio"].tolist() == pytest.approx([0.3, 0.7])
 
-    def test_compute_column_duplicate_name_warns(self, vm, monkeypatch):
-        from PySide6.QtWidgets import QMessageBox
+    def test_compute_column_duplicate_name_warns(self, vm):
         warnings = []
-        monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: warnings.append(a))
+        vm.notify.connect(lambda msg, *a: warnings.append(msg))
         vm.df_fit_results = pd.DataFrame({"Filename": ["s1"], "ampli_P1": [10.0]})
         vm.compute_column_from_expression("ampli_P1", "ampli_P1 * 2")
         assert len(warnings) == 1
+        assert "already exists" in warnings[0]
 
     def test_add_column_from_filename(self, vm):
         vm.df_fit_results = pd.DataFrame({"Filename": ["sampleA_run1", "sampleB_run2"], "x0_P1": [1.0, 2.0]})
@@ -682,15 +682,15 @@ class TestResultsExtraction:
 
 
 class TestErrorHandling:
-    def test_load_files_reports_error_via_message_box(self, vm, tmp_path, monkeypatch):
-        from PySide6.QtWidgets import QMessageBox
+    def test_load_files_reports_error_via_notify(self, vm, tmp_path):
         errors = []
-        monkeypatch.setattr(QMessageBox, "critical", lambda *a, **k: errors.append(a))
+        vm.notify.connect(lambda msg, *a: errors.append(msg))
         bad_file = tmp_path / "bad.txt"
         bad_file.write_text("not,valid,spectrum,data\nasdf\n")
         # Malformed content: loader should either cope or raise -> caught and reported.
         vm.load_files([str(tmp_path / "does_not_exist_at_all.txt")])
         assert len(errors) == 1
+        assert "Error loading" in errors[0]
 
     def test_operations_on_empty_selection_do_not_crash(self, vm, qapp):
         vm.copy_baseline()

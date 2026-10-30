@@ -101,7 +101,7 @@ spectroview/
 │   ├── vm_fit_model_builder.py   # Fit model file management orchestration
 │   ├── vm_mva.py                 # MVA orchestration
 │   ├── vm_settings.py            # Settings persistence
-│   └── utils.py                  # Helpers, toast notifications
+│   └── utils.py                  # Helpers, notification adapter
 │
 ├── ai_agent/               # AI Data Chat module (multi-provider; runtime-optional)
 │   ├── __init__.py              # Module docstring, keeps import guarded
@@ -132,6 +132,7 @@ spectroview/
 │       ├── v_fit_results.py           # Fit results DataFrame table
 │       ├── v_data_filter.py           # Dynamic query filter panel
 │       ├── v_dataframe_table.py       # Generic DataFrame viewer
+│       ├── v_notification.py          # Native floating notification badges & manager
 │       ├── v_spectra_list.py          # Spectrum list with checkboxes
 │       ├── v_moretab.py               # Metadata / tab panel
 │       ├── v_settings.py              # Fit/view settings dialog

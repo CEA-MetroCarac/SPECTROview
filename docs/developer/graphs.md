@@ -58,7 +58,7 @@ dataframe_columns_changed = Signal(list)    # Column names of selected DataFrame
 graphs_changed = Signal(list)               # List of graph IDs updated
 graph_state_changed = Signal()              # Any persisted graph property changed (AI context sync)
 undo_state_changed = Signal()               # can_undo/can_redo changed -- sync toolbar buttons
-notify = Signal(str)                        # Toast notification
+notify = Signal(str)                        # Floating notification
 ```
 
 ### **`MGraph` — The Plot Configuration Model**

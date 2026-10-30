@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 
 from spectroview.model.m_settings import MSettings
 
-from spectroview.viewmodel.utils import show_toast_notification
+from spectroview.view.components.v_notification import show_notification
 from spectroview.view.theme import Icons, current_tokens
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
 from spectroview.view.components.v_fit_results import VFitResults
@@ -257,7 +257,7 @@ class VWorkspaceSpectra(QWidget):
         vm.spectra_selection_changed.connect(self.v_fit_model_builder.update_baseline_ui)
         vm.spectra_selection_changed.connect(self._update_peak_table)
         vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra"))
-        vm.notify.connect(self._show_toast_notification)
+        vm.notify.connect(self._show_notification)
 
         # MetaData connections
         self.v_more_tab.normalize_requested.connect(
@@ -278,7 +278,7 @@ class VWorkspaceSpectra(QWidget):
         self.vm_mva.pca_results_ready.connect(self.v_mva.display_pca_results)
         self.vm_mva.nmf_results_ready.connect(self.v_mva.display_nmf_results)
         self.vm_mva.send_df_to_graphs.connect(self._send_df_to_graphs)
-        self.vm_mva.notify.connect(self._show_toast_notification)
+        self.vm_mva.notify.connect(self._show_notification)
         self.vm_mva.notify.connect(self.v_mva.set_status)
 
         vm.show_xcorrection_value.connect(self.v_fit_model_builder.set_xcorrection_value)        
@@ -305,7 +305,7 @@ class VWorkspaceSpectra(QWidget):
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.clear)
         self.vm_fit_model_builder.models_changed.connect(self.v_fit_model_builder.cbb_model.addItems)
         self.vm_fit_model_builder.model_selected.connect(self.v_fit_model_builder.cbb_model.setCurrentText)
-        self.vm_fit_model_builder.notify.connect(self._show_toast_notification)
+        self.vm_fit_model_builder.notify.connect(self._show_notification)
         self.vm_fit_model_builder.refresh_models() # Initial load of models
 
 
@@ -430,13 +430,19 @@ class VWorkspaceSpectra(QWidget):
         graphs_workspace = parent_window.v_graphs_workspace
         graphs_workspace.vm.add_dataframe(df_name, df, force_replace)
         
-    def _show_toast_notification(self, message: str):
-        """Show auto-dismissing toast notification."""
-        show_toast_notification(
-            parent=self,
+    def _show_notification(self, message: str, notification_type=None, duration: int = 3500, title: str | None = None):
+        """Show native floating notification in the application toolbar."""
+        show_notification(
             message=message,
-            duration=3000
+            notification_type=notification_type,
+            duration=duration,
+            title=title,
+            parent=self,
         )
+
+    def _show_toast_notification(self, message: str):
+        """Backward-compatible alias for _show_notification."""
+        self._show_notification(message)
 
     def _update_peak_table(self, spectra):
         """Update the peak table with the first selected spectrum."""
@@ -458,7 +464,7 @@ class VWorkspaceSpectra(QWidget):
         success = self.vm_fit_model_builder.load_model_file(file_path)
         if success:
             self.bottom_tabs.setCurrentWidget(self.v_fit_model_builder)
-            self._show_toast_notification(f"Fit model loaded: {Path(file_path).name}")
+            self._show_notification(f"Fit model loaded: {Path(file_path).name}")
         return success
 
     # ───── Drag & Drop handling ──────────────────────────────────

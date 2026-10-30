@@ -21,7 +21,7 @@ class VMMVA(QObject):
     # ───── ViewModel → View signals ─────
     pca_results_ready = Signal(object)   # PCAResult + metadata dict
     nmf_results_ready = Signal(object)   # NMFResult + metadata dict
-    notify = Signal(str)                 # toast notifications
+    notify = Signal(str)                 # floating notifications
     send_df_to_graphs = Signal(str, object)  # (df_name, pd.DataFrame)
 
     def __init__(self, m_settings=None):

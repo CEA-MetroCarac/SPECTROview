@@ -21,10 +21,11 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QListWidget, QListWidgetItem, QCheckBox, QComboBox, QSpinBox,
-    QDoubleSpinBox, QFileDialog, QMessageBox,
+    QDoubleSpinBox, QFileDialog,
 )
 
 from spectroview.viewmodel.utils import export_figure_to_file
+from spectroview.view.components.v_notification import show_notification
 from spectroview.view.components.v_export_dialog import (
     _ExportSettingsPanel, _MM_PER_INCH, gw_display_name,
 )
@@ -302,7 +303,7 @@ class VMultiPanelDialog(QDialog):
         try:
             composed_fig = self._compose_figure()
         except ValueError as e:
-            QMessageBox.warning(self, "Nothing to Export", str(e))
+            show_notification(str(e), notification_type="warning")
             return
 
         ext, file_filter = self.panel.format_ext(), self.panel.file_filter()

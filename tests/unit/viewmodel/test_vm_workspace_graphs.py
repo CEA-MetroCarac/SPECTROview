@@ -212,14 +212,14 @@ class TestApplyFilters:
         expected = (excel_sheets["sheet1"]["Zone"] == "Edge").sum()
         assert len(result) == expected
 
-    def test_invalid_expression_shows_error_and_returns_none(self, loaded_vm, monkeypatch, qapp):
-        from PySide6.QtWidgets import QMessageBox
+    def test_invalid_expression_shows_error_and_returns_none(self, loaded_vm, qapp):
         errors = []
-        monkeypatch.setattr(QMessageBox, "critical", lambda *a, **k: errors.append(a))
+        loaded_vm.notify.connect(lambda msg, *a: errors.append(msg))
         result = loaded_vm.apply_filters("dataset_Excel_sheet1",
                                            [{"expression": "this is not valid python (((", "state": True}])
         assert result is None
         assert len(errors) == 1
+        assert "Filter error" in errors[0]
 
     def test_apply_filters_unknown_dataframe_returns_none(self, vm):
         assert vm.apply_filters("nope", []) is None
@@ -428,12 +428,12 @@ class TestSaveLoadWorkspace:
         assert len(vm.dataframes["legacy_df"]) == 3
         assert 1 in vm.get_graph_ids()
 
-    def test_load_nonexistent_workspace_shows_error(self, vm, tmp_path, monkeypatch, qapp):
-        from PySide6.QtWidgets import QMessageBox
+    def test_load_nonexistent_workspace_shows_error(self, vm, tmp_path, qapp):
         errors = []
-        monkeypatch.setattr(QMessageBox, "critical", lambda *a, **k: errors.append(a))
+        vm.notify.connect(lambda msg, *a: errors.append(msg))
         vm.load_workspace(str(tmp_path / "does_not_exist.graphs"))
         assert len(errors) == 1
+        assert "File not found" in errors[0]
 
     def test_next_graph_id_continues_after_reload(self, loaded_vm, tmp_path, monkeypatch, qapp):
         from PySide6.QtWidgets import QFileDialog

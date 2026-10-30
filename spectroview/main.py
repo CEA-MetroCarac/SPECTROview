@@ -40,10 +40,10 @@ from spectroview.model.m_update_checker import (
 )
 
 
-from spectroview.view.components.v_about import VAboutDialog
 from spectroview.view.components.v_update_banner import VUpdateBanner
 from spectroview.view.components.v_quick_calculators import MQuickCalc
 from spectroview.view.components.v_menubar import VMenuBar
+from spectroview.view.components.v_notification import NotificationManager
 from spectroview.view.components.v_user_manual import VUserManualDialog
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.v_workspace_maps import VWorkspaceMaps
@@ -149,6 +149,7 @@ class Main(QMainWindow):
         # Toolbar
         self.menu_bar = VMenuBar()
         self.addToolBar(Qt.TopToolBarArea, self.menu_bar)
+        NotificationManager.instance().set_area(self.menu_bar.notification_area)
         
     def setup_connections(self):
         self.menu_bar.open_requested.connect(self.open_files)
@@ -210,6 +211,21 @@ class Main(QMainWindow):
             self.v_spectra_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(self.settings.save_view_options)
             self.v_maps_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(self.settings.save_view_options)
         
+
+    def show_notification(
+        self,
+        message: str,
+        notification_type: str | None = None,
+        duration: int = 3500,
+        title: str | None = None,
+    ):
+        """Display a floating notification in the application toolbar."""
+        return NotificationManager.instance().show(
+            message=message,
+            notification_type=notification_type,
+            duration=duration,
+            title=title,
+        )
 
     def open_files(self):
         """Universal file opener supporting all SPECTROview formats."""

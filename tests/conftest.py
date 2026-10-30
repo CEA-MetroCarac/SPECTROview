@@ -159,6 +159,13 @@ def _release_qt_widgets_between_tests(request):
         app.sendPostedEvents(None, QEvent.DeferredDelete)
         app.processEvents()
 
+    # Reset NotificationManager area so it doesn't hold references across tests
+    try:
+        from spectroview.view.components.v_notification import NotificationManager
+        NotificationManager.instance().set_area(None)
+    except Exception:
+        pass
+
     gc.collect(0)
 
     _qt_cleanup_count += 1

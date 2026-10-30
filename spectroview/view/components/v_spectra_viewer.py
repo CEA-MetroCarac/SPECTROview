@@ -15,10 +15,11 @@ from PySide6.QtWidgets import (
     QPushButton, QToolButton, QLabel,
     QComboBox, QDialog, QMenu, QWidgetAction,
     QLineEdit, QDoubleSpinBox, QSpinBox,
-    QSlider, QMessageBox, QApplication, QButtonGroup
+    QSlider, QApplication, QButtonGroup
 )
 from PySide6.QtCore import Qt, Signal, QSize, QPoint, QTimer
 from PySide6.QtGui import QCursor
+from spectroview.view.components.v_notification import show_notification
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -2169,8 +2170,11 @@ class VSpectraViewer(QWidget):
         if self.btn_peak.isChecked():
             if event.button == 1:      # left click
                 if self.btn_norm.isChecked():
-                    msg = "The 'Intensity normalization' tool is active.\nThis normalization is just for visualization, not affected to data.\n\nPlease deactivate the Normalization (unpush the button) before adding a peak to ensure it is placed in the real intensity scale."
-                    QMessageBox.information(self, "Normalization Active", msg)
+                    show_notification(
+                        "Deactivate Normalization before adding a peak to use the real intensity scale.",
+                        notification_type="warning",
+                        title="Normalization Active",
+                    )
                     return
                 # Check if clicking on an existing peak to drag it
                 clicked_peak = self._find_peak_at_position(x, y)
@@ -2190,8 +2194,11 @@ class VSpectraViewer(QWidget):
         elif self.btn_baseline.isChecked():
             if event.button == 1:
                 if self.btn_norm.isChecked():
-                    msg = "The 'Intensity normalization' tool is active.\nThis normalization is just for visualization, not affected to data.\n\nPlease deactivate the Normalization (unpush the button) before adding a baseline point to ensure it is placed in the real intensity scale."
-                    QMessageBox.information(self, "Normalization Active", msg)
+                    show_notification(
+                        "Deactivate Normalization before adding a baseline point to use the real intensity scale.",
+                        notification_type="warning",
+                        title="Normalization Active",
+                    )
                     return
                 self.baseline_add_requested.emit(x, y)
             elif event.button == 3:

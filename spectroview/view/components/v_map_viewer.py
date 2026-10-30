@@ -14,7 +14,7 @@ from superqt import QLabeledDoubleRangeSlider
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QCheckBox, QDoubleSpinBox,
-    QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction, QApplication, QMessageBox,
+    QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction, QApplication,
     QSizePolicy
 )
 from PySide6.QtCore import Qt, Signal, QSize, QTimer
@@ -23,6 +23,7 @@ from PySide6.QtGui import QAction
 from spectroview import PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
 from spectroview.view.theme import Icons, current_tokens
 from spectroview.viewmodel.utils import copy_fig_to_clb
+from spectroview.view.components.v_notification import show_notification
 from spectroview.view.components.customized_widgets import CustomizedPalette
 
 
@@ -962,30 +963,26 @@ class VMapViewer(QWidget):
             # Handle non-numeric data errors (from both scipy griddata and matplotlib imshow)
             error_msg = str(e)
             if "could not convert string to float" in error_msg or "dtype object cannot be converted to float" in error_msg:
-
-                QMessageBox.critical(
-                    None,
-                    "Non-Numeric Data",
-                    f"The selected parameter contains non-numerical values and cannot be visualized on the map.\n\n"
-                    f"Please select a different parameter that contains only numeric data.\n\n"
-                    f"Error: {error_msg}"
+                show_notification(
+                    "Selected parameter contains non-numeric values and cannot be plotted.",
+                    notification_type="warning",
+                    title="Non-Numeric Data",
                 )
             else:
-
-                QMessageBox.critical(
-                    None,
-                    "Plot Error",
-                    f"An error occurred while plotting the heatmap:\n\n{str(e)}"
+                show_notification(
+                    f"Error plotting heatmap: {error_msg}",
+                    notification_type="error",
+                    title="Plot Error",
                 )
             self.ax.clear()
             self.canvas.draw_idle()
             return
         except Exception as e:
             # Handle any other errors
-            QMessageBox.critical(
-                None,
-                "Plot Error",
-                f"An error occurred while plotting the heatmap:\n\n{str(e)}"
+            show_notification(
+                f"Error plotting heatmap: {str(e)}",
+                notification_type="error",
+                title="Plot Error",
             )
             self.ax.clear()
             self.canvas.draw_idle()

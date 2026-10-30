@@ -33,7 +33,6 @@ TRACKED_PACKAGES: tuple[str, ...] = (
     "openpyxl",
     "superqt",
     "pyarrow",
-    "pyqt-toast-notification",
     "openai",
     "anthropic",
     "ollama",

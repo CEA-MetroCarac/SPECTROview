@@ -1,9 +1,10 @@
 #view/toolbar.py
-from PySide6.QtWidgets import QToolBar, QWidget, QSizePolicy, QLabel, QMenu
+from PySide6.QtWidgets import QToolBar, QSizePolicy, QLabel, QMenu
 from PySide6.QtCore import QSize, Signal, Qt
 
 from spectroview import VERSION
 from spectroview.view.theme import Icons
+from spectroview.view.components.v_notification import VNotificationArea
 
 # Available themes: internal key → display label
 THEME_OPTIONS = [
@@ -38,6 +39,8 @@ class VMenuBar(QToolBar):
         self.init_ui()
         
     def init_ui(self):
+        self.setMovable(False)
+        self.setFloatable(False)
         self.setIconSize(QSize(22, 22))
         
         self.actionOpen = self.addAction(Icons.open(size=22), "Open")
@@ -62,10 +65,10 @@ class VMenuBar(QToolBar):
         self.actionSettings.setShortcut("Ctrl+Shift+S")
         self.actionSettings.triggered.connect(self.settings_requested.emit)
         
-        # ----- Expanding spacer -----
-        spacer = QWidget(self)
-        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        self.addWidget(spacer)
+        # ----- Floating Notification Area (expanding blank space) -----
+        self.notification_area = VNotificationArea(self)
+        self.notification_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.addWidget(self.notification_area)
 
         # ----- SPECTROview AI Agent -----
         self.actionAIChat = self.addAction(Icons.sparkles(size=22), "SPECTROview AI Agent")
@@ -137,6 +140,8 @@ class VMenuBar(QToolBar):
             theme_key = "light"
         self._current_theme = theme_key
         self._update_theme_icon()
+        if hasattr(self, "notification_area") and self.notification_area is not None:
+            self.notification_area.set_theme(theme_key)
 
     def apply_theme(self, theme_key: str) -> None:
         """Update top menubar icons across theme switches."""

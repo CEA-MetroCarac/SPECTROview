@@ -501,14 +501,17 @@ class TestStyleActions:
         assert target.color_palette == "viridis"
         assert target.grid is True
 
-    def test_paste_without_copy_shows_message(self, ws, excel_df, monkeypatch):
-        infos = []
-        monkeypatch.setattr(QMessageBox, "information", lambda *a, **k: infos.append(a))
+    def test_paste_without_copy_shows_message(self, ws, excel_df):
+        from spectroview.view.components.v_notification import NotificationManager
+        mgr = NotificationManager.instance()
+        mgr.clear_history()
         gw = self._graph(ws, excel_df)
 
         ws._on_style_action_requested(gw.graph_id, "paste")
 
-        assert len(infos) == 1
+        history = mgr.get_history()
+        assert len(history) >= 1
+        assert any("Nothing to paste" in h["message"] for h in history)
 
     def test_reset_to_default_restores_defaults(self, ws, excel_df):
         gw = self._graph(ws, excel_df)
@@ -814,8 +817,9 @@ class TestSubtitleSidePanelSync:
 
 class TestExportAll:
     def test_empty_workspace_shows_info_message_and_opens_no_dialog(self, ws, monkeypatch):
-        infos = []
-        monkeypatch.setattr(QMessageBox, 'information', lambda *a, **k: infos.append(a))
+        from spectroview.view.components.v_notification import NotificationManager
+        mgr = NotificationManager.instance()
+        mgr.clear_history()
         opened = []
         class _StubDialog:
             def __init__(self, widgets, parent=None):
@@ -826,8 +830,10 @@ class TestExportAll:
 
         ws._on_export_all_clicked()
 
-        assert len(infos) == 1
         assert opened == []
+        history = mgr.get_history()
+        assert len(history) >= 1
+        assert any("No open graphs to export" in h["message"] for h in history)
 
     def test_open_workspace_opens_batch_dialog_with_every_graph_widget(self, ws, excel_df, monkeypatch):
         graph_model = ws.vm.create_graph({

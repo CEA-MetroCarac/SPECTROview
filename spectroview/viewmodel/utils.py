@@ -381,37 +381,30 @@ def show_alert(message):
     msg_box.exec_()
 
 
-def show_toast_notification(parent, message, title=None, duration=3000, preset=None):
-    """Show an auto-dismissing toast notification"""
-    # Suppress toasts in offscreen/headless or pytest environments to prevent
-    # unparented QTimer callbacks from leaking into the Qt event loop after widget destruction.
-    if os.environ.get("QT_QPA_PLATFORM") == "offscreen" or "PYTEST_CURRENT_TEST" in os.environ:
-        return None
+def show_toast_notification(parent=None, message="", title=None, duration=3000, preset=None):
+    """Show an auto-dismissing notification (backward-compatible adapter).
 
-    try:
-        from pyqttoast import Toast, ToastPreset
-    except ImportError:
-        # Fallback to console print if pyqttoast not available
-        prefix = f"[{title}] " if title else ""
-        print(f"{prefix}{message}")
-        return None
-    
-    try:
-        toast = Toast(parent)
-        toast.setDuration(duration)
-        if title:
-            toast.setTitle(title)
-        toast.setText(message)
-        
-        # Apply preset style (default to SUCCESS)
-        if preset is None:
-            preset = ToastPreset.SUCCESS
-        toast.applyPreset(preset)
-        
-        toast.show()
-        return toast
-    except Exception:
-        return None
+    Routes directly into SPECTROview's native floating notification system.
+    """
+    from spectroview.view.components.v_notification import NotificationManager, NotificationType
+    ntype = NotificationType.from_value(preset) if preset is not None else NotificationType.infer_from_message(message)
+    return NotificationManager.instance().show(
+        message=message,
+        notification_type=ntype,
+        duration=duration,
+        title=title,
+    )
+
+
+def show_notification(message: str, notification_type=None, duration: int = 3500, title: str | None = None, parent=None):
+    """Show a native floating notification in the SPECTROview application toolbar."""
+    from spectroview.view.components.v_notification import NotificationManager
+    return NotificationManager.instance().show(
+        message=message,
+        notification_type=notification_type,
+        duration=duration,
+        title=title,
+    )
 
 
 
@@ -552,7 +545,7 @@ def replace_peak_labels(fit_model, param):
 def copy_fig_to_clb(canvas, size_ratio=None):
     """Copy matplotlib figure canvas to clipboard with optional resizing. """
     if not canvas:
-        QMessageBox.critical(None, "Error", "No plot to copy.")
+        show_notification("No plot to copy.", notification_type="warning")
         return
     
     figure = canvas.figure
@@ -599,7 +592,7 @@ def export_figure_to_file(canvas, filepath, fmt, dpi=300, transparent=False, siz
     Returns True on success, False (after showing an error dialog) on failure.
     """
     if not canvas:
-        QMessageBox.critical(None, "Error", "No plot to export.")
+        show_notification("No plot to export.", notification_type="warning")
         return False
 
     figure = canvas.figure
@@ -626,7 +619,7 @@ def export_figure_to_file(canvas, filepath, fmt, dpi=300, transparent=False, siz
             figure.savefig(filepath, **savefig_kwargs)
         return True
     except Exception as e:
-        QMessageBox.critical(None, "Error", f"Error exporting figure: {e}")
+        show_notification(f"Error exporting figure: {e}", notification_type="error")
         return False
     finally:
         # Restore original figure state

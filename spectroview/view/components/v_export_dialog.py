@@ -14,11 +14,12 @@ from pathlib import Path
 
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QFileDialog, QMessageBox, QWidget,
+    QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QFileDialog, QWidget,
 )
 
 from spectroview.model.m_settings import MSettings
 from spectroview.viewmodel.utils import export_figure_to_file
+from spectroview.view.components.v_notification import show_notification
 
 # Display text -> (file extension, QFileDialog filter string)
 _FORMAT_EXTENSIONS = {
@@ -386,10 +387,16 @@ class VBatchExportDialog(QDialog):
         self.settings.set_last_directory(folder)
 
         if failed:
-            lines = [f"Graph {gid}: {reason}" for gid, reason in failed]
-            QMessageBox.warning(
-                self, "Some Exports Failed",
-                f"{succeeded} of {len(self.graph_widgets)} graph(s) exported.\n\n" + "\n".join(lines)
+            show_notification(
+                f"{succeeded} of {len(self.graph_widgets)} graph(s) exported. Some exports failed.",
+                notification_type="warning",
+                title="Batch Export",
+            )
+        else:
+            show_notification(
+                f"Successfully exported {succeeded} graph(s).",
+                notification_type="success",
+                title="Batch Export",
             )
         self.accept()
 

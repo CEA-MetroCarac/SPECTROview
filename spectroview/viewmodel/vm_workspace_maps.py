@@ -10,7 +10,6 @@ import pandas as pd
 from pathlib import Path
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QMessageBox
 
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
@@ -84,7 +83,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 loaded_maps.append(map_name)
                 last_valid_path = path  # Track last successfully loaded file
             except Exception as e:
-                QMessageBox.critical(None, "Error", f"Error loading {path.name}: {str(e)}")
+                self.notify.emit(f"Error loading {path.name}: {e}")
         
         if loaded_maps:
             self._emit_maps_list_update()
@@ -371,7 +370,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             
             self.notify.emit(f"Map '{self.current_map_name}' saved to CSV.")
         except Exception as e:
-            QMessageBox.critical(None, "Error", f"Error saving map: {e}")
+            self.notify.emit(f"Error saving map: {e}")
     
     def delete_current_map(self):
         """Delete the currently selected map."""
@@ -665,7 +664,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 data = json.load(f)
             fit_model = data.get("0", {})
         except Exception as e:
-            QMessageBox.critical(None, "Error", f"Failed to load fit model:\n{e}")
+            self.notify.emit(f"Failed to load fit model: {e}")
             return
 
         self._apply_fit_model_and_run(fit_model, apply_all)

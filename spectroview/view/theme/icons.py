@@ -335,6 +335,18 @@ class Icons:
         return svg_icon("info", size=size, color=color)
 
     @classmethod
+    def check_circle(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("check_circle", size=size, color=color)
+
+    @classmethod
+    def alert_triangle(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("alert_triangle", size=size, color=color)
+
+    @classmethod
+    def alert_circle(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("alert_circle", size=size, color=color)
+
+    @classmethod
     def folder(cls, color: str | None = None, size: int = 16) -> QIcon:
         return svg_icon("folder", size=size, color=color)
 

@@ -140,6 +140,6 @@ The **About** tab provides comprehensive runtime and reference information:
 - **Environment & Dependencies**: Automatically detects execution mode and displays dependency versions:
   - **Standalone Executable (.exe)**: Shows the exact dependencies bundled at build time from the packaging machine, along with bundled Python and host/build OS.
   - **Installed Package (.whl / pip)**: Dynamically queries and displays the live package versions active on the local machine.
-  - Lists `PySide6` (with Qt runtime version), scientific stack (`numpy`, `scipy`, `matplotlib`, `pandas`, `pybaselines`), export engines (`openpyxl`, `pyarrow`), UI extensions (`superqt`, `pyqt-toast-notification`), and optional AI SDKs.
+  - Lists `PySide6` (with Qt runtime version), scientific stack (`numpy`, `scipy`, `matplotlib`, `pandas`, `pybaselines`), export engines (`openpyxl`, `pyarrow`), UI extensions (`superqt`), and optional AI SDKs.
 - **Check for Updates**: Direct action to check GitHub releases for new versions.
 - **Paper Citation**: The canonical SoftwareX peer-reviewed citation with DOI, along with a **Copy** button to quickly copy the citation into your clipboard.

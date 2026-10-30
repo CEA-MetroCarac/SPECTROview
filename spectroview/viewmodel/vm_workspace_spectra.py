@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 from PySide6.QtCore import QObject, Signal, Qt
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QApplication
+from PySide6.QtWidgets import QFileDialog, QApplication
 
 from spectroview.model.m_io import load_spectrum_file, load_TRPL_data, load_wdf_spectrum, load_spc_spectrum
 from spectroview.model.m_settings import MSettings
@@ -169,7 +169,7 @@ class VMWorkspaceSpectra(QObject):
                 loaded_files.append(p)
                 last_valid_path = path  # Track last successfully loaded file
             except Exception as e:
-                QMessageBox.critical(None, "Error", f"Error loading {path.name}: {str(e)}")
+                self.notify.emit(f"Error loading {path.name}: {e}")
 
         if loaded_files:
             self._emit_list_update()
@@ -1403,7 +1403,7 @@ class VMWorkspaceSpectra(QObject):
                 data = json.load(f)
             fit_model = data.get("0", {})
         except Exception as e:
-            QMessageBox.critical(None, "Error", f"Failed to load fit model:\n{e}")
+            self.notify.emit(f"Failed to load fit model: {e}")
             return
 
         fnames = self._get_active_spectra() if apply_all else self._get_selected_spectra()
@@ -1781,7 +1781,7 @@ class VMWorkspaceSpectra(QObject):
             
         except Exception as e:
             traceback.print_exc()
-            QMessageBox.critical(None, "Save Error", f"Error saving work:\n{str(e)}")
+            self.notify.emit(f"Error saving workspace: {e}")
 
     def load_work(self, file_path: str):
         """Load previously saved workspace from legacy JSON (v1) or newest ZIP-streaming (v2)."""
@@ -1853,7 +1853,7 @@ class VMWorkspaceSpectra(QObject):
 
         except Exception as e:
             traceback.print_exc()
-            QMessageBox.critical(None, "Load Error", f"Error loading workspace:\n{str(e)}")
+            self.notify.emit(f"Error loading workspace: {e}")
 
     def _load_legacy_spectra(self, file_path: str):
         """Load legacy JSON-based .spectra workspace (OLD version)."""
@@ -2135,24 +2135,20 @@ class VMWorkspaceSpectra(QObject):
         """Add a new column to fit results by evaluating a mathematical expression."""
 
         if self.df_fit_results is None or self.df_fit_results.empty:
-            QMessageBox.warning(None, "No Fit Results", "No fit results available. Collect results first.")
+            self.notify.emit("No fit results available. Collect results first.")
             return
 
         if not col_name:
-            QMessageBox.warning(None, "Missing Column Name", "Please enter a column name.")
+            self.notify.emit("Please enter a column name.")
             return
 
         if not expression:
-            QMessageBox.warning(None, "Missing Expression", "Please enter a mathematical expression.")
+            self.notify.emit("Please enter a mathematical expression.")
             return
 
         # Check if column already exists
         if col_name in self.df_fit_results.columns:
-            QMessageBox.warning(
-                None, 
-                "Duplicate Column Name",
-                f"Column '{col_name}' already exists. Please choose a different name."
-            )
+            self.notify.emit(f"Column '{col_name}' already exists.")
             return
 
         try:
@@ -2189,55 +2185,18 @@ class VMWorkspaceSpectra(QObject):
             
             # Show success message with warnings if any
             if warnings:
-                message = f"Successfully added computed column '{col_name}'.\n\nWarnings:\n" + "\n".join(f"• {w}" for w in warnings)
-                QMessageBox.warning(None, "Column Added with Warnings", message)
+                self.notify.emit(f"Successfully added computed column '{col_name}' (with warnings).")
             else:
-                QMessageBox.information(
-                    None, 
-                    "Success",
-                    f"Successfully added computed column '{col_name}'."
-                )
+                self.notify.emit(f"Successfully added computed column '{col_name}'.")
             
         except pd.errors.UndefinedVariableError as e:
-            # Column name in expression doesn't exist
-            QMessageBox.critical(
-                None,
-                "Invalid Column Name",
-                f"Invalid column name in expression.\n\n"
-                f"Error: {str(e)}\n\n"
-                f"Available columns:\n{', '.join(self.df_fit_results.columns)}\n\n"
-                "Note: Use backticks for names with special characters: `x0_LO(M)`"
-            )
+            self.notify.emit(f"Invalid column name in expression: {e}")
         except SyntaxError as e:
-            # Invalid syntax in expression
-            QMessageBox.critical(
-                None,
-                "Syntax Error",
-                f"Invalid expression syntax.\n\n"
-                f"Error: {str(e)}\n\n"
-                "Examples:\n"
-                "• column1 - column2\n"
-                "• (col1 + col2) * 2\n\n"
-                "Note: Use backticks for names with special characters: `x0_LO(M)`"
-            )
+            self.notify.emit(f"Syntax error in expression: {e}")
         except ZeroDivisionError:
-            # Explicit division by zero (though pandas.eval usually handles this)
-            QMessageBox.critical(
-                None,
-                "Division by Zero",
-                "Division by zero detected in expression.\n\n"
-                "Please check your formula."
-            )
+            self.notify.emit("Division by zero in expression.")
         except Exception as e:
-            # Catch-all for other errors
-            QMessageBox.critical(
-                None,
-                "Expression Error",
-                f"Error evaluating expression:\n\n"
-                f"{str(e)}\n\n"
-                f"Available columns:\n{', '.join(self.df_fit_results.columns)}\n\n"
-                "Note: Use backticks for names with special characters or when column's header contain spaces: `x0_LO(M)`"
-            )
+            self.notify.emit(f"Error evaluating expression: {e}")
     
     def save_fit_results(self):
         """Save fit results to Excel or CSV file."""
@@ -2271,13 +2230,13 @@ class VMWorkspaceSpectra(QObject):
                     if success:
                         self.notify.emit(f"Fit results saved: {Path(file_path).name}")
                     else:
-                        QMessageBox.critical(None, "Error", f"Error saving fit results: {message}")
+                        self.notify.emit(f"Error saving fit results: {message}")
                         return
                 
                 # Update last_directory setting
                 self.settings.set_last_directory(str(Path(file_path).parent))
             except Exception as e:
-                QMessageBox.critical(None, "Error", f"Error saving fit results: {e}")
+                self.notify.emit(f"Error saving fit results: {e}")
             finally:
                 QApplication.restoreOverrideCursor()
     

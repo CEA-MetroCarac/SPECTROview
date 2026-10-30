@@ -42,7 +42,6 @@ dependencies = [
     "pyarrow>=15.0.0",
     "pybaselines>=1.2.1",
     "PySide6>=6.10.2",
-    "pyqt-toast-notification>=1.3.3",
     "superqt>=0.7.8",
     "renishawWiRE>=0.1.16",
     "pywin32>=306; platform_system == 'Windows'",

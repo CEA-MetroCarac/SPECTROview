@@ -725,10 +725,31 @@ class CustomizeAxis(QWidget):
             self.y_break_start.setValue(mid_y - range_y / 2)
             self.y_break_end.setValue(mid_y + range_y / 2)
 
-        self.cb_minor_bottom.setChecked(getattr(gw, 'minor_ticks_bottom', True))
-        self.cb_minor_left.setChecked(getattr(gw, 'minor_ticks_left', True))
-        self.cb_minor_top.setChecked(getattr(gw, 'minor_ticks_top', False))
-        self.cb_minor_right.setChecked(getattr(gw, 'minor_ticks_right', False))
+        effective_bottom = (
+            gw.minor_ticks_bottom
+            if getattr(gw, 'minor_ticks_bottom', None) is not None
+            else (gw._resolve_minor_ticks('bottom') if hasattr(gw, '_resolve_minor_ticks') else True)
+        )
+        effective_left = (
+            gw.minor_ticks_left
+            if getattr(gw, 'minor_ticks_left', None) is not None
+            else (gw._resolve_minor_ticks('left') if hasattr(gw, '_resolve_minor_ticks') else True)
+        )
+        effective_top = (
+            gw.minor_ticks_top
+            if getattr(gw, 'minor_ticks_top', None) is not None
+            else (gw._resolve_minor_ticks('top') if hasattr(gw, '_resolve_minor_ticks') else False)
+        )
+        effective_right = (
+            gw.minor_ticks_right
+            if getattr(gw, 'minor_ticks_right', None) is not None
+            else (gw._resolve_minor_ticks('right') if hasattr(gw, '_resolve_minor_ticks') else False)
+        )
+
+        self.cb_minor_bottom.setChecked(bool(effective_bottom))
+        self.cb_minor_left.setChecked(bool(effective_left))
+        self.cb_minor_top.setChecked(bool(effective_top))
+        self.cb_minor_right.setChecked(bool(effective_right))
 
         spines = getattr(gw, 'spines_visible', None) or {'top': True, 'right': True, 'bottom': True, 'left': True}
         self.cb_spine_top.setChecked(spines.get('top', True))

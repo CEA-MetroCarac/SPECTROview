@@ -523,6 +523,50 @@ class TestCustomizeAxis:
         assert vg.minor_ticks_top is True
         assert vg.minor_ticks_right is True
 
+    def test_tab_ticks_spines_reflects_plot_style_and_toggle(self, qapp, excel_df):
+        from spectroview.view.components.customize_graph.tab_ticks_spines import TabTicksSpines
+        from matplotlib.ticker import NullLocator
+
+        # 1. Scatter plot: both X and Y are numerical -> both checked by default
+        vg_scatter = _plotted_graph(qapp, excel_df, plot_style="scatter", x="x0_Si", y=["ampli_Si"])
+        tab_scatter = TabTicksSpines(vg_scatter)
+        assert tab_scatter.cb_minor_bottom.isChecked() is True
+        assert tab_scatter.cb_minor_left.isChecked() is True
+        assert tab_scatter.cb_minor_top.isChecked() is False
+        assert tab_scatter.cb_minor_right.isChecked() is False
+
+        # 2. Bar plot: X is categorical, Y is numerical -> bottom unchecked, left checked
+        vg_bar = _plotted_graph(qapp, excel_df, plot_style="bar", x="Quadrant", y=["ampli_Si"])
+        tab_bar = TabTicksSpines(vg_bar)
+        assert tab_bar.cb_minor_bottom.isChecked() is False
+        assert tab_bar.cb_minor_left.isChecked() is True
+
+        # User toggles bottom minor ticks ON for bar plot
+        tab_bar.cb_minor_bottom.setChecked(True)
+        res = tab_bar.apply_settings(replot=True)
+        assert vg_bar.minor_ticks_bottom is True
+        assert res["minor_ticks_bottom"] is True
+        assert not isinstance(vg_bar.ax.xaxis.get_minor_locator(), NullLocator)
+
+        # 3. Wafer plot: no minor ticks by default
+        vg_wafer = _plotted_graph(qapp, excel_df, plot_style="wafer", x="X", y=["Y"], z="ampli_Si")
+        tab_wafer = TabTicksSpines(vg_wafer)
+        assert tab_wafer.cb_minor_bottom.isChecked() is False
+        assert tab_wafer.cb_minor_left.isChecked() is False
+
+    def test_customize_axis_reflects_plot_style_defaults(self, qapp, excel_df):
+        # Bar plot
+        vg_bar = _plotted_graph(qapp, excel_df, plot_style="bar", x="Quadrant", y=["ampli_Si"])
+        widget_bar = CustomizeAxis(vg_bar)
+        assert widget_bar.cb_minor_bottom.isChecked() is False
+        assert widget_bar.cb_minor_left.isChecked() is True
+
+        # Scatter plot
+        vg_scatter = _plotted_graph(qapp, excel_df, plot_style="scatter", x="x0_Si", y=["ampli_Si"])
+        widget_scatter = CustomizeAxis(vg_scatter)
+        assert widget_scatter.cb_minor_bottom.isChecked() is True
+        assert widget_scatter.cb_minor_left.isChecked() is True
+
     def test_spine_visibility_defaults_all_checked(self, qapp, excel_df):
         vg = _plotted_graph(qapp, excel_df)
         widget = CustomizeAxis(vg)

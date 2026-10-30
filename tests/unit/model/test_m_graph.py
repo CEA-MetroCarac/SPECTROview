@@ -151,8 +151,8 @@ class TestMGraphInitialization:
         assert graph.scatter_edgecolor == "black"
         assert graph.axis_breaks == {'x': None, 'y': None}
 
-        assert graph.minor_ticks_bottom is True
-        assert graph.minor_ticks_left is True
+        assert graph.minor_ticks_bottom is None
+        assert graph.minor_ticks_left is None
         assert graph.minor_ticks_top is False
         assert graph.minor_ticks_right is False
 

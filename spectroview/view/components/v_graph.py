@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 from matplotlib.figure import Figure
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib.ticker import FormatStrFormatter, NullLocator
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
@@ -914,6 +914,58 @@ class VGraph(QWidget):
             if isinstance(loc, tuple):
                 self.legend_bbox = [float(loc[0]), float(loc[1])]
     
+    def _is_x_numeric(self) -> bool:
+        """Return True if X axis represents numeric values, False otherwise."""
+        x_num = getattr(self, 'x_as_numeric', None)
+        if x_num is not None:
+            return bool(x_num)
+        if self.plot_style in ('wafer', '2Dmap'):
+            return False
+        if self.plot_style in ('point', 'box', 'bar'):
+            return False
+        if self.plot_style in ('scatter', 'line', 'trendline', 'histogram'):
+            if self.df is not None and self.x and self.x in self.df.columns:
+                num_vals = pd.to_numeric(self.df[self.x], errors='coerce')
+                return bool(len(num_vals) > 0 and num_vals.notna().sum() == len(num_vals))
+            return True
+        return False
+
+    def _is_y_numeric(self) -> bool:
+        """Return True if Y axis represents numeric values, False otherwise."""
+        y_num = getattr(self, 'y_as_numeric', None)
+        if y_num is not None:
+            return bool(y_num)
+        if self.plot_style in ('wafer', '2Dmap'):
+            return False
+        if self.plot_style == 'histogram':
+            return True
+        if self.plot_style in ('scatter', 'line', 'trendline', 'point', 'box', 'bar'):
+            if self.df is not None and self.y:
+                y_cols = self.y if isinstance(self.y, list) else [self.y]
+                for col in y_cols:
+                    if col and col in self.df.columns:
+                        num_vals = pd.to_numeric(self.df[col], errors='coerce')
+                        if len(num_vals) == 0 or num_vals.notna().sum() != len(num_vals):
+                            return False
+                return True
+            return True
+        return False
+
+    def _resolve_minor_ticks(self, side: str) -> bool:
+        """Resolve effective visibility of minor ticks on a given side ('bottom', 'left', 'top', 'right')."""
+        if self.plot_style == 'wafer':
+            return False
+        val = getattr(self, f'minor_ticks_{side}', None)
+        if val is not None:
+            return bool(val)
+        if side == 'bottom':
+            return bool(self._is_x_numeric())
+        elif side == 'left':
+            return bool(self._is_y_numeric())
+        elif side in ('top', 'right'):
+            return False
+        return False
+
     def _set_grid(self):
         """Add grid for the plot (supports linear & log scale automatically)."""
         is_wafer = (self.plot_style == 'wafer')
@@ -924,28 +976,34 @@ class VGraph(QWidget):
         if getattr(self, 'tick_direction', None):
             extra_ticks['direction'] = self.tick_direction
 
+        show_minor_bottom = False if is_wafer else self._resolve_minor_ticks('bottom')
+        show_minor_left = False if is_wafer else self._resolve_minor_ticks('left')
+        show_minor_top = False if is_wafer else self._resolve_minor_ticks('top')
+        show_minor_right = False if is_wafer else self._resolve_minor_ticks('right')
+
         self.ax.tick_params(
             which='major',
             bottom=False if is_wafer else True,
             left=True,
-            top=False if is_wafer else getattr(self, 'minor_ticks_top', False),
-            right=getattr(self, 'minor_ticks_right', False),
+            top=False if is_wafer else show_minor_top,
+            right=show_minor_right,
             **extra_ticks
         )
 
-        if any([getattr(self, 'minor_ticks_bottom', True),
-                getattr(self, 'minor_ticks_left', True),
-                getattr(self, 'minor_ticks_top', False),
-                getattr(self, 'minor_ticks_right', False)]):
+        if any([show_minor_bottom, show_minor_left, show_minor_top, show_minor_right]):
             self.ax.minorticks_on()
             self.ax.tick_params(
                 which='minor',
-                bottom=False if is_wafer else getattr(self, 'minor_ticks_bottom', True),
-                top=False if is_wafer else getattr(self, 'minor_ticks_top', False),
-                left=getattr(self, 'minor_ticks_left', True),
-                right=getattr(self, 'minor_ticks_right', False),
+                bottom=show_minor_bottom,
+                top=show_minor_top,
+                left=show_minor_left,
+                right=show_minor_right,
                 **({'direction': self.tick_direction} if getattr(self, 'tick_direction', None) else {})
             )
+            if not show_minor_bottom and not show_minor_top:
+                self.ax.xaxis.set_minor_locator(NullLocator())
+            if not show_minor_left and not show_minor_right:
+                self.ax.yaxis.set_minor_locator(NullLocator())
         else:
             self.ax.minorticks_off()
 

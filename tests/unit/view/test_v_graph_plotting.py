@@ -1475,3 +1475,84 @@ class TestToolbarIconsAndRescale:
         """All dedicated toolbar buttons are configured with valid icons."""
         for btn in (vg.btn_home, vg.btn_pan, vg.btn_zoom, vg.btn_replicate, vg.btn_export, vg.btn_customize, vg.btn_copy_figure):
             assert not btn.icon().isNull()
+
+
+class TestMinorTicksLogic:
+    """Tests for plot-style- and axis-type-aware minor tick defaults and overrides."""
+
+    def test_scatter_numeric_shows_both_minor_ticks_by_default(self, vg, excel_df):
+        from matplotlib.ticker import NullLocator
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        assert vg._is_x_numeric() == True
+        assert vg._is_y_numeric() == True
+        assert vg._resolve_minor_ticks("bottom") == True
+        assert vg._resolve_minor_ticks("left") == True
+        assert not isinstance(vg.ax.xaxis.get_minor_locator(), NullLocator)
+        assert not isinstance(vg.ax.yaxis.get_minor_locator(), NullLocator)
+
+    def test_histogram_shows_both_minor_ticks_by_default(self, vg, excel_df):
+        from matplotlib.ticker import NullLocator
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="histogram")
+        vg.plot(excel_df)
+        assert vg._is_x_numeric() == True
+        assert vg._is_y_numeric() == True
+        assert vg._resolve_minor_ticks("bottom") == True
+        assert vg._resolve_minor_ticks("left") == True
+        assert not isinstance(vg.ax.xaxis.get_minor_locator(), NullLocator)
+        assert not isinstance(vg.ax.yaxis.get_minor_locator(), NullLocator)
+
+    def test_line_and_trendline_show_both_minor_ticks_by_default(self, vg, excel_df):
+        from matplotlib.ticker import NullLocator
+        for style in ("line", "trendline"):
+            _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style=style)
+            vg.plot(excel_df)
+            assert vg._resolve_minor_ticks("bottom") == True
+            assert vg._resolve_minor_ticks("left") == True
+            assert not isinstance(vg.ax.xaxis.get_minor_locator(), NullLocator)
+            assert not isinstance(vg.ax.yaxis.get_minor_locator(), NullLocator)
+
+    def test_bar_and_box_hide_bottom_minor_ticks_by_default(self, vg, excel_df):
+        from matplotlib.ticker import NullLocator
+        for style in ("bar", "box", "point"):
+            _configure(vg, x="Quadrant", y=["ampli_Si"], plot_style=style)
+            vg.plot(excel_df)
+            assert vg._is_x_numeric() == False
+            assert vg._is_y_numeric() == True
+            assert vg._resolve_minor_ticks("bottom") == False
+            assert vg._resolve_minor_ticks("left") == True
+            assert isinstance(vg.ax.xaxis.get_minor_locator(), NullLocator)
+            assert not isinstance(vg.ax.yaxis.get_minor_locator(), NullLocator)
+
+    def test_wafer_and_2dmap_hide_all_minor_ticks_by_default(self, vg, excel_df):
+        _configure(vg, x="X", y=["Y"], z="ampli_Si", plot_style="wafer")
+        vg.plot(excel_df)
+        assert vg._resolve_minor_ticks("bottom") == False
+        assert vg._resolve_minor_ticks("left") == False
+        assert vg._resolve_minor_ticks("top") == False
+        assert vg._resolve_minor_ticks("right") == False
+
+    def test_scatter_with_categorical_x_hides_bottom_minor_ticks(self, vg, excel_df):
+        from matplotlib.ticker import NullLocator
+        _configure(vg, x="Quadrant", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        assert vg._is_x_numeric() == False
+        assert vg._resolve_minor_ticks("bottom") == False
+        assert vg._resolve_minor_ticks("left") == True
+        assert isinstance(vg.ax.xaxis.get_minor_locator(), NullLocator)
+
+    def test_explicit_user_override_turns_on_bottom_minor_ticks_for_bar(self, vg, excel_df):
+        from matplotlib.ticker import NullLocator
+        _configure(vg, x="Quadrant", y=["ampli_Si"], plot_style="bar")
+        vg.minor_ticks_bottom = True
+        vg.plot(excel_df)
+        assert vg._resolve_minor_ticks("bottom") == True
+        assert not isinstance(vg.ax.xaxis.get_minor_locator(), NullLocator)
+
+    def test_explicit_user_override_turns_off_left_minor_ticks_for_scatter(self, vg, excel_df):
+        from matplotlib.ticker import NullLocator
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.minor_ticks_left = False
+        vg.plot(excel_df)
+        assert vg._resolve_minor_ticks("left") == False
+        assert isinstance(vg.ax.yaxis.get_minor_locator(), NullLocator)

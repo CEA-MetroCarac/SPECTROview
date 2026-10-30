@@ -134,7 +134,7 @@ Manually constrain the visible range of each axis (X, Y, Z) by specifying **min*
 
 | Control | Description |
 |---|---|
-| **Minor ticks** (X Bottom/Top, Y Left/Right) | Enable minor tick marks on each edge of the plot independently (X Bottom and Y Left are on by default). |
+| **Minor ticks** (X Bottom/Top, Y Left/Right) | Enable minor tick marks on each edge of the plot independently. By default, minor ticks are automatically enabled only for axes representing numerical values (e.g., both X and Y for scatter/line/histogram plots, Y for bar/box/point plots) and hidden on categorical axes or map plots. Users can toggle minor ticks on or off for any axis independently. |
 | **Show spines** (Top/Right/Bottom/Left) | Toggle visibility of each of the four plot border lines independently. |
 | **Tick direction** | `Default`, `In`, `Out`, or `In & Out`. |
 | **Tick label format** | `Auto`, `Integer`, `1-decimal`, `2-decimal`, or `Scientific`. |

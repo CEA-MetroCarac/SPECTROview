@@ -136,8 +136,8 @@ class MGraph:
     x_as_numeric: Optional[bool] = None  # None=Auto, True=Numerical, False=Category
     y_as_numeric: Optional[bool] = None  # None=Auto, True=Numerical, False=Category
 
-    minor_ticks_bottom: bool = True
-    minor_ticks_left: bool = True
+    minor_ticks_bottom: Optional[bool] = None  # None=Auto (True if numeric axis, False if categorical/map)
+    minor_ticks_left: Optional[bool] = None    # None=Auto (True if numeric axis, False if categorical/map)
     minor_ticks_top: bool = False
     minor_ticks_right: bool = False
 

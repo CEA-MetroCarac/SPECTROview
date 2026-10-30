@@ -619,6 +619,20 @@ class VFitModelBuilder(QWidget):
         apply_all = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)
         signal.emit(apply_all)
 
+    def flash_feedback(self, action: str) -> None:
+        """Provide visual checkmark feedback for a successful clipboard action."""
+        mapping = {
+            "baseline_copy": (self.btn_base_copy, "copy"),
+            "baseline_paste": (self.btn_base_paste, "paste"),
+            "peaks_copy": (self.btn_peak_copy, "copy"),
+            "peaks_paste": (self.btn_peak_paste, "paste"),
+            "fitmodel_copy": (self.btn_copy, "copy"),
+            "fitmodel_paste": (self.btn_paste, "paste"),
+        }
+        if action in mapping:
+            btn, icon_type = mapping[action]
+            self._flash_button_feedback(btn, icon_type=icon_type)
+
     def _flash_button_feedback(
         self,
         btn: QPushButton,
@@ -642,27 +656,21 @@ class VFitModelBuilder(QWidget):
 
     def _on_base_copy_clicked(self) -> None:
         self.baseline_copy_requested.emit()
-        self._flash_button_feedback(self.btn_base_copy, icon_type="copy")
 
     def _on_base_paste_clicked(self) -> None:
         self._emit_with_ctrl(self.baseline_paste_requested)
-        self._flash_button_feedback(self.btn_base_paste, icon_type="paste")
 
     def _on_peak_copy_clicked(self) -> None:
         self.peaks_copy_requested.emit()
-        self._flash_button_feedback(self.btn_peak_copy, icon_type="copy")
 
     def _on_peak_paste_clicked(self) -> None:
         self._emit_with_ctrl(self.peaks_paste_requested)
-        self._flash_button_feedback(self.btn_peak_paste, icon_type="paste")
 
     def _on_fitmodel_copy_clicked(self) -> None:
         self.fitmodel_copy_requested.emit()
-        self._flash_button_feedback(self.btn_copy, icon_type="copy")
 
     def _on_fitmodel_paste_clicked(self) -> None:
         self._emit_with_ctrl(self.fitmodel_paste_requested)
-        self._flash_button_feedback(self.btn_paste, icon_type="paste")
 
     def _fit_control_panel(self):
         gb = QWidget()

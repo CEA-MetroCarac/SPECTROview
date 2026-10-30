@@ -46,6 +46,8 @@ class VMWorkspaceSpectra(QObject):
     split_parts_updated = Signal(list)    # list[str] for combobox
     send_df_to_graphs = Signal(str, object, bool)  # (df_name, pd.DataFrame, force_replace)
 
+    clipboard_action_succeeded = Signal(str)  # "baseline_copy", "baseline_paste", "peaks_copy", "peaks_paste", "fitmodel_copy", "fitmodel_paste"
+
     notify = Signal(str)  # general notifications
     
     def __init__(self, settings: MSettings):
@@ -971,25 +973,30 @@ class VMWorkspaceSpectra(QObject):
 
         self._post_bulk_action(apply_all, "apply_spectral_range")
 
-    def copy_baseline(self):
+    def copy_baseline(self) -> bool:
         if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
-            return
+            return False
 
         fnames = self._get_selected_spectra()
         md = self._get_unique_map_data(fnames)[0]
-        if md and md.baseline_config:
-            self._baseline_clipboard = deepcopy(md.baseline_config)
+        if not (md and md.baseline_config):
+            self.notify.emit("No baseline to copy.")
+            return False
 
-    def paste_baseline(self, apply_all: bool = False):
+        self._baseline_clipboard = deepcopy(md.baseline_config)
+        self.clipboard_action_succeeded.emit("baseline_copy")
+        return True
+
+    def paste_baseline(self, apply_all: bool = False) -> bool:
         if self._baseline_clipboard is None:
             self.notify.emit("No baseline copied.")
-            return
+            return False
 
         mds = self._get_target_mds(apply_all)
         if not mds:
             if not apply_all: self.notify.emit("No spectrum selected.")
-            return
+            return False
 
         # Apply baseline to selected spectra
         baseline_data = deepcopy(self._baseline_clipboard)
@@ -1002,6 +1009,8 @@ class VMWorkspaceSpectra(QObject):
             self._on_map_data_changed(md, "paste_baseline")
 
         self._post_bulk_action(apply_all, "paste_baseline")
+        self.clipboard_action_succeeded.emit("baseline_paste")
+        return True
 
     def subtract_baseline(self, apply_all: bool = False):
         mds = self._get_target_mds(apply_all)
@@ -1119,28 +1128,30 @@ class VMWorkspaceSpectra(QObject):
         self._emit_selected_spectra() 
 
 
-    def copy_peaks(self):
+    def copy_peaks(self) -> bool:
         if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
-            return
+            return False
 
         fnames = self._get_selected_spectra()
         md = self._get_unique_map_data(fnames)[0]
 
         if not md.fit_model or not md.fit_model.get("peak_models"):
             self.notify.emit("No peaks to copy.")
-            return
+            return False
         self._peaks_clipboard = deepcopy(md.fit_model)
+        self.clipboard_action_succeeded.emit("peaks_copy")
+        return True
 
-    def paste_peaks(self, apply_all: bool = False):
+    def paste_peaks(self, apply_all: bool = False) -> bool:
         if not hasattr(self, "_peaks_clipboard") or self._peaks_clipboard is None:
             self.notify.emit("No peaks copied.")
-            return
+            return False
 
         mds = self._get_target_mds(apply_all)
         if not mds:
             if not apply_all: self.notify.emit("No spectrum selected.")
-            return
+            return False
 
         for md in mds:
             if md:
@@ -1157,6 +1168,8 @@ class VMWorkspaceSpectra(QObject):
                 self._on_map_data_changed(md, "paste_peaks")
 
         self._post_bulk_action(apply_all, "paste_peaks")
+        self.clipboard_action_succeeded.emit("peaks_paste")
+        return True
 
     def delete_peaks(self, apply_all: bool = False):
         mds = self._get_target_mds(apply_all)
@@ -1293,26 +1306,28 @@ class VMWorkspaceSpectra(QObject):
             md.fit_model["baseline"] = None
         md.fit_model["fit_params"] = self.settings.load_fit_settings()
 
-    def copy_fit_model(self):
+    def copy_fit_model(self) -> bool:
         if not self.selected_fnames:
             self.notify.emit("No spectrum selected.")
-            return
+            return False
 
         fnames = self._get_selected_spectra()
         md = self._get_unique_map_data(fnames)[0]
 
         if not md.fit_model:
             self.notify.emit("No fit results to copy.")
-            return
+            return False
 
         self._sync_fit_model_metadata(md)
 
         self._fitmodel_clipboard = deepcopy(build_clean_fit_model(md.fit_model))
+        self.clipboard_action_succeeded.emit("fitmodel_copy")
+        return True
 
-    def paste_fit_model(self, apply_all: bool = False):
+    def paste_fit_model(self, apply_all: bool = False) -> bool:
         if not hasattr(self, "_fitmodel_clipboard") or self._fitmodel_clipboard is None:
             self.notify.emit("No fit model copied.")
-            return
+            return False
             
         # Update clipboard with current fit settings before pasting
         self._fitmodel_clipboard["fit_params"] = self.settings.load_fit_settings()
@@ -1320,7 +1335,7 @@ class VMWorkspaceSpectra(QObject):
         fnames = self._get_active_spectra() if apply_all else self._get_selected_spectra()
         if not fnames:
             self.notify.emit("No spectrum selected.")
-            return
+            return False
 
         for md in self._get_unique_map_data(fnames):
             self._apply_fit_model_to_mapdata(md, self._fitmodel_clipboard)
@@ -1328,6 +1343,8 @@ class VMWorkspaceSpectra(QObject):
         # In Maps workspace, _run_fit_thread expects the map names, not point names
         unique_fnames = [md.name for md in self._get_unique_map_data(fnames)]
         self._run_fit_thread(deepcopy(self._fitmodel_clipboard), unique_fnames)
+        self.clipboard_action_succeeded.emit("fitmodel_paste")
+        return True
 
     def save_fit_model(self):
         if not self.selected_fnames:

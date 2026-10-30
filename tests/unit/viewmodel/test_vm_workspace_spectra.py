@@ -210,14 +210,38 @@ class TestBaseline:
         np.testing.assert_allclose(md.Y[0], np.zeros_like(x), atol=1e-2)
 
     def test_copy_paste_baseline(self, vm):
+        # Failure: copy without selection
+        succ = []
+        vm.clipboard_action_succeeded.connect(succ.append)
+        notifies = []
+        vm.notify.connect(notifies.append)
+
+        assert vm.copy_baseline() is False
+        assert "No spectrum selected." in notifies
+        assert len(succ) == 0
+
+        # Failure: spectrum has no baseline
         x, y = _synthetic_lorentzian()
         _add_spectrum(vm, "s1", x, y)
         _add_spectrum(vm, "s2", x, y)
         vm.set_selected_fnames(["s1"])
+        assert vm.copy_baseline() is False
+        assert "No baseline to copy." in notifies
+        assert len(succ) == 0
+
+        # Success: baseline copy
         vm.add_baseline_point(320.0, 20.0)
-        vm.copy_baseline()
+        assert vm.copy_baseline() is True
+        assert "baseline_copy" in succ
+
+        # Failure: paste without target
+        vm.set_selected_fnames([])
+        assert vm.paste_baseline(apply_all=False) is False
+
+        # Success: paste
         vm.set_selected_fnames(["s2"])
-        vm.paste_baseline(apply_all=False)
+        assert vm.paste_baseline(apply_all=False) is True
+        assert "baseline_paste" in succ
         md2 = vm.store.get_map_data("s2")
         assert md2.baseline_config["points"][0] == [320.0]
 
@@ -315,20 +339,38 @@ class TestPeaks:
         assert md.fit_model is None
 
     def test_copy_paste_peaks(self, vm):
+        # Failure: copy without selection
+        succ = []
+        vm.clipboard_action_succeeded.connect(succ.append)
+        notifies = []
+        vm.notify.connect(notifies.append)
+
+        assert vm.copy_peaks() is False
+        assert "No spectrum selected." in notifies
+        assert len(succ) == 0
+
+        # Failure: spectrum has no peaks
         x, y = _synthetic_lorentzian()
         _add_spectrum(vm, "s1", x, y)
         _add_spectrum(vm, "s2", x, y)
         vm.set_selected_fnames(["s1"])
+        assert vm.copy_peaks() is False
+        assert "No peaks to copy." in notifies
+        assert len(succ) == 0
+
+        # Success: peaks copy
         vm.add_peak_at(500.0)
+        assert vm.copy_peaks() is True
+        assert "peaks_copy" in succ
 
-        notifies = []
-        vm.notify.connect(notifies.append)
-        vm.copy_peaks()
-        # Verify no redundant toast notification emitted on copy
-        assert len(notifies) == 0
+        # Failure: paste without target
+        vm.set_selected_fnames([])
+        assert vm.paste_peaks(apply_all=False) is False
 
+        # Success: paste
         vm.set_selected_fnames(["s2"])
-        vm.paste_peaks(apply_all=False)
+        assert vm.paste_peaks(apply_all=False) is True
+        assert "peaks_paste" in succ
         md2 = vm.store.get_map_data("s2")
         assert md2.fit_model is not None
         assert "0" in md2.fit_model["peak_models"]
@@ -433,6 +475,45 @@ class TestFitModelSerialization:
         assert "peak_models" in clean
         assert "fit_params" in clean
         assert list(clean.keys()) == ["fit_params", "range_min", "range_max", "baseline", "peak_labels", "peak_models"]
+
+    def test_copy_paste_fit_model_success_and_failures(self, vm, qapp):
+        succ = []
+        vm.clipboard_action_succeeded.connect(succ.append)
+        notifies = []
+        vm.notify.connect(notifies.append)
+
+        # Failure: copy without selection
+        assert vm.copy_fit_model() is False
+        assert "No spectrum selected." in notifies
+        assert len(succ) == 0
+
+        # Failure: spectrum has no fit model
+        x, y = _synthetic_lorentzian()
+        _add_spectrum(vm, "s1", x, y)
+        _add_spectrum(vm, "s2", x, y)
+        vm.set_selected_fnames(["s1"])
+        assert vm.copy_fit_model() is False
+        assert "No fit results to copy." in notifies
+        assert len(succ) == 0
+
+        # Success: copy with fit model
+        vm._apply_fit_model_to_mapdata(vm.store.get_map_data("s1"), _lorentzian_fit_model())
+        assert vm.copy_fit_model() is True
+        assert "fitmodel_copy" in succ
+
+        # Failure: paste without target
+        vm.set_selected_fnames([])
+        assert vm.paste_fit_model(apply_all=False) is False
+
+        # Success: paste to s2
+        vm.set_selected_fnames(["s2"])
+        assert vm.paste_fit_model(apply_all=False) is True
+        assert "fitmodel_paste" in succ
+        if vm._fit_thread is not None:
+            vm._fit_thread.wait()
+            qapp.processEvents()
+        md2 = vm.store.get_map_data("s2")
+        assert md2.fit_model is not None
 
 
 class TestFitting:

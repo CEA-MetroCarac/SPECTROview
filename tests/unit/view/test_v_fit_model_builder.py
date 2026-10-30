@@ -114,17 +114,23 @@ class TestVFitModelBuilderCopyPasteFeedback:
         assert builder.cbb_model.maximumWidth() == 302
         assert builder.btn_refresh.width() == 30
 
-        # Fit model copy/paste (icon feedback without changing button text)
+        # Fit model copy/paste (clicking emits signal; check feedback triggered via flash_feedback)
         fit_copy_emitted = []
         builder.fitmodel_copy_requested.connect(lambda: fit_copy_emitted.append(True))
         builder.btn_copy.click()
         assert len(fit_copy_emitted) == 1
         assert builder.btn_copy.text() == "Copy"
-        assert not builder.btn_copy.icon().isNull()
 
         fit_paste_emitted = []
         builder.fitmodel_paste_requested.connect(fit_paste_emitted.append)
         builder.btn_paste.click()
         assert len(fit_paste_emitted) == 1
         assert builder.btn_paste.text() == "Paste"
-        assert not builder.btn_paste.icon().isNull()
+
+        # Verify flash_feedback triggers check icon without changing button text
+        builder.flash_feedback("fitmodel_copy")
+        assert builder.btn_copy.text() == "Copy"
+        builder.flash_feedback("fitmodel_paste")
+        assert builder.btn_paste.text() == "Paste"
+        builder.flash_feedback("baseline_copy")
+        builder.flash_feedback("peaks_copy")

@@ -243,6 +243,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.fitmodel_paste_requested.connect(vm.paste_fit_model)
         self.v_fit_model_builder.fitmodel_paste_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after paste
         self.v_fit_model_builder.fitmodel_save_requested.connect(vm.save_fit_model)
+        vm.clipboard_action_succeeded.connect(self.v_fit_model_builder.flash_feedback)
 
         # Check all checkbox
         self.cb_check_all.toggled.connect(self._on_check_all_toggled)

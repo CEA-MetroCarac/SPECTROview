@@ -670,17 +670,23 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
         self._apply_fit_model_and_run(fit_model, apply_all)
 
-    def paste_fit_model(self, apply_all: bool = False):
+    def paste_fit_model(self, apply_all: bool = False) -> bool:
         """Override parent to apply clipboard fit model and sync preprocessing/fit thread."""
         if not hasattr(self, "_fitmodel_clipboard") or self._fitmodel_clipboard is None:
             self.notify.emit("No fit model copied.")
-            return
+            return False
+
+        if not apply_all and not self.selected_fnames and not self.current_map_name:
+            self.notify.emit("No spectrum selected.")
+            return False
 
         # Update clipboard with current fit settings before pasting
         self._fitmodel_clipboard["fit_params"] = self.settings.load_fit_settings()
 
         # Skip _update_store_preprocessing() — see apply_fit_model comment.
         self._apply_fit_model_and_run(deepcopy(self._fitmodel_clipboard), apply_all)
+        self.clipboard_action_succeeded.emit("fitmodel_paste")
+        return True
 
     def fit(self, apply_all: bool = False):
         """Override: Fitting action for the Maps workspace."""

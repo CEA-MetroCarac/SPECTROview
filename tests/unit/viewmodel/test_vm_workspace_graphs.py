@@ -86,9 +86,12 @@ class TestLoadDataframes:
 class TestDataframeManagement:
     def test_add_dataframe(self, vm, qapp):
         df = pd.DataFrame({"A": [1, 2, 3]})
+        notifications = []
+        vm.notify.connect(notifications.append)
         vm.add_dataframe("mydf", df)
         assert "mydf" in vm.dataframes
         pd.testing.assert_frame_equal(vm.dataframes["mydf"], df)
+        assert any("sent successfully to Graphs workspace" in n for n in notifications)
 
     def test_add_dataframe_existing_without_force_replace_notifies_and_keeps_original(self, vm, qapp):
         original = pd.DataFrame({"A": [1]})

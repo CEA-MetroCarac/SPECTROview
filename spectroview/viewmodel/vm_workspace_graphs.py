@@ -214,6 +214,8 @@ class VMWorkspaceGraphs(QObject):
         
         if is_replace and force_replace:
             self.notify.emit(f"DataFrame '{df_name}' successfully replaced.")
+        else:
+            self.notify.emit(f"DataFrame '{df_name}' sent successfully to Graphs workspace.")
     
     def remove_dataframe(self, df_name: str):
         """Remove a DataFrame."""

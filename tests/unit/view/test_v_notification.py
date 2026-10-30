@@ -45,6 +45,7 @@ def test_notification_type_infer_from_message():
     assert NotificationType.infer_from_message("Map 'test' saved to CSV.") == NotificationType.SUCCESS
     assert NotificationType.infer_from_message("Sent 5 spectra to Spectra workspace.") == NotificationType.SUCCESS
     assert NotificationType.infer_from_message("DataFrame 'df' refreshed successfully") == NotificationType.SUCCESS
+    assert NotificationType.infer_from_message("DataFrame 'best_fit_results' sent successfully to Graphs workspace.") == NotificationType.SUCCESS
     assert NotificationType.infer_from_message("Undid last action.") == NotificationType.SUCCESS
     assert NotificationType.infer_from_message("Redid last action.") == NotificationType.SUCCESS
     assert NotificationType.infer_from_message("Created 2 wafer plot(s)") == NotificationType.SUCCESS
@@ -93,6 +94,15 @@ def test_notification_badge_creation_and_ui(qtbot):
     assert badge._type == NotificationType.SUCCESS
     assert badge.height() == VNotificationBadge.BADGE_HEIGHT
     assert "Success Title: Test notification message" in badge.toolTip()
+
+
+def test_notification_badge_doubled_width(qtbot):
+    """Verify that MAX_TEXT_WIDTH is doubled to 560 to accommodate long messages."""
+    assert VNotificationBadge.MAX_TEXT_WIDTH == 560
+    long_msg = "Invalid column name in expression: name 'qsq_custom_param' is not defined in dataset"
+    badge = VNotificationBadge(long_msg, notification_type=NotificationType.ERROR)
+    qtbot.addWidget(badge)
+    assert "Invalid column name in expression" in badge._text_label.text()
 
 
 def test_notification_badge_theme_adaptation(qtbot):

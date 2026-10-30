@@ -175,7 +175,7 @@ class VNotificationBadge(QFrame):
 
     BADGE_HEIGHT = 26
     BORDER_RADIUS = 13
-    MAX_TEXT_WIDTH = 280
+    MAX_TEXT_WIDTH = 560
 
     def __init__(
         self,

@@ -198,10 +198,18 @@ class TabTicksSpines(QWidget):
         gw.tick_direction = _TICK_DIRECTION_MAP[self.combo_tick_direction.currentText()]
         gw.tick_label_format = self.combo_tick_format.currentData()
 
-        gw.minor_ticks_bottom = self.cb_minor_bottom.isChecked()
-        gw.minor_ticks_left = self.cb_minor_left.isChecked()
-        gw.minor_ticks_top = self.cb_minor_top.isChecked()
-        gw.minor_ticks_right = self.cb_minor_right.isChecked()
+        # Keep an "auto" (None) minor-tick setting as None while the checkbox
+        # still matches the auto-resolved state -- writing the resolved bool
+        # back would freeze the default as an explicit override (and make an
+        # untouched dialog look like an edit, forcing a needless redraw).
+        for side, cb in (("bottom", self.cb_minor_bottom), ("left", self.cb_minor_left),
+                         ("top", self.cb_minor_top), ("right", self.cb_minor_right)):
+            attr = f"minor_ticks_{side}"
+            checked = cb.isChecked()
+            if getattr(gw, attr, None) is None and hasattr(gw, "_resolve_minor_ticks"):
+                if bool(gw._resolve_minor_ticks(side)) == checked:
+                    continue
+            setattr(gw, attr, checked)
 
         gw.spines_visible = {
             "top": self.cb_spine_top.isChecked(),

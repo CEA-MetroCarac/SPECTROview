@@ -541,6 +541,12 @@ class TestCustomizeAxis:
         assert tab_bar.cb_minor_bottom.isChecked() is False
         assert tab_bar.cb_minor_left.isChecked() is True
 
+        # Applying untouched controls keeps the "auto" (None) state instead of
+        # freezing the resolved default as an explicit override.
+        tab_bar.apply_settings(replot=False)
+        assert vg_bar.minor_ticks_bottom is None
+        assert vg_bar.minor_ticks_left is None
+
         # User toggles bottom minor ticks ON for bar plot
         tab_bar.cb_minor_bottom.setChecked(True)
         res = tab_bar.apply_settings(replot=True)

@@ -1556,3 +1556,84 @@ class TestMinorTicksLogic:
         vg.plot(excel_df)
         assert vg._resolve_minor_ticks("left") == False
         assert isinstance(vg.ax.yaxis.get_minor_locator(), NullLocator)
+
+
+class TestInteractionPerformance:
+    """Resize debouncing and fast pan (layout suspended while dragging)."""
+
+    @staticmethod
+    def _line_graph(vg):
+        df = pd.DataFrame({"x": np.linspace(0, 10, 200), "y": np.sin(np.linspace(0, 10, 200))})
+        _configure(vg, x="x", y=["y"], plot_style="line")
+        vg.plot(df)
+        return vg
+
+    def test_canvas_and_toolbar_use_fast_subclasses(self, vg):
+        from spectroview.view.components.v_graph import (
+            _DebouncedFigureCanvas, _FastNavigationToolbar,
+        )
+        assert isinstance(vg.canvas, _DebouncedFigureCanvas)
+        assert isinstance(vg.toolbar, _FastNavigationToolbar)
+        # Timer parented to the canvas (no stray unparented QObject).
+        assert vg.canvas._resize_timer.parent() is vg.canvas
+
+    def test_resize_burst_is_coalesced_into_trailing_draw(self, vg, qapp, monkeypatch):
+        from PySide6.QtCore import QSize
+        from PySide6.QtGui import QResizeEvent
+
+        draw_calls = []
+        monkeypatch.setattr(vg.canvas, "draw_idle", lambda: draw_calls.append(1))
+
+        canvas = vg.canvas
+        canvas._resize_timer.stop()
+        for i in range(10):
+            canvas.resize(300 + 10 * i, 200 + 10 * i)
+            canvas.resizeEvent(QResizeEvent(QSize(300 + 10 * i, 200 + 10 * i), QSize(300, 200)))
+
+        # During rapid resize burst, 0 expensive Agg draws are performed
+        assert draw_calls == []
+        assert canvas._resize_timer.isActive()
+
+        # Flush trailing debounce timer
+        canvas._resize_timer.stop()
+        canvas._flush_pending_resize()
+        assert len(draw_calls) == 1
+        w_in, h_in = vg.figure.get_size_inches()
+        ratio = canvas.device_pixel_ratio
+        assert round(w_in * vg.figure.dpi / ratio) == canvas.width()
+        assert round(h_in * vg.figure.dpi / ratio) == canvas.height()
+
+    def test_pan_drag_suspends_layout_and_restores_on_release(self, vg, qapp):
+        from matplotlib.backend_bases import MouseEvent
+
+        self._line_graph(vg)
+        vg.canvas.resize(400, 300)
+        vg.canvas.draw()
+        engine = vg.figure.get_layout_engine()
+        assert engine is not None
+
+        vg.btn_pan.click()
+        assert vg.btn_pan.isChecked()
+
+        bbox = vg.ax.get_window_extent()
+        cx, cy = (bbox.x0 + bbox.x1) / 2, (bbox.y0 + bbox.y1) / 2
+        xlim0 = vg.ax.get_xlim()
+
+        vg.canvas.callbacks.process(
+            "button_press_event", MouseEvent("button_press_event", vg.canvas, cx, cy, button=1))
+        # Layout engine suspended while dragging (positions stay frozen).
+        assert vg.toolbar._suspended_layout_engine is engine
+        assert vg.figure.get_layout_engine() is not engine
+
+        for i in range(1, 6):
+            vg.canvas.callbacks.process(
+                "motion_notify_event",
+                MouseEvent("motion_notify_event", vg.canvas, cx + 10 * i, cy, button=1))
+        vg.canvas.callbacks.process(
+            "button_release_event",
+            MouseEvent("button_release_event", vg.canvas, cx + 50, cy, button=1))
+
+        assert vg.ax.get_xlim() != xlim0  # pan actually moved the view
+        assert vg.figure.get_layout_engine() is engine  # restored
+        assert vg.toolbar._suspended_layout_engine is None
+        vg.canvas.draw()  # full layout draw still works afterwards

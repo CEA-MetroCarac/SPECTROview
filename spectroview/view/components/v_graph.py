@@ -40,6 +40,94 @@ from spectroview.viewmodel.utils import show_alert, copy_fig_to_clb
 from spectroview.view.components.v_plot_renderer import PlotRenderer
 
 
+class _DebouncedFigureCanvas(FigureCanvas):
+    """FigureCanvasQTAgg whose resize-triggered redraws are debounced.
+
+    The stock canvas re-renders synchronously on *every* resizeEvent; with
+    ``layout="compressed"`` each render re-runs constrained layout
+    (hundreds of ms), so rapid interactive resizes queue an Agg redraw storm.
+    This canvas updates figure dimensions in inches immediately (so transforms
+    stay valid) while coalescing redraws into a single trailing pass once
+    resizing settles.
+    """
+
+    RESIZE_DEBOUNCE_MS = 60
+
+    def __init__(self, figure):
+        super().__init__(figure)
+        # Parented to the canvas: dies with it (no stray C++ timer).
+        self._resize_timer = QTimer(self)
+        self._resize_timer.setSingleShot(True)
+        self._resize_timer.timeout.connect(self._flush_pending_resize)
+
+    def resizeEvent(self, event):
+        w = event.size().width()
+        h = event.size().height()
+        if w <= 0 or h <= 0:
+            return
+        dpi = self.figure.dpi
+        self.figure.set_size_inches(w / dpi, h / dpi, forward=False)
+        self._resize_timer.start(self.RESIZE_DEBOUNCE_MS)
+
+    def _flush_pending_resize(self):
+        self.draw_idle()
+
+
+class _FastNavigationToolbar(NavigationToolbar2QT):
+    """Hidden matplotlib navigation helper with a fast interactive pan.
+
+    The stock pan redraws the whole figure -- including a constrained-layout
+    pass -- on every mouse-move. During a drag the layout cannot change
+    (only axis limits do), so the layout engine is suspended between press
+    and release, and drag redraws are throttled to ~``PAN_FRAME_S``. The
+    layout engine is restored and a final full redraw issued on release.
+    """
+
+    PAN_FRAME_S = 0.03
+
+    def __init__(self, canvas, parent):
+        super().__init__(canvas, parent)
+        self._suspended_layout_engine = None
+        self._last_pan_draw = 0.0
+
+    def _suspend_layout(self):
+        fig = self.canvas.figure
+        if self._suspended_layout_engine is None:
+            engine = fig.get_layout_engine()
+            if engine is not None:
+                self._suspended_layout_engine = engine
+                fig.set_layout_engine(None)
+
+    def _restore_layout(self):
+        if self._suspended_layout_engine is not None:
+            self.canvas.figure.set_layout_engine(self._suspended_layout_engine)
+            self._suspended_layout_engine = None
+
+    def press_pan(self, event):
+        super().press_pan(event)
+        if self._pan_info is not None:
+            self._suspend_layout()
+            self._last_pan_draw = 0.0
+
+    def drag_pan(self, event):
+        import time
+        if self._pan_info is None:
+            return
+        for ax in self._pan_info.axes:
+            ax.drag_pan(self._pan_info.button, event.key, event.x, event.y)
+        now = time.monotonic()
+        if now - self._last_pan_draw >= self.PAN_FRAME_S:
+            self._last_pan_draw = now
+            self.canvas.draw_idle()
+
+    def release_pan(self, event):
+        try:
+            super().release_pan(event)  # applies the final limits + draw_idle
+        finally:
+            self._restore_layout()
+            self.canvas.draw_idle()
+
+
 class VGraph(QWidget):
     """Graph widget rendering plots based on MGraph model properties."""
     properties_changed = Signal(int, dict)
@@ -114,10 +202,12 @@ class VGraph(QWidget):
             self._current_break_mode = None
             self.ax_break_secondary = None
             
-        self.canvas = FigureCanvas(self.figure)
+        # Debounced canvas: avoids a constrained-layout redraw storm on resize.
+        self.canvas = _DebouncedFigureCanvas(self.figure)
         
         # Matplotlib toolbar kept hidden as a background interaction helper for zoom/pan/rescale
-        self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        # (fast-pan subclass: layout suspended + throttled redraws while dragging).
+        self.toolbar = _FastNavigationToolbar(self.canvas, self)
         self.toolbar.hide()
 
         # Forward any matplotlib toolbar message events to our built-in coordinate label
@@ -256,6 +346,14 @@ class VGraph(QWidget):
         # Very right side: Customize Graph and Copy to clipboard
         toolbar_layout.addWidget(self.btn_customize)
         toolbar_layout.addWidget(self.btn_copy_figure)
+
+        # Toolbar buttons should never steal focus from the MDI subwindow/canvas
+        for btn in (
+            self.btn_home, self.btn_pan, self.btn_zoom,
+            self.btn_replicate, self.btn_export, self.btn_style_menu,
+            self.btn_customize, self.btn_copy_figure,
+        ):
+            btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         
         # Create container widget for toolbar layout -- kept parentless and
         # hidden here; VWorkspaceGraphs.sync_active_graph_toolbar() reparents

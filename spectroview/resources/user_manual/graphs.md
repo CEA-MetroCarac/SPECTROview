@@ -55,6 +55,8 @@ The bottom bar of the workspace hosts every global control plus one shared graph
 | **Compose Figure** | Combines several open plots into one multi-panel exported figure. |
 | **Home / Pan / Zoom / Subplots** | Standard Matplotlib navigation: reset the view, pan, zoom to a rectangle, or adjust subplot margins. |
 
+> **Tip:** When you resize or move a plot window by dragging its edge or title bar, you see an outline first. The plot is redrawn once, at its new size, when you release the mouse. This keeps resizing smooth even for large plots. In the same way, while you pan, the margins around the axes stay fixed and are recalculated when you release the mouse.
+
 A vertical separator marks where the plot's own controls start — always aligned to the right edge of the window:
 
 | Control | Description |

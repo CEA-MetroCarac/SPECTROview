@@ -157,6 +157,13 @@ class VWorkspaceGraphs(QWidget):
         self.btn_compose_figure.setToolTip("Combine several open graphs into one multi-panel exported figure")
         toolbar_layout.addWidget(self.btn_compose_figure)
 
+        # Toolbar buttons should never steal focus from the MDI subwindow/canvas
+        for btn in (
+            self.btn_delete_all, self.btn_minimize_all,
+            self.btn_undo, self.btn_redo, self.btn_compose_figure,
+        ):
+            btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
         # Shared slot the active graph's toolbar_container is reparented into
         # (see _sync_active_graph_toolbar); stretch=1 fills the remaining width.
         self.graph_toolbar_slot = QWidget()
@@ -1760,35 +1767,45 @@ class VWorkspaceGraphs(QWidget):
     
 
     
+    def _clear_graph_toolbar_slot(self):
+        """Unparent and hide all widgets currently inside the shared toolbar slot."""
+        while self._graph_toolbar_slot_layout.count():
+            item = self._graph_toolbar_slot_layout.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.hide()
+                w.setParent(None)
+
     def _sync_active_graph_toolbar(self):
         """Reparent the active MDI subwindow's graph toolbar/action-button
         row into the shared toolbar slot; every other graph's row stays
         hidden and parentless until it becomes active. Safe to call any
         time (no active subwindow, an unknown graph, or a since-deleted
         toolbar_container all just leave the slot empty)."""
-        while self._graph_toolbar_slot_layout.count():
-            item = self._graph_toolbar_slot_layout.takeAt(0)
-            w = item.widget()
-            if w is not None:
-                # Hide *before* unparenting. On Windows, reparenting a
-                # currently-visible widget to None turns it into a visible
-                # top-level window instead of hiding it (the offscreen test
-                # platform hides it, which is why no test caught this): a
-                # multi-graph load then left one stray floating toolbar
-                # window per inactive graph. An explicit hide() first sets
-                # WA_WState_ExplicitShowHide, so the container stays hidden
-                # across the reparent on every platform.
-                w.hide()
-                w.setParent(None)
-
         gid = self._get_active_graph_id()
         if gid is None:
+            if not self.mdi_area.subWindowList():
+                self._clear_graph_toolbar_slot()
             return
-        graph_widget = self.graph_widgets[gid][0]
+
+        graph_widget = self.graph_widgets.get(gid, (None,))[0]
+        if graph_widget is None:
+            self._clear_graph_toolbar_slot()
+            return
 
         container = getattr(graph_widget, 'toolbar_container', None)
         if container is None:
+            self._clear_graph_toolbar_slot()
             return
+
+        # Fast path: if this container is already mounted in the slot, no-op!
+        if (self._graph_toolbar_slot_layout.count() == 1 and
+                self._graph_toolbar_slot_layout.itemAt(0).widget() is container):
+            if not container.isVisible():
+                container.show()
+            return
+
+        self._clear_graph_toolbar_slot()
         try:
             self._graph_toolbar_slot_layout.addWidget(container)
             container.show()
@@ -1798,7 +1815,8 @@ class VWorkspaceGraphs(QWidget):
     def _on_subwindow_activated(self, sub_window):
         """Handle subwindow activation."""
         if not sub_window:
-            self._sync_active_graph_toolbar()
+            if not self.mdi_area.subWindowList():
+                self._sync_active_graph_toolbar()
             return
 
         gid = self._graph_id_for_subwindow(sub_window)
@@ -1808,6 +1826,11 @@ class VWorkspaceGraphs(QWidget):
         graph_widget = self.graph_widgets[gid][0]
 
         self._sync_active_graph_toolbar()
+
+        # Avoid redundant side-panel resync when re-activating the already-selected graph
+        if getattr(self, '_last_synced_graph_id', None) == gid:
+            return
+        self._last_synced_graph_id = gid
 
         # Sync GUI controls with graph properties
         self._sync_gui_from_graph(graph_model)
@@ -2191,6 +2214,11 @@ class MdiSubWindow(QMdiSubWindow):
         _blank = QPixmap(16, 16)
         _blank.fill(Qt.transparent)
         self.setWindowIcon(QIcon(_blank))
+        # Rubber-band resize/move: Qt drags a lightweight outline and resizes
+        # the (expensive-to-redraw) matplotlib canvas once on mouse release,
+        # instead of re-rendering the figure on every intermediate size.
+        self.setOption(QMdiSubWindow.SubWindowOption.RubberBandResize, True)
+        self.setOption(QMdiSubWindow.SubWindowOption.RubberBandMove, True)
         self._fixing_palette = False
         self._fix_title_shadow()
 

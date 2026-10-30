@@ -1189,3 +1189,19 @@ class TestGraphToolbarUnifiedControls:
         assert '(x, y)' in text
         assert '[' in text and ']' in text
         assert '112' in text or '100' in text
+
+
+class TestMdiSubWindowRubberBand:
+    """Graph subwindows resize/move via a rubber band so the heavy matplotlib
+    canvas is re-rendered once on release, not on every intermediate size."""
+
+    def test_subwindow_enables_rubber_band_resize_and_move(self, ws):
+        from PySide6.QtWidgets import QMdiSubWindow
+        from spectroview.view.v_workspace_graphs import MdiSubWindow
+
+        sub = MdiSubWindow(1, ws.mdi_area)
+        try:
+            assert sub.testOption(QMdiSubWindow.SubWindowOption.RubberBandResize)
+            assert sub.testOption(QMdiSubWindow.SubWindowOption.RubberBandMove)
+        finally:
+            sub.deleteLater()

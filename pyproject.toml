@@ -101,3 +101,8 @@ python_functions = ["test_*"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
+filterwarnings = [
+    "ignore:datetime\\.datetime\\.utcfromtimestamp.*:DeprecationWarning",
+    "ignore:'aifc' is deprecated.*:DeprecationWarning",
+    "ignore:'audioop' is deprecated.*:DeprecationWarning",
+]

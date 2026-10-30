@@ -16,14 +16,15 @@ All data comes in through signals; all actions go out through method calls.
 
 from __future__ import annotations
 
+import warnings
 from datetime import datetime
 from typing import Optional, Dict, List
 
 import pandas as pd
 from PySide6.QtWidgets import (
-    QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QScrollArea, QFrame, QComboBox, QSizePolicy,
-    QTextEdit, QApplication, QTextBrowser, QInputDialog, QMessageBox,
+    QApplication, QTextBrowser, QInputDialog, QMessageBox,
     QPlainTextEdit
 )
 import markdown
@@ -253,7 +254,9 @@ class _ComposerFrame(QFrame):
 # ═══════════════════════════════════════════════════════════════════════════
 
 try:
-    import speech_recognition as _sr  # type: ignore[import-untyped]
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        import speech_recognition as _sr  # type: ignore[import-untyped]
     VOICE_AVAILABLE = True
 except ImportError:
     _sr = None  # type: ignore[assignment]

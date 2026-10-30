@@ -1,8 +1,8 @@
 # tests/unit/view/test_v_notification.py
 """Unit tests for the SPECTROview native floating notification system."""
 
-from PySide6.QtCore import Qt, QPoint, QPointF, QEvent, QSize
-from PySide6.QtGui import QMouseEvent, QResizeEvent
+from PySide6.QtCore import Qt, QEvent, QSize
+from PySide6.QtGui import QResizeEvent
 
 from spectroview.view.components.v_notification import (
     NotificationType,
@@ -173,14 +173,7 @@ def test_notification_badge_dismiss_via_badge_click(qtbot):
     dismissed_signals = []
     badge.dismissed.connect(dismissed_signals.append)
 
-    mouse_evt = QMouseEvent(
-        QEvent.Type.MouseButtonPress,
-        QPointF(10.0, 10.0),
-        Qt.MouseButton.LeftButton,
-        Qt.MouseButton.LeftButton,
-        Qt.KeyboardModifier.NoModifier,
-    )
-    badge.mousePressEvent(mouse_evt)
+    qtbot.mouseClick(badge, Qt.MouseButton.LeftButton)
 
     assert len(dismissed_signals) == 1
     assert dismissed_signals[0] is badge

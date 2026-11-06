@@ -257,18 +257,18 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                 dialog.set_selected_points([])
             return
         
-        # Map (x, y) coordinates to spectrum filenames
+        # Map (x, y) coordinates to spectrum filenames (supports multiple time-steps per site)
         md = self.vm.store.get_map_data(self.vm.current_map_name)
         if md is not None and md.coords is not None:
-            coord_map = {
-                (round(float(md.coords[i, 0]), 4), round(float(md.coords[i, 1]), 4)): md.fnames[i]
-                for i in range(len(md.fnames))
-            }
+            coord_map: dict[tuple[float, float], list[str]] = {}
+            for i in range(len(md.fnames)):
+                key = (round(float(md.coords[i, 0]), 4), round(float(md.coords[i, 1]), 4))
+                coord_map.setdefault(key, []).append(md.fnames[i])
             selected_fnames = []
             for x, y in selected_points:
                 key = (round(float(x), 4), round(float(y), 4))
                 if key in coord_map:
-                    selected_fnames.append(coord_map[key])
+                    selected_fnames.extend(coord_map[key])
                 else:
                     selected_fnames.append(f"{self.vm.current_map_name}_({x}, {y})")
         else:

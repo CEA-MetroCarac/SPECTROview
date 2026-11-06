@@ -1,260 +1,387 @@
-import struct
-import numpy as np
+"""Binary reader for Galactic / HORIBA LabSpec SPC spectroscopic files."""
+
+from __future__ import annotations
+
+from pathlib import Path
 import re
+import struct
+
+import numpy as np
+
+
+_LOG_PAIR_RE = re.compile(r"([A-Za-z][A-Za-z0-9\s\.\(\)_\-\%\/\:]*?)\s*=\s*(.*)")
+
+# 32-byte SPC subheader layout (little-endian):
+# 0x00 subflgs (B), 0x01 subexp (b), 0x02 subindx (h),
+# 0x04 subtime (f4), 0x08 subnext (f4), 0x0C subnois (f4),
+# 0x10 subnpts (i4), 0x14 subscan (i4), 0x18 subwlevel (f4), 0x1C subresv (4B)
+_SUBHDR_DTYPE = np.dtype(
+    [
+        ("flags", "<u1"),
+        ("exp", "<i1"),
+        ("index", "<i2"),
+        ("time", "<f4"),
+        ("next", "<f4"),
+        ("noise", "<f4"),
+        ("npts", "<i4"),
+        ("scans", "<i4"),
+        ("wlevel", "<f4"),
+        ("_resv", "V4"),
+    ]
+)
+
+
+def _decode_spc_date(date_int: int) -> str:
+    """Decode packed 32-bit SPC date integer into YYYY-MM-DD HH:MM if valid."""
+    if date_int <= 0:
+        return ""
+    year = (date_int >> 20) & 0xFFF
+    month = (date_int >> 16) & 0xF
+    day = (date_int >> 11) & 0x1F
+    hour = (date_int >> 6) & 0x1F
+    minute = date_int & 0x3F
+    if 1970 <= year <= 2100 and 1 <= month <= 12 and 1 <= day <= 31 and hour <= 23 and minute <= 59:
+        return f"{year:04d}-{month:02d}-{day:02d} {hour:02d}:{minute:02d}"
+    return ""
+
 
 class SpcReader:
+    """Reader for Galactic SPC files (New Format 0x4B, 1996+).
+
+    Supports fast 512-byte header-only inspection (``header_only=True``) for
+    instant file categorization as well as vectorized bulk reading of uniform
+    multi-subfile hyperspectral maps.
     """
-    Reader for Galactic SPC files (New Format, 1996+).
-    Based on the SPC file format specification.
-    """
-    def __init__(self, filepath):
-        self.filepath = filepath
+
+    def __init__(self, filepath: str | Path, header_only: bool = False):
+        self.filepath = str(filepath)
+        self.header_only = header_only
         self.f = None
-        self.header = {}
-        self.subheaders = []
-        self.x_data = None
-        self.y_data = None
-        self.log_content = ""
-        
-        # Read the file upon initialization
-        self.read()
-        
-    def read(self):
-        with open(self.filepath, 'rb') as f:
+        self.header: dict = {}
+        self.subheaders: list[dict] = []
+        self.sub_time: np.ndarray | None = None
+        self.sub_wlevel: np.ndarray | None = None
+        self.x_data: np.ndarray | None = None
+        self.y_data: np.ndarray | None = None
+        self.log_content: str = ""
+        self.log_metadata: dict[str, str] = {}
+
+        self.read(header_only=header_only)
+
+    @classmethod
+    def peek_header(cls, filepath: str | Path) -> dict:
+        """Read and validate only the 512-byte main header without loading spectra."""
+        return cls(filepath, header_only=True).header
+
+    def read(self, header_only: bool = False) -> None:
+        with open(self.filepath, "rb") as f:
             self.f = f
+            file_size = f.seek(0, 2)
+            if file_size < 512:
+                raise ValueError(f"Invalid or truncated SPC file (< 512 bytes): {self.filepath}")
+
             self._read_header()
-            
-            # Helper to check flags
-            def check_flag(flag_byte, bit_mask):
-                return (flag_byte & bit_mask) != 0
 
-            # Determine data offsets
-            # Structure: 
-            # 1. Header (512 bytes)
-            # 2. X Data (if TXVALS/0x80 is set): npts * 4 bytes floats
-            # 3. Directories (if TMULTI/0x02 is set?? No, usually handled via random access, but here we scan linearly)
-            # 4. Subfiles: [Subheader (32 bytes) + Y Data (npts * 4/2 bytes)] * fnsub
-            
-            has_txvals = check_flag(self.header['ftflgs'], 0x80) # 0x80 = TXVALS
-            is_16bit = check_flag(self.header['ftflgs'], 0x10)   # 0x10 = TSPREC
+            npts = self.header["npts"]
+            fnsub = self.header["fnsub"]
+            if fnsub <= 0:
+                raise ValueError(f"Invalid SPC subfile count (fnsub={fnsub}): {self.filepath}")
+            if npts <= 0 and (self.header["ftflgs"] & 0x40) == 0:
+                raise ValueError(f"Invalid SPC point count (npts={npts}): {self.filepath}")
 
-            # Move to end of header
-            self.f.seek(512)
+            if header_only:
+                self.f = None
+                return
 
-            # Read X-axis
-            if has_txvals:
-                # Explicit X array exists
-                x_bytes = self.f.read(self.header['npts'] * 4)
-                self.x_data = np.frombuffer(x_bytes, dtype='<f4').astype(np.float64)
+            ftflgs = self.header["ftflgs"]
+            has_txvals = (ftflgs & 0x80) != 0   # 0x80 = TXVALS (shared explicit X array)
+            has_txyxys = (ftflgs & 0x40) != 0   # 0x40 = TXYXYS (per-subfile X / variable npts)
+            is_16bit = (ftflgs & 0x01) != 0     # 0x01 = TSPREC (16-bit integer Y values vs 32-bit)
+
+            f.seek(512)
+
+            # 1. Read shared X-axis (unless TXYXYS per-subfile X arrays are used)
+            if has_txvals and not has_txyxys:
+                expected_x_bytes = npts * 4
+                x_bytes = f.read(expected_x_bytes)
+                if len(x_bytes) < expected_x_bytes:
+                    raise ValueError(f"Truncated SPC X-axis data in {self.filepath}")
+                self.x_data = np.frombuffer(x_bytes, dtype="<f4").astype(np.float64)
+            elif not has_txyxys:
+                self.x_data = np.linspace(self.header["first"], self.header["last"], npts, dtype=np.float64)
+
+            # 2. Read Subfiles (fast vectorized path for uniform subfiles, fallback for variable/mixed)
+            subfiles_pos = f.tell()
+            if not has_txyxys and self._try_read_uniform_subfiles(f, subfiles_pos, file_size, fnsub, npts, is_16bit):
+                data_end_pos = f.tell()
             else:
-                # Generate linear X
-                self.x_data = np.linspace(
-                    self.header['first'], 
-                    self.header['last'], 
-                    self.header['npts']
-                )
+                f.seek(subfiles_pos)
+                self._read_subfiles_sequential(f, fnsub, npts, is_16bit, has_txvals, has_txyxys)
+                data_end_pos = f.tell()
 
-            # Read Subfiles (Y data)
-            self.y_data = [] 
-            self.subheaders = []
-            
-            for i in range(self.header['fnsub']):
-                subheader = self._read_subheader()
-                self.subheaders.append(subheader)
-                
-                npts = self.header['npts'] 
-                
-                # Logic restructure:
-                # 1. Check Subheader Exp to decide format
-                exponent = subheader['exp']
-                
-                # Special case: If exp == -128 (0x80), data is float32
-                if exponent == -128:
-                     is_float_override = True
-                else:
-                     is_float_override = False
-                     
-                if is_float_override or not is_16bit:
-                     # Read 32-bit floats
-                     raw_data = self.f.read(npts * 4)
-                     y_chunk = np.frombuffer(raw_data, dtype='<f4').astype(np.float64)
-                else:
-                    # 16-bit integers
-                    raw_data = self.f.read(npts * 2)
-                    y_chunk = np.frombuffer(raw_data, dtype='<i2').astype(np.float64)
-                    
-                    if exponent > 127: exponent -= 256 # Just in case, though we fixed reading
-                    scale_factor = 2.0 ** (exponent - 16)
-                    y_chunk = y_chunk * scale_factor
-                    
-                self.y_data.append(y_chunk)
-            
-            if self.header['fnsub'] > 1:
-                self.y_data = np.vstack(self.y_data)
+            # 3. Read Log Block (optional)
+            flogoff = self.header["flogoff"]
+            log_offset = flogoff if (0 < flogoff < file_size) else data_end_pos
+            if 0 < log_offset < file_size:
+                self._read_log_block(f, log_offset, file_size)
+
+            self.f = None
+
+    def _try_read_uniform_subfiles(
+        self,
+        f,
+        start_pos: int,
+        file_size: int,
+        fnsub: int,
+        npts: int,
+        is_16bit: bool,
+    ) -> bool:
+        """Vectorized single-read parser for standard uniform SPC subfiles."""
+        # Peek first subheader exponent: exp == -128 (0x80) denotes IEEE float32;
+        # otherwise values are fixed-point int16 (TSPREC=0x01) or int32 scaled by 2^(exp - bits)
+        first_sh = f.read(32)
+        if len(first_sh) < 32:
+            raise ValueError(f"Truncated SPC subheader in {self.filepath}")
+        raw_first_exp = struct.unpack_from("<b", first_sh, 1)[0]
+        hdr_exp = self.header["fexp"]
+        first_exp = hdr_exp if (raw_first_exp == 0 and hdr_exp != 0) else raw_first_exp
+        use_float32 = first_exp == -128
+        if use_float32:
+            val_dtype = "<f4"
+            bytes_per_pt = 4
+        elif is_16bit:
+            val_dtype = "<i2"
+            bytes_per_pt = 2
+        else:
+            val_dtype = "<i4"
+            bytes_per_pt = 4
+
+        record_size = 32 + npts * bytes_per_pt
+        total_bytes = fnsub * record_size
+        if start_pos + total_bytes > file_size:
+            return False
+
+        f.seek(start_pos)
+        raw_buf = f.read(total_bytes)
+        if len(raw_buf) < total_bytes:
+            return False
+
+        rec_dtype = np.dtype([("sh", _SUBHDR_DTYPE), ("y", val_dtype, (npts,))])
+        records = np.frombuffer(raw_buf, dtype=rec_dtype, count=fnsub)
+        sh_arr = records["sh"]
+
+        # Verify no per-subfile npts overrides and no mixed float32/integer exponent overrides
+        sub_npts = sh_arr["npts"]
+        if np.any((sub_npts != 0) & (sub_npts != npts)):
+            return False
+        raw_exps = sh_arr["exp"].astype(np.int32)
+        eff_exps = np.where((raw_exps == 0) & (hdr_exp != 0), hdr_exp, raw_exps)
+        if use_float32 and not np.all(eff_exps == -128):
+            return False
+        if (not use_float32) and np.any(eff_exps == -128):
+            return False
+
+        # Extract Y matrix in one vectorized operation
+        if use_float32:
+            y_mat = records["y"].astype(np.float64)
+        else:
+            bit_width = 16 if is_16bit else 32
+            scales = np.ldexp(1.0, eff_exps - bit_width)[:, np.newaxis]
+            y_mat = records["y"].astype(np.float64) * scales
+
+        self.y_data = y_mat[0] if fnsub == 1 else y_mat
+        self.sub_time = sh_arr["time"].astype(np.float64)
+        self.sub_wlevel = sh_arr["wlevel"].astype(np.float64)
+
+        # Populate lightweight subheader dicts for full API compatibility
+        flags_l = sh_arr["flags"].tolist()
+        exp_l = sh_arr["exp"].tolist()
+        idx_l = sh_arr["index"].tolist()
+        time_l = sh_arr["time"].tolist()
+        next_l = sh_arr["next"].tolist()
+        noise_l = sh_arr["noise"].tolist()
+        npts_l = sub_npts.tolist()
+        scans_l = sh_arr["scans"].tolist()
+        wlevel_l = sh_arr["wlevel"].tolist()
+        self.subheaders = [
+            {
+                "flags": flags_l[i],
+                "exp": exp_l[i],
+                "index": idx_l[i],
+                "time": time_l[i],
+                "next": next_l[i],
+                "noise": noise_l[i],
+                "npts": npts_l[i],
+                "scans": scans_l[i],
+                "wlevel": wlevel_l[i],
+            }
+            for i in range(fnsub)
+        ]
+        return True
+
+    def _read_subfiles_sequential(
+        self,
+        f,
+        fnsub: int,
+        header_npts: int,
+        is_16bit: bool,
+        has_txvals: bool,
+        has_txyxys: bool,
+    ) -> None:
+        """Fallback sequential subfile reader for variable-length or per-subfile-X SPC files."""
+        y_list = []
+        self.subheaders = []
+
+        for i in range(fnsub):
+            subheader = self._read_subheader(f)
+            if not subheader:
+                raise ValueError(f"Truncated SPC subfile {i} in {self.filepath}")
+            self.subheaders.append(subheader)
+
+            npts = subheader["npts"] if (has_txyxys and subheader["npts"] > 0) else header_npts
+            if npts <= 0:
+                raise ValueError(f"Invalid subfile point count ({npts}) in {self.filepath}")
+
+            if has_txyxys and has_txvals:
+                x_bytes = f.read(npts * 4)
+                if len(x_bytes) < npts * 4:
+                    raise ValueError(f"Truncated per-subfile X array in {self.filepath}")
+                if self.x_data is None:
+                    self.x_data = np.frombuffer(x_bytes, dtype="<f4").astype(np.float64)
+
+            raw_exp = subheader["exp"]
+            hdr_exp = self.header["fexp"]
+            exponent = hdr_exp if (raw_exp == 0 and hdr_exp != 0) else raw_exp
+            if exponent == -128:
+                raw_data = f.read(npts * 4)
+                if len(raw_data) < npts * 4:
+                    raise ValueError(f"Truncated SPC float32 Y data in {self.filepath}")
+                y_chunk = np.frombuffer(raw_data, dtype="<f4").astype(np.float64)
+            elif is_16bit:
+                raw_data = f.read(npts * 2)
+                if len(raw_data) < npts * 2:
+                    raise ValueError(f"Truncated SPC int16 Y data in {self.filepath}")
+                y_chunk = np.frombuffer(raw_data, dtype="<i2").astype(np.float64)
+                y_chunk = y_chunk * np.ldexp(1.0, int(exponent) - 16)
             else:
-                self.y_data = self.y_data[0]
+                raw_data = f.read(npts * 4)
+                if len(raw_data) < npts * 4:
+                    raise ValueError(f"Truncated SPC int32 Y data in {self.filepath}")
+                y_chunk = np.frombuffer(raw_data, dtype="<i4").astype(np.float64)
+                y_chunk = y_chunk * np.ldexp(1.0, int(exponent) - 32)
 
-            
-            # Determine Log Offset
-            file_size = self.f.seek(0, 2)
-            
-            if self.header['flogoff'] != 0 and self.header['flogoff'] < file_size:
-                log_offset = self.header['flogoff']
-            else:
-                 # Fallback: Calculate end of data
-                real_bytes_per_point = 4 if (not is_16bit or (len(self.subheaders) > 0 and self.subheaders[0]['exp'] == -128)) else 2
-                log_offset = 512 + (self.header['npts'] * 4 if has_txvals else 0) + \
-                                      self.header['fnsub'] * (32 + self.header['npts'] * real_bytes_per_point)
+            y_list.append(y_chunk)
 
-            self.f.seek(log_offset)
-            try:
-                self.log_content = self.f.read().decode('utf-8', errors='ignore')
-                # Remove null bytes which might be present in padding
-                self.log_content = self.log_content.replace('\x00', '')
-                self._parse_log_metadata()
-            except:
-                pass
+        if self.x_data is None:
+            n0 = len(y_list[0])
+            self.x_data = np.linspace(self.header["first"], self.header["last"], n0, dtype=np.float64)
 
-    def _parse_log_metadata(self):
-        """Parse Key=Value pairs from log block."""
+        self.sub_time = np.array([sh.get("time", 0.0) for sh in self.subheaders], dtype=np.float64)
+        self.sub_wlevel = np.array([sh.get("wlevel", 0.0) for sh in self.subheaders], dtype=np.float64)
+        self.y_data = np.vstack(y_list) if fnsub > 1 else y_list[0]
+
+    def _read_log_block(self, f, log_offset: int, file_size: int) -> None:
+        """Read SPC logstc header (64 bytes) and parse ASCII Key=Value metadata."""
+        try:
+            f.seek(log_offset)
+            remaining = file_size - log_offset
+            if remaining <= 0:
+                return
+
+            text_offset = log_offset
+            text_len = remaining
+            if remaining >= 64:
+                log_hdr = f.read(64)
+                logsizd, _logsizm, logtxto = struct.unpack_from("<III", log_hdr, 0)
+                if 64 <= logtxto < remaining:
+                    text_offset = log_offset + logtxto
+                    if logtxto < logsizd <= remaining:
+                        text_len = logsizd - logtxto
+                    else:
+                        text_len = remaining - logtxto
+
+            f.seek(text_offset)
+            raw_text = f.read(text_len)
+            self.log_content = raw_text.decode("utf-8", errors="ignore").replace("\x00", "")
+            self._parse_log_metadata()
+        except Exception:
+            pass
+
+    def _parse_log_metadata(self) -> None:
+        """Parse Key=Value pairs from the SPC ASCII log block."""
         self.log_metadata = {}
-        # Filter strings to avoid binary garbage
-        # Pattern: look for printable keys followed by = and value
-        # Allow alphanumeric, spaces, and typical punctuation in unit labels like (cm-1)
-        # Reject keys with control chars or extended ASCII if it looks like garbage
-        # Robust regex to find Key=Value pairs even if surrounded by garbage
-        # Key must start with a letter and contain valid chars
-        pair_pattern = re.compile(r'([A-Za-z][A-Za-z0-9\s\.\(\)_\-\%\/]*?)\s*=\s*(.*)')
-        
         for line in self.log_content.splitlines():
             line = line.strip()
-            if not line: continue
-            
-            # Use search to find the pattern anywhere in the line (handles leading garbage)
-            match = pair_pattern.search(line)
+            if not line or "=" not in line:
+                continue
+            match = _LOG_PAIR_RE.search(line)
             if match:
                 key = match.group(1).strip()
                 val = match.group(2).strip()
-                
-                # Check for reasonable key length
-                if len(key) < 64 and len(key) > 1:
-                     self.log_metadata[key] = val
+                if 1 < len(key) < 64:
+                    self.log_metadata[key] = val
 
-    def _read_header(self):
-        # Read the fixed 512-byte header
-        # Using struct unpack
-        # Structure references: https://github.com/rohanisaac/spc/blob/master/spc/spc.py
-        # and standard SPC format docs
-        
+    def _read_header(self) -> None:
+        """Read the 512-byte Galactic SPC header (New Format 0x4B)."""
         self.f.seek(0)
-        
-        # We only unlock specific fields we typically need
-        # ftflgs (1B), fversn (1B), fexper(1B), fexp(1B), npts(4B), first(8B), last(8B), fnsub(4B)
-        # 0x00: ftflgs (byte), fversn (byte)
-        # 0x02: fexper (byte), fexp (byte)
-        # 0x04: npts (int32)
-        # 0x08: first (double)
-        # 0x10: last (double)
-        # 0x18: fnsub (int32)
-        # ...
-        # 0x20: flogoff (int32)
-        
-        header_fmt = '<BBBBiddi' # Little endian
-        # size = 1+1+1+1+4+8+8+4 = 28 bytes
-        
-        chunk = self.f.read(28)
-        vals = struct.unpack(header_fmt, chunk)
-        
+        hdr = self.f.read(512)
+
+        # 0x00..0x1B: ftflgs(B), fversn(B), fexper(B), fexp(b), fnpts(i), ffirst(d), flast(d), fnsub(i)
+        ftflgs, fversn, fexper, fexp, npts, first, last, fnsub = struct.unpack_from("<BBBbiddi", hdr, 0)
+
+        # Validate SPC version byte (0x4B = New LSB, 0x4C = New MSB, 0x4D = Old format)
+        if fversn not in (0x4B, 0x4C, 0x4D):
+            raise ValueError(f"Unsupported or invalid SPC version byte: 0x{fversn:02X}")
+
+        # 0x1C..0x1F (28..32): fxtype, fytype, fztype, fpost
+        fxtype, fytype, fztype, fpost = struct.unpack_from("<BBBB", hdr, 28)
+
+        # 0x20..0x23 (32..36): fdate (packed uint32)
+        date_uint = struct.unpack_from("<I", hdr, 32)[0]
+
+        # 0x58..0xDA (88..218): fcmnt (130-byte null-terminated comment)
+        fcmnt = hdr[88:218].split(b"\x00", 1)[0].decode("utf-8", errors="ignore").strip()
+
+        # 0xDA..0xF8 (218..248): fcatxt (30 bytes: null-separated X, Y, Z axis strings)
+        fcatxt = hdr[218:248].split(b"\x00", 1)[0].decode("utf-8", errors="ignore").strip()
+
+        # 0xF8..0xFC (248..252): flogoff (uint32 offset to logstc block)
+        flogoff = struct.unpack_from("<I", hdr, 248)[0]
+
         self.header = {
-            'ftflgs': vals[0],
-            'fversn': vals[1],
-            'fexper': vals[2], # Instrument technique code
-            'fexp': vals[3],   # scaling exponent (for 16-bit integer files)
-            'npts': vals[4],   # Number of points per spectrum
-            'first': vals[5],  # X coordinate of first point
-            'last': vals[6],   # X coordinate of last point
-            'fnsub': vals[7]   # Number of subfiles (spectra)
+            "ftflgs": ftflgs,
+            "fversn": fversn,
+            "fexper": fexper,
+            "fexp": fexp,
+            "npts": npts,
+            "first": first,
+            "last": last,
+            "fnsub": fnsub,
+            "fxtype": fxtype,
+            "fytype": fytype,
+            "fztype": fztype,
+            "fpost": fpost,
+            "flogoff": flogoff,
+            "fcmnt": fcmnt,
+            "fcatxt": fcatxt,
+            "date": _decode_spc_date(date_uint),
         }
-        
-        # Read flogoff at 0x20 (byte 32)
-        self.f.seek(32)
-        self.header['flogoff'] = struct.unpack('<i', self.f.read(4))[0]
-        
-        # Read fxtype, fytype, fztype, fpost at 0x24 (byte 36)
-        # 4 bytes = 4 chars/bytes
-        self.f.seek(36)
-        vals = struct.unpack('<BBBB', self.f.read(4))
-        self.header['fxtype'] = vals[0]
-        self.header['fytype'] = vals[1]
-        self.header['fztype'] = vals[2]
-        self.header['fpost'] = vals[3]
-        
-        # Read fcatxt (X axis label) at 0x10E (270)
-        # Size is 30 bytes
-        self.f.seek(270)
-        self.header['fcatxt'] = self.f.read(30).split(b'\0')[0].decode('utf-8', errors='ignore').strip()
-        
-        # Read axes labels (null terminated strings)
-        # ... legacy comments ...
-        # flogtxt (0xA0, 19 bytes)
-        # fmods (0xB3, 4 bytes)
-        # fprocs (0xB7, 1 byte)
-        # flevel (0xB8, 1 byte)
-        # fsampin (0xB9, 2 bytes)
-        # ffactor (0xBB, 4 bytes float)
-        # fmethod (0xBF, 48 bytes)
-        # fzinc (0xEF, 4 bytes float)
-        # fwplanes (0xF3, 4 bytes int)
-        # fwinc (0xF7, 4 bytes float)
-        # fwtype (0xFB, 1 byte)
-        # fresv (0xFC, 187 bytes)
-        
-        # Let's read the comment and axis labels if possible
-        # fcmnt starts at 96 (0x60)
-        self.f.seek(96)
-        self.header['fcmnt'] = self.f.read(130).split(b'\0')[0].decode('utf-8', errors='ignore').strip()
-        
-        # fcatxt (X axis unit) at 226 (0xE2) ?? No, check offset
-        # The offset 0x82 is 130 decimal. But wait, 0x60 is 96. 96+130 = 226.
-        # So fcmnt ends at 226.
-        # fcatxt starts at 226? No, 0x60 is 96. Size is 130 bytes?
-        # Use simpler offsets:
-        # fcatxt seems to be at 226?
-        # Actually, let's just grab the date which is useful.
-        # fdate is at 0x28 (40). It is a 4 byte int (MMDDYYHH with top 4 bits for Y2K)
-        self.f.seek(40)
-        date_int = struct.unpack('<i', self.f.read(4))[0]
-        # Parse date if non-zero
-        self.header['date'] = str(date_int) # Placeholder
-        
-    def _read_subheader(self):
-        # Subheader is 32 bytes
-        # 0x00: subflgs (byte)
-        # 0x01: subexp (byte) - exponent for Y values (if 16-bit)
-        # 0x02: subindx (word) - index number
-        # 0x04: subtime (float) - time of scan
-        # 0x08: subnext (float) - time to next scan
-        # 0x0C: subnois (float) - noise
-        # 0x10: subnpts (long) - number of points (usually same as header npts, can be 0 meaning 'use header npts')
-        # 0x14: subscan (long) - number of scans
-        # 0x18: subwlevel (float) - W axis value (e.g. Z level for tomograms or Cycle for kinetics)
-        # 0x1C: subresv (4 bytes)
-        
-        sh_fmt = '<Bbhfffiff'
-        chunk = self.f.read(32)
-        if not chunk:
+
+    def _read_subheader(self, f=None) -> dict:
+        """Read a single 32-byte SPC subheader."""
+        fh = f if f is not None else self.f
+        chunk = fh.read(32)
+        if len(chunk) < 32:
             return {}
-        vals = struct.unpack(sh_fmt, chunk[:28])
-        
-        sh = {
-            'flags': vals[0],
-            'exp': vals[1],
-            'index': vals[2],
-            'time': vals[3],
-            'next': vals[4],
-            'noise': vals[5],
-            'npts': vals[6],
-            'scans': vals[7],
-            'wlevel': vals[8]
+        vals = struct.unpack_from("<Bbhfffiff", chunk, 0)
+        return {
+            "flags": vals[0],
+            "exp": vals[1],
+            "index": vals[2],
+            "time": vals[3],
+            "next": vals[4],
+            "noise": vals[5],
+            "npts": vals[6],
+            "scans": vals[7],
+            "wlevel": vals[8],
         }
-        return sh

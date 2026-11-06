@@ -1,7 +1,4 @@
 import os
-import tempfile
-import shutil
-import pandas as pd
 
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton,
@@ -9,48 +6,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QFileInfo
 
-
-def convert_action(input_path, output_path):
-    """
-    Converts a Renishaw InVia long-format TXT export (#X, #Y, #Wave,
-    #Intensity columns) into a wide-matrix TXT file compatible with
-    SPECTROview/LabSpec6, by reshaping intensity values into a matrix.
-
-    Module-level (Qt-free) so it can be called directly from
-    spectroview.api.io.convert_renishaw_map without instantiating the
-    QDialog below.
-    """
-    try:
-        dfr = pd.read_csv(input_path, delimiter="\t")
-        assert {'#X', '#Y', '#Wave', '#Intensity'}.issubset(dfr.columns)
-    except Exception as e:
-        raise ValueError(f"Invalid file format: {str(e)}")
-
-    # Count number of points per spectrum
-    dfr_spectrum = dfr.groupby(['#Y', '#X']).size().reset_index(name='size')
-    wavenumber_range = dfr_spectrum['size'][1]
-    total_spectra_number = len(dfr_spectrum)
-
-    dfr_wavenumbers = dfr['#Wave'][:wavenumber_range]
-    dfr_intensity = dfr['#Intensity']
-
-    # Build intensity matrix
-    intensity_data = {
-        str(dfr_wavenumbers.iloc[i]): [
-            dfr_intensity[i + j * wavenumber_range] for j in range(total_spectra_number)
-        ]
-        for i in range(wavenumber_range)
-    }
-
-    # Create intensity DataFrame and concat with coordinates
-    dfr_intensity_matrix = pd.DataFrame(intensity_data)
-    dfr_spectrum = pd.concat([dfr_spectrum[['#Y', '#X']].reset_index(drop=True), dfr_intensity_matrix], axis=1)
-
-    # Cleanup
-    dfr_spectrum = dfr_spectrum.rename(columns={'#X': '', '#Y': ''})
-
-    # Export
-    dfr_spectrum.to_csv(output_path, sep='\t', encoding='utf-8', index=False)
+from spectroview.model.m_io import convert_action
 
 
 class MFileConverter(QDialog):
@@ -136,26 +92,16 @@ class MFileConverter(QDialog):
                 continue
 
             name, _ = os.path.splitext(selected_file_name)
-            if output_dir is None:
-                output_dir = os.path.dirname(input_path)
-            output_path = os.path.join(output_dir, f"{name}_converted.txt")
+            target_dir = output_dir if output_dir is not None else os.path.dirname(input_path)
+            output_path = os.path.join(target_dir, f"{name}_converted.txt")
 
-            with tempfile.TemporaryDirectory() as dirtemp:
-                temp_input_path = os.path.join(dirtemp, selected_file_name)
-                shutil.copy(input_path, temp_input_path)
-
-                # Clean tab formatting
-                with open(temp_input_path, 'r+', encoding='utf-8') as fid:
-                    data = fid.read().replace("\t\t", "\t")
-                    fid.seek(0)
-                    fid.write(data)
-                    fid.truncate()
-
-                try:
-                    self.convert_action(temp_input_path, output_path)
-                    self.listbox.addItem(os.path.basename(output_path))
-                except Exception as e:
-                    QMessageBox.critical(self, "Conversion Error", f"Failed to convert {selected_file_name}\n{str(e)}")
+            try:
+                self.convert_action(input_path, output_path)
+                self.listbox.addItem(os.path.basename(output_path))
+            except Exception as e:
+                QMessageBox.critical(
+                    self, "Conversion Error", f"Failed to convert {selected_file_name}\n{str(e)}"
+                )
 
     def convert_action(self, input_path, output_path):
         """Delegates to the module-level convert_action (Qt-free)."""

@@ -22,14 +22,12 @@ mpl.use('qtagg')
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, message=".*Glyph.*")
 
-import pandas as pd
-
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QFileDialog, QMessageBox, QSplitter
 from PySide6.QtCore import Qt, QFileInfo, QUrl, QTimer
 from PySide6.QtGui import QDesktopServices
 
 from spectroview.model.m_file_converter import MFileConverter
-from spectroview.model.m_spc import SpcReader
+from spectroview.model.m_io import detect_file_type
 from spectroview.settings import MSettings, VMSettings, VSettingsDialog
 from spectroview.model.m_update_checker import (
     UpdateCheckerWorker,
@@ -51,12 +49,6 @@ from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 from spectroview.view.theme import ThemeManager, setup_application_font
 
 from spectroview import USER_MANUAL_DIR, get_app_icon
-
-try:
-    from renishawWiRE import WDFReader
-    WDF_AVAILABLE = True
-except ImportError:
-    WDF_AVAILABLE = False
 
 # The AI chat module drags in the provider SDKs (~4.5 s of import time), so it is
 # only probed here (find_spec locates the module without executing it) and
@@ -234,7 +226,7 @@ class Main(QMainWindow):
             None,
             "Open file(s)",
             last_dir,
-            "SPECTROview formats (*.csv *.txt *.dat *.wdf *.spc *.spectra *.maps *.graphs *.xlsx)"
+            "SPECTROview formats (*.csv *.txt *.dat *.wdf *.spc *.spectra *.maps *.graphs *.xlsx *.xls *.json)"
         )
         
         if not paths:
@@ -254,7 +246,7 @@ class Main(QMainWindow):
         last_dir = QFileInfo(paths[0]).absolutePath()
         self.settings.set_last_directory(last_dir)
         
-        # Categorize files by type
+        # Categorize files by type via Model-layer header/sample inspection
         spectra_files = []
         hyperspectral_files = []
         dataframes = []
@@ -265,123 +257,26 @@ class Main(QMainWindow):
         
         for file_path in paths:
             path = Path(file_path)
-            ext = path.suffix.lower()
-            
-            # Saved workspace files
-            if ext == '.spectra':
-                spectra_work_file = str(path)
-            elif ext == '.maps':
-                maps_work_file = str(path)
-            elif ext == '.graphs':
-                graphs_work_file = str(path)
-            elif ext == '.json':
-                fit_model_files.append(str(path))
-            elif ext == '.dat':
-                # TRPL time-resolved data
+            try:
+                file_kind = detect_file_type(path)
+            except Exception as e:
+                QMessageBox.warning(self, "File Load Error", f"Failed to read {path.name}: {e}")
+                continue
+
+            if file_kind == "spectra":
                 spectra_files.append(str(path))
-            elif ext == '.wdf':
-                # Renishaw WiRE native format - detect if it's a map or single spectrum
-                try:
-                    if not WDF_AVAILABLE:
-                        raise ImportError("renishawWiRE library is not installed.")
-                    reader = WDFReader(str(path))
-                    # Check measurement type: Mapping = hyperspectral, Single = spectrum
-                    # measurement_type is an enum, so convert to string for comparison
-                    if str(reader.measurement_type) == 'Mapping' or 'Mapping' in str(reader.measurement_type):
-                        hyperspectral_files.append(str(path))
-                    else:
-                        spectra_files.append(str(path))
-                    reader.close()
-                except Exception as e:
-                    QMessageBox.warning(self, "WDF Error", f"Failed to read WDF file {path.name}: {e}")
-            elif ext == '.spc':
-                # Galactic SPC format
-                try:
-                    reader = SpcReader(str(path))
-                    # Check if multifile (fnsub > 1) -> likely a map or series
-                    if reader.header['fnsub'] > 1:
-                        hyperspectral_files.append(str(path))
-                    else:
-                        spectra_files.append(str(path))
-                except Exception as e:
-                     QMessageBox.warning(self, "SPC Error", f"Failed to read SPC file {path.name}: {e}")
-            elif ext == '.xlsx':
+            elif file_kind == "map":
+                hyperspectral_files.append(str(path))
+            elif file_kind == "dataframe":
                 dataframes.append(str(path))
-            elif ext in ['.csv', '.txt']:
-                # Detect if it's a dataframe, spectrum, or hyperspectral map data
-                try:
-                    # Read first line to determine file type
-                    with open(path, 'r') as f:
-                        first_line = f.readline().strip()
-                    
-                    # Determine if this is a saved dataframe CSV vs map/spectrum data
-                    is_dataframe_csv = False
-                    is_wafer_map = False
-                    
-                    if ext == '.csv':
-                        # Check for wafer map CSV signature
-                        if "Dynamic Sitebased Spectral" in first_line:
-                            is_wafer_map = True
-                        # Check if it's a saved dataframe (has semicolons and text header)
-                        elif ';' in first_line:
-                            first_values = first_line.split(';')
-                            # Try to parse first value as float
-                            try:
-                                float(first_values[0])
-                                # Numeric header, not a saved dataframe
-                                is_dataframe_csv = False
-                            except (ValueError, AttributeError):
-                                # Text header = saved dataframe
-                                is_dataframe_csv = True
-                    
-                    if is_dataframe_csv:
-                        # CSV with dataframe header format
-                        dataframes.append(str(path))
-                    elif is_wafer_map:
-                        # Wafer map CSV
-                        hyperspectral_files.append(str(path))
-                    else:
-                        # Spectroscopic data (map or spectrum) - need to check structure
-                        if ext == '.csv':
-                            # CSV files use semicolon delimiter and have 3 header rows for maps
-                            delimiter = ";"
-                            skiprows = 3
-                            engine = 'c'
-                        else:  # .txt
-                            # Auto-detect delimiter by reading first lines
-                            with open(path, 'r') as f:
-                                first_line = next(f, None)
-                                second_line = next(f, None)
-                            
-                            test_line = second_line if second_line else first_line
-                            if test_line:
-                                if ';' in test_line:
-                                    delimiter = ';'
-                                    engine = 'c'
-                                elif '\t' in test_line:
-                                    delimiter = '\t'
-                                    engine = 'c'
-                                else:
-                                    delimiter = r'\s+'  # space/whitespace
-                                    engine = 'python'
-                            else:
-                                delimiter = '\t'
-                                engine = 'c'
-                            skiprows = 1  # TXT files typically have 1 header row
-                        
-                        df = pd.read_csv(path, delimiter=delimiter, header=None, 
-                                       skiprows=skiprows, nrows=5, engine=engine)
-                        
-                        if df.shape[1] == 2:
-                            spectra_files.append(str(path))
-                        elif df.shape[1] > 3:
-                            hyperspectral_files.append(str(path))
-                        else:
-                            QMessageBox.warning(self, "Invalid File", f"Invalid number of columns in {path.name}")
-                except Exception as e:
-                    QMessageBox.warning(self, "Read Error", f"Failed to read {path.name}: {e}")
-            else:
-                QMessageBox.warning(self, "Unsupported Format", f"Unsupported file format: {ext}")
+            elif file_kind == "fit_model":
+                fit_model_files.append(str(path))
+            elif file_kind == "spectra_workspace":
+                spectra_work_file = str(path)
+            elif file_kind == "maps_workspace":
+                maps_work_file = str(path)
+            elif file_kind == "graphs_workspace":
+                graphs_work_file = str(path)
         
         # Load files into appropriate workspaces
         if spectra_files:

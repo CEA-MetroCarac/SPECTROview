@@ -171,3 +171,30 @@ class TestVWorkspaceMapsHeatmapSelection:
         assert workspace.v_map_viewer.selected_points == [(1.0, 2.0), (3.0, 4.0)]
 
         workspace.close()
+
+    def test_map_viewer_renders_time_resolved_duplicate_coords_without_crash(
+        self, qapp, examples_dir
+    ):
+        import pytest
+
+        tr_path = examples_dir / "spectroscopic_data" / "time_resolved_wafer_maps.csv"
+        assert tr_path.exists()
+
+        workspace = VWorkspaceMaps()
+        try:
+            workspace.vm.load_map_files([str(tr_path)])
+            qapp.processEvents()
+
+            md = workspace.vm.store.get_map_data("time_resolved_wafer_maps")
+            assert md is not None and md.n_spectra == 50
+            # X-range spinboxes initialize to actual spectral axis (~-79.28..3411 cm-1), not fallback (0..100)
+            assert workspace.v_map_viewer.spin_xmin.value() == pytest.approx(float(md.x0[0]), abs=0.5)
+            assert workspace.v_map_viewer.spin_xmax.value() == pytest.approx(float(md.x0[-1]), abs=0.5)
+
+            # Selecting one (X, Y) wafer site selects all 10 time-resolved spectra at that site
+            first_site = (float(md.coords[0, 0]), float(md.coords[0, 1]))
+            workspace._on_map_viewer_selection([first_site])
+            assert len(workspace.vm.selected_fnames) == 10
+        finally:
+            workspace.close()
+            workspace.deleteLater()

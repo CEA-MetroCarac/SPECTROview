@@ -12,7 +12,7 @@ from pathlib import Path
 from PySide6.QtCore import Signal
 
 from spectroview.model.m_settings import MSettings
-from spectroview.model.m_io import load_map_file, load_wdf_map, load_spc_map
+from spectroview.model.m_io import extract_map_arrays, load_map_file, load_wdf_map, load_spc_map
 from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.viewmodel.utils import parse_coords_from_fname
@@ -200,39 +200,16 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             
     def _extract_spectra_from_map(self, map_name: str, map_df: pd.DataFrame):
         """Extract all individual spectra from a hyperspectral map dataframe."""
-        # Extract wavenumber columns (all columns except X, Y)
-        wavenumber_cols = [col for col in map_df.columns if col not in ['X', 'Y']]
-        
-        # Convert to numeric and skip last value (following legacy behavior)
-        x_values = pd.to_numeric(wavenumber_cols, errors='coerce').tolist()
-        if len(x_values) > 1:
-            x_values = x_values[:-1]  # Skip last value
-            wavenumber_cols = wavenumber_cols[:-1]
-                
-        x_data = np.asarray(x_values, dtype=np.float64)
-        
-        # Pre-extract all spatial coordinates and intensity data (faster)
-        x_positions = map_df['X'].values
-        y_positions = map_df['Y'].values
-        intensity_data = map_df[wavenumber_cols].values  # 2D numpy array
-        
-        # Check if this map has metadata (WDF files)
+        x_data, Y0, coords, fnames = extract_map_arrays(map_name, map_df)
         map_metadata = self.maps_metadata.get(map_name, {})
 
-        N = len(map_df)
-        coords = np.column_stack([x_positions, y_positions]).astype(np.float64)
-        Y0 = intensity_data.astype(np.float32)
-        fnames = [
-            f"{map_name}_({float(x_positions[i])}, {float(y_positions[i])})"
-            for i in range(N)
-        ]
         self.store.add_map(
             name=map_name,
             x0=x_data,
             Y0=Y0,
             coords=coords,
             fnames=fnames,
-            is_active=np.ones(N, dtype=bool),
+            is_active=np.ones(len(fnames), dtype=bool),
         )
         md = self.store.get_map_data(map_name)
         if md:

@@ -6,7 +6,7 @@ This section demonstrates how to handle hyperspectral map data (like Raman wafer
 
 ## Stateful Workspaces
 
-`spectroview.api.workspace.MapsWorkspace` mirrors the GUI's own Maps Workspace: one map per loaded file, all of whose pixels share a fit model, with pixel identifiers named `f"{map_name}_({x}, {y})"` exactly like the GUI. It reads/writes the same `.maps` file format the GUI's "Save work" produces.
+`spectroview.api.workspace.MapsWorkspace` mirrors the GUI's own Maps Workspace: one map per loaded file, all of whose pixels share a fit model, with pixel identifiers named `f"{map_name}_({x}, {y})"` (or `f"{map_name}_({x}, {y})_{k}"` when time-resolved maps contain repeated scans at the same `(x, y)` coordinate) exactly like the GUI. It reads/writes the same `.maps` file format the GUI's "Save work" produces.
 
 ```python
 from spectroview.api import workspace, fitting

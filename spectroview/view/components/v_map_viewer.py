@@ -1193,7 +1193,12 @@ class VMapViewer(QWidget):
             # 2D maps: Use fast pivot table (regular grid, no interpolation needed)
             # NaN values in final_z_col will be preserved in the pivot table
             heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
-            heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
+            if heatmap_data.duplicated(subset=['X', 'Y']).any():
+                heatmap_pivot = heatmap_data.pivot_table(
+                    index='Y', columns='X', values='Z', aggfunc='mean'
+                )
+            else:
+                heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
             
             # Calculate extent to center pixels on coordinates 
             # Use sorted unique coordinates

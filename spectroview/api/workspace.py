@@ -25,6 +25,7 @@ from spectroview.api.exceptions import FitModelError, WorkspaceError
 from spectroview.fit_engine.baseline import eval_baseline_batch
 from spectroview.fit_engine.evaluator import eval_peak_initial
 from spectroview.model.heatmap import build_heatmap_grid
+from spectroview.model.m_io import extract_map_arrays
 from spectroview.model.spectra_store import SpectraStore
 from spectroview.model.workspace_io import WorkspaceIO
 
@@ -513,25 +514,14 @@ class MapsWorkspace(SpectraWorkspace):
         return added
 
     def _extract_spectra_from_map(self, map_name: str, map_df: pd.DataFrame) -> None:
-        wavenumber_cols = [c for c in map_df.columns if c not in ("X", "Y")]
-        x_values = pd.to_numeric(pd.Index(wavenumber_cols), errors="coerce").tolist()
-        if len(x_values) > 1:
-            x_values = x_values[:-1]  # skip last value, matches GUI behavior
-            wavenumber_cols = wavenumber_cols[:-1]
-        x_data = np.asarray(x_values, dtype=np.float64)
-
-        x_positions = map_df["X"].values
-        y_positions = map_df["Y"].values
-        intensity_data = map_df[wavenumber_cols].values
-
-        N = len(map_df)
-        coords = np.column_stack([x_positions, y_positions]).astype(np.float64)
-        Y0 = intensity_data.astype(np.float32)
-        fnames = [f"{map_name}_({float(x_positions[i])}, {float(y_positions[i])})" for i in range(N)]
-
+        x_data, Y0, coords, fnames = extract_map_arrays(map_name, map_df)
         self.store.add_map(
-            name=map_name, x0=x_data, Y0=Y0, coords=coords, fnames=fnames,
-            is_active=np.ones(N, dtype=bool),
+            name=map_name,
+            x0=x_data,
+            Y0=Y0,
+            coords=coords,
+            fnames=fnames,
+            is_active=np.ones(len(fnames), dtype=bool),
         )
         md = self.store.get_map_data(map_name)
         if md:

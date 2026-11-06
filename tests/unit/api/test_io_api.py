@@ -1,6 +1,5 @@
 """Tests for spectroview.api.io -- file loading, dataset import/export, and
 the headless Renishaw map converter."""
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -111,3 +110,36 @@ class TestConvertRenishawMap:
         bad.write_text("this,is,not,the,right,format\n1,2,3,4,5,6\n")
         with pytest.raises(LoadError):
             io.convert_renishaw_map(bad, tmp_path / "out.txt")
+
+
+class TestLoadMultiFormatSpectraAndMaps:
+    """Public API coverage for .wdf, .spc, and .dat spectroscopic loaders."""
+
+    def test_api_load_spectra_wdf_spc_and_trpl(self, examples_dir):
+        spec_dir = examples_dir / "spectroscopic_data"
+        for fname, expected_items in (
+            ("spectra_1.wdf", 1),
+            ("static_repeatability.wdf", 50),
+            ("spectra.spc", 1),
+            ("specturm_TRPL.dat", 1),
+        ):
+            p = spec_dir / fname
+            assert p.exists()
+            data = io.load_spectra(p)
+            assert len(data["items"]) == expected_items
+            assert len(data["items"][0]["x0"]) > 0
+
+    def test_api_load_map_wdf_and_spc(self, examples_dir, wdf_map_file):
+        if wdf_map_file.exists():
+            df, meta = io.load_map(wdf_map_file)
+            assert isinstance(df, pd.DataFrame)
+            assert isinstance(meta, dict)
+            assert df.shape == (3721, 577)
+
+        spc_map = examples_dir / "spectroscopic_data" / "2dmap_spc.spc"
+        assert spc_map.exists()
+        df_spc, meta_spc = io.load_map(spc_map)
+        assert isinstance(df_spc, pd.DataFrame)
+        assert isinstance(meta_spc, dict)
+        assert df_spc.shape == (1681, 1026)
+

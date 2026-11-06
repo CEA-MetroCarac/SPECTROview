@@ -18,15 +18,19 @@
 
 ```mermaid
 flowchart TD
-    FILE["File on disk<br/>(.wdf / .spc / .txt / .csv / .dat / .xlsx)"]
+    FILE["File on disk<br/>(.wdf / .spc / .txt / .csv / .dat / .xlsx / .xls / .json / .spectra / .maps / .graphs)"]
 
-    FILE --> MIO["m_io.py<br/>universal file reader"]
+    FILE --> DETECT["m_io.detect_file_type()<br/>Header / sample classification (<0.1 ms)"]
 
-    MIO -->|"Spectra dict<br/>{type, items}"| VMSPECTRA["VMWorkspaceSpectra<br/>.load_files()"]
-    MIO -->|"DataFrame + metadata"| VMMAPS["VMWorkspaceMaps<br/>.load_map_files()"]
-    MIO -->|"dict[str, DataFrame]"| VMGRAPHS["VMWorkspaceGraphs<br/>.add_dataframe()"]
+    DETECT -->|"spectra"| MIO_SPEC["load_wdf_spectrum / load_spc_spectrum /<br/>load_spectrum_file / load_TRPL_data"]
+    DETECT -->|"map"| MIO_MAP["load_wdf_map / load_spc_map /<br/>load_map_file"]
+    DETECT -->|"dataframe"| MIO_DF["load_dataframe_file"]
 
-    VMSPECTRA --> STORE["SpectraStore<br/>.add_map()"]
+    MIO_SPEC -->|"Spectra dict {type, items}"| VMSPECTRA["VMWorkspaceSpectra.load_files()"]
+    MIO_MAP -->|"DataFrame (+ metadata)"| VMMAPS["VMWorkspaceMaps.load_map_files()<br/>+ extract_map_arrays()"]
+    MIO_DF -->|"dict[str, DataFrame]"| VMGRAPHS["VMWorkspaceGraphs.load_dataframes()"]
+
+    VMSPECTRA --> STORE["SpectraStore.add_map()"]
     VMMAPS --> STORE
 
     STORE --> SPECTRA_WS["Spectra Workspace"]
@@ -36,18 +40,23 @@ flowchart TD
 
 ---
 
-## Supported Formats
+## Supported Formats & Entry Points
 
-| Format | Extension | Function | Returns |
+| Format / Role | Extension | Function | Returns |
 |--------|-----------|----------|---------|
-| Renishaw WiRE spectrum | `.wdf` | `load_wdf_spectrum()` | `spectra dict` |
-| Renishaw WiRE map | `.wdf` | `load_wdf_map()` | `(DataFrame, metadata dict)` |
+| Fast file classifier | all supported | `detect_file_type()` | `'spectra'` \| `'map'` \| `'dataframe'` \| `'fit_model'` \| `'spectra_workspace'` \| `'maps_workspace'` \| `'graphs_workspace'` |
+| WDF header peek | `.wdf` | `peek_wdf_measurement_type()` | `'spectra'` \| `'map'` (reads 144-byte `WDF1` header) |
+| SPC header peek | `.spc` | `SpcReader.peek_header()` | `dict` (reads 512-byte Galactic SPC header) |
+| Renishaw WiRE spectrum / series | `.wdf` | `load_wdf_spectrum()` | `spectra dict` |
+| Renishaw WiRE map / line profile | `.wdf` | `load_wdf_map()` | `(DataFrame, metadata dict)` |
 | Galactic SPC spectrum | `.spc` | `load_spc_spectrum()` | `spectra dict` |
 | Galactic SPC map | `.spc` | `load_spc_map()` | `(DataFrame, metadata dict)` |
 | Text / CSV spectrum | `.txt`, `.csv` | `load_spectrum_file()` | `spectra dict` |
 | Text / CSV map | `.txt`, `.csv` | `load_map_file()` | `DataFrame` |
 | TRPL time-resolved PL | `.dat` | `load_TRPL_data()` | `spectra dict` |
 | Excel / CSV datasheet | `.xlsx`, `.xls`, `.csv` | `load_dataframe_file()` | `dict[str, DataFrame]` |
+| Map tensor extractor | DataFrame | `extract_map_arrays()` | `(x0, Y0, coords, fnames)` |
+| Renishaw long-format converter | `.txt` | `convert_action()` | writes wide-matrix `.txt` |
 
 ---
 
@@ -159,26 +168,24 @@ for item in data_dict["items"]:
 > [!NOTE]
 > **Each spectrum is its own `MapData` block** (N=1). This is the same structure used for map spectra (N=thousands). The unified model is what lets `VMWorkspaceMaps` extend `VMWorkspaceSpectra` without duplication.
 
-### Maps Workspace: `VMWorkspaceMaps.load_map_files()`
+### Maps Workspace: `VMWorkspaceMaps.load_map_files()` & `extract_map_arrays()`
 
 ```python
-# In vm_workspace_maps.py — simplified for clarity
+# In vm_workspace_maps.py (and spectroview/api/workspace.py)
 
-df, metadata = load_wdf_map(path)    # -> (DataFrame, dict)
+df, metadata = load_wdf_map(path)                    # -> (DataFrame, dict)
+x0, Y0, coords, fnames = extract_map_arrays(path.stem, df)
+# x0:     float64[M]    — all valid numeric wavenumber channels (ascending)
+# Y0:     float32[N, M] — contiguous spectral matrix
+# coords: float64[N, 2] — stage (X, Y) positions
+# fnames: list[str]     — "{map_name}_({x}, {y})" (disambiguated with _{k} on time-resolved duplicate sites)
 
-# Separate coordinate columns from spectral data
-wn_cols  = [c for c in df.columns if c not in ('X', 'Y')]
-x0       = np.array([float(c) for c in wn_cols])        # float64[M]
-Y0       = df[wn_cols].to_numpy(dtype=np.float32)        # float32[N, M]
-coords   = df[['X', 'Y']].to_numpy(dtype=np.float64)    # float64[N, 2]
-
-# Register as a single MapData block with N spectra
 self.store.add_map(
     name   = path.stem,
     x0     = x0,
     Y0     = Y0,
     coords = coords,
-    fnames = [f"{path.stem}_{i}" for i in range(len(coords))],
+    fnames = fnames,
 )
 ```
 
@@ -197,19 +204,30 @@ for name, df in dataframes.items():
 
 ---
 
-## Design Notes
+## Design & Performance Notes
 
-### Auto-Detection of Delimiters (TXT files)
+### Zero-Payload Header Classification (`detect_file_type`)
 
-`load_spectrum_file()` and `load_map_file()` automatically detect whether a `.txt` file uses `;`, `\t`, or space delimiters by inspecting the first two lines before reading the full file. This avoids requiring users to specify delimiters when loading exported text files from various instruments.
+When opening or dragging files into `Main._load_files_by_paths()`, `detect_file_type()` classifies files in `< 0.1 ms` without parsing full datasets:
+- **`.wdf`**: `peek_wdf_measurement_type()` reads only the first 144 bytes of the `WDF1` header (`measurement_type` at offset `132`) rather than decoding multi-megabyte spectral cubes twice.
+- **`.spc`**: `SpcReader.peek_header()` (`header_only=True`) reads only the 512-byte Galactic SPC header (`fnsub` subfile count) and skips subfile/log reading.
+- **`.txt` / `.csv`**: Inspects up to 12 non-empty lines in pure Python without launching regex-engine `pandas` reads during routing.
 
-### Wavenumber Sort (WDF files)
+### Consolidated Map DataFrames & Vectorized Parsing
 
-Renishaw WiRE exports wavenumber axes in descending order (e.g., 3200 → 100 cm⁻¹). Both `load_wdf_spectrum()` and `load_wdf_map()` detect this and sort the axis to ascending order, reordering the intensity arrays correspondingly. This normalization ensures all downstream code (baseline, fitting, plotting) can assume ascending x-axes.
+- **Single-block DataFrames**: Binary (`WDF`, `SPC`) and converted maps are assembled via `_build_map_dataframe()`, wrapping the contiguous 2D spectral matrix directly instead of constructing thousands of 1D column slices.
+- **C-engine CSV/TXT fast paths**: `load_map_file()` uses `pd.read_csv(..., engine="c")` with `usecols` (stripping trailing semicolons at parse time), `skiprows` callables for alternating-row wafer CSV exports, and positional `iloc` permutation when sorting descending wavenumbers to avoid duplicating large spectral matrices in RAM.
+- **Vectorized SPC subfiles**: `SpcReader` reads uniform multi-subfile `.spc` maps in a single buffered I/O call via structured NumPy `np.frombuffer` dtypes (supporting IEEE `float32`, `TSPREC` `int16`, and `int32` fixed-point scaling), falling back to sequential parsing only for variable-length `TXYXYS` files.
 
-### `parse_wdf_metadata()` (WDF only)
+### Headerless Spectra, Ascending Axes & Duplicate Coordinates
 
-WDF files encode rich acquisition metadata in binary blocks. `m_io.py` delegates the parsing of those blocks to `parse_wdf_metadata()` in `viewmodel/utils.py`, which extracts grating name, objective, exposure time, slit settings, timestamp, and more into a clean dict that becomes `MapData.map_metadata`.
+- **Headerless 1D files**: `load_spectrum_file()` inspects leading lines before calling `pd.read_csv`, preserving row `0` on headerless `.txt`/`.csv` spectra while skipping `#` comments, single headers, or 3-line legacy headers.
+- **Ascending X-axis invariant**: All spectrum and map loaders (`WDF`, `SPC`, `TXT`, `CSV`) normalize spectral axes to strictly ascending order so downstream baseline, ROI cropping, and VBF fitting can rely on monotonic `x0`.
+- **Time-resolved maps at fixed sites**: When a map contains repeated `(X, Y)` coordinates (e.g., multi-scan time-resolved wafer CSVs), `extract_map_arrays()` appends `_{k}` suffixes (`map_(x, y)_2`, ...) so every measurement retains a unique `SpectraStore` key while `parse_coords_from_fname()` still recovers exact `(X, Y)` coordinates.
+
+### Pure Model-Layer Metadata (`parse_wdf_metadata`)
+
+`parse_wdf_metadata()` lives in `spectroview/model/m_io.py` (re-exported in `viewmodel/utils.py` for backward compatibility), keeping `spectroview/model/` 100% free of Qt and ViewModel imports. It parses binary `WXIS`, `WXCS`, `WXDM`, and `WDF1` `FILETIME` blocks to extract objective, grating, laser power, slit settings, exposure time, and timestamps.
 
 ---
 

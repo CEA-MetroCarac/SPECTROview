@@ -199,7 +199,7 @@ def convert_renishaw_map(input_path: Union[str, Path], output_path: Union[str, P
         io.convert_renishaw_map("raw_export.txt", "converted_map.txt")
         df = io.load_map("converted_map.txt")
     """
-    from spectroview.model.m_file_converter import convert_action
+    from spectroview.model.m_io import convert_action
 
     output_path = Path(output_path)
     try:

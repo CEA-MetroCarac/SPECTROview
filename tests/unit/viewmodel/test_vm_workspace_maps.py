@@ -21,12 +21,9 @@ def vm(settings):
 
 def _make_map_df(map_name, n_rows_side=4, x0=500.0, ampli=100.0, fwhm=6.0, seed=0):
     """Build a synthetic hyperspectral map DataFrame with a single Lorentzian
-    peak (slightly jittered per-pixel) plus a trailing 'extra' wavenumber
-    column, matching _extract_spectra_from_map's convention of dropping the
-    last column."""
+    peak (slightly jittered per-pixel)."""
     rng = np.random.default_rng(seed)
     x = np.linspace(300.0, 700.0, 200)
-    x_cols = list(x) + [x[-1] + (x[1] - x[0])]  # extra col to be dropped
 
     rows = []
     coords = []
@@ -34,14 +31,14 @@ def _make_map_df(map_name, n_rows_side=4, x0=500.0, ampli=100.0, fwhm=6.0, seed=
         for j in range(n_rows_side):
             a = ampli * rng.uniform(0.8, 1.2)
             y = a / (1 + 4 * ((x - x0) / fwhm) ** 2)
-            y_full = np.append(y, 0.0)  # matches the extra dropped column
-            rows.append(y_full)
+            rows.append(y)
             coords.append((float(i), float(j)))
 
-    data = {"X": [c[0] for c in coords], "Y": [c[1] for c in coords]}
-    for k, xc in enumerate(x_cols):
-        data[str(xc)] = [row[k] for row in rows]
-    return pd.DataFrame(data)
+    mat = np.asarray(rows, dtype=np.float64)
+    df = pd.DataFrame(mat, columns=[str(xc) for xc in x])
+    df.insert(0, "Y", [c[1] for c in coords])
+    df.insert(0, "X", [c[0] for c in coords])
+    return df
 
 
 def _lorentzian_fit_model(ampli=100.0, fwhm=6.0, x0=500.0, seed_offset=-2.0, coef_noise=0.0):
@@ -70,11 +67,44 @@ class TestLoadAndSelectMap:
         assert md.n_spectra == 9
         assert "map1" in vm.store.map_names
 
-    def test_last_wavenumber_column_is_dropped(self, vm):
+    def test_all_numeric_wavenumber_columns_preserved(self, vm):
         df = _make_map_df("map1", n_rows_side=2)
         n_wn_cols = len(df.columns) - 2  # minus X, Y
         md = _load_map(vm, "map1", n_rows_side=2)
-        assert md.n_wavenumbers == n_wn_cols - 1
+        assert md.n_wavenumbers == n_wn_cols
+
+    def test_trailing_non_numeric_unnamed_columns_dropped(self, vm):
+        df = _make_map_df("map_unnamed", n_rows_side=2)
+        n_wn_cols = len(df.columns) - 2
+        df["Unnamed: 202"] = np.nan
+        vm.maps["map_unnamed"] = df
+        vm.maps_metadata["map_unnamed"] = {}
+        vm._extract_spectra_from_map("map_unnamed", df)
+        md = vm.store.get_map_data("map_unnamed")
+        assert md.n_wavenumbers == n_wn_cols
+
+    def test_duplicate_xy_coordinates_disambiguated_for_time_resolved_maps(self, vm):
+        df = pd.DataFrame({
+            "X": [0.0, 0.0, 10.0, 10.0],
+            "Y": [5.0, 5.0, 5.0, 5.0],
+            "500.0": [10.0, 12.0, 20.0, 22.0],
+            "510.0": [15.0, 18.0, 25.0, 28.0],
+        })
+        vm.maps["tr_map"] = df
+        vm.maps_metadata["tr_map"] = {}
+        vm._extract_spectra_from_map("tr_map", df)
+        md = vm.store.get_map_data("tr_map")
+        assert md.n_spectra == 4
+        assert len(set(md.fnames)) == 4
+        assert md.fnames == [
+            "tr_map_(0.0, 5.0)",
+            "tr_map_(0.0, 5.0)_2",
+            "tr_map_(10.0, 5.0)",
+            "tr_map_(10.0, 5.0)_2",
+        ]
+        vm.select_map("tr_map")
+        vm.select_all_current_map_spectra()
+        assert len(vm.selected_fnames) == 4
 
     def test_fnames_encode_coordinates(self, vm):
         md = _load_map(vm, "map1", n_rows_side=2)
@@ -122,7 +152,7 @@ class TestActiveStateAndSelection:
 
     def test_get_active_spectra_scoped_to_current_map(self, vm):
         md1 = _load_map(vm, "map1", n_rows_side=2)
-        md2 = _load_map(vm, "map2", n_rows_side=2)
+        _load_map(vm, "map2", n_rows_side=2)
         vm.select_map("map1")
         active = vm._get_active_spectra()
         assert set(active) == set(md1.fnames)

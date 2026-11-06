@@ -72,7 +72,7 @@ def ensure_markdown_spacing(text: str) -> str:
             continue
 
         # Check fenced code blocks (``` or ~~~)
-        if stripped.startswith('```') or stripped.startswith('~~~'):
+        if stripped.startswith(('```', '~~~')):
             if not in_fence:
                 in_fence = True
                 fence_marker = stripped[:3]
@@ -119,26 +119,25 @@ def ensure_markdown_spacing(text: str) -> str:
             prefix = m_list.group(1)
             indent = len(prefix.expandtabs(4))
 
-            if not in_list:
-                if out:
-                    prev_line = out[-1]
-                    prev_stripped = prev_line.strip()
-                    if (
-                        prev_stripped
-                        and not _HEADING_RE.match(prev_stripped)
-                        and not _ADMONITION_RE.match(prev_stripped)
-                        and not _TAB_RE.match(prev_stripped)
-                        and not prev_stripped.startswith('```')
-                        and not prev_stripped.startswith('<!--')
-                        and not _HTML_CLOSE_RE.match(prev_stripped)
-                        and not _HR_RE.match(prev_stripped)
-                    ):
-                        if '>' in prefix:
-                            bq_match = _BQ_PREFIX_RE.match(prefix)
-                            bq_prefix = (bq_match.group(1).rstrip() if bq_match else '>') + '\n'
-                            out.append(bq_prefix)
-                        else:
-                            out.append('\n')
+            if not in_list and out:
+                prev_line = out[-1]
+                prev_stripped = prev_line.strip()
+                if (
+                    prev_stripped
+                    and not _HEADING_RE.match(prev_stripped)
+                    and not _ADMONITION_RE.match(prev_stripped)
+                    and not _TAB_RE.match(prev_stripped)
+                    and not prev_stripped.startswith('```')
+                    and not prev_stripped.startswith('<!--')
+                    and not _HTML_CLOSE_RE.match(prev_stripped)
+                    and not _HR_RE.match(prev_stripped)
+                ):
+                    if '>' in prefix:
+                        bq_match = _BQ_PREFIX_RE.match(prefix)
+                        bq_prefix = (bq_match.group(1).rstrip() if bq_match else '>') + '\n'
+                        out.append(bq_prefix)
+                    else:
+                        out.append('\n')
             in_list = True
             list_indent = indent
             out.append(line)

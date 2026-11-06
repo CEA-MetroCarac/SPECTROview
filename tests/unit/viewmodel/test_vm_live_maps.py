@@ -133,3 +133,54 @@ def test_vm_live_maps_no_data_graceful(qapp):
     grid, msg = results[SELECTOR_GREEN]
     assert grid is None
     assert "No hyperspectral map loaded" in msg
+
+
+def test_vm_live_maps_spectra_series_mode(qapp):
+    """Test VMLiveMaps in 'spectra' mode computing parameter trends across selected spectra."""
+    vm = VMLiveMaps(mode="spectra")
+    series_results = {}
+    vm.series_data_ready.connect(
+        lambda cid, vals, lbls, msg: series_results.update({cid: (vals, lbls, msg)})
+    )
+
+    # 1. No spectra selected -> emits empty array with message
+    vm.set_selector_active(SELECTOR_RED, True)
+    assert SELECTOR_RED in series_results
+    vals0, lbls0, msg0 = series_results[SELECTOR_RED]
+    assert len(vals0) == 0
+    assert "No spectra selected" in msg0
+
+    # 2. Load 4 discrete spectra with linearly increasing peak height at 900
+    x = np.linspace(500, 1500, 101)
+    mds = []
+    for i in range(4):
+        amp = 10.0 + i * 5.0
+        y = (amp * np.exp(-((x - 900.0) ** 2) / (2 * 25.0 ** 2)) + 2.0).reshape(1, -1)
+        mds.append(
+            MapData(
+                name=f"spec_{i + 1}",
+                x0=x,
+                Y0=y.astype(np.float32),
+                coords=np.array([[0.0, 0.0]]),
+                is_active=np.array([True]),
+                fnames=[f"spec_{i + 1}"],
+                colors=[None],
+                labels=[f"S{i + 1}"],
+            )
+        )
+
+    vm.set_selector_range(SELECTOR_RED, 850.0, 950.0, immediate=True)
+    vm.set_series_data(mds)
+
+    vals, lbls, msg = series_results[SELECTOR_RED]
+    assert len(vals) == 4
+    assert lbls == ["S1", "S2", "S3", "S4"]
+    # Integrated intensity increases monotonically across S1..S4
+    assert np.all(np.diff(vals) > 0)
+
+    # 3. User-adjusted range [850, 950] is preserved when selection subset changes
+    vm.set_series_data(mds[:2])
+    assert vm._states[SELECTOR_RED]["range"] == (850.0, 950.0)
+    vals_sub, lbls_sub, _ = series_results[SELECTOR_RED]
+    assert len(vals_sub) == 2
+    assert lbls_sub == ["S1", "S2"]

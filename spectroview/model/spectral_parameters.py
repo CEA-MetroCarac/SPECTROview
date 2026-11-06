@@ -304,6 +304,109 @@ def _compute_fit_parameter(
     return np.full(n_spectra, np.nan), False, f"Unknown fit parameter '{parameter}'"
 
 
+def compute_series_spectral_parameter(
+    mds: list[Any],
+    x_range: Tuple[float, float],
+    parameter: str = PARAM_INTEGRATED_INTENSITY,
+) -> Tuple[np.ndarray, list[str], bool, str]:
+    """Compute a spectral parameter across a selected series of MapData objects.
+
+    Supports both homogeneous series (batched in a single vectorized NumPy call)
+    and heterogeneous series (differing x-axes or per-spectrum fit models).
+
+    Parameters
+    ----------
+    mds : list of MapData
+        Currently selected MapData blocks (typically N=1 per block in Spectra workspace).
+    x_range : tuple of (float, float)
+        Spectral interval (x_start, x_end).
+    parameter : str
+        The spectral parameter to calculate.
+
+    Returns
+    -------
+    values : np.ndarray
+        1D array of calculated parameter values across all selected spectra.
+    labels : list of str
+        Display labels / filenames for each spectrum in the series.
+    is_valid : bool
+        True if at least one valid value was calculated, False otherwise.
+    message : str
+        Status message or reason for failure.
+    """
+    valid_mds = [
+        md for md in (mds or [])
+        if md is not None and getattr(md, "x_axis", None) is not None and getattr(md, "y_matrix", None) is not None
+    ]
+    if not valid_mds:
+        return np.array([], dtype=np.float64), [], False, "No spectra selected"
+
+    labels: list[str] = []
+    for md in valid_mds:
+        n_rows = md.y_matrix.shape[0] if md.y_matrix.ndim == 2 else 1
+        for i in range(n_rows):
+            lbl = None
+            if getattr(md, "labels", None) and i < len(md.labels):
+                lbl = md.labels[i]
+            if not lbl and getattr(md, "fnames", None) and i < len(md.fnames):
+                lbl = md.fnames[i]
+            if not lbl:
+                lbl = getattr(md, "name", f"Spectrum {len(labels) + 1}")
+            labels.append(str(lbl))
+
+    # Fast vectorized batch path when all blocks share the same x_axis and baseline status
+    if not is_fit_parameter(parameter) and len(valid_mds) >= 1:
+        ref_x = valid_mds[0].x_axis
+        ref_bl = bool(getattr(valid_mds[0], "is_baseline_subtracted", False))
+        same_axis = all(
+            len(md.x_axis) == len(ref_x)
+            and bool(getattr(md, "is_baseline_subtracted", False)) == ref_bl
+            and np.array_equal(md.x_axis, ref_x)
+            for md in valid_mds[1:]
+        )
+        if same_axis:
+            Y_stacked = np.vstack([
+                md.y_matrix if md.y_matrix.ndim == 2 else md.y_matrix[np.newaxis, :]
+                for md in valid_mds
+            ])
+            vals, is_valid, msg = compute_spectral_parameter(
+                x_axis=ref_x,
+                Y=Y_stacked,
+                x_range=x_range,
+                parameter=parameter,
+                baseline_subtracted=ref_bl,
+            )
+            return vals, labels, is_valid, msg
+
+    # Per-block evaluation (handles differing x-axes or per-spectrum fit parameters)
+    all_vals = []
+    last_msg = ""
+    any_valid = False
+    for md in valid_mds:
+        has_fit = md.has_fit_results() if hasattr(md, "has_fit_results") else False
+        v, ok, m = compute_spectral_parameter(
+            x_axis=md.x_axis,
+            Y=md.y_matrix,
+            x_range=x_range,
+            parameter=parameter,
+            baseline_subtracted=getattr(md, "is_baseline_subtracted", False),
+            peak_params=md.peak_params if has_fit else None,
+            param_names=md.param_names if has_fit else None,
+            fit_model=getattr(md, "fit_model", None),
+        )
+        all_vals.append(v)
+        if ok:
+            any_valid = True
+            last_msg = m
+        elif not last_msg:
+            last_msg = m
+
+    vals = np.concatenate(all_vals) if all_vals else np.array([], dtype=np.float64)
+    if not any_valid or not np.any(np.isfinite(vals)):
+        return vals, labels, False, last_msg or "Unable to calculate parameter"
+    return vals, labels, True, last_msg or "OK"
+
+
 def compute_map_grid(
     coords: np.ndarray,
     values: np.ndarray,

@@ -40,23 +40,88 @@ def test_map_data():
     )
 
 
-def test_workspace_isolation_and_live_maps_tab_position(qapp):
-    """Verify Live Maps tab and range selectors are in Maps workspace, but NOT Spectra workspace."""
-    # 1. Spectra Workspace: no Live Maps, range selectors hidden
+def test_workspace_modes_and_live_maps_tab_position(qapp):
+    """Verify Live Maps tab and range selectors are present in both Spectra and Maps workspaces with appropriate modes."""
+    # 1. Spectra Workspace: Live Maps in 'spectra' (1D variation graph) mode at index 2, range selectors visible
     ws_spectra = VWorkspaceSpectra()
     spectra_tab_texts = [ws_spectra.bottom_tabs.tabText(i) for i in range(ws_spectra.bottom_tabs.count())]
-    assert "Live Maps" not in spectra_tab_texts, "Live Maps must NOT be present in Spectra workspace"
-    assert not hasattr(ws_spectra, "v_live_maps")
-    assert ws_spectra.v_spectra_viewer.range_panel.isHidden() is True
+    assert "Live Maps" in spectra_tab_texts, "Live Maps must be present in Spectra workspace"
+    assert spectra_tab_texts.index("Live Maps") == 2, "Live Maps must be at index 2 (after Fit Results)"
     assert spectra_tab_texts[-1] == "More", "More tab must be at the end"
+    assert ws_spectra.v_spectra_viewer.range_panel.isHidden() is False
+    assert ws_spectra.v_live_maps.mode == "spectra"
+    assert ws_spectra.vm_live_maps.mode == "spectra"
 
-    # 2. Maps Workspace: Live Maps present at index 2, range selectors visible
+    # 2. Maps Workspace: Live Maps in 'map' (2D spatial heatmap) mode at index 2, range selectors visible
     ws_maps = VWorkspaceMaps()
     maps_tab_texts = [ws_maps.bottom_tabs.tabText(i) for i in range(ws_maps.bottom_tabs.count())]
     assert "Live Maps" in maps_tab_texts, "Live Maps must be present in Maps workspace"
     assert maps_tab_texts.index("Live Maps") == 2, "Live Maps must be at index 2 (after Fit Results)"
     assert maps_tab_texts[-1] == "More", "More tab must be at the end"
     assert ws_maps.v_spectra_viewer.range_panel.isHidden() is False
+    assert ws_maps.v_live_maps.mode == "map"
+    assert ws_maps.vm_live_maps.mode == "map"
+
+
+def test_spectra_workspace_range_selector_to_live_series_synchronization(qapp):
+    """Test full cycle in Spectra workspace: select spectra -> toggle RGB brackets -> drag bracket -> verify variation graph."""
+    ws = VWorkspaceSpectra()
+    ws.show()
+
+    x = np.linspace(500, 1500, 101)
+    fnames = []
+    for i in range(5):
+        fname = f"spectrum_{i + 1}"
+        fnames.append(fname)
+        # Peak at 900 + i*5 with amplitude 10 + i*4
+        center = 900.0 + i * 5.0
+        amp = 10.0 + i * 4.0
+        y = (amp * np.exp(-((x - center) ** 2) / (2 * 20.0 ** 2)) + 3.0).reshape(1, -1)
+        ws.vm.store.add_map(
+            name=fname,
+            x0=x.copy(),
+            Y0=y.astype(np.float32),
+            coords=np.array([[0.0, 0.0]], dtype=np.float64),
+            fnames=[fname],
+            is_active=np.array([True], dtype=bool),
+        )
+
+    ws.vm._emit_list_update()
+    # Select all 5 spectra
+    ws.v_spectra_list.select_all()
+    assert len(ws.vm._get_selected_spectra()) == 5
+
+    ws.bottom_tabs.setCurrentWidget(ws.v_live_maps)
+
+    # 1. Toggle Red selector in spectra viewer
+    ws.v_spectra_viewer.btn_range_red.setChecked(True)
+    red_panel = ws.v_live_maps.panels[SELECTOR_RED]
+    assert not red_panel.isHidden()
+    assert ws.vm_live_maps._states[SELECTOR_RED]["active"] is True
+
+    # 2. Set Red interval over the peak [850, 960]
+    ws.v_spectra_viewer.range_manager.set_range(SELECTOR_RED, 850.0, 960.0)
+    ws.vm_live_maps.recalculate(SELECTOR_RED)
+
+    # 3. Verify Red subpanel rendered a 5-point variation curve with increasing intensity
+    assert red_panel.line is not None
+    assert len(red_panel._series_values) == 5
+    assert np.all(np.diff(red_panel._series_values) > 0)
+
+    # 4. Switch parameter to Peak position and verify increasing peak center trend
+    ws.v_live_maps.parameter_change_requested.emit(SELECTOR_RED, PARAM_PEAK_POSITION)
+    assert red_panel.line is not None
+    expected_centers = np.array([900.0 + i * 5.0 for i in range(5)])
+    assert np.allclose(red_panel._series_values, expected_centers, atol=6.0)
+
+    # 5. Select only first 3 spectra -> graph updates to 3 points
+    ws.vm.set_selected_fnames(fnames[:3])
+    assert len(red_panel._series_values) == 3
+    assert len(red_panel.line.get_xdata()) == 3
+
+    # 6. Deactivate Red selector -> panel hidden
+    ws.v_spectra_viewer.btn_range_red.setChecked(False)
+    assert red_panel.isVisible() is False
 
 
 def test_range_selector_to_live_maps_synchronization(qapp, test_map_data):

@@ -1,7 +1,9 @@
 """Live Maps Tab View component for SPECTROview.
 
-Displays 3 live-updating 2D heatmaps corresponding to Red, Blue, and Green
-spectral range selectors, with parameter selection and colormap configuration.
+Displays 3 live-updating panels corresponding to Red, Blue, and Green
+spectral range selectors:
+- In Maps workspace ('map' mode): renders 2D spatial heatmaps with colormap selection.
+- In Spectra workspace ('spectra' mode): renders 1D parameter variation graphs across selected spectra.
 """
 
 from __future__ import annotations
@@ -10,6 +12,7 @@ from typing import Optional, Dict, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from matplotlib.ticker import MaxNLocator
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from PySide6.QtCore import Qt, Signal, QSize
@@ -48,33 +51,41 @@ AVAILABLE_PALETTES = [
 
 
 class LiveMapSubpanel(QFrame):
-    """Subpanel rendering a single 2D heatmap for one spectral range selector."""
+    """Subpanel rendering a single 2D heatmap ('map' mode) or 1D variation graph ('spectra' mode)."""
 
     parameter_changed = Signal(str, str)  # (color_id, parameter_name)
 
-    def __init__(self, color_id: str, parent=None):
+    def __init__(self, color_id: str, parent=None, mode: str = "map"):
         super().__init__(parent)
         self.color_id = color_id
         self.color_hex = SELECTOR_COLORS[color_id]
         self.color_name = SELECTOR_NAMES[color_id]
+        self.mode = mode  # "map" or "spectra"
 
         self.setObjectName(f"liveMapPanel_{color_id}")
         self.setFrameShape(QFrame.StyledPanel)
 
-        # Cached grid data
+        # Cached 2D grid data (Maps mode)
         self._grid = None
         self._extent = [0.0, 1.0, 0.0, 1.0]
         self._vmin = 0.0
         self._vmax = 1.0
+
+        # Cached 1D series data (Spectra mode)
+        self._series_values: Optional[np.ndarray] = None
+        self._series_labels: list[str] = []
+
         self._status_msg = ""
         self._x_range = (0.0, 100.0)
         self._current_theme = "Light Mode"
 
-        # Image and colorbar references
+        # Artist references
         self.img = None
         self.cbar = None
+        self.line = None
 
         self._init_ui()
+        self.set_mode(mode)
 
     def _init_ui(self):
         layout = QVBoxLayout(self)
@@ -154,8 +165,20 @@ class LiveMapSubpanel(QFrame):
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         layout.addWidget(self.canvas, stretch=1)
 
+    def set_mode(self, mode: str):
+        """Configure subpanel for 'map' (2D heatmap) or 'spectra' (1D variation graph) mode."""
+        self.mode = mode
+        is_map = (mode == "map")
+        self.cbb_palette.setVisible(is_map)
+        if is_map:
+            self.btn_copy.setToolTip("Copy map to clipboard")
+            self.cbb_param.setToolTip("Select spectral parameter for this map")
+        else:
+            self.btn_copy.setToolTip("Copy graph to clipboard")
+            self.cbb_param.setToolTip("Select spectral parameter for this graph")
+
     def _copy_to_clipboard(self):
-        """Copy heatmap figure to system clipboard."""
+        """Copy figure to system clipboard."""
         copy_fig_to_clb(self.canvas)
 
     def _on_palette_changed(self, palette_name: str):
@@ -183,6 +206,105 @@ class LiveMapSubpanel(QFrame):
         idx = self.cbb_param.findText(parameter)
         if idx >= 0:
             self.cbb_param.setCurrentIndex(idx)
+
+    def update_series(
+        self,
+        values: Optional[np.ndarray],
+        labels: Optional[list[str]] = None,
+        status_msg: str = "",
+        theme: str = "Light Mode",
+    ):
+        """Render or update the 1D parameter variation graph across selected spectra."""
+        val_arr = np.asarray(values, dtype=np.float64) if values is not None else np.array([], dtype=np.float64)
+        self._series_values = val_arr
+        self._series_labels = list(labels) if labels else []
+        self._status_msg = status_msg
+        self._current_theme = theme
+
+        param_name = self.cbb_param.currentText()
+        title_text = f"{self.color_name}: {param_name}"
+
+        has_valid = len(val_arr) > 0 and bool(np.any(np.isfinite(val_arr)))
+
+        # Fast path: in-place line update during continuous bracket dragging
+        if (
+            self.line is not None
+            and has_valid
+            and len(self.line.get_xdata()) == len(val_arr)
+        ):
+            n = len(val_arr)
+            x_idx = np.arange(1, n + 1, dtype=np.float64)
+            self.line.set_data(x_idx, val_arr)
+            ymin = float(np.nanmin(val_arr))
+            ymax = float(np.nanmax(val_arr))
+            span = ymax - ymin
+            pad = span * 0.12 if span > 1e-12 else (abs(ymin) * 0.1 if abs(ymin) > 1e-12 else 1.0)
+            self.ax.set_ylim(ymin - pad, ymax + pad)
+            self.ax.set_ylabel(param_name)
+            self.ax.set_title(title_text, fontsize=10, pad=4)
+            self.canvas.draw_idle()
+            return
+
+        is_dark = theme in ("Dark Mode", "dark", "classic_dark")
+        style_path = PLOT_POLICY_DARK if is_dark else PLOT_POLICY_LIGHT
+
+        with plt.style.context(style_path):
+            self.ax.clear()
+
+            if self.cbar is not None:
+                try:
+                    self.cbar.remove()
+                except Exception:
+                    pass
+                self.cbar = None
+            self.img = None
+            self.line = None
+
+            if not has_valid:
+                msg = status_msg or "No spectra selected"
+                self.ax.text(
+                    0.5, 0.5, msg,
+                    ha="center", va="center", transform=self.ax.transAxes,
+                    fontsize=10, color="gray", wrap=True
+                )
+                self.ax.set_xticks([])
+                self.ax.set_yticks([])
+                self.canvas.draw_idle()
+                return
+
+            n = len(val_arr)
+            x_idx = np.arange(1, n + 1, dtype=np.float64)
+
+            (self.line,) = self.ax.plot(
+                x_idx,
+                val_arr,
+                color=self.color_hex,
+                marker="o",
+                markersize=5 if n <= 30 else 3,
+                linewidth=1.8,
+                alpha=0.95,
+            )
+
+            if n == 1:
+                self.ax.set_xlim(0.5, 1.5)
+                self.ax.set_xticks([1])
+            else:
+                margin = max(0.25, 0.04 * (n - 1))
+                self.ax.set_xlim(1.0 - margin, float(n) + margin)
+                self.ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+            ymin = float(np.nanmin(val_arr))
+            ymax = float(np.nanmax(val_arr))
+            span = ymax - ymin
+            pad = span * 0.12 if span > 1e-12 else (abs(ymin) * 0.1 if abs(ymin) > 1e-12 else 1.0)
+            self.ax.set_ylim(ymin - pad, ymax + pad)
+
+            self.ax.grid(True, alpha=0.25, linestyle="--")
+            self.ax.set_xlabel("Spectrum #")
+            self.ax.set_ylabel(param_name)
+            self.ax.set_title(title_text, fontsize=10, pad=4)
+
+            self.canvas.draw_idle()
 
     def update_map(
         self,
@@ -220,7 +342,8 @@ class LiveMapSubpanel(QFrame):
             return
 
         # Re-render path for status messages or first draw
-        style_path = PLOT_POLICY_DARK if theme == "Dark Mode" else PLOT_POLICY_LIGHT
+        is_dark = theme in ("Dark Mode", "dark", "classic_dark")
+        style_path = PLOT_POLICY_DARK if is_dark else PLOT_POLICY_LIGHT
 
         with plt.style.context(style_path):
             self.ax.clear()
@@ -232,6 +355,7 @@ class LiveMapSubpanel(QFrame):
                     pass
                 self.cbar = None
             self.img = None
+            self.line = None
 
             if grid is None or np.all(np.isnan(grid)):
                 msg = status_msg or "No map data available"
@@ -270,13 +394,14 @@ class LiveMapSubpanel(QFrame):
 
 
 class VLiveMaps(QWidget):
-    """Live Maps Tab View coordinating the 3 spectral range heatmaps."""
+    """Live Maps Tab View coordinating the 3 spectral range subpanels."""
 
     parameter_change_requested = Signal(str, str)  # (color_id, parameter)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, mode: str = "map"):
         super().__init__(parent)
         self.setObjectName("LiveMapsTab")
+        self.mode = mode
 
         self.panels: Dict[str, LiveMapSubpanel] = {}
         self._active_states: Dict[str, bool] = {
@@ -292,6 +417,7 @@ class VLiveMaps(QWidget):
 
         self._current_theme = "Light Mode"
         self._init_ui()
+        self.set_mode(mode)
 
     def _init_ui(self):
         main_layout = QVBoxLayout(self)
@@ -299,12 +425,7 @@ class VLiveMaps(QWidget):
         main_layout.setSpacing(4)
 
         # ── Placeholder when all selectors are off ──
-        self.lbl_placeholder = QLabel(
-            "Live Spectral Mapping\n\n"
-            "Activate one or more spectral range selectors (Red, Blue, Green)\n"
-            "in the Spectra viewer right panel to display live 2D heatmaps.",
-            self
-        )
+        self.lbl_placeholder = QLabel(self)
         self.lbl_placeholder.setAlignment(Qt.AlignCenter)
         self.lbl_placeholder.setStyleSheet("font-size: 13px; color: #888; padding: 30px;")
         main_layout.addWidget(self.lbl_placeholder)
@@ -316,7 +437,7 @@ class VLiveMaps(QWidget):
         maps_layout.setSpacing(6)
 
         for color_id in SELECTOR_KEYS:
-            panel = LiveMapSubpanel(color_id, self.maps_container)
+            panel = LiveMapSubpanel(color_id, self.maps_container, mode=self.mode)
             panel.parameter_changed.connect(self.parameter_change_requested.emit)
             panel.setVisible(False)  # Hidden by default until activated
             self.panels[color_id] = panel
@@ -325,8 +446,26 @@ class VLiveMaps(QWidget):
         main_layout.addWidget(self.maps_container, stretch=1)
         self._update_visibility()
 
+    def set_mode(self, mode: str):
+        """Configure tab for 'map' (2D spatial heatmaps) or 'spectra' (1D variation graphs) mode."""
+        self.mode = mode
+        if mode == "spectra":
+            self.lbl_placeholder.setText(
+                "Live Spectral Mapping\n\n"
+                "Activate one or more spectral range selectors (Red, Blue, Green)\n"
+                "in the Spectra viewer right panel to display live parameter variation graphs."
+            )
+        else:
+            self.lbl_placeholder.setText(
+                "Live Spectral Mapping\n\n"
+                "Activate one or more spectral range selectors (Red, Blue, Green)\n"
+                "in the Spectra viewer right panel to display live 2D heatmaps."
+            )
+        for panel in self.panels.values():
+            panel.set_mode(mode)
+
     def set_selector_active(self, color_id: str, is_active: bool):
-        """Update visibility of a map panel based on selector state."""
+        """Update visibility of a subpanel based on selector state."""
         self._active_states[color_id] = is_active
         panel = self.panels.get(color_id)
         if panel:
@@ -334,7 +473,7 @@ class VLiveMaps(QWidget):
         self._update_visibility()
 
     def set_selector_range(self, color_id: str, x_min: float, x_max: float):
-        """Update range label on a map panel."""
+        """Update range label on a subpanel."""
         self._ranges[color_id] = (x_min, x_max)
         panel = self.panels.get(color_id)
         if panel:
@@ -355,10 +494,22 @@ class VLiveMaps(QWidget):
         vmax: float,
         status_msg: str = "",
     ):
-        """Forward calculated grid data to matching subpanel."""
+        """Forward calculated 2D grid data to matching subpanel."""
         panel = self.panels.get(color_id)
         if panel:
             panel.update_map(grid, extent, vmin, vmax, status_msg, theme=self._current_theme)
+
+    def update_series_data(
+        self,
+        color_id: str,
+        values: Optional[np.ndarray],
+        labels: list[str],
+        status_msg: str = "",
+    ):
+        """Forward calculated 1D parameter series data to matching subpanel."""
+        panel = self.panels.get(color_id)
+        if panel:
+            panel.update_series(values, labels, status_msg, theme=self._current_theme)
 
     def apply_theme(self, theme_name: str):
         """Update theme for all subpanels."""
@@ -368,8 +519,17 @@ class VLiveMaps(QWidget):
         for panel in self.panels.values():
             panel.btn_copy.setIcon(Icons.copy(color=icon_color))
             panel.img = None
+            panel.line = None
             if panel.isVisible():
-                panel.update_map(
-                    panel._grid, panel._extent, panel._vmin, panel._vmax,
-                    panel._status_msg, theme=theme_name
-                )
+                if self.mode == "spectra":
+                    panel.update_series(
+                        panel._series_values,
+                        panel._series_labels,
+                        panel._status_msg,
+                        theme=theme_name,
+                    )
+                else:
+                    panel.update_map(
+                        panel._grid, panel._extent, panel._vmin, panel._vmax,
+                        panel._status_msg, theme=theme_name
+                    )

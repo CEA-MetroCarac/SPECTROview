@@ -17,11 +17,13 @@ from spectroview.view.components.v_notification import show_notification
 from spectroview.view.theme import Icons, current_tokens
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
 from spectroview.view.components.v_fit_results import VFitResults
+from spectroview.view.components.v_live_maps import VLiveMaps
 from spectroview.view.components.v_moretab  import VMoreTab
 from spectroview.view.components.v_mva import VMVA
 from spectroview.view.components.v_spectra_list import VSpectraList
 from spectroview.view.components.v_spectra_viewer import VSpectraViewer
 from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
+from spectroview.viewmodel.vm_live_maps import VMLiveMaps
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.viewmodel.vm_mva import VMMVA
 
@@ -68,14 +70,17 @@ class VWorkspaceSpectra(QWidget):
         self.bottom_tabs.setMinimumHeight(150)
         self.v_fit_model_builder = VFitModelBuilder()
         self.v_fit_results = VFitResults()
+        self.v_live_maps = VLiveMaps(self, mode="spectra")
         self.v_more_tab = VMoreTab()
         self.v_mva = VMVA()
         self.vm_fit_model_builder = VMFitModelBuilder(self.m_settings)
+        self.vm_live_maps = VMLiveMaps(self.m_settings, mode="spectra")
         self.vm_mva = VMMVA(self.m_settings)
         self.vm.set_fit_model_builder(self.vm_fit_model_builder) # 🔑 inject dependency
         
         self.bottom_tabs.addTab(self.v_fit_model_builder, "Fit Model Builder")
         self.bottom_tabs.addTab(self.v_fit_results, "Fit Results")
+        self.bottom_tabs.addTab(self.v_live_maps, "Live Maps")
         self.bottom_tabs.addTab(self.v_mva, "MVA (beta)")
         self.bottom_tabs.addTab(self.v_more_tab, "More")
         
@@ -179,6 +184,7 @@ class VWorkspaceSpectra(QWidget):
         fname = item.data(Qt.UserRole + 1)
         if fname:
             self.vm.set_spectrum_active(fname, item.checkState() == Qt.Checked)
+            self._on_selection_changed_for_live_maps(None)
 
     def _on_check_all_toggled(self, checked: bool):
         """Handle check all checkbox toggle."""
@@ -188,6 +194,7 @@ class VWorkspaceSpectra(QWidget):
             self.v_spectra_list.item(i).setCheckState(Qt.Checked if checked else Qt.Unchecked)
         self.v_spectra_list.blockSignals(False)
         self.vm.set_all_spectra_active(checked)
+        self._on_selection_changed_for_live_maps(None)
 
     def setup_connections(self):
         """Connect ViewModel signals and slots to the View components."""
@@ -266,6 +273,16 @@ class VWorkspaceSpectra(QWidget):
         self.v_more_tab.undo_normalization_requested.connect(
             lambda: self._apply_with_ctrl(vm.undo_y_normalization)
         )
+
+        # ═════════════════════════════════════════════════════════════════
+        # Live Maps connections
+        # ═════════════════════════════════════════════════════════════════
+        self.v_spectra_viewer.range_toggled.connect(self._on_range_selector_toggled)
+        self.v_spectra_viewer.range_changed.connect(self._on_range_selector_changed)
+        self.v_live_maps.parameter_change_requested.connect(self.vm_live_maps.set_selector_parameter)
+        self.vm_live_maps.map_data_ready.connect(self.v_live_maps.update_map_data)
+        self.vm_live_maps.series_data_ready.connect(self.v_live_maps.update_series_data)
+        vm.spectra_selection_changed.connect(self._on_selection_changed_for_live_maps)
 
 
         # ═════════════════════════════════════════════════════════════════
@@ -369,6 +386,35 @@ class VWorkspaceSpectra(QWidget):
         if hasattr(self, 'v_mva') and hasattr(self.v_mva, 'apply_theme'):
             self.v_mva.apply_theme(theme)
 
+        # Propagate to Live Maps
+        if hasattr(self, 'v_live_maps') and hasattr(self.v_live_maps, 'apply_theme'):
+            self.v_live_maps.apply_theme(theme)
+
+    def _on_range_selector_toggled(self, color_id: str, is_active: bool):
+        """Handle activation / deactivation of a spectral range selector."""
+        if is_active and hasattr(self, "v_spectra_viewer"):
+            x_min, x_max = self.v_spectra_viewer.range_manager.get_range(color_id)
+            self.v_live_maps.set_selector_range(color_id, x_min, x_max)
+            self.vm_live_maps.set_selector_range(color_id, x_min, x_max, immediate=False)
+        self.v_live_maps.set_selector_active(color_id, is_active)
+        self.vm_live_maps.set_selector_active(color_id, is_active)
+
+    def _on_range_selector_changed(self, color_id: str, x_min: float, x_max: float):
+        """Handle boundary change of a spectral range selector."""
+        self.v_live_maps.set_selector_range(color_id, x_min, x_max)
+        self.vm_live_maps.set_selector_range(color_id, x_min, x_max)
+
+    def _on_selection_changed_for_live_maps(self, selected_data):
+        """Update Live Maps with the currently selected spectra."""
+        if not hasattr(self, "vm_live_maps"):
+            return
+        fnames = self.vm._get_selected_spectra()
+        mds = [
+            self.vm.store.get_map_data(fname)
+            for fname in fnames
+            if self.vm.store.get_map_data(fname) is not None
+        ]
+        self.vm_live_maps.set_series_data(mds)
 
     def _update_fit_results(self, df):
         """Update fit results table display."""
@@ -376,6 +422,7 @@ class VWorkspaceSpectra(QWidget):
             self.v_fit_results.show_results(df)
         else:
             self.v_fit_results.clear_results()
+        self._on_selection_changed_for_live_maps(None)
     
     def _update_metadata_display(self, selected_spectra):
         """Update metadata display with first selected spectrum's metadata."""

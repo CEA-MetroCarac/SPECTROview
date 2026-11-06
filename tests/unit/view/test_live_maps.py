@@ -95,3 +95,32 @@ def test_v_live_maps_update_data_and_theme(qapp):
     # Apply dark theme
     live_maps.apply_theme("dark")
     assert live_maps._current_theme == "dark"
+
+
+def test_live_map_subpanel_spectra_series_render(qapp):
+    """Test LiveMapSubpanel and VLiveMaps in 'spectra' mode (1D parameter variation graph)."""
+    live_maps = VLiveMaps(mode="spectra")
+    live_maps.show()
+    red_panel = live_maps.panels[SELECTOR_RED]
+
+    # In spectra mode, 2D colormap selector is hidden
+    assert red_panel.cbb_palette.isHidden() is True
+
+    live_maps.set_selector_active(SELECTOR_RED, True)
+    vals = np.array([10.0, 20.0, 15.0, 30.0])
+    labels = ["S1", "S2", "S3", "S4"]
+
+    live_maps.update_series_data(SELECTOR_RED, vals, labels, "OK")
+    assert red_panel.line is not None
+    orig_line = red_panel.line
+    assert np.allclose(red_panel.line.get_ydata(), vals)
+
+    # Fast in-place update when dragging bracket (same spectrum count) preserves line artist
+    vals2 = np.array([12.0, 24.0, 18.0, 36.0])
+    live_maps.update_series_data(SELECTOR_RED, vals2, labels, "OK")
+    assert red_panel.line is orig_line
+    assert np.allclose(red_panel.line.get_ydata(), vals2)
+
+    # Empty / NaN series renders status message gracefully and clears line artist
+    live_maps.update_series_data(SELECTOR_RED, np.array([]), [], "No spectra selected")
+    assert red_panel.line is None

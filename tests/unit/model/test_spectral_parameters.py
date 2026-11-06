@@ -3,8 +3,10 @@
 import numpy as np
 import pytest
 
+from spectroview.model.spectra_store import MapData
 from spectroview.model.spectral_parameters import (
     compute_spectral_parameter,
+    compute_series_spectral_parameter,
     compute_map_grid,
     is_fit_parameter,
     PARAM_INTEGRATED_INTENSITY,
@@ -200,3 +202,67 @@ def test_compute_map_grid(synthetic_data):
     assert grid[0, 4] == 4.0
     assert grid[1, 0] == 5.0
     assert grid[1, 4] == 9.0
+
+
+def test_compute_series_spectral_parameter_homogeneous_and_heterogeneous(synthetic_data):
+    """Test series parameter computation across multiple discrete MapData objects."""
+    x = synthetic_data["x"]
+    Y = synthetic_data["Y"]
+    p_names = synthetic_data["param_names"]
+    p_params = synthetic_data["peak_params"]
+
+    # 1. Empty list
+    vals_empty, labels_empty, ok_empty, msg_empty = compute_series_spectral_parameter([], (750, 850))
+    assert ok_empty is False
+    assert len(vals_empty) == 0
+    assert labels_empty == []
+    assert "No spectra selected" in msg_empty
+
+    # 2. Homogeneous series of 5 discrete spectra
+    mds = []
+    for i in range(5):
+        md = MapData(
+            name=f"spec_{i + 1}",
+            x0=x.copy(),
+            Y0=Y[i : i + 1].copy(),
+            coords=np.array([[0.0, 0.0]]),
+            is_active=np.array([True]),
+            fnames=[f"spec_{i + 1}"],
+            colors=[None],
+            labels=[f"Label_{i + 1}"],
+            peak_params=p_params[i : i + 1].copy(),
+            param_names=list(p_names),
+        )
+        mds.append(md)
+
+    vals, labels, ok, _ = compute_series_spectral_parameter(mds, (750, 850), PARAM_MAX_INTENSITY)
+    assert ok is True
+    assert len(vals) == 5
+    assert labels == [f"Label_{i + 1}" for i in range(5)]
+    assert vals[0] < vals[-1]
+
+    # 3. Fit parameter across discrete spectra
+    fit_vals, _, ok_fit, _ = compute_series_spectral_parameter(mds, (750, 850), PARAM_PEAK_HEIGHT_FIT)
+    assert ok_fit is True
+    assert np.allclose(fit_vals, 10.0 + 2.0 * np.arange(5))
+
+    # 4. Heterogeneous x-axis lengths across discrete spectra
+    x_dense = np.linspace(500, 1500, 301)
+    y_dense = (30.0 * np.exp(-((x_dense - 800) ** 2) / (2 * 20 ** 2)) + 5.0).reshape(1, -1)
+    md_dense = MapData(
+        name="spec_dense",
+        x0=x_dense,
+        Y0=y_dense,
+        coords=np.array([[0.0, 0.0]]),
+        is_active=np.array([True]),
+        fnames=["spec_dense"],
+        colors=[None],
+        labels=["Dense"],
+    )
+    het_vals, het_labels, ok_het, _ = compute_series_spectral_parameter(
+        [mds[0], md_dense], (750, 850), PARAM_PEAK_POSITION
+    )
+    assert ok_het is True
+    assert len(het_vals) == 2
+    assert het_labels == ["Label_1", "Dense"]
+    assert np.allclose(het_vals, 800.0, atol=6.0)

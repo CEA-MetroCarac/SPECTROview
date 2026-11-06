@@ -243,7 +243,6 @@ class VSpectraViewer(QWidget):
         self.btn_range_red = self.range_panel.buttons[SELECTOR_RED]
         self.btn_range_blue = self.range_panel.buttons[SELECTOR_BLUE]
         self.btn_range_green = self.range_panel.buttons[SELECTOR_GREEN]
-        self.range_panel.setVisible(False)  # Hidden by default; active only in Maps workspace
         layout.addWidget(self.range_panel, 0, Qt.AlignHCenter)
 
         layout.addStretch(1)
@@ -1601,6 +1600,11 @@ class VSpectraViewer(QWidget):
 
         self.lbl_r2.setText("")
         self.lbl_noise.setText("")
+
+        # ── Render active spectral range selectors ──
+        if hasattr(self, "range_manager") and self.ax is not None:
+            self.range_manager.render(self.ax)
+
         self.canvas.draw_idle()
 
     def _toggle_heatmap_mode(self, checked: bool):
@@ -2516,8 +2520,7 @@ class VSpectraViewer(QWidget):
     def set_range_selectors_visible(self, visible: bool):
         """Show or hide the spectral range selector panel on the right toolbar.
 
-        Active only in the Maps workspace. When hidden, any active selectors
-        are cleanly deactivated.
+        When hidden, any active selectors are cleanly deactivated.
         """
         self.range_panel.setVisible(visible)
         if not visible:
@@ -2540,9 +2543,13 @@ class VSpectraViewer(QWidget):
         if self._tensor_data:
             x_arr = self._tensor_data.get("x")
             if x_arr is not None:
-                first_x = x_arr[0] if isinstance(x_arr, list) and len(x_arr) > 0 else x_arr
-                if hasattr(first_x, "__len__") and len(first_x) > 1:
-                    return float(np.min(first_x)), float(np.max(first_x))
+                if isinstance(x_arr, list) and len(x_arr) > 0:
+                    mins = [float(np.min(xa)) for xa in x_arr if hasattr(xa, "__len__") and len(xa) > 1]
+                    maxs = [float(np.max(xa)) for xa in x_arr if hasattr(xa, "__len__") and len(xa) > 1]
+                    if mins and maxs:
+                        return min(mins), max(maxs)
+                elif hasattr(x_arr, "__len__") and len(x_arr) > 1:
+                    return float(np.min(x_arr)), float(np.max(x_arr))
         if self._current_spectra:
             x_vals = []
             for s in self._current_spectra:

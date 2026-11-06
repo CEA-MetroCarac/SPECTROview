@@ -111,7 +111,9 @@ All bulk actions (baseline subtract, peak paste, reinit, fit) follow this patter
 
 ### Interactive Spectral Mapping & Live Maps
 
-The interactive spectral mapping subsystem allows users to select up to three independent spectral ranges on the 1D spectrum viewer and see live-updating 2D parameter heatmaps in real time.
+The interactive spectral mapping subsystem allows users to select up to three independent spectral ranges on the 1D spectrum viewer and see live-updating parameter visualizations in real time:
+- **Spectra Workspace (`mode="spectra"`)**: Renders up to three color-coded (Red, Blue, Green) 1D trend curves (`Spectrum #` vs. parameter value) across the **currently selected spectra** in `VSpectraList`.
+- **Maps Workspace (`mode="map"`)**: Renders up to three 2D spatial parameter heatmaps across the active hyperspectral map grid.
 
 ```mermaid
 graph TD
@@ -121,7 +123,7 @@ graph TD
     end
 
     subgraph ViewModel
-        VMLM["VMLiveMaps<br/>(60 ms debounce timer, active states, intervals)"]
+        VMLM["VMLiveMaps<br/>(60 ms debounce timer, mode='spectra' | 'map')"]
     end
 
     subgraph Model
@@ -130,23 +132,23 @@ graph TD
 
     subgraph Live Maps Tab
         VLM["VLiveMaps<br/>(Tab placed immediately before More)"]
-        Sub["LiveMapSubpanel x 3<br/>(Canvas, colorbar, parameter dropdown, palette dropdown)"]
+        Sub["LiveMapSubpanel x 3<br/>(1D Series Curve in Spectra / 2D Heatmap in Maps)"]
     end
 
     RP -->|"range_toggled(key, active)"| RSM & VMLM
     RSM -->|"range_changed(key, xmin, xmax)"| VMLM
-    VMLM -->|"compute_spectral_parameter()"| SP
-    VMLM -->|"map_updated(key, grid, coords, ...)"| VLM
+    VMLM -->|"compute_spectral_parameter() /<br/>compute_series_spectral_parameter()"| SP
+    VMLM -->|"series_data_ready / map_data_ready"| VLM
     VLM --> Sub
 ```
 
 - **`VRangeSelectorPanel`**: Positioned as a dedicated vertical panel on the right side of `VSpectraViewer`. Contains three independent toggle buttons identified by Red (`#e74c3c`), Blue (`#3498db`), and Green (`#2ecc71`) circular badges and labels.
 - **`RangeSelectorManager`**: Manages interactive vertical boundary lines, inward bracket annotations, and transparent spans for each selector. Dragging either line or the center span smoothly translates or resizes the interval. Hit testing uses pixel tolerance with coordinate translation from Matplotlib transforms.
-- **`VMLiveMaps`**: Owns selector intervals, parameter selections, and colormap choices. Uses a 60ms debounce timer to prevent full-dataset recalculations during continuous mouse drag.
-- **`spectral_parameters.py`**: Model-level vectorized evaluation over `MapData.Y` (2D array $[N, M]$) without per-spectrum loops. Calculates:
+- **`VMLiveMaps`**: Owns selector intervals, parameter selections, colormap choices, and `mode` (`"spectra"` or `"map"`). Uses a 60ms debounce timer to prevent full-dataset recalculations during continuous mouse drag. In `"spectra"` mode, `set_series_data(mds)` preserves user-adjusted bracket positions across spectrum selection changes when within axis bounds and emits `series_data_ready`. In `"map"` mode, `set_map_data(md)` emits `map_data_ready`.
+- **`spectral_parameters.py`**: Model-level vectorized evaluation over `MapData.Y` (2D array $[N, M]$) via `compute_spectral_parameter()` and across discrete selected spectra (`list[MapData]`) via `compute_series_spectral_parameter()` (which stacks homogeneous `x` grids into a single batch tensor before evaluating). Calculates:
   - *Direct*: `Integrated intensity`, `Mean intensity`, `Maximum intensity`, `Peak position`, `Peak height` (baseline-subtracted).
   - *Fitted*: `Peak position (fit)`, `Peak height (fit)`, `Peak area (fit)` using fitted peak parameters when available.
-- **`VLiveMaps`**: QWidget tab installed in `bottom_tabs` (between `Fit Results` and `MVA`, with `More` placed at the end of the tabs). Hosts 3 independent subpanels that dynamically hide/show based on active selectors, with dark/light theme support.
+- **`VLiveMaps`**: QWidget tab installed in `bottom_tabs` (between `Fit Results` and `MVA`, with `More` placed at the end of the tabs). Hosts 3 independent subpanels that dynamically hide/show based on active selectors, with dark/light theme support. In `"spectra"` mode, each subpanel hides the colormap dropdown and updates its 1D `Line2D` artist in-place during drag events for smooth 60fps feedback.
 - **Zoom & Range Coordination**: When a range selector is activated, `btn_zoom` is automatically deactivated so bracket adjustment can occur without triggering simultaneous zoom rectangles. The Zoom button can also be toggled off by clicking it, and while Zoom is active, clicking inside the range span performs a zoom rather than moving the range body.
 
 ### `VMWorkspaceSpectra` — The ViewModel

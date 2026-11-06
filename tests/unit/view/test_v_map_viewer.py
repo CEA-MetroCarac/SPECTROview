@@ -430,6 +430,56 @@ class TestMapViewerCoordinateDrift:
         assert len(viewer2.img.get_paths()) == 49
         assert viewer2._current_dx > 5.0
 
+    def test_cursor_data_updates_after_fast_path_and_handles_duplicate_sites(self, qapp):
+        """Mouse hover get_cursor_data must reflect updated Z values after fast-path parameter changes."""
+        from types import SimpleNamespace
+        from matplotlib.collections import PatchCollection
+        viewer = VMapViewer()
+        viewer.cbb_map_type.setCurrentText("2Dmap")
+
+        # 3 scattered sites, site (0.0, 0.0) has 2 repeated measurements (first=10, second=50)
+        df = pd.DataFrame({
+            'X': [0.0, 0.0, 10.0, 3.0],
+            'Y': [0.0, 0.0, 0.0, 7.0],
+            100.0: [10.0, 50.0, 20.0, 30.0],
+            200.0: [2.0, 10.0, 4.0, 6.0],
+        })
+        viewer.set_map_data(df, "dup_sites")
+        viewer.cbb_zparameter.setCurrentText("Intensity")
+        viewer._do_plot_heatmap()
+        assert isinstance(viewer.img, PatchCollection)
+
+        # Hover over (0.0, 0.0): should return the top-most (last valid) patch value = 50.0
+        ev = SimpleNamespace(xdata=0.0, ydata=0.0)
+        assert np.isclose(viewer.img.get_cursor_data(ev), 50.0)
+
+        # Switch Z parameter to Area (triggers fast-path in-place update on same PatchCollection)
+        viewer.cbb_zparameter.setCurrentText("Area")
+        viewer._do_plot_heatmap()
+        # Area for second spectrum at (0.0, 0.0) is 50.0 + 10.0 = 60.0
+        assert np.isclose(viewer.img.get_cursor_data(ev), 60.0)
+
+    def test_symmetric_5_point_die_pattern_with_repeats_classified_as_irregular(self, qapp):
+        """A 5-point die pattern (4 corners + center) with repeated spectra must not be misclassified as a 3x3 regular grid."""
+        from matplotlib.collections import PatchCollection
+        viewer = VMapViewer()
+        viewer.cbb_map_type.setCurrentText("2Dmap")
+
+        # 5 sites on a symmetric 3x3 bounding box, each repeated 4 times (20 rows total, 5 unique sites out of 9 grid cells = 55.6%)
+        sites = [(-1.0, -1.0), (-1.0, 1.0), (0.0, 0.0), (1.0, -1.0), (1.0, 1.0)] * 4
+        df = pd.DataFrame({
+            'X': [p[0] for p in sites],
+            'Y': [p[1] for p in sites],
+            100.0: np.arange(len(sites), dtype=float) + 10.0,
+        })
+        viewer.set_map_data(df, "five_point_sym")
+        viewer._do_plot_heatmap()
+
+        assert isinstance(viewer.img, PatchCollection)
+        assert viewer._cached_2d_geometry['is_regular'] is False
+        assert viewer._cached_2d_geometry['has_duplicates'] is True
+
+
 
 
 

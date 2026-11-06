@@ -464,21 +464,12 @@ class VMapViewer(QWidget):
     def set_map_data(self, map_df, map_name, df_fit_results=None, selected_points=None):
         """Set map data and schedule plot update with debounce."""
         is_map_change = (map_name != getattr(self, "map_df_name", None))
+        old_sites_x = getattr(self, "_sites_x", np.array([], dtype=float))
+        old_sites_y = getattr(self, "_sites_y", np.array([], dtype=float))
 
         self.map_df = map_df
         self.map_df_name = map_name
         self.df_fit_results = df_fit_results if df_fit_results is not None else pd.DataFrame()
-
-        # When map dataset changes, reset rendered artists and cache keys to force a clean redraw
-        if is_map_change:
-            self._last_rendered_map_name = None
-            self._last_rendered_cache_key = None
-            self.img = None
-            self.cbar = None
-            if hasattr(self, '_current_dx'):
-                del self._current_dx
-            if hasattr(self, '_current_dy'):
-                del self._current_dy
         
         # Cache coordinate arrays for fast reuse across plots and mouse interactions
         if self.map_df is not None and not self.map_df.empty:
@@ -491,6 +482,26 @@ class VMapViewer(QWidget):
             self._sites_x = np.array([], dtype=float)
             self._sites_y = np.array([], dtype=float)
             self.number_of_points = 0
+
+        coords_changed = (
+            is_map_change
+            or len(self._sites_x) != len(old_sites_x)
+            or not (np.array_equal(self._sites_x, old_sites_x) and np.array_equal(self._sites_y, old_sites_y))
+        )
+
+        # When map dataset or its coordinate geometry changes, reset rendered artists and cached 2D geometry
+        if coords_changed:
+            self._cached_2d_geometry = None
+            self._last_rendered_map_name = None
+            self._last_rendered_cache_key = None
+            self.img = None
+            self.cbar = None
+            if hasattr(self, '_current_dx'):
+                del self._current_dx
+            if hasattr(self, '_current_dy'):
+                del self._current_dy
+            if not is_map_change and map_name:
+                self.clear_cache_for_map(map_name)
 
         # Auto-select the first coordinate on map open or switch
         if selected_points is not None:
@@ -783,7 +794,12 @@ class VMapViewer(QWidget):
                     f"QFrame#canvasCard {{ background-color: {fig_hex}; border: 1px solid {tok.border}; border-radius: 8px; }}"
                 )
             self.ax = self.figure.add_subplot(111)
+            self.img = None
             self.cbar = None
+            self._selection_collection = None
+            self._profile_line = None
+            self._profile_height_line = None
+            self._last_stats_text_artist = None
             self.canvas.draw_idle()
             return
         
@@ -837,23 +853,12 @@ class VMapViewer(QWidget):
 
                 if map_type != '2Dmap' and grid_z is not None:
                     img_data = grid_z
-                    width = extent[1] - extent[0]
-                    height = extent[3] - extent[2]
-                    self._current_dx = width / 80.0
-                    self._current_dy = height / 80.0
                     if hasattr(self, '_scatter_sites') and self._scatter_sites is not None:
                         all_x, all_y = self._get_measurement_sites()
                         if len(all_x) > 0:
                             self._scatter_sites.set_offsets(np.column_stack([all_x, all_y]))
                 elif not heatmap_pivot.empty:
                     img_data = heatmap_pivot.values if hasattr(heatmap_pivot, 'values') else np.asarray(heatmap_pivot)
-                    rows, cols = heatmap_pivot.shape
-                    if cols > 0 and rows > 0:
-                        self._current_dx = (extent[1] - extent[0]) / cols
-                        self._current_dy = (extent[3] - extent[2]) / rows
-                    else:
-                        self._current_dx = 1.0
-                        self._current_dy = 1.0
                 elif isinstance(self.img, PatchCollection):
                     if len(self.img.get_paths()) != len(final_z_col):
                         raise ValueError("PatchCollection count mismatch")
@@ -876,7 +881,7 @@ class VMapViewer(QWidget):
                 else:
                     img_data = None
 
-                if img_data is not None:
+                if img_data is not None and hasattr(self.img, 'set_data'):
                     self.img.set_cmap(cmap)
                     self.img.set_interpolation(interpolation)
                     if self.cbb_color_scale.currentText() == "Log" and vmin_plot is not None and vmin_plot > 0:
@@ -909,7 +914,12 @@ class VMapViewer(QWidget):
                 f"QFrame#canvasCard {{ background-color: {fig_hex}; border: 1px solid {tok.border}; border-radius: 8px; }}"
             )
         self.ax = self.figure.add_subplot(111)
+        self.img = None
         self.cbar = None
+        self._selection_collection = None
+        self._profile_line = None
+        self._profile_height_line = None
+        self._last_stats_text_artist = None
         self._last_rendered_map_name = self.map_df_name
         self._last_map_type = map_type
         self._last_show_stats = show_stats
@@ -946,11 +956,10 @@ class VMapViewer(QWidget):
         
         # Get heatmap data and plot (consolidated error handling)
         try:
-            # Get heatmap data
+            # Get heatmap data (also updates self._current_dx and self._current_dy)
             heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col = self._get_data_for_heatmap()
             self._last_final_z_col = final_z_col
         
-            
             # Plot settings
             cmap = plt.get_cmap(self.cbb_palette.currentText()).copy()
             # Set NaN values to transparent so they don't hide the background
@@ -967,27 +976,11 @@ class VMapViewer(QWidget):
                                          origin='lower', aspect='equal', cmap=cmap,
                                          interpolation=interpolation,
                                          **color_kwargs)
-                                         
-                # Calculate pixel size for wafer map (grid_x is 80x80)
-                width = extent[1] - extent[0]
-                height = extent[3] - extent[2]
-                self._current_dx = width / 80.0
-                self._current_dy = height / 80.0
-                
             elif not heatmap_pivot.empty:
                 # 2D maps (regular grid): Use pivot table with optional smoothing
                 self.img = self.ax.imshow(heatmap_pivot, extent=extent,
                                          origin='lower', aspect='equal', cmap=cmap,
                                          interpolation=interpolation, **color_kwargs)
-                                         
-                # Calculate pixel size from pivot table shape and extent
-                rows, cols = heatmap_pivot.shape
-                if cols > 0 and rows > 0:
-                    self._current_dx = (extent[1] - extent[0]) / cols
-                    self._current_dy = (extent[3] - extent[2]) / rows
-                else:
-                    self._current_dx = 1.0
-                    self._current_dy = 1.0
             else:
                 # 2D maps (irregular / scattered grid, e.g. wafer files or non-uniform coordinates in 2Dmap mode):
                 # Render square color pixels centered at actual (x, y) coordinates to eliminate coordinate drift.
@@ -995,20 +988,8 @@ class VMapViewer(QWidget):
                 dx = getattr(self, '_current_dx', None)
                 dy = getattr(self, '_current_dy', None)
                 if dx is None or dy is None or dx <= 0 or dy <= 0:
-                    x_span = float(x_col.max() - x_col.min()) if len(x_col) > 0 else 0.0
-                    y_span = float(y_col.max() - y_col.min()) if len(y_col) > 0 else 0.0
-                    pts = np.column_stack([x_col, y_col])
-                    unique_pts = np.unique(pts, axis=0)
-                    if len(unique_pts) > 1:
-                        diff = unique_pts[:, np.newaxis, :] - unique_pts[np.newaxis, :, :]
-                        dists = np.sqrt(np.sum(diff ** 2, axis=-1))
-                        np.fill_diagonal(dists, np.inf)
-                        min_dist = float(dists.min())
-                        span_max = max(x_span, y_span)
-                        pixel_size = min(min_dist * 0.35, span_max / 20.0) if span_max > 0 else min_dist * 0.35
-                        dx = dy = max(pixel_size, 1e-4)
-                    else:
-                        dx = dy = 1.0
+                    geom = self._get_2d_spatial_geometry()
+                    dx, dy = geom['dx'], geom['dy']
                     self._current_dx = float(dx)
                     self._current_dy = float(dy)
                 rects = [
@@ -1029,13 +1010,19 @@ class VMapViewer(QWidget):
                 # Enable mouseover for live coordinate and cursor data display
                 collection.set_mouseover(True)
 
-                def _get_cursor_data(event, _xs=x_col, _ys=y_col, _zs=final_z_col, _dx=dx, _dy=dy):
-                    if event.xdata is None or event.ydata is None or len(_xs) == 0:
+                def _get_cursor_data(event, _xs=x_col, _ys=y_col, _dx=dx, _dy=dy):
+                    zs = getattr(self, '_last_final_z_col', None)
+                    if event.xdata is None or event.ydata is None or len(_xs) == 0 or zs is None or len(zs) != len(_xs):
                         return None
                     dists_sq = (_xs - event.xdata) ** 2 + (_ys - event.ydata) ** 2
-                    idx = np.argmin(dists_sq)
+                    idx = int(np.argmin(dists_sq))
                     if abs(_xs[idx] - event.xdata) <= _dx / 2 and abs(_ys[idx] - event.ydata) <= _dy / 2:
-                        return _zs[idx]
+                        same_site = np.where((_xs == _xs[idx]) & (_ys == _ys[idx]))[0]
+                        if len(same_site) > 1:
+                            valid_site = same_site[~np.isnan(zs[same_site])]
+                            if len(valid_site) > 0:
+                                return zs[valid_site[-1]]
+                        return zs[idx]
                     return None
 
                 collection.get_cursor_data = _get_cursor_data
@@ -1295,73 +1282,28 @@ class VMapViewer(QWidget):
                 self._current_dx = float(dx)
                 self._current_dy = float(dy)
         else:
-            # 2D maps: Determine whether coordinates form a regular uniform Cartesian grid
-            u_x = np.sort(np.unique(x_col))
-            u_y = np.sort(np.unique(y_col))
+            geom = self._get_2d_spatial_geometry()
+            dx = geom['dx']
+            dy = geom['dy']
+            extent = geom['extent']
+            self._current_dx = float(dx)
+            self._current_dy = float(dy)
 
-            is_regular = False
-            if len(u_x) > 1 and len(u_y) > 1:
-                diffs_x = np.diff(u_x)
-                diffs_y = np.diff(u_y)
-                step_x = diffs_x[0]
-                step_y = diffs_y[0]
-                if step_x > 0 and step_y > 0:
-                    is_uniform_x = np.allclose(diffs_x, step_x, rtol=0.01, atol=1e-5)
-                    is_uniform_y = np.allclose(diffs_y, step_y, rtol=0.01, atol=1e-5)
-                    if is_uniform_x and is_uniform_y and len(x_col) >= 0.5 * (len(u_x) * len(u_y)):
-                        is_regular = True
-
-            if is_regular:
+            if geom['is_regular']:
                 # Regular 2D maps: Use fast pivot table on uniform grid
                 heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
-                if heatmap_data.duplicated(subset=['X', 'Y']).any():
+                if geom['has_duplicates']:
                     heatmap_pivot = heatmap_data.pivot_table(
                         index='Y', columns='X', values='Z', aggfunc='mean'
                     )
                 else:
                     heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
-
-                dx = step_x
-                dy = step_y
-                xmin = u_x[0] - 0.5 * dx
-                xmax = u_x[-1] + 0.5 * dx
-                ymin = u_y[0] - 0.5 * dy
-                ymax = u_y[-1] + 0.5 * dy
-                extent = [float(xmin), float(xmax), float(ymin), float(ymax)]
                 grid_z = None
-                self._current_dx = float(dx)
-                self._current_dy = float(dy)
             else:
                 # Irregular / scattered 2D map (e.g. wafer files or non-uniform coordinates in 2Dmap mode):
                 # Avoid pivot + imshow which distorts coordinates by assuming uniform row/col spacing.
                 heatmap_pivot = pd.DataFrame()
                 grid_z = None
-
-                x_span = float(x_col.max() - x_col.min()) if len(x_col) > 0 else 0.0
-                y_span = float(y_col.max() - y_col.min()) if len(y_col) > 0 else 0.0
-                pts = np.column_stack([x_col, y_col])
-                unique_pts = np.unique(pts, axis=0)
-                if len(unique_pts) > 1:
-                    diff = unique_pts[:, np.newaxis, :] - unique_pts[np.newaxis, :, :]
-                    dists = np.sqrt(np.sum(diff ** 2, axis=-1))
-                    np.fill_diagonal(dists, np.inf)
-                    min_dist = float(dists.min())
-                    span_max = max(x_span, y_span)
-                    pixel_size = min(min_dist * 0.35, span_max / 20.0) if span_max > 0 else min_dist * 0.35
-                    dx = dy = max(pixel_size, 1e-4)
-                else:
-                    dx = dy = 1.0
-
-                self._current_dx = float(dx)
-                self._current_dy = float(dy)
-                margin_x = max(dx * 1.5, x_span * 0.05 if x_span > 0 else 1.0)
-                margin_y = max(dy * 1.5, y_span * 0.05 if y_span > 0 else 1.0)
-                extent = [
-                    float(x_col.min() - margin_x),
-                    float(x_col.max() + margin_x),
-                    float(y_col.min() - margin_y),
-                    float(y_col.max() + margin_y)
-                ]
         
         dx_val = getattr(self, '_current_dx', 1.0)
         dy_val = getattr(self, '_current_dy', 1.0)
@@ -1371,6 +1313,95 @@ class VMapViewer(QWidget):
         self._griddata_cache[cache_key] = result
         
         return result[:6]
+
+    def _get_2d_spatial_geometry(self) -> dict:
+        """Compute and cache 2D spatial grid regularity, pixel size (dx, dy), and extent for current sites."""
+        cached = getattr(self, '_cached_2d_geometry', None)
+        if cached is not None:
+            return cached
+
+        x_col, y_col = self._get_measurement_sites()
+        if len(x_col) == 0:
+            geom = {
+                'is_regular': False,
+                'dx': 1.0,
+                'dy': 1.0,
+                'extent': [0.0, 0.0, 0.0, 0.0],
+                'has_duplicates': False,
+            }
+            self._cached_2d_geometry = geom
+            return geom
+
+        u_x = np.unique(x_col)
+        u_y = np.unique(y_col)
+        pts = np.column_stack([x_col, y_col])
+        unique_pts = np.unique(pts, axis=0)
+        has_duplicates = len(unique_pts) < len(x_col)
+
+        is_regular = False
+        step_x = 1.0
+        step_y = 1.0
+        if len(u_x) > 1 and len(u_y) > 1:
+            diffs_x = np.diff(u_x)
+            diffs_y = np.diff(u_y)
+            step_x = float((u_x[-1] - u_x[0]) / (len(u_x) - 1))
+            step_y = float((u_y[-1] - u_y[0]) / (len(u_y) - 1))
+            if step_x > 0 and step_y > 0:
+                is_uniform_x = np.allclose(diffs_x, step_x, rtol=0.01, atol=1e-5)
+                is_uniform_y = np.allclose(diffs_y, step_y, rtol=0.01, atol=1e-5)
+                if is_uniform_x and is_uniform_y and len(unique_pts) >= 0.8 * (len(u_x) * len(u_y)):
+                    is_regular = True
+
+        if is_regular:
+            dx = step_x
+            dy = step_y
+            extent = [
+                float(u_x[0] - 0.5 * dx),
+                float(u_x[-1] + 0.5 * dx),
+                float(u_y[0] - 0.5 * dy),
+                float(u_y[-1] + 0.5 * dy),
+            ]
+        else:
+            x_min, x_max = float(u_x[0]), float(u_x[-1])
+            y_min, y_max = float(u_y[0]), float(u_y[-1])
+            x_span = x_max - x_min
+            y_span = y_max - y_min
+
+            if len(unique_pts) > 1:
+                if len(unique_pts) <= 500:
+                    diff = unique_pts[:, np.newaxis, :] - unique_pts[np.newaxis, :, :]
+                    dists_sq = np.sum(diff ** 2, axis=-1)
+                    np.fill_diagonal(dists_sq, np.inf)
+                    min_dist = float(np.sqrt(dists_sq.min()))
+                else:
+                    from scipy.spatial import cKDTree
+                    tree = cKDTree(unique_pts)
+                    dists, _ = tree.query(unique_pts, k=2)
+                    min_dist = float(dists[:, 1].min())
+                span_max = max(x_span, y_span)
+                pixel_size = min(min_dist * 0.35, span_max / 20.0) if span_max > 0 else min_dist * 0.35
+                dx = dy = float(max(pixel_size, 1e-4))
+            else:
+                dx = dy = 1.0
+
+            margin_x = max(dx * 1.5, x_span * 0.05 if x_span > 0 else 1.0)
+            margin_y = max(dy * 1.5, y_span * 0.05 if y_span > 0 else 1.0)
+            extent = [
+                float(x_min - margin_x),
+                float(x_max + margin_x),
+                float(y_min - margin_y),
+                float(y_max + margin_y),
+            ]
+
+        geom = {
+            'is_regular': is_regular,
+            'dx': float(dx),
+            'dy': float(dy),
+            'extent': extent,
+            'has_duplicates': has_duplicates,
+        }
+        self._cached_2d_geometry = geom
+        return geom
     
     def _apply_mask(self, z_col, filtered_df):
         """Apply mask to z_col based on mask settings."""
@@ -1683,11 +1714,12 @@ class VMapViewer(QWidget):
             max_normalized_value = 0.3 * diagonal_length
             
             # Calculate height values (normalized)
-            values = profile_df['values'].values
-            val_max = values.max()
+            values = np.asarray(profile_df['values'].values, dtype=float)
+            valid_vals = values[~np.isnan(values)]
+            val_max = float(valid_vals.max()) if len(valid_vals) > 0 else 0.0
             if val_max > 0:
                 height = (values / val_max) * max_normalized_value
-                height -= height.min()
+                height -= float(np.nanmin(height))
                 
                 dx = x[1] - x[0]
                 dy = y[1] - y[0]

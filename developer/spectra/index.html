@@ -2153,7 +2153,9 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 <li><strong>Dynamic Toolbar Adaptation</strong>: Activating heatmap mode toggles toolbar state: standard 1D tools (<code>btn_peak</code>, <code>btn_baseline</code>, <code>btn_eraser</code>, <code>btn_norm</code>, <code>btn_bestfit</code>, and <code>shift_panel</code>) are hidden via <code>setVisible(False)</code>, while heatmap-specific controls (<code>cbb_heatmap_yaxis</code>, <code>le_heatmap_ylabel</code>, <code>spin_heatmap_interp</code>) become visible. Unchecking the mode restores the 1D tools immediately.</li>
 </ul>
 <h3 id="interactive-spectral-mapping-live-maps">Interactive Spectral Mapping &amp; Live Maps<a class="headerlink" href="#interactive-spectral-mapping-live-maps" title="Permanent link">&para;</a></h3>
-<p>The interactive spectral mapping subsystem allows users to select up to three independent spectral ranges on the 1D spectrum viewer and see live-updating 2D parameter heatmaps in real time.</p>
+<p>The interactive spectral mapping subsystem allows users to select up to three independent spectral ranges on the 1D spectrum viewer and see live-updating parameter visualizations in real time:
+- <strong>Spectra Workspace (<code>mode="spectra"</code>)</strong>: Renders up to three color-coded (Red, Blue, Green) 1D trend curves (<code>Spectrum #</code> vs. parameter value) across the <strong>currently selected spectra</strong> in <code>VSpectraList</code>.
+- <strong>Maps Workspace (<code>mode="map"</code>)</strong>: Renders up to three 2D spatial parameter heatmaps across the active hyperspectral map grid.</p>
 <pre class="mermaid"><code>graph TD
     subgraph Spectra Viewer
         RP["VRangeSelectorPanel&lt;br/&gt;(Red, Blue, Green toggle buttons)"]
@@ -2161,7 +2163,7 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
     end
 
     subgraph ViewModel
-        VMLM["VMLiveMaps&lt;br/&gt;(60 ms debounce timer, active states, intervals)"]
+        VMLM["VMLiveMaps&lt;br/&gt;(60 ms debounce timer, mode='spectra' | 'map')"]
     end
 
     subgraph Model
@@ -2170,22 +2172,22 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 
     subgraph Live Maps Tab
         VLM["VLiveMaps&lt;br/&gt;(Tab placed immediately before More)"]
-        Sub["LiveMapSubpanel x 3&lt;br/&gt;(Canvas, colorbar, parameter dropdown, palette dropdown)"]
+        Sub["LiveMapSubpanel x 3&lt;br/&gt;(1D Series Curve in Spectra / 2D Heatmap in Maps)"]
     end
 
     RP --&gt;|"range_toggled(key, active)"| RSM &amp; VMLM
     RSM --&gt;|"range_changed(key, xmin, xmax)"| VMLM
-    VMLM --&gt;|"compute_spectral_parameter()"| SP
-    VMLM --&gt;|"map_updated(key, grid, coords, ...)"| VLM
+    VMLM --&gt;|"compute_spectral_parameter() /&lt;br/&gt;compute_series_spectral_parameter()"| SP
+    VMLM --&gt;|"series_data_ready / map_data_ready"| VLM
     VLM --&gt; Sub</code></pre>
 <ul>
 <li><strong><code>VRangeSelectorPanel</code></strong>: Positioned as a dedicated vertical panel on the right side of <code>VSpectraViewer</code>. Contains three independent toggle buttons identified by Red (<code>#e74c3c</code>), Blue (<code>#3498db</code>), and Green (<code>#2ecc71</code>) circular badges and labels.</li>
 <li><strong><code>RangeSelectorManager</code></strong>: Manages interactive vertical boundary lines, inward bracket annotations, and transparent spans for each selector. Dragging either line or the center span smoothly translates or resizes the interval. Hit testing uses pixel tolerance with coordinate translation from Matplotlib transforms.</li>
-<li><strong><code>VMLiveMaps</code></strong>: Owns selector intervals, parameter selections, and colormap choices. Uses a 60ms debounce timer to prevent full-dataset recalculations during continuous mouse drag.</li>
-<li><strong><code>spectral_parameters.py</code></strong>: Model-level vectorized evaluation over <code>MapData.Y</code> (2D array <span class="arithmatex">\([N, M]\)</span>) without per-spectrum loops. Calculates:</li>
+<li><strong><code>VMLiveMaps</code></strong>: Owns selector intervals, parameter selections, colormap choices, and <code>mode</code> (<code>"spectra"</code> or <code>"map"</code>). Uses a 60ms debounce timer to prevent full-dataset recalculations during continuous mouse drag. In <code>"spectra"</code> mode, <code>set_series_data(mds)</code> preserves user-adjusted bracket positions across spectrum selection changes when within axis bounds and emits <code>series_data_ready</code>. In <code>"map"</code> mode, <code>set_map_data(md)</code> emits <code>map_data_ready</code>.</li>
+<li><strong><code>spectral_parameters.py</code></strong>: Model-level vectorized evaluation over <code>MapData.Y</code> (2D array <span class="arithmatex">\([N, M]\)</span>) via <code>compute_spectral_parameter()</code> and across discrete selected spectra (<code>list[MapData]</code>) via <code>compute_series_spectral_parameter()</code> (which stacks homogeneous <code>x</code> grids into a single batch tensor before evaluating). Calculates:</li>
 <li><em>Direct</em>: <code>Integrated intensity</code>, <code>Mean intensity</code>, <code>Maximum intensity</code>, <code>Peak position</code>, <code>Peak height</code> (baseline-subtracted).</li>
 <li><em>Fitted</em>: <code>Peak position (fit)</code>, <code>Peak height (fit)</code>, <code>Peak area (fit)</code> using fitted peak parameters when available.</li>
-<li><strong><code>VLiveMaps</code></strong>: QWidget tab installed in <code>bottom_tabs</code> (between <code>Fit Results</code> and <code>MVA</code>, with <code>More</code> placed at the end of the tabs). Hosts 3 independent subpanels that dynamically hide/show based on active selectors, with dark/light theme support.</li>
+<li><strong><code>VLiveMaps</code></strong>: QWidget tab installed in <code>bottom_tabs</code> (between <code>Fit Results</code> and <code>MVA</code>, with <code>More</code> placed at the end of the tabs). Hosts 3 independent subpanels that dynamically hide/show based on active selectors, with dark/light theme support. In <code>"spectra"</code> mode, each subpanel hides the colormap dropdown and updates its 1D <code>Line2D</code> artist in-place during drag events for smooth 60fps feedback.</li>
 <li><strong>Zoom &amp; Range Coordination</strong>: When a range selector is activated, <code>btn_zoom</code> is automatically deactivated so bracket adjustment can occur without triggering simultaneous zoom rectangles. The Zoom button can also be toggled off by clicking it, and while Zoom is active, clicking inside the range span performs a zoom rather than moving the range body.</li>
 </ul>
 <h3 id="vmworkspacespectra-the-viewmodel"><code>VMWorkspaceSpectra</code> — The ViewModel<a class="headerlink" href="#vmworkspacespectra-the-viewmodel" title="Permanent link">&para;</a></h3>
@@ -2200,7 +2202,7 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">fit_in_progress</span>         <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>          <span class="c1"># enable/disable fit buttons</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">fit_progress_updated</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>  <span class="c1"># progress bar</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">fit_results_updated</span>     <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>        <span class="c1"># pd.DataFrame → results table</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">notify</span>                  <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>           <span class="c1"># toast notification message</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">notify</span>                  <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>           <span class="c1"># floating notification message</span>
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">send_df_to_graphs</span>       <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">)</span>   <span class="c1"># forward DataFrame to Graphs</span>
 </code></pre></div>
 <h4 id="method-reference">Method Reference<a class="headerlink" href="#method-reference" title="Permanent link">&para;</a></h4>
@@ -2378,7 +2380,7 @@ This page covers the Spectra-specific View and ViewModel layers. For the shared 
 <ul>
 <li><strong>Left pane</strong>: X-correction, spectral range, baseline mode selector, baseline action buttons.</li>
 <li><strong>Right pane</strong>: <code>VPeakTable</code> (editable parameter rows) + fit action buttons (Fit, Copy model, Paste model, Save model, Apply model).</li>
-<li><strong>Drag-and-Drop Model Loading</strong>: Accepts dropped <code>.json</code> fit model files directly onto the panel or via the parent workspace. When dropped, <code>fit_model_dropped(path)</code> triggers <code>load_fit_model_file()</code>, delegating to <code>VMFitModelBuilder.load_model_file()</code>. This loads the external model into memory, updates the model dropdown, selects it, activates the <code>Fit Model Builder</code> tab, and displays a toast notification. Both Spectra and Maps workspaces inherit and support this functionality.</li>
+<li><strong>Drag-and-Drop Model Loading</strong>: Accepts dropped <code>.json</code> fit model files directly onto the panel or via the parent workspace. When dropped, <code>fit_model_dropped(path)</code> triggers <code>load_fit_model_file()</code>, delegating to <code>VMFitModelBuilder.load_model_file()</code>. This loads the external model into memory, updates the model dropdown, selects it, activates the <code>Fit Model Builder</code> tab, and displays a floating notification. Both Spectra and Maps workspaces inherit and support this functionality.</li>
 </ul>
 <h3 id="vpeaktable-the-parameter-table"><code>VPeakTable</code> — The Parameter Table<a class="headerlink" href="#vpeaktable-the-parameter-table" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <a href="file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_peak_table.py"><code>v_peak_table.py</code></a></p>

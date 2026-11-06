@@ -835,10 +835,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#35-interactive-spectral-range-selectors-live-maps-maps-workspace" class="md-nav__link">
+  <a href="#35-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.5. Interactive Spectral Range Selectors &amp; Live Maps (Maps Workspace)
+        3.5. Interactive Spectral Range Selectors &amp; Live Maps (Spectra &amp; Maps Workspaces)
       
     </span>
   </a>
@@ -2013,11 +2013,13 @@
 <li><strong>Y-Axis Interpolation Points (<code>Pts:</code>)</strong>: Specifies the number of interpolated vertical slices (default <code>300</code> pts) using smooth interpolation. Setting this value to <code>0</code> disables interpolation, displaying raw discrete rows.</li>
 <li><strong>Intensity Colormap</strong>: Respects the active color palette chosen under <strong>More Options</strong> (e.g. <code>jet</code>, <code>viridis</code>, <code>plasma</code>).</li>
 </ul>
-<h4 id="35-interactive-spectral-range-selectors-live-maps-maps-workspace"><strong>3.5. Interactive Spectral Range Selectors &amp; Live Maps (Maps Workspace)</strong><a class="headerlink" href="#35-interactive-spectral-range-selectors-live-maps-maps-workspace" title="Permanent link">&para;</a></h4>
-<p>When working in the <strong>Maps workspace</strong>, you can interactively bracket spectral features in the <code>SpectraViewer</code> and visualize their spatial distributions as real-time 2D heatmaps in the dedicated <strong>Live Maps</strong> tab.</p>
+<h4 id="35-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces"><strong>3.5. Interactive Spectral Range Selectors &amp; Live Maps (Spectra &amp; Maps Workspaces)</strong><a class="headerlink" href="#35-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces" title="Permanent link">&para;</a></h4>
+<p>In both the <strong>Spectra</strong> and <strong>Maps</strong> workspaces, you can interactively bracket up to three spectral features in the <code>SpectraViewer</code> and inspect their variation in real time within the dedicated <strong>Live Maps</strong> tab:
+- <strong>Spectra Workspace</strong>: Displays up to three color-coded (Red, Blue, Green) <strong>1D parameter variation graphs</strong> across the <strong>currently selected spectra</strong> in the <code>SpectraList</code>, allowing rapid review of how peak intensity, position, height, or area evolves across a series of selected spectra.
+- <strong>Maps Workspace</strong>: Displays up to three real-time <strong>2D spatial heatmaps</strong> across the active hyperspectral map.</p>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/rgb_live_map.png" alt="RGB Live Maps and Spectral Range Selectors" width="800"><br>
-  <i>Interactive Spectral Range Selectors in <code>SpectraViewer</code> (top) paired with real-time 2D spatial heatmaps in the <code>Live Maps</code> tab (bottom).</i>
+  <i>Interactive Spectral Range Selectors in <code>SpectraViewer</code> (top) paired with real-time visualizations in the <code>Live Maps</code> tab (bottom).</i>
 </div>
 
 <h5 id="range-selector-controls-spectra-viewer"><strong>Range Selector Controls (Spectra Viewer)</strong><a class="headerlink" href="#range-selector-controls-spectra-viewer" title="Permanent link">&para;</a></h5>
@@ -2025,17 +2027,16 @@
 - <strong>Red</strong> (<code>R</code>)
 - <strong>Blue</strong> (<code>B</code>)
 - <strong>Green</strong> (<code>G</code>)</p>
-<p><em>(Note: These range selector controls and the companion Live Maps tab are exclusive to the Maps workspace where 2D hyperspectral mapping is performed, keeping the individual Spectra workspace clean and focused on discrete 1D operations).</em></p>
 <p>Each button activates a corresponding pair of draggable vertical markers (brackets and shaded interval) directly on the spectrum plot:
 - <strong>Interactive Dragging</strong>: Click and drag either vertical boundary line to adjust the minimum or maximum wavenumber. Click and drag the shaded middle area to shift the entire interval without altering its width.
 - <strong>Multiple Simultaneous Ranges</strong>: Any combination of the three selectors can be activated at once. Each maintains its own color, interval, and visibility independently.
 - <strong>Rescale Integrity</strong>: Range selector markers do not expand or pollute the spectrum autoscale boundaries, ensuring the <strong>Rescale</strong> button (<code>Ctrl+R</code>) always zooms perfectly to the loaded spectral data.
 - <strong>Auto-Clamping</strong>: When cropping or loading new spectral data, range selectors automatically clamp and reposition within the visible spectrum domain.
-- <strong>Real-Time Map Updating</strong>: Moving any selector immediately recalculates and updates the corresponding 2D spatial heatmap in the <strong>Live Maps</strong> tab (with a smooth 60 ms debounce to prevent lagging).</p>
+- <strong>Real-Time Updating</strong>: Moving any selector or changing the selected spectra in the <code>SpectraList</code> immediately recalculates and updates the corresponding graph (in the <strong>Spectra Workspace</strong>) or 2D spatial heatmap (in the <strong>Maps Workspace</strong>) in the <strong>Live Maps</strong> tab (with a smooth 60 ms debounce to prevent lagging).</p>
 <h5 id="live-maps-tab-visualization-subpanels"><strong>Live Maps Tab Visualization &amp; Subpanels</strong><a class="headerlink" href="#live-maps-tab-visualization-subpanels" title="Permanent link">&para;</a></h5>
 <p>The <strong>Live Maps</strong> tab is located on the bottom tab bar between <strong>Fit Results</strong> and <strong>MVA</strong> (with the <strong>More</strong> tab positioned at the end of the tabs list).
-- <strong>Subpanels Display</strong>: When one or more range selectors are active, their corresponding map panels (Red, Blue, Green) are displayed side-by-side. If no selectors are currently active, a helpful placeholder message guides you to activate a selector button on the right edge of the <code>SpectraViewer</code>.
-- <strong>Supported Spectral Parameters</strong>: For each map subpanel, you can select which parameter is extracted and plotted from the dropdown:</p>
+- <strong>Subpanels Display</strong>: When one or more range selectors are active, their corresponding panels (Red, Blue, Green) are displayed side-by-side. If no selectors are currently active, a helpful placeholder message guides you to activate a selector button on the right edge of the <code>SpectraViewer</code>.
+- <strong>Supported Spectral Parameters</strong>: For each subpanel, you can select which parameter is extracted and plotted from the dropdown:</p>
 <table>
 <thead>
 <tr>
@@ -2087,11 +2088,11 @@
 </tr>
 </tbody>
 </table>
-<p><em>Note</em>: If a fit-based parameter is selected but fit results are not yet available, the map gracefully displays a notification banner rather than misleading or corrupted values.</p>
-<h5 id="individual-map-controls"><strong>Individual Map Controls</strong><a class="headerlink" href="#individual-map-controls" title="Permanent link">&para;</a></h5>
+<p><em>Note</em>: If a fit-based parameter is selected but fit results are not yet available, the panel gracefully displays a notification banner rather than misleading or corrupted values.</p>
+<h5 id="individual-subpanel-controls"><strong>Individual Subpanel Controls</strong><a class="headerlink" href="#individual-subpanel-controls" title="Permanent link">&para;</a></h5>
 <p>Each subpanel provides dedicated controls:
-- <strong>Palette</strong>: Choose any standard colormap (e.g., <code>viridis</code>, <code>plasma</code>, <code>inferno</code>, <code>jet</code>, <code>turbo</code>, <code>coolwarm</code>, <code>cividis</code>, <code>magma</code>, <code>Reds</code>, <code>Blues</code>, <code>Greens</code>).
-- <strong>Copy</strong>: Quickly copy the rendered heatmap figure to the clipboard as an image.
+- <strong>Palette</strong> <em>(Maps Workspace only)</em>: Choose any standard colormap (e.g., <code>viridis</code>, <code>plasma</code>, <code>inferno</code>, <code>jet</code>, <code>turbo</code>, <code>coolwarm</code>, <code>cividis</code>, <code>magma</code>, <code>Reds</code>, <code>Blues</code>, <code>Greens</code>). In the <strong>Spectra Workspace</strong>, each 1D variation curve is automatically styled in its matching selector color (Red, Blue, or Green).
+- <strong>Copy</strong>: Quickly copy the rendered graph or heatmap figure to the clipboard as an image.
 - <strong>Range / Status Badge</strong>: Displays the current interval range <span class="arithmatex">\([x_{min}, x_{max}]\)</span> or fitting status.</p>
 <hr />
 <h3 id="4-fitmodelbuilder"><strong>4. <code>FitModelBuilder</code></strong><a class="headerlink" href="#4-fitmodelbuilder" title="Permanent link">&para;</a></h3>
@@ -2272,7 +2273,7 @@ Supported mathematical operations include: <code>+</code>, <code>-</code>, <code
 </div>
 
 <ul>
-<li><strong>Left</strong>: Displays comprehensive metadata extracted directly from loaded <code>.wdf</code> or <code>.spc</code> files, showing the exact instrument settings used during acquisition.</li>
+<li><strong>Left</strong>: Displays comprehensive metadata extracted directly from loaded <code>.wdf</code>, <code>.spc</code>, <code>.l6s</code>, or <code>.l6m</code> files, showing the exact instrument settings used during acquisition.</li>
 <li><strong>Middle</strong>: Displays detailed properties and statistical information about the currently selected spectrum.</li>
 <li><strong>Right</strong>: Provides access to additional pre-processing utilities, such as global intensity normalization algorithms and cosmic ray artifact detection.</li>
 </ul>

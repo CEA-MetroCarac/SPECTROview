@@ -1055,10 +1055,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#supported-formats" class="md-nav__link">
+  <a href="#supported-formats-entry-points" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Supported Formats
+        Supported Formats &amp; Entry Points
       
     </span>
   </a>
@@ -1139,10 +1139,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#maps-workspace-vmworkspacemapsload_map_files" class="md-nav__link">
+  <a href="#maps-workspace-vmworkspacemapsload_map_files-extract_map_arrays" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Maps Workspace: VMWorkspaceMaps.load_map_files()
+        Maps Workspace: VMWorkspaceMaps.load_map_files() &amp; extract_map_arrays()
       
     </span>
   </a>
@@ -1166,22 +1166,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#design-notes" class="md-nav__link">
+  <a href="#design-performance-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Design Notes
+        Design &amp; Performance Notes
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Design Notes">
+    <nav class="md-nav" aria-label="Design &amp; Performance Notes">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#auto-detection-of-delimiters-txt-files" class="md-nav__link">
+  <a href="#zero-payload-header-classification-detect_file_type" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Auto-Detection of Delimiters (TXT files)
+        Zero-Payload Header Classification (detect_file_type)
       
     </span>
   </a>
@@ -1189,10 +1189,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#wavenumber-sort-wdf-files" class="md-nav__link">
+  <a href="#consolidated-map-dataframes-vectorized-parsing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Wavenumber Sort (WDF files)
+        Consolidated Map DataFrames &amp; Vectorized Parsing
       
     </span>
   </a>
@@ -1200,10 +1200,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#parse_wdf_metadata-wdf-only" class="md-nav__link">
+  <a href="#headerless-spectra-ascending-axes-duplicate-coordinates" class="md-nav__link">
     <span class="md-ellipsis">
       
-        parse_wdf_metadata() (WDF only)
+        Headerless Spectra, Ascending Axes &amp; Duplicate Coordinates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pure-model-layer-metadata-parse_wdf_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pure Model-Layer Metadata (parse_wdf_metadata)
       
     </span>
   </a>
@@ -1820,26 +1831,30 @@
 </tbody>
 </table>
 <pre class="mermaid"><code>flowchart TD
-    FILE["File on disk&lt;br/&gt;(.wdf / .spc / .txt / .csv / .dat / .xlsx)"]
+    FILE["File on disk&lt;br/&gt;(.wdf / .spc / .l6s / .l6m / .txt / .csv / .dat / .xlsx / .xls / .json / .spectra / .maps / .graphs)"]
 
-    FILE --&gt; MIO["m_io.py&lt;br/&gt;universal file reader"]
+    FILE --&gt; DETECT["m_io.detect_file_type()&lt;br/&gt;Header / sample classification (&lt;0.1 ms)"]
 
-    MIO --&gt;|"Spectra dict&lt;br/&gt;{type, items}"| VMSPECTRA["VMWorkspaceSpectra&lt;br/&gt;.load_files()"]
-    MIO --&gt;|"DataFrame + metadata"| VMMAPS["VMWorkspaceMaps&lt;br/&gt;.load_map_files()"]
-    MIO --&gt;|"dict[str, DataFrame]"| VMGRAPHS["VMWorkspaceGraphs&lt;br/&gt;.add_dataframe()"]
+    DETECT --&gt;|"spectra"| MIO_SPEC["load_wdf_spectrum / load_spc_spectrum /&lt;br/&gt;load_l6s_spectrum / load_spectrum_file / load_TRPL_data"]
+    DETECT --&gt;|"map"| MIO_MAP["load_wdf_map / load_spc_map /&lt;br/&gt;load_l6m_map / load_map_file"]
+    DETECT --&gt;|"dataframe"| MIO_DF["load_dataframe_file"]
 
-    VMSPECTRA --&gt; STORE["SpectraStore&lt;br/&gt;.add_map()"]
+    MIO_SPEC --&gt;|"Spectra dict {type, items}"| VMSPECTRA["VMWorkspaceSpectra.load_files()"]
+    MIO_MAP --&gt;|"DataFrame (+ metadata)"| VMMAPS["VMWorkspaceMaps.load_map_files()&lt;br/&gt;+ extract_map_arrays()"]
+    MIO_DF --&gt;|"dict[str, DataFrame]"| VMGRAPHS["VMWorkspaceGraphs.load_dataframes()"]
+
+    VMSPECTRA --&gt; STORE["SpectraStore.add_map()"]
     VMMAPS --&gt; STORE
 
     STORE --&gt; SPECTRA_WS["Spectra Workspace"]
     STORE --&gt; MAPS_WS["Maps Workspace"]
     VMGRAPHS --&gt; GRAPHS_WS["Graphs Workspace"]</code></pre>
 <hr />
-<h2 id="supported-formats">Supported Formats<a class="headerlink" href="#supported-formats" title="Permanent link">&para;</a></h2>
+<h2 id="supported-formats-entry-points">Supported Formats &amp; Entry Points<a class="headerlink" href="#supported-formats-entry-points" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Format</th>
+<th>Format / Role</th>
 <th>Extension</th>
 <th>Function</th>
 <th>Returns</th>
@@ -1847,27 +1862,63 @@
 </thead>
 <tbody>
 <tr>
-<td>Renishaw WiRE spectrum</td>
+<td>Fast file classifier</td>
+<td>all supported</td>
+<td><code>detect_file_type()</code></td>
+<td><code>'spectra'</code> | <code>'map'</code> | <code>'dataframe'</code> | <code>'fit_model'</code> | <code>'spectra_workspace'</code> | <code>'maps_workspace'</code> | <code>'graphs_workspace'</code></td>
+</tr>
+<tr>
+<td>WDF header peek</td>
 <td><code>.wdf</code></td>
-<td><code>load_wdf_spectrum()</code></td>
+<td><code>peek_wdf_measurement_type()</code> / <code>WdfReader.peek_header()</code></td>
+<td><code>'spectra'</code> | <code>'map'</code> / <code>dict</code> (reads 512-byte <code>WDF1</code> header)</td>
+</tr>
+<tr>
+<td>SPC header peek</td>
+<td><code>.spc</code></td>
+<td><code>SpcReader.peek_header()</code></td>
+<td><code>dict</code> (reads 512-byte Galactic SPC header)</td>
+</tr>
+<tr>
+<td>LabSpec 6 header peek</td>
+<td><code>.l6s</code>, <code>.l6m</code></td>
+<td><code>L6sReader.peek_header()</code></td>
+<td><code>dict</code> (validates 76-byte <code>"LabSpec6\x00"</code> binary header)</td>
+</tr>
+<tr>
+<td>Renishaw WiRE spectrum / series</td>
+<td><code>.wdf</code></td>
+<td><code>load_wdf_spectrum()</code> (<code>m_wdf.WdfReader</code>)</td>
 <td><code>spectra dict</code></td>
 </tr>
 <tr>
-<td>Renishaw WiRE map</td>
+<td>Renishaw WiRE map / line profile</td>
 <td><code>.wdf</code></td>
-<td><code>load_wdf_map()</code></td>
+<td><code>load_wdf_map()</code> (<code>m_wdf.WdfReader</code>)</td>
 <td><code>(DataFrame, metadata dict)</code></td>
 </tr>
 <tr>
 <td>Galactic SPC spectrum</td>
 <td><code>.spc</code></td>
-<td><code>load_spc_spectrum()</code></td>
+<td><code>load_spc_spectrum()</code> (<code>m_spc.SpcReader</code>)</td>
 <td><code>spectra dict</code></td>
 </tr>
 <tr>
 <td>Galactic SPC map</td>
 <td><code>.spc</code></td>
-<td><code>load_spc_map()</code></td>
+<td><code>load_spc_map()</code> (<code>m_spc.SpcReader</code>)</td>
+<td><code>(DataFrame, metadata dict)</code></td>
+</tr>
+<tr>
+<td>HORIBA LabSpec 6 spectrum</td>
+<td><code>.l6s</code></td>
+<td><code>load_l6s_spectrum()</code> (<code>m_l6s.L6sReader</code>)</td>
+<td><code>spectra dict</code></td>
+</tr>
+<tr>
+<td>HORIBA LabSpec 6 map</td>
+<td><code>.l6m</code></td>
+<td><code>load_l6m_map()</code> (<code>m_l6s.L6sReader</code>)</td>
 <td><code>(DataFrame, metadata dict)</code></td>
 </tr>
 <tr>
@@ -1894,12 +1945,24 @@
 <td><code>load_dataframe_file()</code></td>
 <td><code>dict[str, DataFrame]</code></td>
 </tr>
+<tr>
+<td>Map tensor extractor</td>
+<td>DataFrame</td>
+<td><code>extract_map_arrays()</code></td>
+<td><code>(x0, Y0, coords, fnames)</code></td>
+</tr>
+<tr>
+<td>Renishaw long-format converter</td>
+<td><code>.txt</code></td>
+<td><code>convert_action()</code></td>
+<td>writes wide-matrix <code>.txt</code></td>
+</tr>
 </tbody>
 </table>
 <hr />
 <h2 id="return-formats">Return Formats<a class="headerlink" href="#return-formats" title="Permanent link">&para;</a></h2>
 <h3 id="spectra-dict-discrete-spectra">Spectra Dict — Discrete Spectra<a class="headerlink" href="#spectra-dict-discrete-spectra" title="Permanent link">&para;</a></h3>
-<p>All spectra loaders (<code>load_wdf_spectrum</code>, <code>load_spc_spectrum</code>, <code>load_spectrum_file</code>, <code>load_TRPL_data</code>) return a unified <strong>spectra dict</strong>:</p>
+<p>All spectra loaders (<code>load_wdf_spectrum</code>, <code>load_spc_spectrum</code>, <code>load_l6s_spectrum</code>, <code>load_spectrum_file</code>, <code>load_TRPL_data</code>) return a unified <strong>spectra dict</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"spectra"</span><span class="p">,</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="s2">"items"</span><span class="p">:</span> <span class="p">[</span>
@@ -1929,8 +1992,8 @@
 <strong>Why a list?</strong> A single <code>.wdf</code> file configured as a temporal series (e.g., 100 acquisitions over 10 minutes) contains N spectra, not 1. The <code>items</code> list handles single spectra (N=1) and multi-spectrum files uniformly without branching logic in the caller.</p>
 </blockquote>
 <h3 id="map-dataframe-hyperspectral-maps">Map DataFrame — Hyperspectral Maps<a class="headerlink" href="#map-dataframe-hyperspectral-maps" title="Permanent link">&para;</a></h3>
-<p>All map loaders (<code>load_wdf_map</code>, <code>load_spc_map</code>, <code>load_map_file</code>) return a <strong>pandas DataFrame</strong> (and optionally a metadata dict for binary formats):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Return type for WDF/SPC: tuple[pd.DataFrame, dict]</span>
+<p>All map loaders (<code>load_wdf_map</code>, <code>load_spc_map</code>, <code>load_l6m_map</code>, <code>load_map_file</code>) return a <strong>pandas DataFrame</strong> (and optionally a metadata dict for binary formats):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Return type for WDF/SPC/L6M: tuple[pd.DataFrame, dict]</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># Return type for TXT/CSV: pd.DataFrame</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">df</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">load_wdf_map</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
@@ -2008,25 +2071,23 @@
 <p>[!NOTE]
 <strong>Each spectrum is its own <code>MapData</code> block</strong> (N=1). This is the same structure used for map spectra (N=thousands). The unified model is what lets <code>VMWorkspaceMaps</code> extend <code>VMWorkspaceSpectra</code> without duplication.</p>
 </blockquote>
-<h3 id="maps-workspace-vmworkspacemapsload_map_files">Maps Workspace: <code>VMWorkspaceMaps.load_map_files()</code><a class="headerlink" href="#maps-workspace-vmworkspacemapsload_map_files" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># In vm_workspace_maps.py — simplified for clarity</span>
+<h3 id="maps-workspace-vmworkspacemapsload_map_files-extract_map_arrays">Maps Workspace: <code>VMWorkspaceMaps.load_map_files()</code> &amp; <code>extract_map_arrays()</code><a class="headerlink" href="#maps-workspace-vmworkspacemapsload_map_files-extract_map_arrays" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># In vm_workspace_maps.py (and spectroview/api/workspace.py)</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">df</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">load_wdf_map</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>    <span class="c1"># -&gt; (DataFrame, dict)</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1"># Separate coordinate columns from spectral data</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">wn_cols</span>  <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'X'</span><span class="p">,</span> <span class="s1">'Y'</span><span class="p">)]</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">x0</span>       <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">wn_cols</span><span class="p">])</span>        <span class="c1"># float64[M]</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">Y0</span>       <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">wn_cols</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>        <span class="c1"># float32[N, M]</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">coords</span>   <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s1">'X'</span><span class="p">,</span> <span class="s1">'Y'</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>    <span class="c1"># float64[N, 2]</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="c1"># Register as a single MapData block with N spectra</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">add_map</span><span class="p">(</span>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="n">name</span>   <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="n">x0</span>     <span class="o">=</span> <span class="n">x0</span><span class="p">,</span>
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="n">Y0</span>     <span class="o">=</span> <span class="n">Y0</span><span class="p">,</span>
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    <span class="n">coords</span> <span class="o">=</span> <span class="n">coords</span><span class="p">,</span>
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    <span class="n">fnames</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">))],</span>
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="p">)</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">df</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">load_wdf_map</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>                    <span class="c1"># -&gt; (DataFrame, dict)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">x0</span><span class="p">,</span> <span class="n">Y0</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">fnames</span> <span class="o">=</span> <span class="n">extract_map_arrays</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span> <span class="n">df</span><span class="p">)</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1"># x0:     float64[M]    — all valid numeric wavenumber channels (ascending)</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># Y0:     float32[N, M] — contiguous spectral matrix</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># coords: float64[N, 2] — stage (X, Y) positions</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1"># fnames: list[str]     — "{map_name}_({x}, {y})" (disambiguated with _{k} on time-resolved duplicate sites)</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">add_map</span><span class="p">(</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="n">name</span>   <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="n">x0</span>     <span class="o">=</span> <span class="n">x0</span><span class="p">,</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="n">Y0</span>     <span class="o">=</span> <span class="n">Y0</span><span class="p">,</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="n">coords</span> <span class="o">=</span> <span class="n">coords</span><span class="p">,</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="n">fnames</span> <span class="o">=</span> <span class="n">fnames</span><span class="p">,</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="p">)</span>
 </code></pre></div>
 <h3 id="graphs-workspace-direct-dataframe-ingestion">Graphs Workspace: Direct DataFrame Ingestion<a class="headerlink" href="#graphs-workspace-direct-dataframe-ingestion" title="Permanent link">&para;</a></h3>
 <p>Datasheets bypass <code>SpectraStore</code> entirely — they go directly from <code>m_io</code> to the Graphs workspace ViewModel:</p>
@@ -2038,13 +2099,30 @@
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">dataframes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span>           <span class="c1"># stored in VM directly, no SpectraStore</span>
 </code></pre></div>
 <hr />
-<h2 id="design-notes">Design Notes<a class="headerlink" href="#design-notes" title="Permanent link">&para;</a></h2>
-<h3 id="auto-detection-of-delimiters-txt-files">Auto-Detection of Delimiters (TXT files)<a class="headerlink" href="#auto-detection-of-delimiters-txt-files" title="Permanent link">&para;</a></h3>
-<p><code>load_spectrum_file()</code> and <code>load_map_file()</code> automatically detect whether a <code>.txt</code> file uses <code>;</code>, <code>\t</code>, or space delimiters by inspecting the first two lines before reading the full file. This avoids requiring users to specify delimiters when loading exported text files from various instruments.</p>
-<h3 id="wavenumber-sort-wdf-files">Wavenumber Sort (WDF files)<a class="headerlink" href="#wavenumber-sort-wdf-files" title="Permanent link">&para;</a></h3>
-<p>Renishaw WiRE exports wavenumber axes in descending order (e.g., 3200 → 100 cm⁻¹). Both <code>load_wdf_spectrum()</code> and <code>load_wdf_map()</code> detect this and sort the axis to ascending order, reordering the intensity arrays correspondingly. This normalization ensures all downstream code (baseline, fitting, plotting) can assume ascending x-axes.</p>
-<h3 id="parse_wdf_metadata-wdf-only"><code>parse_wdf_metadata()</code> (WDF only)<a class="headerlink" href="#parse_wdf_metadata-wdf-only" title="Permanent link">&para;</a></h3>
-<p>WDF files encode rich acquisition metadata in binary blocks. <code>m_io.py</code> delegates the parsing of those blocks to <code>parse_wdf_metadata()</code> in <code>viewmodel/utils.py</code>, which extracts grating name, objective, exposure time, slit settings, timestamp, and more into a clean dict that becomes <code>MapData.map_metadata</code>.</p>
+<h2 id="design-performance-notes">Design &amp; Performance Notes<a class="headerlink" href="#design-performance-notes" title="Permanent link">&para;</a></h2>
+<h3 id="zero-payload-header-classification-detect_file_type">Zero-Payload Header Classification (<code>detect_file_type</code>)<a class="headerlink" href="#zero-payload-header-classification-detect_file_type" title="Permanent link">&para;</a></h3>
+<p>When opening or dragging files into <code>Main._load_files_by_paths()</code>, <code>detect_file_type()</code> classifies files in <code>&lt; 0.1 ms</code> without parsing full datasets:
+- <strong><code>.wdf</code></strong>: <code>peek_wdf_measurement_type()</code> reads only the first 144 bytes of the <code>WDF1</code> header (<code>measurement_type</code> at offset <code>132</code>) rather than decoding multi-megabyte spectral cubes twice.
+- <strong><code>.spc</code></strong>: <code>SpcReader.peek_header()</code> (<code>header_only=True</code>) reads only the 512-byte Galactic SPC header (<code>fnsub</code> subfile count) and skips subfile/log reading.
+- <strong><code>.l6s</code> / <code>.l6m</code></strong>: <code>L6sReader.peek_header()</code> validates the 76-byte <code>"LabSpec6\x00"</code> binary header (<code>magic</code>, <code>version</code>, <code>root_offset</code>) in microseconds without reading full node trees or spectral arrays.
+- <strong><code>.txt</code> / <code>.csv</code></strong>: Inspects up to 12 non-empty lines in pure Python without launching regex-engine <code>pandas</code> reads during routing.</p>
+<h3 id="consolidated-map-dataframes-vectorized-parsing">Consolidated Map DataFrames &amp; Vectorized Parsing<a class="headerlink" href="#consolidated-map-dataframes-vectorized-parsing" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Single-block DataFrames</strong>: Binary (<code>WDF</code>, <code>SPC</code>, <code>L6M</code>) and converted maps are assembled via <code>_build_map_dataframe()</code>, wrapping the contiguous 2D spectral matrix directly instead of constructing thousands of 1D column slices.</li>
+<li><strong>C-engine CSV/TXT fast paths</strong>: <code>load_map_file()</code> uses <code>pd.read_csv(..., engine="c")</code> with <code>usecols</code> (stripping trailing semicolons at parse time), <code>skiprows</code> callables for alternating-row wafer CSV exports, and positional <code>iloc</code> permutation when sorting descending wavenumbers to avoid duplicating large spectral matrices in RAM.</li>
+<li><strong>Vectorized WDF, SPC &amp; LabSpec 6 binary readers</strong>:</li>
+<li><code>WdfReader</code> (<code>spectroview/model/m_wdf.py</code>) parses Renishaw <code>.wdf</code> blocks (<code>WDF1</code>, <code>DATA</code>, <code>XLST</code>, <code>YLST</code>, <code>ORGN</code>, <code>WMAP</code>) natively via single-read <code>struct.unpack_from</code> and <code>np.frombuffer</code> operations without third-party <code>renishawWiRE</code> or <code>PIL</code> dependencies, eliminating per-point Python <code>ORGN</code> coordinate loops and redundant <code>WHTL</code> JPEG decoding.</li>
+<li><code>SpcReader</code> (<code>spectroview/model/m_spc.py</code>) reads uniform multi-subfile <code>.spc</code> maps in a single buffered I/O call via structured NumPy <code>np.frombuffer</code> dtypes (supporting IEEE <code>float32</code>, <code>TSPREC</code> <code>int16</code>, and <code>int32</code> fixed-point scaling), falling back to sequential parsing only for variable-length <code>TXYXYS</code> files.</li>
+<li><code>L6sReader</code> (<code>spectroview/model/m_l6s.py</code>) decodes HORIBA LabSpec 6 <code>.l6s</code> (1D spectrum) and <code>.l6m</code> (2D spectral image <code>SpIm</code>) binary node trees (<code>"LabSpec6\x00"</code> magic, 24-byte DFS records, shared <code>0x8000</code> pointer blocks, and <code>b'temx'</code> runtime subtrees), extracting spectral cubes (<code>float32</code>), spatial <code>(X, Y)</code> stage grids, calibrated laser wavelengths (<code>Laser.pos</code>), <code>S/N</code>, and all acquisition/description/history metadata tables (<code>_reorder_metadata()</code> orders canonical <code>_METADATA_ORDERED_KEYS</code> first and appends additional instrument parameters at the end).</li>
+</ul>
+<h3 id="headerless-spectra-ascending-axes-duplicate-coordinates">Headerless Spectra, Ascending Axes &amp; Duplicate Coordinates<a class="headerlink" href="#headerless-spectra-ascending-axes-duplicate-coordinates" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Headerless 1D files</strong>: <code>load_spectrum_file()</code> inspects leading lines before calling <code>pd.read_csv</code>, preserving row <code>0</code> on headerless <code>.txt</code>/<code>.csv</code> spectra while skipping <code>#</code> comments, single headers, or 3-line legacy headers.</li>
+<li><strong>Ascending X-axis invariant</strong>: All spectrum and map loaders (<code>WDF</code>, <code>SPC</code>, <code>L6S</code>, <code>L6M</code>, <code>TXT</code>, <code>CSV</code>) normalize spectral axes to strictly ascending order so downstream baseline, ROI cropping, and VBF fitting can rely on monotonic <code>x0</code>.</li>
+<li><strong>Time-resolved maps at fixed sites</strong>: When a map contains repeated <code>(X, Y)</code> coordinates (e.g., multi-scan time-resolved wafer CSVs), <code>extract_map_arrays()</code> appends <code>_{k}</code> suffixes (<code>map_(x, y)_2</code>, ...) so every measurement retains a unique <code>SpectraStore</code> key while <code>parse_coords_from_fname()</code> still recovers exact <code>(X, Y)</code> coordinates.</li>
+</ul>
+<h3 id="pure-model-layer-metadata-parse_wdf_metadata">Pure Model-Layer Metadata (<code>parse_wdf_metadata</code>)<a class="headerlink" href="#pure-model-layer-metadata-parse_wdf_metadata" title="Permanent link">&para;</a></h3>
+<p><code>parse_wdf_metadata()</code> lives in <code>spectroview/model/m_io.py</code> (re-exported in <code>viewmodel/utils.py</code> for backward compatibility), keeping <code>spectroview/model/</code> 100% free of Qt and ViewModel imports. It parses binary <code>WXIS</code>, <code>WXCS</code>, <code>WXDM</code>, and <code>WDF1</code> <code>FILETIME</code> blocks to extract objective, grating, laser power, slit settings, exposure time, and timestamps.</p>
 <hr />
 <h2 id="related-pages">Related Pages<a class="headerlink" href="#related-pages" title="Permanent link">&para;</a></h2>
 <ul>

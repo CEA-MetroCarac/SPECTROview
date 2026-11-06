@@ -1855,6 +1855,9 @@ The four available utility buttons allow you to:</p>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>Tip:</strong> When you resize or move a plot window by dragging its edge or title bar, you see an outline first. The plot is redrawn once, at its new size, when you release the mouse. This keeps resizing smooth even for large plots. In the same way, while you pan, the margins around the axes stay fixed and are recalculated when you release the mouse.</p>
+</blockquote>
 <p>A vertical separator marks where the plot's own controls start — always aligned to the right edge of the window:</p>
 <table>
 <thead>
@@ -1986,7 +1989,7 @@ The four available utility buttons allow you to:</p>
 <tbody>
 <tr>
 <td><strong>Minor ticks</strong> (X Bottom/Top, Y Left/Right)</td>
-<td>Enable minor tick marks on each edge of the plot independently (X Bottom and Y Left are on by default).</td>
+<td>Enable minor tick marks on each edge of the plot independently. By default, minor ticks are automatically enabled only for axes representing numerical values (e.g., both X and Y for scatter/line/histogram plots, Y for bar/box/point plots) and hidden on categorical axes or map plots. Users can toggle minor ticks on or off for any axis independently.</td>
 </tr>
 <tr>
 <td><strong>Show spines</strong> (Top/Right/Bottom/Left)</td>

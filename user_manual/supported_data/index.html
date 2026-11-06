@@ -656,10 +656,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-wdf-renishaw-and-spc-horiba-formats" class="md-nav__link">
+  <a href="#1-wdf-renishaw-spc-and-l6s-l6m-horiba-labspec-6-formats" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. .wdf (Renishaw) and .spc (HORIBA) Formats
+        1. .wdf (Renishaw), .spc, and .l6s / .l6m (HORIBA LabSpec 6) Formats
       
     </span>
   </a>
@@ -1694,30 +1694,36 @@
 <tr>
 <td>Delimited text</td>
 <td><code>.txt</code>, <code>.csv</code></td>
-<td>Auto-detected delimiter</td>
-<td>Single spectra and maps</td>
+<td>Auto-detected delimiter &amp; header</td>
+<td>Single spectra, 2D maps, wafer &amp; time-resolved maps</td>
 </tr>
 <tr>
 <td>Renishaw WiRE</td>
 <td><code>.wdf</code></td>
-<td><code>renishawWiRE</code> library</td>
-<td>Single spectra and maps</td>
+<td>Built-in binary reader</td>
+<td>Single spectra, temporal series, line profiles, and 2D maps</td>
+</tr>
+<tr>
+<td>HORIBA LabSpec 6</td>
+<td><code>.l6s</code>, <code>.l6m</code></td>
+<td>Built-in binary reader</td>
+<td>Single spectra (<code>.l6s</code>) and 2D hyperspectral maps (<code>.l6m</code>)</td>
 </tr>
 <tr>
 <td>SPC</td>
 <td><code>.spc</code></td>
 <td>Built-in binary reader</td>
-<td>Single spectra and maps</td>
+<td>Single spectra and 2D maps</td>
 </tr>
 <tr>
 <td>TRPL</td>
 <td><code>.dat</code></td>
 <td>Built-in parser</td>
-<td>Time-resolved decays</td>
+<td>Time-resolved photoluminescence decays</td>
 </tr>
 <tr>
 <td>Tabular data</td>
-<td><code>.xlsx</code>, <code>.csv</code></td>
+<td><code>.xlsx</code>, <code>.xls</code>, <code>.csv</code></td>
 <td><code>Pandas</code> &amp; <code>Openpyxl</code></td>
 <td>DataFrames for plotting</td>
 </tr>
@@ -1729,21 +1735,22 @@
 </tr>
 </tbody>
 </table>
-<h3 id="1-wdf-renishaw-and-spc-horiba-formats"><strong>1. <code>.wdf</code> (Renishaw) and <code>.spc</code> (HORIBA) Formats</strong><a class="headerlink" href="#1-wdf-renishaw-and-spc-horiba-formats" title="Permanent link">&para;</a></h3>
-<p>Since version 26.7.1, <strong>SPECTROview</strong> natively supports:</p>
+<h3 id="1-wdf-renishaw-spc-and-l6s-l6m-horiba-labspec-6-formats"><strong>1. <code>.wdf</code> (Renishaw), <code>.spc</code>, and <code>.l6s</code> / <code>.l6m</code> (HORIBA LabSpec 6) Formats</strong><a class="headerlink" href="#1-wdf-renishaw-spc-and-l6s-l6m-horiba-labspec-6-formats" title="Permanent link">&para;</a></h3>
+<p><strong>SPECTROview</strong> natively supports binary spectrometer formats without requiring external vendor software:</p>
 <ul>
-<li><strong><code>.wdf</code></strong> — Data recorded using WiRE software on Renishaw instruments.</li>
-<li><strong><code>.spc</code></strong> — Data recorded using LabSpec 6 software on HORIBA instruments.</li>
+<li><strong><code>.wdf</code></strong> — Data recorded using WiRE software on Renishaw instruments (discrete spectra, temporal/repeatability series, 1D line-scan profiles, and 2D hyperspectral maps).</li>
+<li><strong><code>.l6s</code> and <code>.l6m</code></strong> — Native binary spectra (<code>.l6s</code>) and 2D spectral images/maps (<code>.l6m</code>) recorded using HORIBA LabSpec 6 software.</li>
+<li><strong><code>.spc</code></strong> — Data recorded using LabSpec 6 / T64000 / GRAMS software on HORIBA and Thermo instruments (discrete Raman/PL spectra and 2D hyperspectral maps).</li>
 </ul>
-<p>Both discrete spectra and hyperspectral datasets (2D maps) are fully supported and can be opened directly without prior conversion. In addition to the raw spectroscopic data, <strong>SPECTROview</strong> automatically parses and imports associated <strong>metadata</strong>, such as excitation wavelength (nm), gratings (gr/mm), objective lens, laser power, slit/hole size, and acquisition timestamps. This provides comprehensive access to both measurement data and experimental conditions in a unified workflow.</p>
+<p>Both discrete spectra and hyperspectral datasets are routed automatically when opened or dragged into the main window without prior conversion. <strong>SPECTROview</strong> also parses and imports instrument <strong>metadata</strong> (excitation wavelength, grating, objective lens, laser power, exposure time, accumulations, slit/hole size, spectral units, spatial step sizes, acquisition timestamps, and additional instrument parameters such as detector model, detector temperature, SWIFT mode, and S/N ratio).</p>
 <h3 id="2-spectroscopic-data-txt-csv"><strong>2. Spectroscopic Data (<code>.txt</code>, <code>.csv</code>)</strong><a class="headerlink" href="#2-spectroscopic-data-txt-csv" title="Permanent link">&para;</a></h3>
-<p><strong>SPECTROview</strong> supports 1D spectroscopic data in TXT or CSV formats. Files must consist of <strong>two columns</strong> separated by semicolons, spaces, or tabs. Column headers are optional but supported:</p>
+<p><strong>SPECTROview</strong> supports 1D spectroscopic data in TXT or CSV formats. Files must consist of <strong>two numeric data columns</strong> separated by semicolons (<code>;</code>), commas (<code>,</code>), tabs, or spaces. Leading comment lines (<code>#</code>) and column headers are optional and automatically detected without losing the first data point on headerless files:</p>
 <ul>
-<li><strong>Column 1</strong>: X-axis values (e.g., Raman shift in cm⁻¹, wavelength in nm).</li>
+<li><strong>Column 1</strong>: X-axis values (e.g., Raman shift in cm⁻¹, wavelength in nm, 2θ in degrees). Descending X-axes are automatically sorted in ascending order.</li>
 <li><strong>Column 2</strong>: Corresponding intensity values (a.u.).</li>
 </ul>
 <h3 id="3-hyperspectral-data-txt-csv"><strong>3. Hyperspectral Data (<code>.txt</code>, <code>.csv</code>)</strong><a class="headerlink" href="#3-hyperspectral-data-txt-csv" title="Permanent link">&para;</a></h3>
-<p><strong>SPECTROview</strong> supports hyperspectral data (2D maps or wafer maps) in TXT or CSV formats, provided the data is structured as follows:</p>
+<p><strong>SPECTROview</strong> supports hyperspectral data (2D stage maps, wafer maps, and multi-scan time-resolved wafer maps) in TXT or CSV formats, structured as follows:</p>
 <table>
 <thead>
 <tr>

@@ -2215,7 +2215,7 @@
 <tr>
 <td><code>maps_metadata</code></td>
 <td><code>dict[str, dict]</code></td>
-<td>Acquisition metadata per map (WDF, SPC)</td>
+<td>Acquisition metadata per map (WDF, SPC, L6M)</td>
 </tr>
 <tr>
 <td><code>map_type</code></td>
@@ -2286,7 +2286,7 @@
 <li><code>VMapViewer</code> — the heatmap canvas with Z-parameter and X-range sliders.</li>
 <li><code>VMapsList</code> — maps list panel with map management and spectra action buttons.</li>
 </ul>
-<p>The left side (SpectraViewer + bottom tabs) is inherited from <code>VWorkspaceSpectra</code>. <code>VWorkspaceMaps</code> activates the <strong>Spectral Range Selectors</strong> (Red, Blue, Green) on the right edge of <code>VSpectraViewer</code> (<code>set_range_selectors_visible(True)</code>) and inserts the <strong>Live Maps</strong> tab at index 2 (between <code>Fit Results</code> and <code>MVA</code>, with <code>More</code> placed at the end of the tabs). In <code>VWorkspaceSpectra</code>, these mapping controls are disabled and hidden.</p>
+<p>The left side (SpectraViewer + bottom tabs) is inherited from <code>VWorkspaceSpectra</code>. While <code>VWorkspaceSpectra</code> initializes <code>VLiveMaps</code> and <code>VMLiveMaps</code> in <code>"spectra"</code> mode (rendering 1D parameter variation graphs across the currently selected spectra), <code>VWorkspaceMaps</code> switches the inherited <code>v_live_maps</code> and <code>vm_live_maps</code> instances to <code>"map"</code> mode (<code>set_mode("map")</code>) so the <strong>Live Maps</strong> tab renders 2D spatial heatmaps with palette selectors.</p>
 <p>In the Maps workspace, when a map is loaded or selected, <code>VWorkspaceMaps</code> forwards the current active <code>MapData</code> block to <code>self.vm_live_maps.set_map_data(md)</code>. As the user toggles the range selectors or drags the boundary brackets on the spectrum plot, the three Live Maps subpanels compute and render 2D heatmaps across the map's spatial grid in real time with a 60 ms debounce. Range selector artists use Matplotlib's <code>ax.add_artist()</code> so that <code>ax.dataLim</code> is never polluted, ensuring that the <strong>Rescale</strong> button (<code>Ctrl+R</code>) zooms exclusively to spectral data.</p>
 <p><strong>Centralized map type management:</strong> The <code>selected_map_type</code> attribute is the single source of truth for all viewers (main + dialogs). When the user changes the combobox in any viewer, <code>_on_map_type_changed()</code> updates all viewers synchronously, preventing drift.</p>
 <h3 id="vmapviewer-the-heatmap-canvas"><code>VMapViewer</code> — The Heatmap Canvas<a class="headerlink" href="#vmapviewer-the-heatmap-canvas" title="Permanent link">&para;</a></h3>
@@ -2296,9 +2296,10 @@
 <li>Z-parameter combobox (Intensity / Area / any fit result column)</li>
 <li>X-range double slider (filters which wavenumbers contribute to Z)</li>
 <li>Outlier removal toggle</li>
+<li><strong>Accurate Spatial Coordinate Placement</strong>: For regular Cartesian grids, renders via fast <code>imshow</code> with symmetric extent bounds. For irregular or scattered coordinates (such as wafer map files loaded in 2Dmap mode), automatically renders square pixel patches centered at each point's exact <span class="arithmatex">\((X, Y)\)</span> coordinate via <code>PatchCollection</code>, completely eliminating spatial drift between heatmap pixels and selection overlays.</li>
 <li><strong>Color-scale combobox (Linear / Log)</strong> in the options (<code>…</code>) menu — <code>_build_color_kwargs()</code> returns a <code>matplotlib.colors.LogNorm</code> for "Log" (falling back to plain linear <code>vmin</code>/<code>vmax</code> when the Z-range isn't strictly positive, since intensity/area are clipped <code>&gt;=0</code> and fit parameters can be <code>&lt;=0</code>); applies to both the 2Dmap <code>imshow</code> and the wafer griddata <code>imshow</code></li>
 <li>Interactive selection (click, rectangle drag, profile line)</li>
-<li><strong>In-Place Artist Updates on Map Switching</strong>: When switching between already-loaded maps of the same type and style, <code>_do_plot_heatmap_internal()</code> fast-paths by updating <code>self.img.set_data(...)</code>, <code>self.img.set_extent(...)</code>, <code>self.img.set_clim(...)</code>, and <code>self.cbar.update_normal(...)</code> in-place, bypassing destructive <code>figure.clf()</code>, subplot re-creation, and expensive <code>tight_layout()</code>.</li>
+<li><strong>In-Place Artist Updates &amp; Dataset Isolation</strong>: For parameter, X-range, or palette changes on the currently active map (<code>_last_rendered_map_name == map_df_name</code>), <code>_do_plot_heatmap_internal()</code> fast-paths by updating <code>self.img</code> (<code>set_data</code> / <code>set_array</code>, <code>set_extent</code>, <code>set_clim</code>) and <code>self.cbar.update_normal(...)</code> in-place, bypassing destructive <code>figure.clf()</code>, subplot re-creation, and expensive <code>tight_layout()</code>. When switching between different map datasets or map types, a clean axes rebuild executes while reusing cached <code>(heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col, dx, dy)</code> from <code>_griddata_cache</code>.</li>
 <li><strong>Fast Z-Range Slider Updates</strong>: Real-time slider drag events bypass cache key recomputations and map repaints, updating <code>set_clim()</code> / <code>set_norm()</code> and colorbar directly in-place.</li>
 <li><strong>Vector Navigation Controls &amp; Built-in Coordinates</strong>: Interactive navigation buttons (<code>btn_home</code> / <code>btn_rescale</code>, <code>btn_pan</code>, <code>btn_zoom</code>) styled identically to SPECTROview toolbar controls (<code>28x28</code>, <code>@surface_elevated</code>, rounded corners) and vector SVG icons (<code>Icons.rescale()</code>, <code>Icons.pan()</code>, <code>Icons.zoom()</code>), replacing default matplotlib icons while maintaining bidirectional mode synchronization with <code>NavigationToolbar2QT</code>. The native matplotlib toolbar is completely hidden in the background, and live coordinates are rendered cleanly using a dedicated native <code>lbl_coordinates</code> label (<code>min-width: 180px</code>, <code>@text_secondary</code>, right-aligned) without clipping or layout shifting.</li>
 <li>Multi-viewer dialog spawning</li>
@@ -2339,7 +2340,7 @@ When a new developer is confused about "where is the data?", the answer is: <str
 <ol>
 <li><strong>User Action</strong>: The user initiates a load map action in <code>VWorkspaceMaps</code>.</li>
 <li><strong>View → ViewModel</strong>: The View calls <code>vm.load_map_files(paths)</code>.</li>
-<li><strong>File Parsing</strong>: For each file, the ViewModel delegates to the <code>m_io</code> module (<code>load_wdf_map</code>, <code>load_spc_map</code>, etc.). The IO module returns a DataFrame containing <code>X</code>, <code>Y</code>, and all wavenumber columns, plus metadata.</li>
+<li><strong>File Parsing</strong>: For each file, the ViewModel delegates to the <code>m_io</code> module (<code>load_wdf_map</code>, <code>load_spc_map</code>, <code>load_l6m_map</code>, etc.). The IO module returns a DataFrame containing <code>X</code>, <code>Y</code>, and all wavenumber columns, plus metadata.</li>
 <li><strong>Data Storage (Legacy)</strong>: The ViewModel caches the returned DataFrame in <code>self.maps[name]</code>.</li>
 <li><strong>Data Extraction</strong>: The ViewModel calls <code>_extract_spectra_from_map(name, map_df)</code> to extract the <code>x0</code>, <code>Y0</code>, and spatial <code>coords</code> arrays from the DataFrame. It also builds the <code>fnames</code> list here.</li>
 <li><strong>Data Storage (Tensor)</strong>: The ViewModel registers the data in the <code>SpectraStore</code> via <code>add_map(name, x0, Y0, coords, fnames, is_active)</code>.</li>
@@ -2412,10 +2413,12 @@ When a new developer is confused about "where is the data?", the answer is: <str
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">remove_outliers</span>  <span class="c1"># outlier removal flag</span>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">)</span>
 </code></pre></div>
+<p>The cache stores <code>(heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col, dx, dy)</code>, retaining exact pixel spatial dimensions (<code>dx, dy</code>) across map type switches and file selections to prevent cross-dataset geometry drift.</p>
 <p>The cache is:
-- <strong>Preserved across map switches</strong> — switching back to a previously viewed map is instant.
+- <strong>Preserved across map switches</strong> — switching back to a previously viewed map is instant, restoring its exact spatial dimensions and griddata.
 - <strong>Invalidated by name</strong> after fitting completes, via the <code>clear_map_cache_requested</code> signal.
-- <strong>Not persisted</strong> across application sessions — it lives only in <code>VMapViewer._griddata_cache</code>.</p>
+- <strong>Not persisted</strong> across application sessions — it lives only in <code>VMapViewer._griddata_cache</code>.
+- <strong>Dataset-isolated</strong>: <code>can_fast_update</code> requires <code>_last_rendered_map_name == map_df_name</code> and checks <code>PatchCollection</code> patch count, ensuring in-place artist updates only execute on the active dataset while dataset switches always trigger a clean redraw.</p>
 <h3 id="interactive-selection">Interactive Selection<a class="headerlink" href="#interactive-selection" title="Permanent link">&para;</a></h3>
 <p>The <code>VMapViewer</code> supports three selection modes:</p>
 <table>

@@ -1,5 +1,7 @@
 """Tests for VMapViewer's color-scale (linear/log) option on the heatmap."""
+import numpy as np
 import pandas as pd
+from matplotlib.collections import PatchCollection
 from matplotlib.colors import LogNorm
 
 from spectroview import PALETTE
@@ -353,6 +355,81 @@ class TestMapViewerCoordinateDrift:
         assert abs(extent[0] + extent[1]) < 1e-6
         assert abs(extent[2] + extent[3]) < 1e-6
         assert abs(extent[0] - extent[2]) < 1e-6
+
+    def test_map_type_toggle_preserves_dx_and_pixel_size(self, qapp):
+        """Toggling 2Dmap -> Wafer -> 2Dmap must restore correct dx and patch sizes on cache hit."""
+        from pathlib import Path
+        from spectroview.model.m_io import load_map_file
+        file_path = Path("examples/spectroscopic_data/time_resolved_wafer_maps.csv")
+        if not file_path.exists():
+            return
+        df = load_map_file(file_path)
+
+        viewer = VMapViewer()
+        viewer.cbb_map_type.setCurrentText("2Dmap")
+        viewer.set_map_data(df, "time_resolved")
+        viewer._do_plot_heatmap()
+
+        # Initially 2Dmap: small pixel size
+        assert isinstance(viewer.img, PatchCollection)
+        initial_dx = viewer._current_dx
+        assert initial_dx < 0.1
+        bbox0 = viewer.img.get_paths()[0].get_extents()
+        assert np.isclose(bbox0.width, initial_dx, atol=1e-4)
+
+        # Switch to Wafer_200mm: dx becomes ~2.5mm
+        viewer.cbb_map_type.setCurrentText("Wafer_200mm")
+        viewer._do_plot_heatmap()
+        assert viewer._current_dx > 2.0
+
+        # Switch back to 2Dmap: must NOT stay at 2.5mm or draw giant patch
+        viewer.cbb_map_type.setCurrentText("2Dmap")
+        viewer._do_plot_heatmap()
+        assert np.isclose(viewer._current_dx, initial_dx, atol=1e-4)
+        bbox_restored = viewer.img.get_paths()[0].get_extents()
+        assert np.isclose(bbox_restored.width, initial_dx, atol=1e-4)
+        sel_bbox = viewer._selection_collection.get_paths()[0].get_extents()
+        assert np.isclose(sel_bbox.width, initial_dx, atol=1e-4)
+
+    def test_file_loading_order_does_not_leak_dx_or_patch_collection(self, qapp):
+        """Loading a large-span map then a small-span map must cleanly reset artists and dx."""
+        from pathlib import Path
+        from spectroview.model.m_io import load_map_file
+        p_wafer = Path("examples/spectroscopic_data/wafer2_process2.csv")
+        p_time = Path("examples/spectroscopic_data/time_resolved_wafer_maps.csv")
+        if not p_wafer.exists() or not p_time.exists():
+            return
+        df_wafer = load_map_file(p_wafer)
+        df_time = load_map_file(p_time)
+
+        # Order 1: wafer2 first, then time_resolved
+        viewer1 = VMapViewer()
+        viewer1.cbb_map_type.setCurrentText("2Dmap")
+        viewer1.set_map_data(df_wafer, "wafer2")
+        viewer1._do_plot_heatmap()
+        assert len(viewer1.img.get_paths()) == 49
+        assert viewer1._current_dx > 5.0
+
+        viewer1.set_map_data(df_time, "time_resolved")
+        viewer1._do_plot_heatmap()
+        assert len(viewer1.img.get_paths()) == 50
+        assert viewer1._current_dx < 0.1
+        p0_width = viewer1.img.get_paths()[0].get_extents().width
+        assert np.isclose(p0_width, viewer1._current_dx, atol=1e-4)
+
+        # Order 2: time_resolved first, then wafer2
+        viewer2 = VMapViewer()
+        viewer2.cbb_map_type.setCurrentText("2Dmap")
+        viewer2.set_map_data(df_time, "time_resolved")
+        viewer2._do_plot_heatmap()
+        assert len(viewer2.img.get_paths()) == 50
+        assert viewer2._current_dx < 0.1
+
+        viewer2.set_map_data(df_wafer, "wafer2")
+        viewer2._do_plot_heatmap()
+        assert len(viewer2.img.get_paths()) == 49
+        assert viewer2._current_dx > 5.0
+
 
 
 

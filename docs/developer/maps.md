@@ -289,10 +289,13 @@ cache_key = (
 )
 ```
 
+The cache stores `(heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col, dx, dy)`, retaining exact pixel spatial dimensions (`dx, dy`) across map type switches and file selections to prevent cross-dataset geometry drift.
+
 The cache is:
-- **Preserved across map switches** — switching back to a previously viewed map is instant.
+- **Preserved across map switches** — switching back to a previously viewed map is instant, restoring its exact spatial dimensions and griddata.
 - **Invalidated by name** after fitting completes, via the `clear_map_cache_requested` signal.
 - **Not persisted** across application sessions — it lives only in `VMapViewer._griddata_cache`.
+- **Dataset-isolated**: `can_fast_update` requires `_last_rendered_map_name == map_df_name` and checks `PatchCollection` patch count, ensuring in-place artist updates only execute on the active dataset while dataset switches always trigger a clean redraw.
 
 ### Interactive Selection
 

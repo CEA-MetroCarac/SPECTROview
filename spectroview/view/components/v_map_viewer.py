@@ -468,6 +468,17 @@ class VMapViewer(QWidget):
         self.map_df = map_df
         self.map_df_name = map_name
         self.df_fit_results = df_fit_results if df_fit_results is not None else pd.DataFrame()
+
+        # When map dataset changes, reset rendered artists and cache keys to force a clean redraw
+        if is_map_change:
+            self._last_rendered_map_name = None
+            self._last_rendered_cache_key = None
+            self.img = None
+            self.cbar = None
+            if hasattr(self, '_current_dx'):
+                del self._current_dx
+            if hasattr(self, '_current_dy'):
+                del self._current_dy
         
         # Cache coordinate arrays for fast reuse across plots and mouse interactions
         if self.map_df is not None and not self.map_df.empty:
@@ -719,10 +730,9 @@ class VMapViewer(QWidget):
         if self.selected_points:
             try:
                 # Use stored dx/dy if available, otherwise estimate or default
-                if hasattr(self, '_current_dx') and hasattr(self, '_current_dy'):
-                    dx, dy = self._current_dx, self._current_dy
-                else:
-                    # Fallback if plot hasn't updated yet
+                dx = getattr(self, '_current_dx', None)
+                dy = getattr(self, '_current_dy', None)
+                if dx is None or dy is None or dx <= 0 or dy <= 0:
                     dx, dy = 1.0, 1.0
                 
                 # Build all rectangles then add as single PatchCollection (10-50x faster)
@@ -793,6 +803,7 @@ class VMapViewer(QWidget):
             getattr(self, 'ax', None) is not None
             and getattr(self, 'img', None) is not None
             and getattr(self, 'cbar', None) is not None
+            and getattr(self, '_last_rendered_map_name', None) == self.map_df_name
             and getattr(self, '_last_map_type', None) == map_type
             and getattr(self, '_last_show_stats', None) == show_stats
             and getattr(self, '_last_grid', None) == show_grid
@@ -844,6 +855,8 @@ class VMapViewer(QWidget):
                         self._current_dx = 1.0
                         self._current_dy = 1.0
                 elif isinstance(self.img, PatchCollection):
+                    if len(self.img.get_paths()) != len(final_z_col):
+                        raise ValueError("PatchCollection count mismatch")
                     img_data = None
                     self.img.set_cmap(cmap)
                     if self.cbb_color_scale.currentText() == "Log" and vmin_plot is not None and vmin_plot > 0:
@@ -897,6 +910,7 @@ class VMapViewer(QWidget):
             )
         self.ax = self.figure.add_subplot(111)
         self.cbar = None
+        self._last_rendered_map_name = self.map_df_name
         self._last_map_type = map_type
         self._last_show_stats = show_stats
         self._last_grid = show_grid
@@ -978,8 +992,25 @@ class VMapViewer(QWidget):
                 # 2D maps (irregular / scattered grid, e.g. wafer files or non-uniform coordinates in 2Dmap mode):
                 # Render square color pixels centered at actual (x, y) coordinates to eliminate coordinate drift.
                 x_col, y_col = self._get_measurement_sites()
-                dx = getattr(self, '_current_dx', 1.0)
-                dy = getattr(self, '_current_dy', 1.0)
+                dx = getattr(self, '_current_dx', None)
+                dy = getattr(self, '_current_dy', None)
+                if dx is None or dy is None or dx <= 0 or dy <= 0:
+                    x_span = float(x_col.max() - x_col.min()) if len(x_col) > 0 else 0.0
+                    y_span = float(y_col.max() - y_col.min()) if len(y_col) > 0 else 0.0
+                    pts = np.column_stack([x_col, y_col])
+                    unique_pts = np.unique(pts, axis=0)
+                    if len(unique_pts) > 1:
+                        diff = unique_pts[:, np.newaxis, :] - unique_pts[np.newaxis, :, :]
+                        dists = np.sqrt(np.sum(diff ** 2, axis=-1))
+                        np.fill_diagonal(dists, np.inf)
+                        min_dist = float(dists.min())
+                        span_max = max(x_span, y_span)
+                        pixel_size = min(min_dist * 0.35, span_max / 20.0) if span_max > 0 else min_dist * 0.35
+                        dx = dy = max(pixel_size, 1e-4)
+                    else:
+                        dx = dy = 1.0
+                    self._current_dx = float(dx)
+                    self._current_dy = float(dy)
                 rects = [
                     patches.Rectangle((x - dx / 2, y - dy / 2), dx, dy)
                     for x, y in zip(x_col, y_col)
@@ -1120,7 +1151,11 @@ class VMapViewer(QWidget):
         
         # Check cache first (avoid expensive griddata computation!)
         if cache_key in self._griddata_cache:
-            return self._griddata_cache[cache_key]
+            cached = self._griddata_cache[cache_key]
+            if len(cached) >= 8:
+                self._current_dx = float(cached[6])
+                self._current_dy = float(cached[7])
+            return cached[:6]
         
         # Default returns
         heatmap_pivot = pd.DataFrame()
@@ -1130,6 +1165,8 @@ class VMapViewer(QWidget):
         final_z_col = None
         
         if self.map_df is None or self.map_df.empty:
+            self._current_dx = 1.0
+            self._current_dy = 1.0
             return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
         
         # Get X-range filter
@@ -1144,6 +1181,8 @@ class VMapViewer(QWidget):
             filtered_columns = column_labels
         
         if len(filtered_columns) == 0:
+            self._current_dx = 1.0
+            self._current_dy = 1.0
             return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
         
         # Coordinates (cached in set_map_data)
@@ -1192,6 +1231,8 @@ class VMapViewer(QWidget):
                 z_col = np.full(len(x_col), np.nan)
         
         if z_col is None or len(z_col) == 0:
+            self._current_dx = 1.0
+            self._current_dy = 1.0
             return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
         
         # Apply mask (2D map only)
@@ -1247,6 +1288,12 @@ class VMapViewer(QWidget):
                 half_step = r / (grid_size - 1)
                 extent = [-r - half_step, r + half_step, -r - half_step, r + half_step]
                 heatmap_pivot = pd.DataFrame()  # Not used for wafer
+                width = extent[1] - extent[0]
+                height = extent[3] - extent[2]
+                dx = width / float(grid_size)
+                dy = height / float(grid_size)
+                self._current_dx = float(dx)
+                self._current_dy = float(dy)
         else:
             # 2D maps: Determine whether coordinates form a regular uniform Cartesian grid
             u_x = np.sort(np.unique(x_col))
@@ -1316,12 +1363,14 @@ class VMapViewer(QWidget):
                     float(y_col.max() + margin_y)
                 ]
         
-        result = (heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col)
+        dx_val = getattr(self, '_current_dx', 1.0)
+        dy_val = getattr(self, '_current_dy', 1.0)
+        result = (heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col, float(dx_val), float(dy_val))
         
         # Cache the result to avoid recomputing expensive griddata
         self._griddata_cache[cache_key] = result
         
-        return result
+        return result[:6]
     
     def _apply_mask(self, z_col, filtered_df):
         """Apply mask to z_col based on mask settings."""

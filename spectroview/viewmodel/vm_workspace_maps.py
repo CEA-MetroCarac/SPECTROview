@@ -12,7 +12,13 @@ from pathlib import Path
 from PySide6.QtCore import Signal
 
 from spectroview.model.m_settings import MSettings
-from spectroview.model.m_io import extract_map_arrays, load_map_file, load_wdf_map, load_spc_map
+from spectroview.model.m_io import (
+    extract_map_arrays,
+    load_map_file,
+    load_wdf_map,
+    load_spc_map,
+    load_l6m_map,
+)
 from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.viewmodel.utils import parse_coords_from_fname
@@ -75,6 +81,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                          self.maps_metadata[map_name] = metadata
                      else:
                          map_df = result
+                elif path.suffix.lower() == '.l6m':
+                    result = load_l6m_map(path)
+                    if isinstance(result, tuple):
+                        map_df, metadata = result
+                        self.maps_metadata[map_name] = metadata
+                    else:
+                        map_df = result
                 else:
                     map_df = load_map_file(path)
                     self.maps_metadata[map_name] = {}  # Empty metadata for non-WDF maps

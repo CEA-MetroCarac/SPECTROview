@@ -345,3 +345,62 @@ class TestParseCoordsFromFname:
         from spectroview.viewmodel.utils import parse_coords_from_fname
         assert parse_coords_from_fname("plain_name") is None
         assert parse_coords_from_fname("bad_(1.0)") is None
+
+
+class TestLabSpec6WorkspaceAndMoreTabIntegration:
+    """Verify .l6s and .l6m files load into Spectra/Maps ViewModels, API, and More tab."""
+
+    def test_load_l6s_and_l6m_into_viewmodels_and_more_tab(self, vm, settings, examples_dir, qapp):
+        from spectroview.api import io as api_io
+        from spectroview.model.m_io import _METADATA_ORDERED_KEYS
+        from spectroview.model.spectra_store import SpectrumProxy
+        from spectroview.view.components.v_moretab import VMoreTab
+        from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
+
+        l6s_path = examples_dir / "spectroscopic_data" / "spectrum.l6s"
+        l6m_path = examples_dir / "spectroscopic_data" / "map.l6m"
+        assert l6s_path.exists() and l6m_path.exists()
+
+        # 1. Spectra ViewModel + More tab display
+        vm_spec = VMWorkspaceSpectra(settings)
+        vm_spec.load_files([str(l6s_path)])
+        assert "spectrum" in vm_spec.store.map_names
+        md_spec = vm_spec.store.get_map_data("spectrum")
+        assert md_spec.n_spectra == 1
+        assert md_spec.n_wavenumbers == 1024
+
+        more_tab = VMoreTab()
+        proxy_spec = SpectrumProxy(md_spec, 0, "spectrum")
+        more_tab.show_metadata(proxy_spec)
+
+        table_keys = [more_tab.table.item(r, 0).text() for r in range(more_tab.table.rowCount())]
+        ordered_in_spec = [k for k in _METADATA_ORDERED_KEYS if k in md_spec.map_metadata]
+        assert table_keys[: len(ordered_in_spec)] == ordered_in_spec
+        assert "Instrument" in table_keys[len(ordered_in_spec) :]
+        assert "S/N" in table_keys[len(ordered_in_spec) :]
+
+        # 2. Maps ViewModel + More tab display
+        vm.load_map_files([str(l6m_path)])
+        assert "map" in vm.maps
+        assert vm.current_map_name == "map"
+        md_map = vm.store.get_map_data("map")
+        assert md_map.n_spectra == 1368
+        assert md_map.n_wavenumbers == 1024
+
+        proxy_map = SpectrumProxy(md_map, 0, md_map.fnames[0])
+        more_tab.show_metadata(proxy_map)
+        map_table_keys = [more_tab.table.item(r, 0).text() for r in range(more_tab.table.rowCount())]
+        ordered_in_map = [k for k in _METADATA_ORDERED_KEYS if k in md_map.map_metadata]
+        assert map_table_keys[: len(ordered_in_map)] == ordered_in_map
+        assert "SWIFT" in map_table_keys[len(ordered_in_map) :]
+        assert "Instrument" in map_table_keys[len(ordered_in_map) :]
+
+        # 3. Public API io.load_spectra and io.load_map
+        api_spec = api_io.load_spectra(l6s_path)
+        assert len(api_spec["items"]) == 1
+        assert api_spec["items"][0]["metadata"]["File Format"] == "HORIBA LabSpec 6"
+
+        api_map_df, api_map_meta = api_io.load_map(l6m_path)
+        assert api_map_df.shape == (1368, 1026)
+        assert api_map_meta["File Format"] == "HORIBA LabSpec 6 Map"
+

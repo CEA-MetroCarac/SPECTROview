@@ -100,7 +100,7 @@ Additional state beyond the inherited [VMWorkspaceSpectra](spectra.md#vmworkspac
 |-----------|------|---------|
 | `maps` | `dict[str, pd.DataFrame]` | Raw map DataFrames indexed by name (legacy cache) |
 | `current_map_name` | `str \| None` | Active map selection |
-| `maps_metadata` | `dict[str, dict]` | Acquisition metadata per map (WDF, SPC) |
+| `maps_metadata` | `dict[str, dict]` | Acquisition metadata per map (WDF, SPC, L6M) |
 | `map_type` | `str` | `'2Dmap'` or `'Wafer_300mm'` / `'Wafer_200mm'` / `'Wafer_100mm'` |
 | `graphs_workspace` | ref | Injected reference for profile extraction |
 
@@ -209,7 +209,7 @@ Coordinate parsing is centralized in `parse_coords_from_fname()` (`viewmodel/uti
 
 1. **User Action**: The user initiates a load map action in `VWorkspaceMaps`.
 2. **View → ViewModel**: The View calls `vm.load_map_files(paths)`.
-3. **File Parsing**: For each file, the ViewModel delegates to the `m_io` module (`load_wdf_map`, `load_spc_map`, etc.). The IO module returns a DataFrame containing `X`, `Y`, and all wavenumber columns, plus metadata.
+3. **File Parsing**: For each file, the ViewModel delegates to the `m_io` module (`load_wdf_map`, `load_spc_map`, `load_l6m_map`, etc.). The IO module returns a DataFrame containing `X`, `Y`, and all wavenumber columns, plus metadata.
 4. **Data Storage (Legacy)**: The ViewModel caches the returned DataFrame in `self.maps[name]`.
 5. **Data Extraction**: The ViewModel calls `_extract_spectra_from_map(name, map_df)` to extract the `x0`, `Y0`, and spatial `coords` arrays from the DataFrame. It also builds the `fnames` list here.
 6. **Data Storage (Tensor)**: The ViewModel registers the data in the `SpectraStore` via `add_map(name, x0, Y0, coords, fnames, is_active)`.

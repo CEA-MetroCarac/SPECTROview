@@ -349,7 +349,7 @@ The `More` tab provides access to auxiliary tools and metadata, divided into thr
   <img src="../user_manual_images/Spectra_Maps/moretab.png" alt="More Tab Overview" width="800"><br>
 </div>
 
-- **Left**: Displays comprehensive metadata extracted directly from loaded `.wdf` or `.spc` files, showing the exact instrument settings used during acquisition.
+- **Left**: Displays comprehensive metadata extracted directly from loaded `.wdf`, `.spc`, `.l6s`, or `.l6m` files, showing the exact instrument settings used during acquisition.
 - **Middle**: Displays detailed properties and statistical information about the currently selected spectrum.
 - **Right**: Provides access to additional pre-processing utilities, such as global intensity normalization algorithms and cosmic ray artifact detection.
 

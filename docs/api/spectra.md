@@ -54,7 +54,7 @@ Each preprocessing/fit method accepts an optional `names=[...]` list to target a
 
 ## Loading Data
 
-The `spectroview.api.io` module provides unified functions to load spectra from multiple formats (WDF, SPC, CSV, TXT, DAT) — this is what `SpectraWorkspace.load_files()` uses internally, and it's also useful on its own for the low-level array-based workflow below.
+The `spectroview.api.io` module provides unified functions to load spectra from multiple formats (WDF, SPC, L6S, CSV, TXT, DAT) — this is what `SpectraWorkspace.load_files()` uses internally, and it's also useful on its own for the low-level array-based workflow below.
 
 ```python
 from spectroview.api import io

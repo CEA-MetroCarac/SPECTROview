@@ -13,8 +13,9 @@ This file contains factual information about SPECTROview's capabilities. It is r
 | Text file | `.txt` | Two-column (x, y) plain text, various delimiters |
 | CSV | `.csv` | Comma-separated values |
 | Renishaw WDF | `.wdf` | Renishaw WiRE spectrometer format (single spectra and maps) |
+| HORIBA LabSpec 6 | `.l6s`, `.l6m` | HORIBA LabSpec 6 native binary format (`.l6s` spectra and `.l6m` 2D maps) |
 | Galactic SPC | `.spc` | Galactic/Thermo Scientific GRAMS format |
-| TRPL Data | `.txt` | Time-resolved photoluminescence data |
+| TRPL Data | `.txt`, `.dat` | Time-resolved photoluminescence data |
 
 ## Data Tables (Graphs Workspace)
 

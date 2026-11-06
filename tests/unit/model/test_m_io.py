@@ -17,11 +17,14 @@ import pandas as pd
 import pytest
 
 from spectroview.model.m_io import (
+    _METADATA_ORDERED_KEYS,
     convert_action,
     detect_file_type,
     extract_map_arrays,
     load_TRPL_data,
     load_dataframe_file,
+    load_l6m_map,
+    load_l6s_spectrum,
     load_map_file,
     load_spc_map,
     load_spc_spectrum,
@@ -30,6 +33,7 @@ from spectroview.model.m_io import (
     load_wdf_spectrum,
     peek_wdf_measurement_type,
 )
+from spectroview.model.m_l6s import L6sReader
 from spectroview.model.m_spc import SpcReader
 from spectroview.model.m_wdf import (
     WdfDataType,
@@ -319,6 +323,7 @@ class TestModelLayerMvvmPurity:
             "spectroview/model/m_io.py",
             "spectroview/model/m_spc.py",
             "spectroview/model/m_wdf.py",
+            "spectroview/model/m_l6s.py",
         ],
     )
     def test_no_qt_or_viewmodel_imports(self, project_root, rel_path):
@@ -357,6 +362,7 @@ class TestDetectFileType:
             (spec_dir / "spectra.spc", "spectra"),
             (spec_dir / "MoS2_PL.spc", "spectra"),
             (spec_dir / "MoS2_Raman.spc", "spectra"),
+            (spec_dir / "spectrum.l6s", "spectra"),
             (spec_dir / "specturm_TRPL.dat", "spectra"),
             (spec_dir / "XRDspectra.txt", "spectra"),
             (spec_dir / "Spectra_baseline_1.txt", "spectra"),
@@ -365,6 +371,7 @@ class TestDetectFileType:
             (spec_dir / "profil.wdf", "map"),
             (bench_dir / "3_3721map.wdf", "map"),
             (spec_dir / "2dmap_spc.spc", "map"),
+            (spec_dir / "map.l6m", "map"),
             (bench_dir / "2Dmap_Si.txt", "map"),
             (bench_dir / "1_CL_map.txt", "map"),
             (bench_dir / "wafer1_process1.csv", "map"),
@@ -746,5 +753,133 @@ class TestConvertActionEdgeCases:
         )
         with pytest.raises(ValueError, match="Inconsistent number of wavenumber points"):
             convert_action(raw, tmp_path / "out.txt")
+
+
+class TestL6sAndL6mBinaryReader:
+    """Validate native HORIBA LabSpec 6 (.l6s and .l6m) binary reader and metadata ordering."""
+
+    def test_l6s_spectrum_loading_and_metadata_ordering(self, examples_dir):
+        l6s_path = examples_dir / "spectroscopic_data" / "spectrum.l6s"
+        assert l6s_path.exists()
+
+        hdr = L6sReader.peek_header(l6s_path)
+        assert hdr["root_tag"] == "datas"
+        assert hdr["version"] == 2
+        assert hdr["root_count"] == 11
+
+        res = load_l6s_spectrum(l6s_path)
+        assert res["type"] == "spectra"
+        assert len(res["items"]) == 1
+
+        item = res["items"][0]
+        assert item["name"] == "spectrum"
+        assert item["x0"].shape == (1024,)
+        assert item["y0"].shape == (1024,)
+        assert np.all(np.diff(item["x0"]) > 0)
+
+        # Silicon reference peak around 520.46 cm^-1
+        peak_idx = int(np.argmax(item["y0"]))
+        assert item["x0"][peak_idx] == pytest.approx(520.4608, abs=0.05)
+        assert item["y0"][peak_idx] == pytest.approx(4892.6411, abs=0.05)
+
+        meta = item["metadata"]
+        keys = list(meta.keys())
+
+        # Verify _METADATA_ORDERED_KEYS appear first in exact canonical order
+        ordered_present = [k for k in _METADATA_ORDERED_KEYS if k in meta]
+        assert keys[: len(ordered_present)] == ordered_present
+
+        assert meta["File Format"] == "HORIBA LabSpec 6"
+        assert meta["Date"] == "21.05.2026 16:39"
+        assert meta["Grating"] == "1800 (500nm)"
+        assert meta["Objective Used"] == "100x"
+        assert meta["Laser Wavelength (nm)"] == "532.43"
+        assert meta["Laser Power (%)"] == "1% (0.96mW)"
+        assert meta["Exposure Time (s)"] == 5
+        assert meta["Accumulations"] == 2
+        assert meta["Slit Opening (µm)"] == "100"
+        assert meta["X-axis Unit"] == "1/cm"
+        assert meta["Points"] == 1024
+        assert meta["Title"] == "D"
+        assert meta["Application"] == "LabSpec 6"
+        assert meta["Measurement Type"] == "Spectrum"
+        assert meta["Spectral Unit"] == "Cnt"
+        assert meta["X-axis Type"] == "Spectr"
+
+        # Additional LabSpec 6 parameters appended after _METADATA_ORDERED_KEYS
+        tail_keys = keys[len(ordered_present) :]
+        assert "Instrument" in tail_keys
+        assert meta["Instrument"] == "LabRAM Soleil"
+        assert meta["Detector"] == "Syncerity OE"
+        assert meta["Laser"] == "532nm_Edge"
+        assert meta["Detector temperature (°C)"] == pytest.approx(-60.1)
+        assert meta["Acquired"] == "21.05.2026 16:39:38"
+        assert meta["S/N"] == "57.7"
+
+    def test_l6m_map_loading_coordinates_and_metadata_ordering(self, examples_dir):
+        l6m_path = examples_dir / "spectroscopic_data" / "map.l6m"
+        assert l6m_path.exists()
+
+        hdr = L6sReader.peek_header(l6m_path)
+        assert hdr["root_tag"] == "datas"
+        assert hdr["version"] == 2
+        assert hdr["root_count"] == 16
+
+        df, meta = load_l6m_map(l6m_path)
+        # 36 Y points * 38 X points = 1368 spectra, 1024 spectral points + X, Y columns = 1026
+        assert df.shape == (1368, 1026)
+        assert list(df.columns[:2]) == ["X", "Y"]
+
+        x0, Y0, coords, fnames = extract_map_arrays("map", df)
+        assert x0.shape == (1024,)
+        assert Y0.shape == (1368, 1024)
+        assert coords.shape == (1368, 2)
+        assert len(fnames) == 1368
+        # Raw eV axis in map.l6m is descending [2.9485..1.2948]; loader must sort ascending
+        assert np.all(np.diff(x0) > 0)
+        assert x0[0] == pytest.approx(1.29479, abs=1e-4)
+        assert x0[-1] == pytest.approx(2.94846, abs=1e-4)
+
+        keys = list(meta.keys())
+        ordered_present = [k for k in _METADATA_ORDERED_KEYS if k in meta]
+        assert keys[: len(ordered_present)] == ordered_present
+
+        assert meta["File Format"] == "HORIBA LabSpec 6 Map"
+        assert meta["Date"] == "28.04.2025 15:55"
+        assert meta["Grating"] == "150 (500nm)"
+        assert meta["Objective Used"] == "100x"
+        assert meta["Laser Wavelength (nm)"] == "532.43"
+        assert meta["Laser Power (%)"] == "0.5% (0.48mW)"
+        assert meta["Exposure Time (s)"] == pytest.approx(0.01)
+        assert meta["Accumulations"] == 1
+        assert meta["Slit Opening (µm)"] == "100"
+        assert meta["X-axis Unit"] == "eV"
+        assert meta["Points per Spectrum"] == 1024
+        assert meta["Total Map Points"] == 1368
+        assert meta["X Step Size (µm)"] == "0.200"
+        assert meta["Y Step Size (µm)"] == "0.203"
+        assert meta["X Range (µm)"] == "-3.65 to 3.75"
+        assert meta["Y Range (µm)"] == "-3.10 to 3.99"
+
+        tail_keys = keys[len(ordered_present) :]
+        assert "SWIFT" in tail_keys
+        assert meta["SWIFT"] == "On"
+        assert meta["Instrument"] == "LabRAM Soleil"
+        assert meta["Detector"] == "Syncerity OE"
+        assert meta["S/N"] == "70.3"
+
+    def test_corrupt_or_truncated_l6s_raises_value_error(self, tmp_path):
+        short_l6s = tmp_path / "short.l6s"
+        short_l6s.write_bytes(b"LabSpec6\x00short")
+        with pytest.raises(ValueError, match="File too small"):
+            detect_file_type(short_l6s)
+
+        bad_magic = tmp_path / "bad.l6m"
+        bad_magic.write_bytes(b"NOT_LABSPEC" + b"\x00" * 128)
+        with pytest.raises(ValueError, match="Invalid LabSpec 6 magic header"):
+            detect_file_type(bad_magic)
+        with pytest.raises(ValueError, match="Invalid LabSpec 6 binary file"):
+            L6sReader(bad_magic)
+
 
 

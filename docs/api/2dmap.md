@@ -57,7 +57,7 @@ For array-level control without a `MapsWorkspace`, `spectroview.api.io.load_map(
 from spectroview.api import io
 import numpy as np
 
-# WDF and SPC files return (DataFrame, metadata_dict); TXT/CSV return a DataFrame only.
+# WDF, SPC, and L6M files return (DataFrame, metadata_dict); TXT/CSV return a DataFrame only.
 result = io.load_map("my_wafer_map.wdf")
 df_map, metadata = result if isinstance(result, tuple) else (result, {})
 ```

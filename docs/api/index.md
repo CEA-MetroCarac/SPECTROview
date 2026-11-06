@@ -7,7 +7,7 @@ All modules are exposed through the `spectroview.api` package.
 ## API Modules
 
 - **[`spectroview.api.workspace`](spectra.md#stateful-workspaces)** — `SpectraWorkspace` / `MapsWorkspace`: stateful sessions that load, preprocess, fit, collect results, and save/load in one place. Files they write/read use the *exact same format* as the GUI's own "Save work" — a workspace built entirely from a script opens directly in the GUI, and vice versa.
-- **[`spectroview.api.io`](spectra.md#loading-data)** — File readers (WDF, SPC, CSV, TXT, DAT), dataset import, result export, and a headless Renishaw map converter.
+- **[`spectroview.api.io`](spectra.md#loading-data)** — File readers (WDF, SPC, L6S, L6M, CSV, TXT, DAT), dataset import, result export, and a headless Renishaw map converter.
 - **[`spectroview.api.preprocessing`](spectra.md#preprocessing)** — Stateless array-level baseline subtraction, cropping, and normalization.
 - **[`spectroview.api.fitting`](spectra.md#batch-fitting)** — The interface to the Vectorized Batch Fit (VBF) engine: model construction, batch fitting, and fit-model template CRUD.
 - **[`spectroview.api.analysis`](2dmap.md#multivariate-analysis-mva)** — Multivariate analysis: PCA and NMF.

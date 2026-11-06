@@ -16,6 +16,7 @@ import struct
 import numpy as np
 import pandas as pd
 
+from spectroview.model.m_l6s import L6sReader
 from spectroview.model.m_spc import SpcReader
 from spectroview.model.m_wdf import WdfReader
 
@@ -156,6 +157,12 @@ def detect_file_type(path: str | Path) -> str:
     if ext == ".spc":
         hdr = SpcReader.peek_header(p)
         return "map" if hdr["fnsub"] > 1 else "spectra"
+    if ext == ".l6s":
+        L6sReader.peek_header(p)
+        return "spectra"
+    if ext == ".l6m":
+        L6sReader.peek_header(p)
+        return "map"
 
     if ext in (".csv", ".txt"):
         with open(p, "r", encoding="utf-8", errors="replace") as f:
@@ -1052,6 +1059,150 @@ def load_spc_map(path: Path) -> tuple[pd.DataFrame, dict]:
         metadata.update(_map_spc_metadata(reader.log_metadata))
 
     return df, _reorder_metadata(metadata)
+
+
+def _construct_l6s_metadata(
+    reader: L6sReader,
+    x0: np.ndarray,
+    is_map: bool = False,
+) -> dict:
+    """Construct standardized LabSpec 6 metadata dictionary with all extra parameters."""
+    tbl = reader.tables_metadata
+    metadata: dict = {
+        "File Format": "HORIBA LabSpec 6 Map" if is_map else "HORIBA LabSpec 6",
+        "Application": "LabSpec 6",
+        "Measurement Type": reader.record_type,
+        "X-axis Unit": reader.x_unit,
+        "X-axis Type": reader.x_type,
+        "Spectral Unit": reader.spectral_unit,
+    }
+
+    if len(x0) > 0:
+        metadata["Wavenumber Range"] = f"{x0[0]:.2f} to {x0[-1]:.2f} {reader.x_unit}"
+
+    if is_map:
+        metadata["Total Map Points"] = reader.num_spectra
+        metadata["Points per Spectrum"] = reader.n_pts
+        if reader.x_axis is not None and len(reader.x_axis) > 0:
+            metadata["X Range (µm)"] = f"{reader.x_axis.min():.2f} to {reader.x_axis.max():.2f}"
+        if reader.y_axis is not None and len(reader.y_axis) > 0:
+            metadata["Y Range (µm)"] = f"{reader.y_axis.min():.2f} to {reader.y_axis.max():.2f}"
+        if reader.x_step is not None:
+            metadata["X Step Size (µm)"] = f"{reader.x_step:.3f}"
+        if reader.y_step is not None:
+            metadata["Y Step Size (µm)"] = f"{reader.y_step:.3f}"
+    else:
+        metadata["Points"] = reader.n_pts
+        if reader.num_spectra > 1:
+            metadata["Total Map Points"] = reader.num_spectra
+
+    # Map standard acquisition attributes to _METADATA_ORDERED_KEYS
+    mapping_rules = (
+        ("Date", ("Date",)),
+        ("Grating", ("Grating",)),
+        ("Objective Used", ("Objective",)),
+        ("Laser Power (%)", ("ND Filter", "Power", "Laser Power")),
+        ("Exposure Time (s)", ("Acq. time (s)", "Exposure time (s)")),
+        ("Accumulations", ("Accumulations",)),
+        ("Slit Opening (µm)", ("Hole (µm)", "Slit (µm)", "Hole")),
+        ("Title", ("Title",)),
+    )
+
+    mapped_source_keys: set[str] = set()
+    for standard_key, candidates in mapping_rules:
+        for src_key in candidates:
+            mapped_source_keys.add(src_key)
+            if src_key in tbl and standard_key not in metadata:
+                val = tbl[src_key]
+                if val is not None and str(val).strip() != "":
+                    metadata[standard_key] = val
+
+    if "Title" not in metadata and reader.title:
+        metadata["Title"] = reader.title
+
+    if reader.laser_wavelength_nm is not None:
+        metadata["Laser Wavelength (nm)"] = f"{reader.laser_wavelength_nm:g}"
+    elif "Laser" in tbl and str(tbl["Laser"]).strip():
+        metadata["Laser Wavelength (nm)"] = str(tbl["Laser"]).strip()
+
+    # Preserve all remaining LabSpec 6 parameters at the end of the metadata list
+    for key, val in tbl.items():
+        if key not in mapped_source_keys and key not in metadata:
+            if val is not None and str(val).strip() != "":
+                metadata[key] = val
+
+    if reader.snr:
+        metadata["S/N"] = reader.snr
+
+    return _reorder_metadata(metadata)
+
+
+def load_l6s_spectrum(path: Path) -> dict:
+    """Load discrete spectrum (or multi-spectrum series) from a HORIBA LabSpec 6 ``.l6s`` file."""
+    path = Path(path)
+    reader = L6sReader(path)
+
+    x0 = np.asarray(reader.x_data, dtype=np.float64)
+    y_raw = np.asarray(reader.y_data, dtype=np.float64)
+    if y_raw.ndim == 1:
+        y_mat = y_raw.reshape(1, -1)
+    else:
+        y_mat = y_raw
+
+    if len(x0) > 1 and x0[0] > x0[-1]:
+        sort_inds = np.argsort(x0)
+        x0 = np.ascontiguousarray(x0[sort_inds])
+        y_mat = np.ascontiguousarray(y_mat[:, sort_inds])
+    else:
+        x0 = x0.copy()
+        y_mat = y_mat.copy()
+
+    metadata = _construct_l6s_metadata(reader, x0, is_map=False)
+
+    items = []
+    n_spec = y_mat.shape[0]
+    for i in range(n_spec):
+        item_name = path.stem if n_spec == 1 else f"{path.stem}_{i + 1}"
+        items.append(
+            {
+                "name": item_name,
+                "x0": x0 if i == 0 else x0.copy(),
+                "y0": y_mat[i],
+                "metadata": dict(metadata),
+            }
+        )
+
+    return {
+        "type": "spectra",
+        "items": items,
+    }
+
+
+def load_l6m_map(path: Path) -> tuple[pd.DataFrame, dict]:
+    """Load 2D hyperspectral map or line profile from a HORIBA LabSpec 6 ``.l6m`` file."""
+    path = Path(path)
+    reader = L6sReader(path)
+
+    wavenumbers = np.asarray(reader.x_data, dtype=np.float64)
+    spectra_matrix = np.asarray(reader.y_data, dtype=np.float64)
+    if spectra_matrix.ndim == 1:
+        spectra_matrix = spectra_matrix.reshape(1, -1)
+
+    if len(wavenumbers) > 1 and wavenumbers[0] > wavenumbers[-1]:
+        sort_inds = np.argsort(wavenumbers)
+        wavenumbers = np.ascontiguousarray(wavenumbers[sort_inds])
+        spectra_matrix = np.ascontiguousarray(spectra_matrix[:, sort_inds])
+
+    wavenumber_cols = [str(wn) for wn in wavenumbers]
+    df = _build_map_dataframe(
+        np.round(reader.x_coords, 4),
+        np.round(reader.y_coords, 4),
+        wavenumber_cols,
+        spectra_matrix,
+    )
+
+    metadata = _construct_l6s_metadata(reader, wavenumbers, is_map=True)
+    return df, metadata
 
 
 def _extract_spc_x_unit(reader: SpcReader) -> str:

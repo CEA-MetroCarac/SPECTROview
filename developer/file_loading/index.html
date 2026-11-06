@@ -2101,11 +2101,13 @@
 <hr />
 <h2 id="design-performance-notes">Design &amp; Performance Notes<a class="headerlink" href="#design-performance-notes" title="Permanent link">&para;</a></h2>
 <h3 id="zero-payload-header-classification-detect_file_type">Zero-Payload Header Classification (<code>detect_file_type</code>)<a class="headerlink" href="#zero-payload-header-classification-detect_file_type" title="Permanent link">&para;</a></h3>
-<p>When opening or dragging files into <code>Main._load_files_by_paths()</code>, <code>detect_file_type()</code> classifies files in <code>&lt; 0.1 ms</code> without parsing full datasets:
-- <strong><code>.wdf</code></strong>: <code>peek_wdf_measurement_type()</code> reads only the first 144 bytes of the <code>WDF1</code> header (<code>measurement_type</code> at offset <code>132</code>) rather than decoding multi-megabyte spectral cubes twice.
-- <strong><code>.spc</code></strong>: <code>SpcReader.peek_header()</code> (<code>header_only=True</code>) reads only the 512-byte Galactic SPC header (<code>fnsub</code> subfile count) and skips subfile/log reading.
-- <strong><code>.l6s</code> / <code>.l6m</code></strong>: <code>L6sReader.peek_header()</code> validates the 76-byte <code>"LabSpec6\x00"</code> binary header (<code>magic</code>, <code>version</code>, <code>root_offset</code>) in microseconds without reading full node trees or spectral arrays.
-- <strong><code>.txt</code> / <code>.csv</code></strong>: Inspects up to 12 non-empty lines in pure Python without launching regex-engine <code>pandas</code> reads during routing.</p>
+<p>When opening or dragging files into <code>Main._load_files_by_paths()</code>, <code>detect_file_type()</code> classifies files in <code>&lt; 0.1 ms</code> without parsing full datasets:</p>
+<ul>
+<li><strong><code>.wdf</code></strong>: <code>peek_wdf_measurement_type()</code> reads only the first 144 bytes of the <code>WDF1</code> header (<code>measurement_type</code> at offset <code>132</code>) rather than decoding multi-megabyte spectral cubes twice.</li>
+<li><strong><code>.spc</code></strong>: <code>SpcReader.peek_header()</code> (<code>header_only=True</code>) reads only the 512-byte Galactic SPC header (<code>fnsub</code> subfile count) and skips subfile/log reading.</li>
+<li><strong><code>.l6s</code> / <code>.l6m</code></strong>: <code>L6sReader.peek_header()</code> validates the 76-byte <code>"LabSpec6\x00"</code> binary header (<code>magic</code>, <code>version</code>, <code>root_offset</code>) in microseconds without reading full node trees or spectral arrays.</li>
+<li><strong><code>.txt</code> / <code>.csv</code></strong>: Inspects up to 12 non-empty lines in pure Python without launching regex-engine <code>pandas</code> reads during routing.</li>
+</ul>
 <h3 id="consolidated-map-dataframes-vectorized-parsing">Consolidated Map DataFrames &amp; Vectorized Parsing<a class="headerlink" href="#consolidated-map-dataframes-vectorized-parsing" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Single-block DataFrames</strong>: Binary (<code>WDF</code>, <code>SPC</code>, <code>L6M</code>) and converted maps are assembled via <code>_build_map_dataframe()</code>, wrapping the contiguous 2D spectral matrix directly instead of constructing thousands of 1D column slices.</li>

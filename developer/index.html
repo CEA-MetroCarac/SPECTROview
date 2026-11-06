@@ -1724,7 +1724,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>│       ├── v_menubar.py               # Main menu bar
 <a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>│       ├── v_about.py                 # About dialog
 <a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>│       ├── v_update_banner.py         # Update notification banner widget
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>│       ├── v_user_manual.py           # Built-in user manual viewer
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>│       ├── markdown_utils.py          # Markdown spacing normalizer for Python-Markdown
 <a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>│       ├── customized_widgets.py      # Palette combobox, custom toolbar
 <a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>│       └── customize_graph/           # Graph customization dialog (two-panel Settings-like package)
 <a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>│           ├── customize_graph_dialog.py     # CustomizeGraphDialog (two-panel host with search &amp; live preview)
@@ -1754,10 +1754,9 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>│   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
 <a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>│   └── noise.py                 # Noise estimation functions
 <a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>│
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>└── resources/              # Icons, stylesheets, user manual assets
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>└── resources/              # Icons and Matplotlib stylesheets
 <a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>    ├── icons/
-<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>    ├── styles/
-<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>    └── user_manual/
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>    └── *.mplstyle
 </code></pre></div>
 <hr />
 <h2 id="application-entry-point"><strong>Application Entry Point</strong><a class="headerlink" href="#application-entry-point" title="Permanent link">&para;</a></h2>

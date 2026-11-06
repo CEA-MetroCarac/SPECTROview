@@ -1830,15 +1830,21 @@
 <h2 id="4-typography-geometry-component-styling">4. Typography, Geometry &amp; Component Styling<a class="headerlink" href="#4-typography-geometry-component-styling" title="Permanent link">&para;</a></h2>
 <h3 id="typography-stack">Typography Stack<a class="headerlink" href="#typography-stack" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Standard UI Typography</strong>:
+<li>
+<p><strong>Standard UI Typography</strong>:
   <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">font-family</span><span class="o">:</span><span class="w"> </span><span class="s2">"Inter"</span><span class="o">,</span><span class="w"> </span><span class="s2">"Segoe UI Variable Text"</span><span class="o">,</span><span class="w"> </span><span class="s2">"Segoe UI"</span><span class="o">,</span><span class="w"> </span><span class="nt">sans-serif</span><span class="o">;</span>
 </code></pre></div>
-  Provides clean legibility across dense scientific property sheets and menus without requiring external bundled TTF/OTF dependencies.</li>
-<li><strong>Monospace Numerical &amp; Code Stack</strong>:
+  Provides clean legibility across dense scientific property sheets and menus without requiring external bundled TTF/OTF dependencies.</p>
+</li>
+<li>
+<p><strong>Monospace Numerical &amp; Code Stack</strong>:
   <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">font-family</span><span class="o">:</span><span class="w"> </span><span class="s2">"JetBrains Mono"</span><span class="o">,</span><span class="w"> </span><span class="s2">"Cascadia Code"</span><span class="o">,</span><span class="w"> </span><span class="s2">"Consolas"</span><span class="o">,</span><span class="w"> </span><span class="nt">monospace</span><span class="o">;</span>
 </code></pre></div>
-  Used in spectral coordinate readouts, VBF parameter tables, fit residual reports, and embedded AI code snippets.</li>
-<li><strong>Font Size Safety</strong>: Application initialization guarantees positive point size (<code>setPointSizeF(9.0)</code>) to eliminate negative-size layout warnings during Qt Markdown rendering.</li>
+  Used in spectral coordinate readouts, VBF parameter tables, fit residual reports, and embedded AI code snippets.</p>
+</li>
+<li>
+<p><strong>Font Size Safety</strong>: Application initialization guarantees positive point size (<code>setPointSizeF(9.0)</code>) to eliminate negative-size layout warnings during Qt Markdown rendering.</p>
+</li>
 </ul>
 <h3 id="radii-geometry-hierarchy">Radii &amp; Geometry Hierarchy<a class="headerlink" href="#radii-geometry-hierarchy" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Corner Radii:
@@ -1884,9 +1890,11 @@
 <hr />
 <h2 id="5-vector-svg-icon-architecture-icons_svgpy-iconspy">5. Vector SVG Icon Architecture (<code>icons_svg.py</code> &amp; <code>icons.py</code>)<a class="headerlink" href="#5-vector-svg-icon-architecture-icons_svgpy-iconspy" title="Permanent link">&para;</a></h2>
 <h3 id="the-vector-engine-_svgiconengine">The Vector Engine (<code>_SvgIconEngine</code>)<a class="headerlink" href="#the-vector-engine-_svgiconengine" title="Permanent link">&para;</a></h3>
-<p>Traditional rasterized PNG icons suffer from two major defects in desktop analytical software:
-1. Resampling blur when scaled to fractional DPRs (e.g. 125%, 150%, 175% scaling on Windows 11).
-2. Hardcoded colors that cannot adapt dynamically when toggling between Dark and Light modes.</p>
+<p>Traditional rasterized PNG icons suffer from two major defects in desktop analytical software:</p>
+<ol>
+<li>Resampling blur when scaled to fractional DPRs (e.g. 125%, 150%, 175% scaling on Windows 11).</li>
+<li>Hardcoded colors that cannot adapt dynamically when toggling between Dark and Light modes.</li>
+</ol>
 <p>SPECTROview resolves this via a native PySide6 <code>QIconEngine</code> subclass:</p>
 <pre class="mermaid"><code>flowchart LR
     Caller["svg_icon('spectrum_1d', 16)"] --&gt; Engine["_SvgIconEngine"]

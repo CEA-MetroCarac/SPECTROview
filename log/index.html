@@ -1691,19 +1691,21 @@ mode (e.g. peak) had actually been selected. Reproduced and verified with headle
 before and after the fix — see the two <code>QT_QPA_PLATFORM=offscreen python3 -c "..."</code> scripts run
 during the session for the exact repro (not saved to disk, but easy to recreate: click
 <code>btn_peak</code>, then <code>btn_eraser</code>, check <code>w.toolbar.mode</code> vs <code>w.zoom_pan_active</code>).</p>
-<p><strong>Fix:</strong>
-1. Added <code>_mpl_zoom_active()</code> / <code>_set_zoom_tool_active(active: bool)</code> — idempotent helpers that
+<p><strong>Fix:</strong></p>
+<ol>
+<li>Added <code>_mpl_zoom_active()</code> / <code>_set_zoom_tool_active(active: bool)</code> — idempotent helpers that
    only call <code>toolbar.zoom()</code> when the toolbar's actual mode disagrees with what's requested.
-   All 3 call sites that used to call <code>toolbar.zoom()</code> unconditionally now go through this.
-2. <code>_toggle_erase_mode()</code> now remembers which of <code>btn_zoom</code>/<code>btn_baseline</code>/<code>btn_peak</code> was
+   All 3 call sites that used to call <code>toolbar.zoom()</code> unconditionally now go through this.</li>
+<li><code>_toggle_erase_mode()</code> now remembers which of <code>btn_zoom</code>/<code>btn_baseline</code>/<code>btn_peak</code> was
    checked before erase mode starts (<code>self._pre_erase_tool_btn</code>) and restores <em>that specific
-   one</em> on exit, instead of hardcoding zoom.
-3. Added <code>if self._erase_mode: return</code> guard at the top of <code>_on_mouse_click()</code> — needed because
+   one</em> on exit, instead of hardcoding zoom.</li>
+<li>Added <code>if self._erase_mode: return</code> guard at the top of <code>_on_mouse_click()</code> — needed because
    Qt's <code>setAutoExclusive</code> buttons <strong>cannot be programmatically unchecked when they're the sole
    checked button in their group</strong> (verified in isolation: <code>setChecked(False)</code> on the only
    checked auto-exclusive sibling silently no-ops). So <code>btn_peak</code> can stay visually checked
    while eraser mode is active, and without this guard, peak-picking logic would still fire
-   alongside the eraser's own press/motion/release handlers on the same clicks.</p>
+   alongside the eraser's own press/motion/release handlers on the same clicks.</li>
+</ol>
 <p>All three changes verified with targeted headless reproductions (peak→eraser→peak round-trip,
 zoom→eraser→zoom round-trip, and the peak-click-during-erase interference case) plus the full
 test suite.</p>

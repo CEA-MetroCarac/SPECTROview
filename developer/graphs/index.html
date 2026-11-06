@@ -2240,13 +2240,17 @@ geometry, and refresh of an open Customize dialog.</p>
 <h3 id="vgraph-the-rendering-widget"><strong><code>VGraph</code> — The Rendering Widget</strong><a class="headerlink" href="#vgraph-the-rendering-widget" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/view/components/v_graph.py</code></p>
 <p>Each plot in the MDI area is a <code>VGraph</code> instance. It holds a Matplotlib <code>Figure</code> + <code>FigureCanvas</code> and acts as the UI wrapper. It manages interactions, context menus, and toolbar actions (Style menu, Export, Replicate), but delegates the actual drawing algorithms to <code>PlotRenderer</code>. <code>create_plot_widget()</code> still builds each <code>VGraph</code>'s own matplotlib nav toolbar + action-button row (<code>self.toolbar_container</code>), but never adds it to the graph's own layout — see <a href="#mdi-area-management">the bottom toolbar</a> for where it's actually shown.</p>
-<p><strong>Interactive resize/pan performance.</strong> Every figure uses <code>layout="compressed"</code>, and each Agg redraw re-runs constrained layout, which costs hundreds of ms. Three things keep interaction responsive:
-- <code>MdiSubWindow</code> turns on <code>RubberBandResize</code>/<code>RubberBandMove</code>. Dragging a subwindow edge only moves a lightweight outline, and the canvas is resized and redrawn <strong>once</strong>, when the mouse is released.
-- <code>VGraph.canvas</code> is a <code>_DebouncedFigureCanvas</code>. The first <code>resizeEvent</code> of a burst is applied right away; any further events within <code>RESIZE_DEBOUNCE_MS</code> (60 ms) merge into one trailing resize at the final size. This covers resizes that don't go through the rubber band, such as tiling, maximizing, or dragging the splitter. The debounce timer is parented to the canvas.
-- <code>VGraph.toolbar</code> is a <code>_FastNavigationToolbar</code>, still the hidden <code>NavigationToolbar2QT</code> helper that drives the Pan/Zoom buttons. It suspends the figure's layout engine from <code>press_pan</code> until <code>release_pan</code> (only axis limits change mid-drag), throttles drag redraws to about 30 FPS (<code>PAN_FRAME_S</code>), and restores the engine with one full redraw on release. Clicking the Pan button is cheap in itself (~1 ms); the lag users noticed came from the per-mouse-move full layout redraw during the drag.</p>
-<p>Two rendering paths:
-- <strong><code>plot(df)</code></strong> — full replot: clears and rebuilds the Axes from scratch. Required whenever artists themselves change (series data, colors/markers per point, colormap, secondary/twin axes, annotations, insets) or a broken axis is active/toggled.
-- <strong><code>restyle()</code></strong> — fast path that repaints an already-rendered Axes in place (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling) without touching plotted data. Returns <code>False</code> (forcing a full replot instead) whenever a broken axis is active. See <a href="#live-preview-restyle-fast-path">Live Preview &amp; Restyle Fast Path</a> for how the Customize dialog decides which path to use.</p>
+<p><strong>Interactive resize/pan performance.</strong> Every figure uses <code>layout="compressed"</code>, and each Agg redraw re-runs constrained layout, which costs hundreds of ms. Three things keep interaction responsive:</p>
+<ul>
+<li><code>MdiSubWindow</code> turns on <code>RubberBandResize</code>/<code>RubberBandMove</code>. Dragging a subwindow edge only moves a lightweight outline, and the canvas is resized and redrawn <strong>once</strong>, when the mouse is released.</li>
+<li><code>VGraph.canvas</code> is a <code>_DebouncedFigureCanvas</code>. The first <code>resizeEvent</code> of a burst is applied right away; any further events within <code>RESIZE_DEBOUNCE_MS</code> (60 ms) merge into one trailing resize at the final size. This covers resizes that don't go through the rubber band, such as tiling, maximizing, or dragging the splitter. The debounce timer is parented to the canvas.</li>
+<li><code>VGraph.toolbar</code> is a <code>_FastNavigationToolbar</code>, still the hidden <code>NavigationToolbar2QT</code> helper that drives the Pan/Zoom buttons. It suspends the figure's layout engine from <code>press_pan</code> until <code>release_pan</code> (only axis limits change mid-drag), throttles drag redraws to about 30 FPS (<code>PAN_FRAME_S</code>), and restores the engine with one full redraw on release. Clicking the Pan button is cheap in itself (~1 ms); the lag users noticed came from the per-mouse-move full layout redraw during the drag.</li>
+</ul>
+<p>Two rendering paths:</p>
+<ul>
+<li><strong><code>plot(df)</code></strong> — full replot: clears and rebuilds the Axes from scratch. Required whenever artists themselves change (series data, colors/markers per point, colormap, secondary/twin axes, annotations, insets) or a broken axis is active/toggled.</li>
+<li><strong><code>restyle()</code></strong> — fast path that repaints an already-rendered Axes in place (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling) without touching plotted data. Returns <code>False</code> (forcing a full replot instead) whenever a broken axis is active. See <a href="#live-preview-restyle-fast-path">Live Preview &amp; Restyle Fast Path</a> for how the Customize dialog decides which path to use.</li>
+</ul>
 <p><code>_set_figure_style()</code> re-applies <code>axes.facecolor</code>/<code>figure.facecolor</code>/<code>axes.labelcolor</code>/<code>text.color</code>/<code>xtick.color</code>/<code>ytick.color</code>/<code>axes.edgecolor</code> from <code>plt.rcParams</code> on every render — necessary because <code>ax.clear()</code> does not retroactively repaint an Axes built under a different Matplotlib style/theme context, which previously left tick/label/spine colors stuck black after switching to a dark theme.</p>
 <h3 id="plotrenderer-the-plotting-engine"><strong><code>PlotRenderer</code> — The Plotting Engine</strong><a class="headerlink" href="#plotrenderer-the-plotting-engine" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/view/components/v_plot_renderer.py</code></p>
@@ -2625,10 +2629,12 @@ panel grid are one-off file/composition choices rather than <code>MGraph</code> 
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">graph_id</span><span class="p">:</span> <span class="p">(</span><span class="n">VGraph</span><span class="p">,</span> <span class="n">QDialog</span><span class="p">,</span> <span class="n">QMdiSubWindow</span><span class="p">)</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
 </code></pre></div>
-<p>When a graph is selected via the combobox or by clicking its subwindow:
-1. <code>_on_subwindow_activated()</code> identifies the <code>graph_id</code>.
-2. The ViewModel's <code>MGraph</code> is loaded.
-3. The right panel controls (X/Y/Z comboboxes, labels, style) are synced to match.</p>
+<p>When a graph is selected via the combobox or by clicking its subwindow:</p>
+<ol>
+<li><code>_on_subwindow_activated()</code> identifies the <code>graph_id</code>.</li>
+<li>The ViewModel's <code>MGraph</code> is loaded.</li>
+<li>The right panel controls (X/Y/Z comboboxes, labels, style) are synced to match.</li>
+</ol>
 <hr />
 <h2 id="persistence"><strong>Persistence</strong><a class="headerlink" href="#persistence" title="Permanent link">&para;</a></h2>
 <h3 id="spectroview-working-folder"><strong>SPECTROview Working Folder</strong><a class="headerlink" href="#spectroview-working-folder" title="Permanent link">&para;</a></h3>

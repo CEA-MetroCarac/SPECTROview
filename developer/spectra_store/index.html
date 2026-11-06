@@ -2382,14 +2382,22 @@ The <strong>dual-array design</strong> (<code>x0/Y0</code> vs <code>x/Y</code>) 
 </code></pre></div>
 <hr />
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
-<p><strong>Preprocessing not applied to viewer</strong>
-- The viewer receives <code>md.x</code> / <code>md.Y</code> from the payload. If <code>batch_preprocess()</code> was not called (e.g., no baseline config and no range), <code>md.x</code> and <code>md.Y</code> remain <code>None</code> and the viewer falls back to <code>md.x0</code> / <code>md.Y0</code>. This is the expected non-destructive behavior.</p>
-<p><strong>Memory grows unboundedly with large maps</strong>
-- <code>md.Y_bestfit</code>, <code>md.Y_baseline</code>, and <code>md.Y_peaks</code> are never freed until the map is deleted or <code>reinit_spectra()</code> is called (which resets them to <code>None</code>). For very large maps, call <code>store.remove_map()</code> for maps that are no longer needed.</p>
-<p><strong><code>get_map_data()</code> returns <code>None</code></strong>
-- The map name is case-sensitive and must match the exact key used in <code>add_map()</code>. Check <code>store.map_names</code> for the registered keys.</p>
-<p><strong>Zero-copy semantics cause unintended side effects</strong>
-- Because <code>get_map_data()</code> returns a direct reference, modifying <code>md.Y</code> anywhere affects all consumers. Always operate through the ViewModel's established mutate-then-signal pipeline to ensure UI consistency.</p>
+<p><strong>Preprocessing not applied to viewer</strong></p>
+<ul>
+<li>The viewer receives <code>md.x</code> / <code>md.Y</code> from the payload. If <code>batch_preprocess()</code> was not called (e.g., no baseline config and no range), <code>md.x</code> and <code>md.Y</code> remain <code>None</code> and the viewer falls back to <code>md.x0</code> / <code>md.Y0</code>. This is the expected non-destructive behavior.</li>
+</ul>
+<p><strong>Memory grows unboundedly with large maps</strong></p>
+<ul>
+<li><code>md.Y_bestfit</code>, <code>md.Y_baseline</code>, and <code>md.Y_peaks</code> are never freed until the map is deleted or <code>reinit_spectra()</code> is called (which resets them to <code>None</code>). For very large maps, call <code>store.remove_map()</code> for maps that are no longer needed.</li>
+</ul>
+<p><strong><code>get_map_data()</code> returns <code>None</code></strong></p>
+<ul>
+<li>The map name is case-sensitive and must match the exact key used in <code>add_map()</code>. Check <code>store.map_names</code> for the registered keys.</li>
+</ul>
+<p><strong>Zero-copy semantics cause unintended side effects</strong></p>
+<ul>
+<li>Because <code>get_map_data()</code> returns a direct reference, modifying <code>md.Y</code> anywhere affects all consumers. Always operate through the ViewModel's established mutate-then-signal pipeline to ensure UI consistency.</li>
+</ul>
 
 
 

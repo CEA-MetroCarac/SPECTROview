@@ -2014,29 +2014,37 @@
 <li><strong>Intensity Colormap</strong>: Respects the active color palette chosen under <strong>More Options</strong> (e.g. <code>jet</code>, <code>viridis</code>, <code>plasma</code>).</li>
 </ul>
 <h4 id="35-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces"><strong>3.5. Interactive Spectral Range Selectors &amp; Live Maps (Spectra &amp; Maps Workspaces)</strong><a class="headerlink" href="#35-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces" title="Permanent link">&para;</a></h4>
-<p>In both the <strong>Spectra</strong> and <strong>Maps</strong> workspaces, you can interactively bracket up to three spectral features in the <code>SpectraViewer</code> and inspect their variation in real time within the dedicated <strong>Live Maps</strong> tab:
-- <strong>Spectra Workspace</strong>: Displays up to three color-coded (Red, Blue, Green) <strong>1D parameter variation graphs</strong> across the <strong>currently selected spectra</strong> in the <code>SpectraList</code>, allowing rapid review of how peak intensity, position, height, or area evolves across a series of selected spectra.
-- <strong>Maps Workspace</strong>: Displays up to three real-time <strong>2D spatial heatmaps</strong> across the active hyperspectral map.</p>
+<p>In both the <strong>Spectra</strong> and <strong>Maps</strong> workspaces, you can interactively bracket up to three spectral features in the <code>SpectraViewer</code> and inspect their variation in real time within the dedicated <strong>Live Maps</strong> tab:</p>
+<ul>
+<li><strong>Spectra Workspace</strong>: Displays up to three color-coded (Red, Blue, Green) <strong>1D parameter variation graphs</strong> across the <strong>currently selected spectra</strong> in the <code>SpectraList</code>, allowing rapid review of how peak intensity, position, height, or area evolves across a series of selected spectra.</li>
+<li><strong>Maps Workspace</strong>: Displays up to three real-time <strong>2D spatial heatmaps</strong> across the active hyperspectral map.</li>
+</ul>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/rgb_live_map.png" alt="RGB Live Maps and Spectral Range Selectors" width="800"><br>
   <i>Interactive Spectral Range Selectors in <code>SpectraViewer</code> (top) paired with real-time visualizations in the <code>Live Maps</code> tab (bottom).</i>
 </div>
 
 <h5 id="range-selector-controls-spectra-viewer"><strong>Range Selector Controls (Spectra Viewer)</strong><a class="headerlink" href="#range-selector-controls-spectra-viewer" title="Permanent link">&para;</a></h5>
-<p>A vertical toolbar panel located on the right edge of the <code>SpectraViewer</code> provides three independent, color-coded toggle buttons:
-- <strong>Red</strong> (<code>R</code>)
-- <strong>Blue</strong> (<code>B</code>)
-- <strong>Green</strong> (<code>G</code>)</p>
-<p>Each button activates a corresponding pair of draggable vertical markers (brackets and shaded interval) directly on the spectrum plot:
-- <strong>Interactive Dragging</strong>: Click and drag either vertical boundary line to adjust the minimum or maximum wavenumber. Click and drag the shaded middle area to shift the entire interval without altering its width.
-- <strong>Multiple Simultaneous Ranges</strong>: Any combination of the three selectors can be activated at once. Each maintains its own color, interval, and visibility independently.
-- <strong>Rescale Integrity</strong>: Range selector markers do not expand or pollute the spectrum autoscale boundaries, ensuring the <strong>Rescale</strong> button (<code>Ctrl+R</code>) always zooms perfectly to the loaded spectral data.
-- <strong>Auto-Clamping</strong>: When cropping or loading new spectral data, range selectors automatically clamp and reposition within the visible spectrum domain.
-- <strong>Real-Time Updating</strong>: Moving any selector or changing the selected spectra in the <code>SpectraList</code> immediately recalculates and updates the corresponding graph (in the <strong>Spectra Workspace</strong>) or 2D spatial heatmap (in the <strong>Maps Workspace</strong>) in the <strong>Live Maps</strong> tab (with a smooth 60 ms debounce to prevent lagging).</p>
+<p>A vertical toolbar panel located on the right edge of the <code>SpectraViewer</code> provides three independent, color-coded toggle buttons:</p>
+<ul>
+<li><strong>Red</strong> (<code>R</code>)</li>
+<li><strong>Blue</strong> (<code>B</code>)</li>
+<li><strong>Green</strong> (<code>G</code>)</li>
+</ul>
+<p>Each button activates a corresponding pair of draggable vertical markers (brackets and shaded interval) directly on the spectrum plot:</p>
+<ul>
+<li><strong>Interactive Dragging</strong>: Click and drag either vertical boundary line to adjust the minimum or maximum wavenumber. Click and drag the shaded middle area to shift the entire interval without altering its width.</li>
+<li><strong>Multiple Simultaneous Ranges</strong>: Any combination of the three selectors can be activated at once. Each maintains its own color, interval, and visibility independently.</li>
+<li><strong>Rescale Integrity</strong>: Range selector markers do not expand or pollute the spectrum autoscale boundaries, ensuring the <strong>Rescale</strong> button (<code>Ctrl+R</code>) always zooms perfectly to the loaded spectral data.</li>
+<li><strong>Auto-Clamping</strong>: When cropping or loading new spectral data, range selectors automatically clamp and reposition within the visible spectrum domain.</li>
+<li><strong>Real-Time Updating</strong>: Moving any selector or changing the selected spectra in the <code>SpectraList</code> immediately recalculates and updates the corresponding graph (in the <strong>Spectra Workspace</strong>) or 2D spatial heatmap (in the <strong>Maps Workspace</strong>) in the <strong>Live Maps</strong> tab (with a smooth 60 ms debounce to prevent lagging).</li>
+</ul>
 <h5 id="live-maps-tab-visualization-subpanels"><strong>Live Maps Tab Visualization &amp; Subpanels</strong><a class="headerlink" href="#live-maps-tab-visualization-subpanels" title="Permanent link">&para;</a></h5>
-<p>The <strong>Live Maps</strong> tab is located on the bottom tab bar between <strong>Fit Results</strong> and <strong>MVA</strong> (with the <strong>More</strong> tab positioned at the end of the tabs list).
-- <strong>Subpanels Display</strong>: When one or more range selectors are active, their corresponding panels (Red, Blue, Green) are displayed side-by-side. If no selectors are currently active, a helpful placeholder message guides you to activate a selector button on the right edge of the <code>SpectraViewer</code>.
-- <strong>Supported Spectral Parameters</strong>: For each subpanel, you can select which parameter is extracted and plotted from the dropdown:</p>
+<p>The <strong>Live Maps</strong> tab is located on the bottom tab bar between <strong>Fit Results</strong> and <strong>MVA</strong> (with the <strong>More</strong> tab positioned at the end of the tabs list).</p>
+<ul>
+<li><strong>Subpanels Display</strong>: When one or more range selectors are active, their corresponding panels (Red, Blue, Green) are displayed side-by-side. If no selectors are currently active, a helpful placeholder message guides you to activate a selector button on the right edge of the <code>SpectraViewer</code>.</li>
+<li><strong>Supported Spectral Parameters</strong>: For each subpanel, you can select which parameter is extracted and plotted from the dropdown:</li>
+</ul>
 <table>
 <thead>
 <tr>
@@ -2090,10 +2098,12 @@
 </table>
 <p><em>Note</em>: If a fit-based parameter is selected but fit results are not yet available, the panel gracefully displays a notification banner rather than misleading or corrupted values.</p>
 <h5 id="individual-subpanel-controls"><strong>Individual Subpanel Controls</strong><a class="headerlink" href="#individual-subpanel-controls" title="Permanent link">&para;</a></h5>
-<p>Each subpanel provides dedicated controls:
-- <strong>Palette</strong> <em>(Maps Workspace only)</em>: Choose any standard colormap (e.g., <code>viridis</code>, <code>plasma</code>, <code>inferno</code>, <code>jet</code>, <code>turbo</code>, <code>coolwarm</code>, <code>cividis</code>, <code>magma</code>, <code>Reds</code>, <code>Blues</code>, <code>Greens</code>). In the <strong>Spectra Workspace</strong>, each 1D variation curve is automatically styled in its matching selector color (Red, Blue, or Green).
-- <strong>Copy</strong>: Quickly copy the rendered graph or heatmap figure to the clipboard as an image.
-- <strong>Range / Status Badge</strong>: Displays the current interval range <span class="arithmatex">\([x_{min}, x_{max}]\)</span> or fitting status.</p>
+<p>Each subpanel provides dedicated controls:</p>
+<ul>
+<li><strong>Palette</strong> <em>(Maps Workspace only)</em>: Choose any standard colormap (e.g., <code>viridis</code>, <code>plasma</code>, <code>inferno</code>, <code>jet</code>, <code>turbo</code>, <code>coolwarm</code>, <code>cividis</code>, <code>magma</code>, <code>Reds</code>, <code>Blues</code>, <code>Greens</code>). In the <strong>Spectra Workspace</strong>, each 1D variation curve is automatically styled in its matching selector color (Red, Blue, or Green).</li>
+<li><strong>Copy</strong>: Quickly copy the rendered graph or heatmap figure to the clipboard as an image.</li>
+<li><strong>Range / Status Badge</strong>: Displays the current interval range <span class="arithmatex">\([x_{min}, x_{max}]\)</span> or fitting status.</li>
+</ul>
 <hr />
 <h3 id="4-fitmodelbuilder"><strong>4. <code>FitModelBuilder</code></strong><a class="headerlink" href="#4-fitmodelbuilder" title="Permanent link">&para;</a></h3>
 <p>The <code>FitModelBuilder</code> tab is where you configure your spectral fit models. It is divided into three main panels: <code>Fitting</code>, <code>PeakTable</code>, and <code>FitModelControl</code>, each explained in the following sections.</p>
@@ -2217,16 +2227,18 @@ A fully configured fit model can be copied from one spectrum and pasted onto ano
 </ul>
 </blockquote>
 <p><strong>Saving / Loading Fit Models</strong>:
-If you intend to use a model frequently, you can save it as a template. Stored models can be easily accessed and applied to new datasets using the dropdown menu.
-- <strong>Select from Dropdown</strong>: Pick any pre-existing model from the <code>Fit model:</code> combobox.
-- <strong>Load via Button</strong>: Click the <strong>Load</strong> button to browse for and load any <code>.json</code> fit model template from your filesystem.
-- <strong>Drag &amp; Drop</strong>: You can drag and drop a <code>.json</code> fit model file directly onto the <code>Fit Model Builder</code> panel or anywhere on the <strong>Spectra</strong> or <strong>Maps</strong> workspace. The file is instantly added to the model list, selected in the dropdown, and ready to be applied.
-- <strong>Apply Model</strong>: Click <strong>Apply</strong> to assign the loaded model to the currently selected spectrum (or hold <strong>Ctrl</strong> while clicking <strong>Apply</strong> to assign it to all spectra).</p>
-<blockquote>
+If you intend to use a model frequently, you can save it as a template. Stored models can be easily accessed and applied to new datasets using the dropdown menu.</p>
+<ul>
+<li><strong>Select from Dropdown</strong>: Pick any pre-existing model from the <code>Fit model:</code> combobox.</li>
+<li><strong>Load via Button</strong>: Click the <strong>Load</strong> button to browse for and load any <code>.json</code> fit model template from your filesystem.</li>
+<li><strong>Drag &amp; Drop</strong>: You can drag and drop a <code>.json</code> fit model file directly onto the <code>Fit Model Builder</code> panel or anywhere on the <strong>Spectra</strong> or <strong>Maps</strong> workspace. The file is instantly added to the model list, selected in the dropdown, and ready to be applied.</li>
+<li><strong>Apply Model</strong>: Click <strong>Apply</strong> to assign the loaded model to the currently selected spectrum (or hold <strong>Ctrl</strong> while clicking <strong>Apply</strong> to assign it to all spectra).<blockquote>
 <ul>
 <li>When you <strong>Save</strong> a model to a <code>.json</code> file, the <em>current</em> Noise Threshold is permanently baked into that file. Later, when you <strong>Apply (Load)</strong> that model, the fit engine strictly uses the exact noise threshold saved in the file, ignoring whatever is currently set in your Settings Panel.</li>
 </ul>
 </blockquote>
+</li>
+</ul>
 <hr />
 <h3 id="5-collect-and-save-fit-results"><strong>5. Collect and Save Fit Results</strong><a class="headerlink" href="#5-collect-and-save-fit-results" title="Permanent link">&para;</a></h3>
 <p>Once fitting is complete across your spectra or maps, you need to aggregate the best-fit results:</p>

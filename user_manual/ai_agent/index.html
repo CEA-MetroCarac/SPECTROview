@@ -1856,21 +1856,25 @@
 <li>An embedded bottom toolbar hosting the <strong>AI Provider selector</strong>, <strong>Model selector</strong>, <strong>Refresh button</strong>, <strong>Voice dictation mic (<code>🎤</code>)</strong>, and <strong>Send ▶ / Stop ■ button</strong>.</li>
 </ul>
 <h4 id="conversation-history-dialog"><strong>Conversation History Dialog</strong><a class="headerlink" href="#conversation-history-dialog" title="Permanent link">&para;</a></h4>
-<p>Clicking the <strong>Chat History</strong> icon button opens a management dialog inspired by PLUME:
-- <strong>Search filter</strong>: Real-time text search across conversation titles.
-- <strong>Section organization</strong>: Pinned conversations are organized at the top under a <strong>PINNED</strong> section; others are grouped chronologically (<strong>TODAY</strong>, <strong>YESTERDAY</strong>, <strong>THIS WEEK</strong>, <strong>OLDER</strong>).
-- <strong>Exact Timestamps &amp; Message Counts</strong>: Each conversation card displays precise timestamping (<code>YYYY-MM-DD HH:MM:SS</code>) and message counts.
-- <strong>Actions</strong>: Pin/Unpin, Rename, Duplicate, and Delete conversations via dedicated row action buttons or right-click context menu.
-- <strong>Safe Delete All</strong>: The <strong>Delete All</strong> button cleans up unpinned conversations while safely keeping pinned items.</p>
+<p>Clicking the <strong>Chat History</strong> icon button opens a management dialog inspired by PLUME:</p>
+<ul>
+<li><strong>Search filter</strong>: Real-time text search across conversation titles.</li>
+<li><strong>Section organization</strong>: Pinned conversations are organized at the top under a <strong>PINNED</strong> section; others are grouped chronologically (<strong>TODAY</strong>, <strong>YESTERDAY</strong>, <strong>THIS WEEK</strong>, <strong>OLDER</strong>).</li>
+<li><strong>Exact Timestamps &amp; Message Counts</strong>: Each conversation card displays precise timestamping (<code>YYYY-MM-DD HH:MM:SS</code>) and message counts.</li>
+<li><strong>Actions</strong>: Pin/Unpin, Rename, Duplicate, and Delete conversations via dedicated row action buttons or right-click context menu.</li>
+<li><strong>Safe Delete All</strong>: The <strong>Delete All</strong> button cleans up unpinned conversations while safely keeping pinned items.</li>
+</ul>
 <p>The chat panel shows messages in chronological order with clear color-coded bubbles:</p>
 <ul>
 <li>🔵 <strong>Blue bubble</strong> — Your messages (User)</li>
 <li>🟢 <strong>Green bubble</strong> — AI Agent replies</li>
 <li>🔴 <strong>Red bubble</strong> — Error messages</li>
 </ul>
-<p>Each bubble shows the <strong>timestamp</strong> (<code>YY-MM-DD HH:MM</code>) and action buttons:
-- <strong>📋 Copy</strong> — Copy the message text to clipboard
-- <strong>↩ Reply</strong> (AI messages only) — Reply specifically to that AI message</p>
+<p>Each bubble shows the <strong>timestamp</strong> (<code>YY-MM-DD HH:MM</code>) and action buttons:</p>
+<ul>
+<li><strong>📋 Copy</strong> — Copy the message text to clipboard</li>
+<li><strong>↩ Reply</strong> (AI messages only) — Reply specifically to that AI message</li>
+</ul>
 <h4 id="voice-dictation-optional">🎤 Voice Dictation (Optional)<a class="headerlink" href="#voice-dictation-optional" title="Permanent link">&para;</a></h4>
 <p>You can use the microphone button in the input bar to dictate your queries instead of typing them. This feature requires optional dependencies:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>SpeechRecognition<span class="w"> </span>pyaudio

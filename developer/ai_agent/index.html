@@ -2413,11 +2413,13 @@ leaves the legacy store in place so an older build still runs.</p>
 <p><strong>Secrets</strong>: API keys are written to the per-user OS settings store (Windows
 registry / macOS defaults) — never to a file inside the project, so they
 cannot be committed. <code>config/servers.yaml</code> <em>is</em> committed: never put a token
-in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
-2. <strong>Parameter-count check</strong> (Ollama only) — <code>get_ollama_model_info(model)</code> calls <code>ollama show &lt;model&gt;</code>, parses <code>details.parameter_size</code> (e.g. <code>"8.2B"</code>) via <code>_parse_param_size_to_billions()</code>, and compares it against <code>config/model.yaml</code>'s <code>small_model_param_threshold_b</code> (default <strong>10.0</strong>). Cached per model name for the life of the <code>VMChat</code> instance.
-3. <strong>Name-pattern fallback</strong> — if the parameter count can't be determined (cloud model, or <code>ollama show</code> fails), the model name is matched against <code>VMChat._SMALL_MODEL_PATTERNS</code>, a list of known small model tags (<code>qwen3:8b</code>, <code>gemma3:4b</code>, <code>phi3:mini</code>, <code>deepseek-r1:8b</code>, etc.).
-4. <strong>Default: full tier.</strong> If nothing resolves, the model is treated as large. An unrecognized model getting the full prompt is the safer failure mode than an unrecognized <em>large</em> model being needlessly handicapped.</p>
+in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.</p>
 </blockquote>
+<ol>
+<li><strong>Parameter-count check</strong> (Ollama only) — <code>get_ollama_model_info(model)</code> calls <code>ollama show &lt;model&gt;</code>, parses <code>details.parameter_size</code> (e.g. <code>"8.2B"</code>) via <code>_parse_param_size_to_billions()</code>, and compares it against <code>config/model.yaml</code>'s <code>small_model_param_threshold_b</code> (default <strong>10.0</strong>). Cached per model name for the life of the <code>VMChat</code> instance.</li>
+<li><strong>Name-pattern fallback</strong> — if the parameter count can't be determined (cloud model, or <code>ollama show</code> fails), the model name is matched against <code>VMChat._SMALL_MODEL_PATTERNS</code>, a list of known small model tags (<code>qwen3:8b</code>, <code>gemma3:4b</code>, <code>phi3:mini</code>, <code>deepseek-r1:8b</code>, etc.).</li>
+<li><strong>Default: full tier.</strong> If nothing resolves, the model is treated as large. An unrecognized model getting the full prompt is the safer failure mode than an unrecognized <em>large</em> model being needlessly handicapped.</li>
+</ol>
 <p>Detection is hard-gated to <code>provider == "Ollama"</code> for steps 2–3 — cloud providers always resolve to the full tier unless a manual override forces otherwise. Detection re-runs on <code>set_model()</code>/<code>set_provider()</code>, never during <code>__init__</code> (an <code>ollama show</code> network call shouldn't race object construction).</p>
 <h3 id="what-changes-in-simplified-mode">What changes in Simplified mode<a class="headerlink" href="#what-changes-in-simplified-mode" title="Permanent link">&para;</a></h3>
 <p>All four of the following are computed in <code>vm_chat.py</code> and read from <code>config/model.yaml</code>:</p>
@@ -2472,9 +2474,11 @@ in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
 <li>The most common <code>other_properties</code> keys (<code>grid</code>, <code>plot_title</code>, <code>xlabel</code>, <code>ylabel</code>, <code>zlabel</code>, axis limits, <code>color_palette</code>, log-scale flags, etc.) are explicit, typed, named parameters on <code>plot_graph</code>/<code>update_graph</code>, in addition to the <code>other_properties</code> catch-all dict. A model that puts <code>grid=true</code> at the top level of the call (rather than correctly nested inside <code>other_properties</code>) no longer loses that value — both forms are merged into the final config, with the named parameter winning on conflict.</li>
 </ul>
 <h3 id="case-study-qwen38b">Case study: qwen3:8b<a class="headerlink" href="#case-study-qwen38b" title="Permanent link">&para;</a></h3>
-<p>Given an identical 3-plot request, a large cloud model (DeepSeek) succeeded in one turn; <code>qwen3:8b</code> failed two different ways on two attempts before this system existed:
-- <strong>Attempt A</strong>: emitted zero tool calls — instead, 2,237 characters of prose describing a plan, in <code>``python fenced pseudo-code, that was never actually executed.
-- **Attempt B**: emitted valid tool calls, but placed</code>grid: true<code>as a top-level argument (the only place its real signature recognized it was nested inside</code>other_properties`) — silently dropped by MCP/Pydantic, no error, no retry.</p>
+<p>Given an identical 3-plot request, a large cloud model (DeepSeek) succeeded in one turn; <code>qwen3:8b</code> failed two different ways on two attempts before this system existed:</p>
+<ul>
+<li><strong>Attempt A</strong>: emitted zero tool calls — instead, 2,237 characters of prose describing a plan, in ```python fenced pseudo-code, that was never actually executed.</li>
+<li><strong>Attempt B</strong>: emitted valid tool calls, but placed <code>grid: true</code> as a top-level argument (the only place its real signature recognized it was nested inside <code>other_properties</code>) — silently dropped by MCP/Pydantic, no error, no retry.</li>
+</ul>
 <p>After the fixes above: <strong>3/3 replay attempts succeeded</strong>, each producing exactly 3 correctly-shaped <code>plot_graph</code> calls (with <code>grid</code> correctly preserved) and a closing summary, averaging ~19s total versus the original 42–100s <em>per single failed turn</em>.</p>
 <hr />
 <h2 id="key-classes"><strong>Key Classes</strong><a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
@@ -2546,10 +2550,12 @@ in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
 <h3 id="llmclient-connection-facade"><strong><code>LLMClient</code> — Connection Facade</strong><a class="headerlink" href="#llmclient-connection-facade" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/ai_agent/m_llm_client.py</code></p>
 <p>A lightweight, non-Qt facade that manages provider selection, API key storage, and worker lifecycle.</p>
-<p><strong>Known providers</strong> (defined in <code>API_PROVIDERS</code> dict):
-- <code>Ollama</code> → <code>LLMWorker</code>
-- <code>OpenAI</code>, <code>DeepSeek</code>, <code>Gemini</code>, <code>Custom</code> → <code>APIWorker</code>
-- <code>Anthropic</code> → <code>AnthropicWorker</code></p>
+<p><strong>Known providers</strong> (defined in <code>API_PROVIDERS</code> dict):</p>
+<ul>
+<li><code>Ollama</code> → <code>LLMWorker</code></li>
+<li><code>OpenAI</code>, <code>DeepSeek</code>, <code>Gemini</code>, <code>Custom</code> → <code>APIWorker</code></li>
+<li><code>Anthropic</code> → <code>AnthropicWorker</code></li>
+</ul>
 <table>
 <thead>
 <tr>
@@ -2765,32 +2771,40 @@ in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
 <h3 id="vchatpanel-view-dialog"><strong><code>VChatPanel</code> — View Dialog</strong><a class="headerlink" href="#vchatpanel-view-dialog" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/ai_agent/v_chat_panel.py</code></p>
 <p>A floating <code>QDialog</code> styled with a modern, clean card aesthetic inspired by modern AI composers.</p>
-<p><strong>Header</strong>: Streamlined 2-row layout (height 74px):
-- <strong>Row 1</strong>: Connection status label <code>lbl_status</code> (appends <code>· Simplified prompts</code> when small-model mode is active), <code>lbl_no_data</code> notice, stretch, and 30×30 action buttons: Conversation History (<code>btn_history</code>), New Chat (<code>btn_new_chat</code>), and Clear Conversation (<code>btn_clear</code>).
-- <strong>Row 2</strong>: Editable conversation title (<code>edit_title</code>).</p>
-<p><strong>Composer (<code>chatComposerFrame</code>)</strong>:
-- Enclosed card with rounded corners (8px) and subtle border at the bottom of the dialog.
-- <strong>Top</strong>: Auto-resizing multi-line text input (<code>_ChatLineEdit</code>), borderless with transparent background.
-- <strong>Embedded Toolbar</strong>: Located inside the bottom of the composer card:
-  - AI Provider selector dropdown (<code>cbb_provider</code>)
-  - Model selector dropdown (<code>cbb_model</code>, editable)
-  - Connection/models refresh button (<code>btn_refresh_models</code>)
-  - Stretch
-  - Voice dictation microphone button (<code>btn_mic</code>)
-  - Modern action button (<code>btn_send</code>): toggles between blue Send and red Stop states, with dynamic hover/active styling.</p>
+<p><strong>Header</strong>: Streamlined 2-row layout (height 74px):</p>
+<ul>
+<li><strong>Row 1</strong>: Connection status label <code>lbl_status</code> (appends <code>· Simplified prompts</code> when small-model mode is active), <code>lbl_no_data</code> notice, stretch, and 30×30 action buttons: Conversation History (<code>btn_history</code>), New Chat (<code>btn_new_chat</code>), and Clear Conversation (<code>btn_clear</code>).</li>
+<li><strong>Row 2</strong>: Editable conversation title (<code>edit_title</code>).</li>
+</ul>
+<p><strong>Composer (<code>chatComposerFrame</code>)</strong>:</p>
+<ul>
+<li>Enclosed card with rounded corners (8px) and subtle border at the bottom of the dialog.</li>
+<li><strong>Top</strong>: Auto-resizing multi-line text input (<code>_ChatLineEdit</code>), borderless with transparent background.</li>
+<li><strong>Embedded Toolbar</strong>: Located inside the bottom of the composer card:</li>
+<li>AI Provider selector dropdown (<code>cbb_provider</code>)</li>
+<li>Model selector dropdown (<code>cbb_model</code>, editable)</li>
+<li>Connection/models refresh button (<code>btn_refresh_models</code>)</li>
+<li>Stretch</li>
+<li>Voice dictation microphone button (<code>btn_mic</code>)</li>
+<li>Modern action button (<code>btn_send</code>): toggles between blue Send and red Stop states, with dynamic hover/active styling.</li>
+</ul>
 <p>The previous manual prompt-tier combobox (<code>cbb_prompt_tier</code>: Auto / Full / Small) has been removed; small-model detection operates automatically based on the model's parameter count.</p>
-<p>Helper widgets:
-- <strong><code>_MessageCard</code></strong>: styled message bubble; <code>_add_card(text, role, timestamp)</code> indents it on the side matching the speaker
-- <strong><code>_ChatLineEdit</code></strong> / input area: emits <code>send_requested</code> on Enter key</p>
+<p>Helper widgets:</p>
+<ul>
+<li><strong><code>_MessageCard</code></strong>: styled message bubble; <code>_add_card(text, role, timestamp)</code> indents it on the side matching the speaker</li>
+<li><strong><code>_ChatLineEdit</code></strong> / input area: emits <code>send_requested</code> on Enter key</li>
+</ul>
 <hr />
 <h2 id="system-prompt-llm-contract"><strong>System Prompt &amp; LLM Contract</strong><a class="headerlink" href="#system-prompt-llm-contract" title="Permanent link">&para;</a></h2>
 <p>The system prompt is modular and managed by <code>PromptManager</code>, assembled from two tiers of granular Markdown files depending on the active model (see <a href="#small-model-support">Small-Model Support</a>):</p>
-<p><strong>Full tier</strong> (default; also used for all cloud providers):
-1. <strong>Core prompt</strong> (<code>prompts/system.md</code>, <code>chat.md</code>, <code>plotting.md</code>): identity, tool-usage contract, plotting instructions.
-2. <strong>Dynamic context</strong> (injected by <code>VMChat</code>): DataFrame schemas/sample values (compacted above <code>column_detail_threshold</code> columns via <code>utils/df_summary.py</code>), active DataFrame name, open-graph summary.
-3. <strong>Rules</strong> (<code>rules/general.md</code>, <code>plotting.md</code>, <code>spectroview.md</code>): behavioral constraints.
-4. <strong>Knowledge</strong> (<code>knowledge/features.md</code>): static facts about the software.
-5. <strong>Examples</strong> (<code>examples/plotting_examples.md</code>): 13 few-shot tool-call examples.</p>
+<p><strong>Full tier</strong> (default; also used for all cloud providers):</p>
+<ol>
+<li><strong>Core prompt</strong> (<code>prompts/system.md</code>, <code>chat.md</code>, <code>plotting.md</code>): identity, tool-usage contract, plotting instructions.</li>
+<li><strong>Dynamic context</strong> (injected by <code>VMChat</code>): DataFrame schemas/sample values (compacted above <code>column_detail_threshold</code> columns via <code>utils/df_summary.py</code>), active DataFrame name, open-graph summary.</li>
+<li><strong>Rules</strong> (<code>rules/general.md</code>, <code>plotting.md</code>, <code>spectroview.md</code>): behavioral constraints.</li>
+<li><strong>Knowledge</strong> (<code>knowledge/features.md</code>): static facts about the software.</li>
+<li><strong>Examples</strong> (<code>examples/plotting_examples.md</code>): 13 few-shot tool-call examples.</li>
+</ol>
 <p><strong>Simplified tier</strong>: <code>prompts/system_small.md</code> (self-contained: identity, critical rules, dynamic context placeholders, tool list, common <code>plot_graph</code> options, spatial-plot mapping, multi-turn guidance — all in one file) + <code>rules/general.md</code> + <code>examples/examples_small.md</code> (~8 examples covering all 5 tools).</p>
 <p>The agent uses <strong>native Tool/Function Calling</strong> via the <strong>Model Context Protocol (MCP)</strong> — no JSON-text parsing. The LLM is given a strict, typed schema for each tool (<code>mcp/server.py</code>, built with <code>FastMCP</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">query_dataframe</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
@@ -2974,9 +2988,11 @@ in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
 <a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="c1"># ... same pattern for openai (_load_openai), anthropic (_load_anthropic)</span>
 </code></pre></div>
 <p>Because the loader returns the module global when it is already set, tests can still swap in a fake with <code>patch.object(m_llm_client, "_ollama", fake)</code>.</p>
-<p>If a package is genuinely missing (e.g. a stripped-down environment) or Ollama isn't running / no API key is set:
-- The relevant provider reports unavailable via <code>LLMClient.is_available()</code>, surfaced as a red status message with actionable install instructions.
-- No error is raised at startup; the rest of the application is unaffected.</p>
+<p>If a package is genuinely missing (e.g. a stripped-down environment) or Ollama isn't running / no API key is set:</p>
+<ul>
+<li>The relevant provider reports unavailable via <code>LLMClient.is_available()</code>, surfaced as a red status message with actionable install instructions.</li>
+<li>No error is raised at startup; the rest of the application is unaffected.</li>
+</ul>
 <hr />
 <h2 id="response-parsing-error-handling"><strong>Response Parsing &amp; Error Handling</strong><a class="headerlink" href="#response-parsing-error-handling" title="Permanent link">&para;</a></h2>
 <p>With <strong>MCP Tool Calling</strong>, response parsing has no free-text JSON to parse at all:</p>

@@ -17,14 +17,10 @@ import numpy as np
 import pandas as pd
 
 from spectroview.model.m_spc import SpcReader
+from spectroview.model.m_wdf import WdfReader
 
-try:
-    from renishawWiRE import WDFReader
-
-    WDF_AVAILABLE = True
-except ImportError:  # pragma: no cover - optional runtime dependency guard
-    WDFReader = None
-    WDF_AVAILABLE = False
+WDFReader = WdfReader
+WDF_AVAILABLE = True
 
 
 # Precompiled regexes for WDF/TRPL metadata extraction
@@ -259,7 +255,10 @@ def _build_map_dataframe(
     spectra_matrix: np.ndarray,
 ) -> pd.DataFrame:
     """Construct a consolidated Map DataFrame without per-column dict fragmentation."""
-    mat = np.ascontiguousarray(spectra_matrix)
+    if not spectra_matrix.flags["C_CONTIGUOUS"] and not spectra_matrix.flags["F_CONTIGUOUS"]:
+        mat = np.ascontiguousarray(spectra_matrix)
+    else:
+        mat = spectra_matrix
     df = pd.DataFrame(mat, columns=wavenumber_cols, copy=False)
     df.insert(0, "Y", np.asarray(y_coords, dtype=np.float64))
     df.insert(0, "X", np.asarray(x_coords, dtype=np.float64))
@@ -731,8 +730,12 @@ def parse_wdf_metadata(reader) -> dict:
     # 4. Parse WDF1 header for acquisition timestamp
     found_date = None
     try:
-        file_obj.seek(0)
-        header_bytes = file_obj.read(1024)
+        cached_hdr = getattr(reader, "_wdf1_bytes", b"")
+        if cached_hdr and len(cached_hdr) >= 512:
+            header_bytes = cached_hdr
+        else:
+            file_obj.seek(0)
+            header_bytes = file_obj.read(1024)
 
         def decode_filetime(ft_bytes: bytes) -> str | None:
             ft_int = int.from_bytes(ft_bytes, "little")
@@ -790,9 +793,14 @@ def load_wdf_spectrum(path: Path) -> dict:
     try:
         wavenumbers = np.asarray(reader.xdata, dtype=np.float64)
         sort_inds = None
+        is_reversed = False
         if len(wavenumbers) > 1 and wavenumbers[0] > wavenumbers[-1]:
-            sort_inds = np.argsort(wavenumbers)
-            wavenumbers = np.ascontiguousarray(wavenumbers[sort_inds])
+            if np.all(wavenumbers[:-1] >= wavenumbers[1:]):
+                is_reversed = True
+                wavenumbers = np.ascontiguousarray(wavenumbers[::-1])
+            else:
+                sort_inds = np.argsort(wavenumbers)
+                wavenumbers = np.ascontiguousarray(wavenumbers[sort_inds])
         else:
             wavenumbers = np.array(wavenumbers, dtype=np.float64, copy=True)
 
@@ -818,7 +826,9 @@ def load_wdf_spectrum(path: Path) -> dict:
             series_mat = np.asarray(reader.spectra, dtype=np.float64)
             if series_mat.ndim > 2:
                 series_mat = series_mat.reshape(-1, series_mat.shape[-1])
-            if sort_inds is not None:
+            if is_reversed:
+                series_mat = np.ascontiguousarray(series_mat[:, ::-1])
+            elif sort_inds is not None:
                 series_mat = np.ascontiguousarray(series_mat[:, sort_inds])
 
             n_items = min(int(reader.count), series_mat.shape[0])
@@ -845,7 +855,9 @@ def load_wdf_spectrum(path: Path) -> dict:
             raw_y = reader.spectra[0] if reader.count == 1 else reader.spectra.mean(axis=0)
 
         intensities = np.asarray(raw_y, dtype=np.float64)
-        if sort_inds is not None:
+        if is_reversed:
+            intensities = np.ascontiguousarray(intensities[::-1])
+        elif sort_inds is not None:
             intensities = np.ascontiguousarray(intensities[sort_inds])
         else:
             intensities = intensities.copy()
@@ -884,9 +896,13 @@ def load_wdf_map(path: Path) -> tuple[pd.DataFrame, dict]:
             spectra_matrix = spectra_data
 
         if len(wavenumbers) > 1 and wavenumbers[0] > wavenumbers[-1]:
-            sort_inds = np.argsort(wavenumbers)
-            wavenumbers = wavenumbers[sort_inds]
-            spectra_matrix = spectra_matrix[:, sort_inds]
+            if np.all(wavenumbers[:-1] >= wavenumbers[1:]):
+                wavenumbers = wavenumbers[::-1]
+                spectra_matrix = np.ascontiguousarray(spectra_matrix[:, ::-1])
+            else:
+                sort_inds = np.argsort(wavenumbers)
+                wavenumbers = wavenumbers[sort_inds]
+                spectra_matrix = spectra_matrix[:, sort_inds]
 
         wavenumber_cols = [str(wn) for wn in wavenumbers]
         df = _build_map_dataframe(x_coords, y_coords, wavenumber_cols, spectra_matrix)

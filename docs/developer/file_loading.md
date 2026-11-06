@@ -45,12 +45,12 @@ flowchart TD
 | Format / Role | Extension | Function | Returns |
 |--------|-----------|----------|---------|
 | Fast file classifier | all supported | `detect_file_type()` | `'spectra'` \| `'map'` \| `'dataframe'` \| `'fit_model'` \| `'spectra_workspace'` \| `'maps_workspace'` \| `'graphs_workspace'` |
-| WDF header peek | `.wdf` | `peek_wdf_measurement_type()` | `'spectra'` \| `'map'` (reads 144-byte `WDF1` header) |
+| WDF header peek | `.wdf` | `peek_wdf_measurement_type()` / `WdfReader.peek_header()` | `'spectra'` \| `'map'` / `dict` (reads 512-byte `WDF1` header) |
 | SPC header peek | `.spc` | `SpcReader.peek_header()` | `dict` (reads 512-byte Galactic SPC header) |
-| Renishaw WiRE spectrum / series | `.wdf` | `load_wdf_spectrum()` | `spectra dict` |
-| Renishaw WiRE map / line profile | `.wdf` | `load_wdf_map()` | `(DataFrame, metadata dict)` |
-| Galactic SPC spectrum | `.spc` | `load_spc_spectrum()` | `spectra dict` |
-| Galactic SPC map | `.spc` | `load_spc_map()` | `(DataFrame, metadata dict)` |
+| Renishaw WiRE spectrum / series | `.wdf` | `load_wdf_spectrum()` (`m_wdf.WdfReader`) | `spectra dict` |
+| Renishaw WiRE map / line profile | `.wdf` | `load_wdf_map()` (`m_wdf.WdfReader`) | `(DataFrame, metadata dict)` |
+| Galactic SPC spectrum | `.spc` | `load_spc_spectrum()` (`m_spc.SpcReader`) | `spectra dict` |
+| Galactic SPC map | `.spc` | `load_spc_map()` (`m_spc.SpcReader`) | `(DataFrame, metadata dict)` |
 | Text / CSV spectrum | `.txt`, `.csv` | `load_spectrum_file()` | `spectra dict` |
 | Text / CSV map | `.txt`, `.csv` | `load_map_file()` | `DataFrame` |
 | TRPL time-resolved PL | `.dat` | `load_TRPL_data()` | `spectra dict` |
@@ -217,7 +217,9 @@ When opening or dragging files into `Main._load_files_by_paths()`, `detect_file_
 
 - **Single-block DataFrames**: Binary (`WDF`, `SPC`) and converted maps are assembled via `_build_map_dataframe()`, wrapping the contiguous 2D spectral matrix directly instead of constructing thousands of 1D column slices.
 - **C-engine CSV/TXT fast paths**: `load_map_file()` uses `pd.read_csv(..., engine="c")` with `usecols` (stripping trailing semicolons at parse time), `skiprows` callables for alternating-row wafer CSV exports, and positional `iloc` permutation when sorting descending wavenumbers to avoid duplicating large spectral matrices in RAM.
-- **Vectorized SPC subfiles**: `SpcReader` reads uniform multi-subfile `.spc` maps in a single buffered I/O call via structured NumPy `np.frombuffer` dtypes (supporting IEEE `float32`, `TSPREC` `int16`, and `int32` fixed-point scaling), falling back to sequential parsing only for variable-length `TXYXYS` files.
+- **Vectorized WDF & SPC binary readers**:
+  - `WdfReader` (`spectroview/model/m_wdf.py`) parses Renishaw `.wdf` blocks (`WDF1`, `DATA`, `XLST`, `YLST`, `ORGN`, `WMAP`) natively via single-read `struct.unpack_from` and `np.frombuffer` operations without third-party `renishawWiRE` or `PIL` dependencies, eliminating per-point Python `ORGN` coordinate loops and redundant `WHTL` JPEG decoding.
+  - `SpcReader` (`spectroview/model/m_spc.py`) reads uniform multi-subfile `.spc` maps in a single buffered I/O call via structured NumPy `np.frombuffer` dtypes (supporting IEEE `float32`, `TSPREC` `int16`, and `int32` fixed-point scaling), falling back to sequential parsing only for variable-length `TXYXYS` files.
 
 ### Headerless Spectra, Ascending Axes & Duplicate Coordinates
 

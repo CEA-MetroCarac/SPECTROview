@@ -5,7 +5,7 @@ Examples of all supported data types can be found in the [`/examples`](https://g
 | Format | Extension | Loader | Data Type |
 |---|---|---|---|
 | Delimited text | `.txt`, `.csv` | Auto-detected delimiter & header | Single spectra, 2D maps, wafer & time-resolved maps |
-| Renishaw WiRE | `.wdf` | `renishawWiRE` library | Single spectra, temporal series, line profiles, and 2D maps |
+| Renishaw WiRE | `.wdf` | Built-in binary reader | Single spectra, temporal series, line profiles, and 2D maps |
 | SPC | `.spc` | Built-in binary reader | Single spectra and 2D maps |
 | TRPL | `.dat` | Built-in parser | Time-resolved photoluminescence decays |
 | Tabular data | `.xlsx`, `.xls`, `.csv` | `Pandas` & `Openpyxl` | DataFrames for plotting |

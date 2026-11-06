@@ -31,6 +31,13 @@ from spectroview.model.m_io import (
     peek_wdf_measurement_type,
 )
 from spectroview.model.m_spc import SpcReader
+from spectroview.model.m_wdf import (
+    WdfDataType,
+    WdfMeasurementType,
+    WdfReader,
+    WdfScanType,
+    WdfUnitType,
+)
 from spectroview.viewmodel.utils import parse_coords_from_fname
 
 
@@ -304,13 +311,26 @@ def _build_synthetic_spc_bytes(
 
 
 class TestModelLayerMvvmPurity:
-    """Verify Model-layer I/O modules never import View, ViewModel, or Qt."""
+    """Verify Model-layer I/O modules never import View, ViewModel, Qt, or third-party WDF/PIL."""
 
-    @pytest.mark.parametrize("rel_path", ["spectroview/model/m_io.py", "spectroview/model/m_spc.py"])
+    @pytest.mark.parametrize(
+        "rel_path",
+        [
+            "spectroview/model/m_io.py",
+            "spectroview/model/m_spc.py",
+            "spectroview/model/m_wdf.py",
+        ],
+    )
     def test_no_qt_or_viewmodel_imports(self, project_root, rel_path):
         source = (project_root / rel_path).read_text(encoding="utf-8")
         tree = ast.parse(source)
-        forbidden_prefixes = ("PySide6", "spectroview.view", "spectroview.viewmodel")
+        forbidden_prefixes = (
+            "PySide6",
+            "spectroview.view",
+            "spectroview.viewmodel",
+            "renishawWiRE",
+            "PIL",
+        )
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
@@ -565,6 +585,64 @@ class TestSpcBinaryReaderEdgeCases:
         trunc_spc.write_bytes(full_bytes[:530])  # header ok, subfile truncated
         with pytest.raises(ValueError):
             SpcReader(str(trunc_spc))
+
+
+class TestWdfBinaryReaderEdgeCases:
+    """Test native WdfReader header peeking, context manager, enum fallbacks, and corrupt inputs."""
+
+    def test_peek_header_and_context_manager(self, wdf_map_file, examples_dir):
+        if wdf_map_file.exists():
+            hdr = WdfReader.peek_header(wdf_map_file)
+            assert hdr["count"] == 3721
+            assert hdr["point_per_spectrum"] == 575
+            assert str(hdr["measurement_type"]) == "Mapping"
+            assert hdr["application_name"] == "WiRE"
+
+            reader_hdr_only = WdfReader(wdf_map_file, header_only=True)
+            assert reader_hdr_only.spectra.size == 0
+            assert reader_hdr_only.file_obj.closed
+
+        single_p = examples_dir / "spectroscopic_data" / "spectra_1.wdf"
+        assert single_p.exists()
+        with WdfReader(single_p) as reader:
+            assert reader.count == 1
+            assert reader.point_per_spectrum == 572
+            assert reader.spectra.shape == (572,)
+            assert not reader.file_obj.closed
+        assert reader.file_obj.closed
+
+    def test_enum_unknown_codes_fallback_gracefully(self):
+        assert WdfMeasurementType(999) == WdfMeasurementType.Unspecified
+        assert WdfScanType(999) == WdfScanType.Unspecified
+        assert WdfUnitType(999) == WdfUnitType.Arbitrary
+        assert str(WdfUnitType.Microseconds) == "us"
+        assert WdfDataType(999) == WdfDataType.Arbitrary
+
+    def test_corrupt_or_truncated_wdf_raises_errors(self, tmp_path, examples_dir):
+        with pytest.raises(OSError):
+            WdfReader(tmp_path / "does_not_exist.wdf")
+
+        short_wdf = tmp_path / "short.wdf"
+        short_wdf.write_bytes(b"WDF1" + b"\x00" * 20)
+        with pytest.raises(ValueError, match="Invalid or truncated WDF file"):
+            WdfReader(short_wdf)
+
+        bad_magic = tmp_path / "bad_magic.wdf"
+        bad_magic.write_bytes(b"XXXX" + b"\x00" * 508)
+        with pytest.raises(ValueError, match="wdf file format is incorrect"):
+            WdfReader(bad_magic)
+
+        single_p = examples_dir / "spectroscopic_data" / "spectra_1.wdf"
+        raw_bytes = single_p.read_bytes()
+        trunc_data = tmp_path / "trunc_data.wdf"
+        # Keep 512B WDF1 header + partial DATA block (truncate inside DATA payload)
+        trunc_data.write_bytes(raw_bytes[:600])
+        # Force DATA block size header to claim only 88 bytes so _locate_all_blocks registers it
+        buf = bytearray(trunc_data.read_bytes())
+        struct.pack_into("<IQ", buf, 512 + 4, 0, 88)
+        trunc_data.write_bytes(bytes(buf))
+        with pytest.raises(ValueError, match="Truncated WDF DATA block"):
+            WdfReader(trunc_data)
 
 
 class TestMapsLineProfilesAndTimeResolvedData:

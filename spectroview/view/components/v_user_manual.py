@@ -12,6 +12,7 @@ from PySide6.QtGui import (
     QTextCursor, QMovie
 )
 from spectroview.view.theme import get_application_font, Icons, current_tokens
+from spectroview.view.components.markdown_utils import ensure_markdown_spacing
 
 class FitImageTextBrowser(QTextBrowser):
     """A QTextBrowser that automatically scales down large images
@@ -385,9 +386,10 @@ class VUserManualDialog(QDialog):
             else:
                 with open(filepath, 'r', encoding='utf-8') as f:
                     md_text = f.read()
+                normalized_text = ensure_markdown_spacing(md_text)
                 md = markdown.Markdown(
                     extensions=['toc', 'tables', 'fenced_code'])
-                html = md.convert(md_text)
+                html = md.convert(normalized_text)
                 toc_tokens = md.toc_tokens if hasattr(md, 'toc_tokens') else []
                 self._cache[filename] = (md_text, html, toc_tokens)
 

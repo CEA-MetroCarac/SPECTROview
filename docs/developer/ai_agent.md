@@ -254,6 +254,7 @@ leaves the legacy store in place so an older build still runs.
 > registry / macOS defaults) — never to a file inside the project, so they
 > cannot be committed. `config/servers.yaml` *is* committed: never put a token
 > in it, use `${VAR}` (expanded by `mcp/config.py`) instead.
+
 2. **Parameter-count check** (Ollama only) — `get_ollama_model_info(model)` calls `ollama show <model>`, parses `details.parameter_size` (e.g. `"8.2B"`) via `_parse_param_size_to_billions()`, and compares it against `config/model.yaml`'s `small_model_param_threshold_b` (default **10.0**). Cached per model name for the life of the `VMChat` instance.
 3. **Name-pattern fallback** — if the parameter count can't be determined (cloud model, or `ollama show` fails), the model name is matched against `VMChat._SMALL_MODEL_PATTERNS`, a list of known small model tags (`qwen3:8b`, `gemma3:4b`, `phi3:mini`, `deepseek-r1:8b`, etc.).
 4. **Default: full tier.** If nothing resolves, the model is treated as large. An unrecognized model getting the full prompt is the safer failure mode than an unrecognized *large* model being needlessly handicapped.
@@ -286,6 +287,7 @@ Two changes in `mcp/server.py` reduce ambiguity for *any* model, independent of 
 ### Case study: qwen3:8b
 
 Given an identical 3-plot request, a large cloud model (DeepSeek) succeeded in one turn; `qwen3:8b` failed two different ways on two attempts before this system existed:
+
 - **Attempt A**: emitted zero tool calls — instead, 2,237 characters of prose describing a plan, in ```python fenced pseudo-code, that was never actually executed.
 - **Attempt B**: emitted valid tool calls, but placed `grid: true` as a top-level argument (the only place its real signature recognized it was nested inside `other_properties`) — silently dropped by MCP/Pydantic, no error, no retry.
 
@@ -328,6 +330,7 @@ Three `QThread` subclasses, one per backend. Each executes a single streaming (o
 A lightweight, non-Qt facade that manages provider selection, API key storage, and worker lifecycle.
 
 **Known providers** (defined in `API_PROVIDERS` dict):
+
 - `Ollama` → `LLMWorker`
 - `OpenAI`, `DeepSeek`, `Gemini`, `Custom` → `APIWorker`
 - `Anthropic` → `AnthropicWorker`
@@ -441,10 +444,12 @@ class ChatResult:
 A floating `QDialog` styled with a modern, clean card aesthetic inspired by modern AI composers.
 
 **Header**: Streamlined 2-row layout (height 74px):
+
 - **Row 1**: Connection status label `lbl_status` (appends `· Simplified prompts` when small-model mode is active), `lbl_no_data` notice, stretch, and 30×30 action buttons: Conversation History (`btn_history`), New Chat (`btn_new_chat`), and Clear Conversation (`btn_clear`).
 - **Row 2**: Editable conversation title (`edit_title`).
 
 **Composer (`chatComposerFrame`)**:
+
 - Enclosed card with rounded corners (8px) and subtle border at the bottom of the dialog.
 - **Top**: Auto-resizing multi-line text input (`_ChatLineEdit`), borderless with transparent background.
 - **Embedded Toolbar**: Located inside the bottom of the composer card:
@@ -458,6 +463,7 @@ A floating `QDialog` styled with a modern, clean card aesthetic inspired by mode
 The previous manual prompt-tier combobox (`cbb_prompt_tier`: Auto / Full / Small) has been removed; small-model detection operates automatically based on the model's parameter count.
 
 Helper widgets:
+
 - **`_MessageCard`**: styled message bubble; `_add_card(text, role, timestamp)` indents it on the side matching the speaker
 - **`_ChatLineEdit`** / input area: emits `send_requested` on Enter key
 
@@ -468,6 +474,7 @@ Helper widgets:
 The system prompt is modular and managed by `PromptManager`, assembled from two tiers of granular Markdown files depending on the active model (see [Small-Model Support](#small-model-support)):
 
 **Full tier** (default; also used for all cloud providers):
+
 1. **Core prompt** (`prompts/system.md`, `chat.md`, `plotting.md`): identity, tool-usage contract, plotting instructions.
 2. **Dynamic context** (injected by `VMChat`): DataFrame schemas/sample values (compacted above `column_detail_threshold` columns via `utils/df_summary.py`), active DataFrame name, open-graph summary.
 3. **Rules** (`rules/general.md`, `plotting.md`, `spectroview.md`): behavioral constraints.
@@ -655,6 +662,7 @@ def _load_ollama():
 Because the loader returns the module global when it is already set, tests can still swap in a fake with `patch.object(m_llm_client, "_ollama", fake)`.
 
 If a package is genuinely missing (e.g. a stripped-down environment) or Ollama isn't running / no API key is set:
+
 - The relevant provider reports unavailable via `LLMClient.is_available()`, surfaced as a red status message with actionable install instructions.
 - No error is raised at startup; the rest of the application is unaffected.
 

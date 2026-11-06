@@ -30,6 +30,7 @@ Follow this procedure to implement new features in SPECTROview while preserving 
 ## Phase 2: Plan the Implementation
 
 Outline:
+
 - Backing models or schemas to update (e.g. `MGraph`, `SpectraStore`).
 - ViewModel signals and methods.
 - View components, dialogs, or keyboard shortcuts.
@@ -76,6 +77,7 @@ Outline:
 ## Phase 5: Synchronize Documentation
 
 Update the authoritative documents mapped in [.agents/rules/documentation.md](../../rules/documentation.md):
+
 - Developer Guide: `docs/developer/<area>.md`
 - User Manual: `spectroview/resources/user_manual/<area>.md`
 - Public API: `docs/api/<area>.md` (if API surface expanded)

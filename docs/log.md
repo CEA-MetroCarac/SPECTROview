@@ -193,6 +193,7 @@ during the session for the exact repro (not saved to disk, but easy to recreate:
 `btn_peak`, then `btn_eraser`, check `w.toolbar.mode` vs `w.zoom_pan_active`).
 
 **Fix:**
+
 1. Added `_mpl_zoom_active()` / `_set_zoom_tool_active(active: bool)` — idempotent helpers that
    only call `toolbar.zoom()` when the toolbar's actual mode disagrees with what's requested.
    All 3 call sites that used to call `toolbar.zoom()` unconditionally now go through this.

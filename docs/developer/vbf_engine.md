@@ -7,6 +7,7 @@ This document provides a deep dive into the inner workings, architecture, and pe
 ## **1. Why the `VBF Engine` Is Much Faster**
 
 The legacy fit engines operate on a **per-spectrum** basis. For a hyperspectral map containing thousands of spectra, this approach introduces significant overhead:
+
 - **Python Function Call Overhead**: Calling the objective function and Jacobian estimator thousands of times per iteration.
 - **Finite-Difference Jacobians**: Approximating the Jacobian numerically requires `2 * K` (where K is the number of parameters) additional function evaluations per iteration, per spectrum.
 - **Sequential Execution**: Even with multiprocessing, the overhead of serialization and inter-process communication creates bottlenecks.
@@ -59,6 +60,7 @@ Even though the math is batched, each spectrum converges independently. The opti
 
 ### **3.3. Robust Loss Functions (IRLS-Style Scaling)**
 To handle outliers such as cosmic ray spikes and sharp detector artifacts without requiring manual data masking, the optimizer supports robust M-estimators via Iteratively Reweighted Least Squares (IRLS):
+
 - **`linear`** (default): Standard least-squares objective $\rho(z) = z$, $\rho'(z) = 1$. The code path is bit-identical to the original unweighted LM.
 - **`soft_l1`**: Smooth $L_1$ approximation $\rho(z) = 2(\sqrt{1 + z} - 1)$, with derivative scaling factor $\sqrt{\rho'(z)} = (1 + z)^{-1/4}$ where $z = (r / f\_scale)^2$. Transitions smoothly from quadratic behavior near zero to linear penalty for large residuals.
 - **`huber`**: Huber loss $\rho(z) = z$ if $z \le 1$ else $2\sqrt{z} - 1$, with derivative scaling factor $\sqrt{\rho'(z)} = 1$ if $z \le 1$ else $z^{-1/4}$.
@@ -69,6 +71,7 @@ $$(J^T W J + \lambda \text{diag}(J^T W J)) \delta \mathbf{p} = -J^T W \mathbf{r}
 where $W = \text{diag}(w_{\text{hard}}^2 \cdot w_{\text{robust}}^2)$.
 
 **Weighting Composition Order**:
+
 1. **Hard exclusions** (`fit_negative` and `coef_noise` noise floor) are evaluated first in `weights.py` to assign zero weight ($w_{\text{hard}} = 0$) to excluded points.
 2. **Robust weighting** ($w_{\text{robust}}$) is applied second inside `optimizer.py` on the active points, smoothly down-weighting large outlier residuals. Zero-weighted points remain zero.
 

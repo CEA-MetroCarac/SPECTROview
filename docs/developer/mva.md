@@ -67,6 +67,7 @@ The MVA view uses a split-panel layout:
 
 ### **Right Panel (Tabbed Plots)**
 Each plot type occupies its own tab in a `QTabWidget`:
+
 - **Scree Plot** (PCA only): Variance explained per component.
 - **Loadings**: Spectral loading profiles.
 - **Scores**: Interactive 2D scatter with axis selection.

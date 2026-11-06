@@ -54,6 +54,7 @@ Configuration is defined in `pyproject.toml` (`[tool.pytest.ini_options]`): `tes
 
 ### Headless Platform (`QT_QPA_PLATFORM=offscreen`)
 `tests/conftest.py` configures `QT_QPA_PLATFORM=offscreen` **before** any `QApplication` instance is created. This allows hundreds of native Qt widgets and matplotlib canvases to be created in a single process without exhausting operating system window handles.
+
 - **Ad-hoc Scripts**: When running ad-hoc Python scripts touching Qt, always set:
   ```powershell
   $env:QT_QPA_PLATFORM="offscreen"

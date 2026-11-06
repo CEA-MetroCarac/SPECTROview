@@ -134,11 +134,13 @@ The core token system defines 36 semantic variables. All translucent colors use 
   font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", sans-serif;
   ```
   Provides clean legibility across dense scientific property sheets and menus without requiring external bundled TTF/OTF dependencies.
+
 - **Monospace Numerical & Code Stack**:
   ```css
   font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
   ```
   Used in spectral coordinate readouts, VBF parameter tables, fit residual reports, and embedded AI code snippets.
+
 - **Font Size Safety**: Application initialization guarantees positive point size (`setPointSizeF(9.0)`) to eliminate negative-size layout warnings during Qt Markdown rendering.
 
 ### Radii & Geometry Hierarchy
@@ -194,6 +196,7 @@ QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {
 
 ### The Vector Engine (`_SvgIconEngine`)
 Traditional rasterized PNG icons suffer from two major defects in desktop analytical software:
+
 1. Resampling blur when scaled to fractional DPRs (e.g. 125%, 150%, 175% scaling on Windows 11).
 2. Hardcoded colors that cannot adapt dynamically when toggling between Dark and Light modes.
 

@@ -53,6 +53,7 @@ Full narratives are in `docs/developer/graphs.md` and `docs/developer/graph_work
 ## 6. Recipes vs Style Templates
 
 Do not confuse these distinct persistence models:
+
 - **Plot Recipe**: Complete plot configuration (data columns, axes, style, annotations): `model/m_plot_recipe.py`, `v_plot_recipe_dialog.py`.
 - **Style Template**: Visual presentation settings only (fonts, spines, colors, markers): `model/m_style_template_store.py`, `v_style_template_dialog.py`.
 

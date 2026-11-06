@@ -5,6 +5,7 @@ The `Maps` workspace handles **hyperspectral map data** — spatially resolved s
 > [!NOTE]
 > **Prerequisites** — Before reading this guide, ensure you are familiar with:
 >
+>
 > - [Data Architecture: SpectraStore](spectra_store.md) — the shared `MapData` / `SpectraStore` data model.
 > - [Workspace: Spectra](spectra.md) — the base ViewModel, View components, and data flow patterns.
 >
@@ -292,6 +293,7 @@ cache_key = (
 The cache stores `(heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col, dx, dy)`, retaining exact pixel spatial dimensions (`dx, dy`) across map type switches and file selections to prevent cross-dataset geometry drift.
 
 The cache is:
+
 - **Preserved across map switches** — switching back to a previously viewed map is instant, restoring its exact spatial dimensions and griddata.
 - **Invalidated by name** after fitting completes, via the `clear_map_cache_requested` signal.
 - **Not persisted** across application sessions — it lives only in `VMapViewer._griddata_cache`.
@@ -378,6 +380,7 @@ vm.send_selected_spectra_to_spectra_workspace()
 ```
 
 For each selected spectrum:
+
 1. Builds a **deep-copied** payload dict (raw `x0`, `Y0`, `baseline_config`, `fit_model`, `range_min/max`, `is_subtracted`).
 2. Emits `send_spectra_to_workspace(payloads)`.
 3. `main.py` connects that signal to the Spectra ViewModel's `receive_spectra()`, which registers each payload as a new N=1 `MapData` block in the **Spectra** workspace's `SpectraStore`.
@@ -483,21 +486,27 @@ New spatial layouts require:
 ## Troubleshooting
 
 **Heatmap does not update after fitting**
+
 - `collect_fit_results()` must be called after `_on_fit_finished()`. Check that `clear_map_cache_requested` is emitted for the map name, and that the cache key's `parameter` matches what is currently selected in the combobox.
 
 **Selected pixel does not highlight the correct spectrum**
+
 - The mapping from `(x, y)` coordinates to fnames relies on the format `{map_name}_(x, y)` matching `md.fnames`. Check that `float(x_pos)` renders the same string in `_extract_spectra_from_map()` and in `_on_map_viewer_selection()`.
 
 **Fitting a large map freezes the UI briefly at start**
+
 - Task construction (`_run_fit_thread()`) happens on the main thread before `VBFthread.start()`. For very large maps, the `np.arange(md.n_spectra)` index build is fast, but the `vstack` of Y matrices can be slow. Profile the `_run_fit_thread()` call with `cProfile` if this becomes a bottleneck.
 
 **Send to Spectra creates duplicate spectra**
+
 - The Spectra ViewModel's `receive_spectra()` checks `name in self.store.map_names` before adding. If duplicates appear, check that the fname format is consistent (watch for floating-point rounding in `(x_pos, y_pos)` string representations).
 
 **Wafer griddata is slow on every redraw**
+
 - Ensure `clear_map_cache_requested` is only emitted when necessary (after fitting, not on every selection change). Check that the `cache_key` tuple is hashable and stable — if any element changes inadvertently between renders, the cache will never hit.
 
 **Memory spike when loading many large maps**
+
 - Each `MapData.Y0` for a 50×50 map at 1000 wavenumbers is ~100 MB. After fitting, `Y_bestfit` and `Y_peaks` add another ~100 MB each. Plan for ~300–400 MB per map if fits are stored. Use `remove_map()` for maps no longer needed, or reduce `float64 → float32` in `x0` if precision allows.
 
 For data-model troubleshooting (preprocessing not applied, memory management), see [SpectraStore: Troubleshooting](spectra_store.md#troubleshooting).

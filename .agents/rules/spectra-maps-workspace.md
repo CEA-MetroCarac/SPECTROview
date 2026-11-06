@@ -32,6 +32,7 @@ Deep architectural narrative is in `docs/developer/spectra.md`, `docs/developer/
 `VMWorkspaceSpectra` is the base ViewModel; `VMWorkspaceMaps` **subclasses** it (matching the relationship between `VWorkspaceSpectra` and `VWorkspaceMaps`).
 
 Always inspect the parent method before modifying an override. Bulk operations must be customized **only** via the three established template hooks:
+
 1. `_get_target_mds(apply_all)`: Determines which `MapData` blocks to process (Spectra: selected spectra; Maps: current map, or all maps if Ctrl is pressed).
 2. `_on_map_data_changed(md, action)`: Per-block hook (Maps: re-runs preprocessing and invalidates heatmap cache).
 3. `_post_bulk_action(apply_all, action)`: Post-loop hook (Maps: refreshes fit results table and map canvas).
@@ -41,6 +42,7 @@ Always inspect the parent method before modifying an override. Bulk operations m
 
 ### Ctrl-Modifier Convention
 All bulk operation buttons follow `_apply_with_ctrl(fn)`:
+
 - Click: applies operation to selected item.
 - Ctrl + Click: applies operation across all items.
 
@@ -49,6 +51,7 @@ All bulk operation buttons follow `_apply_with_ctrl(fn)`:
 ## 3. Selection Payloads
 
 `_emit_selected_spectra()` emits a dictionary consumed by `v_spectra_viewer.py`:
+
 - **Spectra Workspace**: emits `type: 'tensor_list'` (independent spectra, potentially with differing x-axes).
 - **Maps Workspace**: overrides to emit `type: 'tensor'` (one shared x-axis matrix).
 Always maintain established payload keys (`spectra_names`, `x`, `Y`, `peaks_params`).

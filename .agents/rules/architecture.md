@@ -11,6 +11,7 @@ On-demand orientation. Detailed diagrams and narrative are in `docs/developer/in
 ## 1. MVVM Architecture
 
 `SPECTROview` enforces strict Model-View-ViewModel separation across all workspaces:
+
 - **View $\leftrightarrow$ ViewModel communicate exclusively via Qt signals/slots**. A ViewModel that needs to reach a View emits a signal; it never calls View methods or imports View classes.
 - **Model layer (`spectroview/model/`) holds no Qt widget references** and can be tested independently without a `QApplication`.
 - **View layer (`spectroview/view/`) delegates all data operations and mutations to its ViewModel**.
@@ -75,6 +76,7 @@ spectroview/
 ## 5. Startup Import Deferral
 
 To ensure fast application startup:
+
 - Heavy scientific libraries (`scipy.*`) and LLM SDKs (`anthropic`, `openai`, `ollama`, `mcp`) must **never** be imported at top-level module scope.
 - Import them lazily inside the functions that require them.
 - `scipy` is prewarmed in a background thread by `Main._prewarm_heavy_imports()` after the UI is rendered.
@@ -85,5 +87,6 @@ To ensure fast application startup:
 ## 6. Public API Stability
 
 Public APIs in `spectroview/api/` (`spectra.py`, `2dmap.py`, `graphs.py`, `fitting.py`, etc.) are stable contracts:
+
 - Never rename, reorder, or remove parameters (even unused ones) without explicit instruction.
 - Positional call sites in external scripts, tests, and the AI agent depend on these signatures.

@@ -20,6 +20,7 @@ Follow this procedure to expand test coverage and build deterministic, maintaina
 ## Phase 2: Inspect Existing Test Patterns & Fixtures
 
 Review test patterns in the relevant subdirectory:
+
 - **`tests/unit/fit_engine/`**: Pure NumPy mathematical tests (`test_models.py`, `test_optimizer.py`, `test_evaluator.py`, `test_baseline.py`).
 - **`tests/unit/model/`**: `SpectraStore`, settings, file I/O, `MGraph` schema sync (`test_spectra_store.py`, `test_m_graph.py`).
 - **`tests/unit/viewmodel/`**: ViewModel signals and data transformations (`test_vm_workspace_spectra.py`, `test_vm_workspace_maps.py`, `test_vm_workspace_graphs.py`).

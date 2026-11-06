@@ -50,6 +50,7 @@ Click the **Calculator** icon to open a suite of utility calculators. See the "Q
 
 ### **5. Keyboard Shortcuts**
 You can quickly access tools from anywhere in the application using the following keyboard shortcuts:
+
 - `Ctrl + Shift + A`: Open AI Chat Agent
 - `Ctrl + Shift + S`: Open Settings Panel
 - `Ctrl + Shift + M`: Open User Manual

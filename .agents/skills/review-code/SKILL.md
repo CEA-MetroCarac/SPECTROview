@@ -60,6 +60,7 @@ python -m pyflakes spectroview/<modified_file>.py
 ## Phase 4: Report Findings
 
 Produce a structured review report:
+
 - **Critical (Blockers)**: Segfault traps (unparented QTimers), MVVM violations, thread safety breaches, broken public APIs.
 - **Warnings**: Unvectorized loops on large arrays, unparented helper objects, missing edge-case tests, stale docstrings.
 - **Suggestions**: Code readability, dictionary dispatch refactoring, naming improvements.

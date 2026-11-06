@@ -212,6 +212,7 @@ for name, df in dataframes.items():
 ### Zero-Payload Header Classification (`detect_file_type`)
 
 When opening or dragging files into `Main._load_files_by_paths()`, `detect_file_type()` classifies files in `< 0.1 ms` without parsing full datasets:
+
 - **`.wdf`**: `peek_wdf_measurement_type()` reads only the first 144 bytes of the `WDF1` header (`measurement_type` at offset `132`) rather than decoding multi-megabyte spectral cubes twice.
 - **`.spc`**: `SpcReader.peek_header()` (`header_only=True`) reads only the 512-byte Galactic SPC header (`fnsub` subfile count) and skips subfile/log reading.
 - **`.l6s` / `.l6m`**: `L6sReader.peek_header()` validates the 76-byte `"LabSpec6\x00"` binary header (`magic`, `version`, `root_offset`) in microseconds without reading full node trees or spectral arrays.

@@ -84,6 +84,7 @@ You can quickly modify the **labels** of the axes and the **title** of the plot 
 <br>
 
 For advanced customization, click the **Customize** button (⚙) to open the **Customize Graph Dialog** (`Ctrl + E`). The dialog features a modern Settings-like two-panel interface with real-time global search across all options, responsive left category navigation, and in-page option highlighting with automatic scroll-to-view across seven modular categories:
+
 - **General & Typography**: Figure theme (Light/Dark), Grid lines, X-axis label rotation, font sizes (Title, Axis label, Tick label, Colorbar), and intelligent data sorting.
 - **Axes & Limits**: Axis limits with interactive range sliders (on top), primary X/Y/Z scales (Linear, Logarithmic, Symlog, Centered), numerical/categorical data types, axis inversion, and broken axis ranges.
 - **Ticks & Spines**: Tick mark direction, tick label formatting presets, minor ticks (Top, Bottom, Left, Right), and spine frame border visibility.
@@ -341,6 +342,7 @@ For statistical plot styles (`point`, `bar`, `box`, and `trendline`), SPECTROvie
 #### 6.2 **Box Plot**
 
 The `box` plot natively displays the statistical distribution of the dataset based on standard five-number summaries:
+
 - **Box Bounds (Q1 to Q3):** The main body of the box spans from the first quartile (25th percentile) to the third quartile (75th percentile), known as the Interquartile Range (IQR).
 - **Median Line:** The horizontal line inside the box marks the **Median** (50th percentile).
 - **Whiskers:** The whiskers extend to the furthest data points that are still within `1.5 × IQR` of the box edges.

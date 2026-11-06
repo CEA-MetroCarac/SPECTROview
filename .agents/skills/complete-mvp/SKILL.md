@@ -36,6 +36,7 @@ Both must pass with zero failures.
 ## Phase 3: Confirm Documentation Synchronization
 
 Confirm that all relevant documentation surfaces have been updated to reflect the completed milestone per [.agents/rules/documentation.md](../../rules/documentation.md):
+
 - Developer Guide: `docs/developer/*.md`
 - User Manual: `spectroview/resources/user_manual/*.md`
 - Public API: `docs/api/*.md`
@@ -70,6 +71,7 @@ Confirm that all relevant documentation surfaces have been updated to reflect th
 ## Phase 5: Produce Completion Report
 
 Provide a clear summary including:
+
 - Summary of delivered capabilities.
 - Test and static check verification results.
 - Documentation updated.

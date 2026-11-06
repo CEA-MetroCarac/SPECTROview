@@ -112,6 +112,7 @@ All bulk actions (baseline subtract, peak paste, reinit, fit) follow this patter
 ### Interactive Spectral Mapping & Live Maps
 
 The interactive spectral mapping subsystem allows users to select up to three independent spectral ranges on the 1D spectrum viewer and see live-updating parameter visualizations in real time:
+
 - **Spectra Workspace (`mode="spectra"`)**: Renders up to three color-coded (Red, Blue, Green) 1D trend curves (`Spectrum #` vs. parameter value) across the **currently selected spectra** in `VSpectraList`.
 - **Maps Workspace (`mode="map"`)**: Renders up to three 2D spatial parameter heatmaps across the active hyperspectral map grid.
 
@@ -409,16 +410,20 @@ See the dedicated [VBF Engine guide](vbf_engine.md). In short:
 ## Troubleshooting
 
 **Spectrum doesn't appear after loading**
+
 - Check `md.is_active[0]` — loading sets this to `True` by default, but a failed load may leave the entry in an inconsistent state.
 - Verify that `_emit_list_update()` is called after `store.add_map()`.
 
 **Peak table is empty after fit**
+
 - `_emit_selected_spectra()` must be called after `_on_fit_finished()`. Check that `store.set_fit_results()` populated `md.param_names`.
 
 **R² shows 0.0 despite successful fit**
+
 - The fit engine sets `rsquared = 0` if `fit_success` is False. Check `md.fit_success[idx]` for the spectrum in question.
 
 **`_emit_selected_spectra()` causes a Qt signal loop**
+
 - Never call `_emit_selected_spectra()` from within a slot that is connected to `spectra_selection_changed`. Use a `QTimer.singleShot(0, ...)` to defer if necessary.
 
 For data-model troubleshooting (preprocessing not applied, memory issues), see [SpectraStore: Troubleshooting](spectra_store.md#troubleshooting).

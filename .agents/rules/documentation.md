@@ -60,3 +60,31 @@ Never declare a task complete while documentation remains outdated.
 - **Developer Docs**: MkDocs Material format (Mermaid diagrams, admonitions, and syntax highlighting).
 - **User Manual**: Clean, task-oriented Markdown compatible with PySide6 rich-text rendering (`v_user_manual.py`).
 - **Conciseness**: Group long reference tables (e.g. `MGraph` fields) by logical category with a pointer to the source file rather than copying volatile lists.
+
+---
+
+## 6. Markdown Formatting Rules for Python-Markdown Compatibility
+
+`SPECTROview` user manual pages and documentation are rendered by **Python-Markdown** (used by MkDocs Material and the in-app `VUserManualDialog`). Python-Markdown enforces John Gruber's standard Markdown specification:
+
+- **Mandatory Blank Line Before Lists**:
+  Always insert an empty line between paragraph text and an unordered (`-`, `*`, `+`) or ordered (`1.`) list:
+  ```markdown
+  <!-- CORRECT -->
+  Here is some introductory text:
+
+  - Item 1
+  - Item 2
+
+  <!-- INCORRECT (Python-Markdown collapses all items into a single paragraph line) -->
+  Here is some introductory text:
+  - Item 1
+  - Item 2
+  ```
+  > [!WARNING]
+  > CommonMark / GFM parsers (e.g., VS Code or GitHub Markdown preview) allow lists to interrupt paragraphs without a preceding blank line. Python-Markdown does NOT. If the blank line is omitted, the list will render as an unformatted run-on paragraph in both MkDocs (`mkdocs gh-deploy`) and the in-app manual.
+
+- **Mandatory Blank Line Before Tables**:
+  Always separate tables from preceding text with a blank line.
+- **Lists in Admonitions & Blockquotes**:
+  Lists inside admonitions (`!!! note`) and blockquotes (`>`) also require an empty line (matching blockquote / indentation prefix) before the first list item.

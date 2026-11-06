@@ -55,6 +55,7 @@ Follow this procedure to eliminate bugs at their root cause while safeguarding a
 ## Phase 4: Synchronize Documentation
 
 If the bug fix alters documented behavior, parameters, or fixes an error in the manual:
+
 - Update `docs/developer/<area>.md` or `spectroview/resources/user_manual/<area>.md` per [.agents/rules/documentation.md](../../rules/documentation.md).
 
 ---

@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit
 )
 import markdown
+from spectroview.view.components.markdown_utils import ensure_markdown_spacing
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QThread, QObject
 from PySide6.QtGui import QFont, QKeyEvent, QTextCursor
 
@@ -143,7 +144,8 @@ class _MessageCard(QFrame):
             self.content_view.setText(text)
         else:
             # Convert Markdown to HTML
-            html = markdown.markdown(text, extensions=['tables', 'fenced_code', 'codehilite'])
+            normalized_text = ensure_markdown_spacing(text)
+            html = markdown.markdown(normalized_text, extensions=['tables', 'fenced_code', 'codehilite'])
             self.content_view.setUpdatesEnabled(False)
             self.content_view.setHtml(_MARKDOWN_CSS + html)
             self.content_view.document().setTextWidth(self.content_view.viewport().width())

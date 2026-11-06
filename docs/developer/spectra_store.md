@@ -360,13 +360,17 @@ SpectraStore.load_map_from_npz(store, name, arrays, metadata)
 ## Troubleshooting
 
 **Preprocessing not applied to viewer**
+
 - The viewer receives `md.x` / `md.Y` from the payload. If `batch_preprocess()` was not called (e.g., no baseline config and no range), `md.x` and `md.Y` remain `None` and the viewer falls back to `md.x0` / `md.Y0`. This is the expected non-destructive behavior.
 
 **Memory grows unboundedly with large maps**
+
 - `md.Y_bestfit`, `md.Y_baseline`, and `md.Y_peaks` are never freed until the map is deleted or `reinit_spectra()` is called (which resets them to `None`). For very large maps, call `store.remove_map()` for maps that are no longer needed.
 
 **`get_map_data()` returns `None`**
+
 - The map name is case-sensitive and must match the exact key used in `add_map()`. Check `store.map_names` for the registered keys.
 
 **Zero-copy semantics cause unintended side effects**
+
 - Because `get_map_data()` returns a direct reference, modifying `md.Y` anywhere affects all consumers. Always operate through the ViewModel's established mutate-then-signal pipeline to ensure UI consistency.

@@ -148,6 +148,7 @@ When Heatmap mode is activated, specialized configuration controls appear direct
 #### **3.5. Interactive Spectral Range Selectors & Live Maps (Spectra & Maps Workspaces)**
 
 In both the **Spectra** and **Maps** workspaces, you can interactively bracket up to three spectral features in the `SpectraViewer` and inspect their variation in real time within the dedicated **Live Maps** tab:
+
 - **Spectra Workspace**: Displays up to three color-coded (Red, Blue, Green) **1D parameter variation graphs** across the **currently selected spectra** in the `SpectraList`, allowing rapid review of how peak intensity, position, height, or area evolves across a series of selected spectra.
 - **Maps Workspace**: Displays up to three real-time **2D spatial heatmaps** across the active hyperspectral map.
 
@@ -158,11 +159,13 @@ In both the **Spectra** and **Maps** workspaces, you can interactively bracket u
 
 ##### **Range Selector Controls (Spectra Viewer)**
 A vertical toolbar panel located on the right edge of the `SpectraViewer` provides three independent, color-coded toggle buttons:
+
 - **Red** (`R`)
 - **Blue** (`B`)
 - **Green** (`G`)
 
 Each button activates a corresponding pair of draggable vertical markers (brackets and shaded interval) directly on the spectrum plot:
+
 - **Interactive Dragging**: Click and drag either vertical boundary line to adjust the minimum or maximum wavenumber. Click and drag the shaded middle area to shift the entire interval without altering its width.
 - **Multiple Simultaneous Ranges**: Any combination of the three selectors can be activated at once. Each maintains its own color, interval, and visibility independently.
 - **Rescale Integrity**: Range selector markers do not expand or pollute the spectrum autoscale boundaries, ensuring the **Rescale** button (`Ctrl+R`) always zooms perfectly to the loaded spectral data.
@@ -171,6 +174,7 @@ Each button activates a corresponding pair of draggable vertical markers (bracke
 
 ##### **Live Maps Tab Visualization & Subpanels**
 The **Live Maps** tab is located on the bottom tab bar between **Fit Results** and **MVA** (with the **More** tab positioned at the end of the tabs list).
+
 - **Subpanels Display**: When one or more range selectors are active, their corresponding panels (Red, Blue, Green) are displayed side-by-side. If no selectors are currently active, a helpful placeholder message guides you to activate a selector button on the right edge of the `SpectraViewer`.
 - **Supported Spectral Parameters**: For each subpanel, you can select which parameter is extracted and plotted from the dropdown:
 
@@ -189,6 +193,7 @@ The **Live Maps** tab is located on the bottom tab bar between **Fit Results** a
 
 ##### **Individual Subpanel Controls**
 Each subpanel provides dedicated controls:
+
 - **Palette** *(Maps Workspace only)*: Choose any standard colormap (e.g., `viridis`, `plasma`, `inferno`, `jet`, `turbo`, `coolwarm`, `cividis`, `magma`, `Reds`, `Blues`, `Greens`). In the **Spectra Workspace**, each 1D variation curve is automatically styled in its matching selector color (Red, Blue, or Green).
 - **Copy**: Quickly copy the rendered graph or heatmap figure to the clipboard as an image.
 - **Range / Status Badge**: Displays the current interval range $[x_{min}, x_{max}]$ or fitting status.
@@ -292,10 +297,12 @@ Once your model is fully defined, click the **Fit** button to execute the optimi
 
 **Copy / Paste Fit Models**:
 A fully configured fit model can be copied from one spectrum and pasted onto another, making it easy to replicate complex setups across isolated files.
+>
 > - When you **Paste** a model, the engine always fetches the *current* Noise Threshold setting from your active Settings Panel. This means you can copy a model, adjust your noise threshold, and paste it to apply the model with the updated noise settings.
 
 **Saving / Loading Fit Models**:
 If you intend to use a model frequently, you can save it as a template. Stored models can be easily accessed and applied to new datasets using the dropdown menu.
+
 - **Select from Dropdown**: Pick any pre-existing model from the `Fit model:` combobox.
 - **Load via Button**: Click the **Load** button to browse for and load any `.json` fit model template from your filesystem.
 - **Drag & Drop**: You can drag and drop a `.json` fit model file directly onto the `Fit Model Builder` panel or anywhere on the **Spectra** or **Maps** workspace. The file is instantly added to the model list, selected in the dropdown, and ready to be applied.

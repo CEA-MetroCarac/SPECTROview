@@ -72,6 +72,7 @@ The chat interface features an intuitive, unified layout:
 
 #### **Conversation History Dialog**
 Clicking the **Chat History** icon button opens a management dialog inspired by PLUME:
+
 - **Search filter**: Real-time text search across conversation titles.
 - **Section organization**: Pinned conversations are organized at the top under a **PINNED** section; others are grouped chronologically (**TODAY**, **YESTERDAY**, **THIS WEEK**, **OLDER**).
 - **Exact Timestamps & Message Counts**: Each conversation card displays precise timestamping (`YYYY-MM-DD HH:MM:SS`) and message counts.
@@ -85,6 +86,7 @@ The chat panel shows messages in chronological order with clear color-coded bubb
 - 🔴 **Red bubble** — Error messages
 
 Each bubble shows the **timestamp** (`YY-MM-DD HH:MM`) and action buttons:
+
 - **📋 Copy** — Copy the message text to clipboard
 - **↩ Reply** (AI messages only) — Reply specifically to that AI message
 

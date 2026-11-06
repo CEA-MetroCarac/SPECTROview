@@ -23,6 +23,7 @@ Determine which surfaces require updates:
 
 ### 1. Developer Guide (`docs/developer/*.md`)
 Touch whenever:
+
 - Architectural contracts, threading models, or data flows change.
 - New models, algorithms, or subsystems are introduced (`vbf_engine.md`, `spectra_store.md`, `graphs.md`, `maps.md`, `spectra.md`, `ai_agent.md`).
 - File loading formats change (`file_loading.md`).
@@ -30,11 +31,13 @@ Touch whenever:
 
 ### 2. Public API Documentation (`docs/api/*.md`)
 Touch whenever:
+
 - Functions in `spectroview/api/` (`spectra.py`, `2dmap.py`, `graphs.py`, `fitting.py`, `preprocessing.py`, `io.py`, `settings.py`) are added or updated.
 - Document signatures, parameter types, default values, and return structures.
 
 ### 3. User Manual (`spectroview/resources/user_manual/*.md`)
 Touch whenever:
+
 - User-facing features, plots, calculators, or options are added or modified.
 - Keyboard shortcuts change (`shortcuts.md`).
 - Settings dialog options change (`settings.md`).

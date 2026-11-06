@@ -103,10 +103,6 @@ UI_FILE = resource_path("spectroview/config/gui/gui.ui")
 LOGO_APPLI = resource_path("spectroview/resources/icons/logo_spectroview.png")
 LOGO_APPLI_ICO = resource_path("spectroview/resources/icons/logo_spectroview.ico")
 
-USER_MANUAL_DIR = resource_path(
-    "spectroview/resources/user_manual"
-)
-
 
 def get_app_icon():
     """Return the application QIcon with multi-resolution support (.ico and .png)."""

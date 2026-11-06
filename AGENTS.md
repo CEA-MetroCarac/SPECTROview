@@ -93,7 +93,7 @@ For every task, execute these steps proportionally:
    - Update relevant documentation across the three surfaces in the same task:
      - Developer Guide (`docs/developer/*.md`)
      - Public API (`docs/api/*.md`)
-     - User Manual (`spectroview/resources/user_manual/*.md`)
+     - User Manual (`docs/user_manual/*.md`)
 6. **Commit & Report**:
    - Stage only related files for the completed milestone.
    - Create a Conventional Commit (`feat(scope): ...`, `fix(scope): ...`).

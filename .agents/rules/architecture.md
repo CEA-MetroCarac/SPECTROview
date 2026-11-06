@@ -51,7 +51,7 @@ spectroview/
 ├── fit_engine/        # Vectorized Batch Fit: vbf_engine, optimizer, models, baseline, vbf_thread …
 ├── ai_agent/          # Optional LLM chat: agent/ (AppContext + commands), mcp/ (server,
 │                      #   hub, config), prompts/rules/knowledge/examples/, config/, utils/
-└── resources/         # icons/, *.mplstyle, user_manual/
+└── resources/         # icons/, *.mplstyle
 ```
 
 ---

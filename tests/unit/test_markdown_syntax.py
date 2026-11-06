@@ -1,8 +1,8 @@
 """
 Automated markdown syntax validator for SPECTROview documentation.
-Ensures that all markdown documents in spectroview/resources/user_manual/ and docs/
+Ensures that all markdown documents in docs/ (including docs/user_manual/)
 maintain proper blank lines before lists and tables to guarantee correct rendering
-in Python-Markdown (MkDocs and in-app VUserManualDialog).
+in Python-Markdown (MkDocs).
 """
 
 import os
@@ -10,7 +10,6 @@ import re
 import pytest
 
 DOC_DIRS = [
-    os.path.join("spectroview", "resources", "user_manual"),
     "docs",
 ]
 
@@ -38,9 +37,6 @@ def get_all_markdown_files():
             for f in files:
                 if f.endswith(".md"):
                     rel = os.path.relpath(os.path.join(root, f), project_root).replace('\\', '/')
-                    # Exclude auto-copied user_manual in docs/ if present during build
-                    if rel.startswith("docs/user_manual/"):
-                        continue
                     md_files.append((project_root, rel))
     return md_files
 

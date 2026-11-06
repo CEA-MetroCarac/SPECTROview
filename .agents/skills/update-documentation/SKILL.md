@@ -35,7 +35,7 @@ Touch whenever:
 - Functions in `spectroview/api/` (`spectra.py`, `2dmap.py`, `graphs.py`, `fitting.py`, `preprocessing.py`, `io.py`, `settings.py`) are added or updated.
 - Document signatures, parameter types, default values, and return structures.
 
-### 3. User Manual (`spectroview/resources/user_manual/*.md`)
+### 3. User Manual (`docs/user_manual/*.md`)
 Touch whenever:
 
 - User-facing features, plots, calculators, or options are added or modified.
@@ -51,7 +51,7 @@ Touch whenever:
 1. **Accuracy**: Document the code as implemented, including exact parameter names, defaults, and UI button texts.
 2. **Style**:
    - Developer Guide: Use MkDocs Material markdown (Mermaid diagrams, callout admonitions `!!! note`).
-   - User Manual: Clean, task-oriented Markdown compatible with `v_user_manual.py`.
+   - User Manual: Clean, task-oriented Markdown rendered by MkDocs.
 3. **Avoid Duplication**: Link to authoritative source files or existing pages rather than duplicating large tables or code snippets.
 
 ---

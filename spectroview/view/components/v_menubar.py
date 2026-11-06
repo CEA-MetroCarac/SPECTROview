@@ -90,7 +90,7 @@ class VMenuBar(QToolBar):
 
         self.actionManual= self.addAction(Icons.manual(size=22), "Open User Manual")
         self.actionManual.setShortcut("Ctrl+Shift+M")
-        self.actionManual.setToolTip("Open User Manual PDF\n(Ctrl + Click to open online web manual)")
+        self.actionManual.setToolTip("Open Online User Manual (Ctrl+Shift+M)")
         self.actionManual.triggered.connect(self.manual_requested.emit)
 
         self.actionGithub= self.addAction(Icons.github(size=22), "Open Github repository")

@@ -21,10 +21,6 @@ env_spectroview/
 
 # MkDocs build output
 site/
-
-# User Manual docs are symlinked from spectroview/resources/ at build time
-docs/user_manual/
-docs/user_manual_images/
 .cache/
 
 # Secrets. LLM provider API keys are stored in the OS settings store (Windows

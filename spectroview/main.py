@@ -42,13 +42,12 @@ from spectroview.view.components.v_update_banner import VUpdateBanner
 from spectroview.view.components.v_quick_calculators import MQuickCalc
 from spectroview.view.components.v_menubar import VMenuBar
 from spectroview.view.components.v_notification import NotificationManager
-from spectroview.view.components.v_user_manual import VUserManualDialog
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.v_workspace_maps import VWorkspaceMaps
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 from spectroview.view.theme import ThemeManager, setup_application_font
 
-from spectroview import USER_MANUAL_DIR, get_app_icon
+from spectroview import get_app_icon
 
 # The AI chat module drags in the provider SDKs (~4.5 s of import time), so it is
 # only probed here (find_spec locates the module without executing it) and
@@ -594,26 +593,9 @@ class Main(QMainWindow):
         self._open_settings(section="about")
 
     def manual(self):
-        """Open integrated user manual MD viewer or web documentation."""
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers & Qt.ControlModifier:
-            url = QUrl("https://cea-metrocarac.github.io/SPECTROview/")
-            QDesktopServices.openUrl(url)
-            return
-
-        if not os.path.exists(USER_MANUAL_DIR):
-            QMessageBox.warning(
-                self, 
-                "Manual Not Found", 
-                f"User manual not found at:\n{USER_MANUAL_DIR}"
-            )
-            return
-            
-        if not hasattr(self, '_manual_dlg') or self._manual_dlg is None:
-            self._manual_dlg = VUserManualDialog(USER_MANUAL_DIR, self)
-        self._manual_dlg.show()
-        self._manual_dlg.raise_()
-        self._manual_dlg.activateWindow()
+        """Open online User Manual web documentation."""
+        url = QUrl("https://cea-metrocarac.github.io/SPECTROview/user_manual/")
+        QDesktopServices.openUrl(url)
 
     def open_github_repo(self):
         """Open the project's GitHub repository."""

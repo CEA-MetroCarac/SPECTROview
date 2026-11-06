@@ -141,7 +141,7 @@ spectroview/
 │       ├── v_menubar.py               # Main menu bar
 │       ├── v_about.py                 # About dialog
 │       ├── v_update_banner.py         # Update notification banner widget
-│       ├── v_user_manual.py           # Built-in user manual viewer
+│       ├── markdown_utils.py          # Markdown spacing normalizer for Python-Markdown
 │       ├── customized_widgets.py      # Palette combobox, custom toolbar
 │       └── customize_graph/           # Graph customization dialog (two-panel Settings-like package)
 │           ├── customize_graph_dialog.py     # CustomizeGraphDialog (two-panel host with search & live preview)
@@ -171,10 +171,9 @@ spectroview/
 │   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
 │   └── noise.py                 # Noise estimation functions
 │
-└── resources/              # Icons, stylesheets, user manual assets
+└── resources/              # Icons and Matplotlib stylesheets
     ├── icons/
-    ├── styles/
-    └── user_manual/
+    └── *.mplstyle
 ```
 
 ---

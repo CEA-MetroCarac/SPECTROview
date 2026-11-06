@@ -32,7 +32,7 @@ optional **AI chat** (`ai_agent/`).
 7. **Keep docs in sync** — in the *same* change, update the docstring and, for
    any new feature or structural change, the **developer guide**
    (`docs/developer/`) and the **user manual**
-   (`spectroview/resources/user_manual/`). Never leave docs describing old
+   (`docs/user_manual/`). Never leave docs describing old
    behavior. Details: [rules/documentation.md](.claude/rules/documentation.md).
 8. **Pause for the big calls** — explain major architectural changes before
    applying; ask when requirements are ambiguous instead of guessing. Proceed

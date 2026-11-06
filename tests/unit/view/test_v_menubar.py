@@ -71,3 +71,26 @@ def test_v_menubar_aichat_position(qtbot):
     idx_update = actions.index(menubar.actionCheckUpdate)
     assert idx_ai == idx_update - 1
 
+
+def test_v_menubar_manual_action_opens_online_docs(qtbot, monkeypatch):
+    """Verify that clicking User Manual triggers manual_requested and Main.manual opens the MkDocs URL."""
+    from PySide6.QtCore import QUrl
+    from PySide6.QtGui import QDesktopServices
+    from spectroview.main import Main
+
+    menubar = VMenuBar()
+    qtbot.addWidget(menubar)
+
+    assert menubar.actionManual.shortcut().toString() == "Ctrl+Shift+M"
+    assert menubar.actionManual.toolTip() == "Open Online User Manual (Ctrl+Shift+M)"
+
+    with qtbot.waitSignal(menubar.manual_requested, timeout=1000):
+        menubar.actionManual.trigger()
+
+    opened_urls = []
+    monkeypatch.setattr(QDesktopServices, "openUrl", lambda url: opened_urls.append(url) or True)
+
+    Main.manual(None)
+    assert opened_urls == [QUrl("https://cea-metrocarac.github.io/SPECTROview/user_manual/")]
+
+

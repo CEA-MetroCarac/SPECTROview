@@ -10,8 +10,6 @@ from PySide6.QtWidgets import (
     QTabBar,
 )
 from spectroview.view.theme.fonts import get_application_font, setup_application_font
-from spectroview.view.components.v_user_manual import VUserManualDialog
-from spectroview import USER_MANUAL_DIR
 
 
 def test_get_application_font_macos():
@@ -61,28 +59,8 @@ def test_widget_font_inheritance(qapp, qtbot):
         assert w.fontMetrics().height() >= 12
 
 
-def test_user_manual_dialog_font_scaling(qapp, qtbot):
-    """Verify VUserManualDialog initializes with platform-appropriate text size."""
-    setup_application_font(qapp)
-    expected_size = get_application_font().pointSize()
-
-    dlg = VUserManualDialog(USER_MANUAL_DIR)
-    qtbot.addWidget(dlg)
-
-    assert dlg._text_size == expected_size
-    assert dlg.section_list.font().pointSize() == expected_size
-    assert dlg.content_browser.font().pointSize() == expected_size
-
-    # Verify zoom operations adjust content text size correctly
-    dlg._zoom_in()
-    assert dlg._text_size == expected_size + 1
-    assert dlg.content_browser.font().pointSize() == expected_size + 1
-
-    dlg._zoom_out()
-    assert dlg._text_size == expected_size
-    assert dlg.content_browser.font().pointSize() == expected_size
-
-    # Verify QTextBrowser frame and background match theme surface
+def test_qtextbrowser_theme_stylesheet():
+    """Verify QTextBrowser frame and background match theme surface."""
     from spectroview.view.theme.qss_template import build_stylesheet
     from spectroview.view.theme.tokens import THEME_TOKENS
     dark_qss = build_stylesheet(THEME_TOKENS["dark"])

@@ -2,7 +2,7 @@
 
 How the **SPECTROview AI Agent** (`spectroview/ai_agent/`) is put together, and
 where to change what. User-facing documentation lives in
-`spectroview/resources/user_manual/ai_agent.md`; the architectural overview with
+`docs/user_manual/ai_agent.md`; the architectural overview with
 provider setup instructions is in `docs/developer/ai_agent.md`.
 
 ---

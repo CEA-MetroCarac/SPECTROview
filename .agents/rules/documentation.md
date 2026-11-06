@@ -22,16 +22,16 @@ Never declare a task complete while documentation remains outdated.
 |---|---|---|---|
 | **Developer Guide** | `docs/developer/*.md` | Maintainers and contributors | MkDocs (`mkdocs.yml`) |
 | **Public API** | `docs/api/*.md` | External Python API users | MkDocs (`mkdocs.yml`) |
-| **User Manual** | `spectroview/resources/user_manual/*.md` | End users | In-app viewer (`v_user_manual.py`) and online MkDocs (via `docs_hooks.py`) |
+| **User Manual** | `docs/user_manual/*.md` | End users | Online MkDocs (`mkdocs.yml`, `docs_hooks.py`) |
 
 > [!NOTE]
-> `spectroview/resources/user_manual/` is the single source of truth for user-facing documentation. The build hook in `docs/docs_hooks.py` symlinks it into `docs/user_manual/` during MkDocs builds.
+> `docs/user_manual/` (along with `docs/user_manual_images/`) is the single source of truth for user-facing documentation, opened directly via the User Manual toolbar button (`https://cea-metrocarac.github.io/SPECTROview/user_manual/`).
 
 ---
 
 ## 3. Which Documentation File to Touch by Area
 
-| Area | Developer Guide (`docs/developer/`) | User Manual (`spectroview/resources/user_manual/`) | Public API (`docs/api/`) |
+| Area | Developer Guide (`docs/developer/`) | User Manual (`docs/user_manual/`) | Public API (`docs/api/`) |
 |---|---|---|---|
 | **Spectra Workspace** | `spectra.md`, `spectra_store.md` | `spectra_maps.md` | `spectra.md` |
 | **Maps Workspace** | `maps.md` | `spectra_maps.md` | `2dmap.md` |
@@ -58,14 +58,14 @@ Never declare a task complete while documentation remains outdated.
 ## 5. Style & Quality Standards
 
 - **Developer Docs**: MkDocs Material format (Mermaid diagrams, admonitions, and syntax highlighting).
-- **User Manual**: Clean, task-oriented Markdown compatible with PySide6 rich-text rendering (`v_user_manual.py`).
+- **User Manual**: Clean, task-oriented Markdown rendered by MkDocs.
 - **Conciseness**: Group long reference tables (e.g. `MGraph` fields) by logical category with a pointer to the source file rather than copying volatile lists.
 
 ---
 
 ## 6. Markdown Formatting Rules for Python-Markdown Compatibility
 
-`SPECTROview` user manual pages and documentation are rendered by **Python-Markdown** (used by MkDocs Material and the in-app `VUserManualDialog`). Python-Markdown enforces John Gruber's standard Markdown specification:
+`SPECTROview` user manual pages and documentation are rendered by **Python-Markdown** (used by MkDocs Material). Python-Markdown enforces John Gruber's standard Markdown specification:
 
 - **Mandatory Blank Line Before Lists**:
   Always insert an empty line between paragraph text and an unordered (`-`, `*`, `+`) or ordered (`1.`) list:

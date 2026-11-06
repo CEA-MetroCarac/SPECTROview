@@ -2,7 +2,7 @@
 paths:
   - "docs/developer/**"
   - "docs/api/**"
-  - "spectroview/resources/user_manual/**"
+  - "docs/user_manual/**"
 ---
 
 # Documentation
@@ -14,7 +14,7 @@ Three doc surfaces exist — update each that applies:
 |---|---|---|---|
 | Developer guide | `docs/developer/*.md` | maintainers/contributors | mkdocs (`mkdocs.yml`) |
 | Public API | `docs/api/*.md` | API users | mkdocs |
-| User manual | `spectroview/resources/user_manual/*.md` | end users | in-app viewer (`v_user_manual.py`) |
+| User manual | `docs/user_manual/*.md` | end users | mkdocs (`mkdocs.yml`) |
 
 ## Which file to touch (by area)
 

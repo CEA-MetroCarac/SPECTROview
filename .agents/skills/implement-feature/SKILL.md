@@ -79,9 +79,9 @@ Outline:
 Update the authoritative documents mapped in [.agents/rules/documentation.md](../../rules/documentation.md):
 
 - Developer Guide: `docs/developer/<area>.md`
-- User Manual: `spectroview/resources/user_manual/<area>.md`
+- User Manual: `docs/user_manual/<area>.md`
 - Public API: `docs/api/<area>.md` (if API surface expanded)
-- Shortcuts: `spectroview/resources/user_manual/shortcuts.md` (if shortcut added)
+- Shortcuts: `docs/user_manual/shortcuts.md` (if shortcut added)
 
 ---
 

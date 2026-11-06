@@ -15,7 +15,7 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 1. In the target workspace View's `_setup_keyboard_shortcuts()`, add a `QShortcut` attached to the workspace container (e.g. `self.mdi_area` for Graphs) with `Qt.ShortcutContext.WidgetWithChildrenShortcut`.
 2. Connect it to a dedicated handler `_on_<action>_shortcut` that checks for the active target and delegates to the existing handler or button method.
 3. Add tests in the matching test file (e.g. `TestKeyboardShortcuts` in `tests/unit/view/`).
-4. Update `spectroview/resources/user_manual/shortcuts.md`.
+4. Update `docs/user_manual/shortcuts.md`.
 
 ---
 
@@ -34,7 +34,7 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 3. Add any necessary backing configuration fields to `MGraph` (`model/m_graph.py`).
 4. Update `ALL_SAVE_KEYS` and `CUSTOM_VALUES` in `tests/unit/model/test_m_graph.py`, and add test coverage to `TestPlotStyleCoverage` in `tests/unit/view/test_v_graph_plotting.py`.
 5. If UI controls are required, extend `spectroview/view/components/customize_graph/`.
-6. Update documentation: `docs/developer/graphs.md`, `spectroview/resources/user_manual/graphs.md`, `docs/api/graphs.md`.
+6. Update documentation: `docs/developer/graphs.md`, `docs/user_manual/graphs.md`, `docs/api/graphs.md`.
 
 ---
 
@@ -44,7 +44,7 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 2. Add the UI control to the appropriate tab in `spectroview/view/components/customize_graph/` (`customize_axis`, `customize_legend`, `customize_more_options`, `customize_annotations`), wiring data load and apply handlers.
 3. Read and apply the field in `v_plot_renderer.py`. If the modification only restyles existing artists without data reshaping, consider adding it to `graph_style.RESTYLE_SAFE_FIELDS` for the fast path.
 4. Cover the option in `tests/unit/view/test_customize_graph_dialog.py` and `test_m_graph.py`.
-5. Update `spectroview/resources/user_manual/graphs.md`.
+5. Update `docs/user_manual/graphs.md`.
 
 ---
 
@@ -54,7 +54,7 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 2. Connect loader in the loading pipeline in `vm_workspace_spectra.py` and `vm_workspace_maps.py`.
 3. Add sample data files in `examples/` if appropriate.
 4. Write unit tests in `tests/unit/model/test_m_io.py`.
-5. Update `docs/developer/file_loading.md` and `spectroview/resources/user_manual/supported_data.md`.
+5. Update `docs/developer/file_loading.md` and `docs/user_manual/supported_data.md`.
 
 ---
 
@@ -79,4 +79,4 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 1. Add getter and setter methods to `MSettings` (`spectroview/model/m_settings.py`).
 2. Add control to `spectroview/view/components/v_settings.py` and wire in `vm_settings.py`.
 3. Add unit test in `tests/unit/model/test_m_settings.py`.
-4. Update `spectroview/resources/user_manual/settings.md`.
+4. Update `docs/user_manual/settings.md`.

@@ -21,7 +21,6 @@
     "mcp": "2.3.0",
     "pyyaml": "6.0.3",
     "markdown": "3.11.2",
-    "renishawWiRE": "0.1.16",
     "pywin32": "312"
   }
 }

@@ -43,7 +43,6 @@ dependencies = [
     "pybaselines>=1.2.1",
     "PySide6>=6.10.2",
     "superqt>=0.7.8",
-    "renishawWiRE>=0.1.16",
     "pywin32>=306; platform_system == 'Windows'",
     "markdown>=3.6.0",
     "certifi>=2026.10.19",

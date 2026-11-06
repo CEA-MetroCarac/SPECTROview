@@ -58,7 +58,7 @@ spectroview/
 
 Core: `PySide6`, `matplotlib` (pinned `>=3.6.2,<3.10.9`), `pandas`,
 `numpy<2.0`, `scipy`, `superqt` (range sliders), `pyarrow`, `openpyxl`,
-`renishawWiRE` (WDF), `markdown`, `pyyaml`. Windows-only: `pywin32`. AI chat:
+`markdown`, `pyyaml`. Windows-only: `pywin32`. AI chat:
 `ollama`/`openai`/`anthropic`/`mcp`/`truststore` (core deps; `ai_agent` import is
 still guarded so a stripped-down environment without them doesn't crash startup).
 

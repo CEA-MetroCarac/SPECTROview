@@ -58,13 +58,8 @@ _METADATA_ORDERED_KEYS = (
 
 
 def _require_wdf():
-    """Return WDFReader or raise a clear ImportError if renishawWiRE is missing."""
-    if WDFReader is None:
-        raise ImportError(
-            "The 'renishawWiRE' library is required to read .wdf files. "
-            "Install it with: pip install renishawWiRE"
-        )
-    return WDFReader
+    """Return WdfReader (native built-in WDF binary reader)."""
+    return WdfReader
 
 
 def _is_float_token(token: str) -> bool:

@@ -537,7 +537,6 @@ mkdocs serve
 | `numpy` | `&ge; 2.0.2` | Numerical array operations (NumPy 2.x) |
 | `scipy` | — | Interpolation, KDTree, SVD |
 | `pandas` | — | DataFrame management |
-| `renishawWiRE` | — | Renishaw `.wdf` file reader |
 | `superqt` | — | Enhanced Qt widgets (range sliders) |
 | `ollama` / `openai` / `anthropic` / `mcp` | `ollama ≥ 0.4`, `mcp ≥ 2.2` | LLM backends + Model Context Protocol for AI Data Chat. **Core dependencies** (no `[ai]` extras group) — a plain `pip install` includes them; the feature is only *optional to use* at runtime. |
 | `truststore` | `≥ 0.9.0` | Routes TLS verification through the OS trust store (corporate/internal CAs) for cloud AI providers; import is guarded |

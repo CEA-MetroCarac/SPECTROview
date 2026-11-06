@@ -43,7 +43,7 @@ try:
     for pkg in [
         'PySide6', 'scipy', 'matplotlib', 'pandas', 'pybaselines',
         'openpyxl', 'pyarrow', 'pyqt-toast-notification', 'openai',
-        'anthropic', 'mcp', 'pyyaml', 'renishawWiRE', 'pywin32'
+        'anthropic', 'mcp', 'pyyaml', 'pywin32'
     ]:
         try:
             extra_datas += copy_metadata(pkg)

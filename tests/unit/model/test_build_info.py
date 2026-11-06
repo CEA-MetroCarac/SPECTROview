@@ -8,13 +8,10 @@ from pathlib import Path
 import platform
 import sys
 
-import pytest
-
 from spectroview import BUILD_NUMBER
 from spectroview.settings.build_info import (
     TRACKED_PACKAGES,
     generate_build_snapshot,
-    get_build_info_path,
     get_build_number,
     get_environment_summary,
     get_runtime_package_versions,
@@ -119,7 +116,7 @@ class TestExecutionModes:
             assert "6.99.0" in versions["PySide6"]
             assert versions["pandas"] == "3.99.0"
             # Packages not in mock snapshot fallback to "Not installed"
-            assert versions["renishawWiRE"] == "Not installed"
+            assert versions["pywin32"] == "Not installed"
         finally:
             get_runtime_package_versions.cache_clear()
 

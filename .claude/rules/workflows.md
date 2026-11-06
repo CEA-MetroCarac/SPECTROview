@@ -42,7 +42,7 @@ developer guide + user manual per [documentation.md](documentation.md).
 4. Cover it in `tests/unit/view/test_customize_graph_dialog.py`.
 
 ## Add a file loader (Spectra/Maps)
-- Loaders live in `model/m_io.py` (+ `m_spc.py` for SPC, `renishawWiRE` for
+- Loaders live in `model/m_io.py` (+ `m_spc.py` for SPC, `m_wdf.py` for
   WDF). Add the format there and route it from the loading path in the Maps/
   Spectra ViewModel. See `docs/developer/file_loading.md`.
 

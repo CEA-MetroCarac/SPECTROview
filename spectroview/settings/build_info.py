@@ -15,7 +15,6 @@ import datetime
 from functools import lru_cache
 import importlib.metadata
 import json
-import os
 from pathlib import Path
 import platform
 import sys
@@ -39,7 +38,6 @@ TRACKED_PACKAGES: tuple[str, ...] = (
     "mcp",
     "pyyaml",
     "markdown",
-    "renishawWiRE",
     "pywin32",
 )
 

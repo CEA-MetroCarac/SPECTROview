@@ -843,6 +843,23 @@ class VMapViewer(QWidget):
                     else:
                         self._current_dx = 1.0
                         self._current_dy = 1.0
+                elif isinstance(self.img, PatchCollection):
+                    img_data = None
+                    self.img.set_cmap(cmap)
+                    if self.cbb_color_scale.currentText() == "Log" and vmin_plot is not None and vmin_plot > 0:
+                        self.img.set_norm(LogNorm(vmin=vmin_plot, vmax=vmax_plot))
+                    else:
+                        self.img.set_norm(None)
+                        self.img.set_clim(vmin_plot, vmax_plot)
+                    self.img.set_array(final_z_col)
+                    self.ax.set_xlim(extent[0], extent[1])
+                    self.ax.set_ylim(extent[2], extent[3])
+                    self.cbar.update_normal(self.img)
+                    title = self.cbb_zparameter.currentText()
+                    self.ax.set_title(title, fontsize=13)
+                    self._update_selection_overlay()
+                    self.canvas.draw_idle()
+                    return
                 else:
                     img_data = None
 
@@ -938,14 +955,13 @@ class VMapViewer(QWidget):
                                          **color_kwargs)
                                          
                 # Calculate pixel size for wafer map (grid_x is 80x80)
-                # extent = [-r-1, r+1, -r-0.5, r+0.5] roughly
                 width = extent[1] - extent[0]
                 height = extent[3] - extent[2]
                 self._current_dx = width / 80.0
                 self._current_dy = height / 80.0
                 
             elif not heatmap_pivot.empty:
-                # 2D maps: Use pivot table with optional smoothing
+                # 2D maps (regular grid): Use pivot table with optional smoothing
                 self.img = self.ax.imshow(heatmap_pivot, extent=extent,
                                          origin='lower', aspect='equal', cmap=cmap,
                                          interpolation=interpolation, **color_kwargs)
@@ -958,6 +974,46 @@ class VMapViewer(QWidget):
                 else:
                     self._current_dx = 1.0
                     self._current_dy = 1.0
+            else:
+                # 2D maps (irregular / scattered grid, e.g. wafer files or non-uniform coordinates in 2Dmap mode):
+                # Render square color pixels centered at actual (x, y) coordinates to eliminate coordinate drift.
+                x_col, y_col = self._get_measurement_sites()
+                dx = getattr(self, '_current_dx', 1.0)
+                dy = getattr(self, '_current_dy', 1.0)
+                rects = [
+                    patches.Rectangle((x - dx / 2, y - dy / 2), dx, dy)
+                    for x, y in zip(x_col, y_col)
+                ]
+                norm = color_kwargs.get('norm', None)
+                vmin = color_kwargs.get('vmin', None)
+                vmax = color_kwargs.get('vmax', None)
+
+                collection = PatchCollection(
+                    rects, cmap=cmap, norm=norm, edgecolors='none'
+                )
+                if norm is None and vmin is not None and vmax is not None:
+                    collection.set_clim(vmin, vmax)
+                collection.set_array(final_z_col)
+
+                # Enable mouseover for live coordinate and cursor data display
+                collection.set_mouseover(True)
+
+                def _get_cursor_data(event, _xs=x_col, _ys=y_col, _zs=final_z_col, _dx=dx, _dy=dy):
+                    if event.xdata is None or event.ydata is None or len(_xs) == 0:
+                        return None
+                    dists_sq = (_xs - event.xdata) ** 2 + (_ys - event.ydata) ** 2
+                    idx = np.argmin(dists_sq)
+                    if abs(_xs[idx] - event.xdata) <= _dx / 2 and abs(_ys[idx] - event.ydata) <= _dy / 2:
+                        return _zs[idx]
+                    return None
+
+                collection.get_cursor_data = _get_cursor_data
+
+                self.ax.add_collection(collection)
+                self.ax.set_xlim(extent[0], extent[1])
+                self.ax.set_ylim(extent[2], extent[3])
+                self.ax.set_aspect('equal')
+                self.img = collection
                                          
         except (ValueError, TypeError) as e:
             # Handle non-numeric data errors (from both scipy griddata and matplotlib imshow)
@@ -1167,9 +1223,10 @@ class VMapViewer(QWidget):
             # Wafer maps: Use griddata for scattered point interpolation
             r = self._get_wafer_radius(map_type)
             if r:
+                grid_size = 80
                 grid_x, grid_y = np.meshgrid(
-                    np.linspace(-r, r, 80),  
-                    np.linspace(-r, r, 80)
+                    np.linspace(-r, r, grid_size),  
+                    np.linspace(-r, r, grid_size)
                 )
                 
                 # Filter out NaN values before interpolation (masked points)
@@ -1187,45 +1244,77 @@ class VMapViewer(QWidget):
                 else:
                     grid_z = np.full_like(grid_x, np.nan)
                 
-                extent = [-r-1, r+1, -r-0.5, r+0.5]
+                half_step = r / (grid_size - 1)
+                extent = [-r - half_step, r + half_step, -r - half_step, r + half_step]
                 heatmap_pivot = pd.DataFrame()  # Not used for wafer
         else:
-            # 2D maps: Use fast pivot table (regular grid, no interpolation needed)
-            # NaN values in final_z_col will be preserved in the pivot table
-            heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
-            if heatmap_data.duplicated(subset=['X', 'Y']).any():
-                heatmap_pivot = heatmap_data.pivot_table(
-                    index='Y', columns='X', values='Z', aggfunc='mean'
-                )
-            else:
-                heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
-            
-            # Calculate extent to center pixels on coordinates 
-            # Use sorted unique coordinates
+            # 2D maps: Determine whether coordinates form a regular uniform Cartesian grid
             u_x = np.sort(np.unique(x_col))
             u_y = np.sort(np.unique(y_col))
-            
-            xmin, xmax = 0.0, 1.0
-            ymin, ymax = 0.0, 1.0
-            
-            if len(u_x) > 1:
-                dx = (u_x[1] - u_x[0])
+
+            is_regular = False
+            if len(u_x) > 1 and len(u_y) > 1:
+                diffs_x = np.diff(u_x)
+                diffs_y = np.diff(u_y)
+                step_x = diffs_x[0]
+                step_y = diffs_y[0]
+                if step_x > 0 and step_y > 0:
+                    is_uniform_x = np.allclose(diffs_x, step_x, rtol=0.01, atol=1e-5)
+                    is_uniform_y = np.allclose(diffs_y, step_y, rtol=0.01, atol=1e-5)
+                    if is_uniform_x and is_uniform_y and len(x_col) >= 0.5 * (len(u_x) * len(u_y)):
+                        is_regular = True
+
+            if is_regular:
+                # Regular 2D maps: Use fast pivot table on uniform grid
+                heatmap_data = pd.DataFrame({'X': x_col, 'Y': y_col, 'Z': final_z_col})
+                if heatmap_data.duplicated(subset=['X', 'Y']).any():
+                    heatmap_pivot = heatmap_data.pivot_table(
+                        index='Y', columns='X', values='Z', aggfunc='mean'
+                    )
+                else:
+                    heatmap_pivot = heatmap_data.pivot(index='Y', columns='X', values='Z')
+
+                dx = step_x
+                dy = step_y
                 xmin = u_x[0] - 0.5 * dx
-                xmax = u_x[-1] + 0.5 * (u_x[-1] - u_x[-2])
-            elif len(u_x) == 1:
-                xmin = u_x[0] - 0.5
-                xmax = u_x[0] + 0.5
-                
-            if len(u_y) > 1:
-                dy = (u_y[1] - u_y[0])
+                xmax = u_x[-1] + 0.5 * dx
                 ymin = u_y[0] - 0.5 * dy
-                ymax = u_y[-1] + 0.5 * (u_y[-1] - u_y[-2])
-            elif len(u_y) == 1:
-                ymin = u_y[0] - 0.5
-                ymax = u_y[0] + 0.5
-            
-            extent = [xmin, xmax, ymin, ymax]
-            grid_z = None  # Not used for 2D maps
+                ymax = u_y[-1] + 0.5 * dy
+                extent = [float(xmin), float(xmax), float(ymin), float(ymax)]
+                grid_z = None
+                self._current_dx = float(dx)
+                self._current_dy = float(dy)
+            else:
+                # Irregular / scattered 2D map (e.g. wafer files or non-uniform coordinates in 2Dmap mode):
+                # Avoid pivot + imshow which distorts coordinates by assuming uniform row/col spacing.
+                heatmap_pivot = pd.DataFrame()
+                grid_z = None
+
+                x_span = float(x_col.max() - x_col.min()) if len(x_col) > 0 else 0.0
+                y_span = float(y_col.max() - y_col.min()) if len(y_col) > 0 else 0.0
+                pts = np.column_stack([x_col, y_col])
+                unique_pts = np.unique(pts, axis=0)
+                if len(unique_pts) > 1:
+                    diff = unique_pts[:, np.newaxis, :] - unique_pts[np.newaxis, :, :]
+                    dists = np.sqrt(np.sum(diff ** 2, axis=-1))
+                    np.fill_diagonal(dists, np.inf)
+                    min_dist = float(dists.min())
+                    span_max = max(x_span, y_span)
+                    pixel_size = min(min_dist * 0.35, span_max / 20.0) if span_max > 0 else min_dist * 0.35
+                    dx = dy = max(pixel_size, 1e-4)
+                else:
+                    dx = dy = 1.0
+
+                self._current_dx = float(dx)
+                self._current_dy = float(dy)
+                margin_x = max(dx * 1.5, x_span * 0.05 if x_span > 0 else 1.0)
+                margin_y = max(dy * 1.5, y_span * 0.05 if y_span > 0 else 1.0)
+                extent = [
+                    float(x_col.min() - margin_x),
+                    float(x_col.max() + margin_x),
+                    float(y_col.min() - margin_y),
+                    float(y_col.max() + margin_y)
+                ]
         
         result = (heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col)
         
@@ -1575,29 +1664,55 @@ class VMapViewer(QWidget):
             return None
         
         (x1, y1), (x2, y2) = self.selected_points
-        heatmap_pivot, _, _, _, _, _ = self._get_data_for_heatmap()
-        if heatmap_pivot.empty:
-            return None
-        
-        x_values = heatmap_pivot.columns.values.astype(float)
-        y_values = heatmap_pivot.index.values.astype(float)
-        z_values = heatmap_pivot.values
-        
-        from scipy.interpolate import RegularGridInterpolator
-        try:
-            interpolator = RegularGridInterpolator((y_values, x_values), z_values)
-            num_samples = 100
-            x_samples = np.linspace(x1, x2, num_samples)
-            y_samples = np.linspace(y1, y2, num_samples)
-            sample_points = np.column_stack((y_samples, x_samples))
-            z_samples = interpolator(sample_points)
-            dists_from_start = np.sqrt((x_samples - x1)**2 + (y_samples - y1)**2)
-            return pd.DataFrame({
-                'X': x_samples,
-                'Y': y_samples,
-                'distance': dists_from_start,
-                'values': z_samples
-            })
-        except Exception as e:
-            print(f"Profile interpolation failed: {e}")
-            return None
+        heatmap_pivot, _, _, _, grid_z, final_z_col = self._get_data_for_heatmap()
+        num_samples = 100
+        x_samples = np.linspace(x1, x2, num_samples)
+        y_samples = np.linspace(y1, y2, num_samples)
+        dists_from_start = np.sqrt((x_samples - x1) ** 2 + (y_samples - y1) ** 2)
+
+        if not heatmap_pivot.empty:
+            x_values = heatmap_pivot.columns.values.astype(float)
+            y_values = heatmap_pivot.index.values.astype(float)
+            z_values = heatmap_pivot.values
+            
+            from scipy.interpolate import RegularGridInterpolator
+            try:
+                interpolator = RegularGridInterpolator((y_values, x_values), z_values)
+                sample_points = np.column_stack((y_samples, x_samples))
+                z_samples = interpolator(sample_points)
+                return pd.DataFrame({
+                    'X': x_samples,
+                    'Y': y_samples,
+                    'distance': dists_from_start,
+                    'values': z_samples
+                })
+            except Exception as e:
+                print(f"Profile interpolation failed: {e}")
+                return None
+        else:
+            x_col, y_col = self._get_measurement_sites()
+            if len(x_col) == 0 or final_z_col is None:
+                return None
+            valid = ~np.isnan(final_z_col)
+            if not valid.any():
+                return None
+            from scipy.interpolate import griddata
+            try:
+                z_samples = griddata(
+                    (x_col[valid], y_col[valid]), final_z_col[valid],
+                    (x_samples, y_samples), method='linear'
+                )
+                if np.isnan(z_samples).all():
+                    z_samples = griddata(
+                        (x_col[valid], y_col[valid]), final_z_col[valid],
+                        (x_samples, y_samples), method='nearest'
+                    )
+                return pd.DataFrame({
+                    'X': x_samples,
+                    'Y': y_samples,
+                    'distance': dists_from_start,
+                    'values': z_samples
+                })
+            except Exception as e:
+                print(f"Profile interpolation failed: {e}")
+                return None

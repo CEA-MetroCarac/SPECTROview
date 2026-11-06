@@ -151,6 +151,7 @@ The most complex View component (~1 300 lines). It renders both 2D rectangular m
 - Z-parameter combobox (Intensity / Area / any fit result column)
 - X-range double slider (filters which wavenumbers contribute to Z)
 - Outlier removal toggle
+- **Accurate Spatial Coordinate Placement**: For regular Cartesian grids, renders via fast `imshow` with symmetric extent bounds. For irregular or scattered coordinates (such as wafer map files loaded in 2Dmap mode), automatically renders square pixel patches centered at each point's exact $(X, Y)$ coordinate via `PatchCollection`, completely eliminating spatial drift between heatmap pixels and selection overlays.
 - **Color-scale combobox (Linear / Log)** in the options (`…`) menu — `_build_color_kwargs()` returns a `matplotlib.colors.LogNorm` for "Log" (falling back to plain linear `vmin`/`vmax` when the Z-range isn't strictly positive, since intensity/area are clipped `>=0` and fit parameters can be `<=0`); applies to both the 2Dmap `imshow` and the wafer griddata `imshow`
 - Interactive selection (click, rectangle drag, profile line)
 - **In-Place Artist Updates on Map Switching**: When switching between already-loaded maps of the same type and style, `_do_plot_heatmap_internal()` fast-paths by updating `self.img.set_data(...)`, `self.img.set_extent(...)`, `self.img.set_clim(...)`, and `self.cbar.update_normal(...)` in-place, bypassing destructive `figure.clf()`, subplot re-creation, and expensive `tight_layout()`.

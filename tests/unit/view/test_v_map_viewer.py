@@ -283,3 +283,76 @@ class TestMapViewerNavigationToolbar:
         assert not viewer.btn_copy.icon().isNull()
 
 
+class TestMapViewerCoordinateDrift:
+    """Regression tests verifying zero coordinate drift between data points, heatmap pixels, and selection overlay."""
+
+    def test_irregular_2dmap_has_zero_coordinate_drift(self, qapp):
+        """Wafer or irregular coordinates in 2Dmap mode must render color pixels at true (X, Y) without drift."""
+        from matplotlib.collections import PatchCollection
+        import numpy as np
+        viewer = VMapViewer()
+        viewer.cbb_map_type.setCurrentText("2Dmap")
+
+        # Irregular circular wafer points (e.g. wafer1_process1 geometry)
+        df = pd.DataFrame({
+            'X': [0.0, 29.7, 21.0, 0.0, -21.0, -29.7, -21.0, 0.0, 21.0],
+            'Y': [0.0, 0.0, 20.978, 29.667, 20.978, 0.0, -20.977, -29.667, -20.977],
+            100.0: [10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0],
+        })
+        viewer.set_map_data(df, "irregular_wafer")
+        viewer.set_selected_points([(-21.0, -20.977)])
+        viewer._do_plot_heatmap()
+
+        # Image must use PatchCollection to place rectangles at exact coordinates
+        assert isinstance(viewer.img, PatchCollection)
+
+        # Check selection rectangle center
+        sel_rect = viewer._selection_collection.get_paths()[0]
+        sel_bbox = sel_rect.get_extents()
+        sel_cx = (sel_bbox.x0 + sel_bbox.x1) / 2
+        sel_cy = (sel_bbox.y0 + sel_bbox.y1) / 2
+
+        # Check patch center in PatchCollection
+        paths = viewer.img.get_paths()
+        matching_patch = None
+        for p in paths:
+            bb = p.get_extents()
+            cx = (bb.x0 + bb.x1) / 2
+            cy = (bb.y0 + bb.y1) / 2
+            if np.isclose(cx, -21.0, atol=1e-3) and np.isclose(cy, -20.977, atol=1e-3):
+                matching_patch = (cx, cy)
+                break
+
+        assert matching_patch is not None, "Color pixel patch at (-21.0, -20.977) must exist"
+        drift = np.sqrt((matching_patch[0] - sel_cx) ** 2 + (matching_patch[1] - sel_cy) ** 2)
+        assert drift < 1e-4, f"Expected 0 drift, got {drift}"
+
+    def test_regular_2dmap_retains_axes_image_rendering(self, qapp):
+        """Regular uniform Cartesian grids must continue to use fast AxesImage rendering."""
+        from matplotlib.image import AxesImage
+        viewer = VMapViewer()
+        viewer.cbb_map_type.setCurrentText("2Dmap")
+        viewer.set_map_data(_simple_2dmap_df(), "regular_map")
+        viewer._do_plot_heatmap()
+
+        assert isinstance(viewer.img, AxesImage)
+        extent = viewer.img.get_extent()
+        # 2x2 grid from 0 to 1 with dx=1 -> extent is [-0.5, 1.5, -0.5, 1.5]
+        assert extent == [-0.5, 1.5, -0.5, 1.5]
+
+    def test_wafer_map_extent_symmetric_and_centered(self, qapp):
+        """Wafer map interpolation extent must be symmetric and isotropic around origin."""
+        viewer = VMapViewer()
+        viewer.cbb_map_type.setCurrentText("Wafer_200mm")
+        viewer.set_map_data(_simple_2dmap_df(), "wafer_test")
+        viewer._do_plot_heatmap()
+
+        extent = viewer.img.get_extent()
+        # Radius is 100mm, grid size is 80 -> half_step = 100/79 ≈ 1.2658mm
+        # Extent must be exactly symmetric: -extent[0] == extent[1] and -extent[2] == extent[3]
+        assert abs(extent[0] + extent[1]) < 1e-6
+        assert abs(extent[2] + extent[3]) < 1e-6
+        assert abs(extent[0] - extent[2]) < 1e-6
+
+
+

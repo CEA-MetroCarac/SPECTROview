@@ -404,3 +404,34 @@ class TestLabSpec6WorkspaceAndMoreTabIntegration:
         assert api_map_df.shape == (1368, 1026)
         assert api_map_meta["File Format"] == "HORIBA LabSpec 6 Map"
 
+    def test_load_ngs_into_viewmodel_api_and_more_tab(self, settings, examples_dir, qapp):
+        from spectroview.api import io as api_io
+        from spectroview.model.m_io import _METADATA_ORDERED_KEYS
+        from spectroview.model.spectra_store import SpectrumProxy
+        from spectroview.view.components.v_moretab import VMoreTab
+        from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
+
+        ngs_path = examples_dir / "spectroscopic_data" / "spectrum.ngs"
+        assert ngs_path.exists()
+
+        vm_spec = VMWorkspaceSpectra(settings)
+        vm_spec.load_files([str(ngs_path)])
+        assert "spectrum" in vm_spec.store.map_names
+        md_spec = vm_spec.store.get_map_data("spectrum")
+        assert md_spec.n_spectra == 1
+        assert md_spec.n_wavenumbers == 1024
+
+        more_tab = VMoreTab()
+        proxy_spec = SpectrumProxy(md_spec, 0, "spectrum")
+        more_tab.show_metadata(proxy_spec)
+
+        table_keys = [more_tab.table.item(r, 0).text() for r in range(more_tab.table.rowCount())]
+        ordered_in_spec = [k for k in _METADATA_ORDERED_KEYS if k in md_spec.map_metadata]
+        assert table_keys[: len(ordered_in_spec)] == ordered_in_spec
+        assert "Instrument" in table_keys[len(ordered_in_spec) :]
+        assert "Spectrograph" in table_keys[len(ordered_in_spec) :]
+
+        api_spec = api_io.load_spectra(ngs_path)
+        assert len(api_spec["items"]) == 1
+        assert api_spec["items"][0]["metadata"]["File Format"] == "HORIBA LabSpec 5"
+

@@ -18,6 +18,7 @@ from spectroview.model.m_io import (
     load_wdf_map,
     load_spc_map,
     load_l6m_map,
+    load_ngc_map,
 )
 from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
@@ -83,6 +84,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                          map_df = result
                 elif path.suffix.lower() == '.l6m':
                     result = load_l6m_map(path)
+                    if isinstance(result, tuple):
+                        map_df, metadata = result
+                        self.maps_metadata[map_name] = metadata
+                    else:
+                        map_df = result
+                elif path.suffix.lower() in ('.ngc', '.ngs'):
+                    result = load_ngc_map(path)
                     if isinstance(result, tuple):
                         map_df, metadata = result
                         self.maps_metadata[map_name] = metadata

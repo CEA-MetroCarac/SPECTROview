@@ -18,12 +18,12 @@
 
 ```mermaid
 flowchart TD
-    FILE["File on disk<br/>(.wdf / .spc / .l6s / .l6m / .txt / .csv / .dat / .xlsx / .xls / .json / .spectra / .maps / .graphs)"]
+    FILE["File on disk<br/>(.wdf / .spc / .l6s / .l6m / .ngs / .ngc / .txt / .csv / .dat / .xlsx / .xls / .json / .spectra / .maps / .graphs)"]
 
-    FILE --> DETECT["m_io.detect_file_type()<br/>Header / sample classification (<0.1 ms)"]
+    FILE --> DETECT["m_io.detect_file_type()<br/>Header / sample classification (<1 ms)"]
 
-    DETECT -->|"spectra"| MIO_SPEC["load_wdf_spectrum / load_spc_spectrum /<br/>load_l6s_spectrum / load_spectrum_file / load_TRPL_data"]
-    DETECT -->|"map"| MIO_MAP["load_wdf_map / load_spc_map /<br/>load_l6m_map / load_map_file"]
+    DETECT -->|"spectra"| MIO_SPEC["load_wdf_spectrum / load_spc_spectrum /<br/>load_l6s_spectrum / load_ngs_spectrum / load_spectrum_file / load_TRPL_data"]
+    DETECT -->|"map"| MIO_MAP["load_wdf_map / load_spc_map /<br/>load_l6m_map / load_ngc_map / load_map_file"]
     DETECT -->|"dataframe"| MIO_DF["load_dataframe_file"]
 
     MIO_SPEC -->|"Spectra dict {type, items}"| VMSPECTRA["VMWorkspaceSpectra.load_files()"]
@@ -48,12 +48,15 @@ flowchart TD
 | WDF header peek | `.wdf` | `peek_wdf_measurement_type()` / `WdfReader.peek_header()` | `'spectra'` \| `'map'` / `dict` (reads 512-byte `WDF1` header) |
 | SPC header peek | `.spc` | `SpcReader.peek_header()` | `dict` (reads 512-byte Galactic SPC header) |
 | LabSpec 6 header peek | `.l6s`, `.l6m` | `L6sReader.peek_header()` | `dict` (validates 76-byte `"LabSpec6\x00"` binary header) |
+| LabSpec 5 header peek | `.ngs`, `.ngc` | `NgsReader.peek_header()` | `dict` (validates `"NGSNextGen"` v1/v3 header and peeks `DataMatrix` subtype) |
 | Renishaw WiRE spectrum / series | `.wdf` | `load_wdf_spectrum()` (`m_wdf.WdfReader`) | `spectra dict` |
 | Renishaw WiRE map / line profile | `.wdf` | `load_wdf_map()` (`m_wdf.WdfReader`) | `(DataFrame, metadata dict)` |
 | Galactic SPC spectrum | `.spc` | `load_spc_spectrum()` (`m_spc.SpcReader`) | `spectra dict` |
 | Galactic SPC map | `.spc` | `load_spc_map()` (`m_spc.SpcReader`) | `(DataFrame, metadata dict)` |
 | HORIBA LabSpec 6 spectrum | `.l6s` | `load_l6s_spectrum()` (`m_l6s.L6sReader`) | `spectra dict` |
 | HORIBA LabSpec 6 map | `.l6m` | `load_l6m_map()` (`m_l6s.L6sReader`) | `(DataFrame, metadata dict)` |
+| HORIBA LabSpec 5 spectrum | `.ngs`, `.ngc` | `load_ngs_spectrum()` (`m_ngs.NgsReader`) | `spectra dict` |
+| HORIBA LabSpec 5 map | `.ngc`, `.ngs` | `load_ngc_map()` (`m_ngs.NgsReader`) | `(DataFrame, metadata dict)` |
 | Text / CSV spectrum | `.txt`, `.csv` | `load_spectrum_file()` | `spectra dict` |
 | Text / CSV map | `.txt`, `.csv` | `load_map_file()` | `DataFrame` |
 | TRPL time-resolved PL | `.dat` | `load_TRPL_data()` | `spectra dict` |
@@ -67,7 +70,7 @@ flowchart TD
 
 ### Spectra Dict — Discrete Spectra
 
-All spectra loaders (`load_wdf_spectrum`, `load_spc_spectrum`, `load_l6s_spectrum`, `load_spectrum_file`, `load_TRPL_data`) return a unified **spectra dict**:
+All spectra loaders (`load_wdf_spectrum`, `load_spc_spectrum`, `load_l6s_spectrum`, `load_ngs_spectrum`, `load_spectrum_file`, `load_TRPL_data`) return a unified **spectra dict**:
 
 ```python
 {
@@ -100,10 +103,10 @@ All spectra loaders (`load_wdf_spectrum`, `load_spc_spectrum`, `load_l6s_spectru
 
 ### Map DataFrame — Hyperspectral Maps
 
-All map loaders (`load_wdf_map`, `load_spc_map`, `load_l6m_map`, `load_map_file`) return a **pandas DataFrame** (and optionally a metadata dict for binary formats):
+All map loaders (`load_wdf_map`, `load_spc_map`, `load_l6m_map`, `load_ngc_map`, `load_map_file`) return a **pandas DataFrame** (and optionally a metadata dict for binary formats):
 
 ```python
-# Return type for WDF/SPC/L6M: tuple[pd.DataFrame, dict]
+# Return type for WDF/SPC/L6M/NGC: tuple[pd.DataFrame, dict]
 # Return type for TXT/CSV: pd.DataFrame
 
 df, metadata = load_wdf_map(path)
@@ -216,21 +219,23 @@ When opening or dragging files into `Main._load_files_by_paths()`, `detect_file_
 - **`.wdf`**: `peek_wdf_measurement_type()` reads only the first 144 bytes of the `WDF1` header (`measurement_type` at offset `132`) rather than decoding multi-megabyte spectral cubes twice.
 - **`.spc`**: `SpcReader.peek_header()` (`header_only=True`) reads only the 512-byte Galactic SPC header (`fnsub` subfile count) and skips subfile/log reading.
 - **`.l6s` / `.l6m`**: `L6sReader.peek_header()` validates the 76-byte `"LabSpec6\x00"` binary header (`magic`, `version`, `root_offset`) in microseconds without reading full node trees or spectral arrays.
+- **`.ngs` / `.ngc`**: `NgsReader.peek_header()` validates the `"NGSNextGen"` v1/v3 binary header and peeks the first 96 bytes of the block stream (`DataMatrix` subtype `"Spectrum"` vs `"SpIm"` and `n_dims`) in ~1 ms without decompressing the full spectral payload.
 - **`.txt` / `.csv`**: Inspects up to 12 non-empty lines in pure Python without launching regex-engine `pandas` reads during routing.
 
 ### Consolidated Map DataFrames & Vectorized Parsing
 
-- **Single-block DataFrames**: Binary (`WDF`, `SPC`, `L6M`) and converted maps are assembled via `_build_map_dataframe()`, wrapping the contiguous 2D spectral matrix directly instead of constructing thousands of 1D column slices.
+- **Single-block DataFrames**: Binary (`WDF`, `SPC`, `L6M`, `NGC`) and converted maps are assembled via `_build_map_dataframe()`, wrapping the contiguous 2D spectral matrix directly instead of constructing thousands of 1D column slices.
 - **C-engine CSV/TXT fast paths**: `load_map_file()` uses `pd.read_csv(..., engine="c")` with `usecols` (stripping trailing semicolons at parse time), `skiprows` callables for alternating-row wafer CSV exports, and positional `iloc` permutation when sorting descending wavenumbers to avoid duplicating large spectral matrices in RAM.
-- **Vectorized WDF, SPC & LabSpec 6 binary readers**:
+- **Vectorized WDF, SPC, LabSpec 6 & LabSpec 5 binary readers**:
   - `WdfReader` (`spectroview/model/m_wdf.py`) parses Renishaw `.wdf` blocks (`WDF1`, `DATA`, `XLST`, `YLST`, `ORGN`, `WMAP`) natively via single-read `struct.unpack_from` and `np.frombuffer` operations without third-party `renishawWiRE` or `PIL` dependencies, eliminating per-point Python `ORGN` coordinate loops and redundant `WHTL` JPEG decoding.
   - `SpcReader` (`spectroview/model/m_spc.py`) reads uniform multi-subfile `.spc` maps in a single buffered I/O call via structured NumPy `np.frombuffer` dtypes (supporting IEEE `float32`, `TSPREC` `int16`, and `int32` fixed-point scaling), falling back to sequential parsing only for variable-length `TXYXYS` files.
   - `L6sReader` (`spectroview/model/m_l6s.py`) decodes HORIBA LabSpec 6 `.l6s` (1D spectrum) and `.l6m` (2D spectral image `SpIm`) binary node trees (`"LabSpec6\x00"` magic, 24-byte DFS records, shared `0x8000` pointer blocks, and `b'temx'` runtime subtrees), extracting spectral cubes (`float32`), spatial `(X, Y)` stage grids, calibrated laser wavelengths (`Laser.pos`), `S/N`, and all acquisition/description/history metadata tables (`_reorder_metadata()` orders canonical `_METADATA_ORDERED_KEYS` first and appends additional instrument parameters at the end).
+  - `NgsReader` (`spectroview/model/m_ngs.py`) decodes HORIBA LabSpec 5 `.ngs` (v1 uncompressed) and `.ngc` (v3 Haruhiko Okumura `lzhuf` adaptive Huffman + LZSS compressed + byte-level `np.cumsum` delta-coded) containers (`"NGSNextGen"` magic), parsing `DataMatrix` spectral/spatial tensors and `Table` blocks (`Param`, `Acq`, `Extra`, `Hist`) with canonical `_METADATA_ORDERED_KEYS` ordering and full preservation of extra instrument parameters.
 
 ### Headerless Spectra, Ascending Axes & Duplicate Coordinates
 
 - **Headerless 1D files**: `load_spectrum_file()` inspects leading lines before calling `pd.read_csv`, preserving row `0` on headerless `.txt`/`.csv` spectra while skipping `#` comments, single headers, or 3-line legacy headers.
-- **Ascending X-axis invariant**: All spectrum and map loaders (`WDF`, `SPC`, `L6S`, `L6M`, `TXT`, `CSV`) normalize spectral axes to strictly ascending order so downstream baseline, ROI cropping, and VBF fitting can rely on monotonic `x0`.
+- **Ascending X-axis invariant**: All spectrum and map loaders (`WDF`, `SPC`, `L6S`, `L6M`, `NGS`, `NGC`, `TXT`, `CSV`) normalize spectral axes to strictly ascending order so downstream baseline, ROI cropping, and VBF fitting can rely on monotonic `x0`.
 - **Time-resolved maps at fixed sites**: When a map contains repeated `(X, Y)` coordinates (e.g., multi-scan time-resolved wafer CSVs), `extract_map_arrays()` appends `_{k}` suffixes (`map_(x, y)_2`, ...) so every measurement retains a unique `SpectraStore` key while `parse_coords_from_fname()` still recovers exact `(X, Y)` coordinates.
 
 ### Pure Model-Layer Metadata (`parse_wdf_metadata`)

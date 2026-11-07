@@ -20,6 +20,7 @@ from spectroview.model.m_io import (
     load_wdf_spectrum,
     load_spc_spectrum,
     load_l6s_spectrum,
+    load_ngs_spectrum,
 )
 from spectroview.model.m_settings import MSettings
 from spectroview.model.workspace_io import WorkspaceIO
@@ -150,6 +151,8 @@ class VMWorkspaceSpectra(QObject):
                     data_dict = load_spc_spectrum(path)
                 elif path.suffix.lower() == '.l6s':
                     data_dict = load_l6s_spectrum(path)
+                elif path.suffix.lower() in ('.ngs', '.ngc'):
+                    data_dict = load_ngs_spectrum(path)
                 else:
                     data_dict = load_spectrum_file(path)
                 

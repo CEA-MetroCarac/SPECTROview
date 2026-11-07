@@ -14,6 +14,7 @@ This file contains factual information about SPECTROview's capabilities. It is r
 | CSV | `.csv` | Comma-separated values |
 | Renishaw WDF | `.wdf` | Renishaw WiRE spectrometer format (single spectra and maps) |
 | HORIBA LabSpec 6 | `.l6s`, `.l6m` | HORIBA LabSpec 6 native binary format (`.l6s` spectra and `.l6m` 2D maps) |
+| HORIBA LabSpec 5 | `.ngs`, `.ngc` | HORIBA LabSpec 5 native binary format (`.ngs` spectra and `.ngc` compressed 2D maps) |
 | Galactic SPC | `.spc` | Galactic/Thermo Scientific GRAMS format |
 | TRPL Data | `.txt`, `.dat` | Time-resolved photoluminescence data |
 

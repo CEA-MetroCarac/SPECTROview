@@ -16,12 +16,14 @@ from spectroview.model.m_io import (
     load_spc_map,
     load_l6s_spectrum,
     load_l6m_map,
+    load_ngs_spectrum,
+    load_ngc_map,
     load_TRPL_data,
 )
 
 
 def load_spectra(path: Union[str, Path]) -> Dict[str, Any]:
-    """Load discrete spectra from TXT, CSV, WDF, SPC, L6S, or DAT (TRPL) files.
+    """Load discrete spectra from TXT, CSV, WDF, SPC, L6S, NGS, or DAT (TRPL) files.
 
     Returns:
         dict with an "items" key: a list of {"name", "x0", "y0", "metadata"} dicts.
@@ -41,6 +43,8 @@ def load_spectra(path: Union[str, Path]) -> Dict[str, Any]:
             return load_spc_spectrum(path)
         elif ext == ".l6s":
             return load_l6s_spectrum(path)
+        elif ext in (".ngs", ".ngc"):
+            return load_ngs_spectrum(path)
         elif ext == ".dat":
             return load_TRPL_data(path)
         else:
@@ -52,11 +56,11 @@ def load_spectra(path: Union[str, Path]) -> Dict[str, Any]:
 
 
 def load_map(path: Union[str, Path]) -> Union[pd.DataFrame, Tuple[pd.DataFrame, dict]]:
-    """Load a hyperspectral map from TXT, CSV, WDF, SPC, or L6M files.
+    """Load a hyperspectral map from TXT, CSV, WDF, SPC, L6M, or NGC files.
 
     Returns:
         A wide-format DataFrame (columns X, Y, <wavenumbers...>), or a
-        (DataFrame, metadata) tuple for WDF/SPC/L6M files that carry acquisition metadata.
+        (DataFrame, metadata) tuple for WDF/SPC/L6M/NGC files that carry acquisition metadata.
 
     Raises:
         LoadError: unsupported extension or unreadable file.
@@ -73,6 +77,8 @@ def load_map(path: Union[str, Path]) -> Union[pd.DataFrame, Tuple[pd.DataFrame, 
             return load_spc_map(path)
         elif ext == ".l6m":
             return load_l6m_map(path)
+        elif ext in (".ngc", ".ngs"):
+            return load_ngc_map(path)
         else:
             raise LoadError(f"Unsupported map file type: {ext}")
     except LoadError:

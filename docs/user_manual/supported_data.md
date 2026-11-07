@@ -7,17 +7,19 @@ Examples of all supported data types can be found in the [`/examples`](https://g
 | Delimited text | `.txt`, `.csv` | Auto-detected delimiter & header | Single spectra, 2D maps, wafer & time-resolved maps |
 | Renishaw WiRE | `.wdf` | Built-in binary reader | Single spectra, temporal series, line profiles, and 2D maps |
 | HORIBA LabSpec 6 | `.l6s`, `.l6m` | Built-in binary reader | Single spectra (`.l6s`) and 2D hyperspectral maps (`.l6m`) |
+| HORIBA LabSpec 5 | `.ngs`, `.ngc` | Built-in binary reader | Single spectra (`.ngs`) and compressed 2D hyperspectral maps (`.ngc`) |
 | SPC | `.spc` | Built-in binary reader | Single spectra and 2D maps |
 | TRPL | `.dat` | Built-in parser | Time-resolved photoluminescence decays |
 | Tabular data | `.xlsx`, `.xls`, `.csv` | `Pandas` & `Openpyxl` | DataFrames for plotting |
 | Fit model template | `.json` | Fit Model Builder | Peak models & baseline configuration |
 
-### **1. `.wdf` (Renishaw), `.spc`, and `.l6s` / `.l6m` (HORIBA LabSpec 6) Formats**
+### **1. `.wdf` (Renishaw), `.spc`, `.l6s` / `.l6m` (HORIBA LabSpec 6), and `.ngs` / `.ngc` (HORIBA LabSpec 5) Formats**
 
 **SPECTROview** natively supports binary spectrometer formats without requiring external vendor software:
 
 - **`.wdf`** — Data recorded using WiRE software on Renishaw instruments (discrete spectra, temporal/repeatability series, 1D line-scan profiles, and 2D hyperspectral maps).
 - **`.l6s` and `.l6m`** — Native binary spectra (`.l6s`) and 2D spectral images/maps (`.l6m`) recorded using HORIBA LabSpec 6 software.
+- **`.ngs` and `.ngc`** — Native binary spectra (`.ngs`) and compressed 2D spectral images/maps (`.ngc`) recorded using HORIBA LabSpec 5 software.
 - **`.spc`** — Data recorded using LabSpec 6 / T64000 / GRAMS software on HORIBA and Thermo instruments (discrete Raman/PL spectra and 2D hyperspectral maps).
 
 Both discrete spectra and hyperspectral datasets are routed automatically when opened or dragged into the main window without prior conversion. **SPECTROview** also parses and imports instrument **metadata** (excitation wavelength, grating, objective lens, laser power, exposure time, accumulations, slit/hole size, spectral units, spatial step sizes, acquisition timestamps, and additional instrument parameters such as detector model, detector temperature, SWIFT mode, and S/N ratio).

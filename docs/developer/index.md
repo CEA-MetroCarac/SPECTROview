@@ -86,7 +86,7 @@ spectroview/
 │   ├── peak_model.py       # Helper functions for peak parameters
 │   ├── m_graph.py          # Plot configuration model
 │   ├── m_settings.py       # Persistent app settings (QSettings wrapper)
-│   ├── m_io.py             # File loaders (TXT, CSV, WDF, SPC, L6S, L6M, TRPL, DAT)
+│   ├── m_io.py             # File loaders (TXT, CSV, WDF, SPC, L6S, L6M, NGS, NGC, TRPL, DAT)
 │   ├── m_mva.py            # PCA + NMF engine
 │   ├── m_fit_model_manager.py # Saved fit model file management
 │   ├── m_file_converter.py # Batch file format converter
@@ -94,7 +94,8 @@ spectroview/
 │   ├── m_update_checker.py # Background GitHub release checker (QThread)
 │   ├── m_wdf.py            # Renishaw WiRE WDF binary reader
 │   ├── m_spc.py            # Galactic SPC binary reader
-│   └── m_l6s.py            # HORIBA LabSpec 6 (.l6s / .l6m) binary reader
+│   ├── m_l6s.py            # HORIBA LabSpec 6 (.l6s / .l6m) binary reader
+│   └── m_ngs.py            # HORIBA LabSpec 5 (.ngs / .ngc) binary reader
 │
 ├── viewmodel/              # Business logic and data orchestration
 │   ├── vm_workspace_spectra.py   # Spectra workspace logic (base class)

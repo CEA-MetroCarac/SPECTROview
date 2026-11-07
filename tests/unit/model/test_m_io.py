@@ -25,6 +25,8 @@ from spectroview.model.m_io import (
     load_dataframe_file,
     load_l6m_map,
     load_l6s_spectrum,
+    load_ngc_map,
+    load_ngs_spectrum,
     load_map_file,
     load_spc_map,
     load_spc_spectrum,
@@ -34,6 +36,7 @@ from spectroview.model.m_io import (
     peek_wdf_measurement_type,
 )
 from spectroview.model.m_l6s import L6sReader
+from spectroview.model.m_ngs import NgsReader
 from spectroview.model.m_spc import SpcReader
 from spectroview.model.m_wdf import (
     WdfDataType,
@@ -324,6 +327,7 @@ class TestModelLayerMvvmPurity:
             "spectroview/model/m_spc.py",
             "spectroview/model/m_wdf.py",
             "spectroview/model/m_l6s.py",
+            "spectroview/model/m_ngs.py",
         ],
     )
     def test_no_qt_or_viewmodel_imports(self, project_root, rel_path):
@@ -363,6 +367,7 @@ class TestDetectFileType:
             (spec_dir / "MoS2_PL.spc", "spectra"),
             (spec_dir / "MoS2_Raman.spc", "spectra"),
             (spec_dir / "spectrum.l6s", "spectra"),
+            (spec_dir / "spectrum.ngs", "spectra"),
             (spec_dir / "specturm_TRPL.dat", "spectra"),
             (spec_dir / "XRDspectra.txt", "spectra"),
             (spec_dir / "Spectra_baseline_1.txt", "spectra"),
@@ -372,6 +377,7 @@ class TestDetectFileType:
             (bench_dir / "3_3721map.wdf", "map"),
             (spec_dir / "2dmap_spc.spc", "map"),
             (spec_dir / "map.l6m", "map"),
+            (spec_dir / "map.ngc", "map"),
             (bench_dir / "2Dmap_Si.txt", "map"),
             (bench_dir / "1_CL_map.txt", "map"),
             (bench_dir / "wafer1_process1.csv", "map"),
@@ -880,6 +886,147 @@ class TestL6sAndL6mBinaryReader:
             detect_file_type(bad_magic)
         with pytest.raises(ValueError, match="Invalid LabSpec 6 binary file"):
             L6sReader(bad_magic)
+
+
+class TestNgsAndNgcBinaryReader:
+    """Validate native HORIBA LabSpec 5 (.ngs and .ngc) binary reader and metadata ordering."""
+
+    def test_ngs_spectrum_loading_and_metadata_ordering(self, examples_dir):
+        ngs_path = examples_dir / "spectroscopic_data" / "spectrum.ngs"
+        assert ngs_path.exists()
+
+        hdr = NgsReader.peek_header(ngs_path)
+        assert hdr["version"] == 1
+        assert hdr["is_compressed"] is False
+        assert hdr["subtype"] == "Spectrum"
+        assert hdr["label"] == "Si_Ref"
+        assert hdr["n_dims"] == 1
+        assert hdr["is_map"] is False
+
+        res = load_ngs_spectrum(ngs_path)
+        assert res["type"] == "spectra"
+        assert len(res["items"]) == 1
+
+        item = res["items"][0]
+        assert item["name"] == "spectrum"
+        assert item["x0"].shape == (1024,)
+        assert item["y0"].shape == (1024,)
+        assert np.all(np.diff(item["x0"]) > 0)
+        assert item["x0"][0] == pytest.approx(34.5072, abs=1e-3)
+        assert item["x0"][-1] == pytest.approx(1041.7700, abs=1e-3)
+
+        # Silicon reference peak around 524.35 cm^-1
+        peak_idx = int(np.argmax(item["y0"]))
+        assert item["x0"][peak_idx] == pytest.approx(524.3491, abs=0.05)
+        assert item["y0"][peak_idx] == pytest.approx(831.1758, abs=0.05)
+
+        meta = item["metadata"]
+        keys = list(meta.keys())
+
+        # Verify _METADATA_ORDERED_KEYS appear first in exact canonical order
+        ordered_present = [k for k in _METADATA_ORDERED_KEYS if k in meta]
+        assert keys[: len(ordered_present)] == ordered_present
+
+        assert meta["File Format"] == "HORIBA LabSpec 5"
+        assert meta["Date"] == "05/30/24 17:00:37"
+        assert meta["Grating"] == 2400
+        assert meta["Objective Used"] == "x100"
+        assert meta["Laser Wavelength (nm)"] == "363.81"
+        assert meta["Exposure Time (s)"] == 10
+        assert meta["Accumulations"] == 3
+        assert meta["Slit Opening (µm)"] == 200
+        assert meta["X-axis Unit"] == "1/cm"
+        assert meta["Points"] == 1024
+        assert meta["Title"] == "Si_Ref"
+        assert meta["Application"] == "LabSpec 5"
+        assert meta["Measurement Type"] == "Spectrum"
+        assert meta["Spectral Unit"] == "cnt"
+        assert meta["X-axis Type"] == "Spectr"
+
+        # Additional LabSpec 5 parameters appended after _METADATA_ORDERED_KEYS
+        tail_keys = keys[len(ordered_present) :]
+        assert "Instrument" in tail_keys
+        assert meta["Instrument"] == "T64000"
+        assert meta["Detector"] == "Synapse CCD"
+        assert meta["Detector size"] == 1024
+        assert meta["Binning"] == 1
+        assert meta["Spectro"] == "549.978 1/cm"
+        assert meta["Spec. width"] == "3.78597 1/cm"
+        assert meta["Entrance Slit"] == "100 µm"
+        assert meta["First Intermediate Slit"] == "26700 µm"
+        assert meta["Second Intermediate Slit"] == "100 µm"
+        assert meta["Analysis Mode"] == "Micro"
+        assert meta["Spectrograph"] == "Triple"
+        assert "Acquired" in tail_keys
+
+    def test_ngc_map_loading_coordinates_and_metadata_ordering(self, examples_dir):
+        ngc_path = examples_dir / "spectroscopic_data" / "map.ngc"
+        assert ngc_path.exists()
+
+        hdr = NgsReader.peek_header(ngc_path)
+        assert hdr["version"] == 3
+        assert hdr["is_compressed"] is True
+        assert hdr["subtype"] == "SpIm"
+        assert hdr["label"] == "MapSample1_1"
+        assert hdr["n_dims"] == 3
+        assert hdr["is_map"] is True
+
+        df, meta = load_ngc_map(ngc_path)
+        # 61 Y points * 61 X points = 3721 spectra, 1024 spectral points + X, Y columns = 1026
+        assert df.shape == (3721, 1026)
+        assert list(df.columns[:2]) == ["X", "Y"]
+
+        x0, Y0, coords, fnames = extract_map_arrays("map", df)
+        assert x0.shape == (1024,)
+        assert Y0.shape == (3721, 1024)
+        assert coords.shape == (3721, 2)
+        assert len(fnames) == 3721
+        assert np.all(np.diff(x0) > 0)
+        assert x0[0] == pytest.approx(54.0570, abs=1e-3)
+        assert x0[-1] == pytest.approx(1120.3964, abs=1e-3)
+
+        keys = list(meta.keys())
+        ordered_present = [k for k in _METADATA_ORDERED_KEYS if k in meta]
+        assert keys[: len(ordered_present)] == ordered_present
+
+        assert meta["File Format"] == "HORIBA LabSpec 5 Map"
+        assert meta["Date"] == "07/28/26 17:23:18"
+        assert meta["Grating"] == 2400
+        assert meta["Objective Used"] == "x100"
+        assert meta["Laser Wavelength (nm)"] == "354.7"
+        assert meta["Exposure Time (s)"] == 5
+        assert meta["Accumulations"] == 2
+        assert meta["Slit Opening (µm)"] == 200
+        assert meta["X-axis Unit"] == "1/cm"
+        assert meta["Points per Spectrum"] == 1024
+        assert meta["Total Map Points"] == 3721
+        assert meta["X Step Size (µm)"] == "0.100"
+        assert meta["Y Step Size (µm)"] == "0.100"
+        assert meta["X Range (µm)"] == "-3.80 to 2.20"
+        assert meta["Y Range (µm)"] == "2.50 to 8.50"
+        assert meta["Title"] == "MapSample1_1"
+        assert meta["Application"] == "LabSpec 5"
+        assert meta["Measurement Type"] == "SpIm"
+
+        tail_keys = keys[len(ordered_present) :]
+        assert "Instrument" in tail_keys
+        assert meta["Instrument"] == "T64000"
+        assert meta["Detector"] == "Synapse CCD"
+        assert meta["Second Intermediate Slit"] == "50 µm"
+        assert meta["Spectrograph"] == "Triple"
+
+    def test_corrupt_or_truncated_ngs_raises_value_error(self, tmp_path):
+        short_ngs = tmp_path / "short.ngs"
+        short_ngs.write_bytes(b"NGSNextGen")
+        with pytest.raises(ValueError, match="Invalid LabSpec 5 NGSNextGen"):
+            detect_file_type(short_ngs)
+
+        bad_ver = tmp_path / "badver.ngc"
+        bad_ver.write_bytes(b"NGSNextGen" + struct.pack("<I", 99) + b"\x00" * 32)
+        with pytest.raises(ValueError, match="Unsupported LabSpec 5 NGSNextGen version"):
+            detect_file_type(bad_ver)
+        with pytest.raises(ValueError, match="Unsupported LabSpec 5 NGSNextGen version"):
+            NgsReader(bad_ver)
 
 
 

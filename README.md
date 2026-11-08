@@ -10,7 +10,7 @@
     <a href="https://CEA-MetroCarac.github.io/SPECTROview/"><img src="https://img.shields.io/badge/docs-latest-green.svg" alt="Docs"></a>
     <a href="https://github.com/CEA-MetroCarac/SPECTROview/stargazers"><img src="https://img.shields.io/github/stars/CEA-MetroCarac/SPECTROview?style=flat&logo=github&color=blue" alt="GitHub Stars"></a>
     <a href="https://github.com/CEA-MetroCarac/SPECTROview/issues"><img src="https://img.shields.io/github/issues/CEA-MetroCarac/SPECTROview?logo=github&color=blue" alt="GitHub Issues"></a>
-    <a href="https://pypi.org/project/spectroview/"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Platform"></a>
+    <a href="https://cea-metrocarac.github.io/SPECTROview/user_manual/installation/"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Platform"></a>
     <a href="https://doi.org/10.1016/j.softx.2026.102862"><img src="https://img.shields.io/badge/DOI-10.1016%2Fj.softx.2026.102862-blue.svg" alt="DOI"></a>
     <a href="https://doi.org/10.1016/j.softx.2026.102862"><img src="https://img.shields.io/badge/Published_in-SoftwareX-orange" alt="SoftwareX"></a>
 </p>
@@ -70,30 +70,26 @@
 
 ## 🚀 Quick Start
 
-**SPECTROview** is available both as standalone native installers (no Python required) and as a Python package (`Python >= 3.12`, tested up to `3.14`):
+**SPECTROview** is available as a **ready-to-use Desktop App** (no Python required) or as a **Python package**.
 
-**Standalone Downloads ([GitHub Releases](https://github.com/CEA-MetroCarac/SPECTROview/releases)):**
+### Option 1: Desktop App (Recommended)
 
-- **Windows (`x64`)**: `SPECTROview_<VERSION>_Windows_x64_Setup.exe` (Velopack installer with auto-updates) or `SPECTROview_<VERSION>_Windows_x64_Portable.zip`
-- **macOS (`arm64` / `x64`)**: `SPECTROview_<VERSION>_macOS_arm64.dmg` or `SPECTROview_<VERSION>_macOS_x64.dmg`
-- **Linux (`x86_64` / `amd64`)**: `SPECTROview_<VERSION>_Linux_x86_64.AppImage` or `SPECTROview_<VERSION>_Linux_amd64.deb`
+Download the installer for your system from [**GitHub Releases**](https://github.com/CEA-MetroCarac/SPECTROview/releases):
 
-**Python / PyPI Install:**
+- **Windows**: `Setup.exe` *(standard installer with automatic updates)* or `Portable.zip` *(extract and run)*
+- **macOS**: `.dmg` for **Apple Silicon (M1–M4)** or **Intel** *(drag into Applications)*
+- **Linux**: `.deb` *(Ubuntu / Debian)* or `.AppImage` *(single runnable file)*
+
+👉 Follow the step-by-step [**Installation Guide**](https://cea-metrocarac.github.io/SPECTROview/user_manual/installation/) for first-launch tips (including macOS security prompt & Linux setup).
+
+### Option 2: Python (`pip`, Python &ge; 3.12)
+
 ```bash
 pip install spectroview
-```
-
-**Or install the latest development version from GitHub:**
-```bash
-pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git
-```
-
-**Launch (Python install):**
-```bash
 spectroview
 ```
 
-See the [Installation Guide](https://cea-metrocarac.github.io/SPECTROview/user_manual/installation/) for macOS Gatekeeper notes (unsigned `.dmg`), Linux Qt/FUSE notes, and update verification details.
+See the [**Installation Guide**](https://cea-metrocarac.github.io/SPECTROview/user_manual/installation/) for upgrade commands, development builds, and troubleshooting.
 
 ---
 
@@ -103,6 +99,7 @@ Full documentation is available at [**CEA-MetroCarac.github.io/SPECTROview**](ht
 
 | Resource | Link |
 |---|---|
+| ⬇️ **Installation Guide** | [Desktop & Python setup](https://cea-metrocarac.github.io/SPECTROview/user_manual/installation/) (Windows, macOS, Linux & `pip`) |
 | 📖 **User Manual** | [Online manual](https://cea-metrocarac.github.io/SPECTROview/user_manual/) (also accessible within the app) |
 | 🛠️ **Developer Guide** | [Developer docs](https://cea-metrocarac.github.io/SPECTROview/developer/) |
 | 📝 **Changelog** | [Release notes](https://github.com/CEA-MetroCarac/SPECTROview/releases) |

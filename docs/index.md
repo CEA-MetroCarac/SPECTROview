@@ -108,7 +108,7 @@ hide:
 <div class="grid cards" markdown>
 
 -   [:material-download-circle: **Installation**](user_manual/installation.md)
-    <br> Install and launch in seconds via PyPI. Easily update to the latest version with a single command.
+    <br> Download the Desktop App for Windows, macOS, or Linux (no Python required), or install via PyPI (`pip`).
 
 -   [:material-account-hard-hat: **User Manual**](user_manual/index.md)
     <br> Step-by-step guides covering all features, from data loading to advanced fitting and visualization.

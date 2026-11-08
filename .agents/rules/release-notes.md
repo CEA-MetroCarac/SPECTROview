@@ -90,7 +90,7 @@ Include only the sections that have real changes in `<prev_tag>..HEAD`, ordered 
 
 1. `## Release Highlights` (required executive summary)
 2. `### 📦 Multi-Platform Distribution, Automatic Updates & TLS Security` (packaging installers/DMG/AppImage/deb, updater, `certifi` / `truststore` hardening)
-3. `### 🎨 Modernized UI/UX & PLUME Theme System` (or `### 🎨 Theme & UI Refinements`)
+3. `### 🎨 Modernized UI/UX & Token-Driven Theme System` (or `### 🎨 Theme & UI Refinements`)
 4. `### 🔍 Spectra & Maps Workspaces` (interactive mapping, Live Maps, viewers, selection, notifications)
 5. `### 📈 Graphs Workspace` (plot styles, customization dialogs, toolbar, filtering, resize/pan fluidity)
 6. `### 🤖 AI Chat Assistant & Credential Security` (sidebar panel, keyring `SecretStore`, history, composer)
@@ -108,9 +108,10 @@ Include only the sections that have real changes in `<prev_tag>..HEAD`, ordered 
 
 - **Two-Level Bullet Pattern**: Use `* **Bold Feature Title (Optional Impact)**:` at level 1, and two-space-indented `- ` sub-bullets for implementation specifics, affected symbols, and measured numbers.
 - **Concrete Identifiers & Metrics**: Name exact UI labels (**Settings → General**), public API functions, modules, classes, or artifact filenames in backticks, and emphasize before → after metrics in **bold**.
-- **GitHub-Ready Markdown**:
+- **GitHub-Ready & Public-Safe Markdown**:
+  - Never mention internal/private project names or design inspirations (e.g., `PLUME`, `PLUME-inspired`) anywhere in release highlights or commit logs; describe features purely in `SPECTROview` public terminology and neutralize any matching commit subjects.
   - Never include local filesystem `file:///` links in release notes.
   - Always leave a blank line before every list and table for universal Markdown rendering.
   - Keep artifact filenames in Downloads descriptions identical to `.github/workflows/release.yml`.
-- **Exact Commit Log Parity**: Every commit in `<prev_tag>..HEAD` must appear verbatim (`* \`<short_sha>\` <subject>`) in reverse-chronological order (`git log --oneline <prev_tag>..HEAD`), matching `v26.43.1`. Do not truncate, reorder, or alter SHAs.
+- **Commit Log Completeness**: Every commit in `<prev_tag>..HEAD` should appear in reverse-chronological order (`* \`<short_sha>\` <commit subject>`), matching `v26.43.1`, with any private/internal reference phrases redacted cleanly. Do not omit commits or alter SHAs.
 

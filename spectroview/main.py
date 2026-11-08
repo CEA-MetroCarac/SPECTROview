@@ -20,8 +20,9 @@ import matplotlib as mpl
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, message=".*Glyph.*")
 
+from typing import Optional
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QFileDialog, QMessageBox, QSplitter
-from PySide6.QtCore import Qt, QFileInfo, QUrl, QTimer
+from PySide6.QtCore import Qt, QFileInfo, QUrl, QTimer, QThread
 from PySide6.QtGui import QDesktopServices
 
 
@@ -678,17 +679,35 @@ class Main(QMainWindow):
             )
         return self._update_manager
 
+    @staticmethod
+    def _is_worker_running(worker: Optional[QThread]) -> bool:
+        """Safely determine if a QThread worker is still alive and actively running."""
+        if worker is None:
+            return False
+        try:
+            from shiboken6 import isValid
+
+            if not isValid(worker):
+                return False
+            return bool(worker.isRunning())
+        except (RuntimeError, ReferenceError):
+            return False
+
     def _start_update_check(self):
         """Launch a background thread to query GitHub for the latest release."""
         if getattr(self, "_has_checked_for_updates", False):
             return
         if not self.settings.get_check_for_updates():
             return
+        if self._is_worker_running(self._startup_check_worker):
+            return
+        self._startup_check_worker = None
 
         self._has_checked_for_updates = True
         worker = UnifiedUpdateCheckWorker(self._get_update_manager(), force=False, parent=self)
         worker.check_succeeded.connect(self._on_startup_check_succeeded)
         worker.check_finished.connect(worker.deleteLater)
+        worker.destroyed.connect(lambda *_: setattr(self, "_startup_check_worker", None))
         self._startup_check_worker = worker
         worker.start()
 
@@ -765,8 +784,9 @@ class Main(QMainWindow):
 
     def _manual_update_check(self):
         """User clicked 'Check for updates' — forces an uncached check with clear feedback."""
-        if self._manual_check_worker is not None and self._manual_check_worker.isRunning():
+        if self._is_worker_running(self._manual_check_worker):
             return
+        self._manual_check_worker = None
         self._manual_check_found_update = False
         self._manual_check_error = ""
         worker = UnifiedUpdateCheckWorker(self._get_update_manager(), force=True, parent=self)
@@ -774,6 +794,7 @@ class Main(QMainWindow):
         worker.check_failed.connect(self._on_manual_check_failed)
         worker.check_finished.connect(self._on_manual_check_done)
         worker.check_finished.connect(worker.deleteLater)
+        worker.destroyed.connect(lambda *_: setattr(self, "_manual_check_worker", None))
         self._manual_check_worker = worker
         worker.start()
 
@@ -790,8 +811,9 @@ class Main(QMainWindow):
         self, _tag: str, _asset_url: str, _asset_sha256: str
     ) -> None:
         """Download and verify the active platform update package."""
-        if self._update_download_worker is not None:
+        if self._is_worker_running(self._update_download_worker):
             return
+        self._update_download_worker = None
         if self._pending_release is None:
             QMessageBox.warning(
                 self,
@@ -810,6 +832,7 @@ class Main(QMainWindow):
         worker.progress_changed.connect(self._on_update_download_progress)
         worker.download_finished.connect(self._on_update_download_finished)
         worker.download_failed.connect(self._on_update_download_failed)
+        worker.destroyed.connect(lambda *_: setattr(self, "_update_download_worker", None))
         self._update_download_worker = worker
         worker.start()
 
@@ -910,7 +933,13 @@ class Main(QMainWindow):
         worker = self._update_download_worker
         self._update_download_worker = None
         if worker is not None:
-            worker.deleteLater()
+            try:
+                from shiboken6 import isValid
+
+                if isValid(worker):
+                    worker.deleteLater()
+            except (RuntimeError, ReferenceError):
+                pass
 
     def _show_update_download_error(self, error: str) -> None:
         if self._update_banner is not None:
@@ -923,6 +952,7 @@ class Main(QMainWindow):
 
     def _on_manual_check_done(self):
         """Show result after a user-initiated check finishes."""
+        self._manual_check_worker = None
         from spectroview import VERSION
         if self._manual_check_error:
             QMessageBox.warning(

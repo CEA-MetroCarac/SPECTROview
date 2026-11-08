@@ -1249,9 +1249,15 @@ class VChatPanel(QWidget):
 
     def _stop_voice_recording(self) -> None:
         """Cancel the in-progress voice worker if any."""
-        if self._voice_worker and self._voice_worker.isRunning():
-            self._voice_worker.cancel()
-            self._voice_worker.wait(1000)  # give it a second to clean up
+        if self._voice_worker:
+            try:
+                from shiboken6 import isValid
+
+                if isValid(self._voice_worker) and self._voice_worker.isRunning():
+                    self._voice_worker.cancel()
+                    self._voice_worker.wait(1000)  # give it a second to clean up
+            except (RuntimeError, ReferenceError):
+                pass
         self._voice_worker = None
 
     def _on_voice_text(self, text: str) -> None:

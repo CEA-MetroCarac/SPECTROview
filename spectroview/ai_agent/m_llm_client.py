@@ -898,7 +898,18 @@ class LLMClient:
 
     def is_busy(self) -> bool:
         """Return ``True`` while a worker thread is running."""
-        return bool(self._worker and self._worker.isRunning())
+        if not self._worker:
+            return False
+        try:
+            from shiboken6 import isValid
+
+            if not isValid(self._worker):
+                self._worker = None
+                return False
+            return bool(self._worker.isRunning())
+        except (RuntimeError, ReferenceError):
+            self._worker = None
+            return False
 
 
 def test_provider_connection(

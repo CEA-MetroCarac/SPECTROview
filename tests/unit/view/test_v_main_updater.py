@@ -25,8 +25,10 @@ if TYPE_CHECKING:
 
 def _make_stub_main() -> Main:
     from spectroview.main import Main
+    from PySide6.QtWidgets import QMainWindow
 
     win = Main.__new__(Main)
+    QMainWindow.__init__(win)
     win.settings = MSettings()
     win._update_banner = None
     win._update_download_worker = None
@@ -217,3 +219,72 @@ def test_import_main_selects_qtagg_when_qapp_exists_under_headless():
     env["QT_QPA_PLATFORM"] = "offscreen"
     res = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True)
     assert res.returncode == 0, f"stderr:\n{res.stderr}"
+
+
+def test_is_worker_running_handles_deleted_cpp_object(qapp):
+    """Main._is_worker_running must return False when a QThread has been deleted by Qt."""
+    from PySide6.QtCore import QThread
+    from spectroview.main import Main
+
+    assert Main._is_worker_running(None) is False
+
+    thread = QThread()
+    assert Main._is_worker_running(thread) is False
+
+    thread.deleteLater()
+    qapp.processEvents()
+
+    # Once deleted by Qt, calling isRunning directly would raise RuntimeError.
+    # _is_worker_running must safely catch it and return False.
+    assert Main._is_worker_running(thread) is False
+
+
+def test_repeated_manual_update_check_does_not_crash(qapp, monkeypatch):
+    """Calling _manual_update_check multiple times after worker deletion must not raise RuntimeError."""
+    from spectroview.model.m_update_manager import UpdateManager
+
+    win = _make_stub_main()
+    monkeypatch.setattr(win, "_get_update_manager", lambda: UpdateManager("26.46.1"))
+    monkeypatch.setattr(win, "_on_manual_check_done", lambda: None)
+    monkeypatch.setattr(win, "_on_manual_check_succeeded", lambda r: None)
+    monkeypatch.setattr(win, "_on_manual_check_failed", lambda e: None)
+
+    # First check
+    win._manual_update_check()
+    assert win._manual_check_worker is not None
+    first_worker = win._manual_check_worker
+    first_worker.wait(2000)
+    qapp.processEvents()
+
+    # Second check must safely proceed without RuntimeError: Internal C++ object already deleted
+    win._manual_update_check()
+    assert win._manual_check_worker is not None
+    win._manual_check_worker.wait(2000)
+    qapp.processEvents()
+
+
+def test_manual_update_check_with_deleted_cpp_worker_does_not_crash(qapp, monkeypatch):
+    """If _manual_check_worker points to a destroyed C++ object, _manual_update_check cleans it up and succeeds."""
+    from PySide6.QtCore import QThread
+    from spectroview.model.m_update_manager import UpdateManager
+
+    win = _make_stub_main()
+    monkeypatch.setattr(win, "_get_update_manager", lambda: UpdateManager("26.46.1"))
+    monkeypatch.setattr(win, "_on_manual_check_done", lambda: None)
+    monkeypatch.setattr(win, "_on_manual_check_succeeded", lambda r: None)
+    monkeypatch.setattr(win, "_on_manual_check_failed", lambda e: None)
+
+    # Artificially set a worker that has been destroyed via deleteLater
+    dead_worker = QThread()
+    dead_worker.deleteLater()
+    qapp.processEvents()
+    win._manual_check_worker = dead_worker
+
+    # Calling _manual_update_check must not raise RuntimeError: Internal C++ object already deleted
+    win._manual_update_check()
+    assert win._manual_check_worker is not None
+    assert win._manual_check_worker is not dead_worker
+    win._manual_check_worker.wait(2000)
+    qapp.processEvents()
+
+

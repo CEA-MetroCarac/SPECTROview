@@ -165,8 +165,14 @@ class VMSettings(QObject):
 
     def cancel_test_connection(self) -> None:
         """Terminate any running connection probe worker."""
-        if self._test_worker is not None and self._test_worker.isRunning():
-            self._test_worker.terminate()
-            self._test_worker.wait(500)
+        if self._test_worker is not None:
+            try:
+                from shiboken6 import isValid
+
+                if isValid(self._test_worker) and self._test_worker.isRunning():
+                    self._test_worker.terminate()
+                    self._test_worker.wait(500)
+            except (RuntimeError, ReferenceError):
+                pass
             self._test_worker = None
 

@@ -90,7 +90,10 @@ spectroview/
 │   ├── m_mva.py            # PCA + NMF engine
 │   ├── m_fit_model_manager.py # Saved fit model file management
 │   ├── m_quick_calculators.py     # Pure math logic for scientific calculators (Spot Size, Depth, Unit conversion)
-│   ├── m_update_checker.py # Background GitHub release checker (QThread)
+│   ├── m_tls.py              # Hardened TLS trust-store & certifi/pip security validation (GHSA-6q48-6c7w-9gw2)
+│   ├── m_installation.py     # Centralized runtime install detection (InstallType & InstallationManager)
+│   ├── m_update_manager.py   # Multi-platform UpdateManager facade, ETag cache, SHA256SUMS, platform backends
+│   ├── m_update_checker.py   # Legacy pip/wheel QThread workers & detached upgrade helper (preserved for compatibility)
 │   ├── m_wdf.py            # Renishaw WiRE WDF binary reader
 │   ├── m_spc.py            # Galactic SPC binary reader
 │   ├── m_l6s.py            # HORIBA LabSpec 6 (.l6s / .l6m) binary reader
@@ -171,9 +174,14 @@ spectroview/
 │   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
 │   └── noise.py                 # Noise estimation functions
 │
-└── resources/              # Icons and Matplotlib stylesheets
-    ├── icons/
-    └── *.mplstyle
+├── resources/              # Icons, fonts, build_info schema, Matplotlib stylesheets
+│   ├── icons/
+│   └── *.mplstyle
+│
+packaging/                  # Standalone platform build pipelines (reusing root main.spec)
+├── windows/build_windows.py      # PyInstaller --onedir + Portable ZIP + Velopack vpk pack
+├── macos/{build_dmg.py,build_dmg.sh,entitlements.plist}
+└── linux/{build_linux.py,build_appimage.sh,build_deb.sh,spectroview.desktop}
 ```
 
 ---
@@ -361,7 +369,8 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 | Thread Class | Location | Purpose |
 |-------------|----------|---------|
 | `VBFthread` | `fit_engine/vbf_thread.py` | Batched fitting (primary engine) |
-| `UpdateCheckerWorker` | `model/m_update_checker.py` | Background GitHub release check at startup |
+| `UnifiedUpdateCheckWorker` / `UnifiedUpdateDownloadWorker` | `model/m_update_manager.py` | Multi-platform release checks (ETag cached) and SHA-256 verified downloads |
+| `UpdateCheckerWorker` | `model/m_update_checker.py` | Legacy pip/wheel background checker & updater (backward compatibility) |
 | `LLMWorker` / `APIWorker` / `AnthropicWorker` | `ai_agent/m_llm_client.py` | Streaming chat requests for AI Data Chat — one worker per backend (Ollama / OpenAI-compatible / Anthropic) |
 
 **Thread lifecycle**:
@@ -411,78 +420,50 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 
 ---
 
-## **Update Checker**
+## **Multi-Platform Update & Packaging Architecture**
 
 ### Overview
 
-`SPECTROview` ships a lightweight, opt-out update system that queries the GitHub Releases API in the background and displays a dismissable banner when a newer version is found. The banner can download the wheel attached to that exact release, verify its GitHub SHA-256 digest when available, close the application, install the wheel with pip, and relaunch it.
-
-No extra dependency is required — only Python's built-in `urllib`.
+`SPECTROview` exposes a unified installation-detection and update facade (`UpdateManager` in `model/m_update_manager.py`) backed by `InstallationManager` (`model/m_installation.py`) and centralized TLS hardening (`model/m_tls.py`). Users receive the same banner, ETag-cached release check, pre-release toggle, and `SHA256SUMS.txt` integrity verification workflow across every distribution target without needing to understand how SPECTROview was installed.
 
 ### Key Files
 
 | File | Role |
 |------|------|
-| `model/m_update_checker.py` | `QThread` workers for release checks and wheel downloads; creates the detached pip-install/restart helper |
-| `view/components/v_update_banner.py` | Slim 36 px banner widget inserted at position 0 of the central layout |
-| `model/m_settings.py` | Stores `enabled`, `skipped_version`, and `last_check_date` in `QSettings` |
-| `main.py` | Starts the thread via `QTimer.singleShot(2000, ...)` from `showEvent` |
+| `model/m_tls.py` | Pure-model CA trust enforcement (`GHSA-6q48-6c7w-9gw2`): `SSL_CERT_FILE`/`REQUESTS_CA_BUNDLE` → OS `truststore` → validated `certifi >= 2026.10.23` (`pip >= 26.2.2` build gate) |
+| `model/m_installation.py` | Pure-model `InstallType` classifier (`DEV_SOURCE`, `PIP_WHEEL`, `WINDOWS_VELOPACK`, `WINDOWS_PORTABLE`, `MACOS_BUNDLE`, `LINUX_APPIMAGE`, `LINUX_DEB`, `STANDALONE_UNKNOWN`) |
+| `model/m_update_manager.py` | `GitHubReleaseClient` (`ETag` + TTL cache), `UpdateManager` facade, `UnifiedUpdateCheckWorker`, `UnifiedUpdateDownloadWorker`, and platform updaters |
+| `model/m_update_checker.py` | Legacy pip/wheel workers preserved cleanly plus hardened pip upgrade runner (`--use-feature=truststore` / `--cert`) |
+| `view/components/v_update_banner.py` | Slim banner displaying version transition (`current → latest`) and dynamic platform action label |
+| `main.py` | Executes early `_run_velopack_bootstrap()` hook before `QApplication` only when Velopack is active; wires unified update banner & guided dialogs |
+| `main.spec` & `packaging/` | Single-source PyInstaller config and platform builders for Windows (`Setup.exe` + `Portable.zip`), macOS (`arm64` + `x64` `.dmg`), and Linux (`.AppImage` + `.deb`) |
 
-### Flow
+### Platform Update Matrix & Design Rationale
 
-```mermaid
-sequenceDiagram
-    participant Main
-    participant Timer as QTimer (2 s)
-    participant Worker as UpdateCheckerWorker
-    participant GitHub as api.github.com
-    participant Banner as VUpdateBanner
-    participant Helper as Update helper
-    actor User
+| `InstallType` | Detection Basis | Update Backend & Mechanism |
+|---|---|---|
+| `DEV_SOURCE` | Unfrozen + `.git` / `pyproject.toml` / PEP 610 editable metadata | `UnsupportedUpdater`: version notification only — never modifies dev checkouts |
+| `PIP_WHEEL` | Unfrozen `site-packages` install | `PythonUpdater`: downloads SHA-256 verified `.whl`, launches detached hardened-TLS `pip install --upgrade`, restarts |
+| `WINDOWS_VELOPACK` | Frozen Windows inside `current/` with `Update.exe` or `sq.version` | `WindowsVelopackUpdater`: downloads `releases.win.json` & delta/full `.nupkg` in Python using hardened `m_tls` (bypassing Rust `webpki-roots` inside `velopack 1.2.161`), then passes local directory ONLY to `velopack.UpdateManager` |
+| `WINDOWS_PORTABLE` | Frozen Windows outside Velopack layout | `WindowsPortableUpdater`: downloads & verifies `Portable.zip`, offers zip-slip-checked **Extract to Folder...** |
+| `MACOS_BUNDLE` | Frozen macOS inside `*.app/Contents/MacOS` | `MacOSUpdater`: downloads arch-matched `arm64`/`x64` `.dmg` and presents Control-click Gatekeeper guidance *(silent replacement deferred until Apple Developer ID signing/notarization is configured)* |
+| `LINUX_APPIMAGE` | Frozen Linux with `$APPIMAGE` matching `$APPDIR` | `LinuxAppImageUpdater`: checks ELF header & SHA-256; atomic `mv` swap + relaunch via `shlex.quote` script when `$APPIMAGE` is writable, guided download otherwise |
+| `LINUX_DEB` | Frozen Linux with `/opt/spectroview/` or `.spectroview-deb` marker | `LinuxDebUpdater`: verifies `!<arch>\n` + SHA-256 and provides one-click copyable `sudo apt install` command |
 
-    Main->>Timer: showEvent → singleShot(2000)
-    Timer->>Worker: _start_update_check() → worker.start()
-    Worker->>GitHub: GET /repos/CEA-MetroCarac/SPECTROview/releases/latest
-    GitHub-->>Worker: JSON {tag_name, html_url, body, assets[]}
-    Worker->>Worker: compare versions
-    alt newer version found
-        Worker-->>Main: update_available(tag, notes, url, wheel URL, SHA-256)
-        Main->>Banner: insertWidget(0, VUpdateBanner(...))
-        User->>Banner: Update
-        Banner->>GitHub: Download release wheel in QThread
-        GitHub-->>Banner: Wheel bytes
-        Banner->>Helper: Start detached updater and close app
-        Helper->>Helper: pip install --upgrade wheel
-        Helper->>Main: Relaunch installed SPECTROview
-    end
-    Worker-->>Main: check_finished → set_last_check_date(today)
-```
+### Multi-Platform Release Automation (`.github/workflows/release.yml`)
 
-### Design Decisions
+Pushing a release tag (`vMAJOR.MINOR.PATCH` or `vMAJOR.MINOR.PATCH-rc.N` matching `spectroview.VERSION`) triggers a unified Python 3.14 workflow:
 
-| Decision | Rationale |
-|----------|----------|
-| **`QThread` instead of `QNetworkAccessManager`** | Pure Python `urllib` avoids Qt networking module complexity; thread is simpler to test |
-| **2-second startup delay** | Ensures the UI is fully painted before the network request starts |
-| **Once-per-day throttle** | Avoids redundant requests; the date is persisted via `QSettings` |
-| **Silent check failure** | `URLError`, `OSError`, `json.JSONDecodeError` are caught — offline machines see no error |
-| **Version comparison via tuples** | `_parse_version('v26.29.0') → (26, 29, 0)` handles `v`-prefixed tags and non-numeric parts gracefully |
-| **Release asset source** | GitHub provides the version, release notes, wheel URL, and integrity digest in one public API response; PyPI remains the normal package-install channel |
-| **Detached helper** | The helper waits for Qt to exit, installs with the launching interpreter, then clears `PYTHONPATH`/`PYTHONHOME` and restarts from a temporary working directory so a checkout cannot shadow the freshly installed package |
-| **Skip vs Dismiss** | *Skip* persists the exact tag — the banner re-appears for the next release. *Dismiss* hides only for the session |
-| **Secure TLS verification** | Release checks and downloads prioritise custom CA environment variables (`SSL_CERT_FILE` / `REQUESTS_CA_BUNDLE`), the native OS trust store (`truststore`), and patched `certifi>=2026.10.19` fallback to guard against compromised intermediate CAs and TLS interception |
+1. **`verify`**: Validates tag/version parity, enforces `pip>=26.2.2` and `certifi>=2026.10.23`, and runs the headless unit/startup-import suites.
+2. **Parallel platform builders**:
+   - **`build-python`**: `.whl` + `.tar.gz`, `twine check`, and clean venv wheel detection verification.
+   - **`build-windows`**: PyInstaller (`--onedir`) + offscreen smoke test + `Portable.zip` + Velopack `vpk pack` (`Setup.exe`, `releases.win.json`, `*.nupkg`, chaining delta history).
+   - **`build-macos`** (`macos-15` `arm64` & `macos-15-intel` `x64`): Native `.app` + `.dmg` builds (env-gated optional `APPLE_SIGNING_IDENTITY` / `APPLE_CERTIFICATE_P12` / `APPLE_ID` notarization hooks ready when credentials are added).
+   - **`build-linux`** (`ubuntu-22.04` glibc baseline): Builds `.AppImage` and `.deb`, validates `.desktop`, and runs live `apt-get install`, offscreen launch, AppImage launch, and config persistence (`~/.config/CEA-Leti/`) checks.
+3. **`release`**: Publishes unified GitHub Release with `SHA256SUMS.txt` (marking pre-releases automatically).
+4. **`publish-pypi`**: On stable releases, preserves the existing PyPI Trusted Publisher (`pypi` environment, `id-token: write`, `pypa/gh-action-pypi-publish@release/v1`).
 
-### Adding / Modifying the Checker
-
-Release automation lives in `.github/workflows/release.yml`. Pushing a `vMAJOR.MINOR.PATCH` tag whose value matches `spectroview.VERSION` builds the wheel and source distribution, attaches them to a GitHub release, and publishes them to PyPI through the `pypi` environment's Trusted Publisher.
-
-Before the first automated PyPI publication, register a Trusted Publisher for
-`CEA-MetroCarac/SPECTROview` in the PyPI project's **Publishing** settings with
-workflow filename `release.yml` and environment `pypi`. This lets GitHub Actions
-obtain a short-lived publishing token without storing a long-lived PyPI API token
-in the repository.
-
-To add a "disable updates" toggle to the Settings dialog, bind `MSettings.set_check_for_updates()` to a `QCheckBox` in `v_settings.py` — the `_start_update_check()` method in `main.py` already reads this flag before starting the thread.
+Before the first PyPI release on a new fork/repository, register a Trusted Publisher for `CEA-MetroCarac/SPECTROview` in PyPI with workflow filename `release.yml` and environment `pypi`.
 
 ---
 
@@ -540,4 +521,5 @@ mkdocs serve
 | `pandas` | — | DataFrame management |
 | `superqt` | — | Enhanced Qt widgets (range sliders) |
 | `ollama` / `openai` / `anthropic` / `mcp` | `ollama ≥ 0.4`, `mcp ≥ 2.2` | LLM backends + Model Context Protocol for AI Data Chat. **Core dependencies** (no `[ai]` extras group) — a plain `pip install` includes them; the feature is only *optional to use* at runtime. |
-| `truststore` | `≥ 0.9.0` | Routes TLS verification through the OS trust store (corporate/internal CAs) for cloud AI providers; import is guarded |
+| `truststore` / `certifi` | `truststore ≥ 0.9.0`, `certifi ≥ 2026.10.23` | Hardened TLS verification routing through the host OS trust store first and patched `certifi` fallback (`GHSA-6q48-6c7w-9gw2`); import is guarded |
+| `velopack` / `pyinstaller` *(optional `[standalone]`)* | `velopack ≥ 1.2.161`, `pyinstaller ≥ 6.10.0` | Standalone desktop bundling & Windows Velopack installer/updater runtime hooks |

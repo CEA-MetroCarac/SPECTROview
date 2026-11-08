@@ -50,7 +50,9 @@ Specify a single universal root folder for all of SPECTROview's templates, recip
 - **Theme**: Select between **Modern Dark**, **Modern Light**, **Classic Dark**, or **Classic Light**. Selection updates the active theme immediately and keeps the top menu bar theme button in perfect synchronization. The plot canvas theme is independent of the interface theme, defaulting to **Light Mode**; you can switch it to **Dark Mode** at any time via the **Plot theme** selector in the `View Options` toolbar under the spectrum canvas (your selection persists across sessions).
 
 #### **Application Updates**
-- **Check for updates automatically on application startup**: When checked (default), SPECTROview will periodically check for new releases in the background upon application launch.
+
+- **Check for updates automatically on application startup**: When checked (default), SPECTROview checks GitHub Releases periodically in the background upon launch (with HTTP `ETag` caching) and respects your installation format (`pip`, Windows Installer, Portable ZIP, macOS DMG, Linux AppImage, or `.deb`).
+- **Include pre-release / release candidate builds**: When checked, update checks also consider pre-release tags (such as `-rc.1` or `-beta`). Disabled by default so most users receive stable releases only.
 
 ---
 
@@ -137,9 +139,10 @@ LAN or internet. Keep SPECTROview running while the client is connected.
 The **About** tab provides comprehensive runtime and reference information:
 
 - **Application Details**: Official SPECTROview logo, title, version number (`Version {VERSION}`), and build number (`Build: {BUILD_NUMBER}`).
-- **Environment & Dependencies**: Automatically detects execution mode and displays dependency versions:
-  - **Standalone Executable (.exe)**: Shows the exact dependencies bundled at build time from the packaging machine, along with bundled Python and host/build OS.
-  - **Installed Package (.whl / pip)**: Dynamically queries and displays the live package versions active on the local machine.
-  - Lists `PySide6` (with Qt runtime version), scientific stack (`numpy`, `scipy`, `matplotlib`, `pandas`, `pybaselines`), export engines (`openpyxl`, `pyarrow`), UI extensions (`superqt`), and optional AI SDKs.
+- **Environment & Dependencies**: Automatically detects execution and packaging mode (`Python Package (.whl / local)`, `Windows Installer (Velopack)`, `Windows Portable`, `macOS Application (.app)`, `Linux AppImage`, or `Linux Debian Package (.deb)`) and displays dependency versions:
+
+  - **Standalone Builds**: Serve the frozen dependency snapshot recorded at packaging time, along with bundled Python and host/build OS details.
+  - **Installed Package (`.whl` / `pip` / Dev)**: Dynamically inspect live package versions active in the local Python environment.
+  - Lists `PySide6` (with Qt runtime version), TLS & security stack (`certifi`, `truststore`), scientific stack (`numpy`, `scipy`, `matplotlib`, `pandas`, `pybaselines`), export engines (`openpyxl`, `pyarrow`), UI extensions (`superqt`), and AI chat SDKs.
 - **Check for Updates**: Direct action to check GitHub releases for new versions.
 - **Paper Citation**: The canonical SoftwareX peer-reviewed citation with DOI, along with a **Copy** button to quickly copy the citation into your clipboard.

@@ -70,9 +70,15 @@
 
 ## 🚀 Quick Start
 
-**SPECTROview** requires Python &ge; 3.12.
+**SPECTROview** is available both as standalone native installers (no Python required) and as a Python package (`Python >= 3.12`, tested up to `3.14`):
 
-**Install from PyPI:**
+**Standalone Downloads ([GitHub Releases](https://github.com/CEA-MetroCarac/SPECTROview/releases)):**
+
+- **Windows (`x64`)**: `SPECTROview_<VERSION>_Windows_x64_Setup.exe` (Velopack installer with auto-updates) or `SPECTROview_<VERSION>_Windows_x64_Portable.zip`
+- **macOS (`arm64` / `x64`)**: `SPECTROview_<VERSION>_macOS_arm64.dmg` or `SPECTROview_<VERSION>_macOS_x64.dmg`
+- **Linux (`x86_64` / `amd64`)**: `SPECTROview_<VERSION>_Linux_x86_64.AppImage` or `SPECTROview_<VERSION>_Linux_amd64.deb`
+
+**Python / PyPI Install:**
 ```bash
 pip install spectroview
 ```
@@ -82,10 +88,12 @@ pip install spectroview
 pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git
 ```
 
-**Launch:**
+**Launch (Python install):**
 ```bash
 spectroview
 ```
+
+See the [Installation Guide](https://cea-metrocarac.github.io/SPECTROview/user_manual/installation/) for macOS Gatekeeper notes (unsigned `.dmg`), Linux Qt/FUSE notes, and update verification details.
 
 ---
 

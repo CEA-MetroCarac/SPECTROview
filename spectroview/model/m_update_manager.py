@@ -507,7 +507,7 @@ class BaseUpdater:
 class PythonUpdater(BaseUpdater):
     """Automatic in-place pip upgrade backend preserving existing wheel updates."""
 
-    action_label = "Update & Restart"
+    action_label = "Update and Restart"
     action_tooltip = "Download verified wheel, upgrade via pip, and relaunch SPECTROview."
 
     def select_asset(self, release: ReleaseInfo) -> Optional[ReleaseAsset]:
@@ -562,7 +562,7 @@ class PythonUpdater(BaseUpdater):
 class WindowsVelopackUpdater(BaseUpdater):
     """Windows Velopack backend using Python hardened-TLS feed + local-dir UpdateManager."""
 
-    action_label = "Update & Restart"
+    action_label = "Update and Restart"
     action_tooltip = "Download delta or full Velopack packages via verified HTTPS and apply on restart."
 
     def __init__(self, info: InstallationInfo, client: GitHubReleaseClient) -> None:
@@ -823,7 +823,7 @@ class MacOSUpdater(BaseUpdater):
 class LinuxAppImageUpdater(BaseUpdater):
     """Linux AppImage updater supporting atomic replacement when ``$APPIMAGE`` is writable."""
 
-    action_label = "Update & Restart"
+    action_label = "Update and Restart"
     action_tooltip = "Download verified AppImage and swap/relaunch cleanly."
 
     def __init__(self, info: InstallationInfo, client: GitHubReleaseClient) -> None:

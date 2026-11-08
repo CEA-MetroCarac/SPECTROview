@@ -1,12 +1,66 @@
 ## **Installation**
 
-**SPECTROview** requires **Python &ge; 3.12** (tested on Python 3.12, 3.13, and 3.14) and runs on **Windows**, **macOS**, and **Linux**. It can be installed and managed entirely from your system's command-line interface (e.g., Command Prompt or PowerShell on Windows, or Terminal on macOS/Linux).
+**SPECTROview** runs on **Windows**, **macOS**, and **Linux** and can be installed either as a **standalone native application** (no Python installation required) or as a **Python package** via `pip` (requires **Python &ge; 3.12**, tested on Python 3.12, 3.13, and 3.14).
 
 ---
 
-### **1. Install from PyPI (Recommended)**
+### **1. Standalone Installers (Recommended for Desktop Users — No Python Required)**
 
-The simplest way to install **SPECTROview** is from the [Python Package Index (PyPI)](https://pypi.org/project/spectroview/):
+Download the matching release asset from the [GitHub Releases](https://github.com/CEA-MetroCarac/SPECTROview/releases) page (every file is verified in `SHA256SUMS.txt`).
+
+#### **Windows (`x64`)**
+
+- **Installer (`SPECTROview_<VERSION>_Windows_x64_Setup.exe`)**
+  - Installs per-user cleanly without administrator privileges and registers Start Menu shortcuts, optional Desktop shortcut, and a standard Windows uninstaller.
+  - Supports installation and working directories containing spaces or non-ASCII characters.
+  - Supports **automatic delta and full updates** via Velopack (`Update and Restart`) while preserving all user preferences and Working Folders across upgrades.
+
+- **Portable ZIP (`SPECTROview_<VERSION>_Windows_x64_Portable.zip`)**
+  - Extract anywhere and launch `SPECTROview.exe` directly — no installer, no administrator rights, and no Python installation required.
+  - Keeps user settings outside the extracted application folder so upgrading via a fresh extraction preserves preferences and your Working Folder.
+  - In-app updates verify and download the newest Portable ZIP and let you **Extract to Folder...** directly.
+
+#### **macOS (`arm64` Apple Silicon & `x64` Intel)**
+
+- Download **`SPECTROview_<VERSION>_macOS_arm64.dmg`** (Apple Silicon M-series) or **`SPECTROview_<VERSION>_macOS_x64.dmg`** (Intel Mac).
+- Open the `.dmg` and drag **`SPECTROview.app`** into the **`Applications`** folder.
+- Application settings persist outside the `.app` bundle (`~/Library/Preferences`), so dragging a new version over `/Applications/SPECTROview.app` keeps your settings intact.
+
+> **Important (Unsigned Build Gatekeeper Notice)**: Releases are currently distributed unsigned/unnotarized. On first launch (or after replacing with a newer version), macOS Gatekeeper may warn that the developer cannot be verified. To open **SPECTROview**:
+>
+> 1. **Control-click** (or right-click) `SPECTROview.app` in `/Applications` → select **Open** → confirm **Open**, **or**
+> 2. Go to **System Settings → Privacy & Security** and click **Open Anyway**.
+>
+> *(Note: Because unsigned macOS apps cannot safely overwrite `/Applications` silently in the background, clicking **Download Update** in the banner fetches the verified `.dmg` and opens these instructions.)*
+
+#### **Linux (`x86_64` / `amd64`)**
+
+- **Debian / Ubuntu package (`SPECTROview_<VERSION>_Linux_amd64.deb`)**
+  - Installs to `/opt/spectroview`, registers the desktop application launcher and `spectroview` CLI command, and declares all required Qt6 / XCB / OpenGL system libraries automatically:
+
+    ```bash
+    sudo apt update
+    sudo apt install ./SPECTROview_<VERSION>_Linux_amd64.deb
+    ```
+
+  - User configuration (`~/.config/CEA-Leti/`) and Working Folders remain untouched during package upgrades or removal.
+
+- **AppImage (`SPECTROview_<VERSION>_Linux_x86_64.AppImage`)**
+  - Run directly without root privileges or installation:
+
+    ```bash
+    chmod +x SPECTROview_<VERSION>_Linux_x86_64.AppImage
+    ./SPECTROview_<VERSION>_Linux_x86_64.AppImage
+    ```
+
+  - On minimal Linux desktops without `libfuse2`, extract and run cleanly with `--appimage-extract-and-run` (or `sudo apt install libfuse2t64` / `libfuse2`).
+  - Supports **in-place automatic updates** (`Update and Restart`) whenever the `.AppImage` file is writable by the current user; otherwise falls back to guided verified download.
+
+---
+
+### **2. Install from PyPI (Python Environments)**
+
+If you already use Python (`>= 3.12`), install **SPECTROview** from [PyPI](https://pypi.org/project/spectroview/):
 
 ```bash
 pip install spectroview
@@ -17,60 +71,53 @@ pip install spectroview
   <i>Successfully installing SPECTROview via pip.</i>
 </div>
 
-> **Note:** On systems where both Python 2 and Python 3 are installed, use `pip3` instead of `pip`:
+> **Note:** On systems with multiple Python installations, use `python -m pip` or `pip3`:
+>
 > ```bash
 > pip3 install spectroview
 > ```
 
-### **2. Install from GitHub (Latest Development Version)**
-
-To install the latest development version directly from the source repository:
+#### **Install Latest Development Version from GitHub**
 
 ```bash
 pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git
 ```
 
-> This installs the most recent code from the `main` branch, which may include features and fixes not yet published on PyPI.
+> This installs the latest commits from `main`, which may include changes not yet released on PyPI.
 
----
-
-### **3. AI Chat Agent & Optional Voice Dictation**
-
-SPECTROview includes a built-in **AI Chat Agent** that allows you to query and visualize data using natural language. All the packages it needs (`ollama`, `openai`, `anthropic`, `mcp`, `truststore`) are installed automatically as part of the standard `pip install spectroview` — no extra step is required.
-
-- **For local AI (Ollama):** also install [Ollama](https://ollama.com) itself on your system (the Python `ollama` package alone only talks to a running Ollama service).
-- **For Cloud AI (OpenAI, DeepSeek, Gemini, Anthropic, or a custom OpenAI-compatible endpoint):** just configure your API key / base URL in **Settings → AI**.
-- **For Voice Dictation (Microphone button):** this remains optional — `pip install SpeechRecognition pyaudio`. If these are not installed, the microphone button still appears but shows an install instruction when clicked.
-
----
-
-### **4. Launch **SPECTROview****
-
-Once installed, open your terminal or command prompt and run:
+#### **Launch Python Installation**
 
 ```bash
 spectroview
 ```
 
-The application window will open automatically.
+---
+
+### **3. AI Chat Agent & Optional Voice Dictation**
+
+SPECTROview includes a built-in **AI Chat Agent** (`ollama`, `openai`, `anthropic`, `mcp`, `truststore`) in both standalone installers and PyPI distributions — no extra installation step is required.
+
+- **For local AI (Ollama):** install [Ollama](https://ollama.com) on your system and start the service.
+- **For Cloud AI (OpenAI, DeepSeek, Gemini, Anthropic, or Custom endpoint):** configure your API key in **Settings → AI Settings**.
+- **For Voice Dictation (optional, Python installs):** `pip install SpeechRecognition pyaudio`.
 
 ---
 
-### **5. Update & Version Management**
+### **4. Python Version & Upgrade Commands**
 
-To update **SPECTROview** to the latest release:
+To upgrade an existing Python installation:
 
 ```bash
 pip install --upgrade spectroview
 ```
 
-To install a specific version (e.g., `26.29.3`):
+To install a specific version (e.g., `26.46.1`):
 
 ```bash
-pip install spectroview==26.29.3
+pip install spectroview==26.46.1
 ```
 
-To check which version is currently installed:
+To inspect your installed package version:
 
 ```bash
 pip show spectroview
@@ -78,64 +125,59 @@ pip show spectroview
 
 ---
 
-### **6. Automatic Update Notifications**
+### **5. Unified Automatic Version Checking & Updating**
 
-**SPECTROview** automatically checks for new releases on startup and notifies you with a non-intrusive banner at the top of the application window — no manual checking required.
+**SPECTROview** automatically detects how it was installed (`pip`, Windows Velopack Installer, Windows Portable ZIP, macOS `.app`, Linux AppImage, or Linux `.deb`) and adapts the in-app updater accordingly.
 
-#### How it works
+#### **How it works**
 
-- **On startup**, a background thread silently queries the [GitHub Releases page](https://github.com/CEA-MetroCarac/SPECTROview/releases) for the latest version.
-- If a newer version is available, a **blue notification banner** appears at the top of the window:
+- **On startup** (2 seconds after the UI renders, or anytime via **Check for updates** in the menu bar / **Settings → About**), a background worker queries GitHub Releases (using HTTP `ETag` caching to stay polite on API rate limits).
+- You can optionally opt in to release candidates (`rc` / `beta`) under **Settings → General → Application Updates → Include pre-release / release candidate builds**.
+- When a newer version is available, a slim banner appears at the top of the window:
 
 <div align="center">
-  <img src="../user_manual_images/Installation/update_banner.png" alt="Automatic update notification banner" width="800"><br>
-  <i>Notification banner displayed when a newer version of SPECTROview is available.</i>
+  <img src="../user_manual_images/Installation/update_banner.png" alt="Automatic update notification banner" width="820"><br>
+  <i>Notification banner showing version transition and platform-appropriate update action.</i>
 </div>
 
-> **Privacy Guarantee**: This check only sends a standard anonymous request to the public GitHub API to fetch the latest version number. **Absolutely no personal or usage data is collected or transmitted.**
+> **Privacy Guarantee**: Update checks send anonymous read-only HTTPS requests to GitHub Releases. **No telemetry, personal data, or usage tracking is collected.**
+>
+> **Security & TLS Verification (`GHSA-6q48-6c7w-9gw2`)**: Network requests prioritise institutional `SSL_CERT_FILE` / `REQUESTS_CA_BUNDLE`, then the host operating system's native certificate trust store (`truststore`), and finally a verified `certifi >= 2026.10.23` CA bundle (refusing compromised eMudhra / emSign roots). Every downloaded update is also verified against GitHub's published `SHA256SUMS.txt` digest before installation.
 
-> **Security & TLS Verification**: Network operations use the operating system's native certificate trust store (`truststore`) or a patched certificate bundle (`certifi >= 2026.10.19`), ensuring immediate protection against compromised intermediate Certificate Authorities and connection spoofing.
+#### **Update Behaviour by Distribution Type**
 
-#### Banner actions
+| Distribution Format | Banner Action | Behaviour After Download & SHA-256 Verification |
+|---|---|---|
+| **Python (`pip` wheel)** | **Update and Restart** | Closes app, runs hardened `pip install --upgrade` against verified `.whl`, and relaunches. |
+| **Windows Installer (`Setup.exe` / Velopack)** | **Update and Restart** | Stages verified delta/full `.nupkg` packages via Velopack and applies updates automatically on restart (preserving settings & Working Folder). |
+| **Windows Portable (`.zip`)** | **Download Update** | Saves verified `.zip` and offers **Extract to Folder...** or **Open Folder** without modifying the running binary folder. |
+| **macOS Application (`.dmg`)** | **Download Update** | Saves verified `arm64` / `x64` `.dmg`, opens **Open Installer** / **Open Folder**, and reminds you of Gatekeeper's Control-click → Open flow. |
+| **Linux AppImage** | **Update and Restart** *(if writable)* / **Download Update** | Atomically replaces writable `$APPIMAGE` and relaunches, or saves verified `.AppImage` cleanly if read-only. |
+| **Linux Debian (`.deb`)** | **Download Update** | Saves verified `.deb` and gives a one-click **Copy Command** button (`sudo apt install ...`). |
+| **Local Git / Source Checkout** | Notification only | Detects dev checkout safely so source files are never overwritten accidentally. |
+
+#### **Banner Buttons**
 
 | Button | Behaviour |
-|--------|-----------|
-| **⬇ Update** | Downloads the `.whl` attached to the announced GitHub release, verifies its SHA-256 checksum when GitHub provides one, closes SPECTROview, runs `pip install --upgrade` with that wheel, and relaunches the app. |
-| **🔍 Show changelog** | Opens the GitHub release page in your browser to see what's new. |
-| **Update later** | Hides the banner for the current session only. It will reappear on the next launch if the update is still available. |
-| **Skip this version** | Hides the banner permanently for that specific version. It will not show again until an even newer version is released. |
+|---|---|
+| **⬇ Update and Restart / Download Update** | Executes the verified download and platform-specific install or guided flow shown above. |
+| **🔍 Show changelog** | Opens the GitHub release notes in your web browser. |
+| **Update later** | Hides the banner for the current session only. |
+| **Skip this version** | Remembers this release tag and stays silent until a newer release is published. |
 
-> **Offline users**: If **SPECTROview** is installed on a machine without internet access, the update check fails silently — the application starts and works exactly as normal. No error is raised.
-
-> **Standalone executable users**: Automatic updates apply to SPECTROview installations made with `pip`. A standalone executable cannot install a Python wheel, so use the release page to download a newer executable instead.
+> **Offline environments**: Startup checks fail quietly when offline so **SPECTROview** launches and runs normally without error popups. Manual checks explain any network or rate-limit failure clearly.
 
 ---
 
-### **7. Troubleshooting**
+### **6. Troubleshooting**
 
-??? question "**pip: command not found**"
+??? question "**`pip: command not found` (Python installs)**"
 
-    This means `pip` is not on your system's PATH. Try one of the following:
+    Use `python -m pip install spectroview` or `python3 -m pip install spectroview`.
 
-    ```bash
-    python -m pip install spectroview
-    ```
+??? question "**`Permission denied` during `pip install`**"
 
-    Or, if you have multiple Python versions installed:
-
-    ```bash
-    python3 -m pip install spectroview
-    ```
-
-??? question "**Permission denied / Access is denied**"
-
-    You may not have write permission to the global Python site-packages directory. Use the `--user` flag to install for your user only:
-
-    ```bash
-    pip install --user spectroview
-    ```
-
-    Alternatively, use a **virtual environment** (recommended):
+    Install inside a virtual environment (recommended) or pass `--user`:
 
     ```bash
     python -m venv spectroview_env
@@ -144,57 +186,34 @@ pip show spectroview
     pip install spectroview
     ```
 
-??? question "**PySide6 fails to install or `qt.qpa.plugin: Could not load the Qt platform plugin`**"
+??? question "**`qt.qpa.plugin: Could not load the Qt platform plugin "xcb"` on Linux**"
 
-    PySide6 is the GUI framework used by **SPECTROview**. If you encounter issues:
+    Standalone `.deb` installs declare these libraries automatically. For AppImage or `pip` installs on minimal Ubuntu/Debian distributions, ensure Qt6 X11/XCB/EGL runtime libraries are present:
 
-    - **Ensure you are using Python &ge; 3.12**.
-    - **On Linux**, you may need to install system-level Qt dependencies:
-      ```bash
-      sudo apt install libxcb-xinerama0 libxkbcommon-x11-0  # Ubuntu/Debian
-      ```
-    - **Try reinstalling PySide6** separately:
-      ```bash
-      pip install --force-reinstall PySide6
-      ```
+    ```bash
+    sudo apt update
+    sudo apt install libxcb-cursor0 libxcb-xinerama0 libxkbcommon-x11-0 libegl1 libgl1 libfontconfig1
+    ```
 
-??? question "**`spectroview` command not found after installation**"
+??? question "**macOS shows `"SPECTROview.app" cannot be opened because the developer cannot be verified`**"
 
-    The `spectroview` command-line entry point may not be on your PATH. Try launching it as a Python module instead:
+    Current macOS DMGs are unsigned. In `/Applications`, **Control-click** `SPECTROview.app` → **Open**, or allow it under **System Settings → Privacy & Security → Open Anyway**.
+
+??? question "**AppImage fails with `dlopen(): error loading libfuse.so.2` on Ubuntu 24.04+**"
+
+    Either run once with `--appimage-extract-and-run`, or install FUSE 2 (`sudo apt install libfuse2t64`).
+
+??? question "**`spectroview` command not found after `pip install`**"
+
+    Launch directly via module invocation:
 
     ```bash
     python -m spectroview.main
     ```
 
-    If you installed with `--user`, ensure your user's local `bin` directory is on your PATH:
+??? question "**Blank window or GPU driver crash on startup**"
 
-    - **macOS/Linux**: Add `export PATH="$HOME/.local/bin:$PATH"` to your `~/.bashrc` or `~/.zshrc`.
-    - **Windows**: The user scripts directory is typically `%APPDATA%\Python\PythonXX\Scripts`.
+    Switch Qt Quick / rendering to software mode before launching:
 
-??? question "**`numpy` or `matplotlib` version conflict errors**"
-
-    **SPECTROview** requires `numpy >= 2.0.2` and `matplotlib >= 3.8.0, < 3.10.9`. If you see version conflict errors, try installing in a clean virtual environment:
-
-    ```bash
-    python -m venv spectroview_env
-    source spectroview_env/bin/activate    # macOS/Linux
-    spectroview_env\Scripts\activate       # Windows
-    pip install spectroview
-    ```
-
-    This avoids conflicts with other packages in your global Python installation.
-
-??? question "**The application opens but the window is blank or crashes immediately**"
-
-    This is typically a GPU/driver issue with Qt's rendering backend. Try disabling hardware acceleration:
-
-    - **Windows**: Set the environment variable before launching:
-      ```bash
-      set QT_QUICK_BACKEND=software
-      spectroview
-      ```
-    - **macOS/Linux**:
-      ```bash
-      export QT_QUICK_BACKEND=software
-      spectroview
-      ```
+    - **Windows (PowerShell)**: `$env:QT_QUICK_BACKEND="software"; spectroview`
+    - **macOS/Linux**: `export QT_QUICK_BACKEND=software; spectroview`

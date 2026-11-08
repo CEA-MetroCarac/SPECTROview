@@ -8,11 +8,10 @@ A horizontal toolbar located at the top of the application provides quick access
 | ![Open](../user_manual_images/menu_bar/open.png) | **Open**: Loads any supported data type. The application automatically detects the file format and switches to the appropriate workspace. |
 | ![Save](../user_manual_images/menu_bar/save.png) | **Save**: Saves the active workspace to a dedicated file (`.maps`, `.spectra`, or `.graphs`), allowing you to pause and resume your work effortlessly. |
 | ![Clear](../user_manual_images/menu_bar/clear.png) | **Clear**: Clears the currently active workspace, resetting loaded data, viewers, fitted peak models, fit results, and multivariate analysis state to start a fresh session. |
-| ![Convert](../user_manual_images/menu_bar/convert.png) | **Convert**: Opens the `Hyperspectral Data Converter` tool (see below for details). |
 | ![Calculation](../user_manual_images/menu_bar/quick_calculation.png) | **Calculators**: Opens the `Quick Calculators` tool (`Ctrl + Shift + C`, see below for details). |
-| 🤖 | **SPECTROview AI Agent**: Opens the AI Chat Agent panel (`Ctrl + Shift + A`) to query, filter, and plot your data in natural language. See the "AI Chat Agent" section. |
+| ![AI Agent](../user_manual_images/menu_bar/ai_agent.png) | **SPECTROview AI Agent**: Opens the AI Chat Agent panel (`Ctrl + Shift + A`) to query, filter, and plot your data in natural language. See the "AI Chat Agent" section. |
 | ![Settings](../user_manual_images/menu_bar/settings.png) | **Settings**: Opens the `Settings Panel` (`Ctrl + Shift + S`, see below for details). |
-| 🔄 | **Check for updates**: Manually checks the GitHub Releases page for a newer version. |
+| ![Check for updates](../user_manual_images/menu_bar/check_update.png) | **Check for updates**: Manually checks the GitHub Releases page for a newer version. |
 | ![Theme](../user_manual_images/menu_bar/theme.png) | **Theme**: Opens a dropdown to choose the interface theme — **Modern Dark**, **Modern Light**, **Classic Dark**, or **Classic Light**. |
 | ![User Manual](../user_manual_images/menu_bar/manual.png) | **User Manual**: Opens the online User Manual documentation in your browser (`Ctrl + Shift + M`). |
 | ![GitHub](../user_manual_images/menu_bar/github.png) | **GitHub**: Opens the SPECTROview GitHub repository in your browser. |
@@ -25,22 +24,12 @@ A horizontal toolbar located at the top of the application provides quick access
 Click the **Settings** icon to open the `Settings Panel`. See the "Settings" section for details.
 
 <div align="center">
-  <img src="../user_manual_images/Settings/settings.png" alt="Settings Panel UI" width="400"><br>
+  <img src="../user_manual_images/Settings/settings.png" alt="Settings Panel UI" width="820"><br>
    <i>The Settings Panel interface.</i>
 </div>
 
 
-### **3. Hyperspectral Data Converter Tool**
-Click the **Convert** icon to open this utility.
-
-To convert hyperspectral data (2D maps) from Renishaw WiRE into a format natively supported by **SPECTROview**, load your file(s) and click **Convert**. The converted file will be saved with a `_converted` suffix in the same directory as the original file.
-
-<div align="center">
-  <img src="../user_manual_images/menu_bar/ui_converter.png" alt="Converter Tool UI" width="500"><br>
-   <i>The Hyperspectral Data Converter Tool interface.</i>
-</div>
-
-### **4. Quick Calculation Tool**
+### **3. Quick Calculation Tool**
 Click the **Calculator** icon to open a suite of utility calculators. See the "Quick Calculators" section for details.
 
 <div align="center">
@@ -48,7 +37,7 @@ Click the **Calculator** icon to open a suite of utility calculators. See the "Q
    <i>The Quick Calculators interface.</i>
 </div>
 
-### **5. Keyboard Shortcuts**
+### **4. Keyboard Shortcuts**
 You can quickly access tools from anywhere in the application using the following keyboard shortcuts:
 
 - `Ctrl + Shift + A`: Open AI Chat Agent

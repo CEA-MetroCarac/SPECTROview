@@ -129,6 +129,11 @@ Changing the palette updates every **Automatic** color preview while preserving 
 The **Heatmap Plot** tool transforms multiple plotted spectra into a continuous 2D intensity map. This mode is particularly powerful for analyzing series data, such as in-situ temperature profiles, time-resolved kinetics, spatial line-scans, or composition gradients.
 
 <div align="center">
+  <img src="../user_manual_images/Spectra_Maps/heatmap_plot_for_spectraviewer_0.png" alt="SpectraViewer Heatmap Mode" width="800"><br>
+
+</div>
+
+<div align="center">
   <img src="../user_manual_images/Spectra_Maps/heatmap_plot_for_spectraviewer.png" alt="SpectraViewer Heatmap Mode" width="800"><br>
   <i>The <code>SpectraViewer</code> in Heatmap visualization mode, displaying a continuous 2D intensity map across an in-situ temperature series.</i>
 </div>
@@ -149,12 +154,21 @@ When Heatmap mode is activated, specialized configuration controls appear direct
 
 In both the **Spectra** and **Maps** workspaces, you can interactively bracket up to three spectral features in the `SpectraViewer` and inspect their variation in real time within the dedicated **Live Maps** tab:
 
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/rgb_spectra_bracketing.png" alt="RGB Spectral Range Selectors" width="800"><br>
+</div>
+
+
 - **Spectra Workspace**: Displays up to three color-coded (Red, Blue, Green) **1D parameter variation graphs** across the **currently selected spectra** in the `SpectraList`, allowing rapid review of how peak intensity, position, height, or area evolves across a series of selected spectra.
+
+<div align="center">
+  <img src="../user_manual_images/Spectra_Maps/rgb_live_spectra.png" alt="RGB Live spectra" width="800"><br>
+</div>
+
 - **Maps Workspace**: Displays up to three real-time **2D spatial heatmaps** across the active hyperspectral map.
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/rgb_live_map.png" alt="RGB Live Maps and Spectral Range Selectors" width="800"><br>
-  <i>Interactive Spectral Range Selectors in <code>SpectraViewer</code> (top) paired with real-time visualizations in the <code>Live Maps</code> tab (bottom).</i>
+  <img src="../user_manual_images/Spectra_Maps/rgb_live_map.png" alt="RGB Live Maps" width="800"><br>
 </div>
 
 ##### **Range Selector Controls (Spectra Viewer)**
@@ -207,7 +221,7 @@ The `FitModelBuilder` tab is where you configure your spectral fit models. It is
 You can use global fitting parameters or adjust fitting parameters in the `Settings Panel` (see the "Settings" section for details).
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="Fit Model Builder UI" width="800"><br>
+  <img src="../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="Fit Model Builder UI" width="850"><br>
   <i>The <code>FitModelBuilder</code> tab featuring: (1) The <code>Fitting</code> panel (left), (2) The <code>PeakTable</code> panel (top-right), and (3) The <code>FitModelControl</code> panel (bottom-right).</i>
 </div>
 
@@ -291,7 +305,7 @@ The `PeakTable` displays all mathematical parameters for the peaks you have defi
 Once your model is fully defined, click the **Fit** button to execute the optimization.
 
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/fit_control_panel.png" alt="Fit Model Control Panel" width="500"><br>
+  <img src="../user_manual_images/Spectra_Maps/fit_control_panel.png" alt="Fit Model Control Panel" width="650"><br>
    <i>The <code>FitModelControl</code> panel.</i>
 </div>
 
@@ -353,7 +367,7 @@ Once your data table is finalized, you can:
 
 The `More` tab provides access to auxiliary tools and metadata, divided into three sections:
 <div align="center">
-  <img src="../user_manual_images/Spectra_Maps/moretab.png" alt="More Tab Overview" width="800"><br>
+  <img src="../user_manual_images/Spectra_Maps/moretab.png" alt="More Tab Overview" width="850"><br>
 </div>
 
 - **Left**: Displays comprehensive metadata extracted directly from loaded `.wdf`, `.spc`, `.l6s`, `.l6m`, `.ngs`, or `.ngc` files, showing the exact instrument settings used during acquisition.

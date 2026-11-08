@@ -3,7 +3,7 @@
 Access the **Settings** menu via the gear icon in the main toolbar (or press `Ctrl + Shift + S`). You can also click **About SPECTROview** in the top menu bar to jump directly to the **About** section.
 
 <div align="center">
-  <img src="../user_manual_images/Settings/settings.png" alt="Settings Panel" width="460"><br>
+  <img src="../user_manual_images/Settings/settings.png" alt="Settings Panel" width="820"><br>
 </div>
 
 <br>

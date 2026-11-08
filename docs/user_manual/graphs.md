@@ -77,7 +77,7 @@ ______
 You can quickly modify the **labels** of the axes and the **title** of the plot via the `Right Panel`. Click the **Update Plot** button to apply the changes instantly:
 
 <div align="center">
-  <img src="../user_manual_images/Graphs/labels.png" alt="Label Customization" width="300"><br>
+  <img src="../user_manual_images/Graphs/labels.png" alt="Label Customization" width="400"><br>
   <i>Customize the selected plot via the Right Panel. Click the Update Plot button to apply changes.</i>
 </div>
 
@@ -100,7 +100,7 @@ All changes across tabs are applied together via the unified **Apply** button at
 #### 4.1 Axis Tab
 
 <div align="center">
-  <img src="../user_manual_images/Graphs/Customize_Axis.png" alt="Axis Tab" width="450"><br>
+  <img src="../user_manual_images/Graphs/Customize_Axis.png" alt="Axis Tab" width="600"><br>
   <i>The Axis tab of the Customize Graph Dialog.</i>
 </div>
 
@@ -129,7 +129,7 @@ Manually constrain the visible range of each axis (X, Y, Z) by specifying **min*
 | **Clear limits** | Resets all axis limits back to automatic (unconstrained). |
 
 <div align="center">
-  <img src="../user_manual_images/Graphs/adjust_axis_limits.gif" alt="Adjusting Axis Limits" width="600"><br>
+  <img src="../user_manual_images/Graphs/adjust_axis_limits.gif" alt="Adjusting Axis Limits" width="650"><br>
   <i>Adjusting the axis limits of the selected plot.</i>
 </div>
 
@@ -175,7 +175,7 @@ Plot additional Y-columns (or a second X-column) against independent scales, one
 #### 4.2 Legend / Color Tab
 
 <div align="center">
-  <img src="../user_manual_images/Graphs/Customize_LegendBox.png" alt="Legend / Color Tab" width="450"><br>
+  <img src="../user_manual_images/Graphs/Customize_LegendBox.png" alt="Legend / Color Tab" width="650"><br>
   <i>The Legend / Color tab of the Customize Graph Dialog.</i>
 </div>
 
@@ -195,7 +195,7 @@ The **Legend / Color** tab lets you customize the appearance and placement of th
 > **Tip**: The legend box can be **dragged** to any position directly on the plot canvas using the mouse.
 
 <div align="center">
-  <img src="../user_manual_images/Graphs/adjust_legends.gif" alt="Adjusting Legends" width="600"><br>
+  <img src="../user_manual_images/Graphs/adjust_legends.gif" alt="Adjusting Legends" width="650"><br>
   <i>Adjusting legends and colors of the selected plot.</i>
 </div>
 
@@ -212,7 +212,7 @@ The **Legend / Color** tab lets you customize the appearance and placement of th
 #### 4.3 Annotations Tab
 
 <div align="center">
-  <img src="../user_manual_images/Graphs/Customize_Annotation.png" alt="Annotations Tab" width="450"><br>
+  <img src="../user_manual_images/Graphs/Customize_Annotation.png" alt="Annotations Tab" width="650"><br>
   <i>The Annotations tab of the Customize Graph Dialog.</i>
 </div>
 

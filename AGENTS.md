@@ -94,6 +94,7 @@ For every task, execute these steps proportionally:
      - Developer Guide (`docs/developer/*.md`)
      - Public API (`docs/api/*.md`)
      - User Manual (`docs/user_manual/*.md`)
+   - Synchronize Visual Assets: Whenever UI components, buttons, dialogs, or themes change, re-capture related screenshots and illustrations in `docs/user_manual_images/` in **Modern Dark mode** using native font rendering (no headless tofu `□□□` boxes) and high-contrast dark button tiles.
 6. **Commit & Report**:
    - Stage only related files for the completed milestone.
    - Create a Conventional Commit (`feat(scope): ...`, `fix(scope): ...`).

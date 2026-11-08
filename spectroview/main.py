@@ -26,7 +26,6 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, Q
 from PySide6.QtCore import Qt, QFileInfo, QUrl, QTimer
 from PySide6.QtGui import QDesktopServices
 
-from spectroview.model.m_file_converter import MFileConverter
 from spectroview.model.m_io import detect_file_type
 from spectroview.settings import MSettings, VMSettings, VSettingsDialog
 from spectroview.model.m_update_checker import (
@@ -147,7 +146,6 @@ class Main(QMainWindow):
         self.menu_bar.save_requested.connect(self.save)
         self.menu_bar.clear_requested.connect(self.clear_workspace)
         self.menu_bar.settings_requested.connect(self._open_settings)
-        self.menu_bar.convert_requested.connect(self.file_converter)
         self.menu_bar.calc_requested.connect(self.quick_calc)
 
         self.menu_bar.about_requested.connect(self.about)
@@ -399,11 +397,6 @@ class Main(QMainWindow):
         except Exception as exc:
             self._mcp_error = str(exc)
             self.statusBar().showMessage(f"Local MCP server failed: {exc}", 15000)
-
-    def file_converter(self):
-        """Open file converter dialog for hyperspectral data."""
-        dlg = MFileConverter(self.settings, self)
-        dlg.exec()
 
     def quick_calc(self):
         """Open quick calculation dialog."""

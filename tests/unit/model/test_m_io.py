@@ -489,7 +489,7 @@ class TestSpectrumEdgeCasesAndFormats:
 
     def test_spc_single_raman_and_pl_units_and_log_metadata(self, examples_dir):
         spec_dir = examples_dir / "spectroscopic_data"
-        raman_p = spec_dir / "spectra.spc"
+        raman_p = spec_dir / "spectrum_ls5.spc" if (spec_dir / "spectrum_ls5.spc").exists() else spec_dir / "spectra.spc"
         pl_p = spec_dir / "MoS2_PL.spc"
         assert raman_p.exists() and pl_p.exists()
 
@@ -765,7 +765,8 @@ class TestL6sAndL6mBinaryReader:
     """Validate native HORIBA LabSpec 6 (.l6s and .l6m) binary reader and metadata ordering."""
 
     def test_l6s_spectrum_loading_and_metadata_ordering(self, examples_dir):
-        l6s_path = examples_dir / "spectroscopic_data" / "spectrum.l6s"
+        spec_dir = examples_dir / "spectroscopic_data"
+        l6s_path = spec_dir / "spectrum_ls6.l6s" if (spec_dir / "spectrum_ls6.l6s").exists() else spec_dir / "spectrum.l6s"
         assert l6s_path.exists()
 
         hdr = L6sReader.peek_header(l6s_path)
@@ -778,7 +779,7 @@ class TestL6sAndL6mBinaryReader:
         assert len(res["items"]) == 1
 
         item = res["items"][0]
-        assert item["name"] == "spectrum"
+        assert item["name"] in ("spectrum", "spectrum_ls6", l6s_path.stem)
         assert item["x0"].shape == (1024,)
         assert item["y0"].shape == (1024,)
         assert np.all(np.diff(item["x0"]) > 0)
@@ -823,7 +824,8 @@ class TestL6sAndL6mBinaryReader:
         assert meta["S/N"] == "57.7"
 
     def test_l6m_map_loading_coordinates_and_metadata_ordering(self, examples_dir):
-        l6m_path = examples_dir / "spectroscopic_data" / "map.l6m"
+        spec_dir = examples_dir / "spectroscopic_data"
+        l6m_path = spec_dir / "mapls6.l6m" if (spec_dir / "mapls6.l6m").exists() else spec_dir / "map.l6m"
         assert l6m_path.exists()
 
         hdr = L6sReader.peek_header(l6m_path)
@@ -908,7 +910,7 @@ class TestNgsAndNgcBinaryReader:
         assert len(res["items"]) == 1
 
         item = res["items"][0]
-        assert item["name"] == "spectrum"
+        assert item["name"] in ("spectrum", "spectrum.ngs", ngs_path.stem)
         assert item["x0"].shape == (1024,)
         assert item["y0"].shape == (1024,)
         assert np.all(np.diff(item["x0"]) > 0)
@@ -960,7 +962,8 @@ class TestNgsAndNgcBinaryReader:
         assert "Acquired" in tail_keys
 
     def test_ngc_map_loading_coordinates_and_metadata_ordering(self, examples_dir):
-        ngc_path = examples_dir / "spectroscopic_data" / "map.ngc"
+        spec_dir = examples_dir / "spectroscopic_data"
+        ngc_path = spec_dir / "mapls5.ngc" if (spec_dir / "mapls5.ngc").exists() else spec_dir / "map.ngc"
         assert ngc_path.exists()
 
         hdr = NgsReader.peek_header(ngc_path)

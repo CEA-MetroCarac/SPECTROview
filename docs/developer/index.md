@@ -89,7 +89,6 @@ spectroview/
 │   ├── m_io.py             # File loaders (TXT, CSV, WDF, SPC, L6S, L6M, NGS, NGC, TRPL, DAT)
 │   ├── m_mva.py            # PCA + NMF engine
 │   ├── m_fit_model_manager.py # Saved fit model file management
-│   ├── m_file_converter.py # Batch file format converter
 │   ├── m_quick_calculators.py     # Pure math logic for scientific calculators (Spot Size, Depth, Unit conversion)
 │   ├── m_update_checker.py # Background GitHub release checker (QThread)
 │   ├── m_wdf.py            # Renishaw WiRE WDF binary reader

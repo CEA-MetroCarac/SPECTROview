@@ -74,12 +74,13 @@ Outline:
 
 ---
 
-## Phase 5: Synchronize Documentation
+## Phase 5: Synchronize Documentation & Visual Assets
 
-Update the authoritative documents mapped in [.agents/rules/documentation.md](../../rules/documentation.md):
+Update the authoritative documents and visual assets mapped in [.agents/rules/documentation.md](../../rules/documentation.md):
 
 - Developer Guide: `docs/developer/<area>.md`
 - User Manual: `docs/user_manual/<area>.md`
+- Visual Assets & Screenshots: If the feature alters buttons, icons, menus, dialogs, viewers, or layouts, re-capture and update the related static PNG images in `docs/user_manual_images/` in **Modern Dark mode** using native font rendering (no headless tofu `□□□` boxes) and high-contrast dark button tiles.
 - Public API: `docs/api/<area>.md` (if API surface expanded)
 - Shortcuts: `docs/user_manual/shortcuts.md` (if shortcut added)
 

@@ -21,7 +21,6 @@ class VMenuBar(QToolBar):
     open_requested = Signal()
     save_requested = Signal()
     clear_requested = Signal()
-    convert_requested = Signal()
     calc_requested = Signal()
     ai_chat_requested = Signal()       # opens the SPECTROview AI Agent panel
     settings_requested = Signal()
@@ -53,9 +52,6 @@ class VMenuBar(QToolBar):
         self.actionClearWS.triggered.connect(self.clear_requested.emit)
 
         self.addSeparator()
-        self.actionConvert= self.addAction(Icons.convert(size=22), "Convert 2Dmap format")
-        self.actionConvert.triggered.connect(self.convert_requested.emit)
-
         self.actionCalc = self.addAction(Icons.calc(size=22), "Quick Calculators")
         self.actionCalc.setShortcut("Ctrl+Shift+C")
         self.actionCalc.triggered.connect(self.calc_requested.emit)
@@ -112,7 +108,6 @@ class VMenuBar(QToolBar):
             self.actionOpen: Icons.open(size=22),
             self.actionSave: Icons.save(size=22),
             self.actionClearWS: Icons.clear(size=22),
-            self.actionConvert: Icons.convert(size=22),
             self.actionCalc: Icons.calc(size=22),
             self.actionAIChat: Icons.sparkles(size=22),
             self.actionSettings: Icons.settings(size=22),

@@ -56,14 +56,29 @@ Touch whenever:
 
 ---
 
-## Phase 4: Verify Links & Syntax
+## Phase 4: Synchronize Visual Assets (Screenshots & Illustrations)
+
+Whenever UI components, buttons, dialogs, layouts, or themes are altered:
+
+1. **Re-capture Outdated Visuals**:
+   - Inspect all static PNG images referenced in the affected manual pages (`docs/user_manual_images/`).
+   - Re-capture screenshots using the live application in **Modern Dark mode** populated with realistic example data.
+2. **Button Icon Contrast**:
+   - Save standalone button icons on a solid dark tile background (`#28282D`, border `#3E3E46`) so they stay crisp and visible in both Light and Dark MkDocs documentation themes.
+3. **Typography Verification**:
+   - Capture widgets using native Windows platform font engine (`windows` QPA, DirectWrite / `Segoe UI`).
+   - **Never** capture text with `QT_QPA_PLATFORM=offscreen`, which lacks font families and produces square tofu glyphs (`□□□□`).
+
+---
+
+## Phase 5: Verify Links & Syntax
 
 1. Verify that all relative links resolve to existing files.
 2. Ensure markdown tables are formatted properly.
 
 ---
 
-## Phase 5: Commit & Report
+## Phase 6: Commit & Report
 
 Commit documentation updates per [.agents/rules/git-workflow.md](../../rules/git-workflow.md):
 ```powershell

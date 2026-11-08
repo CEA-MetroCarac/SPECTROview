@@ -88,3 +88,22 @@ Never declare a task complete while documentation remains outdated.
   Always separate tables from preceding text with a blank line.
 - **Lists in Admonitions & Blockquotes**:
   Lists inside admonitions (`!!! note`) and blockquotes (`>`) also require an empty line (matching blockquote / indentation prefix) before the first list item.
+
+---
+
+## 7. Mandatory Screenshots & Visual Assets Synchronization
+
+Whenever code, styling, or UI changes affect buttons, icons, colors, layouts, dialogs, viewers, tables, or themes, agents **must** update and re-capture the corresponding screenshots and illustrations in `docs/user_manual_images/` alongside Markdown prose:
+
+1. **Modern Dark Mode**:
+   - All screenshots and illustrations must consistently represent the application in **Modern Dark mode**.
+   - Populate with realistic example datasets (`examples/graphs_NEW.graphs`, `examples/wafers_NEW.maps`, `examples/spectra_NEW.spectra`, `examples/spectroscopic_data/`).
+2. **Button Icons & High-Contrast Tiles**:
+   - Standalone toolbar/action button images (used in tables in `menu_bar.md`, `spectra_maps.md`, `save_load.md`) must be rendered on a solid dark button tile background (`#28282D`, 1px subtle border `#3E3E46`, rounded corners).
+   - **Never** save white vector icon strokes with a transparent background for documentation tables: transparent white icons become completely invisible when users view the MkDocs site in Light theme.
+3. **Native Typography (No Headless Tofu Squares)**:
+   - **Never** capture text-bearing widgets under `QT_QPA_PLATFORM=offscreen` on Windows. Headless Qt offscreen QPA lacks DirectWrite font engine initialization (`len(QFontDatabase.families()) == 0`), causing text, labels, and table headers to render as missing-glyph square tofu boxes (`□□□□`).
+   - Always render widgets with the native platform font engine (`Segoe UI` via standard Windows QPA) so all typography remains crisp and legible.
+4. **Clean Presentation**:
+   - Crop tightly to the relevant widget or panel; avoid desktop clutter, OS titlebars, or irrelevant windows.
+   - Maintain existing filenames and image paths in `docs/user_manual_images/` whenever possible to preserve Markdown link integrity.

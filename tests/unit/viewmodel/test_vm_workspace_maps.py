@@ -357,20 +357,20 @@ class TestLabSpec6WorkspaceAndMoreTabIntegration:
         from spectroview.view.components.v_moretab import VMoreTab
         from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 
-        l6s_path = examples_dir / "spectroscopic_data" / "spectrum.l6s"
-        l6m_path = examples_dir / "spectroscopic_data" / "map.l6m"
+        l6s_path = examples_dir / "spectroscopic_data" / "spectrum_ls6.l6s"
+        l6m_path = examples_dir / "spectroscopic_data" / "mapls6.l6m"
         assert l6s_path.exists() and l6m_path.exists()
 
         # 1. Spectra ViewModel + More tab display
         vm_spec = VMWorkspaceSpectra(settings)
         vm_spec.load_files([str(l6s_path)])
-        assert "spectrum" in vm_spec.store.map_names
-        md_spec = vm_spec.store.get_map_data("spectrum")
+        assert "spectrum_ls6" in vm_spec.store.map_names
+        md_spec = vm_spec.store.get_map_data("spectrum_ls6")
         assert md_spec.n_spectra == 1
         assert md_spec.n_wavenumbers == 1024
 
         more_tab = VMoreTab()
-        proxy_spec = SpectrumProxy(md_spec, 0, "spectrum")
+        proxy_spec = SpectrumProxy(md_spec, 0, "spectrum_ls6")
         more_tab.show_metadata(proxy_spec)
 
         table_keys = [more_tab.table.item(r, 0).text() for r in range(more_tab.table.rowCount())]
@@ -381,9 +381,9 @@ class TestLabSpec6WorkspaceAndMoreTabIntegration:
 
         # 2. Maps ViewModel + More tab display
         vm.load_map_files([str(l6m_path)])
-        assert "map" in vm.maps
-        assert vm.current_map_name == "map"
-        md_map = vm.store.get_map_data("map")
+        assert "mapls6" in vm.maps
+        assert vm.current_map_name == "mapls6"
+        md_map = vm.store.get_map_data("mapls6")
         assert md_map.n_spectra == 1368
         assert md_map.n_wavenumbers == 1024
 

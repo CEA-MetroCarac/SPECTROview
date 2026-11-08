@@ -120,7 +120,7 @@ class TestLoadMultiFormatSpectraAndMaps:
         for fname, expected_items in (
             ("spectra_1.wdf", 1),
             ("static_repeatability.wdf", 50),
-            ("spectra.spc", 1),
+            ("spectrum_ls5.spc", 1),
             ("specturm_TRPL.dat", 1),
         ):
             p = spec_dir / fname

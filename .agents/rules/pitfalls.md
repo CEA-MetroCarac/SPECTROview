@@ -82,3 +82,10 @@ Hard-won gotchas that have bitten this codebase. The guards described below are 
   1. Any event filter installed on `QApplication.instance()` must monitor the destruction of its target widget/viewport and call `app.removeEventFilter(self)`.
   2. Inside `eventFilter(watched, event)`, guard against deleted C++ objects with `isValid(watched)` and return early.
   3. `tests/conftest.py`'s `_release_qt_widgets_between_tests` fixture snapshots and closes newly created root widgets and matplotlib figures between tests. Test authors should still explicitly call `widget.close()` and `widget.deleteLater()`.
+
+---
+
+## 9. macOS Matplotlib Font Discovery KeyError: '_items' Trap
+
+- **Trap**: On modern Apple Silicon macOS (Sonoma, Sequoia), `matplotlib.font_manager._get_macos_fonts()` executes `system_profiler -xml SPFontsDataType` and unconditionally accesses `d['_items']`. `system_profiler` takes 10+ seconds and returns a dictionary without `_items`, throwing an unhandled `KeyError: '_items'` that crashes any application or frozen bundle importing matplotlib on any machine without a pre-existing font cache.
+- **Rule**: `spectroview/model/m_macos_font_patch.py::apply_macos_font_cache_fix` intercepts `subprocess.check_output` calls targeting `system_profiler ... SPFontsDataType` and raises `subprocess.CalledProcessError`. Matplotlib's existing `try/except` catches this and cleanly falls back to scanning `OSXFontDirectories` (`/System/Library/Fonts`, `/Library/Fonts`, `~/Library/Fonts`), discovering all 600+ system fonts in < 0.1s without freezing or crashing. This patch is applied in `spectroview/__init__.py`, `spectroview/main.py`, and PyInstaller's `packaging/macos/pyinstaller_runtime_hook.py`.

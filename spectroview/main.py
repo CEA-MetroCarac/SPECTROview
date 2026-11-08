@@ -16,6 +16,14 @@ from spectroview.winapi import apply_windows_taskbar_icon, set_current_process_a
 set_current_process_app_id()
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ── macOS Matplotlib font discovery fix ──────────────────────────────────────
+# Intercept system_profiler SPFontsDataType before matplotlib loads to prevent
+# an unhandled KeyError: '_items' and 10s freeze when building the font cache
+# on Apple Silicon / macOS Sonoma / Sequoia without a pre-existing cache file.
+from spectroview.model.m_macos_font_patch import apply_macos_font_cache_fix
+apply_macos_font_cache_fix()
+# ─────────────────────────────────────────────────────────────────────────────
+
 import matplotlib as mpl
 
 import warnings
@@ -1043,6 +1051,11 @@ def _run_velopack_bootstrap() -> None:
 def launcher():
     _run_velopack_bootstrap()
 
+    if "--version" in sys.argv:
+        from spectroview import VERSION
+        print(f"SPECTROview {VERSION}")
+        sys.exit(0)
+
     app = QApplication(sys.argv)
     _configure_matplotlib_qt_backend()
     app.setApplicationName("SPECTROview")
@@ -1051,6 +1064,12 @@ def launcher():
     setup_application_font(app)
 
     window = Main()
+    if "--smoke-test" in sys.argv:
+        # Offscreen / CI smoke test: verify full UI and workspace hierarchy load cleanly, then exit 0
+        QTimer.singleShot(500, app.quit)
+        code = app.exec()
+        sys.exit(code)
+
     window.show()
     code = app.exec()
     os._exit(code)

@@ -91,30 +91,27 @@ def verify_onedir_bundle(dist_dir: Path) -> None:
 
 def run_smoke_test(dist_dir: Path) -> None:
     """Verify the frozen Windows executable launches offscreen cleanly."""
-    exe = dist_dir / "SPECTROview.exe"
+    exe = (dist_dir / "SPECTROview.exe").resolve()
     probe_env = os.environ.copy()
     probe_env["QT_QPA_PLATFORM"] = "offscreen"
-    # Launch briefly to confirm Qt platform plugin, Python runtime, and C extensions load
+    # Launch briefly with --smoke-test to confirm Qt platform plugin, Python runtime, and C extensions load
     proc = subprocess.Popen(
-        [str(exe)],
+        [str(exe), "--smoke-test"],
         cwd=str(dist_dir),
         env=probe_env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
     try:
-        proc.wait(timeout=8)
+        stdout, stderr = proc.communicate(timeout=15)
     except subprocess.TimeoutExpired:
-        # Still alive after 8s GUI startup window -> healthy launch! Terminate cleanly.
-        proc.terminate()
-        try:
-            proc.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-        return
-    if proc.returncode not in (0, None):
-        stderr = proc.stderr.read().decode("utf-8", errors="replace") if proc.stderr else ""
-        raise RuntimeError(f"Smoke launch exited early with code {proc.returncode}:\n{stderr}")
+        proc.kill()
+        stdout, stderr = proc.communicate()
+        err_msg = stderr.decode("utf-8", errors="replace") if stderr else ""
+        raise RuntimeError(f"Windows smoke launch timed out after 15s:\n{err_msg}")
+    if proc.returncode != 0:
+        err_msg = stderr.decode("utf-8", errors="replace") if stderr else ""
+        raise RuntimeError(f"Smoke launch exited with code {proc.returncode}:\n{err_msg}")
 
 
 def create_portable_zip(dist_dir: Path, out_zip: Path) -> Path:

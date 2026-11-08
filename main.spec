@@ -180,7 +180,7 @@ a = Analysis(
     hiddenimports=hidden_imports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=["packaging/macos/pyinstaller_runtime_hook.py"] if is_macos else [],
     excludes=[
         "PyQt5",
         "PyQt5.QtCore",

@@ -6,6 +6,9 @@ from pathlib import Path
 # The app uses PySide6 throughout, but superqt (used for QLabeledDoubleRangeSlider)
 os.environ.setdefault("QT_API", "pyside6")
 
+from spectroview.model.m_macos_font_patch import apply_macos_font_cache_fix
+apply_macos_font_cache_fix()
+
 VERSION = "26.46.1"
 
 try:

@@ -432,6 +432,7 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 |------|------|
 | `model/m_tls.py` | Pure-model CA trust enforcement (`GHSA-6q48-6c7w-9gw2`): `SSL_CERT_FILE`/`REQUESTS_CA_BUNDLE` → OS `truststore` → validated `certifi >= 2026.10.23` (`pip >= 26.2.2` build gate) |
 | `model/m_installation.py` | Pure-model `InstallType` classifier (`DEV_SOURCE`, `PIP_WHEEL`, `WINDOWS_VELOPACK`, `WINDOWS_PORTABLE`, `MACOS_BUNDLE`, `LINUX_APPIMAGE`, `LINUX_DEB`, `STANDALONE_UNKNOWN`) |
+| `model/m_macos_font_patch.py` | macOS font cache discovery patch intercepting `system_profiler SPFontsDataType` to prevent upstream `matplotlib` `KeyError: '_items'` crash and 10s freeze |
 | `model/m_update_manager.py` | `GitHubReleaseClient` (`ETag` + TTL cache), `UpdateManager` facade, `UnifiedUpdateCheckWorker`, `UnifiedUpdateDownloadWorker`, and platform updaters |
 | `model/m_update_checker.py` | Legacy pip/wheel workers preserved cleanly plus hardened pip upgrade runner (`--use-feature=truststore` / `--cert`) |
 | `view/components/v_update_banner.py` | Slim banner displaying version transition (`current → latest`) and dynamic platform action label |
@@ -458,7 +459,7 @@ Pushing a release tag (`vMAJOR.MINOR.PATCH` or `vMAJOR.MINOR.PATCH-rc.N` matchin
 2. **Parallel platform builders**:
    - **`build-python`**: `.whl` + `.tar.gz`, `twine check`, and clean venv wheel detection verification.
    - **`build-windows`**: PyInstaller (`--onedir`) + offscreen smoke test + `Portable.zip` + Velopack `vpk pack` (`Setup.exe`, `releases.win.json`, `*.nupkg`, chaining delta history).
-   - **`build-macos`** (`macos-15` `arm64`): Native Apple Silicon `.app` + `.dmg` build (env-gated optional `APPLE_SIGNING_IDENTITY` / `APPLE_CERTIFICATE_P12` / `APPLE_ID` notarization hooks ready when credentials are added).
+   - **`build-macos`** (`macos-15` `arm64`): Native Apple Silicon `.app` + `.dmg` build with PyInstaller runtime hook and offscreen `--smoke-test` verification (env-gated optional `APPLE_SIGNING_IDENTITY` / `APPLE_CERTIFICATE_P12` / `APPLE_ID` notarization hooks ready when credentials are added).
    - **`build-linux`** (`ubuntu-22.04` glibc baseline): Builds `.AppImage` and `.deb`, validates `.desktop`, and runs live `apt-get install`, offscreen launch, AppImage launch, and config persistence (`~/.config/CEA-Leti/`) checks.
 3. **`release`**: Publishes unified GitHub Release with `SHA256SUMS.txt` (marking pre-releases automatically).
 4. **`publish-pypi`**: On stable releases, preserves the existing PyPI Trusted Publisher (`pypi` environment, `id-token: write`, `pypa/gh-action-pypi-publish@release/v1`).

@@ -92,28 +92,26 @@ def verify_app_bundle(app_path: Path) -> None:
 
 def run_smoke_test(app_path: Path) -> None:
     """Launch the bundled macOS binary offscreen briefly to confirm runtime load."""
-    exe = app_path / "Contents" / "MacOS" / "SPECTROview"
+    exe = (app_path / "Contents" / "MacOS" / "SPECTROview").resolve()
     probe_env = os.environ.copy()
     probe_env["QT_QPA_PLATFORM"] = "offscreen"
     proc = subprocess.Popen(
-        [str(exe)],
+        [str(exe), "--smoke-test"],
         cwd=str(exe.parent),
         env=probe_env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
     try:
-        proc.wait(timeout=10)
+        stdout, stderr = proc.communicate(timeout=15)
     except subprocess.TimeoutExpired:
-        proc.terminate()
-        try:
-            proc.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-        return
-    if proc.returncode not in (0, None):
-        stderr = proc.stderr.read().decode("utf-8", errors="replace") if proc.stderr else ""
-        raise RuntimeError(f"macOS .app smoke launch exited with code {proc.returncode}:\n{stderr}")
+        proc.kill()
+        stdout, stderr = proc.communicate()
+        err_msg = stderr.decode("utf-8", errors="replace") if stderr else ""
+        raise RuntimeError(f"macOS .app smoke launch timed out after 15s:\n{err_msg}")
+    if proc.returncode != 0:
+        err_msg = stderr.decode("utf-8", errors="replace") if stderr else ""
+        raise RuntimeError(f"macOS .app smoke launch exited with code {proc.returncode}:\n{err_msg}")
 
 
 def build_codesign_commands(

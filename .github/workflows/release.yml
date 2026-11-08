@@ -113,7 +113,7 @@ jobs:
           python -m venv /tmp/venv-wheel-check
           /tmp/venv-wheel-check/bin/pip install --upgrade "pip>=26.2.2" "certifi>=2026.10.23"
           /tmp/venv-wheel-check/bin/pip install dist/*.whl
-          /tmp/venv-wheel-check/bin/python -c "import spectroview; from spectroview.model.m_installation import InstallType, InstallationManager; info = InstallationManager.detect(); assert info.install_type == InstallType.PIP_WHEEL, info"
+          (cd /tmp && /tmp/venv-wheel-check/bin/python -c "import spectroview; from spectroview.model.m_installation import InstallType, InstallationManager; info = InstallationManager.detect(); assert info.install_type == InstallType.PIP_WHEEL, info")
 
       - uses: actions/upload-artifact@v4
         with:
@@ -186,11 +186,14 @@ jobs:
           python-version: "3.14"
 
       - name: Optional Apple Developer certificate import
-        if: ${{ env.APPLE_CERTIFICATE_P12 != '' }}
         env:
           APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
+          if [ -z "${APPLE_CERTIFICATE_P12:-}" ]; then
+            echo "APPLE_CERTIFICATE_P12 secret not configured; proceeding with unsigned build."
+            exit 0
+          fi
           KEYCHAIN_PATH="${RUNNER_TEMP}/spectroview-signing.keychain-db"
           KEYCHAIN_PASS="$(uuidgen)"
           echo "$APPLE_CERTIFICATE_P12" | base64 --decode > "${RUNNER_TEMP}/cert.p12"
@@ -243,7 +246,7 @@ jobs:
             libx11-6 libxext6 libxrender1 libxkbcommon0 libxkbcommon-x11-0 \
             libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 \
-            patchelf desktop-file-utils dpkg-dev wget file binutils
+            patchelf desktop-file-utils dpkg-dev squashfs-tools wget file binutils
 
       - name: Install appimagetool
         run: |

@@ -38,6 +38,10 @@ def test_release_workflow_preserves_pypi_trusted_publishing_and_adds_all_platfor
     assert "certifi>=2026.10.23" in raw_text
     assert "pip>=26.2.2" in raw_text
     assert "SHA256SUMS.txt" in raw_text
+    # Ensure wheel verification runs outside repo root so CWD does not resolve ./spectroview as DEV_SOURCE
+    assert "cd /tmp &&" in raw_text
+    # Ensure step env secrets are evaluated cleanly inside shell rather than unsupported step-env `if:`
+    assert "env.APPLE_CERTIFICATE_P12" not in raw_text
 
     # Preserve PyPI Trusted Publisher exactly
     pypi_job = jobs["publish-pypi"]

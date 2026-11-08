@@ -281,6 +281,10 @@ def stage_deb_root(
         encoding="utf-8",
     )
     _set_exec_bit(postrm)
+    try:
+        os.chmod(debian_dir, 0o755)
+    except OSError:
+        pass
 
     return deb_root
 
@@ -305,7 +309,7 @@ def build_appimage_binary(appdir: Path, out_file: Path, *, appimagetool_path: Op
     env.setdefault("ARCH", "x86_64")
     # Containers/CI without FUSE2 require APPIMAGE_EXTRACT_AND_RUN=1 when appimagetool is itself an AppImage.
     env.setdefault("APPIMAGE_EXTRACT_AND_RUN", "1")
-    cmd = [tool, str(appdir), str(out_file)]
+    cmd = [tool, "--no-appstream", str(appdir), str(out_file)]
     print(f"[build_linux] Running: {' '.join(cmd)}")
     subprocess.run(cmd, env=env, check=True)
     _set_exec_bit(out_file)

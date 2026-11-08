@@ -9,7 +9,7 @@ os.environ.setdefault("QT_API", "pyside6")
 from spectroview.model.m_macos_font_patch import apply_macos_font_cache_fix
 apply_macos_font_cache_fix()
 
-VERSION = "26.46.2"
+VERSION = "26.46.3"
 
 try:
     from ._build_info import BUILD_NUMBER

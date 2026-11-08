@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any, Dict, Optional, Union
+from typing import Optional
 
 from PySide6.QtCore import QSettings
 
@@ -185,8 +185,8 @@ class MSettings:
         """Assemble persistent application configuration into a dictionary.
 
         Note: API keys and secret credentials are intentionally excluded and stored
-        exclusively in the OS credential vault (keyring / Windows Credential Manager)
-        to prevent accidental cleartext leakage in backups and shared directories.
+        exclusively in user-private QSettings under '_credentials/' to prevent
+        accidental cleartext leakage in backups and shared directories.
         """
         ai_data = {}
         self.settings.beginGroup(self.AI_GROUP)

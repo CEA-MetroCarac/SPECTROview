@@ -63,38 +63,16 @@ def _isolate_qsettings(tmp_path, monkeypatch):
 
     import spectroview.model.m_settings as m_settings_module
     import spectroview.settings.m_settings as settings_m_settings
+    import spectroview.settings.secrets as settings_secrets
 
     def _isolated_qsettings(organization, application, *args, **kwargs):
         return QSettings(QSettings.IniFormat, QSettings.UserScope, organization, application)
 
-    # Patching m_settings alone is sufficient: every persisted setting in the
-    # app -- including the AI agent's, which used to live in a separate
-    # QSettings("SPECTROview", "AIChat") pair that escaped this fixture and
-    # read/wrote the developer's real configuration -- now goes through
-    # MSettings. Route any new QSettings call site through it too.
+    # Patching m_settings and secrets: every persisted setting in the
+    # app now goes through isolated INI files.
     monkeypatch.setattr(m_settings_module, "QSettings", _isolated_qsettings, raising=False)
     monkeypatch.setattr(settings_m_settings, "QSettings", _isolated_qsettings, raising=False)
-
-    # Isolate keyring so tests never touch native OS credential store
-    try:
-        import keyring
-        import keyring.backend
-
-        class _InMemoryKeyring(keyring.backend.KeyringBackend):
-            priority = 10
-            def __init__(self):
-                self._storage = {}
-            def set_password(self, service, username, password):
-                self._storage[(service, username)] = str(password)
-            def get_password(self, service, username):
-                return self._storage.get((service, username))
-            def delete_password(self, service, username):
-                self._storage.pop((service, username), None)
-
-        test_keyring = _InMemoryKeyring()
-        keyring.set_keyring(test_keyring)
-    except Exception:
-        pass
+    monkeypatch.setattr(settings_secrets, "QSettings", _isolated_qsettings, raising=False)
 
     yield
 

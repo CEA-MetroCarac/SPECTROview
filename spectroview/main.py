@@ -6,20 +6,11 @@ import threading
 from pathlib import Path
 
 # ── Windows taskbar identity ─────────────────────────────────────────────────
-# Must run BEFORE any PySide6/Qt import. When Qt is first imported it
-# initialises the Windows platform plugin which registers the process with
-# the Shell.  If we haven't set our own AppUserModelID by that point,
-# Windows associates the process with python.exe's default icon and the
-# taskbar button will never show the SPECTROview logo.
-# This mirrors the pattern used in PLUME (see plume/__main__.py).
 from spectroview.winapi import apply_windows_taskbar_icon, set_current_process_app_id
 set_current_process_app_id()
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── macOS Matplotlib font discovery fix ──────────────────────────────────────
-# Intercept system_profiler SPFontsDataType before matplotlib loads to prevent
-# an unhandled KeyError: '_items' and 10s freeze when building the font cache
-# on Apple Silicon / macOS Sonoma / Sequoia without a pre-existing cache file.
 from spectroview.model.m_macos_font_patch import apply_macos_font_cache_fix
 apply_macos_font_cache_fix()
 # ─────────────────────────────────────────────────────────────────────────────
@@ -81,9 +72,6 @@ from spectroview.view.theme import ThemeManager, setup_application_font
 
 from spectroview import get_app_icon
 
-# The AI chat module drags in the provider SDKs (~4.5 s of import time), so it is
-# only probed here (find_spec locates the module without executing it) and
-# imported for real when the user opens the panel.
 try:
     LLM_AVAILABLE = importlib.util.find_spec("spectroview.ai_agent.v_chat_panel") is not None
     LLM_ERROR_MSG = "" if LLM_AVAILABLE else "spectroview.ai_agent.v_chat_panel not found"
@@ -111,9 +99,7 @@ class Main(QMainWindow):
         # Lazy chat panel (created on first use)
         self._chat_panel = None
 
-        # One domain-oriented facade over the running application. The AI
-        # Chat's graph commands and the optional external MCP endpoint both
-        # reuse it; all external-thread calls are queued onto this GUI thread.
+        # One domain-oriented facade over the running application. 
         from spectroview.application.dispatch import QtMainThreadDispatcher
         from spectroview.application.service import SpectroviewApplicationAPI
         self._application_dispatcher = QtMainThreadDispatcher(self)
@@ -982,11 +968,6 @@ class Main(QMainWindow):
                     importlib.import_module(name)
                 except Exception:           # noqa: BLE001 - prewarm is best-effort
                     pass
-            try:
-                import keyring
-                keyring.get_keyring()
-            except Exception:
-                pass
             try:
                 from spectroview.settings.ui.tab_about import get_runtime_package_versions
                 get_runtime_package_versions()

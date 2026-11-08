@@ -93,7 +93,6 @@ try:
         "pyarrow",
         "certifi",
         "truststore",
-        "keyring",
         "openai",
         "anthropic",
         "ollama",
@@ -138,10 +137,6 @@ hidden_imports = [
     "certifi",
     "httpx",
     "yaml",
-    "keyring",
-    "keyring.backends",
-    "keyring.backends.fail",
-    "keyring.backends.null",
     "spectroview.ai_agent",
     "spectroview.ai_agent.v_chat_panel",
     "spectroview.ai_agent.vm_chat",
@@ -160,11 +155,7 @@ hidden_imports = [
     "uvicorn.lifespan.on",
 ]
 if is_windows:
-    hidden_imports.extend(["keyring.backends.Windows", "velopack"])
-elif is_macos:
-    hidden_imports.extend(["keyring.backends.macOS"])
-elif is_linux:
-    hidden_imports.extend(["keyring.backends.SecretService"])
+    hidden_imports.extend(["velopack"])
 
 # ------------------------------------------------------------
 # Analysis
@@ -201,6 +192,18 @@ a = Analysis(
         "IPython",
         "notebook",
         "jedi",
+        # Heavy optional ML & speech packages present in local dev environments
+        "torch",
+        "torchvision",
+        "torchaudio",
+        "timm",
+        "numba",
+        "llvmlite",
+        "transformers",
+        "huggingface_hub",
+        "speech_recognition",
+        "pocketsphinx",
+        "babel",
     ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,

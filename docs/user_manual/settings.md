@@ -40,7 +40,7 @@ Specify a single universal root folder for all of SPECTROview's templates, recip
 - Click **Browse** to select a folder, or type the path directly.
 - Click **Open** to open the configured folder directly in **Windows Explorer** or **macOS Finder** with one click.
 
-> **Credential Security**: AI provider API keys entered in Settings are securely stored in the operating system credential vault (**Windows Credential Manager** via `keyring`) and are strictly excluded from `config.json` backups. This prevents sensitive credentials from being leaked if you share or commit your working directory.
+> **Credential Security**: AI provider API keys entered in Settings are stored in your per-user private OS application configuration (`QSettings` under an internal obfuscated namespace) across Windows, macOS, and Linux, and are strictly excluded from `config.json` backups. This avoids intrusive OS Keychain / KWallet prompts while preventing sensitive credentials from being leaked if you share or commit your working directory.
 >
 > **Backup & PC Migration**: If you move to a new PC or want to make a backup, simply copy this single Working Folder to the new PC. In SPECTROview's Settings panel on the new machine, point the **SPECTROview Working Folder** to that folder: all fit models, plot recipes, style templates, AI chat history, and configuration (`config.json`) will be restored automatically!
 >

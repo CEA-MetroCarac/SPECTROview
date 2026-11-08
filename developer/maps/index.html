@@ -2215,7 +2215,7 @@
 <tr>
 <td><code>maps_metadata</code></td>
 <td><code>dict[str, dict]</code></td>
-<td>Acquisition metadata per map (WDF, SPC, L6M)</td>
+<td>Acquisition metadata per map (WDF, SPC, L6M, NGC)</td>
 </tr>
 <tr>
 <td><code>map_type</code></td>
@@ -2340,7 +2340,7 @@ When a new developer is confused about "where is the data?", the answer is: <str
 <ol>
 <li><strong>User Action</strong>: The user initiates a load map action in <code>VWorkspaceMaps</code>.</li>
 <li><strong>View → ViewModel</strong>: The View calls <code>vm.load_map_files(paths)</code>.</li>
-<li><strong>File Parsing</strong>: For each file, the ViewModel delegates to the <code>m_io</code> module (<code>load_wdf_map</code>, <code>load_spc_map</code>, <code>load_l6m_map</code>, etc.). The IO module returns a DataFrame containing <code>X</code>, <code>Y</code>, and all wavenumber columns, plus metadata.</li>
+<li><strong>File Parsing</strong>: For each file, the ViewModel delegates to the <code>m_io</code> module (<code>load_wdf_map</code>, <code>load_spc_map</code>, <code>load_l6m_map</code>, <code>load_ngc_map</code>, etc.). The IO module returns a DataFrame containing <code>X</code>, <code>Y</code>, and all wavenumber columns, plus metadata.</li>
 <li><strong>Data Storage (Legacy)</strong>: The ViewModel caches the returned DataFrame in <code>self.maps[name]</code>.</li>
 <li><strong>Data Extraction</strong>: The ViewModel calls <code>_extract_spectra_from_map(name, map_df)</code> to extract the <code>x0</code>, <code>Y0</code>, and spatial <code>coords</code> arrays from the DataFrame. It also builds the <code>fnames</code> list here.</li>
 <li><strong>Data Storage (Tensor)</strong>: The ViewModel registers the data in the <code>SpectraStore</code> via <code>add_map(name, x0, Y0, coords, fnames, is_active)</code>.</li>

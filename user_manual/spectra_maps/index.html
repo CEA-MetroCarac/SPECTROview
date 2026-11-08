@@ -1998,6 +1998,11 @@
 <h4 id="34-heatmap-visualization-mode"><strong>3.4. Heatmap Visualization Mode</strong><a class="headerlink" href="#34-heatmap-visualization-mode" title="Permanent link">&para;</a></h4>
 <p>The <strong>Heatmap Plot</strong> tool transforms multiple plotted spectra into a continuous 2D intensity map. This mode is particularly powerful for analyzing series data, such as in-situ temperature profiles, time-resolved kinetics, spatial line-scans, or composition gradients.</p>
 <div align="center">
+  <img src="../../user_manual_images/Spectra_Maps/heatmap_plot_for_spectraviewer_0.png" alt="SpectraViewer Heatmap Mode" width="800"><br>
+
+</div>
+
+<div align="center">
   <img src="../../user_manual_images/Spectra_Maps/heatmap_plot_for_spectraviewer.png" alt="SpectraViewer Heatmap Mode" width="800"><br>
   <i>The <code>SpectraViewer</code> in Heatmap visualization mode, displaying a continuous 2D intensity map across an in-situ temperature series.</i>
 </div>
@@ -2015,13 +2020,22 @@
 </ul>
 <h4 id="35-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces"><strong>3.5. Interactive Spectral Range Selectors &amp; Live Maps (Spectra &amp; Maps Workspaces)</strong><a class="headerlink" href="#35-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces" title="Permanent link">&para;</a></h4>
 <p>In both the <strong>Spectra</strong> and <strong>Maps</strong> workspaces, you can interactively bracket up to three spectral features in the <code>SpectraViewer</code> and inspect their variation in real time within the dedicated <strong>Live Maps</strong> tab:</p>
+<div align="center">
+  <img src="../../user_manual_images/Spectra_Maps/rgb_spectra_bracketing.png" alt="RGB Spectral Range Selectors" width="800"><br>
+</div>
+
 <ul>
 <li><strong>Spectra Workspace</strong>: Displays up to three color-coded (Red, Blue, Green) <strong>1D parameter variation graphs</strong> across the <strong>currently selected spectra</strong> in the <code>SpectraList</code>, allowing rapid review of how peak intensity, position, height, or area evolves across a series of selected spectra.</li>
+</ul>
+<div align="center">
+  <img src="../../user_manual_images/Spectra_Maps/rgb_live_spectra.png" alt="RGB Live spectra" width="800"><br>
+</div>
+
+<ul>
 <li><strong>Maps Workspace</strong>: Displays up to three real-time <strong>2D spatial heatmaps</strong> across the active hyperspectral map.</li>
 </ul>
 <div align="center">
-  <img src="../../user_manual_images/Spectra_Maps/rgb_live_map.png" alt="RGB Live Maps and Spectral Range Selectors" width="800"><br>
-  <i>Interactive Spectral Range Selectors in <code>SpectraViewer</code> (top) paired with real-time visualizations in the <code>Live Maps</code> tab (bottom).</i>
+  <img src="../../user_manual_images/Spectra_Maps/rgb_live_map.png" alt="RGB Live Maps" width="800"><br>
 </div>
 
 <h5 id="range-selector-controls-spectra-viewer"><strong>Range Selector Controls (Spectra Viewer)</strong><a class="headerlink" href="#range-selector-controls-spectra-viewer" title="Permanent link">&para;</a></h5>
@@ -2109,7 +2123,7 @@
 <p>The <code>FitModelBuilder</code> tab is where you configure your spectral fit models. It is divided into three main panels: <code>Fitting</code>, <code>PeakTable</code>, and <code>FitModelControl</code>, each explained in the following sections.</p>
 <p>You can use global fitting parameters or adjust fitting parameters in the <code>Settings Panel</code> (see the "Settings" section for details).</p>
 <div align="center">
-  <img src="../../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="Fit Model Builder UI" width="800"><br>
+  <img src="../../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="Fit Model Builder UI" width="850"><br>
   <i>The <code>FitModelBuilder</code> tab featuring: (1) The <code>Fitting</code> panel (left), (2) The <code>PeakTable</code> panel (top-right), and (3) The <code>FitModelControl</code> panel (bottom-right).</i>
 </div>
 
@@ -2215,7 +2229,7 @@
 <h4 id="44-fitmodelcontrol-panel"><strong>4.4. <code>FitModelControl</code> Panel</strong><a class="headerlink" href="#44-fitmodelcontrol-panel" title="Permanent link">&para;</a></h4>
 <p>Once your model is fully defined, click the <strong>Fit</strong> button to execute the optimization.</p>
 <div align="center">
-  <img src="../../user_manual_images/Spectra_Maps/fit_control_panel.png" alt="Fit Model Control Panel" width="500"><br>
+  <img src="../../user_manual_images/Spectra_Maps/fit_control_panel.png" alt="Fit Model Control Panel" width="650"><br>
    <i>The <code>FitModelControl</code> panel.</i>
 </div>
 
@@ -2281,11 +2295,11 @@ Supported mathematical operations include: <code>+</code>, <code>-</code>, <code
 <h3 id="6-more-tab"><strong>6. <code>More</code> Tab</strong><a class="headerlink" href="#6-more-tab" title="Permanent link">&para;</a></h3>
 <p>The <code>More</code> tab provides access to auxiliary tools and metadata, divided into three sections:</p>
 <div align="center">
-  <img src="../../user_manual_images/Spectra_Maps/moretab.png" alt="More Tab Overview" width="800"><br>
+  <img src="../../user_manual_images/Spectra_Maps/moretab.png" alt="More Tab Overview" width="850"><br>
 </div>
 
 <ul>
-<li><strong>Left</strong>: Displays comprehensive metadata extracted directly from loaded <code>.wdf</code>, <code>.spc</code>, <code>.l6s</code>, or <code>.l6m</code> files, showing the exact instrument settings used during acquisition.</li>
+<li><strong>Left</strong>: Displays comprehensive metadata extracted directly from loaded <code>.wdf</code>, <code>.spc</code>, <code>.l6s</code>, <code>.l6m</code>, <code>.ngs</code>, or <code>.ngc</code> files, showing the exact instrument settings used during acquisition.</li>
 <li><strong>Middle</strong>: Displays detailed properties and statistical information about the currently selected spectrum.</li>
 <li><strong>Right</strong>: Provides access to additional pre-processing utilities, such as global intensity normalization algorithms and cosmic ray artifact detection.</li>
 </ul>

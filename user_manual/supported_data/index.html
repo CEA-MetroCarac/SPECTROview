@@ -656,10 +656,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-wdf-renishaw-spc-and-l6s-l6m-horiba-labspec-6-formats" class="md-nav__link">
+  <a href="#1-wdf-renishaw-spc-l6s-l6m-horiba-labspec-6-and-ngs-ngc-horiba-labspec-5-formats" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. .wdf (Renishaw), .spc, and .l6s / .l6m (HORIBA LabSpec 6) Formats
+        1. .wdf (Renishaw), .spc, .l6s / .l6m (HORIBA LabSpec 6), and .ngs / .ngc (HORIBA LabSpec 5) Formats
       
     </span>
   </a>
@@ -1710,6 +1710,12 @@
 <td>Single spectra (<code>.l6s</code>) and 2D hyperspectral maps (<code>.l6m</code>)</td>
 </tr>
 <tr>
+<td>HORIBA LabSpec 5</td>
+<td><code>.ngs</code>, <code>.ngc</code></td>
+<td>Built-in binary reader</td>
+<td>Single spectra (<code>.ngs</code>) and compressed 2D hyperspectral maps (<code>.ngc</code>)</td>
+</tr>
+<tr>
 <td>SPC</td>
 <td><code>.spc</code></td>
 <td>Built-in binary reader</td>
@@ -1735,11 +1741,12 @@
 </tr>
 </tbody>
 </table>
-<h3 id="1-wdf-renishaw-spc-and-l6s-l6m-horiba-labspec-6-formats"><strong>1. <code>.wdf</code> (Renishaw), <code>.spc</code>, and <code>.l6s</code> / <code>.l6m</code> (HORIBA LabSpec 6) Formats</strong><a class="headerlink" href="#1-wdf-renishaw-spc-and-l6s-l6m-horiba-labspec-6-formats" title="Permanent link">&para;</a></h3>
+<h3 id="1-wdf-renishaw-spc-l6s-l6m-horiba-labspec-6-and-ngs-ngc-horiba-labspec-5-formats"><strong>1. <code>.wdf</code> (Renishaw), <code>.spc</code>, <code>.l6s</code> / <code>.l6m</code> (HORIBA LabSpec 6), and <code>.ngs</code> / <code>.ngc</code> (HORIBA LabSpec 5) Formats</strong><a class="headerlink" href="#1-wdf-renishaw-spc-l6s-l6m-horiba-labspec-6-and-ngs-ngc-horiba-labspec-5-formats" title="Permanent link">&para;</a></h3>
 <p><strong>SPECTROview</strong> natively supports binary spectrometer formats without requiring external vendor software:</p>
 <ul>
 <li><strong><code>.wdf</code></strong> — Data recorded using WiRE software on Renishaw instruments (discrete spectra, temporal/repeatability series, 1D line-scan profiles, and 2D hyperspectral maps).</li>
 <li><strong><code>.l6s</code> and <code>.l6m</code></strong> — Native binary spectra (<code>.l6s</code>) and 2D spectral images/maps (<code>.l6m</code>) recorded using HORIBA LabSpec 6 software.</li>
+<li><strong><code>.ngs</code> and <code>.ngc</code></strong> — Native binary spectra (<code>.ngs</code>) and compressed 2D spectral images/maps (<code>.ngc</code>) recorded using HORIBA LabSpec 5 software.</li>
 <li><strong><code>.spc</code></strong> — Data recorded using LabSpec 6 / T64000 / GRAMS software on HORIBA and Thermo instruments (discrete Raman/PL spectra and 2D hyperspectral maps).</li>
 </ul>
 <p>Both discrete spectra and hyperspectral datasets are routed automatically when opened or dragged into the main window without prior conversion. <strong>SPECTROview</strong> also parses and imports instrument <strong>metadata</strong> (excitation wavelength, grating, objective lens, laser power, exposure time, accumulations, slit/hole size, spectral units, spatial step sizes, acquisition timestamps, and additional instrument parameters such as detector model, detector temperature, SWIFT mode, and S/N ratio).</p>

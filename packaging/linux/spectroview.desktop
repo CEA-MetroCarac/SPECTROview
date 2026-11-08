@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=SPECTROview
+GenericName=Spectroscopic Data Analysis
+Comment=Spectroscopic Data Processing, Fitting, and Visualization
+Exec=spectroview %F
+Icon=spectroview
+Terminal=false
+Categories=Science;Chemistry;Physics;Education;
+Keywords=spectroscopy;Raman;Photoluminescence;fitting;wafer;hyperspectral;
+StartupWMClass=SPECTROview
+StartupNotify=true

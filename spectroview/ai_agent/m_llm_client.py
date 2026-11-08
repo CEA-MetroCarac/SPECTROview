@@ -29,6 +29,8 @@ from typing import Callable, List, Dict, Optional, Any
 
 from PySide6.QtCore import QThread, Signal, QObject
 
+from spectroview.model.m_tls import ensure_secure_tls, inject_truststore
+
 # ---------------------------------------------------------------------------
 # Corporate / internal CA support
 # ---------------------------------------------------------------------------
@@ -37,11 +39,7 @@ _CA_BUNDLE_ENV = (
 )
 
 if not _CA_BUNDLE_ENV:
-    try:
-        import truststore as _truststore
-        _truststore.inject_into_ssl()
-    except Exception:           # noqa: BLE001 - optional; certifi stays the default
-        pass
+    inject_truststore()
 
 
 def _make_http_client() -> Optional[Any]:
@@ -53,11 +51,12 @@ def _make_http_client() -> Optional[Any]:
     trust store (so ``truststore`` alone wouldn't help), such as a frozen build
     or a non-Windows host.
     """
-    if not _CA_BUNDLE_ENV or not os.path.isfile(_CA_BUNDLE_ENV):
+    ca_bundle = _CA_BUNDLE_ENV
+    if not ca_bundle or not os.path.isfile(ca_bundle):
         return None
     try:
         import httpx
-        return httpx.Client(verify=_CA_BUNDLE_ENV)
+        return httpx.Client(verify=ca_bundle)
     except Exception:           # noqa: BLE001
         return None
 
@@ -364,6 +363,7 @@ class APIWorker(QThread):
             return
 
         try:
+            ensure_secure_tls()
             client = _load_openai().OpenAI(
                 api_key=self._api_key,
                 base_url=self._base_url or None,
@@ -576,6 +576,7 @@ class AnthropicWorker(QThread):
         max_tokens = self._max_tokens or 4096
 
         try:
+            ensure_secure_tls()
             client_args = {"api_key": self._api_key, "timeout": self._timeout}
             if self._base_url:
                 client_args["base_url"] = self._base_url
@@ -765,6 +766,7 @@ class LLMClient:
         if not OPENAI_AVAILABLE or not self._api_key:
             return self._fallback_models()
         try:
+            ensure_secure_tls()
             client = _load_openai().OpenAI(
                 api_key=self._api_key,
                 base_url=self._base_url or None,
@@ -948,6 +950,7 @@ def test_provider_connection(
         if not api_key:
             return False, "Anthropic API key is required"
         try:
+            ensure_secure_tls()
             mod = _load_anthropic()
             http_cli = _make_http_client()
             client = mod.Anthropic(
@@ -980,6 +983,7 @@ def test_provider_connection(
     effective_key = api_key or "none"
 
     try:
+        ensure_secure_tls()
         openai_mod = _load_openai()
         http_cli = _make_http_client()
         client = openai_mod.OpenAI(

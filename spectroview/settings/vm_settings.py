@@ -63,6 +63,7 @@ class VMSettings(QObject):
         data.update(ai_data)
         data.update(self.settings.load_mcp_settings())
         data["check_updates_startup"] = self.settings.get_check_for_updates()
+        data["include_prereleases"] = self.settings.get_update_include_prereleases()
         data["theme"] = self.settings.get_theme()
         self.settings_loaded.emit(data)
 
@@ -73,6 +74,9 @@ class VMSettings(QObject):
 
         if "check_updates_startup" in data:
             self.settings.set_check_for_updates(bool(data.pop("check_updates_startup")))
+
+        if "include_prereleases" in data:
+            self.settings.set_update_include_prereleases(bool(data.pop("include_prereleases")))
 
         if "theme" in data:
             self.settings.set_theme(str(data.pop("theme")))

@@ -389,6 +389,33 @@ class MSettings:
         self.settings.setValue("update_checker/last_check_date", date_str)
         self.settings.sync()
 
+    def get_update_include_prereleases(self) -> bool:
+        """Whether pre-release (rc/beta) versions are offered during update checks."""
+        return self.settings.value("update_checker/include_prereleases", False, bool)
+
+    def set_update_include_prereleases(self, enabled: bool) -> None:
+        self.settings.setValue("update_checker/include_prereleases", bool(enabled))
+        self.settings.sync()
+
+    def get_update_cache(self) -> dict:
+        """Return cached GitHub release metadata & ETag from QSettings."""
+        raw = self.settings.value("update_checker/cache_json", "", str)
+        if not raw:
+            return {}
+        try:
+            data = json.loads(raw)
+            return data if isinstance(data, dict) else {}
+        except (json.JSONDecodeError, TypeError):
+            return {}
+
+    def set_update_cache(self, cache: dict) -> None:
+        """Persist GitHub release metadata & ETag in QSettings."""
+        try:
+            self.settings.setValue("update_checker/cache_json", json.dumps(cache))
+            self.settings.sync()
+        except Exception:
+            pass
+
     # ---------- AI Settings ----------
     AI_GROUP = "ai_chat"
 

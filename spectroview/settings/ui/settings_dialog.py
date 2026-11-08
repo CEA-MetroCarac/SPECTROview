@@ -333,6 +333,7 @@ class SettingsDialog(QDialog):
         self.btn_import_config = self._tab_general.btn_import_config
         self.lbl_working_hint = self._tab_general.lbl_working_hint
         self.chk_check_updates_startup = self._tab_general.chk_check_updates_startup
+        self.chk_include_prereleases = self._tab_general.chk_include_prereleases
 
         # Fit tab
         self.btn_reset_fit_defaults = self._tab_fit.btn_reset_defaults

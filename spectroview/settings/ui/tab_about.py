@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import os
-import platform
 from typing import Optional
 
 from PySide6.QtCore import QTimer, Qt, Signal
@@ -28,7 +27,7 @@ from spectroview import ICON_DIR, VERSION
 from spectroview.settings.build_info import (
     get_build_number,
     get_environment_summary,
-    get_runtime_package_versions,
+    get_runtime_package_versions as get_runtime_package_versions,
 )
 from spectroview.view.theme import Icons
 
@@ -148,7 +147,7 @@ class AboutTabPage(QWidget):
         host_os = env_summary["host_os"]
 
         if is_frozen:
-            mode_str = "Standalone Executable (.exe)"
+            mode_str = env_summary.get("mode") or "Standalone Executable (.exe)"
             build_os = env_summary.get("build_os") or "Unknown"
             build_py = env_summary.get("build_python") or py_ver
             build_arch = env_summary.get("build_architecture") or arch
@@ -161,7 +160,10 @@ class AboutTabPage(QWidget):
                 f"<b>Python:</b> {build_py} ({build_arch}) [Bundled] &nbsp;|&nbsp; <b>Built on:</b> {build_os}"
             )
         else:
+            install_label = env_summary.get("installation_label") or "Python Package (.whl / local)"
             mode_str = "Python Package (.whl / local)"
+            if install_label and "Development" in install_label:
+                mode_str = "Python Package (.whl / local) — Dev"
             self.grp_env.setToolTip(
                 "Runtime dependencies detected in your local Python environment."
             )

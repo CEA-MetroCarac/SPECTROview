@@ -21,6 +21,7 @@ import sys
 from typing import Any, Optional
 
 from spectroview import BUILD_NUMBER, resource_path
+from spectroview.model.m_installation import InstallType, InstallationManager
 
 TRACKED_PACKAGES: tuple[str, ...] = (
     "PySide6",
@@ -32,6 +33,8 @@ TRACKED_PACKAGES: tuple[str, ...] = (
     "openpyxl",
     "superqt",
     "pyarrow",
+    "certifi",
+    "truststore",
     "openai",
     "anthropic",
     "ollama",
@@ -79,7 +82,10 @@ def query_package_version(pkg: str) -> str:
     return "Not installed"
 
 
-def generate_build_snapshot(target_path: Path | str | None = None) -> dict[str, Any]:
+def generate_build_snapshot(
+    target_path: Path | str | None = None,
+    package_format: Optional[str] = None,
+) -> dict[str, Any]:
     """Capture current environment dependencies and metadata to a JSON file.
 
     Executed during PyInstaller packaging (main.spec) to freeze build machine
@@ -96,6 +102,7 @@ def generate_build_snapshot(target_path: Path | str | None = None) -> dict[str, 
 
     data: dict[str, Any] = {
         "build_mode": "standalone_exe",
+        "package_format": package_format or sys.platform,
         "build_number": timestamp,
         "build_timestamp": timestamp,
         "python_version": py_ver,
@@ -173,6 +180,7 @@ def get_runtime_package_versions() -> dict[str, str]:
 def get_environment_summary() -> dict[str, Any]:
     """Return a comprehensive summary of execution mode, OS, Python, and dependencies."""
     frozen = is_frozen_app()
+    install_info = InstallationManager.detect(frozen=frozen)
     arch = platform.architecture()[0]
     host_os = f"{platform.system()} {platform.release()}".strip()
     py_ver = platform.python_version()
@@ -189,13 +197,27 @@ def get_environment_summary() -> dict[str, Any]:
             build_py = snapshot.get("python_version", py_ver)
             build_arch = snapshot.get("python_architecture", arch)
             build_num = snapshot.get("build_number", BUILD_NUMBER)
-        mode = "Standalone Executable (.exe)"
+
+        mode_map = {
+            InstallType.WINDOWS_VELOPACK: "Standalone Executable (.exe) — Velopack Installer",
+            InstallType.WINDOWS_PORTABLE: "Standalone Executable (.exe) — Portable",
+            InstallType.MACOS_BUNDLE: "Standalone Application (.app)",
+            InstallType.LINUX_APPIMAGE: "Standalone AppImage (Linux)",
+            InstallType.LINUX_DEB: "Debian Package (.deb — Linux)",
+        }
+        mode = mode_map.get(install_info.install_type, "Standalone Executable (.exe)")
     else:
         mode = "Python Package (.whl / local)"
 
     return {
         "is_frozen": frozen,
         "mode": mode,
+        "installation_type": install_info.install_type.value,
+        "installation_label": install_info.label,
+        "is_portable": install_info.is_portable,
+        "update_supported": install_info.update_supported,
+        "auto_update_supported": install_info.auto_update_supported,
+        "update_backend": install_info.update_backend,
         "python_version": py_ver,
         "python_architecture": arch,
         "host_os": host_os,

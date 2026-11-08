@@ -8,6 +8,7 @@ spectroview/ai_agent/CHATLOG/*.json
 spectroview/ai_agent/TEMPLATE/
 build/
 dist/
+release_artifacts/
 scripts/
 __pycache__/
 *.egg*

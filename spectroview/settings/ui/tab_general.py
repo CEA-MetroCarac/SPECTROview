@@ -41,7 +41,7 @@ class GeneralTabPage(QWidget):
     KEYWORDS = [
         "general", "working", "folder", "directory", "path", "backup",
         "restore", "config", "json", "export", "import", "update",
-        "updates", "check updates", "startup", "auto-update",
+        "updates", "check updates", "startup", "auto-update", "prerelease", "beta", "rc",
         "theme", "appearance", "dark", "light", "modern", "classic",
         "modern dark", "modern light", "classic dark", "classic light",
     ]
@@ -159,6 +159,13 @@ class GeneralTabPage(QWidget):
         self.chk_check_updates_startup.setChecked(True)
         updates_layout.addWidget(self.chk_check_updates_startup)
 
+        self.chk_include_prereleases = QCheckBox("Include pre-release / release candidate builds")
+        self.chk_include_prereleases.setChecked(False)
+        self.chk_include_prereleases.setToolTip(
+            "When enabled, SPECTROview also offers beta / release-candidate versions during update checks."
+        )
+        updates_layout.addWidget(self.chk_include_prereleases)
+
         layout.addWidget(self.grp_updates)
 
         layout.addSpacerItem(QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Expanding))
@@ -184,6 +191,7 @@ class GeneralTabPage(QWidget):
     def apply_settings(self, data: dict) -> None:
         self.le_working_folder.setText(data.get("working_folder", ""))
         self.chk_check_updates_startup.setChecked(data.get("check_updates_startup", True))
+        self.chk_include_prereleases.setChecked(data.get("include_prereleases", False))
 
         theme_key = data.get("theme", "")
         if not theme_key:
@@ -205,6 +213,7 @@ class GeneralTabPage(QWidget):
         return {
             "working_folder": self.le_working_folder.text().strip(),
             "check_updates_startup": self.chk_check_updates_startup.isChecked(),
+            "include_prereleases": self.chk_include_prereleases.isChecked(),
             "theme": self.cbb_theme.currentData() or "dark",
         }
 
@@ -224,7 +233,7 @@ class GeneralTabPage(QWidget):
         working_terms = ["working", "folder", "directory", "path", "fit_model", "plot_recipe",
                          "plot_style", "ai_chat", "template", "config", "backup", "restore", "export", "import"]
         theme_terms = ["theme", "appearance", "dark", "light", "modern", "classic"]
-        update_terms = ["update", "updates", "startup", "check", "version"]
+        update_terms = ["update", "updates", "startup", "check", "version", "prerelease", "beta", "rc"]
 
         first_match: Optional[QWidget] = None
 

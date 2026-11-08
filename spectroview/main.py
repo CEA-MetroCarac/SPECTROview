@@ -28,12 +28,12 @@ from PySide6.QtGui import QDesktopServices
 
 from spectroview.model.m_io import detect_file_type
 from spectroview.settings import MSettings, VMSettings, VSettingsDialog
-from spectroview.model.m_update_checker import (
-    UpdateCheckerWorker,
-    UpdateDownloadWorker,
-    UpdateInstallationError,
-    get_update_python_executable,
-    install_update_and_restart,
+from spectroview.model.m_update_manager import (
+    UnifiedUpdateCheckWorker,
+    UnifiedUpdateDownloadWorker,
+    UpdateCheckResult,
+    UpdateManager,
+    WindowsPortableUpdater,
 )
 
 
@@ -93,7 +93,7 @@ class Main(QMainWindow):
 
         # Pre-warm AI chat panel in background after main window is idle
         if LLM_AVAILABLE:
-            QTimer.singleShot(1500, self._prewarm_ai_chat)
+            QTimer.singleShot(1500, self, self._prewarm_ai_chat)
 
 
     def init_ui(self):
@@ -112,6 +112,10 @@ class Main(QMainWindow):
         # ── Update notification banner (created lazily when an update is detected) ──
         self._update_banner = None
         self._update_download_worker = None
+        self._update_manager = None
+        self._pending_release = None
+        self._manual_check_worker = None
+        self._startup_check_worker = None
 
         # Horizontal Splitter between Workspaces and Embedded AI Chat Panel
         self.workspace_splitter = QSplitter(Qt.Horizontal, central)
@@ -645,36 +649,74 @@ class Main(QMainWindow):
             event.acceptProposedAction()
 
     # ── Update checker ────────────────────────────────────────────────────────
+    def _get_update_manager(self) -> UpdateManager:
+        """Return (and lazily create) the centralized multi-platform UpdateManager."""
+        if self._update_manager is None:
+            from spectroview import VERSION
+            self._update_manager = UpdateManager(
+                current_version=VERSION,
+                settings=self.settings,
+            )
+        return self._update_manager
+
     def _start_update_check(self):
         """Launch a background thread to query GitHub for the latest release."""
-        if getattr(self, '_has_checked_for_updates', False):
+        if getattr(self, "_has_checked_for_updates", False):
             return
-            
         if not self.settings.get_check_for_updates():
             return
-            
+
         self._has_checked_for_updates = True
+        worker = UnifiedUpdateCheckWorker(self._get_update_manager(), force=False, parent=self)
+        worker.check_succeeded.connect(self._on_startup_check_succeeded)
+        worker.check_finished.connect(worker.deleteLater)
+        self._startup_check_worker = worker
+        worker.start()
 
-        from spectroview import VERSION
-        self._checker = UpdateCheckerWorker(current_version=VERSION)
-        self._checker.update_available.connect(self._on_update_available)
-        self._checker.start()
-
-    def _on_update_available(
-        self, tag: str, notes: str, html_url: str, wheel_url: str, wheel_sha256: str
-    ):
-        """Show the update banner when a newer version is found on GitHub."""
-        # Never show if the user already skipped this exact version
-        if self.settings.get_skipped_version() == tag:
+    def _on_startup_check_succeeded(self, result: UpdateCheckResult) -> None:
+        """Show the update banner on startup only if newer and not skipped."""
+        if not result.update_available or result.release is None:
             return
-
+        if self.settings.get_skipped_version() == result.release.tag:
+            return
         if self._update_banner is not None:
-            return   # already showing
+            return
+        self._show_update_banner_from_result(result)
 
-        self._show_update_banner(tag, html_url, wheel_url, wheel_sha256)
+    def _show_update_banner_from_result(self, result: UpdateCheckResult) -> None:
+        """Create and insert the single update banner above the workspace tabs."""
+        release = result.release
+        if release is None:
+            return
+        self._pending_release = release
+        asset = result.selected_asset
+        asset_url = asset.url if asset is not None else ""
+        asset_sha256 = asset.sha256 if asset is not None else ""
+
+        # Allow action whenever there is a downloadable platform asset
+        on_update_cb = self._download_and_install_update if asset_url else None
+        self._show_update_banner(
+            release.tag,
+            release.html_url,
+            asset_url,
+            asset_sha256,
+            on_update=on_update_cb,
+            action_label=result.action_label,
+            action_tooltip=result.action_tooltip or result.message,
+            current_version=result.current_version,
+        )
 
     def _show_update_banner(
-        self, tag: str, html_url: str, wheel_url: str, wheel_sha256: str
+        self,
+        tag: str,
+        html_url: str,
+        wheel_url: str,
+        wheel_sha256: str,
+        *,
+        on_update=None,
+        action_label: str = "Update",
+        action_tooltip: str = "",
+        current_version: str = "",
     ) -> None:
         """Create and insert the single update banner above the workspace tabs."""
         banner = VUpdateBanner(
@@ -682,10 +724,13 @@ class Main(QMainWindow):
             html_url=html_url,
             on_skip=self.settings.set_skipped_version,
             on_dismiss=self._hide_banner,
-            on_update=self._download_and_install_update,
+            on_update=on_update if on_update is not None else self._download_and_install_update,
             wheel_url=wheel_url,
             wheel_sha256=wheel_sha256,
             parent=self.centralWidget(),
+            action_label=action_label,
+            action_tooltip=action_tooltip,
+            current_version=current_version,
         )
         banner.apply_theme(self.settings.get_theme())
         self.centralWidget().layout().insertWidget(0, banner)
@@ -700,40 +745,49 @@ class Main(QMainWindow):
             banner.deleteLater()
 
     def _manual_update_check(self):
-        """User clicked 'Check for updates' in the menu bar — always runs (no throttle)."""
-        from spectroview import VERSION
-        self._manual_checker = UpdateCheckerWorker(current_version=VERSION)
-        self._manual_check_found_update = False
-        self._manual_checker.update_available.connect(self._on_manual_update_found)
-        self._manual_checker.check_finished.connect(self._on_manual_check_done)
-        self._manual_checker.start()
-
-    def _on_manual_update_found(
-        self, tag: str, notes: str, html_url: str, wheel_url: str, wheel_sha256: str
-    ):
-        """A newer version was found during a user-initiated check."""
-        self._manual_check_found_update = True
-        # Show banner even if user previously skipped this version
-        if self._update_banner is not None:
+        """User clicked 'Check for updates' — forces an uncached check with clear feedback."""
+        if self._manual_check_worker is not None and self._manual_check_worker.isRunning():
             return
+        self._manual_check_found_update = False
+        self._manual_check_error = ""
+        worker = UnifiedUpdateCheckWorker(self._get_update_manager(), force=True, parent=self)
+        worker.check_succeeded.connect(self._on_manual_check_succeeded)
+        worker.check_failed.connect(self._on_manual_check_failed)
+        worker.check_finished.connect(self._on_manual_check_done)
+        worker.check_finished.connect(worker.deleteLater)
+        self._manual_check_worker = worker
+        worker.start()
 
-        self._show_update_banner(tag, html_url, wheel_url, wheel_sha256)
+    def _on_manual_check_succeeded(self, result: UpdateCheckResult) -> None:
+        if result.update_available and result.release is not None:
+            self._manual_check_found_update = True
+            if self._update_banner is None:
+                self._show_update_banner_from_result(result)
+
+    def _on_manual_check_failed(self, error: str) -> None:
+        self._manual_check_error = error
 
     def _download_and_install_update(
-        self, _tag: str, wheel_url: str, wheel_sha256: str
+        self, _tag: str, _asset_url: str, _asset_sha256: str
     ) -> None:
-        """Download the announced release wheel, then hand installation to the helper."""
+        """Download and verify the active platform update package."""
         if self._update_download_worker is not None:
             return
-        try:
-            get_update_python_executable()
-        except UpdateInstallationError as error:
-            QMessageBox.warning(self, "Automatic update unavailable", str(error))
+        if self._pending_release is None:
+            QMessageBox.warning(
+                self,
+                "Update unavailable",
+                "Release metadata is no longer available. Please run Check for updates again.",
+            )
             return
 
         if self._update_banner is not None:
             self._update_banner.set_download_progress(-1)
-        worker = UpdateDownloadWorker(wheel_url, wheel_sha256, self)
+        worker = UnifiedUpdateDownloadWorker(
+            self._get_update_manager(),
+            self._pending_release,
+            parent=self,
+        )
         worker.progress_changed.connect(self._on_update_download_progress)
         worker.download_finished.connect(self._on_update_download_finished)
         worker.download_failed.connect(self._on_update_download_failed)
@@ -744,16 +798,90 @@ class Main(QMainWindow):
         if self._update_banner is not None:
             self._update_banner.set_download_progress(percent)
 
-    def _on_update_download_finished(self, wheel_path: str) -> None:
-        """Schedule installation after the Qt process exits, then close this instance."""
+    def _on_update_download_finished(self, artifact_path: str) -> None:
+        """Apply automatic install + restart, or guide user through downloaded installer."""
         self._release_update_download_worker()
+        mgr = self._get_update_manager()
         try:
-            install_update_and_restart(Path(wheel_path))
-        except (OSError, UpdateInstallationError) as error:
-            Path(wheel_path).unlink(missing_ok=True)
+            install_result = mgr.install_update(Path(artifact_path), release=self._pending_release)
+        except Exception as error:
             self._show_update_download_error(str(error))
             return
-        self.close()
+
+        if install_result.restart_required:
+            try:
+                self.settings.settings.sync()
+            except Exception:
+                pass
+            mgr.restart_application()
+            self.close()
+            return
+
+        if self._update_banner is not None:
+            self._update_banner.hide()
+            self._hide_banner()
+
+        if install_result.requires_manual_action:
+            self._show_guided_update_dialog(install_result)
+        elif install_result.message:
+            QMessageBox.information(self, "SPECTROview Update", install_result.message)
+
+    def _show_guided_update_dialog(self, install_result) -> None:
+        """Present platform-specific instructions and convenience actions for guided updates."""
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Information)
+        box.setWindowTitle("SPECTROview Update Ready")
+        box.setText(install_result.instructions or install_result.message)
+
+        artifact = Path(install_result.artifact_path) if install_result.artifact_path else None
+        open_file_btn = None
+        open_folder_btn = None
+        extract_btn = None
+        copy_cmd_btn = None
+
+        if artifact is not None and artifact.exists():
+            if artifact.suffix.lower() in (".exe", ".dmg"):
+                open_file_btn = box.addButton("Open Installer", QMessageBox.AcceptRole)
+            open_folder_btn = box.addButton("Open Folder", QMessageBox.ActionRole)
+        if getattr(install_result, "can_extract_zip", False) and artifact is not None:
+            extract_btn = box.addButton("Extract to Folder...", QMessageBox.ActionRole)
+        if getattr(install_result, "command", ""):
+            copy_cmd_btn = box.addButton("Copy Command", QMessageBox.ActionRole)
+        box.addButton(QMessageBox.Close)
+        box.exec()
+
+        clicked = box.clickedButton()
+        if clicked is None:
+            return
+        if clicked is open_file_btn and artifact is not None:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(artifact)))
+        elif clicked is open_folder_btn and artifact is not None:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(artifact.parent)))
+        elif clicked is extract_btn and artifact is not None:
+            dest = QFileDialog.getExistingDirectory(
+                self,
+                "Choose Folder to Extract Portable SPECTROview",
+                str(artifact.parent),
+            )
+            if dest:
+                try:
+                    extracted_root = WindowsPortableUpdater.extract_portable_archive(
+                        artifact, Path(dest) / artifact.stem
+                    )
+                    QMessageBox.information(
+                        self,
+                        "Extraction Complete",
+                        f"SPECTROview was extracted to:\n{extracted_root}\n\n"
+                        "You can close this instance and launch the new SPECTROview.exe directly.",
+                    )
+                    QDesktopServices.openUrl(QUrl.fromLocalFile(str(extracted_root)))
+                except Exception as exc:
+                    QMessageBox.warning(self, "Extraction Failed", str(exc))
+        elif clicked is copy_cmd_btn and install_result.command:
+            cb = QApplication.clipboard()
+            if cb is not None:
+                cb.setText(install_result.command)
+                self.show_notification("Update command copied to clipboard.", notification_type="info")
 
     def _on_update_download_failed(self, error: str) -> None:
         self._release_update_download_worker()
@@ -775,9 +903,15 @@ class Main(QMainWindow):
         )
 
     def _on_manual_check_done(self):
-        """Show 'up to date' message if the manual check found nothing new."""
+        """Show result after a user-initiated check finishes."""
         from spectroview import VERSION
-        if not self._manual_check_found_update:
+        if self._manual_check_error:
+            QMessageBox.warning(
+                self,
+                "Update Check Failed",
+                f"SPECTROview could not check for updates:\n\n{self._manual_check_error}",
+            )
+        elif not self._manual_check_found_update:
             QMessageBox.information(
                 self,
                 "No Update Available",
@@ -790,8 +924,8 @@ class Main(QMainWindow):
         apply_windows_taskbar_icon(int(self.winId()))
         # Use a short single-shot timer so the UI paints before the thread starts
         from PySide6.QtCore import QTimer
-        QTimer.singleShot(2000, self._start_update_check)
-        QTimer.singleShot(0, self._prewarm_heavy_imports)
+        QTimer.singleShot(2000, self, self._start_update_check)
+        QTimer.singleShot(0, self, self._prewarm_heavy_imports)
 
     _prewarmed = False
 
@@ -869,7 +1003,21 @@ class Main(QMainWindow):
                 pass
         event.accept()
 
+def _run_velopack_bootstrap() -> None:
+    """Execute Velopack install/update hooks before QApplication when frozen under Velopack."""
+    try:
+        from spectroview.model.m_installation import InstallationManager
+        if not InstallationManager.should_run_velopack_hook():
+            return
+        import velopack
+        velopack.App().run()
+    except Exception:
+        pass
+
+
 def launcher():
+    _run_velopack_bootstrap()
+
     app = QApplication(sys.argv)
     app.setApplicationName("SPECTROview")
     app.setWindowIcon(get_app_icon())

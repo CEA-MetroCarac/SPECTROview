@@ -414,3 +414,31 @@ def test_main_about_opens_settings_about_section():
     main_instance._open_settings = lambda section="general": opened.append(section)
     Main.about(main_instance)
     assert opened == ["about"]
+
+
+class TestPrereleaseUpdateSetting:
+    def test_include_prereleases_checkbox_round_trip(self, qapp):
+        dialog = _dialog(qapp)
+        assert dialog._tab_general.chk_include_prereleases.isChecked() is False
+
+        dialog._tab_general.chk_include_prereleases.setChecked(True)
+        dialog._on_accept()
+
+        reloaded = _dialog(qapp)
+        assert reloaded._tab_general.chk_include_prereleases.isChecked() is True
+
+        reloaded._tab_general.chk_include_prereleases.setChecked(False)
+        reloaded._on_accept()
+
+        reloaded2 = _dialog(qapp)
+        assert reloaded2._tab_general.chk_include_prereleases.isChecked() is False
+
+    def test_search_filters_and_highlights_prerelease_option(self, qapp):
+        dialog = _dialog(qapp)
+        dialog._search_edit.setText("prerelease")
+        assert dialog._nav_list.item(0).isHidden() is False
+        assert dialog._stack.currentIndex() == 0
+        assert "border" in dialog._tab_general.grp_updates.styleSheet()
+
+        dialog._search_edit.setText("")
+        assert dialog._tab_general.grp_updates.styleSheet() == ""

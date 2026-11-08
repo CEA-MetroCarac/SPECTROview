@@ -103,6 +103,10 @@ class VUpdateBanner(QWidget):
         wheel_url: str = "",
         wheel_sha256: str = "",
         parent=None,
+        *,
+        action_label: str = "Update",
+        action_tooltip: str = "",
+        current_version: str = "",
     ):
         super().__init__(parent)
         self._tag = tag
@@ -112,6 +116,9 @@ class VUpdateBanner(QWidget):
         self._on_update = on_update
         self._wheel_url = wheel_url
         self._wheel_sha256 = wheel_sha256
+        self._action_label = action_label or "Update"
+        self._action_tooltip = action_tooltip
+        self._current_version = current_version
 
         self.setObjectName("UpdateBanner")
         self.setFixedHeight(36)
@@ -132,20 +139,30 @@ class VUpdateBanner(QWidget):
         text_label.setObjectName("banner_text")
         layout.addWidget(text_label)
 
-        version_label = QLabel(self._tag.lstrip("v"))
+        latest_clean = self._tag.lstrip("v")
+        version_text = (
+            f"{self._current_version.lstrip('v')} → {latest_clean}"
+            if self._current_version
+            else latest_clean
+        )
+        version_label = QLabel(version_text)
         version_label.setObjectName("banner_version")
         layout.addWidget(version_label)
         layout.addStretch(1)
 
-        self.btn_update = QPushButton("Update")
+        self.btn_update = QPushButton(self._action_label)
         self.btn_update.setObjectName("btn_update")
         self.btn_update.setIcon(Icons.download(color="#FFFFFF"))
         self.btn_update.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_update.setToolTip("Download, install, and restart with this release.")
+        self.btn_update.setToolTip(
+            self._action_tooltip or "Download, install, and apply this release."
+        )
         self.btn_update.clicked.connect(self._request_update)
         self.btn_update.setEnabled(bool(self._wheel_url and self._on_update))
         if not self.btn_update.isEnabled():
-            self.btn_update.setToolTip("This release does not include an installable wheel.")
+            self.btn_update.setToolTip(
+                self._action_tooltip or "No automatic update asset is attached to this release."
+            )
         layout.addWidget(self.btn_update)
 
         self.btn_download = QPushButton("Show changelog")

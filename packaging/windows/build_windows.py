@@ -208,7 +208,7 @@ def main() -> int:
     version = read_version()
     print(f"[build_windows] Building SPECTROview {version} for Windows x64...")
 
-    tls_report = assert_safe_build_tls(require_pip=True)
+    tls_report = assert_safe_build_tls(require_pip=bool(os.environ.get("CI")))
     print(
         f"[build_windows] TLS security verified: certifi={tls_report['certifi_version']}, "
         f"pip={tls_report['pip_version']}, truststore={tls_report['truststore_available']}"

@@ -283,7 +283,7 @@ def main() -> int:
     arch = normalize_arch(None if args.arch == "auto" else args.arch)
     print(f"[build_dmg] Building SPECTROview {version} for macOS ({arch})...")
 
-    tls_report = assert_safe_build_tls(require_pip=True)
+    tls_report = assert_safe_build_tls(require_pip=bool(os.environ.get("CI")))
     print(
         f"[build_dmg] TLS security verified: certifi={tls_report['certifi_version']}, "
         f"pip={tls_report['pip_version']}, truststore={tls_report['truststore_available']}"

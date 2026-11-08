@@ -1,16 +1,26 @@
-name: Build and publish release
+name: Multi-Platform Build and Release
 
 on:
   push:
     tags:
       - "v[0-9]*"
+  workflow_dispatch:
+    inputs:
+      smoke_test:
+        description: "Run offscreen startup smoke tests for frozen bundles"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
 
 jobs:
-  build-and-release:
-    runs-on: ubuntu-latest
+  verify:
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+      is_prerelease: ${{ steps.meta.outputs.is_prerelease }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,33 +28,92 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
-      - name: Verify release tag matches package version
+      - name: Install Linux Qt runtime libraries for headless tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libegl1 libdbus-1-3 libfontconfig1 libfreetype6 libglib2.0-0 \
+            libx11-6 libxext6 libxrender1 libxkbcommon0 libxkbcommon-x11-0 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0
+
+      - name: Verify version metadata and TLS security baseline
+        id: meta
         env:
           RELEASE_TAG: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
+          python -m pip install --upgrade "pip>=26.2.2" "certifi>=2026.10.23" truststore
           python - <<'PY'
           import os
           import re
           from pathlib import Path
 
-          tag = os.environ["RELEASE_TAG"]
-          match = re.fullmatch(r"v(\d+\.\d+\.\d+)", tag)
           source = Path("spectroview/__init__.py").read_text(encoding="utf-8")
-          version = re.search(r'^VERSION\s*=\s*["\']([^"\']+)["\']', source, re.M)
-          if not match or version is None or version.group(1) != match.group(1):
-              raise SystemExit(
-                  "Release tags must be vMAJOR.MINOR.PATCH and match "
-                  "spectroview.VERSION."
+          ver_match = re.search(r'^VERSION\s*=\s*["\']([^"\']+)["\']', source, re.M)
+          if ver_match is None:
+              raise SystemExit("Could not extract spectroview.VERSION")
+          pkg_version = ver_match.group(1).strip()
+
+          tag = os.environ.get("RELEASE_TAG", "").strip()
+          if os.environ.get("EVENT_NAME") == "push":
+              tag_match = re.fullmatch(
+                  r"v(\d+\.\d+\.\d+(?:[-.]?(?:alpha|beta|rc|dev)\w*(?:[.\-]\d+)*)?)",
+                  tag,
+                  re.IGNORECASE,
               )
+              if not tag_match or tag_match.group(1) != pkg_version:
+                  raise SystemExit(
+                      f"Release tag {tag!r} must match spectroview.VERSION ({pkg_version!r})."
+                  )
+              is_pre = bool(re.search(r"(alpha|beta|rc|dev)", pkg_version, re.IGNORECASE))
+          else:
+              tag = f"v{pkg_version}"
+              is_pre = True
+
+          from spectroview.model.m_tls import assert_safe_build_tls
+          report = assert_safe_build_tls(require_pip=True)
+          print(f"Verified TLS: certifi={report['certifi_version']}, pip={report['pip_version']}")
+
+          out_file = Path(os.environ["GITHUB_OUTPUT"])
+          with out_file.open("a", encoding="utf-8") as fh:
+              fh.write(f"version={pkg_version}\n")
+              fh.write(f"tag={tag}\n")
+              fh.write(f"is_prerelease={'true' if is_pre else 'false'}\n")
           PY
 
-      - name: Build and validate distributions
+      - name: Install dependencies and run test suite
         run: |
-          python -m pip install --upgrade "pip>=26.2.2" "certifi>=2026.10.19" build twine
+          python -m pip install -e ".[test]"
+          python -m pytest tests/ -m "not slow" -q
+          python -m pytest tests/performance/test_startup_imports.py -q
+
+  build-python:
+    needs: verify
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Build and validate wheel & sdist
+        run: |
+          python -m pip install --upgrade "pip>=26.2.2" "certifi>=2026.10.23" build twine
           python -m build
           python -m twine check dist/*
+
+      - name: Verify clean wheel installation
+        run: |
+          python -m venv /tmp/venv-wheel-check
+          /tmp/venv-wheel-check/bin/pip install --upgrade "pip>=26.2.2" "certifi>=2026.10.23"
+          /tmp/venv-wheel-check/bin/pip install dist/*.whl
+          /tmp/venv-wheel-check/bin/python -c "import spectroview; from spectroview.model.m_installation import InstallType, InstallationManager; info = InstallationManager.detect(); assert info.install_type == InstallType.PIP_WHEEL, info"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -52,20 +121,243 @@ jobs:
           path: dist/
           if-no-files-found: error
 
-      - name: Create GitHub release and attach distributions
+  build-windows:
+    needs: verify
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install PyInstaller, Velopack SDK & vpk CLI
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade "pip>=26.2.2" "certifi>=2026.10.23" "pyinstaller>=6.10.0" "velopack>=1.2.161" .
+          dotnet tool install -g vpk
+          echo "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Build Windows Installer (Velopack) and Portable ZIP
+        shell: pwsh
+        run: |
+          python packaging/windows/build_windows.py --output-dir release_artifacts --smoke-test
+
+      - name: Verify Windows release artifacts
+        shell: pwsh
+        run: |
+          $v = "${{ needs.verify.outputs.version }}"
+          foreach ($f in @("SPECTROview_${v}_Windows_x64_Setup.exe", "SPECTROview_${v}_Windows_x64_Portable.zip")) {
+            if (-not (Test-Path "release_artifacts\$f")) { throw "Missing $f" }
+          }
+          if (-not (Get-ChildItem release_artifacts\releases*.json)) { throw "Missing Velopack releases.json feed" }
+          if (-not (Get-ChildItem release_artifacts\*.nupkg)) { throw "Missing Velopack .nupkg" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-distributions
+          path: release_artifacts/
+          if-no-files-found: error
+
+  build-macos:
+    needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+          - arch: x64
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Optional Apple Developer certificate import
+        if: ${{ env.APPLE_CERTIFICATE_P12 != '' }}
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH="${RUNNER_TEMP}/spectroview-signing.keychain-db"
+          KEYCHAIN_PASS="$(uuidgen)"
+          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > "${RUNNER_TEMP}/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security import "${RUNNER_TEMP}/cert.p12" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+          rm -f "${RUNNER_TEMP}/cert.p12"
+
+      - name: Install dependencies and PyInstaller
+        run: |
+          python3 -m pip install --upgrade "pip>=26.2.2" "certifi>=2026.10.23" "pyinstaller>=6.10.0" .
+
+      - name: Build macOS .app bundle and .dmg
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          chmod +x packaging/macos/build_dmg.sh
+          bash packaging/macos/build_dmg.sh --arch "${{ matrix.arch }}" --output-dir release_artifacts --smoke-test
+          test -f "release_artifacts/SPECTROview_${{ needs.verify.outputs.version }}_macOS_${{ matrix.arch }}.dmg"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}-distributions
+          path: release_artifacts/
+          if-no-files-found: error
+
+  build-linux:
+    needs: verify
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install Linux runtime, packaging & validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libegl1 libdbus-1-3 libfontconfig1 libfreetype6 libglib2.0-0 \
+            libx11-6 libxext6 libxrender1 libxkbcommon0 libxkbcommon-x11-0 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 \
+            patchelf desktop-file-utils dpkg-dev wget file binutils
+
+      - name: Install appimagetool
+        run: |
+          wget -q -O /tmp/appimagetool-x86_64.AppImage \
+            "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x /tmp/appimagetool-x86_64.AppImage
+          echo "APPIMAGETOOL=/tmp/appimagetool-x86_64.AppImage" >> "$GITHUB_ENV"
+          echo "APPIMAGE_EXTRACT_AND_RUN=1" >> "$GITHUB_ENV"
+
+      - name: Install Python dependencies and PyInstaller
+        run: |
+          python3 -m pip install --upgrade "pip>=26.2.2" "certifi>=2026.10.23" "pyinstaller>=6.10.0" .
+
+      - name: Build Linux AppImage and .deb packages
+        run: |
+          python3 packaging/linux/build_linux.py --format all --output-dir release_artifacts --smoke-test
+
+      - name: Verify clean Ubuntu .deb & AppImage installation and config persistence
+        run: |
+          VER="${{ needs.verify.outputs.version }}"
+          DEB="release_artifacts/SPECTROview_${VER}_Linux_amd64.deb"
+          APPIMG="release_artifacts/SPECTROview_${VER}_Linux_x86_64.AppImage"
+          test -f "$DEB"
+          test -f "$APPIMG"
+          desktop-file-validate packaging/linux/spectroview.desktop
+
+          mkdir -p "$HOME/.config/CEA-Leti"
+          printf "[General]\nsentinel=keep\n" > "$HOME/.config/CEA-Leti/SPECTROview.conf"
+
+          sudo apt-get install -y "./${DEB}"
+          test -f /opt/spectroview/.spectroview-deb
+          which spectroview
+          set +e
+          QT_QPA_PLATFORM=offscreen timeout 8s spectroview
+          code=$?
+          set -e
+          test "$code" -eq 0 -o "$code" -eq 124
+
+          sudo dpkg -r spectroview
+          grep -q "sentinel=keep" "$HOME/.config/CEA-Leti/SPECTROview.conf"
+
+          set +e
+          QT_QPA_PLATFORM=offscreen APPIMAGE_EXTRACT_AND_RUN=1 timeout 8s "$APPIMG"
+          acode=$?
+          set -e
+          test "$acode" -eq 0 -o "$acode" -eq 124
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-distributions
+          path: release_artifacts/
+          if-no-files-found: error
+
+  release:
+    needs: [verify, build-python, build-windows, build-macos, build-linux]
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: downloaded_artifacts/
+
+      - name: Flatten release assets and generate SHA256SUMS.txt
+        run: |
+          mkdir -p final_assets
+          find downloaded_artifacts -type f -exec mv -t final_assets/ {} +
+          (cd final_assets && sha256sum * > SHA256SUMS.txt)
+          ls -lh final_assets/
+          cat final_assets/SHA256SUMS.txt
+
+      - name: Create GitHub Release and attach all platform artifacts
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.verify.outputs.tag }}
+          VER: ${{ needs.verify.outputs.version }}
+          IS_PRE: ${{ needs.verify.outputs.is_prerelease }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/* \
+          cat > release_notes.md <<EOF
+          ### Downloads & Verification
+
+          All artifacts are verified against \`SHA256SUMS.txt\`. Network/update operations enforce the host OS trust store (\`truststore\`) or patched \`certifi >= 2026.10.23\`.
+
+          - **Windows**:
+            - \`SPECTROview_${VER}_Windows_x64_Setup.exe\` — Per-user installer (Velopack) with Start Menu/Desktop shortcuts and delta/full automatic updates.
+            - \`SPECTROview_${VER}_Windows_x64_Portable.zip\` — Extract and launch \`SPECTROview.exe\` without installation.
+          - **macOS** (\`SPECTROview_${VER}_macOS_arm64.dmg\`, \`SPECTROview_${VER}_macOS_x64.dmg\`):
+            - Drag \`SPECTROview.app\` to \`Applications\`. **Unsigned build note**: on first launch, Control-click \`SPECTROview.app\` → **Open** (or allow via **System Settings → Privacy & Security**).
+          - **Linux**:
+            - \`SPECTROview_${VER}_Linux_x86_64.AppImage\` — \`chmod +x\` and launch directly (supports in-place replacement updates when writable).
+            - \`SPECTROview_${VER}_Linux_amd64.deb\` — Install with \`sudo apt install ./SPECTROview_${VER}_Linux_amd64.deb\`.
+          - **Python (pip / PyPI)**: \`pip install --upgrade spectroview\` or attached \`.whl\` / \`.tar.gz\`.
+          EOF
+
+          PRE_FLAG=""
+          if [ "$IS_PRE" = "true" ]; then
+            PRE_FLAG="--prerelease"
+          fi
+
+          gh release create "$TAG" final_assets/* \
             --repo "$GITHUB_REPOSITORY" \
-            --title "$GITHUB_REF_NAME" \
-            --notes "The installable wheel is attached below and is used by SPECTROview's automatic updater." \
+            --title "$TAG" \
+            --notes-file release_notes.md \
             --generate-notes \
-            --verify-tag
+            --verify-tag \
+            $PRE_FLAG
 
   publish-pypi:
-    needs: build-and-release
-    runs-on: ubuntu-latest
+    needs: [verify, release]
+    if: ${{ startsWith(github.ref, 'refs/tags/v') && needs.verify.outputs.is_prerelease != 'true' }}
+    runs-on: ubuntu-24.04
     environment:
       name: pypi
       url: https://pypi.org/p/spectroview

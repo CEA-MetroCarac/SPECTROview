@@ -17,7 +17,6 @@ set_current_process_app_id()
 # ─────────────────────────────────────────────────────────────────────────────
 
 import matplotlib as mpl
-mpl.use('qtagg')
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, message=".*Glyph.*")
@@ -25,6 +24,32 @@ warnings.filterwarnings("ignore", category=UserWarning, message=".*Glyph.*")
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QFileDialog, QMessageBox, QSplitter
 from PySide6.QtCore import Qt, QFileInfo, QUrl, QTimer
 from PySide6.QtGui import QDesktopServices
+
+
+def _configure_matplotlib_qt_backend() -> None:
+    """Configure the ``qtagg`` backend only when Qt or a GUI display is active.
+
+    Prevents ``ImportError: Cannot load backend 'qtagg' ... as 'headless' is
+    currently running`` on headless Linux CI when ``matplotlib.pyplot`` was
+    already imported with ``Agg`` (or will be imported before a ``QApplication``
+    exists).
+    """
+    if "matplotlib.pyplot" in sys.modules:
+        return
+    if QApplication.instance() is None:
+        try:
+            from matplotlib import _c_internal_utils
+            if not _c_internal_utils.display_is_valid():
+                return
+        except Exception:
+            if sys.platform.startswith("linux") and not (
+                os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
+            ):
+                return
+    mpl.use("qtagg", force=False)
+
+
+_configure_matplotlib_qt_backend()
 
 from spectroview.model.m_io import detect_file_type
 from spectroview.settings import MSettings, VMSettings, VSettingsDialog
@@ -1019,6 +1044,7 @@ def launcher():
     _run_velopack_bootstrap()
 
     app = QApplication(sys.argv)
+    _configure_matplotlib_qt_backend()
     app.setApplicationName("SPECTROview")
     app.setWindowIcon(get_app_icon())
     app.setStyle("Fusion")

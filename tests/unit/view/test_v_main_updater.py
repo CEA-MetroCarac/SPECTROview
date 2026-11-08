@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
 import sys
 import types
+from typing import TYPE_CHECKING
 from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QWidget
 
-from spectroview.main import Main, _run_velopack_bootstrap
 from spectroview.model.m_installation import InstallationManager
 from spectroview.model.m_update_manager import (
     InstallResult,
@@ -17,8 +19,13 @@ from spectroview.model.m_update_manager import (
 )
 from spectroview.settings.m_settings import MSettings
 
+if TYPE_CHECKING:
+    from spectroview.main import Main
+
 
 def _make_stub_main() -> Main:
+    from spectroview.main import Main
+
     win = Main.__new__(Main)
     win.settings = MSettings()
     win._update_banner = None
@@ -151,6 +158,8 @@ def test_on_update_download_finished_handles_restart_and_guided_paths(qapp, monk
 
 
 def test_run_velopack_bootstrap_only_imports_when_needed(monkeypatch):
+    from spectroview.main import _run_velopack_bootstrap
+
     called = []
     fake_vpk = types.SimpleNamespace(
         App=lambda: types.SimpleNamespace(run=lambda: called.append("ran"))
@@ -164,3 +173,47 @@ def test_run_velopack_bootstrap_only_imports_when_needed(monkeypatch):
     monkeypatch.setattr(InstallationManager, "should_run_velopack_hook", classmethod(lambda cls: True))
     _run_velopack_bootstrap()
     assert called == ["ran"]
+
+
+def test_import_main_after_headless_pyplot_does_not_fail():
+    """Importing spectroview.main after pyplot under headless Linux (no DISPLAY) must not raise ImportError."""
+    code = (
+        "import matplotlib, matplotlib._c_internal_utils as _c; "
+        "_c.display_is_valid = lambda: False; "
+        "matplotlib.use('Agg'); "
+        "import matplotlib.pyplot; "
+        "import spectroview.main"
+    )
+    res = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert res.returncode == 0, f"stderr:\n{res.stderr}"
+
+
+def test_import_main_before_headless_pyplot_does_not_fail():
+    """Importing spectroview.main before pyplot under headless Linux must not leave qtagg forced without QApplication."""
+    code = (
+        "import matplotlib._c_internal_utils as _c; "
+        "_c.display_is_valid = lambda: False; "
+        "import spectroview.main; "
+        "import matplotlib.pyplot as plt; "
+        "fig, ax = plt.subplots(); "
+        "plt.close(fig)"
+    )
+    res = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert res.returncode == 0, f"stderr:\n{res.stderr}"
+
+
+def test_import_main_selects_qtagg_when_qapp_exists_under_headless():
+    """Once QApplication exists under offscreen Qt, spectroview.main can configure qtagg safely."""
+    code = (
+        "import os; os.environ['QT_QPA_PLATFORM'] = 'offscreen'; "
+        "import matplotlib._c_internal_utils as _c; "
+        "_c.display_is_valid = lambda: False; "
+        "from PySide6.QtWidgets import QApplication; app = QApplication([]); "
+        "import spectroview.main; "
+        "import matplotlib.pyplot as plt; "
+        "assert plt.get_backend().lower() == 'qtagg', plt.get_backend()"
+    )
+    env = os.environ.copy()
+    env["QT_QPA_PLATFORM"] = "offscreen"
+    res = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True)
+    assert res.returncode == 0, f"stderr:\n{res.stderr}"

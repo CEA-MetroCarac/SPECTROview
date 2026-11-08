@@ -44,12 +44,12 @@ def _is_system_profiler_font_query(cmd: Union[str, Sequence[Any]]) -> bool:
     return False
 
 
-def apply_macos_font_cache_fix() -> bool:
+def apply_macos_font_cache_fix(force: bool = False) -> bool:
     """Apply early guard against matplotlib macOS font discovery crash and hang.
 
-    Returns True if the patch was applied or already active, False if not on macOS.
+    Returns True if the patch was applied or already active, False if not on macOS (unless force=True).
     """
-    if sys.platform != "darwin":
+    if not force and sys.platform != "darwin":
         return False
 
     current_check_output = subprocess.check_output

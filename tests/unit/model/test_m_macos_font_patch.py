@@ -59,14 +59,14 @@ def test_apply_macos_font_cache_fix_non_darwin(monkeypatch):
 
 def test_subprocess_check_output_transparent_for_normal_commands():
     """Subprocess check_output must forward normal system calls transparently."""
-    apply_macos_font_cache_fix()
+    apply_macos_font_cache_fix(force=True)
     out = subprocess.check_output([sys.executable, "-c", "print('spectroview_ok')"])
     assert b"spectroview_ok" in out
 
 
 def test_subprocess_check_output_intercepts_system_profiler_fonts():
     """Calling system_profiler SPFontsDataType must raise CalledProcessError."""
-    apply_macos_font_cache_fix()
+    apply_macos_font_cache_fix(force=True)
     with pytest.raises(subprocess.CalledProcessError):
         subprocess.check_output(["system_profiler", "-xml", "SPFontsDataType"])
 

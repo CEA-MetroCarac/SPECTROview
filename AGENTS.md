@@ -56,6 +56,7 @@ Detailed project rules and procedures are modularized in Antigravity workspace r
 - **[graphs-workspace.md](file:///.agents/rules/graphs-workspace.md)** `[model_decision]`: `MGraph` single source of truth, restyle fast path, toolbar sharing, and undo/redo.
 - **[spectra-maps-workspace.md](file:///.agents/rules/spectra-maps-workspace.md)** `[model_decision]`: `SpectraStore` dual arrays, base $\leftrightarrow$ subclass hooks, selection payloads, and heatmap cache.
 - **[workflows.md](file:///.agents/rules/workflows.md)** `[model_decision]`: Step-by-step touchpoints (adding shortcuts, plot styles, loaders, customization options, API functions).
+- **[release-notes.md](file:///.agents/rules/release-notes.md)** `[model_decision]`: GitHub release note format, structure, full commit-audit procedure, and template inspired by `v26.43.1`.
 
 ### Workspace Skills (`.agents/skills/<name>/SKILL.md`)
 - **[implement-feature](file:///.agents/skills/implement-feature/SKILL.md)**: End-to-end workflow for adding new features, plot styles, or UI components.

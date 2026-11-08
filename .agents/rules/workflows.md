@@ -80,3 +80,11 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 2. Add control to `spectroview/view/components/v_settings.py` and wire in `vm_settings.py`.
 3. Add unit test in `tests/unit/model/test_m_settings.py`.
 4. Update `docs/user_manual/settings.md`.
+
+---
+
+## 9. Write or Rewrite GitHub Release Notes
+
+1. Determine the previous release tag (`<prev_tag>`) and inspect **every** commit in `<prev_tag>..HEAD` (`git rev-list --count <prev_tag>..HEAD`, full subjects + bodies).
+2. Cross-check evolving commits against the final code on `main` and `.github/workflows/release.yml` artifact names.
+3. Author the release notes strictly following the structure, headings, bullet style, and verbatim commit-log convention in [.agents/rules/release-notes.md](release-notes.md).

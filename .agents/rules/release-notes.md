@@ -113,3 +113,4 @@ Include only the sections that have real changes in `<prev_tag>..HEAD`, ordered 
   - Always leave a blank line before every list and table for universal Markdown rendering.
   - Keep artifact filenames in Downloads descriptions identical to `.github/workflows/release.yml`.
 - **Exact Commit Log Parity**: Every commit in `<prev_tag>..HEAD` must appear verbatim (`* \`<short_sha>\` <subject>`) in reverse-chronological order (`git log --oneline <prev_tag>..HEAD`), matching `v26.43.1`. Do not truncate, reorder, or alter SHAs.
+

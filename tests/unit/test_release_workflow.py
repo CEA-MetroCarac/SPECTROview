@@ -50,7 +50,12 @@ def test_release_workflow_preserves_pypi_trusted_publishing_and_adds_all_platfor
     uses_list = [step.get("uses", "") for step in pypi_job["steps"]]
     assert "pypa/gh-action-pypi-publish@release/v1" in uses_list
 
-    # Preserve macOS matrix covering arm64 & x64
+    # macOS matrix targets Apple Silicon arm64 only (macos-15)
     mac_matrix = jobs["build-macos"]["strategy"]["matrix"]["include"]
     arches = {item["arch"] for item in mac_matrix}
-    assert arches == {"arm64", "x64"}
+    runners = {item["runner"] for item in mac_matrix}
+    assert arches == {"arm64"}
+    assert runners == {"macos-15"}
+    assert "macos-15-intel" not in raw_text
+    assert "SPECTROview_${VER}_macOS_x64.dmg" not in raw_text
+    assert "SPECTROview_${VER}_macOS_arm64.dmg" in raw_text

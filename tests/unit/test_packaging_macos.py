@@ -33,13 +33,19 @@ def test_entitlements_plist_is_valid_xml_with_hardened_runtime_keys():
 def test_arch_normalization_and_dmg_filename():
     assert bm.normalize_arch("arm64") == "arm64"
     assert bm.normalize_arch("aarch64") == "arm64"
-    assert bm.normalize_arch("x86_64") == "x64"
-    assert bm.normalize_arch("x64") == "x64"
-    with pytest.raises(ValueError):
+    assert bm.normalize_arch("apple_silicon") == "arm64"
+
+    # Intel macOS architectures are rejected with clear explanation
+    for intel_arch in ("x86_64", "x64", "intel", "amd64"):
+        with pytest.raises(ValueError, match="Intel macOS builds are no longer supported"):
+            bm.normalize_arch(intel_arch)
+
+    with pytest.raises(ValueError, match="Unsupported macOS architecture"):
         bm.normalize_arch("sparc64")
 
     assert bm.dmg_filename("26.47.0", "arm64") == "SPECTROview_26.47.0_macOS_arm64.dmg"
-    assert bm.dmg_filename("26.47.0", "x86_64") == "SPECTROview_26.47.0_macOS_x64.dmg"
+    with pytest.raises(ValueError, match="Intel macOS builds are no longer supported"):
+        bm.dmg_filename("26.47.0", "x86_64")
 
 
 def test_verify_app_bundle_and_stage_dmg_contents(tmp_path):

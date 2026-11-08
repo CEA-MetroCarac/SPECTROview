@@ -77,7 +77,7 @@
 Download the installer for your system from [**GitHub Releases**](https://github.com/CEA-MetroCarac/SPECTROview/releases):
 
 - **Windows**: `Setup.exe` *(standard installer with automatic updates)* or `Portable.zip` *(extract and run)*
-- **macOS**: `.dmg` for **Apple Silicon (M1–M4)** or **Intel** *(drag into Applications)*
+- **macOS (Apple Silicon)**: `.dmg` for **Apple Silicon Macs (M1 or newer)** *(drag into Applications)*
 - **Linux**: `.deb` *(Ubuntu / Debian)* or `.AppImage` *(single runnable file)*
 
 👉 Follow the step-by-step [**Installation Guide**](https://cea-metrocarac.github.io/SPECTROview/user_manual/installation/) for first-launch tips (including macOS security prompt & Linux setup).

@@ -785,23 +785,39 @@ class WindowsPortableUpdater(BaseUpdater):
 
 
 class MacOSUpdater(BaseUpdater):
-    """macOS ``.app`` bundle updater downloading verified architecture-matched DMGs."""
+    """macOS ``.app`` bundle updater downloading verified Apple Silicon DMGs."""
 
     action_label = "Download Update"
-    action_tooltip = "Download and verify the latest macOS .dmg disk image."
+    action_tooltip = "Download and verify the latest macOS (Apple Silicon arm64) .dmg disk image."
 
     def select_asset(self, release: ReleaseInfo) -> Optional[ReleaseAsset]:
         arch = self.info.architecture
         dmg_assets = [a for a in release.assets if a.name.lower().endswith(".dmg")]
-        preferred_tokens = ("arm64", "apple_silicon") if arch == "arm64" else ("x64", "x86_64", "intel")
+        if arch != "arm64":
+            # Intel macOS builds are discontinued; avoid serving an incompatible arm64 DMG
+            # unless a release explicitly carries a matching universal or x64 disk image.
+            for asset in dmg_assets:
+                if "universal" in asset.name.lower():
+                    return asset
+            for asset in dmg_assets:
+                low = asset.name.lower()
+                if any(tok in low for tok in ("x64", "x86_64", "intel")):
+                    return asset
+            return None
+
         for asset in dmg_assets:
             low = asset.name.lower()
-            if any(tok in low for tok in preferred_tokens):
+            if any(tok in low for tok in ("arm64", "apple_silicon")):
                 return asset
         for asset in dmg_assets:
             if "universal" in asset.name.lower():
                 return asset
-        return dmg_assets[0] if dmg_assets else None
+        # Fallback only for untagged DMGs, never Intel-only DMGs
+        for asset in dmg_assets:
+            low = asset.name.lower()
+            if not any(tok in low for tok in ("x64", "x86_64", "intel")):
+                return asset
+        return None
 
     def install_update(self, downloaded_path: Path, release: Optional[ReleaseInfo] = None) -> InstallResult:
         return InstallResult(
@@ -1081,9 +1097,13 @@ class UpdateManager:
 
         action_label = self._backend.action_label
         action_tooltip = self._backend.action_tooltip
+        message = "" if asset is not None else "No matching binary asset attached; open GitHub Releases."
         if isinstance(self._backend, WindowsVelopackUpdater) and not can_auto and asset is not None:
             action_label = "Download Installer"
             action_tooltip = "Download verified Windows Setup.exe installer."
+        elif isinstance(self._backend, MacOSUpdater) and asset is None and self._info.architecture != "arm64":
+            message = "Intel macOS builds are no longer supported (Apple Silicon arm64 only); open GitHub Releases."
+            action_tooltip = message
 
         status = UpdateStatus.UPDATE_AVAILABLE if newer else UpdateStatus.UP_TO_DATE
         self._status = status
@@ -1097,7 +1117,7 @@ class UpdateManager:
             can_auto_install=can_auto,
             action_label=action_label,
             action_tooltip=action_tooltip,
-            message="" if asset is not None else "No matching binary asset attached; open GitHub Releases.",
+            message=message,
             from_cache=from_cache,
         )
         self._last_result = result

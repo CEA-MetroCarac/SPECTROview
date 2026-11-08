@@ -436,7 +436,7 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 | `model/m_update_checker.py` | Legacy pip/wheel workers preserved cleanly plus hardened pip upgrade runner (`--use-feature=truststore` / `--cert`) |
 | `view/components/v_update_banner.py` | Slim banner displaying version transition (`current → latest`) and dynamic platform action label |
 | `main.py` | Executes early `_run_velopack_bootstrap()` hook before `QApplication` only when Velopack is active; wires unified update banner & guided dialogs |
-| `main.spec` & `packaging/` | Single-source PyInstaller config and platform builders for Windows (`Setup.exe` + `Portable.zip`), macOS (`arm64` + `x64` `.dmg`), and Linux (`.AppImage` + `.deb`) |
+| `main.spec` & `packaging/` | Single-source PyInstaller config and platform builders for Windows (`Setup.exe` + `Portable.zip`), macOS (Apple Silicon `arm64` `.dmg`), and Linux (`.AppImage` + `.deb`) |
 
 ### Platform Update Matrix & Design Rationale
 
@@ -446,7 +446,7 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 | `PIP_WHEEL` | Unfrozen `site-packages` install | `PythonUpdater`: downloads SHA-256 verified `.whl`, launches detached hardened-TLS `pip install --upgrade`, restarts |
 | `WINDOWS_VELOPACK` | Frozen Windows inside `current/` with `Update.exe` or `sq.version` | `WindowsVelopackUpdater`: downloads `releases.win.json` & delta/full `.nupkg` in Python using hardened `m_tls` (bypassing Rust `webpki-roots` inside `velopack 1.2.161`), then passes local directory ONLY to `velopack.UpdateManager` |
 | `WINDOWS_PORTABLE` | Frozen Windows outside Velopack layout | `WindowsPortableUpdater`: downloads & verifies `Portable.zip`, offers zip-slip-checked **Extract to Folder...** |
-| `MACOS_BUNDLE` | Frozen macOS inside `*.app/Contents/MacOS` | `MacOSUpdater`: downloads arch-matched `arm64`/`x64` `.dmg` and presents Control-click Gatekeeper guidance *(silent replacement deferred until Apple Developer ID signing/notarization is configured)* |
+| `MACOS_BUNDLE` | Frozen macOS inside `*.app/Contents/MacOS` | `MacOSUpdater`: downloads verified `arm64` `.dmg` (discontinued Intel `x64` hosts do not download incompatible `arm64` binaries) and presents Control-click Gatekeeper guidance *(silent replacement deferred until Apple Developer ID signing/notarization is configured)* |
 | `LINUX_APPIMAGE` | Frozen Linux with `$APPIMAGE` matching `$APPDIR` | `LinuxAppImageUpdater`: checks ELF header & SHA-256; atomic `mv` swap + relaunch via `shlex.quote` script when `$APPIMAGE` is writable, guided download otherwise |
 | `LINUX_DEB` | Frozen Linux with `/opt/spectroview/` or `.spectroview-deb` marker | `LinuxDebUpdater`: verifies `!<arch>\n` + SHA-256 and provides one-click copyable `sudo apt install` command |
 
@@ -458,7 +458,7 @@ Pushing a release tag (`vMAJOR.MINOR.PATCH` or `vMAJOR.MINOR.PATCH-rc.N` matchin
 2. **Parallel platform builders**:
    - **`build-python`**: `.whl` + `.tar.gz`, `twine check`, and clean venv wheel detection verification.
    - **`build-windows`**: PyInstaller (`--onedir`) + offscreen smoke test + `Portable.zip` + Velopack `vpk pack` (`Setup.exe`, `releases.win.json`, `*.nupkg`, chaining delta history).
-   - **`build-macos`** (`macos-15` `arm64` & `macos-15-intel` `x64`): Native `.app` + `.dmg` builds (env-gated optional `APPLE_SIGNING_IDENTITY` / `APPLE_CERTIFICATE_P12` / `APPLE_ID` notarization hooks ready when credentials are added).
+   - **`build-macos`** (`macos-15` `arm64`): Native Apple Silicon `.app` + `.dmg` build (env-gated optional `APPLE_SIGNING_IDENTITY` / `APPLE_CERTIFICATE_P12` / `APPLE_ID` notarization hooks ready when credentials are added).
    - **`build-linux`** (`ubuntu-22.04` glibc baseline): Builds `.AppImage` and `.deb`, validates `.desktop`, and runs live `apt-get install`, offscreen launch, AppImage launch, and config persistence (`~/.config/CEA-Leti/`) checks.
 3. **`release`**: Publishes unified GitHub Release with `SHA256SUMS.txt` (marking pre-releases automatically).
 4. **`publish-pypi`**: On stable releases, preserves the existing PyPI Trusted Publisher (`pypi` environment, `id-token: write`, `pypa/gh-action-pypi-publish@release/v1`).

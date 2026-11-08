@@ -173,8 +173,6 @@ jobs:
         include:
           - arch: arm64
             runner: macos-15
-          - arch: x64
-            runner: macos-15-intel
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -336,7 +334,7 @@ jobs:
           - **Windows**:
             - \`SPECTROview_${VER}_Windows_x64_Setup.exe\` — Per-user installer (Velopack) with Start Menu/Desktop shortcuts and delta/full automatic updates.
             - \`SPECTROview_${VER}_Windows_x64_Portable.zip\` — Extract and launch \`SPECTROview.exe\` without installation.
-          - **macOS** (\`SPECTROview_${VER}_macOS_arm64.dmg\`, \`SPECTROview_${VER}_macOS_x64.dmg\`):
+          - **macOS (Apple Silicon)** (\`SPECTROview_${VER}_macOS_arm64.dmg\`):
             - Drag \`SPECTROview.app\` to \`Applications\`. **Unsigned build note**: on first launch, Control-click \`SPECTROview.app\` → **Open** (or allow via **System Settings → Privacy & Security**).
           - **Linux**:
             - \`SPECTROview_${VER}_Linux_x86_64.AppImage\` — \`chmod +x\` and launch directly (supports in-place replacement updates when writable).

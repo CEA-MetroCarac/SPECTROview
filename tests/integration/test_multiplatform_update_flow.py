@@ -70,7 +70,6 @@ def simulated_release_transport(monkeypatch):
         "SPECTROview_26.47.0_Windows_x64_Setup.exe": b"MZ-setup",
         "SPECTROview_26.47.0_Windows_x64_Portable.zip": _build_fake_portable_zip_bytes(),
         "SPECTROview_26.47.0_macOS_arm64.dmg": b"koly-dmg-arm64",
-        "SPECTROview_26.47.0_macOS_x64.dmg": b"koly-dmg-x64",
         "SPECTROview_26.47.0_Linux_x86_64.AppImage": b"\x7fELF-appimage-v26.47.0",
         "SPECTROview_26.47.0_Linux_amd64.deb": b"!<arch>\ndebian-binary",
     }

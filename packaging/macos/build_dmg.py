@@ -1,13 +1,14 @@
-"""Build script for macOS standalone .app bundle and .dmg disk image.
+"""Build script for macOS Apple Silicon (``arm64``) standalone .app bundle and .dmg disk image.
 
-Supports both Apple Silicon (``arm64``) and Intel (``x64``) builds using
-the unified ``main.spec`` configuration. By default generates an unsigned /
-ad-hoc disk image without requiring Apple Developer credentials; optional
-Developer ID signing and notarization activate automatically when signing
-secrets are present in the environment.
+Targets Apple Silicon (``arm64``) builds using the unified ``main.spec``
+configuration (Intel ``x64`` / ``x86_64`` macOS builds are no longer
+supported). By default generates an unsigned / ad-hoc disk image without
+requiring Apple Developer credentials; optional Developer ID signing and
+notarization activate automatically when signing secrets are present in the
+environment.
 
 Usage:
-    python3 packaging/macos/build_dmg.py [--arch arm64|x64|auto] [--output-dir release_artifacts] [--smoke-test]
+    python3 packaging/macos/build_dmg.py [--arch arm64|auto] [--output-dir release_artifacts] [--smoke-test]
 """
 
 from __future__ import annotations
@@ -39,12 +40,19 @@ def read_version() -> str:
 
 
 def normalize_arch(raw_arch: Optional[str] = None) -> str:
-    """Normalise machine architecture strings into ``arm64`` or ``x64``."""
+    """Normalise machine architecture strings for Apple Silicon (``arm64``).
+
+    macOS builds target Apple Silicon (``arm64``) exclusively; Intel (``x64`` /
+    ``x86_64``) builds are no longer supported.
+    """
     val = (raw_arch or platform.machine() or "arm64").strip().lower()
     if val in ("arm64", "aarch64", "apple_silicon"):
         return "arm64"
     if val in ("x86_64", "amd64", "x64", "intel"):
-        return "x64"
+        raise ValueError(
+            f"Unsupported macOS architecture: {raw_arch or platform.machine()!r}. "
+            "Intel macOS builds are no longer supported; only Apple Silicon (arm64) is supported."
+        )
     raise ValueError(f"Unsupported macOS architecture: {raw_arch!r}")
 
 
@@ -261,7 +269,12 @@ def maybe_notarize_dmg(dmg_path: Path) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build macOS SPECTROview .app and .dmg.")
-    parser.add_argument("--arch", default="auto", help="Target architecture: arm64, x64, or auto.")
+    parser.add_argument(
+        "--arch",
+        default="auto",
+        choices=["arm64", "auto"],
+        help="Target macOS architecture: Apple Silicon (arm64, default) or auto.",
+    )
     parser.add_argument("--output-dir", default="release_artifacts", help="Directory for output .dmg.")
     parser.add_argument("--smoke-test", action="store_true", help="Launch bundled .app offscreen briefly.")
     parser.add_argument("--skip-dmg", action="store_true", help="Build and verify .app only.")

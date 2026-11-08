@@ -97,10 +97,6 @@ def _sample_release(tag: str = "v26.47.0", prerelease: bool = False) -> ReleaseI
                 url=f"https://example.test/SPECTROview_{ver}_macOS_arm64.dmg",
             ),
             ReleaseAsset(
-                name=f"SPECTROview_{ver}_macOS_x64.dmg",
-                url=f"https://example.test/SPECTROview_{ver}_macOS_x64.dmg",
-            ),
-            ReleaseAsset(
                 name=f"SPECTROview_{ver}_Linux_x86_64.AppImage",
                 url=f"https://example.test/SPECTROview_{ver}_Linux_x86_64.AppImage",
             ),
@@ -276,7 +272,7 @@ class TestPlatformBackends:
         port = UpdateManager("26.46.1", install_info=_info(InstallType.WINDOWS_PORTABLE), client=client)
         assert port.get_backend().select_asset(rel).name.endswith("_Windows_x64_Portable.zip")
 
-        # macOS selects arm64 vs x64 by arch
+        # macOS Apple Silicon selects _macOS_arm64.dmg
         mac_arm = UpdateManager(
             "26.46.1",
             install_info=_info(InstallType.MACOS_BUNDLE, platform_name="darwin", architecture="arm64"),
@@ -284,12 +280,31 @@ class TestPlatformBackends:
         )
         assert mac_arm.get_backend().select_asset(rel).name.endswith("_macOS_arm64.dmg")
 
+        # macOS Intel does not select ARM64 binary from newer releases
         mac_intel = UpdateManager(
             "26.46.1",
             install_info=_info(InstallType.MACOS_BUNDLE, platform_name="darwin", architecture="x64"),
             client=client,
         )
-        assert mac_intel.get_backend().select_asset(rel).name.endswith("_macOS_x64.dmg")
+        assert mac_intel.get_backend().select_asset(rel) is None
+
+        # But if a legacy release contains an x64 or universal DMG, it still selects it
+        legacy_rel = ReleaseInfo(
+            tag="v26.43.1",
+            version="26.43.1",
+            name="v26.43.1",
+            html_url="https://example.test",
+            notes="",
+            prerelease=False,
+            published_at="",
+            assets=(
+                ReleaseAsset(
+                    name="SPECTROview_26.43.1_macOS_x64.dmg",
+                    url="https://example.test/SPECTROview_26.43.1_macOS_x64.dmg",
+                ),
+            ),
+        )
+        assert mac_intel.get_backend().select_asset(legacy_rel).name.endswith("_macOS_x64.dmg")
 
         # Linux AppImage vs .deb
         appimg = UpdateManager(

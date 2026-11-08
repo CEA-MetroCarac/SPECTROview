@@ -27,12 +27,10 @@ Select your operating system below:
 
 === ":material-apple: macOS"
 
-    Go to [**GitHub Releases**](https://github.com/CEA-MetroCarac/SPECTROview/releases), expand **Assets** on the latest release, and download the `.dmg` file for your Mac:
+    Go to [**GitHub Releases**](https://github.com/CEA-MetroCarac/SPECTROview/releases), expand **Assets** on the latest release, and download the **`...macOS_arm64.dmg`** file (**Apple Silicon Macs — M1 or newer**).
 
-    - **Apple Silicon Macs (M1, M2, M3, M4 — most Macs since 2020):** download `...macOS_arm64.dmg`
-    - **Older Intel Macs:** download `...macOS_x64.dmg`
-
-    *(Not sure which Mac you have? Click the **Apple menu () → About This Mac** and check whether it lists **Chip: Apple ...** or **Processor: Intel**.)*
+    !!! info "Apple Silicon only"
+        Pre-built macOS `.dmg` installers support **Apple Silicon Macs only** (M1, M2, M3, M4, or newer; check **Apple menu () → About This Mac → Chip: Apple ...**). Older Intel Macs are not supported by the desktop installer.
 
     **Steps to install:**
 

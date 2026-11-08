@@ -1811,7 +1811,8 @@
 </ul>
 <h4 id="application-updates"><strong>Application Updates</strong><a class="headerlink" href="#application-updates" title="Permanent link">&para;</a></h4>
 <ul>
-<li><strong>Check for updates automatically on application startup</strong>: When checked (default), SPECTROview will periodically check for new releases in the background upon application launch.</li>
+<li><strong>Check for updates automatically on application startup</strong>: When checked (default), SPECTROview checks GitHub Releases periodically in the background upon launch (with HTTP <code>ETag</code> caching) and respects your installation format (<code>pip</code>, Windows Installer, Portable ZIP, macOS DMG, Linux AppImage, or <code>.deb</code>).</li>
+<li><strong>Include pre-release / release candidate builds</strong>: When checked, update checks also consider pre-release tags (such as <code>-rc.1</code> or <code>-beta</code>). Disabled by default so most users receive stable releases only.</li>
 </ul>
 <hr />
 <h3 id="2-fit-convergence-parameters-fit-settings-tab"><strong>2. Fit Convergence Parameters</strong> <em>(Fit Settings tab)</em><a class="headerlink" href="#2-fit-convergence-parameters-fit-settings-tab" title="Permanent link">&para;</a></h3>
@@ -2001,10 +2002,14 @@ LAN or internet. Keep SPECTROview running while the client is connected.</p>
 <p>The <strong>About</strong> tab provides comprehensive runtime and reference information:</p>
 <ul>
 <li><strong>Application Details</strong>: Official SPECTROview logo, title, version number (<code>Version {VERSION}</code>), and build number (<code>Build: {BUILD_NUMBER}</code>).</li>
-<li><strong>Environment &amp; Dependencies</strong>: Automatically detects execution mode and displays dependency versions:</li>
-<li><strong>Standalone Executable (.exe)</strong>: Shows the exact dependencies bundled at build time from the packaging machine, along with bundled Python and host/build OS.</li>
-<li><strong>Installed Package (.whl / pip)</strong>: Dynamically queries and displays the live package versions active on the local machine.</li>
-<li>Lists <code>PySide6</code> (with Qt runtime version), scientific stack (<code>numpy</code>, <code>scipy</code>, <code>matplotlib</code>, <code>pandas</code>, <code>pybaselines</code>), export engines (<code>openpyxl</code>, <code>pyarrow</code>), UI extensions (<code>superqt</code>), and optional AI SDKs.</li>
+<li>
+<p><strong>Environment &amp; Dependencies</strong>: Automatically detects execution and packaging mode (<code>Python Package (.whl / local)</code>, <code>Windows Installer (Velopack)</code>, <code>Windows Portable</code>, <code>macOS Application (.app)</code>, <code>Linux AppImage</code>, or <code>Linux Debian Package (.deb)</code>) and displays dependency versions:</p>
+</li>
+<li>
+<p><strong>Standalone Builds</strong>: Serve the frozen dependency snapshot recorded at packaging time, along with bundled Python and host/build OS details.</p>
+</li>
+<li><strong>Installed Package (<code>.whl</code> / <code>pip</code> / Dev)</strong>: Dynamically inspect live package versions active in the local Python environment.</li>
+<li>Lists <code>PySide6</code> (with Qt runtime version), TLS &amp; security stack (<code>certifi</code>, <code>truststore</code>), scientific stack (<code>numpy</code>, <code>scipy</code>, <code>matplotlib</code>, <code>pandas</code>, <code>pybaselines</code>), export engines (<code>openpyxl</code>, <code>pyarrow</code>), UI extensions (<code>superqt</code>), and AI chat SDKs.</li>
 <li><strong>Check for Updates</strong>: Direct action to check GitHub releases for new versions.</li>
 <li><strong>Paper Citation</strong>: The canonical SoftwareX peer-reviewed citation with DOI, along with a <strong>Copy</strong> button to quickly copy the citation into your clipboard.</li>
 </ul>

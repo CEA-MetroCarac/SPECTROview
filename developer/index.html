@@ -1673,90 +1673,98 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>│   ├── m_mva.py            # PCA + NMF engine
 <a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>│   ├── m_fit_model_manager.py # Saved fit model file management
 <a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>│   ├── m_quick_calculators.py     # Pure math logic for scientific calculators (Spot Size, Depth, Unit conversion)
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>│   ├── m_update_checker.py # Background GitHub release checker (QThread)
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>│   ├── m_wdf.py            # Renishaw WiRE WDF binary reader
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>│   ├── m_spc.py            # Galactic SPC binary reader
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>│   ├── m_l6s.py            # HORIBA LabSpec 6 (.l6s / .l6m) binary reader
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>│   └── m_ngs.py            # HORIBA LabSpec 5 (.ngs / .ngc) binary reader
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>│
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>├── viewmodel/              # Business logic and data orchestration
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>│   ├── vm_workspace_spectra.py   # Spectra workspace logic (base class)
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>│   ├── vm_workspace_maps.py      # Maps workspace (extends Spectra VM)
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>│   ├── vm_workspace_graphs.py    # Graphs workspace logic
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>│   ├── vm_fit_model_builder.py   # Fit model file management orchestration
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>│   ├── vm_mva.py                 # MVA orchestration
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>│   ├── vm_settings.py            # Settings persistence
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>│   └── utils.py                  # Helpers, notification adapter
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>│
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>├── ai_agent/               # AI Data Chat module (multi-provider; runtime-optional)
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>│   ├── __init__.py              # Module docstring, keeps import guarded
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>│   ├── m_llm_client.py          # Multi-provider LLM clients (Ollama/OpenAI/Anthropic) + QThread workers
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>│   ├── m_conversation.py        # Conversation model (+ m_conversation_store.py: history)
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>│   ├── m_prompt_manager.py      # System-prompt / rules / knowledge assembly
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>│   ├── mcp/server.py            # Shared FastMCP chat + full desktop tool profiles
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>│   ├── mcp/runtime.py           # Opt-in loopback Streamable HTTP lifecycle
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>│   ├── config/, prompts/, rules/, knowledge/, examples/, utils/  # Prompt assets + helpers (see ai_agent.md)
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>│   ├── vm_chat.py               # Chat ViewModel (prompt-tier selection, agentic loop)
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>│   └── v_chat_panel.py          # Floating chat dialog (+ v_history_dialog.py)
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>│
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>├── view/                   # Qt widgets and UI layout
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>│   ├── v_workspace_spectra.py    # Spectra workspace View
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>│   ├── v_workspace_maps.py       # Maps workspace View (extends Spectra)
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>│   ├── v_workspace_graphs.py     # Graphs workspace View
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>│   ├── v_quick_calculators.py    # Scientific calculators GUI
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>│   └── components/               # Shared / reusable widgets
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>│       ├── v_spectra_viewer.py        # Matplotlib spectra canvas
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>│       ├── v_spectra_legend_editor.py  # Batch spectrum label/color editor
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>│       ├── v_fit_model_builder.py     # Baseline + Peak + Fit controls
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>│       ├── v_peak_table.py            # Interactive peak parameter table
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>│       ├── v_map_viewer.py            # Heatmap / wafer canvas
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>│       ├── v_map_viewer_dialog.py     # Detachable map viewer window
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>│       ├── v_map_list.py              # Loaded maps list panel
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>│       ├── v_graph.py                 # Single graph widget (matplotlib)
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>│       ├── v_mva.py                   # PCA/NMF controls and plots
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>│       ├── v_fit_results.py           # Fit results DataFrame table
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>│       ├── v_data_filter.py           # Dynamic query filter panel
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>│       ├── v_dataframe_table.py       # Generic DataFrame viewer
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>│       ├── v_notification.py          # Native floating notification badges &amp; manager
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>│       ├── v_spectra_list.py          # Spectrum list with checkboxes
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>│       ├── v_moretab.py               # Metadata / tab panel
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>│       ├── v_settings.py              # Fit/view settings dialog
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>│       ├── v_menubar.py               # Main menu bar
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>│       ├── v_about.py                 # About dialog
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>│       ├── v_update_banner.py         # Update notification banner widget
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>│       ├── markdown_utils.py          # Markdown spacing normalizer for Python-Markdown
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>│       ├── customized_widgets.py      # Palette combobox, custom toolbar
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>│       └── customize_graph/           # Graph customization dialog (two-panel Settings-like package)
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>│           ├── customize_graph_dialog.py     # CustomizeGraphDialog (two-panel host with search &amp; live preview)
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>│           ├── common.py                     # NavItemDelegate and highlight styling helpers
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>│           ├── tab_general.py                # General &amp; Typography tab (theme, grid, rotation, fonts, sorting)
-<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>│           ├── tab_axes_limits.py            # Axes &amp; Limits tab (scales, limits, sliders, breaks)
-<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>│           ├── tab_ticks_spines.py           # Ticks &amp; Spines tab (direction, format, minor ticks, borders)
-<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>│           ├── tab_secondary_inset.py        # Secondary &amp; Inset tab (Y2/Y3/X2 twin axes, zoom insets)
-<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>│           ├── tab_legend_series.py          # Legend &amp; Series tab (legend box, unify markers, series table)
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>│           ├── tab_plot_styles.py            # Plot Style &amp; Fitting tab (style options, unified error bars, trendlines, histograms)
-<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>│           ├── tab_annotations.py            # Annotations tab (add, edit, list, canvas drag sync)
-<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>│           └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
-<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>│       └── theme/                     # Theme &amp; font architecture (ThemeManager, tokens, palettes, fonts)
-<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>│           ├── manager.py             # Single owner of application-wide theme state
-<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>│           ├── fonts.py               # Cross-platform application font configuration (macOS/Windows/Linux)
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>│           ├── palettes.py            # QPalette builders for 5 canonical themes
-<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>│           ├── qss_template.py        # Parameterized QSS template
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>│           └── tokens.py              # ThemeTokens dataclass and presets
-<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>│
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>├── fit_engine/             # High-performance batch fitting
-<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>│   ├── vbf_engine.py            # Orchestrator (VBFengine)
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>│   ├── evaluator.py             # Parameter mapping (VBFevaluator)
-<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>│   ├── optimizer.py             # Batched Levenberg-Marquardt
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>│   ├── models.py                # Batched peak functions + Jacobians
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>│   ├── scalar_models.py         # Fallback scalar functions + PEAK_MODEL_REGISTRY
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>│   ├── vbf_thread.py            # QThread wrapper
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>│   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
-<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>│   └── noise.py                 # Noise estimation functions
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>│
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>└── resources/              # Icons and Matplotlib stylesheets
-<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>    ├── icons/
-<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>    └── *.mplstyle
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>│   ├── m_tls.py              # Hardened TLS trust-store &amp; certifi/pip security validation (GHSA-6q48-6c7w-9gw2)
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>│   ├── m_installation.py     # Centralized runtime install detection (InstallType &amp; InstallationManager)
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>│   ├── m_update_manager.py   # Multi-platform UpdateManager facade, ETag cache, SHA256SUMS, platform backends
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>│   ├── m_update_checker.py   # Legacy pip/wheel QThread workers &amp; detached upgrade helper (preserved for compatibility)
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>│   ├── m_wdf.py            # Renishaw WiRE WDF binary reader
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>│   ├── m_spc.py            # Galactic SPC binary reader
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>│   ├── m_l6s.py            # HORIBA LabSpec 6 (.l6s / .l6m) binary reader
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>│   └── m_ngs.py            # HORIBA LabSpec 5 (.ngs / .ngc) binary reader
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>│
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>├── viewmodel/              # Business logic and data orchestration
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>│   ├── vm_workspace_spectra.py   # Spectra workspace logic (base class)
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>│   ├── vm_workspace_maps.py      # Maps workspace (extends Spectra VM)
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>│   ├── vm_workspace_graphs.py    # Graphs workspace logic
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>│   ├── vm_fit_model_builder.py   # Fit model file management orchestration
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>│   ├── vm_mva.py                 # MVA orchestration
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>│   ├── vm_settings.py            # Settings persistence
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>│   └── utils.py                  # Helpers, notification adapter
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>│
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>├── ai_agent/               # AI Data Chat module (multi-provider; runtime-optional)
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>│   ├── __init__.py              # Module docstring, keeps import guarded
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>│   ├── m_llm_client.py          # Multi-provider LLM clients (Ollama/OpenAI/Anthropic) + QThread workers
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>│   ├── m_conversation.py        # Conversation model (+ m_conversation_store.py: history)
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>│   ├── m_prompt_manager.py      # System-prompt / rules / knowledge assembly
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>│   ├── mcp/server.py            # Shared FastMCP chat + full desktop tool profiles
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>│   ├── mcp/runtime.py           # Opt-in loopback Streamable HTTP lifecycle
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>│   ├── config/, prompts/, rules/, knowledge/, examples/, utils/  # Prompt assets + helpers (see ai_agent.md)
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>│   ├── vm_chat.py               # Chat ViewModel (prompt-tier selection, agentic loop)
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>│   └── v_chat_panel.py          # Floating chat dialog (+ v_history_dialog.py)
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>│
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>├── view/                   # Qt widgets and UI layout
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>│   ├── v_workspace_spectra.py    # Spectra workspace View
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>│   ├── v_workspace_maps.py       # Maps workspace View (extends Spectra)
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>│   ├── v_workspace_graphs.py     # Graphs workspace View
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>│   ├── v_quick_calculators.py    # Scientific calculators GUI
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>│   └── components/               # Shared / reusable widgets
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>│       ├── v_spectra_viewer.py        # Matplotlib spectra canvas
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>│       ├── v_spectra_legend_editor.py  # Batch spectrum label/color editor
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>│       ├── v_fit_model_builder.py     # Baseline + Peak + Fit controls
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>│       ├── v_peak_table.py            # Interactive peak parameter table
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>│       ├── v_map_viewer.py            # Heatmap / wafer canvas
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>│       ├── v_map_viewer_dialog.py     # Detachable map viewer window
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>│       ├── v_map_list.py              # Loaded maps list panel
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>│       ├── v_graph.py                 # Single graph widget (matplotlib)
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>│       ├── v_mva.py                   # PCA/NMF controls and plots
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>│       ├── v_fit_results.py           # Fit results DataFrame table
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>│       ├── v_data_filter.py           # Dynamic query filter panel
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>│       ├── v_dataframe_table.py       # Generic DataFrame viewer
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>│       ├── v_notification.py          # Native floating notification badges &amp; manager
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>│       ├── v_spectra_list.py          # Spectrum list with checkboxes
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>│       ├── v_moretab.py               # Metadata / tab panel
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>│       ├── v_settings.py              # Fit/view settings dialog
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>│       ├── v_menubar.py               # Main menu bar
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>│       ├── v_about.py                 # About dialog
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>│       ├── v_update_banner.py         # Update notification banner widget
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>│       ├── markdown_utils.py          # Markdown spacing normalizer for Python-Markdown
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>│       ├── customized_widgets.py      # Palette combobox, custom toolbar
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>│       └── customize_graph/           # Graph customization dialog (two-panel Settings-like package)
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>│           ├── customize_graph_dialog.py     # CustomizeGraphDialog (two-panel host with search &amp; live preview)
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>│           ├── common.py                     # NavItemDelegate and highlight styling helpers
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>│           ├── tab_general.py                # General &amp; Typography tab (theme, grid, rotation, fonts, sorting)
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>│           ├── tab_axes_limits.py            # Axes &amp; Limits tab (scales, limits, sliders, breaks)
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>│           ├── tab_ticks_spines.py           # Ticks &amp; Spines tab (direction, format, minor ticks, borders)
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>│           ├── tab_secondary_inset.py        # Secondary &amp; Inset tab (Y2/Y3/X2 twin axes, zoom insets)
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>│           ├── tab_legend_series.py          # Legend &amp; Series tab (legend box, unify markers, series table)
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>│           ├── tab_plot_styles.py            # Plot Style &amp; Fitting tab (style options, unified error bars, trendlines, histograms)
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>│           ├── tab_annotations.py            # Annotations tab (add, edit, list, canvas drag sync)
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>│           └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>│       └── theme/                     # Theme &amp; font architecture (ThemeManager, tokens, palettes, fonts)
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>│           ├── manager.py             # Single owner of application-wide theme state
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>│           ├── fonts.py               # Cross-platform application font configuration (macOS/Windows/Linux)
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>│           ├── palettes.py            # QPalette builders for 5 canonical themes
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>│           ├── qss_template.py        # Parameterized QSS template
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>│           └── tokens.py              # ThemeTokens dataclass and presets
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>│
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>├── fit_engine/             # High-performance batch fitting
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>│   ├── vbf_engine.py            # Orchestrator (VBFengine)
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>│   ├── evaluator.py             # Parameter mapping (VBFevaluator)
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>│   ├── optimizer.py             # Batched Levenberg-Marquardt
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>│   ├── models.py                # Batched peak functions + Jacobians
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>│   ├── scalar_models.py         # Fallback scalar functions + PEAK_MODEL_REGISTRY
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>│   ├── vbf_thread.py            # QThread wrapper
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>│   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>│   └── noise.py                 # Noise estimation functions
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>│
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>├── resources/              # Icons, fonts, build_info schema, Matplotlib stylesheets
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>│   ├── icons/
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>│   └── *.mplstyle
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>│
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>packaging/                  # Standalone platform build pipelines (reusing root main.spec)
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>├── windows/build_windows.py      # PyInstaller --onedir + Portable ZIP + Velopack vpk pack
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>├── macos/{build_dmg.py,build_dmg.sh,entitlements.plist}
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>└── linux/{build_linux.py,build_appimage.sh,build_deb.sh,spectroview.desktop}
 </code></pre></div>
 <hr />
 <h2 id="application-entry-point"><strong>Application Entry Point</strong><a class="headerlink" href="#application-entry-point" title="Permanent link">&para;</a></h2>
@@ -2003,9 +2011,14 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 <td>Batched fitting (primary engine)</td>
 </tr>
 <tr>
+<td><code>UnifiedUpdateCheckWorker</code> / <code>UnifiedUpdateDownloadWorker</code></td>
+<td><code>model/m_update_manager.py</code></td>
+<td>Multi-platform release checks (ETag cached) and SHA-256 verified downloads</td>
+</tr>
+<tr>
 <td><code>UpdateCheckerWorker</code></td>
 <td><code>model/m_update_checker.py</code></td>
-<td>Background GitHub release check at startup</td>
+<td>Legacy pip/wheel background checker &amp; updater (backward compatibility)</td>
 </tr>
 <tr>
 <td><code>LLMWorker</code> / <code>APIWorker</code> / <code>AnthropicWorker</code></td>
@@ -2080,10 +2093,9 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 </tbody>
 </table>
 <hr />
-<h2 id="update-checker"><strong>Update Checker</strong><a class="headerlink" href="#update-checker" title="Permanent link">&para;</a></h2>
+<h2 id="multi-platform-update-packaging-architecture"><strong>Multi-Platform Update &amp; Packaging Architecture</strong><a class="headerlink" href="#multi-platform-update-packaging-architecture" title="Permanent link">&para;</a></h2>
 <h3 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h3>
-<p><code>SPECTROview</code> ships a lightweight, opt-out update system that queries the GitHub Releases API in the background and displays a dismissable banner when a newer version is found. The banner can download the wheel attached to that exact release, verify its GitHub SHA-256 digest when available, close the application, install the wheel with pip, and relaunch it.</p>
-<p>No extra dependency is required — only Python's built-in <code>urllib</code>.</p>
+<p><code>SPECTROview</code> exposes a unified installation-detection and update facade (<code>UpdateManager</code> in <code>model/m_update_manager.py</code>) backed by <code>InstallationManager</code> (<code>model/m_installation.py</code>) and centralized TLS hardening (<code>model/m_tls.py</code>). Users receive the same banner, ETag-cached release check, pre-release toggle, and <code>SHA256SUMS.txt</code> integrity verification workflow across every distribution target without needing to understand how SPECTROview was installed.</p>
 <h3 id="key-files">Key Files<a class="headerlink" href="#key-files" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2094,104 +2106,95 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 </thead>
 <tbody>
 <tr>
+<td><code>model/m_tls.py</code></td>
+<td>Pure-model CA trust enforcement (<code>GHSA-6q48-6c7w-9gw2</code>): <code>SSL_CERT_FILE</code>/<code>REQUESTS_CA_BUNDLE</code> → OS <code>truststore</code> → validated <code>certifi &gt;= 2026.10.23</code> (<code>pip &gt;= 26.2.2</code> build gate)</td>
+</tr>
+<tr>
+<td><code>model/m_installation.py</code></td>
+<td>Pure-model <code>InstallType</code> classifier (<code>DEV_SOURCE</code>, <code>PIP_WHEEL</code>, <code>WINDOWS_VELOPACK</code>, <code>WINDOWS_PORTABLE</code>, <code>MACOS_BUNDLE</code>, <code>LINUX_APPIMAGE</code>, <code>LINUX_DEB</code>, <code>STANDALONE_UNKNOWN</code>)</td>
+</tr>
+<tr>
+<td><code>model/m_update_manager.py</code></td>
+<td><code>GitHubReleaseClient</code> (<code>ETag</code> + TTL cache), <code>UpdateManager</code> facade, <code>UnifiedUpdateCheckWorker</code>, <code>UnifiedUpdateDownloadWorker</code>, and platform updaters</td>
+</tr>
+<tr>
 <td><code>model/m_update_checker.py</code></td>
-<td><code>QThread</code> workers for release checks and wheel downloads; creates the detached pip-install/restart helper</td>
+<td>Legacy pip/wheel workers preserved cleanly plus hardened pip upgrade runner (<code>--use-feature=truststore</code> / <code>--cert</code>)</td>
 </tr>
 <tr>
 <td><code>view/components/v_update_banner.py</code></td>
-<td>Slim 36 px banner widget inserted at position 0 of the central layout</td>
-</tr>
-<tr>
-<td><code>model/m_settings.py</code></td>
-<td>Stores <code>enabled</code>, <code>skipped_version</code>, and <code>last_check_date</code> in <code>QSettings</code></td>
+<td>Slim banner displaying version transition (<code>current → latest</code>) and dynamic platform action label</td>
 </tr>
 <tr>
 <td><code>main.py</code></td>
-<td>Starts the thread via <code>QTimer.singleShot(2000, ...)</code> from <code>showEvent</code></td>
+<td>Executes early <code>_run_velopack_bootstrap()</code> hook before <code>QApplication</code> only when Velopack is active; wires unified update banner &amp; guided dialogs</td>
+</tr>
+<tr>
+<td><code>main.spec</code> &amp; <code>packaging/</code></td>
+<td>Single-source PyInstaller config and platform builders for Windows (<code>Setup.exe</code> + <code>Portable.zip</code>), macOS (<code>arm64</code> + <code>x64</code> <code>.dmg</code>), and Linux (<code>.AppImage</code> + <code>.deb</code>)</td>
 </tr>
 </tbody>
 </table>
-<h3 id="flow">Flow<a class="headerlink" href="#flow" title="Permanent link">&para;</a></h3>
-<pre class="mermaid"><code>sequenceDiagram
-    participant Main
-    participant Timer as QTimer (2 s)
-    participant Worker as UpdateCheckerWorker
-    participant GitHub as api.github.com
-    participant Banner as VUpdateBanner
-    participant Helper as Update helper
-    actor User
-
-    Main-&gt;&gt;Timer: showEvent → singleShot(2000)
-    Timer-&gt;&gt;Worker: _start_update_check() → worker.start()
-    Worker-&gt;&gt;GitHub: GET /repos/CEA-MetroCarac/SPECTROview/releases/latest
-    GitHub--&gt;&gt;Worker: JSON {tag_name, html_url, body, assets[]}
-    Worker-&gt;&gt;Worker: compare versions
-    alt newer version found
-        Worker--&gt;&gt;Main: update_available(tag, notes, url, wheel URL, SHA-256)
-        Main-&gt;&gt;Banner: insertWidget(0, VUpdateBanner(...))
-        User-&gt;&gt;Banner: Update
-        Banner-&gt;&gt;GitHub: Download release wheel in QThread
-        GitHub--&gt;&gt;Banner: Wheel bytes
-        Banner-&gt;&gt;Helper: Start detached updater and close app
-        Helper-&gt;&gt;Helper: pip install --upgrade wheel
-        Helper-&gt;&gt;Main: Relaunch installed SPECTROview
-    end
-    Worker--&gt;&gt;Main: check_finished → set_last_check_date(today)</code></pre>
-<h3 id="design-decisions">Design Decisions<a class="headerlink" href="#design-decisions" title="Permanent link">&para;</a></h3>
+<h3 id="platform-update-matrix-design-rationale">Platform Update Matrix &amp; Design Rationale<a class="headerlink" href="#platform-update-matrix-design-rationale" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Decision</th>
-<th>Rationale</th>
+<th><code>InstallType</code></th>
+<th>Detection Basis</th>
+<th>Update Backend &amp; Mechanism</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong><code>QThread</code> instead of <code>QNetworkAccessManager</code></strong></td>
-<td>Pure Python <code>urllib</code> avoids Qt networking module complexity; thread is simpler to test</td>
+<td><code>DEV_SOURCE</code></td>
+<td>Unfrozen + <code>.git</code> / <code>pyproject.toml</code> / PEP 610 editable metadata</td>
+<td><code>UnsupportedUpdater</code>: version notification only — never modifies dev checkouts</td>
 </tr>
 <tr>
-<td><strong>2-second startup delay</strong></td>
-<td>Ensures the UI is fully painted before the network request starts</td>
+<td><code>PIP_WHEEL</code></td>
+<td>Unfrozen <code>site-packages</code> install</td>
+<td><code>PythonUpdater</code>: downloads SHA-256 verified <code>.whl</code>, launches detached hardened-TLS <code>pip install --upgrade</code>, restarts</td>
 </tr>
 <tr>
-<td><strong>Once-per-day throttle</strong></td>
-<td>Avoids redundant requests; the date is persisted via <code>QSettings</code></td>
+<td><code>WINDOWS_VELOPACK</code></td>
+<td>Frozen Windows inside <code>current/</code> with <code>Update.exe</code> or <code>sq.version</code></td>
+<td><code>WindowsVelopackUpdater</code>: downloads <code>releases.win.json</code> &amp; delta/full <code>.nupkg</code> in Python using hardened <code>m_tls</code> (bypassing Rust <code>webpki-roots</code> inside <code>velopack 1.2.161</code>), then passes local directory ONLY to <code>velopack.UpdateManager</code></td>
 </tr>
 <tr>
-<td><strong>Silent check failure</strong></td>
-<td><code>URLError</code>, <code>OSError</code>, <code>json.JSONDecodeError</code> are caught — offline machines see no error</td>
+<td><code>WINDOWS_PORTABLE</code></td>
+<td>Frozen Windows outside Velopack layout</td>
+<td><code>WindowsPortableUpdater</code>: downloads &amp; verifies <code>Portable.zip</code>, offers zip-slip-checked <strong>Extract to Folder...</strong></td>
 </tr>
 <tr>
-<td><strong>Version comparison via tuples</strong></td>
-<td><code>_parse_version('v26.29.0') → (26, 29, 0)</code> handles <code>v</code>-prefixed tags and non-numeric parts gracefully</td>
+<td><code>MACOS_BUNDLE</code></td>
+<td>Frozen macOS inside <code>*.app/Contents/MacOS</code></td>
+<td><code>MacOSUpdater</code>: downloads arch-matched <code>arm64</code>/<code>x64</code> <code>.dmg</code> and presents Control-click Gatekeeper guidance <em>(silent replacement deferred until Apple Developer ID signing/notarization is configured)</em></td>
 </tr>
 <tr>
-<td><strong>Release asset source</strong></td>
-<td>GitHub provides the version, release notes, wheel URL, and integrity digest in one public API response; PyPI remains the normal package-install channel</td>
+<td><code>LINUX_APPIMAGE</code></td>
+<td>Frozen Linux with <code>$APPIMAGE</code> matching <code>$APPDIR</code></td>
+<td><code>LinuxAppImageUpdater</code>: checks ELF header &amp; SHA-256; atomic <code>mv</code> swap + relaunch via <code>shlex.quote</code> script when <code>$APPIMAGE</code> is writable, guided download otherwise</td>
 </tr>
 <tr>
-<td><strong>Detached helper</strong></td>
-<td>The helper waits for Qt to exit, installs with the launching interpreter, then clears <code>PYTHONPATH</code>/<code>PYTHONHOME</code> and restarts from a temporary working directory so a checkout cannot shadow the freshly installed package</td>
-</tr>
-<tr>
-<td><strong>Skip vs Dismiss</strong></td>
-<td><em>Skip</em> persists the exact tag — the banner re-appears for the next release. <em>Dismiss</em> hides only for the session</td>
-</tr>
-<tr>
-<td><strong>Secure TLS verification</strong></td>
-<td>Release checks and downloads prioritise custom CA environment variables (<code>SSL_CERT_FILE</code> / <code>REQUESTS_CA_BUNDLE</code>), the native OS trust store (<code>truststore</code>), and patched <code>certifi&gt;=2026.10.19</code> fallback to guard against compromised intermediate CAs and TLS interception</td>
+<td><code>LINUX_DEB</code></td>
+<td>Frozen Linux with <code>/opt/spectroview/</code> or <code>.spectroview-deb</code> marker</td>
+<td><code>LinuxDebUpdater</code>: verifies <code>!&lt;arch&gt;\n</code> + SHA-256 and provides one-click copyable <code>sudo apt install</code> command</td>
 </tr>
 </tbody>
 </table>
-<h3 id="adding-modifying-the-checker">Adding / Modifying the Checker<a class="headerlink" href="#adding-modifying-the-checker" title="Permanent link">&para;</a></h3>
-<p>Release automation lives in <code>.github/workflows/release.yml</code>. Pushing a <code>vMAJOR.MINOR.PATCH</code> tag whose value matches <code>spectroview.VERSION</code> builds the wheel and source distribution, attaches them to a GitHub release, and publishes them to PyPI through the <code>pypi</code> environment's Trusted Publisher.</p>
-<p>Before the first automated PyPI publication, register a Trusted Publisher for
-<code>CEA-MetroCarac/SPECTROview</code> in the PyPI project's <strong>Publishing</strong> settings with
-workflow filename <code>release.yml</code> and environment <code>pypi</code>. This lets GitHub Actions
-obtain a short-lived publishing token without storing a long-lived PyPI API token
-in the repository.</p>
-<p>To add a "disable updates" toggle to the Settings dialog, bind <code>MSettings.set_check_for_updates()</code> to a <code>QCheckBox</code> in <code>v_settings.py</code> — the <code>_start_update_check()</code> method in <code>main.py</code> already reads this flag before starting the thread.</p>
+<h3 id="multi-platform-release-automation-githubworkflowsreleaseyml">Multi-Platform Release Automation (<code>.github/workflows/release.yml</code>)<a class="headerlink" href="#multi-platform-release-automation-githubworkflowsreleaseyml" title="Permanent link">&para;</a></h3>
+<p>Pushing a release tag (<code>vMAJOR.MINOR.PATCH</code> or <code>vMAJOR.MINOR.PATCH-rc.N</code> matching <code>spectroview.VERSION</code>) triggers a unified Python 3.14 workflow:</p>
+<ol>
+<li><strong><code>verify</code></strong>: Validates tag/version parity, enforces <code>pip&gt;=26.2.2</code> and <code>certifi&gt;=2026.10.23</code>, and runs the headless unit/startup-import suites.</li>
+<li><strong>Parallel platform builders</strong>:</li>
+<li><strong><code>build-python</code></strong>: <code>.whl</code> + <code>.tar.gz</code>, <code>twine check</code>, and clean venv wheel detection verification.</li>
+<li><strong><code>build-windows</code></strong>: PyInstaller (<code>--onedir</code>) + offscreen smoke test + <code>Portable.zip</code> + Velopack <code>vpk pack</code> (<code>Setup.exe</code>, <code>releases.win.json</code>, <code>*.nupkg</code>, chaining delta history).</li>
+<li><strong><code>build-macos</code></strong> (<code>macos-15</code> <code>arm64</code> &amp; <code>macos-15-intel</code> <code>x64</code>): Native <code>.app</code> + <code>.dmg</code> builds (env-gated optional <code>APPLE_SIGNING_IDENTITY</code> / <code>APPLE_CERTIFICATE_P12</code> / <code>APPLE_ID</code> notarization hooks ready when credentials are added).</li>
+<li><strong><code>build-linux</code></strong> (<code>ubuntu-22.04</code> glibc baseline): Builds <code>.AppImage</code> and <code>.deb</code>, validates <code>.desktop</code>, and runs live <code>apt-get install</code>, offscreen launch, AppImage launch, and config persistence (<code>~/.config/CEA-Leti/</code>) checks.</li>
+<li><strong><code>release</code></strong>: Publishes unified GitHub Release with <code>SHA256SUMS.txt</code> (marking pre-releases automatically).</li>
+<li><strong><code>publish-pypi</code></strong>: On stable releases, preserves the existing PyPI Trusted Publisher (<code>pypi</code> environment, <code>id-token: write</code>, <code>pypa/gh-action-pypi-publish@release/v1</code>).</li>
+</ol>
+<p>Before the first PyPI release on a new fork/repository, register a Trusted Publisher for <code>CEA-MetroCarac/SPECTROview</code> in PyPI with workflow filename <code>release.yml</code> and environment <code>pypi</code>.</p>
 <hr />
 <h2 id="deep-dive-documentation"><strong>Deep-Dive Documentation</strong><a class="headerlink" href="#deep-dive-documentation" title="Permanent link">&para;</a></h2>
 <table>
@@ -2311,9 +2314,14 @@ For detailed developer and pair programming guidelines, refer to the <a href="ht
 <td>LLM backends + Model Context Protocol for AI Data Chat. <strong>Core dependencies</strong> (no <code>[ai]</code> extras group) — a plain <code>pip install</code> includes them; the feature is only <em>optional to use</em> at runtime.</td>
 </tr>
 <tr>
-<td><code>truststore</code></td>
-<td><code>≥ 0.9.0</code></td>
-<td>Routes TLS verification through the OS trust store (corporate/internal CAs) for cloud AI providers; import is guarded</td>
+<td><code>truststore</code> / <code>certifi</code></td>
+<td><code>truststore ≥ 0.9.0</code>, <code>certifi ≥ 2026.10.23</code></td>
+<td>Hardened TLS verification routing through the host OS trust store first and patched <code>certifi</code> fallback (<code>GHSA-6q48-6c7w-9gw2</code>); import is guarded</td>
+</tr>
+<tr>
+<td><code>velopack</code> / <code>pyinstaller</code> <em>(optional <code>[standalone]</code>)</em></td>
+<td><code>velopack ≥ 1.2.161</code>, <code>pyinstaller ≥ 6.10.0</code></td>
+<td>Standalone desktop bundling &amp; Windows Velopack installer/updater runtime hooks</td>
 </tr>
 </tbody>
 </table>

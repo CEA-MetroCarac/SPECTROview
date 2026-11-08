@@ -537,10 +537,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-install-from-pypi-recommended" class="md-nav__link">
+  <a href="#1-install-spectroview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Install from PyPI (Recommended)
+        1. Install SPECTROview
       
     </span>
   </a>
@@ -548,10 +548,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-install-from-github-latest-development-version" class="md-nav__link">
+  <a href="#2-using-the-built-in-ai-chat-agent" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Install from GitHub (Latest Development Version)
+        2. Using the Built-in AI Chat Agent
       
     </span>
   </a>
@@ -559,10 +559,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-ai-chat-agent-optional-voice-dictation" class="md-nav__link">
+  <a href="#3-automatic-updates" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. AI Chat Agent &amp; Optional Voice Dictation
+        3. Automatic Updates
       
     </span>
   </a>
@@ -570,71 +570,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-launch-spectroview" class="md-nav__link">
+  <a href="#4-common-questions-troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Launch SPECTROview
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-update-version-management" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Update &amp; Version Management
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#6-automatic-update-notifications" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6. Automatic Update Notifications
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="6. Automatic Update Notifications">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#how-it-works" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How it works
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#banner-actions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Banner actions
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#7-troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7. Troubleshooting
+        4. Common Questions &amp; Troubleshooting
       
     </span>
   </a>
@@ -1687,172 +1626,188 @@
   <h1>Installation</h1>
 
 <h2 id="installation"><strong>Installation</strong><a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<p><strong>SPECTROview</strong> requires <strong>Python &ge; 3.12</strong> (tested on Python 3.12, 3.13, and 3.14) and runs on <strong>Windows</strong>, <strong>macOS</strong>, and <strong>Linux</strong>. It can be installed and managed entirely from your system's command-line interface (e.g., Command Prompt or PowerShell on Windows, or Terminal on macOS/Linux).</p>
+<p>Choose the <strong>Desktop App</strong> (recommended — no Python or coding setup required) or install as a <strong>Python package (<code>pip</code>)</strong>.</p>
+<p>All installers are published on the official <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases"><strong>GitHub Releases</strong></a> page. Your preferences, fit models, and templates are stored separately from the application folder, so upgrading keeps all your work safe.</p>
 <hr />
-<h3 id="1-install-from-pypi-recommended"><strong>1. Install from PyPI (Recommended)</strong><a class="headerlink" href="#1-install-from-pypi-recommended" title="Permanent link">&para;</a></h3>
-<p>The simplest way to install <strong>SPECTROview</strong> is from the <a href="https://pypi.org/project/spectroview/">Python Package Index (PyPI)</a>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
-</code></pre></div>
-<div align="center">
-  <img src="../../user_manual_images/Installation/installation.gif" alt="Installation process" width="500"><br>
-  <i>Successfully installing SPECTROview via pip.</i>
+<h3 id="1-install-spectroview"><strong>1. Install SPECTROview</strong><a class="headerlink" href="#1-install-spectroview" title="Permanent link">&para;</a></h3>
+<p>Select your operating system below:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 12V6.75l6-1.32v6.48zm17-9v8.75l-10 .15V5.21zM3 13l6 .09v6.81l-6-1.15zm17 .25V22l-10-1.91V13.1z"/></svg></span> Windows</label><label for="__tabbed_1_2"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11"/></svg></span> macOS</label><label for="__tabbed_1_3"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.62 8.35c-.42.28-1.75 1.04-1.95 1.19-.39.31-.75.29-1.14-.01-.2-.16-1.53-.92-1.95-1.19-.48-.31-.45-.7.08-.92 1.64-.69 3.28-.64 4.91.03.49.21.51.6.05.9m7.22 7.28c-.93-2.09-2.2-3.99-3.84-5.66a4.3 4.3 0 0 1-1.06-1.88c-.1-.33-.17-.67-.24-1.01-.2-.88-.29-1.78-.7-2.61-.73-1.58-2-2.4-3.84-2.47-1.81.05-3.16.81-3.95 2.4-.21.43-.36.88-.46 1.34-.17.76-.32 1.55-.5 2.32-.15.65-.45 1.21-.96 1.71-1.61 1.57-2.9 3.37-3.88 5.35-.14.29-.28.58-.37.88-.19.66.29 1.12.99.96.44-.09.88-.18 1.3-.31.41-.15.57-.05.67.35.65 2.15 2.07 3.66 4.24 4.5 4.12 1.56 8.93-.66 9.97-4.58.07-.27.17-.37.47-.27.46.14.93.24 1.4.35.49.09.85-.16.92-.64.03-.26-.06-.49-.16-.73"/></svg></span> Linux</label><label for="__tabbed_1_4"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.14 7.5A2.86 2.86 0 0 1 22 10.36v3.78A2.86 2.86 0 0 1 19.14 17H12c0 .39.32.96.71.96H17v1.68a2.86 2.86 0 0 1-2.86 2.86H9.86A2.86 2.86 0 0 1 7 19.64v-3.75a2.85 2.85 0 0 1 2.86-2.85h5.25a2.85 2.85 0 0 0 2.85-2.86V7.5zm-4.28 11.79c-.4 0-.72.3-.72.89s.32.71.72.71a.71.71 0 0 0 .71-.71c0-.59-.32-.89-.71-.89m-10-1.79A2.86 2.86 0 0 1 2 14.64v-3.78A2.86 2.86 0 0 1 4.86 8H12c0-.39-.32-.96-.71-.96H7V5.36A2.86 2.86 0 0 1 9.86 2.5h4.28A2.86 2.86 0 0 1 17 5.36v3.75a2.85 2.85 0 0 1-2.86 2.85H8.89a2.85 2.85 0 0 0-2.85 2.86v2.68zM9.14 5.71c.4 0 .72-.3.72-.89s-.32-.71-.72-.71c-.39 0-.71.12-.71.71s.32.89.71.89"/></svg></span> Python (pip)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Go to <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases"><strong>GitHub Releases</strong></a>, expand <strong>Assets</strong> on the latest release, and choose one of the two Windows downloads:</p>
+<p><strong>Option A — Standard Installer (<code>...Windows_x64_Setup.exe</code>) <em>(Recommended)</em></strong></p>
+<ol>
+<li>Double-click the downloaded <code>.exe</code> file to install (no administrator password needed).</li>
+<li>Open <strong>SPECTROview</strong> from your <strong>Start Menu</strong> or <strong>Desktop</strong> shortcut.</li>
+<li>Future updates can be installed automatically inside the app with one click (<strong>Update and Restart</strong>).</li>
+</ol>
+<p><strong>Option B — Portable Version (<code>...Windows_x64_Portable.zip</code>) <em>(No installation)</em></strong></p>
+<ol>
+<li>Right-click the <code>.zip</code> file and choose <strong>Extract All...</strong> to any folder (including a USB stick or personal folder).</li>
+<li>Open the extracted folder and double-click <strong><code>SPECTROview.exe</code></strong>.</li>
+</ol>
 </div>
-
-<blockquote>
-<p><strong>Note:</strong> On systems where both Python 2 and Python 3 are installed, use <code>pip3</code> instead of <code>pip</code>:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip3<span class="w"> </span>install<span class="w"> </span>spectroview
-</code></pre></div></p>
-</blockquote>
-<h3 id="2-install-from-github-latest-development-version"><strong>2. Install from GitHub (Latest Development Version)</strong><a class="headerlink" href="#2-install-from-github-latest-development-version" title="Permanent link">&para;</a></h3>
-<p>To install the latest development version directly from the source repository:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/CEA-MetroCarac/SPECTROview.git
-</code></pre></div>
-<blockquote>
-<p>This installs the most recent code from the <code>main</code> branch, which may include features and fixes not yet published on PyPI.</p>
-</blockquote>
-<hr />
-<h3 id="3-ai-chat-agent-optional-voice-dictation"><strong>3. AI Chat Agent &amp; Optional Voice Dictation</strong><a class="headerlink" href="#3-ai-chat-agent-optional-voice-dictation" title="Permanent link">&para;</a></h3>
-<p>SPECTROview includes a built-in <strong>AI Chat Agent</strong> that allows you to query and visualize data using natural language. All the packages it needs (<code>ollama</code>, <code>openai</code>, <code>anthropic</code>, <code>mcp</code>, <code>truststore</code>) are installed automatically as part of the standard <code>pip install spectroview</code> — no extra step is required.</p>
+<div class="tabbed-block">
+<p>Go to <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases"><strong>GitHub Releases</strong></a>, expand <strong>Assets</strong> on the latest release, and download the <code>.dmg</code> file for your Mac:</p>
 <ul>
-<li><strong>For local AI (Ollama):</strong> also install <a href="https://ollama.com">Ollama</a> itself on your system (the Python <code>ollama</code> package alone only talks to a running Ollama service).</li>
-<li><strong>For Cloud AI (OpenAI, DeepSeek, Gemini, Anthropic, or a custom OpenAI-compatible endpoint):</strong> just configure your API key / base URL in <strong>Settings → AI</strong>.</li>
-<li><strong>For Voice Dictation (Microphone button):</strong> this remains optional — <code>pip install SpeechRecognition pyaudio</code>. If these are not installed, the microphone button still appears but shows an install instruction when clicked.</li>
+<li><strong>Apple Silicon Macs (M1, M2, M3, M4 — most Macs since 2020):</strong> download <code>...macOS_arm64.dmg</code></li>
+<li><strong>Older Intel Macs:</strong> download <code>...macOS_x64.dmg</code></li>
+</ul>
+<p><em>(Not sure which Mac you have? Click the <strong>Apple menu () → About This Mac</strong> and check whether it lists <strong>Chip: Apple ...</strong> or <strong>Processor: Intel</strong>.)</em></p>
+<p><strong>Steps to install:</strong></p>
+<ol>
+<li>Double-click the downloaded <code>.dmg</code> file.</li>
+<li>Drag <strong><code>SPECTROview</code></strong> onto the <strong><code>Applications</code></strong> folder icon.</li>
+<li><strong>First time opening only:</strong> Right-click (or <strong>Control-click</strong>) <strong>SPECTROview</strong> inside <strong>Applications</strong> → click <strong>Open</strong> → click <strong>Open</strong> in the confirmation popup.</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Why does macOS show a warning on first launch?</p>
+<p>SPECTROview is a free open-source app and does not currently use a paid Apple Developer signature. If macOS says the developer cannot be verified, open <strong>System Settings → Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>. You only need to do this once per version.</p>
+</div>
+</div>
+<div class="tabbed-block">
+<p>Go to <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases"><strong>GitHub Releases</strong></a>, expand <strong>Assets</strong> on the latest release, and choose your preferred format:</p>
+<p><strong>Option A — Ubuntu / Debian Installer (<code>...Linux_amd64.deb</code>) <em>(Recommended)</em></strong></p>
+<p>Double-click the downloaded <code>.deb</code> file to install it with your Software Center, or install from a terminal:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>update
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>./SPECTROview_*_Linux_amd64.deb
+</code></pre></div>
+<p>Then launch <strong>SPECTROview</strong> from your applications menu or by typing <code>spectroview</code>. Your settings remain safe in your home folder if you upgrade or uninstall later.</p>
+<p><strong>Option B — Portable AppImage (<code>...Linux_x86_64.AppImage</code>) <em>(No installation)</em></strong></p>
+<ol>
+<li>Right-click the file → <strong>Properties → Permissions</strong> → enable <strong>Allow executing file as program</strong> <em>(or run <code>chmod +x SPECTROview_*.AppImage</code>)</em>.</li>
+<li>Double-click the file to start <strong>SPECTROview</strong>.</li>
+</ol>
+<div class="admonition tip">
+<p class="admonition-title">On Ubuntu 24.04 or newer</p>
+<p>If double-clicking the AppImage does nothing, install FUSE once (<code>sudo apt install libfuse2t64</code>) or run <code>./SPECTROview_*.AppImage --appimage-extract-and-run</code>.</p>
+</div>
+</div>
+<div class="tabbed-block">
+<p>If you already use Python (<strong>Python &ge; 3.12</strong>), install <strong>SPECTROview</strong> directly from <a href="https://pypi.org/project/spectroview/">PyPI</a>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
+</code></pre></div>
+<p>Launch <strong>SPECTROview</strong> from your terminal or Anaconda Prompt:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>spectroview
+</code></pre></div>
+<p><div align="center">
+  <img src="../../user_manual_images/Installation/installation.gif" alt="Installing SPECTROview with pip" width="500"><br>
+  <i>Installing SPECTROview via pip.</i>
+</div></p>
+<details class="tip">
+<summary>More Python commands (upgrade, specific version, development build)</summary>
+<ul>
+<li><strong>Multiple Python versions installed?</strong> Use <code>pip3 install spectroview</code> or <code>python -m pip install spectroview</code>.</li>
+<li><strong>Upgrade to the latest release:</strong> <code>pip install --upgrade spectroview</code></li>
+<li><strong>Install a specific version:</strong> <code>pip install spectroview==26.46.1</code></li>
+<li><strong>Install the latest development code from GitHub:</strong> <code>pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git</code></li>
+<li><strong>Check installed version:</strong> <code>pip show spectroview</code></li>
+<li><strong>Optional voice dictation (Python only):</strong> <code>pip install SpeechRecognition pyaudio</code></li>
+</ul>
+</details>
+</div>
+</div>
+</div>
+<hr />
+<h3 id="2-using-the-built-in-ai-chat-agent"><strong>2. Using the Built-in AI Chat Agent</strong><a class="headerlink" href="#2-using-the-built-in-ai-chat-agent" title="Permanent link">&para;</a></h3>
+<p>The <strong>AI Chat Agent</strong> is already included — no extra installation is needed inside <strong>SPECTROview</strong>:</p>
+<ul>
+<li><strong>Cloud AI</strong> <em>(OpenAI, Gemini, DeepSeek, Anthropic, etc.)</em>: enter your API key in <strong>Settings → AI Settings</strong>.</li>
+<li><strong>Private Local AI</strong> <em>(runs offline on your own computer)</em>: install <a href="https://ollama.com">Ollama</a> and start it before opening <strong>SPECTROview</strong>.</li>
 </ul>
 <hr />
-<h3 id="4-launch-spectroview"><strong>4. Launch <strong>SPECTROview</strong></strong><a class="headerlink" href="#4-launch-spectroview" title="Permanent link">&para;</a></h3>
-<p>Once installed, open your terminal or command prompt and run:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>spectroview
-</code></pre></div>
-<p>The application window will open automatically.</p>
-<hr />
-<h3 id="5-update-version-management"><strong>5. Update &amp; Version Management</strong><a class="headerlink" href="#5-update-version-management" title="Permanent link">&para;</a></h3>
-<p>To update <strong>SPECTROview</strong> to the latest release:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>spectroview
-</code></pre></div>
-<p>To install a specific version (e.g., <code>26.29.3</code>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">spectroview</span><span class="o">==</span><span class="m">26</span>.29.3
-</code></pre></div>
-<p>To check which version is currently installed:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>pip<span class="w"> </span>show<span class="w"> </span>spectroview
-</code></pre></div>
-<hr />
-<h3 id="6-automatic-update-notifications"><strong>6. Automatic Update Notifications</strong><a class="headerlink" href="#6-automatic-update-notifications" title="Permanent link">&para;</a></h3>
-<p><strong>SPECTROview</strong> automatically checks for new releases on startup and notifies you with a non-intrusive banner at the top of the application window — no manual checking required.</p>
-<h4 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h4>
-<ul>
-<li><strong>On startup</strong>, a background thread silently queries the <a href="https://github.com/CEA-MetroCarac/SPECTROview/releases">GitHub Releases page</a> for the latest version.</li>
-<li>If a newer version is available, a <strong>blue notification banner</strong> appears at the top of the window:</li>
-</ul>
+<h3 id="3-automatic-updates"><strong>3. Automatic Updates</strong><a class="headerlink" href="#3-automatic-updates" title="Permanent link">&para;</a></h3>
+<p><strong>SPECTROview</strong> checks for new versions in the background shortly after opening (or anytime when you click <strong>Check for updates</strong> in the top toolbar). When an update is ready, a bar appears at the top of the window:</p>
 <div align="center">
-  <img src="../../user_manual_images/Installation/update_banner.png" alt="Automatic update notification banner" width="800"><br>
-  <i>Notification banner displayed when a newer version of SPECTROview is available.</i>
+  <img src="../../user_manual_images/Installation/update_banner.png" alt="Automatic update notification banner" width="820"><br>
+  <i>Update banner shown when a newer version is available.</i>
 </div>
 
-<blockquote>
-<p><strong>Privacy Guarantee</strong>: This check only sends a standard anonymous request to the public GitHub API to fetch the latest version number. <strong>Absolutely no personal or usage data is collected or transmitted.</strong></p>
-<p><strong>Security &amp; TLS Verification</strong>: Network operations use the operating system's native certificate trust store (<code>truststore</code>) or a patched certificate bundle (<code>certifi &gt;= 2026.10.19</code>), ensuring immediate protection against compromised intermediate Certificate Authorities and connection spoofing.</p>
-</blockquote>
-<h4 id="banner-actions">Banner actions<a class="headerlink" href="#banner-actions" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Click <strong>Update and Restart</strong> / <strong>Download Update</strong> to install or fetch the newest release.</li>
+<li>Click <strong>Show changelog</strong> to read what changed, <strong>Update later</strong> to dismiss for today, or <strong>Skip this version</strong> to stay on your current version until a future release.</li>
+</ul>
 <table>
 <thead>
 <tr>
-<th>Button</th>
-<th>Behaviour</th>
+<th>Your Version</th>
+<th>What Happens When You Update</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>⬇ Update</strong></td>
-<td>Downloads the <code>.whl</code> attached to the announced GitHub release, verifies its SHA-256 checksum when GitHub provides one, closes SPECTROview, runs <code>pip install --upgrade</code> with that wheel, and relaunches the app.</td>
+<td><strong>Windows Installer</strong> &amp; <strong>Python (<code>pip</code>)</strong></td>
+<td>Downloads, checks the file automatically, updates <strong>SPECTROview</strong>, and restarts it for you.</td>
 </tr>
 <tr>
-<td><strong>🔍 Show changelog</strong></td>
-<td>Opens the GitHub release page in your browser to see what's new.</td>
+<td><strong>Linux AppImage</strong> <em>(in a writable folder)</em></td>
+<td>Replaces itself safely and restarts <strong>SPECTROview</strong>.</td>
 </tr>
 <tr>
-<td><strong>Update later</strong></td>
-<td>Hides the banner for the current session only. It will reappear on the next launch if the update is still available.</td>
+<td><strong>Windows Portable</strong> &amp; <strong>macOS (<code>.dmg</code>)</strong></td>
+<td>Downloads the new verified file and opens a simple prompt so you can extract or drag it into <strong>Applications</strong>.</td>
 </tr>
 <tr>
-<td><strong>Skip this version</strong></td>
-<td>Hides the banner permanently for that specific version. It will not show again until an even newer version is released.</td>
+<td><strong>Ubuntu / Debian (<code>.deb</code>)</strong></td>
+<td>Downloads the verified <code>.deb</code> file and lets you copy the install command in one click.</td>
 </tr>
 </tbody>
 </table>
-<blockquote>
-<p><strong>Offline users</strong>: If <strong>SPECTROview</strong> is installed on a machine without internet access, the update check fails silently — the application starts and works exactly as normal. No error is raised.</p>
-<p><strong>Standalone executable users</strong>: Automatic updates apply to SPECTROview installations made with <code>pip</code>. A standalone executable cannot install a Python wheel, so use the release page to download a newer executable instead.</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">Offline friendly &amp; private</p>
+<p>No usage data or personal files are ever uploaded. If your computer is offline, startup update checks stay quiet so <strong>SPECTROview</strong> starts normally.</p>
+</div>
+<details class="info">
+<summary>Security &amp; corporate network details (for IT teams)</summary>
+<ul>
+<li><strong>File integrity:</strong> Every downloaded installer or package is checked against the official <code>SHA256SUMS.txt</code> checksum before anything runs.</li>
+<li><strong>Trusted HTTPS connections (<code>GHSA-6q48-6c7w-9gw2</code>):</strong> Network connections use your operating system's native certificate store first (supporting institutional/corporate CAs and custom <code>SSL_CERT_FILE</code> / <code>REQUESTS_CA_BUNDLE</code> variables) and require a patched <code>certifi</code> bundle (<code>&gt;= 2026.10.23</code>), refusing compromised eMudhra / emSign root CAs.</li>
+<li><strong>Pre-release testing:</strong> Optional release-candidate notifications can be toggled under <strong>Settings → General → Application Updates</strong>.</li>
+</ul>
+</details>
 <hr />
-<h3 id="7-troubleshooting"><strong>7. Troubleshooting</strong><a class="headerlink" href="#7-troubleshooting" title="Permanent link">&para;</a></h3>
+<h3 id="4-common-questions-troubleshooting"><strong>4. Common Questions &amp; Troubleshooting</strong><a class="headerlink" href="#4-common-questions-troubleshooting" title="Permanent link">&para;</a></h3>
 <details class="question">
-<summary><strong>pip: command not found</strong></summary>
-<p>This means <code>pip</code> is not on your system's PATH. Try one of the following:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>spectroview
-</code></pre></div>
-<p>Or, if you have multiple Python versions installed:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>spectroview
-</code></pre></div>
+<summary>macOS says “SPECTROview” cannot be opened (developer cannot be verified)</summary>
+<ol>
+<li>Open your <strong>Applications</strong> folder in <strong>Finder</strong>.</li>
+<li>Hold <strong>Control</strong> (or right-click) <strong><code>SPECTROview</code></strong> and choose <strong>Open</strong>.</li>
+<li>Click <strong>Open</strong> again on the popup dialog.</li>
+</ol>
+<p><em>(Alternatively: open <strong>System Settings → Privacy &amp; Security</strong>, scroll down, and click <strong>Open Anyway</strong>.)</em></p>
 </details>
 <details class="question">
-<summary><strong>Permission denied / Access is denied</strong></summary>
-<p>You may not have write permission to the global Python site-packages directory. Use the <code>--user</code> flag to install for your user only:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>spectroview
-</code></pre></div>
-<p>Alternatively, use a <strong>virtual environment</strong> (recommended):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>spectroview_env
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nb">source</span><span class="w"> </span>spectroview_env/bin/activate<span class="w">    </span><span class="c1"># macOS/Linux</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>spectroview_env<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">       </span><span class="c1"># Windows</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
-</code></pre></div>
+<summary>Windows: Should I download Setup.exe or Portable.zip?</summary>
+<p>Choose <strong><code>Setup.exe</code></strong> if you want Start Menu shortcuts and one-click automatic updates. Choose <strong><code>Portable.zip</code></strong> if you prefer no installation (or want to run from a USB drive) — make sure to <strong>Extract All...</strong> before double-clicking <code>SPECTROview.exe</code>.</p>
 </details>
 <details class="question">
-<summary><strong>PySide6 fails to install or <code>qt.qpa.plugin: Could not load the Qt platform plugin</code></strong></summary>
-<p>PySide6 is the GUI framework used by <strong>SPECTROview</strong>. If you encounter issues:</p>
+<summary>AppImage does not open on Ubuntu / Debian</summary>
+<p>Minimal Ubuntu setups sometimes lack FUSE 2 or Qt X11 libraries. Run these once in a terminal:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>update
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libfuse2t64<span class="w"> </span>libxcb-cursor0<span class="w"> </span>libxkbcommon-x11-0<span class="w"> </span>libegl1<span class="w"> </span>libgl1
+</code></pre></div>
+<p>Or start the AppImage without FUSE: <code>./SPECTROview_*.AppImage --appimage-extract-and-run</code>.</p>
+</details>
+<details class="question">
+<summary>Blank window or graphics crash when launching</summary>
+<p>Try launching with software graphics rendering before opening <strong>SPECTROview</strong>:</p>
 <ul>
-<li><strong>Ensure you are using Python &ge; 3.12</strong>.</li>
-<li><strong>On Linux</strong>, you may need to install system-level Qt dependencies:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libxcb-xinerama0<span class="w"> </span>libxkbcommon-x11-0<span class="w">  </span><span class="c1"># Ubuntu/Debian</span>
-</code></pre></div></li>
-<li><strong>Try reinstalling PySide6</strong> separately:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>pip<span class="w"> </span>install<span class="w"> </span>--force-reinstall<span class="w"> </span>PySide6
-</code></pre></div></li>
+<li><strong>Windows (PowerShell):</strong> <code>$env:QT_QUICK_BACKEND="software"; spectroview</code></li>
+<li><strong>macOS / Linux:</strong> <code>export QT_QUICK_BACKEND=software; spectroview</code></li>
 </ul>
 </details>
 <details class="question">
-<summary><strong><code>spectroview</code> command not found after installation</strong></summary>
-<p>The <code>spectroview</code> command-line entry point may not be on your PATH. Try launching it as a Python module instead:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>python<span class="w"> </span>-m<span class="w"> </span>spectroview.main
-</code></pre></div>
-<p>If you installed with <code>--user</code>, ensure your user's local <code>bin</code> directory is on your PATH:</p>
+<summary>Python errors (<code>pip: command not found</code>, permission error, or <code>spectroview: command not found</code>)</summary>
 <ul>
-<li><strong>macOS/Linux</strong>: Add <code>export PATH="$HOME/.local/bin:$PATH"</code> to your <code>~/.bashrc</code> or <code>~/.zshrc</code>.</li>
-<li><strong>Windows</strong>: The user scripts directory is typically <code>%APPDATA%\Python\PythonXX\Scripts</code>.</li>
+<li>If <code>pip</code> is not recognized, run <code>python -m pip install spectroview</code> (or <code>python3 -m pip install spectroview</code>).</li>
+<li>If <code>spectroview</code> is not recognized after installing, launch with <code>python -m spectroview.main</code>.</li>
+<li>Avoid system permission errors by creating a virtual environment first:</li>
 </ul>
-</details>
-<details class="question">
-<summary><strong><code>numpy</code> or <code>matplotlib</code> version conflict errors</strong></summary>
-<p><strong>SPECTROview</strong> requires <code>numpy &gt;= 2.0.2</code> and <code>matplotlib &gt;= 3.8.0, &lt; 3.10.9</code>. If you see version conflict errors, try installing in a clean virtual environment:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>spectroview_env
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nb">source</span><span class="w"> </span>spectroview_env/bin/activate<span class="w">    </span><span class="c1"># macOS/Linux</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>spectroview_env<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">       </span><span class="c1"># Windows</span>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>spectroview_env
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">source</span><span class="w"> </span>spectroview_env/bin/activate<span class="w">    </span><span class="c1"># macOS / Linux</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>spectroview_env<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">       </span><span class="c1"># Windows</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>pip<span class="w"> </span>install<span class="w"> </span>spectroview
 </code></pre></div>
-<p>This avoids conflicts with other packages in your global Python installation.</p>
-</details>
-<details class="question">
-<summary><strong>The application opens but the window is blank or crashes immediately</strong></summary>
-<p>This is typically a GPU/driver issue with Qt's rendering backend. Try disabling hardware acceleration:</p>
-<ul>
-<li><strong>Windows</strong>: Set the environment variable before launching:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">set</span><span class="w"> </span><span class="nv">QT_QUICK_BACKEND</span><span class="o">=</span>software
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>spectroview
-</code></pre></div></li>
-<li><strong>macOS/Linux</strong>:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">QT_QUICK_BACKEND</span><span class="o">=</span>software
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>spectroview
-</code></pre></div></li>
-</ul>
 </details>
 
 

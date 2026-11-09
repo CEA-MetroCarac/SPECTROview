@@ -8,7 +8,35 @@ All installers are published on the official [**GitHub Releases**](https://githu
 
 ### **1. Install SPECTROview**
 
-Select your operating system below:
+Select your installation method or operating system below:
+
+=== ":material-language-python: Python (pip)"
+
+    If you already use Python (**Python &ge; 3.12**), install **SPECTROview** directly from [PyPI](https://pypi.org/project/spectroview/):
+
+    ```bash
+    pip install spectroview
+    ```
+
+    Launch **SPECTROview** from your terminal or Anaconda Prompt:
+
+    ```bash
+    spectroview
+    ```
+
+    <div align="center">
+      <img src="../user_manual_images/Installation/installation.gif" alt="Installing SPECTROview with pip" width="500"><br>
+      <i>Installing SPECTROview via pip.</i>
+    </div>
+
+    ??? tip "More Python commands (upgrade, specific version, development build)"
+
+        - **Multiple Python versions installed?** Use `pip3 install spectroview` or `python -m pip install spectroview`.
+        - **Upgrade to the latest release:** `pip install --upgrade spectroview`
+        - **Install a specific version:** `pip install spectroview==26.46.1`
+        - **Install the latest development code from GitHub:** `pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git`
+        - **Check installed version:** `pip show spectroview`
+        - **Optional voice dictation (Python only):** `pip install SpeechRecognition pyaudio`
 
 === ":material-microsoft-windows: Windows"
 
@@ -63,34 +91,6 @@ Select your operating system below:
 
     !!! tip "On Ubuntu 24.04 or newer"
         If double-clicking the AppImage does nothing, install FUSE once (`sudo apt install libfuse2t64`) or run `./SPECTROview_*.AppImage --appimage-extract-and-run`.
-
-=== ":material-language-python: Python (pip)"
-
-    If you already use Python (**Python &ge; 3.12**), install **SPECTROview** directly from [PyPI](https://pypi.org/project/spectroview/):
-
-    ```bash
-    pip install spectroview
-    ```
-
-    Launch **SPECTROview** from your terminal or Anaconda Prompt:
-
-    ```bash
-    spectroview
-    ```
-
-    <div align="center">
-      <img src="../user_manual_images/Installation/installation.gif" alt="Installing SPECTROview with pip" width="500"><br>
-      <i>Installing SPECTROview via pip.</i>
-    </div>
-
-    ??? tip "More Python commands (upgrade, specific version, development build)"
-
-        - **Multiple Python versions installed?** Use `pip3 install spectroview` or `python -m pip install spectroview`.
-        - **Upgrade to the latest release:** `pip install --upgrade spectroview`
-        - **Install a specific version:** `pip install spectroview==26.46.1`
-        - **Install the latest development code from GitHub:** `pip install git+https://github.com/CEA-MetroCarac/SPECTROview.git`
-        - **Check installed version:** `pip show spectroview`
-        - **Optional voice dictation (Python only):** `pip install SpeechRecognition pyaudio`
 
 ---
 

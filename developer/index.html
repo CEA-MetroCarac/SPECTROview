@@ -2114,6 +2114,10 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 <td>Pure-model <code>InstallType</code> classifier (<code>DEV_SOURCE</code>, <code>PIP_WHEEL</code>, <code>WINDOWS_VELOPACK</code>, <code>WINDOWS_PORTABLE</code>, <code>MACOS_BUNDLE</code>, <code>LINUX_APPIMAGE</code>, <code>LINUX_DEB</code>, <code>STANDALONE_UNKNOWN</code>)</td>
 </tr>
 <tr>
+<td><code>model/m_macos_font_patch.py</code></td>
+<td>macOS font cache discovery patch intercepting <code>system_profiler SPFontsDataType</code> to prevent upstream <code>matplotlib</code> <code>KeyError: '_items'</code> crash and 10s freeze</td>
+</tr>
+<tr>
 <td><code>model/m_update_manager.py</code></td>
 <td><code>GitHubReleaseClient</code> (<code>ETag</code> + TTL cache), <code>UpdateManager</code> facade, <code>UnifiedUpdateCheckWorker</code>, <code>UnifiedUpdateDownloadWorker</code>, and platform updaters</td>
 </tr>
@@ -2131,7 +2135,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 </tr>
 <tr>
 <td><code>main.spec</code> &amp; <code>packaging/</code></td>
-<td>Single-source PyInstaller config and platform builders for Windows (<code>Setup.exe</code> + <code>Portable.zip</code>), macOS (<code>arm64</code> + <code>x64</code> <code>.dmg</code>), and Linux (<code>.AppImage</code> + <code>.deb</code>)</td>
+<td>Single-source PyInstaller config and platform builders for Windows (<code>Setup.exe</code> + <code>Portable.zip</code>), macOS (Apple Silicon <code>arm64</code> <code>.dmg</code>), and Linux (<code>.AppImage</code> + <code>.deb</code>)</td>
 </tr>
 </tbody>
 </table>
@@ -2168,7 +2172,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 <tr>
 <td><code>MACOS_BUNDLE</code></td>
 <td>Frozen macOS inside <code>*.app/Contents/MacOS</code></td>
-<td><code>MacOSUpdater</code>: downloads arch-matched <code>arm64</code>/<code>x64</code> <code>.dmg</code> and presents Control-click Gatekeeper guidance <em>(silent replacement deferred until Apple Developer ID signing/notarization is configured)</em></td>
+<td><code>MacOSUpdater</code>: downloads verified <code>arm64</code> <code>.dmg</code> (discontinued Intel <code>x64</code> hosts do not download incompatible <code>arm64</code> binaries) and presents Control-click Gatekeeper guidance <em>(silent replacement deferred until Apple Developer ID signing/notarization is configured)</em></td>
 </tr>
 <tr>
 <td><code>LINUX_APPIMAGE</code></td>
@@ -2189,7 +2193,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 <li><strong>Parallel platform builders</strong>:</li>
 <li><strong><code>build-python</code></strong>: <code>.whl</code> + <code>.tar.gz</code>, <code>twine check</code>, and clean venv wheel detection verification.</li>
 <li><strong><code>build-windows</code></strong>: PyInstaller (<code>--onedir</code>) + offscreen smoke test + <code>Portable.zip</code> + Velopack <code>vpk pack</code> (<code>Setup.exe</code>, <code>releases.win.json</code>, <code>*.nupkg</code>, chaining delta history).</li>
-<li><strong><code>build-macos</code></strong> (<code>macos-15</code> <code>arm64</code> &amp; <code>macos-15-intel</code> <code>x64</code>): Native <code>.app</code> + <code>.dmg</code> builds (env-gated optional <code>APPLE_SIGNING_IDENTITY</code> / <code>APPLE_CERTIFICATE_P12</code> / <code>APPLE_ID</code> notarization hooks ready when credentials are added).</li>
+<li><strong><code>build-macos</code></strong> (<code>macos-15</code> <code>arm64</code>): Native Apple Silicon <code>.app</code> + <code>.dmg</code> build with PyInstaller runtime hook and offscreen <code>--smoke-test</code> verification (env-gated optional <code>APPLE_SIGNING_IDENTITY</code> / <code>APPLE_CERTIFICATE_P12</code> / <code>APPLE_ID</code> notarization hooks ready when credentials are added).</li>
 <li><strong><code>build-linux</code></strong> (<code>ubuntu-22.04</code> glibc baseline): Builds <code>.AppImage</code> and <code>.deb</code>, validates <code>.desktop</code>, and runs live <code>apt-get install</code>, offscreen launch, AppImage launch, and config persistence (<code>~/.config/CEA-Leti/</code>) checks.</li>
 <li><strong><code>release</code></strong>: Publishes unified GitHub Release with <code>SHA256SUMS.txt</code> (marking pre-releases automatically).</li>
 <li><strong><code>publish-pypi</code></strong>: On stable releases, preserves the existing PyPI Trusted Publisher (<code>pypi</code> environment, <code>id-token: write</code>, <code>pypa/gh-action-pypi-publish@release/v1</code>).</li>

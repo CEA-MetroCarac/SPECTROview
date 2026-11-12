@@ -164,20 +164,33 @@ def test_live_map_profile_render_in_map_mode(qapp):
 
 def test_live_map_switch_heatmap_profile_heatmap(qapp):
     live_maps = VLiveMaps(mode="map")
+    live_maps.resize(900, 280)
     live_maps.show()
     live_maps.set_selector_active(SELECTOR_BLUE, True)
     panel = live_maps.panels[SELECTOR_BLUE]
 
-    live_maps.update_map_data(SELECTOR_BLUE, np.ones((3, 3)), [0, 3, 0, 3], 0.0, 1.0, "OK")
+    live_maps.update_map_data(SELECTOR_BLUE, np.ones((3, 3)), [-20, 20, -20, 20], 0.0, 1.0, "OK")
+    panel.canvas.draw()
     assert panel.img is not None and panel.line is None
+    assert panel.ax.get_aspect() in ("equal", 1.0)
 
-    live_maps.update_profile_data(SELECTOR_BLUE, np.arange(5.0), np.arange(5.0), "X", "OK")
+    # Switching from 2D heatmap (aspect="equal") to 1D profile with large Y vs X
+    # span must reset aspect to "auto" so the axes does not collapse into a line.
+    x_pos = np.linspace(-20.0, 20.0, 41)
+    y_vals = np.linspace(5000.0, 40000.0, 41)
+    live_maps.update_profile_data(SELECTOR_BLUE, x_pos, y_vals, "X", "OK")
+    panel.canvas.draw()
     assert panel.line is not None and panel.img is None and panel.cbar is None
     assert panel.cbb_palette.isHidden() is True
+    assert panel.ax.get_aspect() == "auto"
+    pos_bbox = panel.ax.get_position()
+    assert pos_bbox.width > 0.5 and pos_bbox.height > 0.5
 
-    live_maps.update_map_data(SELECTOR_BLUE, np.ones((3, 3)) * 2, [0, 3, 0, 3], 0.0, 2.0, "OK")
+    live_maps.update_map_data(SELECTOR_BLUE, np.ones((3, 3)) * 2, [-20, 20, -20, 20], 0.0, 2.0, "OK")
+    panel.canvas.draw()
     assert panel.img is not None and panel.cbar is not None and panel.line is None
     assert panel.cbb_palette.isHidden() is False
+    assert panel.ax.get_aspect() in ("equal", 1.0)
 
 
 def test_live_map_profile_empty_and_nan_values(qapp):

@@ -203,6 +203,25 @@ class LiveMapSubpanel(QFrame):
         """Colormap selector only applies to heatmaps (Maps mode, not a 1D line plot)."""
         self.cbb_palette.setVisible(self.mode == "map" and self._display_kind != "series")
 
+    def _reset_axes(self):
+        """Remove any colorbar, clear the axes, and restore automatic aspect scaling.
+
+        Matplotlib's ``Axes.clear()`` does not reset the aspect ratio set by
+        ``imshow(..., aspect="equal")``; without resetting to ``"auto"``, a
+        subsequent 1D line plot inherits a 1:1 data aspect and collapses into a
+        thin vertical or horizontal strip when X and Y spans differ.
+        """
+        if self.cbar is not None:
+            try:
+                self.cbar.remove()
+            except Exception:
+                pass
+            self.cbar = None
+        self.img = None
+        self.line = None
+        self.ax.clear()
+        self.ax.set_aspect("auto", adjustable="box")
+
     def is_ratio_display(self) -> bool:
         """True if this panel currently displays the Red/Blue ratio."""
         return self.cbb_param.currentText() == PARAM_RB_RATIO
@@ -333,16 +352,7 @@ class LiveMapSubpanel(QFrame):
         self._sync_palette_visibility()
 
         with plt.style.context(style_path):
-            self.ax.clear()
-
-            if self.cbar is not None:
-                try:
-                    self.cbar.remove()
-                except Exception:
-                    pass
-                self.cbar = None
-            self.img = None
-            self.line = None
+            self._reset_axes()
 
             if not has_valid:
                 msg = status_msg or ("No spectra selected" if is_index_axis else "No profile data available")
@@ -420,16 +430,7 @@ class LiveMapSubpanel(QFrame):
         self._sync_palette_visibility()
 
         with plt.style.context(style_path):
-            self.ax.clear()
-
-            if self.cbar is not None:
-                try:
-                    self.cbar.remove()
-                except Exception:
-                    pass
-                self.cbar = None
-            self.img = None
-            self.line = None
+            self._reset_axes()
 
             if grid is None or np.all(np.isnan(grid)):
                 msg = status_msg or "No map data available"

@@ -207,11 +207,12 @@ def test_maps_workspace_live_maps_adapt_to_map_dimensionality_and_rb_ratio(qapp,
     for cid in (SELECTOR_RED, SELECTOR_BLUE, SELECTOR_GREEN):
         assert panels[cid].img is not None and panels[cid].line is None
 
-    # 2. Switch to 1D profile → line plots along X, no manual refresh
+    # 2. Switch to 1D profile → line plots along X, no manual refresh, auto aspect
     ws.vm_live_maps.set_map_data(line_md)
     for cid in (SELECTOR_RED, SELECTOR_BLUE, SELECTOR_GREEN):
         assert panels[cid].line is not None and panels[cid].img is None
         assert panels[cid].cbb_palette.isHidden() is True
+        assert panels[cid].ax.get_aspect() == "auto"
     np.testing.assert_allclose(panels[SELECTOR_RED].line.get_xdata(), line_md.coords[:, 0])
     assert np.all(np.diff(panels[SELECTOR_RED]._series_values) > 0)
 

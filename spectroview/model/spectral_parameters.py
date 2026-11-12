@@ -6,6 +6,7 @@ generation for visualization.
 """
 
 from __future__ import annotations
+from dataclasses import dataclass
 from typing import Tuple, Optional, Any, Dict
 import numpy as np
 
@@ -44,6 +45,18 @@ FIT_PARAMETERS = {
     PARAM_PEAK_HEIGHT_FIT,
     PARAM_PEAK_AREA_FIT,
 }
+
+# Derived display option (Green channel only): pixel-wise ratio of the
+# integrated intensities of the Red and Blue spectral ranges.
+PARAM_RB_RATIO = "R/B ratio"
+
+# Denominator values below RATIO_REL_EPS * max(|denominator|) are treated as
+# undefined (NaN) to avoid division-by-zero and noise-dominated ratios.
+RATIO_REL_EPS = 1e-3
+
+# Collinearity tolerance (ratio of the 2nd to the 1st singular value of the
+# centered coordinates) under which a map is treated as a 1D profile.
+PROFILE_COLLINEAR_TOL = 1e-3
 
 SELECTOR_RED = "red"
 SELECTOR_BLUE = "blue"
@@ -512,3 +525,123 @@ def compute_map_grid(
     # Simple fallback: 1xN or Nx1 grid
     grid = np.array([v_arr])
     return grid, extent, vmin, vmax
+
+
+@dataclass(frozen=True)
+class MapGeometry:
+    """Spatial dimensionality of a map, derived from its (X, Y) coordinates.
+
+    Attributes
+    ----------
+    ndim : int
+        ``2`` for spatially distributed 2D maps, ``1`` for 1D profiles
+        (line scans), i.e. maps whose measurement sites are collinear.
+    positions : np.ndarray or None
+        For 1D profiles: position of every spectrum along the profile, shape (N,).
+        ``None`` for 2D maps.
+    order : np.ndarray or None
+        For 1D profiles: indices sorting ``positions`` ascending (stable).
+    axis_label : str
+        Name of the profile axis (``"X"``, ``"Y"`` or ``"Distance"``); empty for 2D maps.
+    """
+
+    ndim: int
+    positions: Optional[np.ndarray] = None
+    order: Optional[np.ndarray] = None
+    axis_label: str = ""
+
+    @property
+    def is_profile(self) -> bool:
+        return self.ndim == 1
+
+
+_GEOMETRY_2D = MapGeometry(ndim=2)
+
+
+def analyze_map_geometry(
+    coords: Optional[np.ndarray],
+    collinear_tol: float = PROFILE_COLLINEAR_TOL,
+) -> MapGeometry:
+    """Detect whether a map is a 2D map or a 1D profile from its coordinates.
+
+    A map is a 1D profile when it has at least two distinct measurement sites
+    and all sites lie on a single straight line: either one coordinate is
+    constant (axis-aligned line scan) or the centered coordinates have a
+    negligible second singular value (diagonal line scan). Single-site maps
+    and anything else are treated as 2D maps (existing heatmap behavior).
+
+    Parameters
+    ----------
+    coords : np.ndarray
+        Spatial positions of shape (N, 2).
+    collinear_tol : float
+        Maximum ratio ``s[1] / s[0]`` of the singular values of the centered
+        coordinates for the sites to be considered collinear.
+    """
+    if coords is None:
+        return _GEOMETRY_2D
+    c = np.asarray(coords, dtype=np.float64)
+    if c.ndim != 2 or c.shape[1] != 2 or len(c) < 2 or not np.all(np.isfinite(c)):
+        return _GEOMETRY_2D
+
+    x, y = c[:, 0], c[:, 1]
+    x_const = bool(np.ptp(x) == 0.0)
+    y_const = bool(np.ptp(y) == 0.0)
+    if x_const and y_const:
+        return _GEOMETRY_2D  # single measurement site
+
+    if y_const:
+        positions, label = x.copy(), "X"
+    elif x_const:
+        positions, label = y.copy(), "Y"
+    else:
+        centered = c - c.mean(axis=0)
+        _, s, vt = np.linalg.svd(centered, full_matrices=False)
+        if s[0] <= 0.0 or s[1] > collinear_tol * s[0]:
+            return _GEOMETRY_2D
+        direction = vt[0]
+        # Nearly axis-aligned lines (e.g. rounding jitter) keep the native axis
+        if abs(direction[0]) >= 0.9999:
+            positions, label = x.copy(), "X"
+        elif abs(direction[1]) >= 0.9999:
+            positions, label = y.copy(), "Y"
+        else:
+            proj = centered @ direction
+            positions, label = proj - proj.min(), "Distance"
+
+    order = np.argsort(positions, kind="stable")
+    return MapGeometry(ndim=1, positions=positions, order=order, axis_label=label)
+
+
+def compute_intensity_ratio(
+    numerator: np.ndarray,
+    denominator: np.ndarray,
+    rel_eps: float = RATIO_REL_EPS,
+) -> Tuple[np.ndarray, int]:
+    """Element-wise ratio ``numerator / denominator`` with NaN masking.
+
+    Points where either operand is non-finite, or where the denominator
+    magnitude is at or below ``rel_eps * max(|denominator|)`` (zero or
+    near-zero intensity), are set to NaN instead of producing ``inf`` or
+    noise-dominated values.
+
+    Returns
+    -------
+    ratio : np.ndarray
+        Ratio array (float64) of the broadcast shape; undefined points are NaN.
+    n_masked : int
+        Number of points set to NaN.
+    """
+    num = np.asarray(numerator, dtype=np.float64)
+    den = np.asarray(denominator, dtype=np.float64)
+    num, den = np.broadcast_arrays(num, den)
+
+    abs_den = np.abs(den)
+    finite = np.isfinite(num) & np.isfinite(den)
+    max_den = float(abs_den[finite].max()) if np.any(finite) else 0.0
+    threshold = rel_eps * max_den
+    valid = finite & (abs_den > threshold) & (abs_den > 0.0)
+
+    ratio = np.full(num.shape, np.nan, dtype=np.float64)
+    np.divide(num, den, out=ratio, where=valid)
+    return ratio, int(ratio.size - np.count_nonzero(valid))

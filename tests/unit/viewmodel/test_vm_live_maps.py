@@ -11,7 +11,8 @@ from spectroview.model.spectral_parameters import (
     SELECTOR_BLUE,
     SELECTOR_GREEN,
 )
-from spectroview.viewmodel.vm_live_maps import VMLiveMaps
+from spectroview.viewmodel.vm_live_maps import VMLiveMaps, MSG_RATIO_NEEDS_RB
+from spectroview.model.spectral_parameters import PARAM_RB_RATIO
 
 
 @pytest.fixture
@@ -184,3 +185,214 @@ def test_vm_live_maps_spectra_series_mode(qapp):
     vals_sub, lbls_sub, _ = series_results[SELECTOR_RED]
     assert len(vals_sub) == 2
     assert lbls_sub == ["S1", "S2"]
+
+
+# ── 1D profile maps & R/B ratio ──────────────────────────────────────────────
+
+
+def _make_profile_map(n=8, along="x", blue_zero_at=None):
+    """1D line scan with Red peak (700) growing and Blue peak (1300) constant."""
+    x = np.linspace(400, 1600, 121)
+    pos = np.arange(n, dtype=np.float64)[::-1]  # reversed acquisition order
+    Y = np.zeros((n, len(x)), dtype=np.float32)
+    for i, p in enumerate(pos):
+        red = (2.0 + p) * np.exp(-((x - 700) ** 2) / (2 * 25 ** 2))
+        blue = 4.0 * np.exp(-((x - 1300) ** 2) / (2 * 25 ** 2))
+        if blue_zero_at is not None and i == blue_zero_at:
+            blue = 0.0 * blue
+        Y[i] = red + blue
+    coords = np.column_stack([pos, np.zeros(n)]) if along == "x" else np.column_stack([np.zeros(n), pos])
+    return MapData(
+        name=f"profile_{along}", x0=x, Y0=Y, coords=coords,
+        is_active=np.ones(n, dtype=bool), fnames=[f"p_{i}" for i in range(n)],
+        colors=[None] * n, labels=[None] * n,
+    )
+
+
+def _collect(vm):
+    out = {"map": {}, "profile": {}}
+    vm.map_data_ready.connect(lambda cid, g, e, v0, v1, m: out["map"].update({cid: (g, m)}))
+    vm.profile_data_ready.connect(
+        lambda cid, pos, vals, lbl, m: out["profile"].update({cid: (pos, vals, lbl, m)})
+    )
+    return out
+
+
+def test_vm_profile_map_emits_line_data_sorted_by_position(qapp):
+    vm = VMLiveMaps()
+    out = _collect(vm)
+    vm.set_selector_active(SELECTOR_RED, True)
+    vm.set_selector_range(SELECTOR_RED, 650.0, 750.0, immediate=True)
+    out["map"].clear()
+    vm.set_map_data(_make_profile_map(along="y"))
+
+    assert SELECTOR_RED not in out["map"]  # no heatmap for a 1D profile
+    pos, vals, label, msg = out["profile"][SELECTOR_RED]
+    assert label == "Y"
+    np.testing.assert_allclose(pos, np.arange(8.0))
+    assert np.all(np.diff(vals) > 0)  # red grows with position
+
+
+def test_vm_switching_between_2d_and_profile_maps(qapp, sample_map_data):
+    vm = VMLiveMaps()
+    out = _collect(vm)
+    vm.set_selector_active(SELECTOR_RED, True)
+
+    vm.set_map_data(sample_map_data)
+    assert out["map"][SELECTOR_RED][0].shape == (3, 4)
+
+    out["map"].clear()
+    vm.set_map_data(_make_profile_map())
+    assert SELECTOR_RED in out["profile"] and SELECTOR_RED not in out["map"]
+    assert vm.get_map_geometry().is_profile
+
+    out["profile"].clear()
+    vm.set_map_data(sample_map_data)
+    assert SELECTOR_RED in out["map"] and SELECTOR_RED not in out["profile"]
+    assert not vm.get_map_geometry().is_profile
+
+
+def test_vm_geometry_cached_per_coords_array(qapp, monkeypatch):
+    import spectroview.viewmodel.vm_live_maps as mod
+
+    calls = []
+    real = mod.analyze_map_geometry
+    monkeypatch.setattr(mod, "analyze_map_geometry", lambda c: calls.append(1) or real(c))
+    vm = VMLiveMaps()
+    vm.set_selector_active(SELECTOR_RED, True)
+    md = _make_profile_map()
+    vm.set_map_data(md)
+    for lo in (600.0, 620.0, 640.0):
+        vm.set_selector_range(SELECTOR_RED, lo, lo + 100.0, immediate=True)
+    assert len(calls) == 1
+
+
+def test_vm_rb_ratio_requires_red_and_blue_active(qapp, sample_map_data):
+    vm = VMLiveMaps()
+    out = _collect(vm)
+    vm.set_map_data(sample_map_data)
+    vm.set_selector_active(SELECTOR_GREEN, True)
+    vm.set_selector_parameter(SELECTOR_GREEN, PARAM_RB_RATIO)
+    grid, msg = out["map"][SELECTOR_GREEN]
+    assert grid is None
+    assert msg == MSG_RATIO_NEEDS_RB
+
+    # Activating Red and Blue refreshes the dependent Green ratio automatically
+    vm.set_selector_range(SELECTOR_RED, 650.0, 750.0)
+    vm.set_selector_range(SELECTOR_BLUE, 1250.0, 1350.0)
+    vm.set_selector_active(SELECTOR_RED, True)
+    vm.set_selector_active(SELECTOR_BLUE, True)
+    grid, msg = out["map"][SELECTOR_GREEN]
+    assert grid is not None and grid.shape == (3, 4)
+    assert msg == "OK"
+
+
+def test_vm_rb_ratio_2d_values_match_integrated_intensities(qapp, sample_map_data):
+    from spectroview.model.spectral_parameters import compute_spectral_parameter, compute_map_grid
+
+    vm = VMLiveMaps()
+    out = _collect(vm)
+    vm.set_map_data(sample_map_data)
+    for cid, rng in ((SELECTOR_RED, (650.0, 750.0)), (SELECTOR_BLUE, (1250.0, 1350.0))):
+        vm.set_selector_range(cid, *rng)
+        vm.set_selector_active(cid, True)
+    vm.set_selector_active(SELECTOR_GREEN, True)
+    vm.set_selector_parameter(SELECTOR_GREEN, PARAM_RB_RATIO)
+
+    i_r, _, _ = compute_spectral_parameter(sample_map_data.x0, sample_map_data.Y0, (650.0, 750.0))
+    i_b, _, _ = compute_spectral_parameter(sample_map_data.x0, sample_map_data.Y0, (1250.0, 1350.0))
+    expected, *_ = compute_map_grid(sample_map_data.coords, i_r / i_b)
+    np.testing.assert_allclose(out["map"][SELECTOR_GREEN][0], expected, rtol=1e-9)
+
+
+def test_vm_rb_ratio_follows_red_bracket_moves(qapp, sample_map_data):
+    vm = VMLiveMaps()
+    out = _collect(vm)
+    vm.set_map_data(sample_map_data)
+    for cid, rng in ((SELECTOR_RED, (650.0, 750.0)), (SELECTOR_BLUE, (1250.0, 1350.0))):
+        vm.set_selector_range(cid, *rng)
+        vm.set_selector_active(cid, True)
+    vm.set_selector_active(SELECTOR_GREEN, True)
+    vm.set_selector_parameter(SELECTOR_GREEN, PARAM_RB_RATIO)
+    before = out["map"][SELECTOR_GREEN][0].copy()
+
+    # Debounced path: moving Red queues Green as a dependent
+    vm.set_selector_range(SELECTOR_RED, 600.0, 800.0)
+    assert vm._pending_calc == {SELECTOR_RED, SELECTOR_GREEN}
+    vm._recalculate_pending()
+    after = out["map"][SELECTOR_GREEN][0]
+    assert not np.allclose(before, after)
+
+
+def test_vm_rb_ratio_reuses_red_intensity_within_pass(qapp, sample_map_data, monkeypatch):
+    vm = VMLiveMaps()
+    vm.set_map_data(sample_map_data)
+    for cid, rng in ((SELECTOR_RED, (650.0, 750.0)), (SELECTOR_BLUE, (1250.0, 1350.0))):
+        vm.set_selector_range(cid, *rng)
+        vm.set_selector_active(cid, True)
+    vm.set_selector_active(SELECTOR_GREEN, True)
+    vm.set_selector_parameter(SELECTOR_GREEN, PARAM_RB_RATIO)
+
+    calls = []
+    real = vm._compute_values
+    monkeypatch.setattr(vm, "_compute_values", lambda rng, p: calls.append(rng) or real(rng, p))
+    vm.set_selector_range(SELECTOR_RED, 600.0, 800.0, immediate=True)
+    # Red computed once (shared with ratio) + Blue once — not three times
+    assert sorted(calls) == [(600.0, 800.0), (1250.0, 1350.0)]
+    assert vm._intensity_cache == {}  # pass-scoped cache is released
+
+
+def test_vm_rb_ratio_profile_masks_zero_blue(qapp):
+    vm = VMLiveMaps()
+    out = _collect(vm)
+    md = _make_profile_map(n=6, blue_zero_at=2)
+    vm.set_map_data(md)
+    for cid, rng in ((SELECTOR_RED, (650.0, 750.0)), (SELECTOR_BLUE, (1250.0, 1350.0))):
+        vm.set_selector_range(cid, *rng)
+        vm.set_selector_active(cid, True)
+    vm.set_selector_active(SELECTOR_GREEN, True)
+    vm.set_selector_parameter(SELECTOR_GREEN, PARAM_RB_RATIO)
+
+    pos, vals, label, msg = out["profile"][SELECTOR_GREEN]
+    assert label == "X"
+    assert len(vals) == 6
+    # acquisition index 2 has position 3 (reversed order) → sorted index 3
+    assert np.isnan(vals[3])
+    assert np.all(np.isfinite(np.delete(vals, 3)))
+    assert "masked" in msg
+
+
+def test_vm_rb_ratio_switch_back_to_green_intensity(qapp, sample_map_data):
+    vm = VMLiveMaps()
+    out = _collect(vm)
+    vm.set_map_data(sample_map_data)
+    vm.set_selector_active(SELECTOR_GREEN, True)
+    vm.set_selector_parameter(SELECTOR_GREEN, PARAM_RB_RATIO)
+    vm.set_selector_parameter(SELECTOR_GREEN, PARAM_INTEGRATED_INTENSITY)
+    grid, msg = out["map"][SELECTOR_GREEN]
+    assert grid is not None
+    assert msg == "OK"
+
+
+def test_vm_rb_ratio_spectra_series_mode(qapp):
+    vm = VMLiveMaps(mode="spectra")
+    series = {}
+    vm.series_data_ready.connect(lambda cid, v, l, m: series.update({cid: (v, m)}))
+    x = np.linspace(400, 1600, 121)
+    mds = []
+    for i in range(3):
+        y = ((2.0 + i) * np.exp(-((x - 700) ** 2) / 1250) + 4.0 * np.exp(-((x - 1300) ** 2) / 1250))
+        mds.append(MapData(
+            name=f"s{i}", x0=x, Y0=y.reshape(1, -1).astype(np.float32),
+            coords=np.zeros((1, 2)), is_active=np.array([True]), fnames=[f"s{i}"],
+            colors=[None], labels=[f"S{i}"],
+        ))
+    vm.set_series_data(mds)
+    for cid, rng in ((SELECTOR_RED, (650.0, 750.0)), (SELECTOR_BLUE, (1250.0, 1350.0))):
+        vm.set_selector_range(cid, *rng)
+        vm.set_selector_active(cid, True)
+    vm.set_selector_active(SELECTOR_GREEN, True)
+    vm.set_selector_parameter(SELECTOR_GREEN, PARAM_RB_RATIO)
+    vals, msg = series[SELECTOR_GREEN]
+    assert len(vals) == 3
+    assert np.all(np.diff(vals) > 0)

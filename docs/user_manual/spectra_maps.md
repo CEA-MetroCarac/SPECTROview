@@ -165,7 +165,9 @@ In both the **Spectra** and **Maps** workspaces, you can interactively bracket u
   <img src="../user_manual_images/Spectra_Maps/rgb_live_spectra.png" alt="RGB Live spectra" width="800"><br>
 </div>
 
-- **Maps Workspace**: Displays up to three real-time **2D spatial heatmaps** across the active hyperspectral map.
+- **Maps Workspace**: Automatically adapts to the spatial dimensionality of the selected map:
+  - **2D maps**: Displays up to three real-time **2D spatial heatmaps** across the active hyperspectral grid.
+  - **1D maps (profiles / line scans)**: Automatically detects collinear measurement coordinates and displays the Red, Blue, and Green channels as **1D line plots** along the spatial axis (`X (mm)`, `Y (mm)`, or `Distance (mm)`), seamlessly switching between heatmaps and line plots when you select different maps.
 
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/rgb_live_map.png" alt="RGB Live Maps" width="800"><br>
@@ -202,6 +204,7 @@ The **Live Maps** tab is located on the bottom tab bar between **Fit Results** a
 | **Peak position (fit)** | Fit-based | Center wavenumber ($x_0$) of a fitted peak within the interval (requires prior fitting). |
 | **Peak height (fit)** | Fit-based | Fitted amplitude ($A$) of the peak within the interval (requires prior fitting). |
 | **Peak area (fit)** | Fit-based | Analytical integrated area of the fitted peak (requires prior fitting). |
+| **R/B ratio** *(Green channel only)* | Derived | Pixel-by-pixel (2D map) or point-by-point (1D profile / spectra series) integrated intensity ratio $I_{\mathrm{Red}} / I_{\mathrm{Blue}}$. Updates automatically when Red or Blue brackets are moved or resized; zero or near-zero Blue intensities are safely masked as `NaN`. |
 
 *Note*: If a fit-based parameter is selected but fit results are not yet available, the panel gracefully displays a notification banner rather than misleading or corrupted values.
 

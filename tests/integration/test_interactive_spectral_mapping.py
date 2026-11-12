@@ -163,3 +163,73 @@ def test_range_selector_to_live_maps_synchronization(qapp, test_map_data):
     workspace.v_spectra_viewer.btn_range_red.setChecked(False)
     assert workspace.v_live_maps.panels[SELECTOR_RED].isVisible() is False
     assert workspace.vm_live_maps._states[SELECTOR_RED]["active"] is False
+
+
+def _make_line_scan(name="line_scan", n=12):
+    """1D line scan along X with a Red peak (700) growing and a constant Blue peak (1300)."""
+    x = np.linspace(500, 1500, 101)
+    xs = np.linspace(0.0, 11.0, n)
+    Y = np.zeros((n, len(x)), dtype=np.float32)
+    for i, px in enumerate(xs):
+        Y[i] = ((2.0 + px) * np.exp(-((x - 700) ** 2) / (2 * 25 ** 2))
+                + 4.0 * np.exp(-((x - 1300) ** 2) / (2 * 25 ** 2)) + 1.0)
+    coords = np.column_stack([xs, np.full(n, 3.0)])
+    return MapData(
+        name=name, x0=x, Y0=Y, coords=coords, is_active=np.ones(n, dtype=bool),
+        fnames=[f"{name}_({c[0]}, {c[1]})" for c in coords],
+        colors=[None] * n, labels=[None] * n,
+    )
+
+
+def test_maps_workspace_live_maps_adapt_to_map_dimensionality_and_rb_ratio(qapp, test_map_data):
+    """2D map → heatmaps, 1D profile → line plots, switching without refresh, plus R/B ratio in Green."""
+    from spectroview.model.spectral_parameters import SELECTOR_BLUE, SELECTOR_GREEN, PARAM_RB_RATIO
+
+    ws = VWorkspaceMaps()
+    ws.show()
+    line_md = _make_line_scan()
+    ws.vm.store._maps[test_map_data.name] = test_map_data
+    ws.vm.store._maps[line_md.name] = line_md
+    ws.bottom_tabs.setCurrentWidget(ws.v_live_maps)
+
+    ws.vm_live_maps.set_map_data(test_map_data)
+    viewer = ws.v_spectra_viewer
+    viewer.btn_range_red.setChecked(True)
+    viewer.btn_range_blue.setChecked(True)
+    viewer.btn_range_green.setChecked(True)
+    viewer.range_manager.set_range(SELECTOR_RED, 650.0, 750.0)
+    viewer.range_manager.set_range(SELECTOR_BLUE, 1250.0, 1350.0)
+    viewer.range_manager.set_range(SELECTOR_GREEN, 850.0, 950.0)
+    ws.vm_live_maps._recalculate_batch([SELECTOR_RED, SELECTOR_BLUE, SELECTOR_GREEN])
+
+    panels = ws.v_live_maps.panels
+    # 1. 2D map → three heatmaps
+    for cid in (SELECTOR_RED, SELECTOR_BLUE, SELECTOR_GREEN):
+        assert panels[cid].img is not None and panels[cid].line is None
+
+    # 2. Switch to 1D profile → line plots along X, no manual refresh
+    ws.vm_live_maps.set_map_data(line_md)
+    for cid in (SELECTOR_RED, SELECTOR_BLUE, SELECTOR_GREEN):
+        assert panels[cid].line is not None and panels[cid].img is None
+        assert panels[cid].cbb_palette.isHidden() is True
+    np.testing.assert_allclose(panels[SELECTOR_RED].line.get_xdata(), line_md.coords[:, 0])
+    assert np.all(np.diff(panels[SELECTOR_RED]._series_values) > 0)
+
+    # 3. Green → R/B ratio from the panel combo, rendered as a profile line
+    panels[SELECTOR_GREEN].set_selected_parameter(PARAM_RB_RATIO)
+    ratio = panels[SELECTOR_GREEN]._series_values
+    red_vals = panels[SELECTOR_RED]._series_values
+    blue_vals = panels[SELECTOR_BLUE]._series_values
+    np.testing.assert_allclose(ratio, red_vals / blue_vals, rtol=1e-9)
+
+    # 4. Moving the Red bracket updates the ratio (debounced path flushed)
+    viewer.range_manager.set_range(SELECTOR_RED, 600.0, 800.0)
+    ws.vm_live_maps.set_selector_range(SELECTOR_RED, 600.0, 800.0)
+    ws.vm_live_maps._recalculate_pending()
+    assert not np.allclose(panels[SELECTOR_GREEN]._series_values, ratio)
+
+    # 5. Back to the 2D map → heatmaps again, Green ratio as heatmap
+    ws.vm_live_maps.set_map_data(test_map_data)
+    for cid in (SELECTOR_RED, SELECTOR_BLUE, SELECTOR_GREEN):
+        assert panels[cid].img is not None and panels[cid].line is None
+    assert panels[SELECTOR_GREEN]._grid.shape == (4, 5)

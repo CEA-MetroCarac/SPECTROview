@@ -5,6 +5,7 @@ import numpy as np
 from spectroview.model.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
     PARAM_PEAK_POSITION,
+    PARAM_RB_RATIO,
     SELECTOR_RED,
     SELECTOR_BLUE,
     SELECTOR_GREEN,
@@ -124,3 +125,110 @@ def test_live_map_subpanel_spectra_series_render(qapp):
     # Empty / NaN series renders status message gracefully and clears line artist
     live_maps.update_series_data(SELECTOR_RED, np.array([]), [], "No spectra selected")
     assert red_panel.line is None
+
+
+# ── 1D profile maps & R/B ratio ──────────────────────────────────────────────
+
+
+def test_live_map_profile_render_in_map_mode(qapp):
+    """1D profile maps render a line plot vs. position and hide the colormap selector."""
+    live_maps = VLiveMaps(mode="map")
+    live_maps.show()
+    live_maps.set_selector_active(SELECTOR_RED, True)
+    panel = live_maps.panels[SELECTOR_RED]
+    assert panel.cbb_palette.isHidden() is False
+
+    pos = np.array([0.0, 0.5, 1.0, 1.5])
+    vals = np.array([1.0, 3.0, 2.0, 5.0])
+    live_maps.update_profile_data(SELECTOR_RED, pos, vals, "X", "OK")
+    assert panel.line is not None
+    assert panel.img is None and panel.cbar is None
+    np.testing.assert_allclose(panel.line.get_xdata(), pos)
+    np.testing.assert_allclose(panel.line.get_ydata(), vals)
+    assert panel.ax.get_xlabel() == "X (mm)"
+    assert panel.cbb_palette.isHidden() is True
+    xmin, xmax = panel.ax.get_xlim()
+    assert xmin < 0.0 and xmax > 1.5
+
+    # Fast in-place update while dragging keeps the same artist
+    orig_line = panel.line
+    live_maps.update_profile_data(SELECTOR_RED, pos, vals * 2, "X", "OK")
+    assert panel.line is orig_line
+    np.testing.assert_allclose(panel.line.get_ydata(), vals * 2)
+
+    # Same length, different profile axis (map switch) still updates x data/label
+    live_maps.update_profile_data(SELECTOR_RED, pos * 10, vals, "Y", "OK")
+    np.testing.assert_allclose(panel.line.get_xdata(), pos * 10)
+    assert panel.ax.get_xlabel() == "Y (mm)"
+
+
+def test_live_map_switch_heatmap_profile_heatmap(qapp):
+    live_maps = VLiveMaps(mode="map")
+    live_maps.show()
+    live_maps.set_selector_active(SELECTOR_BLUE, True)
+    panel = live_maps.panels[SELECTOR_BLUE]
+
+    live_maps.update_map_data(SELECTOR_BLUE, np.ones((3, 3)), [0, 3, 0, 3], 0.0, 1.0, "OK")
+    assert panel.img is not None and panel.line is None
+
+    live_maps.update_profile_data(SELECTOR_BLUE, np.arange(5.0), np.arange(5.0), "X", "OK")
+    assert panel.line is not None and panel.img is None and panel.cbar is None
+    assert panel.cbb_palette.isHidden() is True
+
+    live_maps.update_map_data(SELECTOR_BLUE, np.ones((3, 3)) * 2, [0, 3, 0, 3], 0.0, 2.0, "OK")
+    assert panel.img is not None and panel.cbar is not None and panel.line is None
+    assert panel.cbb_palette.isHidden() is False
+
+
+def test_live_map_profile_empty_and_nan_values(qapp):
+    live_maps = VLiveMaps(mode="map")
+    live_maps.set_selector_active(SELECTOR_RED, True)
+    panel = live_maps.panels[SELECTOR_RED]
+
+    live_maps.update_profile_data(SELECTOR_RED, np.array([]), np.array([]), "X", "Unable")
+    assert panel.line is None
+
+    # NaN (masked) points are drawn as gaps without breaking axis limits
+    live_maps.update_profile_data(
+        SELECTOR_RED, np.arange(4.0), np.array([1.0, np.nan, 2.0, 3.0]), "X", "OK"
+    )
+    assert panel.line is not None
+    ymin, ymax = panel.ax.get_ylim()
+    assert np.isfinite(ymin) and np.isfinite(ymax)
+
+
+def test_live_map_theme_reapply_keeps_profile_plot(qapp):
+    live_maps = VLiveMaps(mode="map")
+    live_maps.show()
+    live_maps.set_selector_active(SELECTOR_RED, True)
+    panel = live_maps.panels[SELECTOR_RED]
+    pos = np.array([2.0, 4.0, 6.0])
+    live_maps.update_profile_data(SELECTOR_RED, pos, np.array([1.0, 2.0, 3.0]), "Distance", "OK")
+
+    live_maps.apply_theme("dark")
+    assert panel.line is not None and panel.img is None
+    np.testing.assert_allclose(panel.line.get_xdata(), pos)
+    assert panel.ax.get_xlabel() == "Distance (mm)"
+
+
+def test_green_panel_offers_rb_ratio_option(qapp):
+    green = LiveMapSubpanel(SELECTOR_GREEN)
+    red = LiveMapSubpanel(SELECTOR_RED)
+    assert green.cbb_param.findText(PARAM_RB_RATIO) >= 0
+    assert red.cbb_param.findText(PARAM_RB_RATIO) < 0
+    # Default remains the standard Green intensity
+    assert green.cbb_param.currentText() == PARAM_INTEGRATED_INTENSITY
+
+    emitted = []
+    green.parameter_changed.connect(lambda cid, p: emitted.append((cid, p)))
+    green.set_range_text(800.0, 900.0)
+    green.set_selected_parameter(PARAM_RB_RATIO)
+    assert emitted[-1] == (SELECTOR_GREEN, PARAM_RB_RATIO)
+    assert green.is_ratio_display()
+    assert "Red" in green.lbl_range.text() and "Blue" in green.lbl_range.text()
+
+    # Range updates while in ratio mode keep the ratio label; switching back restores range
+    green.set_range_text(810.0, 910.0)
+    assert "Red" in green.lbl_range.text()
+    green.set_selected_parameter(PARAM_INTEGRATED_INTENSITY)
+    assert "[810.0, 910.0]" in green.lbl_range.text()

@@ -137,9 +137,14 @@ Overrides `_add_maps_panel()` to replace the inherited spectra sidebar with:
 - `VMapViewer` — the heatmap canvas with Z-parameter and X-range sliders.
 - `VMapsList` — maps list panel with map management and spectra action buttons.
 
-The left side (SpectraViewer + bottom tabs) is inherited from `VWorkspaceSpectra`. While `VWorkspaceSpectra` initializes `VLiveMaps` and `VMLiveMaps` in `"spectra"` mode (rendering 1D parameter variation graphs across the currently selected spectra), `VWorkspaceMaps` switches the inherited `v_live_maps` and `vm_live_maps` instances to `"map"` mode (`set_mode("map")`) so the **Live Maps** tab renders 2D spatial heatmaps with palette selectors.
+The left side (SpectraViewer + bottom tabs) is inherited from `VWorkspaceSpectra`. While `VWorkspaceSpectra` initializes `VLiveMaps` and `VMLiveMaps` in `"spectra"` mode (rendering 1D parameter variation graphs across the currently selected spectra), `VWorkspaceMaps` switches the inherited `v_live_maps` and `vm_live_maps` instances to `"map"` mode (`set_mode("map")`).
 
-In the Maps workspace, when a map is loaded or selected, `VWorkspaceMaps` forwards the current active `MapData` block to `self.vm_live_maps.set_map_data(md)`. As the user toggles the range selectors or drags the boundary brackets on the spectrum plot, the three Live Maps subpanels compute and render 2D heatmaps across the map's spatial grid in real time with a 60 ms debounce. Range selector artists use Matplotlib's `ax.add_artist()` so that `ax.dataLim` is never polluted, ensuring that the **Rescale** button (`Ctrl+R`) zooms exclusively to spectral data.
+In the Maps workspace, when a map is loaded or selected, `VWorkspaceMaps` forwards the current active `MapData` block to `self.vm_live_maps.set_map_data(md)`. `VMLiveMaps` inspects `md.coords` via `analyze_map_geometry()` (cached by coordinate array identity) and automatically adapts the plot type to the dimensionality of the map:
+- **2D maps**: Emits `map_data_ready` so the three Live Maps subpanels render 2D spatial heatmaps with colormap selectors.
+- **1D maps (profiles / line scans)**: When all measurement sites are collinear (constant X, constant Y, or diagonal line scan), emits `profile_data_ready` sorted along the profile coordinate (`X (mm)`, `Y (mm)`, or `Distance (mm)`), so the subpanels render 1D line plots with their colormap selector hidden.
+- **Red/Blue Intensity Ratio (`R/B ratio`)**: The Green channel subpanel provides an additional `R/B ratio` option that computes $I_{\mathrm{Red}} / I_{\mathrm{Blue}}$ from the integrated intensities of the Red and Blue spectral ranges (masking zero or near-zero Blue intensities as `NaN`), automatically updating whenever the Red or Blue brackets are moved or resized and adapting to either a 2D heatmap or 1D profile line plot.
+
+Range selector updates run in real time with a 60 ms debounce, and range selector artists use Matplotlib's `ax.add_artist()` so that `ax.dataLim` is never polluted, ensuring that the **Rescale** button (`Ctrl+R`) zooms exclusively to spectral data.
 
 **Centralized map type management:** The `selected_map_type` attribute is the single source of truth for all viewers (main + dialogs). When the user changes the combobox in any viewer, `_on_map_type_changed()` updates all viewers synchronously, preventing drift.
 

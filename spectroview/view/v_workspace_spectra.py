@@ -282,6 +282,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_live_maps.parameter_change_requested.connect(self.vm_live_maps.set_selector_parameter)
         self.vm_live_maps.map_data_ready.connect(self.v_live_maps.update_map_data)
         self.vm_live_maps.series_data_ready.connect(self.v_live_maps.update_series_data)
+        self.vm_live_maps.profile_data_ready.connect(self.v_live_maps.update_profile_data)
         vm.spectra_selection_changed.connect(self._on_selection_changed_for_live_maps)
 
 

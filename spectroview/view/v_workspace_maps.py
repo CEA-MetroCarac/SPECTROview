@@ -222,8 +222,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.vm.fit_results_updated.connect(self._on_fit_results_updated)
 
         # Note: Live Maps signals (range_toggled, range_changed, parameter_change_requested,
-        # map_data_ready, series_data_ready, spectra_selection_changed) are connected in
-        # super().setup_connections().
+        # map_data_ready, series_data_ready, profile_data_ready, spectra_selection_changed)
+        # are connected in super().setup_connections(). The 2D heatmap vs. 1D profile
+        # line plot choice is made by VMLiveMaps from the selected map's coordinates.
 
     def _on_selection_changed_for_live_maps(self, selected_data):
         """Update Live Maps MapData reference on selection change."""

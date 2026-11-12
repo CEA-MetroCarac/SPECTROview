@@ -2,8 +2,11 @@
 
 Displays 3 live-updating panels corresponding to Red, Blue, and Green
 spectral range selectors:
-- In Maps workspace ('map' mode): renders 2D spatial heatmaps with colormap selection.
+- In Maps workspace ('map' mode): renders 2D spatial heatmaps with colormap
+  selection for 2D maps, or line plots along the profile for 1D maps (profiles).
 - In Spectra workspace ('spectra' mode): renders 1D parameter variation graphs across selected spectra.
+
+The Green panel can alternatively display the Red/Blue intensity ratio (R/B).
 """
 
 from __future__ import annotations
@@ -12,7 +15,7 @@ from typing import Optional, Dict, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator, AutoLocator
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from PySide6.QtCore import Qt, Signal, QSize
@@ -27,6 +30,7 @@ from spectroview.viewmodel.utils import copy_fig_to_clb
 from spectroview.model.spectral_parameters import (
     SPECTRAL_PARAMETERS,
     PARAM_INTEGRATED_INTENSITY,
+    PARAM_RB_RATIO,
 )
 from spectroview.view.components.v_range_selector import (
     SELECTOR_RED,
@@ -51,7 +55,13 @@ AVAILABLE_PALETTES = [
 
 
 class LiveMapSubpanel(QFrame):
-    """Subpanel rendering a single 2D heatmap ('map' mode) or 1D variation graph ('spectra' mode)."""
+    """Subpanel rendering a 2D heatmap or a 1D line plot for one spectral range.
+
+    The plot type follows the data received, not a fixed mode:
+    ``update_map`` draws a 2D heatmap (2D maps), ``update_series`` draws a
+    line plot — either vs. spectrum index (Spectra workspace) or vs. spatial
+    position (1D profile maps, when ``x_values`` is given).
+    """
 
     parameter_changed = Signal(str, str)  # (color_id, parameter_name)
 
@@ -71,9 +81,14 @@ class LiveMapSubpanel(QFrame):
         self._vmin = 0.0
         self._vmax = 1.0
 
-        # Cached 1D series data (Spectra mode)
+        # Cached 1D series data (Spectra mode / 1D profile maps)
         self._series_values: Optional[np.ndarray] = None
         self._series_labels: list[str] = []
+        self._series_x: Optional[np.ndarray] = None  # None → spectrum index axis
+        self._series_xlabel: str = "Spectrum #"
+
+        # What is currently drawn: None, "map" (heatmap) or "series" (line plot)
+        self._display_kind: Optional[str] = None
 
         self._status_msg = ""
         self._x_range = (0.0, 100.0)
@@ -137,12 +152,20 @@ class LiveMapSubpanel(QFrame):
         self.cbb_param = QComboBox(self)
         for param in SPECTRAL_PARAMETERS:
             self.cbb_param.addItem(param)
+        if self.color_id == SELECTOR_GREEN:
+            # Derived option: Red/Blue integrated-intensity ratio
+            self.cbb_param.insertSeparator(self.cbb_param.count())
+            self.cbb_param.addItem(PARAM_RB_RATIO)
+            self.cbb_param.setItemData(
+                self.cbb_param.count() - 1,
+                "Ratio of the Red and Blue integrated intensities (I_Red / I_Blue).\n"
+                "Requires the Red and Blue range selectors to be active.",
+                Qt.ToolTipRole,
+            )
         self.cbb_param.setCurrentText(PARAM_INTEGRATED_INTENSITY)
         self.cbb_param.setToolTip("Select spectral parameter for this map")
         self.cbb_param.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.cbb_param.currentTextChanged.connect(
-            lambda param: self.parameter_changed.emit(self.color_id, param)
-        )
+        self.cbb_param.currentTextChanged.connect(self._on_param_changed)
         row2_layout.addWidget(self.cbb_param, stretch=1)
 
         self.cbb_palette = QComboBox(self)
@@ -168,14 +191,25 @@ class LiveMapSubpanel(QFrame):
     def set_mode(self, mode: str):
         """Configure subpanel for 'map' (2D heatmap) or 'spectra' (1D variation graph) mode."""
         self.mode = mode
-        is_map = (mode == "map")
-        self.cbb_palette.setVisible(is_map)
-        if is_map:
+        if mode == "map":
             self.btn_copy.setToolTip("Copy map to clipboard")
             self.cbb_param.setToolTip("Select spectral parameter for this map")
         else:
             self.btn_copy.setToolTip("Copy graph to clipboard")
             self.cbb_param.setToolTip("Select spectral parameter for this graph")
+        self._sync_palette_visibility()
+
+    def _sync_palette_visibility(self):
+        """Colormap selector only applies to heatmaps (Maps mode, not a 1D line plot)."""
+        self.cbb_palette.setVisible(self.mode == "map" and self._display_kind != "series")
+
+    def is_ratio_display(self) -> bool:
+        """True if this panel currently displays the Red/Blue ratio."""
+        return self.cbb_param.currentText() == PARAM_RB_RATIO
+
+    def _on_param_changed(self, param: str):
+        self._refresh_range_label()
+        self.parameter_changed.emit(self.color_id, param)
 
     def _copy_to_clipboard(self):
         """Copy figure to system clipboard."""
@@ -195,7 +229,14 @@ class LiveMapSubpanel(QFrame):
     def set_range_text(self, x_min: float, x_max: float):
         """Update range label in header."""
         self._x_range = (x_min, x_max)
-        self.lbl_range.setText(f"[{x_min:.1f}, {x_max:.1f}]")
+        self._refresh_range_label()
+
+    def _refresh_range_label(self):
+        if self.is_ratio_display():
+            self.lbl_range.setText("I(Red) / I(Blue)")
+        else:
+            x_min, x_max = self._x_range
+            self.lbl_range.setText(f"[{x_min:.1f}, {x_max:.1f}]")
 
     def get_selected_parameter(self) -> str:
         """Return currently selected parameter name."""
@@ -207,17 +248,60 @@ class LiveMapSubpanel(QFrame):
         if idx >= 0:
             self.cbb_param.setCurrentIndex(idx)
 
+    @staticmethod
+    def _padded_ylim(val_arr: np.ndarray) -> Tuple[float, float]:
+        ymin = float(np.nanmin(val_arr))
+        ymax = float(np.nanmax(val_arr))
+        span = ymax - ymin
+        pad = span * 0.12 if span > 1e-12 else (abs(ymin) * 0.1 if abs(ymin) > 1e-12 else 1.0)
+        return ymin - pad, ymax + pad
+
+    def _apply_x_limits(self, x: np.ndarray, is_index_axis: bool):
+        """Set x-limits/ticks for an index axis (Spectrum #) or a spatial profile axis."""
+        n = len(x)
+        if is_index_axis:
+            if n == 1:
+                self.ax.set_xlim(0.5, 1.5)
+                self.ax.set_xticks([1])
+            else:
+                margin = max(0.25, 0.04 * (n - 1))
+                self.ax.set_xlim(1.0 - margin, float(n) + margin)
+                self.ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            return
+        x_lo = float(np.nanmin(x))
+        x_hi = float(np.nanmax(x))
+        span = x_hi - x_lo
+        margin = span * 0.03 if span > 1e-12 else 0.5
+        self.ax.set_xlim(x_lo - margin, x_hi + margin)
+        self.ax.xaxis.set_major_locator(AutoLocator())
+
     def update_series(
         self,
         values: Optional[np.ndarray],
         labels: Optional[list[str]] = None,
         status_msg: str = "",
         theme: str = "Light Mode",
+        x_values: Optional[np.ndarray] = None,
+        x_label: str = "Spectrum #",
     ):
-        """Render or update the 1D parameter variation graph across selected spectra."""
+        """Render or update a 1D line plot.
+
+        Without ``x_values`` the values are plotted against the spectrum index
+        (Spectra workspace). With ``x_values`` they are plotted against those
+        positions, e.g. the spatial coordinate of a 1D profile map.
+        """
         val_arr = np.asarray(values, dtype=np.float64) if values is not None else np.array([], dtype=np.float64)
+        is_index_axis = x_values is None
+        if is_index_axis:
+            x_arr = np.arange(1, len(val_arr) + 1, dtype=np.float64)
+        else:
+            x_arr = np.asarray(x_values, dtype=np.float64)
+            if len(x_arr) != len(val_arr):
+                val_arr = np.array([], dtype=np.float64)
         self._series_values = val_arr
         self._series_labels = list(labels) if labels else []
+        self._series_x = None if is_index_axis else x_arr
+        self._series_xlabel = x_label
         self._status_msg = status_msg
         self._current_theme = theme
 
@@ -232,14 +316,11 @@ class LiveMapSubpanel(QFrame):
             and has_valid
             and len(self.line.get_xdata()) == len(val_arr)
         ):
-            n = len(val_arr)
-            x_idx = np.arange(1, n + 1, dtype=np.float64)
-            self.line.set_data(x_idx, val_arr)
-            ymin = float(np.nanmin(val_arr))
-            ymax = float(np.nanmax(val_arr))
-            span = ymax - ymin
-            pad = span * 0.12 if span > 1e-12 else (abs(ymin) * 0.1 if abs(ymin) > 1e-12 else 1.0)
-            self.ax.set_ylim(ymin - pad, ymax + pad)
+            self.line.set_data(x_arr, val_arr)
+            if not is_index_axis:
+                self._apply_x_limits(x_arr, is_index_axis=False)
+            self.ax.set_ylim(*self._padded_ylim(val_arr))
+            self.ax.set_xlabel(x_label)
             self.ax.set_ylabel(param_name)
             self.ax.set_title(title_text, fontsize=10, pad=4)
             self.canvas.draw_idle()
@@ -247,6 +328,9 @@ class LiveMapSubpanel(QFrame):
 
         is_dark = theme in ("Dark Mode", "dark", "classic_dark")
         style_path = PLOT_POLICY_DARK if is_dark else PLOT_POLICY_LIGHT
+
+        self._display_kind = "series"
+        self._sync_palette_visibility()
 
         with plt.style.context(style_path):
             self.ax.clear()
@@ -261,7 +345,7 @@ class LiveMapSubpanel(QFrame):
             self.line = None
 
             if not has_valid:
-                msg = status_msg or "No spectra selected"
+                msg = status_msg or ("No spectra selected" if is_index_axis else "No profile data available")
                 self.ax.text(
                     0.5, 0.5, msg,
                     ha="center", va="center", transform=self.ax.transAxes,
@@ -273,10 +357,8 @@ class LiveMapSubpanel(QFrame):
                 return
 
             n = len(val_arr)
-            x_idx = np.arange(1, n + 1, dtype=np.float64)
-
             (self.line,) = self.ax.plot(
-                x_idx,
+                x_arr,
                 val_arr,
                 color=self.color_hex,
                 marker="o",
@@ -285,22 +367,11 @@ class LiveMapSubpanel(QFrame):
                 alpha=0.95,
             )
 
-            if n == 1:
-                self.ax.set_xlim(0.5, 1.5)
-                self.ax.set_xticks([1])
-            else:
-                margin = max(0.25, 0.04 * (n - 1))
-                self.ax.set_xlim(1.0 - margin, float(n) + margin)
-                self.ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-
-            ymin = float(np.nanmin(val_arr))
-            ymax = float(np.nanmax(val_arr))
-            span = ymax - ymin
-            pad = span * 0.12 if span > 1e-12 else (abs(ymin) * 0.1 if abs(ymin) > 1e-12 else 1.0)
-            self.ax.set_ylim(ymin - pad, ymax + pad)
+            self._apply_x_limits(x_arr, is_index_axis)
+            self.ax.set_ylim(*self._padded_ylim(val_arr))
 
             self.ax.grid(True, alpha=0.25, linestyle="--")
-            self.ax.set_xlabel("Spectrum #")
+            self.ax.set_xlabel(x_label)
             self.ax.set_ylabel(param_name)
             self.ax.set_title(title_text, fontsize=10, pad=4)
 
@@ -344,6 +415,9 @@ class LiveMapSubpanel(QFrame):
         # Re-render path for status messages or first draw
         is_dark = theme in ("Dark Mode", "dark", "classic_dark")
         style_path = PLOT_POLICY_DARK if is_dark else PLOT_POLICY_LIGHT
+
+        self._display_kind = "map"
+        self._sync_palette_visibility()
 
         with plt.style.context(style_path):
             self.ax.clear()
@@ -459,7 +533,8 @@ class VLiveMaps(QWidget):
             self.lbl_placeholder.setText(
                 "Live Spectral Mapping\n\n"
                 "Activate one or more spectral range selectors (Red, Blue, Green)\n"
-                "in the Spectra viewer right panel to display live 2D heatmaps."
+                "in the Spectra viewer right panel to display live 2D heatmaps\n"
+                "(or line plots for 1D profile maps)."
             )
         for panel in self.panels.values():
             panel.set_mode(mode)
@@ -511,6 +586,23 @@ class VLiveMaps(QWidget):
         if panel:
             panel.update_series(values, labels, status_msg, theme=self._current_theme)
 
+    def update_profile_data(
+        self,
+        color_id: str,
+        positions: Optional[np.ndarray],
+        values: Optional[np.ndarray],
+        axis_label: str = "X",
+        status_msg: str = "",
+    ):
+        """Forward a 1D profile (values along the profile axis) to the matching subpanel."""
+        panel = self.panels.get(color_id)
+        if panel:
+            panel.update_series(
+                values, None, status_msg, theme=self._current_theme,
+                x_values=positions if positions is not None else np.array([]),
+                x_label=f"{axis_label or 'Position'} (mm)",
+            )
+
     def apply_theme(self, theme_name: str):
         """Update theme for all subpanels."""
         self._current_theme = theme_name
@@ -521,12 +613,15 @@ class VLiveMaps(QWidget):
             panel.img = None
             panel.line = None
             if panel.isVisible():
-                if self.mode == "spectra":
+                kind = panel._display_kind or ("series" if self.mode == "spectra" else "map")
+                if kind == "series":
                     panel.update_series(
                         panel._series_values,
                         panel._series_labels,
                         panel._status_msg,
                         theme=theme_name,
+                        x_values=panel._series_x,
+                        x_label=panel._series_xlabel,
                     )
                 else:
                     panel.update_map(

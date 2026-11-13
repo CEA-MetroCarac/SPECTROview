@@ -343,6 +343,9 @@ class TestLiveMapsViewOptions:
         assert opts["line_width"] == 1.5
         assert opts["dot_size"] == 1.5
         assert opts["show_grid"] is False
+        assert opts["copy_fig_width"] == "5.5"
+        assert opts["copy_fig_height"] == "4.0"
+        assert opts["copy_fig_theme"] == "Light Mode"
         assert opts["custom_labels"] == {}
         assert opts["custom_colors"] == {}
 
@@ -364,6 +367,9 @@ class TestLiveMapsViewOptions:
             "share_y": True,
             "heatmap_smoothing": True,
             "show_colorbar": False,
+            "copy_fig_width": "7.2",
+            "copy_fig_height": "3.6",
+            "copy_fig_theme": "Dark Mode",
             "custom_labels": {"red": "Peak A", "Line1": "Sample X"},
             "custom_colors": {"red": "#e11d48", "Line1": "#2563eb"},
         }

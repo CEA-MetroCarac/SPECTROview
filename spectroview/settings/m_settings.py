@@ -27,6 +27,9 @@ LIVE_MAPS_VIEW_OPTION_DEFAULTS = {
     "share_y": False,
     "heatmap_smoothing": False,
     "show_colorbar": True,
+    "copy_fig_width": "5.5",
+    "copy_fig_height": "4.0",
+    "copy_fig_theme": "Light Mode",
     "custom_labels": {},
     "custom_colors": {},
 }
@@ -127,6 +130,12 @@ class MSettings:
             self.settings.value("live_maps_view_options/plot_theme", defaults["plot_theme"], str)
         )
         plot_theme = "Dark Mode" if "dark" in raw_theme.lower() else "Light Mode"
+        raw_copy_theme = str(
+            self.settings.value(
+                "live_maps_view_options/copy_fig_theme", defaults["copy_fig_theme"], str
+            )
+        )
+        copy_fig_theme = "Dark Mode" if "dark" in raw_copy_theme.lower() else "Light Mode"
         result = {
             "plot_theme": plot_theme,
             "xscale": self.settings.value("live_maps_view_options/xscale", defaults["xscale"], str),
@@ -150,6 +159,17 @@ class MSettings:
             "show_colorbar": self.settings.value(
                 "live_maps_view_options/show_colorbar", defaults["show_colorbar"], bool
             ),
+            "copy_fig_width": str(
+                self.settings.value(
+                    "live_maps_view_options/copy_fig_width", defaults["copy_fig_width"], str
+                )
+            ),
+            "copy_fig_height": str(
+                self.settings.value(
+                    "live_maps_view_options/copy_fig_height", defaults["copy_fig_height"], str
+                )
+            ),
+            "copy_fig_theme": copy_fig_theme,
             "custom_labels": self._parse_json_dict(
                 self.settings.value("live_maps_view_options/custom_labels", "{}")
             ),

@@ -691,3 +691,76 @@ def test_v_live_maps_subpanel_rescale_pan_zoom_tools(qapp):
     assert panel.ax.get_ylim() == pytest.approx((0.0, 10.0))
 
 
+def test_v_live_maps_copied_figure_size_theme_and_two_column_menu(qapp):
+    """Clipboard copy uses fixed size & theme regardless of window size; options menu uses 2 columns."""
+    import warnings
+    from PySide6.QtWidgets import QApplication, QFrame
+    from matplotlib import colors as mcolors
+
+    live_maps = VLiveMaps(mode="map")
+    live_maps.resize(460, 320)
+    live_maps.show()
+    live_maps.set_selector_active(SELECTOR_RED, True)
+    panel = live_maps.panels[SELECTOR_RED]
+
+    # Menu uses a 2-column widget container separated by a vertical divider
+    menu = live_maps.options_menu
+    assert len(menu.actions()) == 1
+    container = menu.actions()[0].defaultWidget()
+    v_lines = [
+        f for f in container.findChildren(QFrame)
+        if f.frameShape() == QFrame.VLine
+    ]
+    assert len(v_lines) == 1
+    assert container.sizeHint().height() < 360
+
+    # Sync check between top toolbar toggle, checkbox, and QAction
+    live_maps.btn_legend.click()
+    assert live_maps.chk_show_legend.isChecked() is True
+    assert live_maps.act_show_legend.isChecked() is True
+    live_maps.chk_show_grid.click()
+    assert live_maps.act_show_grid.isChecked() is True
+    live_maps.chk_show_grid.click()
+    assert live_maps.act_show_grid.isChecked() is False
+    live_maps.btn_legend.click()
+
+    pos = np.array([0.0, 2.0, 5.0, 10.0])
+    vals = np.array([10.0, 25.0, 40.0, 15.0])
+    live_maps.update_profile_data(SELECTOR_RED, pos, vals, axis_label="X", status_msg="OK")
+    qapp.processEvents()
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        # Copy at small window dimensions with default 5.5 x 4.0 in
+        panel._copy_to_clipboard()
+        pm_small = QApplication.clipboard().pixmap()
+        assert not pm_small.isNull()
+
+        # Dramatically resize SPECTROview window -> copied figure dimensions stay invariant
+        live_maps.resize(1320, 680)
+        qapp.processEvents()
+        panel._copy_to_clipboard()
+        pm_large = QApplication.clipboard().pixmap()
+        assert abs(pm_large.width() - pm_small.width()) <= 15
+        assert abs(pm_large.height() - pm_small.height()) <= 15
+
+        # Custom aspect ratio (e.g. 7.0 x 3.5) and Copied figure theme Dark Mode while preview stays Light Mode
+        live_maps.width_entry.setText("7.0")
+        live_maps.height_entry.setText("3.5")
+        live_maps._commit_copy_size_entries()
+        live_maps.cbb_copy_theme.setCurrentText("Dark Mode")
+
+        panel._copy_to_clipboard()
+        pm_wide = QApplication.clipboard().pixmap()
+        assert pm_wide.width() > pm_wide.height() * 1.5
+        # Screen figure theme remains Light Mode after dark copy completes
+        assert min(mcolors.to_rgb(panel.ax.get_facecolor())) > 0.9
+        # Copied corner pixel is dark background
+        corner_px = pm_wide.toImage().pixelColor(2, 2)
+        assert max(corner_px.red(), corner_px.green(), corner_px.blue()) < 90
+
+    layout_warnings = [str(w.message) for w in caught if "constrained_layout" in str(w.message).lower()]
+    assert layout_warnings == []
+
+
+

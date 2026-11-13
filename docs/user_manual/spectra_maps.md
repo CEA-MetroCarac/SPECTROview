@@ -217,17 +217,18 @@ Each subpanel provides dedicated controls:
 
 - **Rescale / Pan / Zoom**: Independent navigation buttons in each subpanel header allow you to zoom into regions of interest, pan across the curve or heatmap, and reset back to the full plot range without affecting adjacent channels. Double-clicking on a legend still opens the legend editor rather than resetting zoom.
 - **Palette** *(Maps Workspace only)*: Choose any standard colormap (e.g., `viridis`, `plasma`, `inferno`, `jet`, `turbo`, `coolwarm`, `cividis`, `magma`, `Reds`, `Blues`, `Greens`). In the **Spectra Workspace**, each 1D variation curve is automatically styled in its matching selector color (Red, Blue, or Green).
-- **Copy**: Quickly copy the rendered graph or heatmap figure to the clipboard as an image.
+- **Copy**: Copy the subpanel figure to the clipboard at the configured **Copied figure size** and **Copied figure theme** (independent of the current SPECTROview window size).
 - **Range / Status Badge**: Displays the current interval range $[x_{min}, x_{max}]$ or fitting status.
 
 ##### **Live Maps View Options & Legend Customization**
 Whenever one or more selectors are active, two quick controls appear in the top-right corner of the **Live Maps** tab:
 
 - **Show / Hide Legend (`btn_legend`)**: Toggles interactive canvas legends across 1D subpanels. You can drag inside legends directly with the mouse, or double-click a canvas legend box to customize its labels and colors.
-- **More View Options (`⋯`)**: Opens a compact menu matching `SpectraViewer` (all choices are synchronized between Spectra and Maps workspaces and automatically saved for future startups):
+- **More View Options (`⋯`)**: Opens a compact 2-column menu matching `SpectraViewer` spacing (all choices are synchronized between Spectra and Maps workspaces and automatically saved for future startups):
   - **Plot Theme**: Switch Live Maps figures between **Light Mode** (white canvas, default) and **Dark Mode** independently of the global application UI theme.
   - **Axis & Color Scales**: Toggle **X-scale**, **Y-scale**, and **Color (Z) scale** between **Linear** and **Log** (non-positive domains automatically fall back safely).
   - **Plot Style & Sizing**: Switch 1D curves between **Line** (default), **Line + Dots**, and **Dot**, and tune **Line width** (default `1.5`), **Dot size** (default `1.5`), and graph **Text size** (`6–24 pt`, scaling axis titles, labels, ticks, and colorbar labels).
+  - **Copied Figure Size & Theme**: Set fixed clipboard figure dimensions in inches (**Copied figure size**, default `5.5` × `4.0`) and choose **Copied figure theme** (**Light Mode** default or **Dark Mode**) so copied figures retain constant proportions and readable text sizes regardless of window resizing.
   - **Legend Box Settings**: Toggle legend visibility, change **Legend location** (`best`, corners, `outside right`, `outside top`), **Legend columns**, **Legend font size**, or open **Edit legend labels...** to rename series labels and pick custom colors directly on the canvas legend box.
   - **Display & Comparison Aids**: Toggle **Show grid** (default Off), synchronize Y-limits across panels with **Share Y-axis (1D)**, enable bilinear **Heatmap smoothing**, show/hide **Colorbars**, or **Reset view options**.
 

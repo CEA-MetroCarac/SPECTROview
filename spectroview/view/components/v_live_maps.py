@@ -22,11 +22,12 @@ from matplotlib.ticker import MaxNLocator, AutoLocator
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from PySide6.QtCore import Qt, Signal, QSize, QTimer
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QDoubleValidator
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
     QPushButton, QFrame, QSizePolicy, QToolButton,
     QMenu, QWidgetAction, QDoubleSpinBox, QSpinBox,
+    QCheckBox, QLineEdit,
 )
 
 from spectroview import PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, DEFAULT_COLORS
@@ -90,6 +91,9 @@ def _copy_view_options(src: Optional[dict] = None) -> dict:
     if src:
         base.update(src)
     base["plot_theme"] = _normalize_plot_theme(base.get("plot_theme"))
+    base["copy_fig_theme"] = _normalize_plot_theme(base.get("copy_fig_theme"))
+    base["copy_fig_width"] = str(base.get("copy_fig_width") or "5.5").strip() or "5.5"
+    base["copy_fig_height"] = str(base.get("copy_fig_height") or "4.0").strip() or "4.0"
     base["custom_labels"] = dict(base.get("custom_labels") or {})
     base["custom_colors"] = dict(base.get("custom_colors") or {})
     return base
@@ -204,6 +208,7 @@ class LiveMapSubpanel(QFrame):
 
         tok = current_tokens()
         icon_color = tok.text_primary
+        self._icon_color = icon_color
 
         self.btn_home = QPushButton(self)
         self.btn_home.setIcon(Icons.rescale(color=icon_color))
@@ -314,12 +319,12 @@ class LiveMapSubpanel(QFrame):
         self._draw_timer.start()
 
     def _has_layout_headroom(self) -> bool:
-        """Return True when canvas dimensions are large enough for compressed layout."""
-        return (
-            self.canvas is not None
-            and self.canvas.width() >= 180
-            and self.canvas.height() >= 120
-        )
+        """Return True when figure dimensions are large enough for compressed layout."""
+        if self.canvas is None or self.figure is None:
+            return False
+        fig_w_px = float(self.figure.get_figwidth()) * float(self.figure.dpi)
+        fig_h_px = float(self.figure.get_figheight()) * float(self.figure.dpi)
+        return fig_w_px >= 180.0 and fig_h_px >= 120.0
 
     def _request_relayout(self):
         """Enable compressed layout when the canvas has headroom; skip on tiny surfaces."""
@@ -352,6 +357,7 @@ class LiveMapSubpanel(QFrame):
 
     def apply_icon_theme(self, icon_color: str):
         """Update subpanel Qt toolbar button icons independently of Matplotlib plot theme."""
+        self._icon_color = icon_color
         self.btn_home.setIcon(Icons.rescale(color=icon_color))
         self.btn_pan.setIcon(Icons.pan(color=icon_color))
         self.btn_zoom.setIcon(Icons.zoom(color=icon_color))
@@ -536,9 +542,57 @@ class LiveMapSubpanel(QFrame):
         self._refresh_range_label()
         self.parameter_changed.emit(self.color_id, param)
 
+    def _parse_copied_figure_size(self) -> Tuple[float, float]:
+        """Return validated copied figure (width, height) in inches from view options."""
+        def _parse_one(raw, fallback: float) -> float:
+            try:
+                val = float(str(raw or "").strip().replace(",", "."))
+                if 0.5 <= val <= 50.0 and np.isfinite(val):
+                    return val
+            except (TypeError, ValueError):
+                pass
+            return fallback
+
+        return (
+            _parse_one(self._view_options.get("copy_fig_width"), 5.5),
+            _parse_one(self._view_options.get("copy_fig_height"), 4.0),
+        )
+
     def _copy_to_clipboard(self):
-        """Copy figure to system clipboard."""
-        copy_fig_to_clb(self.canvas)
+        """Copy figure to clipboard at configured fixed size ratio and copy theme."""
+        size_ratio = self._parse_copied_figure_size()
+        target_theme = _normalize_plot_theme(
+            self._view_options.get("copy_fig_theme", "Light Mode")
+        )
+        original_theme = _normalize_plot_theme(self._current_theme)
+        try:
+            if target_theme != original_theme:
+                self._apply_figure_theme(target_theme)
+            if (
+                size_ratio[0] * float(self.figure.dpi) >= 180.0
+                and size_ratio[1] * float(self.figure.dpi) >= 120.0
+            ):
+                self._relayout_needed = True
+                self.figure.set_layout_engine("compressed")
+            copy_fig_to_clb(self.canvas, size_ratio=size_ratio)
+        finally:
+            if target_theme != original_theme:
+                self._apply_figure_theme(original_theme)
+            self._request_relayout()
+            if self.canvas is not None:
+                self.canvas.draw_idle()
+        self._flash_copy_feedback()
+
+    def _flash_copy_feedback(self) -> None:
+        """Show 1-second checkmark feedback on the Copy button."""
+        self.btn_copy.setIcon(Icons.check())
+        QTimer.singleShot(1000, self, self._reset_copy_feedback)
+
+    def _reset_copy_feedback(self) -> None:
+        try:
+            self.btn_copy.setIcon(Icons.copy(color=getattr(self, "_icon_color", None)))
+        except (RuntimeError, AttributeError, TypeError):
+            pass
 
     def _on_palette_changed(self, palette_name: str):
         """Update colormap without recomputing grid data."""
@@ -867,6 +921,9 @@ class LiveMapSubpanel(QFrame):
         prev_loc = self._view_options.get("legend_loc", "best")
         self._view_options = _copy_view_options(options)
         self._current_theme = self._view_options.get("plot_theme", "Light Mode")
+
+        if changed_keys and changed_keys <= {"copy_fig_width", "copy_fig_height", "copy_fig_theme"}:
+            return
 
         if self._display_kind is None:
             if changed_keys is None or "plot_theme" in changed_keys:
@@ -1545,65 +1602,148 @@ class VLiveMaps(QWidget):
         main_layout.addWidget(self.maps_container, stretch=1)
         self._update_visibility()
 
-    def _wrap_menu_row(self, parent_menu: QMenu, label: str, widget: QWidget) -> QWidgetAction:
-        """Embed a labeled control widget cleanly inside a QMenu row."""
-        row_widget = QWidget(parent_menu)
+    def _wrap_menu_row(self, parent_widget: QWidget, label: str, widget: QWidget) -> QWidget:
+        """Build a compact label + control row with VSpectraViewer-matching (2, 2, 2, 2) margins."""
+        row_widget = QWidget(parent_widget)
         row_layout = QHBoxLayout(row_widget)
-        row_layout.setContentsMargins(10, 4, 10, 4)
-        row_layout.setSpacing(8)
+        row_layout.setContentsMargins(2, 2, 2, 2)
+        row_layout.setSpacing(6)
         row_layout.addWidget(QLabel(label, row_widget))
         row_layout.addWidget(widget, stretch=1)
-        action = QWidgetAction(parent_menu)
-        action.setDefaultWidget(row_widget)
-        return action
+        return row_widget
+
+    @staticmethod
+    def _menu_h_separator(parent_widget: QWidget) -> QFrame:
+        """Return a hairline horizontal separator for the 2-column options menu."""
+        line = QFrame(parent_widget)
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        line.setFixedHeight(1)
+        return line
+
+    def _bind_menu_checkbox(
+        self,
+        parent_widget: QWidget,
+        menu: QMenu,
+        text: str,
+        checked: bool,
+        on_toggled,
+    ) -> Tuple[QAction, QCheckBox]:
+        """Create a compact QCheckBox synchronized with a programmatic QAction."""
+        act = QAction(text, menu)
+        act.setCheckable(True)
+        act.setChecked(bool(checked))
+
+        chk = QCheckBox(text, parent_widget)
+        chk.setChecked(bool(checked))
+
+        def _on_act_toggled(val: bool):
+            val = bool(val)
+            if chk.isChecked() != val:
+                chk.blockSignals(True)
+                chk.setChecked(val)
+                chk.blockSignals(False)
+            on_toggled(val)
+
+        def _on_chk_toggled(val: bool):
+            val = bool(val)
+            if act.isChecked() != val:
+                act.setChecked(val)
+
+        act.toggled.connect(_on_act_toggled)
+        chk.toggled.connect(_on_chk_toggled)
+        return act, chk
+
+    @staticmethod
+    def _sanitize_dim_text(line_edit: QLineEdit, fallback: str) -> str:
+        """Validate positive copied-figure inch dimension text."""
+        raw = str(line_edit.text() or "").strip().replace(",", ".")
+        try:
+            val = float(raw)
+            if 0.5 <= val <= 50.0 and np.isfinite(val):
+                formatted = f"{val:g}" if "." not in raw else raw
+                if line_edit.text() != formatted:
+                    line_edit.blockSignals(True)
+                    line_edit.setText(formatted)
+                    line_edit.blockSignals(False)
+                return formatted
+        except (TypeError, ValueError):
+            pass
+        line_edit.blockSignals(True)
+        line_edit.setText(fallback)
+        line_edit.blockSignals(False)
+        return fallback
+
+    def _commit_copy_size_entries(self):
+        """Commit Copied figure size inputs when editing finishes or menu closes."""
+        if hasattr(self, "width_entry"):
+            w = self._sanitize_dim_text(self.width_entry, "5.5")
+            self._update_option("copy_fig_width", w)
+        if hasattr(self, "height_entry"):
+            h = self._sanitize_dim_text(self.height_entry, "4.0")
+            self._update_option("copy_fig_height", h)
 
     def _create_options_menu(self) -> QMenu:
-        """Build 'More view options' menu mirroring VSpectraViewer idioms."""
+        """Build a compact 2-column 'More view options' menu matching VSpectraViewer spacing."""
         menu = QMenu(self)
+        panel = QWidget(menu)
+        outer_layout = QVBoxLayout(panel)
+        outer_layout.setContentsMargins(6, 4, 6, 4)
+        outer_layout.setSpacing(2)
 
-        # ── Plot theme (independent of global app UI theme) ──
-        self.cbb_plot_theme = QComboBox(menu)
+        cols_layout = QHBoxLayout()
+        cols_layout.setContentsMargins(0, 0, 0, 0)
+        cols_layout.setSpacing(8)
+
+        left_col = QWidget(panel)
+        left_layout = QVBoxLayout(left_col)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(2)
+
+        right_col = QWidget(panel)
+        right_layout = QVBoxLayout(right_col)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(2)
+
+        # ── Left Column: Plot theme, Axis scales, Style/Sizes & Copy size/theme ──
+        self.cbb_plot_theme = QComboBox(left_col)
         self.cbb_plot_theme.addItems(["Light Mode", "Dark Mode"])
         self.cbb_plot_theme.setCurrentText(self._view_options["plot_theme"])
         self.cbb_plot_theme.currentTextChanged.connect(
             lambda txt: self._update_option("plot_theme", txt)
         )
-        menu.addAction(self._wrap_menu_row(menu, "Plot theme:", self.cbb_plot_theme))
+        left_layout.addWidget(self._wrap_menu_row(left_col, "Plot theme:", self.cbb_plot_theme))
 
-        menu.addSeparator()
-
-        # ── Axis scales ──
-        self.cbb_xscale = QComboBox(menu)
+        self.cbb_xscale = QComboBox(left_col)
         self.cbb_xscale.addItems(["Linear", "Log"])
         self.cbb_xscale.currentTextChanged.connect(
             lambda txt: self._update_option("xscale", txt.lower())
         )
-        menu.addAction(self._wrap_menu_row(menu, "X-scale:", self.cbb_xscale))
+        left_layout.addWidget(self._wrap_menu_row(left_col, "X-scale:", self.cbb_xscale))
 
-        self.cbb_yscale = QComboBox(menu)
+        self.cbb_yscale = QComboBox(left_col)
         self.cbb_yscale.addItems(["Linear", "Log"])
         self.cbb_yscale.currentTextChanged.connect(
             lambda txt: self._update_option("yscale", txt.lower())
         )
-        menu.addAction(self._wrap_menu_row(menu, "Y-scale:", self.cbb_yscale))
+        left_layout.addWidget(self._wrap_menu_row(left_col, "Y-scale:", self.cbb_yscale))
 
-        self.cbb_zscale = QComboBox(menu)
+        self.cbb_zscale = QComboBox(left_col)
         self.cbb_zscale.addItems(["Linear", "Log"])
         self.cbb_zscale.currentTextChanged.connect(
             lambda txt: self._update_option("zscale", txt.lower())
         )
-        menu.addAction(self._wrap_menu_row(menu, "Color (Z) scale:", self.cbb_zscale))
+        left_layout.addWidget(self._wrap_menu_row(left_col, "Color (Z) scale:", self.cbb_zscale))
 
-        menu.addSeparator()
+        left_layout.addWidget(self._menu_h_separator(left_col))
 
-        # ── Plot style & sizes ──
         self._style_labels_to_keys = {
             "Line": "line",
             "Line + Dots": "line+dots",
             "Dot": "dot",
         }
         self._style_keys_to_labels = {v: k for k, v in self._style_labels_to_keys.items()}
-        self.cbb_plot_style = QComboBox(menu)
+        self.cbb_plot_style = QComboBox(left_col)
         self.cbb_plot_style.addItems(list(self._style_labels_to_keys.keys()))
         self.cbb_plot_style.setCurrentText(
             self._style_keys_to_labels.get(self._view_options["plot_style"], "Line")
@@ -1613,9 +1753,9 @@ class VLiveMaps(QWidget):
                 "plot_style", self._style_labels_to_keys.get(txt, "line")
             )
         )
-        menu.addAction(self._wrap_menu_row(menu, "Plot style:", self.cbb_plot_style))
+        left_layout.addWidget(self._wrap_menu_row(left_col, "Plot style:", self.cbb_plot_style))
 
-        self.spb_linewidth = QDoubleSpinBox(menu)
+        self.spb_linewidth = QDoubleSpinBox(left_col)
         self.spb_linewidth.setRange(0.5, 6.0)
         self.spb_linewidth.setSingleStep(0.2)
         self.spb_linewidth.setDecimals(1)
@@ -1624,9 +1764,9 @@ class VLiveMaps(QWidget):
         self.spb_linewidth.valueChanged.connect(
             lambda val: self._update_option("line_width", float(val))
         )
-        menu.addAction(self._wrap_menu_row(menu, "Line width:", self.spb_linewidth))
+        left_layout.addWidget(self._wrap_menu_row(left_col, "Line width:", self.spb_linewidth))
 
-        self.spb_dotsize = QDoubleSpinBox(menu)
+        self.spb_dotsize = QDoubleSpinBox(left_col)
         self.spb_dotsize.setRange(1.0, 14.0)
         self.spb_dotsize.setSingleStep(0.5)
         self.spb_dotsize.setDecimals(1)
@@ -1635,9 +1775,9 @@ class VLiveMaps(QWidget):
         self.spb_dotsize.valueChanged.connect(
             lambda val: self._update_option("dot_size", float(val))
         )
-        menu.addAction(self._wrap_menu_row(menu, "Dot size:", self.spb_dotsize))
+        left_layout.addWidget(self._wrap_menu_row(left_col, "Dot size:", self.spb_dotsize))
 
-        self.spb_text_fontsize = QSpinBox(menu)
+        self.spb_text_fontsize = QSpinBox(left_col)
         self.spb_text_fontsize.setRange(6, 24)
         self.spb_text_fontsize.setSuffix(" pt")
         self.spb_text_fontsize.setKeyboardTracking(False)
@@ -1645,104 +1785,163 @@ class VLiveMaps(QWidget):
         self.spb_text_fontsize.valueChanged.connect(
             lambda val: self._update_option("text_fontsize", int(val))
         )
-        menu.addAction(self._wrap_menu_row(menu, "Text size:", self.spb_text_fontsize))
+        left_layout.addWidget(self._wrap_menu_row(left_col, "Text size:", self.spb_text_fontsize))
 
-        menu.addSeparator()
+        left_layout.addWidget(self._menu_h_separator(left_col))
 
-        # ── Legend options ──
-        self.act_show_legend = QAction("Show legend", menu)
-        self.act_show_legend.setCheckable(True)
-        self.act_show_legend.setChecked(self._view_options["show_legend"])
-        self.act_show_legend.toggled.connect(self._on_legend_toggled)
-        menu.addAction(self.act_show_legend)
+        ratio_widget = QWidget(left_col)
+        ratio_layout = QHBoxLayout(ratio_widget)
+        ratio_layout.setContentsMargins(2, 2, 2, 2)
+        ratio_layout.setSpacing(4)
+        ratio_layout.addWidget(QLabel("Copied figure size:", ratio_widget))
+        ratio_layout.addStretch(1)
 
-        self.cbb_legend_loc = QComboBox(menu)
+        dim_validator = QDoubleValidator(0.5, 50.0, 2, ratio_widget)
+        self.width_entry = QLineEdit(ratio_widget)
+        self.width_entry.setFixedWidth(40)
+        self.width_entry.setValidator(dim_validator)
+        self.width_entry.setText(self._view_options["copy_fig_width"])
+        self.width_entry.setToolTip("Copied figure width (inches)")
+        self.width_entry.editingFinished.connect(self._commit_copy_size_entries)
+        ratio_layout.addWidget(self.width_entry)
+
+        self.height_entry = QLineEdit(ratio_widget)
+        self.height_entry.setFixedWidth(40)
+        self.height_entry.setValidator(dim_validator)
+        self.height_entry.setText(self._view_options["copy_fig_height"])
+        self.height_entry.setToolTip("Copied figure height (inches)")
+        self.height_entry.editingFinished.connect(self._commit_copy_size_entries)
+        ratio_layout.addWidget(self.height_entry)
+        left_layout.addWidget(ratio_widget)
+
+        self.cbb_copy_theme = QComboBox(left_col)
+        self.cbb_copy_theme.addItems(["Light Mode", "Dark Mode"])
+        self.cbb_copy_theme.setCurrentText(self._view_options["copy_fig_theme"])
+        self.cbb_copy_theme.currentTextChanged.connect(
+            lambda txt: self._update_option("copy_fig_theme", txt)
+        )
+        left_layout.addWidget(
+            self._wrap_menu_row(left_col, "Copied figure theme:", self.cbb_copy_theme)
+        )
+        left_layout.addStretch(1)
+
+        # ── Right Column: Legend, Display Aids & Reset ──
+        self.act_show_legend, self.chk_show_legend = self._bind_menu_checkbox(
+            right_col, menu, "Show legend", self._view_options["show_legend"],
+            self._on_legend_toggled,
+        )
+        right_layout.addWidget(self.chk_show_legend)
+
+        self.cbb_legend_loc = QComboBox(right_col)
         self.cbb_legend_loc.addItems(LEGEND_LOCATIONS)
         self.cbb_legend_loc.setCurrentText(self._view_options["legend_loc"])
         self.cbb_legend_loc.currentTextChanged.connect(
             lambda txt: self._update_option("legend_loc", txt)
         )
-        menu.addAction(self._wrap_menu_row(menu, "Legend location:", self.cbb_legend_loc))
+        right_layout.addWidget(self._wrap_menu_row(right_col, "Legend location:", self.cbb_legend_loc))
 
-        self.spb_legend_ncol = QSpinBox(menu)
+        self.spb_legend_ncol = QSpinBox(right_col)
         self.spb_legend_ncol.setRange(1, 4)
         self.spb_legend_ncol.setKeyboardTracking(False)
         self.spb_legend_ncol.setValue(self._view_options["legend_ncol"])
         self.spb_legend_ncol.valueChanged.connect(
             lambda val: self._update_option("legend_ncol", int(val))
         )
-        menu.addAction(self._wrap_menu_row(menu, "Legend columns:", self.spb_legend_ncol))
+        right_layout.addWidget(self._wrap_menu_row(right_col, "Legend columns:", self.spb_legend_ncol))
 
-        self.spb_legend_fontsize = QSpinBox(menu)
+        self.spb_legend_fontsize = QSpinBox(right_col)
         self.spb_legend_fontsize.setRange(6, 16)
         self.spb_legend_fontsize.setKeyboardTracking(False)
         self.spb_legend_fontsize.setValue(self._view_options["legend_fontsize"])
         self.spb_legend_fontsize.valueChanged.connect(
             lambda val: self._update_option("legend_fontsize", int(val))
         )
-        menu.addAction(self._wrap_menu_row(menu, "Legend font size:", self.spb_legend_fontsize))
+        right_layout.addWidget(
+            self._wrap_menu_row(right_col, "Legend font size:", self.spb_legend_fontsize)
+        )
 
         self.act_edit_legend = QAction("Edit legend labels...", menu)
         self.act_edit_legend.triggered.connect(self.open_legend_editor)
-        menu.addAction(self.act_edit_legend)
-
-        menu.addSeparator()
-
-        # ── Additional Live Maps aids ──
-        self.act_show_grid = QAction("Show grid", menu)
-        self.act_show_grid.setCheckable(True)
-        self.act_show_grid.setChecked(self._view_options["show_grid"])
-        self.act_show_grid.toggled.connect(
-            lambda chk: self._update_option("show_grid", bool(chk))
+        self.btn_edit_legend = QPushButton("Edit legend labels...", right_col)
+        self.btn_edit_legend.setProperty("variant", "ghost")
+        self.btn_edit_legend.setStyleSheet("text-align: left; padding: 3px 6px;")
+        self.btn_edit_legend.clicked.connect(
+            lambda: (menu.close(), self.act_edit_legend.trigger())
         )
-        menu.addAction(self.act_show_grid)
+        right_layout.addWidget(self.btn_edit_legend)
 
-        self.act_share_y = QAction("Share Y-axis (1D)", menu)
-        self.act_share_y.setCheckable(True)
-        self.act_share_y.setChecked(self._view_options["share_y"])
-        self.act_share_y.toggled.connect(
-            lambda chk: self._update_option("share_y", bool(chk))
+        right_layout.addWidget(self._menu_h_separator(right_col))
+
+        self.act_show_grid, self.chk_show_grid = self._bind_menu_checkbox(
+            right_col, menu, "Show grid", self._view_options["show_grid"],
+            lambda chk: self._update_option("show_grid", bool(chk)),
         )
-        menu.addAction(self.act_share_y)
+        right_layout.addWidget(self.chk_show_grid)
 
-        self.act_smoothing = QAction("Heatmap smoothing", menu)
-        self.act_smoothing.setCheckable(True)
-        self.act_smoothing.setChecked(self._view_options["heatmap_smoothing"])
-        self.act_smoothing.toggled.connect(
-            lambda chk: self._update_option("heatmap_smoothing", bool(chk))
+        self.act_share_y, self.chk_share_y = self._bind_menu_checkbox(
+            right_col, menu, "Share Y-axis (1D)", self._view_options["share_y"],
+            lambda chk: self._update_option("share_y", bool(chk)),
         )
-        menu.addAction(self.act_smoothing)
+        right_layout.addWidget(self.chk_share_y)
 
-        self.act_show_colorbar = QAction("Show colorbars", menu)
-        self.act_show_colorbar.setCheckable(True)
-        self.act_show_colorbar.setChecked(self._view_options["show_colorbar"])
-        self.act_show_colorbar.toggled.connect(
-            lambda chk: self._update_option("show_colorbar", bool(chk))
+        self.act_smoothing, self.chk_smoothing = self._bind_menu_checkbox(
+            right_col, menu, "Heatmap smoothing", self._view_options["heatmap_smoothing"],
+            lambda chk: self._update_option("heatmap_smoothing", bool(chk)),
         )
-        menu.addAction(self.act_show_colorbar)
+        right_layout.addWidget(self.chk_smoothing)
 
-        menu.addSeparator()
+        self.act_show_colorbar, self.chk_show_colorbar = self._bind_menu_checkbox(
+            right_col, menu, "Show colorbars", self._view_options["show_colorbar"],
+            lambda chk: self._update_option("show_colorbar", bool(chk)),
+        )
+        right_layout.addWidget(self.chk_show_colorbar)
+
+        right_layout.addStretch(1)
+        right_layout.addWidget(self._menu_h_separator(right_col))
 
         self.act_reset_options = QAction("Reset view options", menu)
         self.act_reset_options.triggered.connect(self.reset_view_options)
-        menu.addAction(self.act_reset_options)
+        self.btn_reset_options = QPushButton("Reset view options", right_col)
+        self.btn_reset_options.setProperty("variant", "ghost")
+        self.btn_reset_options.setStyleSheet("text-align: left; padding: 3px 6px;")
+        self.btn_reset_options.clicked.connect(
+            lambda: (menu.close(), self.act_reset_options.trigger())
+        )
+        right_layout.addWidget(self.btn_reset_options)
+
+        v_sep = QFrame(panel)
+        v_sep.setFrameShape(QFrame.VLine)
+        v_sep.setFrameShadow(QFrame.Sunken)
+
+        cols_layout.addWidget(left_col, stretch=1)
+        cols_layout.addWidget(v_sep)
+        cols_layout.addWidget(right_col, stretch=1)
+        outer_layout.addLayout(cols_layout)
+
+        container_action = QWidgetAction(menu)
+        container_action.setDefaultWidget(panel)
+        menu.addAction(container_action)
+        menu.aboutToHide.connect(self._commit_copy_size_entries)
 
         return menu
 
     def _on_legend_toggled(self, checked: bool):
-        """Keep top toggle button and menu action synchronized on legend toggle."""
+        """Keep top toggle button, checkbox, and menu action synchronized on legend toggle."""
         checked = bool(checked)
         self.btn_legend.blockSignals(True)
         self.act_show_legend.blockSignals(True)
+        self.chk_show_legend.blockSignals(True)
         self.btn_legend.setChecked(checked)
         self.act_show_legend.setChecked(checked)
+        self.chk_show_legend.setChecked(checked)
         self.btn_legend.blockSignals(False)
         self.act_show_legend.blockSignals(False)
+        self.chk_show_legend.blockSignals(False)
         self._update_option("show_legend", checked)
 
     def _update_option(self, key: str, value):
         """Update one view option and apply cleanly to visible panels via fast path."""
-        if key == "plot_theme":
+        if key in ("plot_theme", "copy_fig_theme"):
             value = _normalize_plot_theme(value)
         if self._view_options.get(key) == value:
             return
@@ -1761,9 +1960,13 @@ class VLiveMaps(QWidget):
             self.cbb_xscale, self.cbb_yscale, self.cbb_zscale,
             self.cbb_plot_style, self.spb_linewidth, self.spb_dotsize,
             self.spb_text_fontsize,
-            self.btn_legend, self.act_show_legend,
+            self.width_entry, self.height_entry, self.cbb_copy_theme,
+            self.btn_legend, self.act_show_legend, self.chk_show_legend,
             self.cbb_legend_loc, self.spb_legend_ncol, self.spb_legend_fontsize,
-            self.act_show_grid, self.act_share_y, self.act_smoothing, self.act_show_colorbar,
+            self.act_show_grid, self.chk_show_grid,
+            self.act_share_y, self.chk_share_y,
+            self.act_smoothing, self.chk_smoothing,
+            self.act_show_colorbar, self.chk_show_colorbar,
         )
         for w in widgets:
             w.blockSignals(True)
@@ -1778,17 +1981,25 @@ class VLiveMaps(QWidget):
             self.spb_linewidth.setValue(float(opts["line_width"]))
             self.spb_dotsize.setValue(float(opts["dot_size"]))
             self.spb_text_fontsize.setValue(int(opts["text_fontsize"]))
+            self.width_entry.setText(str(opts["copy_fig_width"]))
+            self.height_entry.setText(str(opts["copy_fig_height"]))
+            self.cbb_copy_theme.setCurrentText(opts["copy_fig_theme"])
             self.btn_legend.setChecked(bool(opts["show_legend"]))
             self.act_show_legend.setChecked(bool(opts["show_legend"]))
+            self.chk_show_legend.setChecked(bool(opts["show_legend"]))
             loc = opts["legend_loc"]
             if self.cbb_legend_loc.findText(loc) >= 0:
                 self.cbb_legend_loc.setCurrentText(loc)
             self.spb_legend_ncol.setValue(int(opts["legend_ncol"]))
             self.spb_legend_fontsize.setValue(int(opts["legend_fontsize"]))
             self.act_show_grid.setChecked(bool(opts["show_grid"]))
+            self.chk_show_grid.setChecked(bool(opts["show_grid"]))
             self.act_share_y.setChecked(bool(opts["share_y"]))
+            self.chk_share_y.setChecked(bool(opts["share_y"]))
             self.act_smoothing.setChecked(bool(opts["heatmap_smoothing"]))
+            self.chk_smoothing.setChecked(bool(opts["heatmap_smoothing"]))
             self.act_show_colorbar.setChecked(bool(opts["show_colorbar"]))
+            self.chk_show_colorbar.setChecked(bool(opts["show_colorbar"]))
         finally:
             for w in widgets:
                 w.blockSignals(False)
@@ -2118,6 +2329,7 @@ class VLiveMaps(QWidget):
         """Update Qt toolbar and subpanel icon colors without overriding Plot theme."""
         tok = current_tokens()
         icon_color = tok.text_primary
+        self._icon_color = icon_color
         self.btn_legend.setIcon(Icons.legend(color=icon_color))
         self.btn_options.setIcon(Icons.settings(color=icon_color))
         for panel in self.panels.values():

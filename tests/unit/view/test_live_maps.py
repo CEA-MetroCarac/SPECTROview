@@ -811,5 +811,179 @@ def test_v_live_maps_show_figure_label_toggle(qapp):
     assert layout_warnings == []
 
 
+def _fire_canvas_mouse(panel, name: str, xd: float, yd: float, *, key=None, button: int = 1, dblclick: bool = False):
+    """Build and dispatch a real Matplotlib MouseEvent from data coordinates."""
+    from matplotlib.backend_bases import MouseEvent
+
+    px, py = panel.ax.transData.transform((xd, yd))
+    ev = MouseEvent(name, panel.canvas, int(round(px)), int(round(py)), button=button, key=key, dblclick=dblclick)
+    panel.canvas.callbacks.process(name, ev)
+    return ev
+
+
+def test_v_live_maps_2d_interactive_selection_click_ctrl_and_drag(qapp):
+    """Single click, Ctrl+Click, and box drag select XY sites across R/B subpanels and skip unchecked sites."""
+    live_maps = VLiveMaps(mode="map")
+    live_maps.resize(900, 440)
+    live_maps.show()
+    try:
+        live_maps.set_selector_active(SELECTOR_RED, True)
+        live_maps.set_selector_active(SELECTOR_BLUE, True)
+
+        xs = [0.0, 1.0, 2.0]
+        ys = [0.0, 1.0, 2.0]
+        coords = np.array([(x, y) for y in ys for x in xs], dtype=np.float64)
+        active = np.ones(len(coords), dtype=bool)
+        grid = np.arange(9, dtype=np.float64).reshape(3, 3)
+
+        live_maps.set_spatial_sites({"map_name": "m1", "is_profile": False, "coords": coords, "active_mask": active})
+        live_maps.update_map_data(SELECTOR_RED, grid, [-0.5, 2.5, -0.5, 2.5], 0.0, 8.0, "OK")
+        live_maps.update_map_data(SELECTOR_BLUE, grid * 2.0, [-0.5, 2.5, -0.5, 2.5], 0.0, 16.0, "OK")
+
+        red = live_maps.panels[SELECTOR_RED]
+        blue = live_maps.panels[SELECTOR_BLUE]
+        red.canvas.draw()
+        blue.canvas.draw()
+
+        emitted = []
+        live_maps.spectra_selected.connect(emitted.append)
+
+        # 1. Single click near (1.0, 1.0)
+        _fire_canvas_mouse(red, "button_press_event", 0.9, 1.1)
+        _fire_canvas_mouse(red, "button_release_event", 0.9, 1.1)
+        assert emitted[-1] == [(1.0, 1.0)]
+        assert red._selector.selection_collection is not None
+        assert len(red._selector.selection_collection.get_paths()) == 1
+        assert blue._selector.selection_collection is not None
+        assert len(blue._selector.selection_collection.get_paths()) == 1
+
+        # 2. Ctrl+Click near (2.0, 2.0) appends; Ctrl+Click on (1.0, 1.0) toggles off
+        _fire_canvas_mouse(red, "button_press_event", 1.9, 2.1, key="control")
+        _fire_canvas_mouse(red, "button_release_event", 1.9, 2.1, key="control")
+        assert emitted[-1] == [(1.0, 1.0), (2.0, 2.0)]
+        assert len(blue._selector.selection_collection.get_paths()) == 2
+
+        _fire_canvas_mouse(red, "button_press_event", 1.05, 0.95, key="control")
+        _fire_canvas_mouse(red, "button_release_event", 1.05, 0.95, key="control")
+        assert emitted[-1] == [(2.0, 2.0)]
+
+        # 3. Drag rectangle around (0..1, 0..1) replaces selection cleanly
+        _fire_canvas_mouse(red, "button_press_event", -0.2, -0.2)
+        _fire_canvas_mouse(red, "motion_notify_event", 1.2, 1.2)
+        assert red._selector.rect_patch is not None
+        _fire_canvas_mouse(red, "button_release_event", 1.2, 1.2)
+        assert red._selector.rect_patch is None
+        assert set(emitted[-1]) == {(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)}
+        assert len(blue._selector.selection_collection.get_paths()) == 4
+
+        # 4. Ctrl+Drag around (2.0, 2.0) merges into existing 4-point selection
+        _fire_canvas_mouse(red, "button_press_event", 1.8, 1.8, key="control")
+        _fire_canvas_mouse(red, "motion_notify_event", 2.2, 2.2, key="control")
+        _fire_canvas_mouse(red, "button_release_event", 2.2, 2.2, key="control")
+        assert set(emitted[-1]) == {(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0), (2.0, 2.0)}
+
+        # 5. Unchecked site (0.0, 0.0) cannot be selected on click
+        active_masked = active.copy()
+        active_masked[0] = False
+        live_maps.set_spatial_sites({"map_name": "m1", "is_profile": False, "coords": coords, "active_mask": active_masked})
+        _fire_canvas_mouse(red, "button_press_event", 0.0, 0.0)
+        _fire_canvas_mouse(red, "button_release_event", 0.0, 0.0)
+        assert emitted[-1] != [(0.0, 0.0)]
+        assert emitted[-1] in ([(1.0, 0.0)], [(0.0, 1.0)])
+    finally:
+        live_maps.close()
+        live_maps.deleteLater()
+
+
+def test_v_live_maps_selection_guards_pan_zoom_legend_and_dark_theme(qapp):
+    """Selection respects Pan/Zoom tools, legend hits, Spectra mode, and adapts marquee color."""
+    from matplotlib.backend_bases import MouseEvent
+
+    live_maps = VLiveMaps(mode="map")
+    live_maps.resize(720, 420)
+    live_maps.show()
+    try:
+        live_maps.set_selector_active(SELECTOR_RED, True)
+        panel = live_maps.panels[SELECTOR_RED]
+        coords = np.array([[2.0, 0.0], [2.0, 5.0], [2.0, 10.0], [2.0, 15.0]], dtype=np.float64)
+        pos = np.array([0.0, 5.0, 10.0, 15.0], dtype=np.float64)
+        vals = np.array([100.0, 500.0, 200.0, 800.0], dtype=np.float64)
+
+        live_maps.set_spatial_sites({"map_name": "p1", "is_profile": True, "coords": coords, "positions": pos})
+        live_maps.set_view_options({"show_legend": True, "legend_loc": "upper right"}, emit_signal=False)
+        live_maps.update_profile_data(SELECTOR_RED, pos, vals, axis_label="Y", status_msg="OK")
+        panel.canvas.draw()
+
+        emitted = []
+        live_maps.spectra_selected.connect(emitted.append)
+
+        # Pan active -> click & drag do NOT select
+        panel.btn_pan.click()
+        assert panel.btn_pan.isChecked()
+        _fire_canvas_mouse(panel, "button_press_event", 5.0, 400.0)
+        _fire_canvas_mouse(panel, "motion_notify_event", 10.0, 400.0)
+        assert panel._selector.rect_patch is None
+        _fire_canvas_mouse(panel, "button_release_event", 10.0, 400.0)
+        assert emitted == []
+        panel.btn_pan.click()
+
+        # Zoom active -> click & drag do NOT select
+        panel.btn_zoom.click()
+        assert panel.btn_zoom.isChecked()
+        _fire_canvas_mouse(panel, "button_press_event", 5.0, 400.0)
+        _fire_canvas_mouse(panel, "motion_notify_event", 10.0, 400.0)
+        assert panel._selector.rect_patch is None
+        _fire_canvas_mouse(panel, "button_release_event", 10.0, 400.0)
+        assert emitted == []
+        panel.btn_zoom.click()
+
+        # After Rescale, clicking works normally on 1D profile
+        panel.btn_home.click()
+        _fire_canvas_mouse(panel, "button_press_event", 5.1, 450.0)
+        _fire_canvas_mouse(panel, "button_release_event", 5.1, 450.0)
+        assert emitted[-1] == [(2.0, 5.0)]
+        markers = panel._selector.selection_markers
+        assert markers is not None
+        np.testing.assert_allclose(markers.get_xdata(), [5.0])
+        np.testing.assert_allclose(markers.get_ydata(), [500.0])
+
+        # Drag box in 1D profile filters on both position X and value Y
+        _fire_canvas_mouse(panel, "button_press_event", -0.2, 60.0)
+        _fire_canvas_mouse(panel, "motion_notify_event", 11.0, 250.0)
+        assert panel._selector.rect_patch is not None
+        assert panel._selector.rect_patch.get_edgecolor()[:3] == (0x11 / 255.0, 0x11 / 255.0, 0x11 / 255.0)
+        _fire_canvas_mouse(panel, "button_release_event", 11.0, 250.0)
+        assert emitted[-1] == [(2.0, 0.0), (2.0, 10.0)]
+
+        # Dark Mode uses high-contrast white marquee outline
+        live_maps.set_view_options({"plot_theme": "Dark Mode"}, emit_signal=False)
+        panel.canvas.draw()
+        _fire_canvas_mouse(panel, "button_press_event", 0.0, 100.0)
+        _fire_canvas_mouse(panel, "motion_notify_event", 8.0, 400.0)
+        assert panel._selector.rect_patch is not None
+        assert panel._selector.rect_patch.get_edgecolor()[:3] == (1.0, 1.0, 1.0)
+        _fire_canvas_mouse(panel, "button_release_event", 8.0, 400.0)
+
+        # Clicking inside visible legend box is excluded from XY selection
+        prev_count = len(emitted)
+        renderer = panel.canvas.get_renderer()
+        bbox = panel._legend.get_window_extent(renderer=renderer)
+        lx, ly = int(round((bbox.x0 + bbox.x1) / 2.0)), int(round((bbox.y0 + bbox.y1) / 2.0))
+        panel.canvas.callbacks.process("button_press_event", MouseEvent("button_press_event", panel.canvas, lx, ly, button=1))
+        panel.canvas.callbacks.process("button_release_event", MouseEvent("button_release_event", panel.canvas, lx, ly, button=1))
+        assert len(emitted) == prev_count
+
+        # Spectra mode keeps XY selection disabled
+        live_maps.set_mode("spectra")
+        live_maps.update_series_data(SELECTOR_RED, np.array([1.0, 2.0, 3.0]), ["s1", "s2", "s3"], "OK")
+        panel.canvas.draw()
+        _fire_canvas_mouse(panel, "button_press_event", 2.0, 2.0)
+        _fire_canvas_mouse(panel, "button_release_event", 2.0, 2.0)
+        assert len(emitted) == prev_count
+    finally:
+        live_maps.close()
+        live_maps.deleteLater()
+
+
 
 

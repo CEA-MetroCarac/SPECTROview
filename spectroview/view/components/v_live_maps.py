@@ -34,6 +34,14 @@ from spectroview import PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, DEFAULT_COLORS
 from spectroview.settings.m_settings import LIVE_MAPS_VIEW_OPTION_DEFAULTS
 from spectroview.view.theme import Icons, current_tokens
 from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
+from spectroview.view.components.map_selection import (
+    MapCanvasSelector,
+    compute_2d_spatial_geometry,
+    get_drag_box_edgecolor,
+    is_ctrl_event,
+    resolve_1d_profile_selection,
+    resolve_xy_selection,
+)
 from spectroview.viewmodel.utils import copy_fig_to_clb
 from spectroview.model.spectral_parameters import (
     SPECTRAL_PARAMETERS,
@@ -112,6 +120,7 @@ class LiveMapSubpanel(QFrame):
     parameter_changed = Signal(str, str)  # (color_id, parameter_name)
     legend_edit_requested = Signal()
     view_reset_requested = Signal()
+    spectra_selected = Signal(list)       # List of (x, y) tuples selected interactively
 
     def __init__(self, color_id: str, parent=None, mode: str = "map"):
         super().__init__(parent)
@@ -156,6 +165,9 @@ class LiveMapSubpanel(QFrame):
         self._valid_y_bounds: Optional[Tuple[float, float]] = None
         self._valid_pos_y_bounds: Optional[Tuple[float, float]] = None
         self._relayout_needed: bool = True
+        self._spatial_sites: Optional[dict] = None
+        self._selected_points: list[tuple[float, float]] = []
+        self._selector: Optional[MapCanvasSelector] = None
 
         # Parented coalesce timer for option-change redraws (prevents UI lag during bursts)
         self._draw_timer = QTimer(self)
@@ -286,6 +298,7 @@ class LiveMapSubpanel(QFrame):
 
         self.canvas = FigureCanvas(self.figure)
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self._selector = MapCanvasSelector(self.ax, self.canvas)
 
         self.toolbar = NoDoubleClickZoomToolbar(self.canvas, self)
         self.toolbar.hide()
@@ -300,6 +313,8 @@ class LiveMapSubpanel(QFrame):
             action_dict["Zoom"].toggled.connect(self.btn_zoom.setChecked)
 
         self.canvas.mpl_connect("button_press_event", self._on_canvas_button_press)
+        self.canvas.mpl_connect("motion_notify_event", self._on_canvas_motion)
+        self.canvas.mpl_connect("button_release_event", self._on_canvas_release)
         self.canvas.mpl_connect("draw_event", self._on_canvas_draw)
         self.canvas.mpl_connect("resize_event", self._on_canvas_resize)
         self._apply_figure_theme(self._current_theme)
@@ -413,20 +428,248 @@ class LiveMapSubpanel(QFrame):
         if self.canvas is not None:
             self.canvas.draw_idle()
 
-    def _on_canvas_button_press(self, event):
-        """Open legend label editor when double-clicking inside the Matplotlib legend box."""
-        if not getattr(event, "dblclick", False) or self._legend is None:
+    def set_spatial_sites(self, sites: Optional[dict]):
+        """Store current map spatial site metadata and refresh selection overlay."""
+        if not sites:
+            self._spatial_sites = None
+            if self._selector is not None:
+                self._selector.clear_drag_box()
+                self._selector.clear_overlay()
+                if self.canvas is not None:
+                    self.canvas.draw_idle()
             return
-        if event.x is None or event.y is None:
+
+        coords = np.asarray(sites.get("coords", []), dtype=np.float64)
+        if coords.ndim != 2 or len(coords) == 0 or coords.shape[1] < 2:
+            self._spatial_sites = None
             return
+
+        is_profile = bool(sites.get("is_profile", False))
+        raw_active = sites.get("active_mask")
+        if raw_active is not None and len(raw_active) == len(coords):
+            active_mask = np.asarray(raw_active, dtype=bool)
+        else:
+            active_mask = np.ones(len(coords), dtype=bool)
+
+        positions = sites.get("positions")
+        pos_arr = (
+            np.asarray(positions, dtype=np.float64)
+            if (is_profile and positions is not None and len(positions) == len(coords))
+            else None
+        )
+
+        active_site_keys: set[tuple[float, float]] = set()
+        site_index: dict[tuple[float, float], int] = {}
+        for idx in range(len(coords)):
+            key = (round(float(coords[idx, 0]), 4), round(float(coords[idx, 1]), 4))
+            if bool(active_mask[idx]):
+                active_site_keys.add(key)
+                site_index.setdefault(key, idx)
+
+        cell_dx, cell_dy = (1.0, 1.0)
+        if not is_profile:
+            geom_2d = compute_2d_spatial_geometry(coords[:, 0], coords[:, 1])
+            cell_dx, cell_dy = float(geom_2d["dx"]), float(geom_2d["dy"])
+
+        self._spatial_sites = {
+            "map_name": sites.get("map_name"),
+            "is_profile": is_profile,
+            "coords": coords[:, :2],
+            "positions": pos_arr,
+            "active_mask": active_mask,
+            "active_site_keys": active_site_keys,
+            "site_index": site_index,
+            "cell_dx": cell_dx,
+            "cell_dy": cell_dy,
+        }
+        if self._display_kind is not None:
+            self._update_selection_overlay(draw=True)
+
+    def set_selected_points(self, points: list):
+        """Update highlighted (X, Y) spectrum selection without emitting feedback signal."""
+        self._selected_points = list(
+            dict.fromkeys((float(pt[0]), float(pt[1])) for pt in (points or []))
+        )
+        self._update_selection_overlay(draw=True)
+
+    def _is_event_on_legend(self, event) -> bool:
+        """Return True if mouse event falls inside the visible legend box."""
+        if self._legend is None or not self._legend.get_visible():
+            return False
+        if event.x is None or event.y is None or self.canvas is None:
+            return False
         try:
             renderer = self.canvas.get_renderer()
             if renderer is None:
-                return
-            if self._legend.get_window_extent(renderer=renderer).contains(event.x, event.y):
-                self.legend_edit_requested.emit()
+                return False
+            return bool(self._legend.get_window_extent(renderer=renderer).contains(event.x, event.y))
         except Exception:
-            pass
+            return False
+
+    def _is_selection_interactive(self) -> bool:
+        """Allow interactive XY click/drag selection only in Map mode when nav tools are idle."""
+        if self.mode != "map" or self._spatial_sites is None or self._selector is None:
+            return False
+        if bool(getattr(self.toolbar, "mode", "")) or self.btn_pan.isChecked() or self.btn_zoom.isChecked():
+            return False
+        if self._display_kind == "map":
+            return self.img is not None and not self._spatial_sites.get("is_profile", False)
+        if self._display_kind in ("series", "multi_profile"):
+            return bool(self.lines) and bool(self._spatial_sites.get("is_profile", False))
+        return False
+
+    def _get_primary_profile_values(self) -> Optional[np.ndarray]:
+        """Return plotted Y values corresponding to the primary 1D spatial curve."""
+        if self._display_kind == "series":
+            return self._series_values
+        if self._display_kind == "multi_profile" and self._multi_entries:
+            for entry in self._multi_entries:
+                if entry.get("is_primary"):
+                    return np.asarray(entry.get("values", []), dtype=np.float64)
+            return np.asarray(self._multi_entries[0].get("values", []), dtype=np.float64)
+        return None
+
+    def _filter_active_selected_points(self) -> list[tuple[float, float]]:
+        """Filter stored selected points to active sites on the current spatial map."""
+        if not self._spatial_sites:
+            return list(self._selected_points)
+        active_keys = self._spatial_sites.get("active_site_keys")
+        if active_keys is None:
+            return list(self._selected_points)
+        return [
+            pt for pt in self._selected_points
+            if (round(float(pt[0]), 4), round(float(pt[1]), 4)) in active_keys
+        ]
+
+    def _update_selection_overlay(self, draw: bool = False):
+        """Draw red selection boxes (2D) or markers (1D profile) matching active map sites."""
+        if self._selector is None:
+            return
+        self._selector.ax = self.ax
+        if (
+            self.mode != "map"
+            or not self._selected_points
+            or self._spatial_sites is None
+            or self._display_kind not in ("map", "series", "multi_profile")
+        ):
+            self._selector.clear_overlay()
+            if draw and self.canvas is not None:
+                self.canvas.draw_idle()
+            return
+
+        if self._display_kind == "map" and self.img is not None and not self._spatial_sites.get("is_profile", False):
+            pts = self._filter_active_selected_points()
+            dx = self._spatial_sites.get("cell_dx", 1.0)
+            dy = self._spatial_sites.get("cell_dy", 1.0)
+            self._selector.draw_2d_overlay(pts, dx, dy, draw=draw)
+            return
+
+        if self._display_kind in ("series", "multi_profile") and self.lines and self._spatial_sites.get("is_profile", False):
+            positions = self._spatial_sites.get("positions")
+            site_index = self._spatial_sites.get("site_index")
+            active_mask = self._spatial_sites.get("active_mask")
+            vals = self._get_primary_profile_values()
+            if positions is None or site_index is None or vals is None or len(vals) != len(positions):
+                self._selector.clear_overlay()
+                if draw and self.canvas is not None:
+                    self.canvas.draw_idle()
+                return
+            xs, ys = [], []
+            for x, y in self._selected_points:
+                idx = site_index.get((round(float(x), 4), round(float(y), 4)))
+                if idx is None:
+                    continue
+                if active_mask is not None and not bool(active_mask[idx]):
+                    continue
+                px = float(positions[idx])
+                py = float(vals[idx])
+                if np.isfinite(px) and np.isfinite(py):
+                    xs.append(px)
+                    ys.append(py)
+            markersize = max(5.5, float(self._view_options.get("dot_size", 1.5)) + 4.5)
+            self._selector.draw_1d_overlay(xs, ys, markersize=markersize, draw=draw)
+            return
+
+        self._selector.clear_overlay()
+        if draw and self.canvas is not None:
+            self.canvas.draw_idle()
+
+    def _on_canvas_button_press(self, event):
+        """Handle legend double-click editing and interactive map spectrum click start."""
+        if getattr(event, "dblclick", False) and self._is_event_on_legend(event):
+            self.legend_edit_requested.emit()
+            return
+        if not self._is_selection_interactive():
+            return
+        if self._is_event_on_legend(event):
+            return
+        self._selector.ax = self.ax
+        self._selector.begin_press(event)
+
+    def _on_canvas_motion(self, event):
+        """Update rectangular selection marquee while dragging on the plot."""
+        if not self._is_selection_interactive():
+            return
+        edgecolor = get_drag_box_edgecolor(self._current_theme == "Dark Mode")
+        self._selector.ax = self.ax
+        self._selector.update_move(event, edgecolor=edgecolor)
+
+    def _on_canvas_release(self, event):
+        """Finish click/drag selection and emit chosen (X, Y) spectrum coordinates."""
+        if self._selector is None:
+            return
+        self._selector.ax = self.ax
+        gesture = self._selector.finish_release(event)
+        if gesture is None or not self._is_selection_interactive():
+            return
+
+        x0, y0, x1, y1, is_rect = gesture
+        ctrl_held = is_ctrl_event(event)
+        sites = self._spatial_sites
+        coords = sites["coords"]
+        active = sites["active_mask"]
+
+        if self._display_kind == "map":
+            act_coords = coords[active]
+            new_points = resolve_xy_selection(
+                act_coords[:, 0],
+                act_coords[:, 1],
+                self._selected_points,
+                x0=x0,
+                y0=y0,
+                x1=x1,
+                y1=y1,
+                is_rect=is_rect,
+                ctrl_held=ctrl_held,
+            )
+        else:
+            positions = sites.get("positions")
+            if positions is None or len(positions) != len(coords):
+                return
+            primary_vals = self._get_primary_profile_values()
+            act_pos = positions[active]
+            act_coords = coords[active]
+            act_vals = (
+                primary_vals[active]
+                if (primary_vals is not None and len(primary_vals) == len(coords))
+                else None
+            )
+            new_points = resolve_1d_profile_selection(
+                act_pos,
+                act_vals,
+                act_coords,
+                self._selected_points,
+                x0=x0,
+                y0=y0,
+                x1=x1,
+                y1=y1,
+                is_rect=is_rect,
+                ctrl_held=ctrl_held,
+            )
+
+        self._selected_points = new_points
+        self._update_selection_overlay(draw=True)
+        self.spectra_selected.emit(list(self._selected_points))
 
     def set_view_options(self, options: dict, redraw: bool = False):
         """Apply view options dictionary and optionally re-render cached artists."""
@@ -513,6 +756,9 @@ class LiveMapSubpanel(QFrame):
             except Exception:
                 pass
         self.lines.clear()
+        if self._selector is not None:
+            self._selector.ax = self.ax
+            self._selector.reset()
         self.ax.clear()
         self.ax.set_aspect("auto", adjustable="box")
         try:
@@ -975,6 +1221,8 @@ class LiveMapSubpanel(QFrame):
         if self._display_kind in ("series", "multi_profile"):
             if changed_keys & {"plot_style", "line_width", "dot_size"}:
                 self._sync_1d_line_styles()
+                if "dot_size" in changed_keys and self._selected_points:
+                    self._update_selection_overlay(draw=False)
             if changed_keys & {"custom_labels", "custom_colors"}:
                 custom_labels = self._view_options.get("custom_labels", {})
                 custom_colors = self._view_options.get("custom_colors", {})
@@ -1100,6 +1348,7 @@ class LiveMapSubpanel(QFrame):
             self._apply_figure_theme(active_theme)
             self._apply_text_sizes()
             self._sync_legend()
+            self._update_selection_overlay(draw=False)
             self.canvas.draw_idle()
             return
 
@@ -1146,6 +1395,7 @@ class LiveMapSubpanel(QFrame):
         self._apply_figure_theme(active_theme)
         self._apply_text_sizes()
         self._sync_legend()
+        self._update_selection_overlay(draw=False)
         try:
             self.toolbar.update()
         except Exception:
@@ -1243,6 +1493,7 @@ class LiveMapSubpanel(QFrame):
             self._apply_figure_theme(active_theme)
             self._apply_text_sizes()
             self._sync_legend()
+            self._update_selection_overlay(draw=False)
             self.canvas.draw_idle()
             return
 
@@ -1298,6 +1549,7 @@ class LiveMapSubpanel(QFrame):
         self._apply_figure_theme(active_theme)
         self._apply_text_sizes()
         self._sync_legend()
+        self._update_selection_overlay(draw=False)
         try:
             self.toolbar.update()
         except Exception:
@@ -1402,6 +1654,7 @@ class LiveMapSubpanel(QFrame):
                 self.cbar.update_normal(self.img)
             self._apply_figure_theme(active_theme)
             self._apply_text_sizes()
+            self._update_selection_overlay(draw=False)
             self.canvas.draw_idle()
             return
 
@@ -1449,6 +1702,7 @@ class LiveMapSubpanel(QFrame):
         self._sync_title(has_content=True)
         self._apply_figure_theme(active_theme)
         self._apply_text_sizes()
+        self._update_selection_overlay(draw=False)
         try:
             self.toolbar.update()
         except Exception:
@@ -1462,6 +1716,7 @@ class VLiveMaps(QWidget):
     parameter_change_requested = Signal(str, str)  # (color_id, parameter)
     active_2d_map_requested = Signal(str)          # active 2D map name from switcher
     view_options_changed = Signal(dict)            # emitted on user/reset view option edits
+    spectra_selected = Signal(list)                # (X, Y) spectrum points clicked/dragged in Live Maps
 
     def __init__(self, parent=None, mode: str = "map"):
         super().__init__(parent)
@@ -1484,6 +1739,9 @@ class VLiveMaps(QWidget):
         self._context_status: str = ""
         self._view_options = _copy_view_options()
         self._is_setting_options = False
+        self._spatial_sites: Optional[dict] = None
+        self._selected_points: list[tuple[float, float]] = []
+        self._selected_map_name: Optional[str] = None
 
         self._current_theme = self._view_options["plot_theme"]
         self._init_ui()
@@ -1605,6 +1863,7 @@ class VLiveMaps(QWidget):
             panel.parameter_changed.connect(self.parameter_change_requested.emit)
             panel.legend_edit_requested.connect(self.open_legend_editor)
             panel.view_reset_requested.connect(self._sync_shared_y)
+            panel.spectra_selected.connect(self._on_panel_spectra_selected)
             panel.set_view_options(self._view_options, redraw=False)
             panel.setVisible(False)  # Hidden by default until activated
             self.panels[color_id] = panel
@@ -2168,6 +2427,10 @@ class VLiveMaps(QWidget):
     def set_mode(self, mode: str):
         """Configure tab for 'map' (2D spatial heatmaps) or 'spectra' (1D variation graphs) mode."""
         self.mode = mode
+        if mode != "map":
+            self._spatial_sites = None
+            self._selected_points = []
+            self._selected_map_name = None
         if mode == "spectra":
             self.lbl_placeholder.setText(
                 "Live Spectral Mapping\n\n"
@@ -2183,6 +2446,49 @@ class VLiveMaps(QWidget):
             )
         for panel in self.panels.values():
             panel.set_mode(mode)
+            if mode != "map":
+                panel.set_spatial_sites(None)
+                panel.set_selected_points([])
+
+    def active_site_map_name(self) -> Optional[str]:
+        """Return the name of the map currently backing interactive Live Maps selection."""
+        return self._spatial_sites.get("map_name") if self._spatial_sites else None
+
+    def set_spatial_sites(self, sites: Optional[dict]):
+        """Propagate current map spatial site metadata to all R/B/G subpanels."""
+        self._spatial_sites = sites
+        cur_map = sites.get("map_name") if sites else None
+        show_pts = (
+            self._selected_points
+            if (cur_map and (self._selected_map_name is None or self._selected_map_name == cur_map))
+            else []
+        )
+        for panel in self.panels.values():
+            panel.set_spatial_sites(sites)
+            panel.set_selected_points(show_pts)
+
+    def set_selected_points(self, points: list, map_name: Optional[str] = None):
+        """Highlight (X, Y) spectrum points across all R/B/G subpanels without feedback emission."""
+        pts = list(dict.fromkeys((float(pt[0]), float(pt[1])) for pt in (points or [])))
+        self._selected_points = pts
+        self._selected_map_name = map_name
+        active_map = self.active_site_map_name()
+        effective = (
+            pts
+            if (map_name is None or active_map is None or active_map == map_name)
+            else []
+        )
+        for panel in self.panels.values():
+            panel.set_selected_points(effective)
+
+    def _on_panel_spectra_selected(self, points: list):
+        """Sync one subpanel's interactive XY selection across R/B/G panels and notify workspace."""
+        pts = list(dict.fromkeys((float(pt[0]), float(pt[1])) for pt in (points or [])))
+        self._selected_points = pts
+        self._selected_map_name = self.active_site_map_name()
+        for panel in self.panels.values():
+            panel.set_selected_points(pts)
+        self.spectra_selected.emit(list(pts))
 
     def set_selector_active(self, color_id: str, is_active: bool):
         """Update visibility of a subpanel based on selector state."""
@@ -2339,6 +2645,9 @@ class VLiveMaps(QWidget):
         self._last_raw_entries = []
         self._2d_candidates = []
         self._context_status = ""
+        self._spatial_sites = None
+        self._selected_points = []
+        self._selected_map_name = None
         self.lbl_context_status.setText("")
         self.cbb_2d_map.blockSignals(True)
         self.cbb_2d_map.clear()
@@ -2346,6 +2655,8 @@ class VLiveMaps(QWidget):
         self._sync_2d_nav_buttons()
         self._update_header_visibility()
         for panel in self.panels.values():
+            panel.set_spatial_sites(None)
+            panel.set_selected_points([])
             panel.clear_plot()
 
     def apply_global_theme(self, theme_name: str):

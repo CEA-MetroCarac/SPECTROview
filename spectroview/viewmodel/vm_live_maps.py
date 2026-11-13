@@ -280,6 +280,8 @@ class VMLiveMaps(QObject):
     live_maps_cleared = Signal()
     # (color_id, is_active, x_min, x_max)
     selector_state_changed = Signal(str, bool, float, float)
+    # ({map_name, is_profile, coords, positions, active_mask} | None) — selectable spatial sites for map mode
+    spatial_sites_changed = Signal(object)
 
     def __init__(
         self,
@@ -511,6 +513,7 @@ class VMLiveMaps(QObject):
             self._versioned_cache.clear()
             self._last_data_sig = empty_sig
             self.map_2d_candidates_changed.emit([], None, "")
+            self.spatial_sites_changed.emit(None)
             self.live_maps_cleared.emit()
             return True
 
@@ -592,6 +595,7 @@ class VMLiveMaps(QObject):
         self.map_2d_candidates_changed.emit(
             list(self._2d_candidates), self._active_2d_map_name, self._format_excluded_status()
         )
+        self.spatial_sites_changed.emit(self._build_spatial_sites_payload())
         if self._current_md is not None and self._current_md.x_axis is not None and len(self._current_md.x_axis) >= 2:
             self._sync_or_init_ranges_from_axis(self._current_md.x_axis)
         self._recalculate_batch(cid for cid, s in self._states.items() if s["active"])
@@ -613,9 +617,41 @@ class VMLiveMaps(QObject):
         """Recalculate all currently active selectors."""
         self._recalculate_batch(cid for cid, s in self._states.items() if s["active"])
 
+    def _build_spatial_sites_payload(self) -> Optional[dict]:
+        """Build ordered spatial site metadata for interactive Live Maps selection."""
+        if self.mode != "map" or self._current_md is None or self._current_md.coords is None:
+            return None
+        raw_coords = np.asarray(self._current_md.coords, dtype=np.float64)
+        if raw_coords.ndim != 2 or len(raw_coords) == 0 or raw_coords.shape[1] < 2:
+            return None
+        raw_active = getattr(self._current_md, "is_active", None)
+        if raw_active is not None and len(raw_active) == len(raw_coords):
+            active_mask = np.asarray(raw_active, dtype=bool)
+        else:
+            active_mask = np.ones(len(raw_coords), dtype=bool)
+
+        geom = self._get_geometry_for(self._current_md)
+        if geom.is_profile:
+            order = geom.order
+            return {
+                "map_name": self._current_md.name,
+                "is_profile": True,
+                "coords": np.asarray(raw_coords[order, :2], dtype=np.float64),
+                "positions": np.asarray(geom.positions[order], dtype=np.float64),
+                "active_mask": np.asarray(active_mask[order], dtype=bool),
+            }
+        return {
+            "map_name": self._current_md.name,
+            "is_profile": False,
+            "coords": np.asarray(raw_coords[:, :2], dtype=np.float64),
+            "positions": None,
+            "active_mask": active_mask,
+        }
+
     def set_series_data(self, mds: Optional[list[MapData]]):
         """Update selected spectra series and trigger recalculation for all active selectors."""
         self._current_series_mds = [md for md in (mds or []) if md is not None]
+        self.spatial_sites_changed.emit(None)
         if self._current_series_mds:
             first_md = self._current_series_mds[0]
             if first_md.x_axis is not None and len(first_md.x_axis) >= 2:

@@ -14,7 +14,7 @@ from superqt import QLabeledDoubleRangeSlider
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QCheckBox, QDoubleSpinBox,
-    QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction, QApplication,
+    QFrame, QLineEdit, QToolButton, QMenu, QWidgetAction,
     QSizePolicy
 )
 from PySide6.QtCore import Qt, Signal, QSize, QTimer
@@ -25,6 +25,13 @@ from spectroview.view.theme import Icons, current_tokens
 from spectroview.viewmodel.utils import copy_fig_to_clb
 from spectroview.view.components.v_notification import show_notification
 from spectroview.view.components.customized_widgets import CustomizedPalette
+from spectroview.view.components.map_selection import (
+    MapCanvasSelector,
+    compute_2d_spatial_geometry,
+    get_drag_box_edgecolor,
+    is_ctrl_event,
+    resolve_xy_selection,
+)
 
 
 class VMapViewer(QWidget):
@@ -45,9 +52,8 @@ class VMapViewer(QWidget):
         self.number_of_points = 0
         self.current_style = 'Light Mode'
         
-        # Rectangle selection state
-        self.rect_start = None
-        self.rect_patch = None
+        # Rectangle / canvas selection helper (initialized in _create_canvas)
+        self._selector = None
         
         # Plot artifacts
         self.img = None
@@ -67,6 +73,33 @@ class VMapViewer(QWidget):
         self.plot_timer.timeout.connect(self._do_plot_heatmap)
         
         self._init_ui()
+
+    @property
+    def rect_start(self):
+        return self._selector.rect_start if self._selector is not None else None
+
+    @rect_start.setter
+    def rect_start(self, value):
+        if self._selector is not None:
+            self._selector.rect_start = value
+
+    @property
+    def rect_patch(self):
+        return self._selector.rect_patch if self._selector is not None else None
+
+    @rect_patch.setter
+    def rect_patch(self, value):
+        if self._selector is not None:
+            self._selector.rect_patch = value
+
+    @property
+    def _selection_collection(self):
+        return self._selector.selection_collection if self._selector is not None else None
+
+    @_selection_collection.setter
+    def _selection_collection(self, value):
+        if self._selector is not None:
+            self._selector.selection_collection = value
     
     def _init_ui(self):
         """Initialize the UI components."""
@@ -96,6 +129,7 @@ class VMapViewer(QWidget):
         
         self.canvas = FigureCanvas(self.figure)
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self._selector = MapCanvasSelector(self.ax, self.canvas)
         
         # Connect mouse events for interactive selection
         self.canvas.mpl_connect('button_press_event', self._on_mouse_click)
@@ -711,61 +745,44 @@ class VMapViewer(QWidget):
     
     def _update_selection_overlay(self):
         """Update selection overlay without full plot redraw (fast).
-        
+
         Uses PatchCollection for O(1) rendering instead of individual add_patch() calls.
         """
-        # Remove old selection collection
-        if hasattr(self, '_selection_collection') and self._selection_collection is not None:
-            try:
-                self._selection_collection.remove()
-            except:
-                pass
-            self._selection_collection = None
-        
+        if self._selector is not None:
+            self._selector.clear_overlay()
+
         # Remove old profile lines
         if self._profile_line is not None:
             try:
                 self._profile_line.remove()
-            except:
+            except Exception:
                 pass
             self._profile_line = None
-        
+
         if self._profile_height_line is not None:
             try:
                 self._profile_height_line.remove()
-            except:
+            except Exception:
                 pass
             self._profile_height_line = None
-        
+
         # Add new selection overlay
         if self.selected_points:
             try:
-                # Use stored dx/dy if available, otherwise estimate or default
                 dx = getattr(self, '_current_dx', None)
                 dy = getattr(self, '_current_dy', None)
-                if dx is None or dy is None or dx <= 0 or dy <= 0:
-                    dx, dy = 1.0, 1.0
-                
-                # Build all rectangles then add as single PatchCollection (10-50x faster)
-                rects = [
-                    patches.Rectangle((x - dx/2, y - dy/2), dx, dy)
-                    for x, y in self.selected_points
-                ]
-                collection = PatchCollection(
-                    rects, linewidth=1.2, edgecolor='red',
-                    facecolor='none', zorder=10
-                )
-                self.ax.add_collection(collection)
-                self._selection_collection = collection
-                
+                if self._selector is not None:
+                    self._selector.ax = self.ax
+                    self._selector.draw_2d_overlay(self.selected_points, dx, dy, draw=False)
+
                 # Plot profile if exactly 2 points selected and in 2D map mode
                 map_type = self.cbb_map_type.currentText()
                 if len(self.selected_points) == 2 and map_type == '2Dmap':
                     self._plot_height_profile_on_map()
-                    
+
             except Exception as e:
                 print(f"Error drawing selection overlay: {e}")
-        
+
         self.canvas.draw_idle()
     
     def plot_heatmap(self):
@@ -796,7 +813,11 @@ class VMapViewer(QWidget):
             self.ax = self.figure.add_subplot(111)
             self.img = None
             self.cbar = None
-            self._selection_collection = None
+            if self._selector is not None:
+                self._selector.ax = self.ax
+                self._selector.selection_collection = None
+                self._selector.rect_patch = None
+                self._selector.rect_start = None
             self._profile_line = None
             self._profile_height_line = None
             self._last_stats_text_artist = None
@@ -916,7 +937,11 @@ class VMapViewer(QWidget):
         self.ax = self.figure.add_subplot(111)
         self.img = None
         self.cbar = None
-        self._selection_collection = None
+        if self._selector is not None:
+            self._selector.ax = self.ax
+            self._selector.selection_collection = None
+            self._selector.rect_patch = None
+            self._selector.rect_start = None
         self._profile_line = None
         self._profile_height_line = None
         self._last_stats_text_artist = None
@@ -1321,85 +1346,7 @@ class VMapViewer(QWidget):
             return cached
 
         x_col, y_col = self._get_measurement_sites()
-        if len(x_col) == 0:
-            geom = {
-                'is_regular': False,
-                'dx': 1.0,
-                'dy': 1.0,
-                'extent': [0.0, 0.0, 0.0, 0.0],
-                'has_duplicates': False,
-            }
-            self._cached_2d_geometry = geom
-            return geom
-
-        u_x = np.unique(x_col)
-        u_y = np.unique(y_col)
-        pts = np.column_stack([x_col, y_col])
-        unique_pts = np.unique(pts, axis=0)
-        has_duplicates = len(unique_pts) < len(x_col)
-
-        is_regular = False
-        step_x = 1.0
-        step_y = 1.0
-        if len(u_x) > 1 and len(u_y) > 1:
-            diffs_x = np.diff(u_x)
-            diffs_y = np.diff(u_y)
-            step_x = float((u_x[-1] - u_x[0]) / (len(u_x) - 1))
-            step_y = float((u_y[-1] - u_y[0]) / (len(u_y) - 1))
-            if step_x > 0 and step_y > 0:
-                is_uniform_x = np.allclose(diffs_x, step_x, rtol=0.01, atol=1e-5)
-                is_uniform_y = np.allclose(diffs_y, step_y, rtol=0.01, atol=1e-5)
-                if is_uniform_x and is_uniform_y and len(unique_pts) >= 0.8 * (len(u_x) * len(u_y)):
-                    is_regular = True
-
-        if is_regular:
-            dx = step_x
-            dy = step_y
-            extent = [
-                float(u_x[0] - 0.5 * dx),
-                float(u_x[-1] + 0.5 * dx),
-                float(u_y[0] - 0.5 * dy),
-                float(u_y[-1] + 0.5 * dy),
-            ]
-        else:
-            x_min, x_max = float(u_x[0]), float(u_x[-1])
-            y_min, y_max = float(u_y[0]), float(u_y[-1])
-            x_span = x_max - x_min
-            y_span = y_max - y_min
-
-            if len(unique_pts) > 1:
-                if len(unique_pts) <= 500:
-                    diff = unique_pts[:, np.newaxis, :] - unique_pts[np.newaxis, :, :]
-                    dists_sq = np.sum(diff ** 2, axis=-1)
-                    np.fill_diagonal(dists_sq, np.inf)
-                    min_dist = float(np.sqrt(dists_sq.min()))
-                else:
-                    from scipy.spatial import cKDTree
-                    tree = cKDTree(unique_pts)
-                    dists, _ = tree.query(unique_pts, k=2)
-                    min_dist = float(dists[:, 1].min())
-                span_max = max(x_span, y_span)
-                pixel_size = min(min_dist * 0.35, span_max / 20.0) if span_max > 0 else min_dist * 0.35
-                dx = dy = float(max(pixel_size, 1e-4))
-            else:
-                dx = dy = 1.0
-
-            margin_x = max(dx * 1.5, x_span * 0.05 if x_span > 0 else 1.0)
-            margin_y = max(dy * 1.5, y_span * 0.05 if y_span > 0 else 1.0)
-            extent = [
-                float(x_min - margin_x),
-                float(x_max + margin_x),
-                float(y_min - margin_y),
-                float(y_max + margin_y),
-            ]
-
-        geom = {
-            'is_regular': is_regular,
-            'dx': float(dx),
-            'dy': float(dy),
-            'extent': extent,
-            'has_duplicates': has_duplicates,
-        }
+        geom = compute_2d_spatial_geometry(x_col, y_col)
         self._cached_2d_geometry = geom
         return geom
     
@@ -1516,22 +1463,10 @@ class VMapViewer(QWidget):
     
     def _on_mouse_click(self, event):
         """Start selection on mouse click."""
-        # Disable selection if toolbar mode (Zoom/Pan) is active
-        if self.toolbar.mode:
+        if self.toolbar.mode or self._selector is None:
             return
-            
-        if event.inaxes != self.ax or event.button != 1:
-            return
-        
-        self.rect_start = (event.xdata, event.ydata)
-        
-        # Remove previous rectangle
-        if self.rect_patch is not None:
-            try:
-                self.rect_patch.remove()
-            except:
-                pass
-            self.rect_patch = None
+        self._selector.ax = self.ax
+        self._selector.begin_press(event)
     
     def _update_coordinates(self, event):
         """Update built-in live coordinate display label under the map canvas.
@@ -1570,90 +1505,43 @@ class VMapViewer(QWidget):
     def _on_mouse_move(self, event):
         """Update rectangle during drag."""
         self._update_coordinates(event)
-        if self.toolbar.mode:
+        if self.toolbar.mode or self._selector is None:
             return
-            
-        if self.rect_start is None or event.inaxes != self.ax:
-            return
-        
-        x0, y0 = self.rect_start
-        x1, y1 = event.xdata, event.ydata
-        
-        if self.rect_patch is None:
-            self.rect_patch = patches.Rectangle(
-                (min(x0, x1), min(y0, y1)),
-                abs(x1 - x0), abs(y1 - y0),
-                linewidth=1.2, edgecolor='black', 
-                facecolor='none', linestyle='--'
-            )
-            self.ax.add_patch(self.rect_patch)
-        else:
-            self.rect_patch.set_x(min(x0, x1))
-            self.rect_patch.set_y(min(y0, y1))
-            self.rect_patch.set_width(abs(x1 - x0))
-            self.rect_patch.set_height(abs(y1 - y0))
-        
-        self.canvas.draw_idle()
-    
+        edgecolor = get_drag_box_edgecolor(self.current_style == 'Dark Mode')
+        self._selector.ax = self.ax
+        self._selector.update_move(event, edgecolor=edgecolor)
+
     def _on_mouse_release(self, event):
         """Finish selection on mouse release."""
-        if self.toolbar.mode:
+        if self.toolbar.mode or self._selector is None:
             return
-            
-        if self.rect_start is None or event.inaxes != self.ax:
+
+        self._selector.ax = self.ax
+        gesture = self._selector.finish_release(event)
+        if gesture is None:
             return
-        
-        x0, y0 = self.rect_start
-        x1, y1 = event.xdata, event.ydata
-        
+
+        x0, y0, x1, y1, is_rect = gesture
         all_x, all_y = self._get_measurement_sites()
         if len(all_x) == 0:
-            self.rect_start = None
             return
-        
-        modifiers = QApplication.keyboardModifiers()
-        
-        if self.rect_patch is not None:
-            # Rectangle selection
-            xmin, xmax = sorted([x0, x1])
-            ymin, ymax = sorted([y0, y1])
-            inside = ((all_x >= xmin) & (all_x <= xmax) & 
-                     (all_y >= ymin) & (all_y <= ymax))
-            
-            if modifiers != Qt.ControlModifier:
-                self.selected_points = []
-            
-            # Add selected points (ensure uniqueness)
-            new_points = [(float(x), float(y)) for x, y in zip(all_x[inside], all_y[inside])]
-            for pt in new_points:
-                if pt not in self.selected_points:
-                    self.selected_points.append(pt)
-            
-            try:
-                self.rect_patch.remove()
-            except Exception:
-                pass
-            self.rect_patch = None
-        else:
-            # Single click - nearest point
-            if all_x.size > 0:
-                distances_sq = (all_x - x1) ** 2 + (all_y - y1) ** 2
-                idx = np.argmin(distances_sq)
-                pt = (float(all_x[idx]), float(all_y[idx]))
-                
-                if modifiers == Qt.ControlModifier:
-                    if pt in self.selected_points:
-                        self.selected_points.remove(pt)
-                    else:
-                        self.selected_points.append(pt)
-                else:
-                    self.selected_points = [pt]
-        
-        self.rect_start = None
-        
+
+        ctrl_held = is_ctrl_event(event)
+        self.selected_points = resolve_xy_selection(
+            all_x,
+            all_y,
+            self.selected_points,
+            x0=x0,
+            y0=y0,
+            x1=x1,
+            y1=y1,
+            is_rect=is_rect,
+            ctrl_held=ctrl_held,
+        )
+
         # Emit signal with selected points
         self.spectra_selected.emit(self.selected_points)
-        
+
         # Update selection overlay without full redraw
         self._update_selection_overlay()
     

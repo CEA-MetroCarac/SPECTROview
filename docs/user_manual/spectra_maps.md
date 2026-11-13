@@ -212,6 +212,14 @@ The **Live Maps** tab is located on the bottom tab bar between **Fit Results** a
 
 *Note*: If a fit-based parameter is selected but fit results are not yet available, the panel gracefully displays a notification banner rather than misleading or corrupted values.
 
+##### **Interactive Spectrum Selection from RGB Live Maps *(Maps Workspace)***
+When working with 2D maps or 1D profile maps in the **Maps** workspace (whenever the **Pan** and **Zoom** tools are unchecked), you can select spectra directly from any Red, Blue, or Green subpanel without leaving the Live Maps tab:
+
+- **Single Click**: Selects the spectrum nearest the clicked coordinate and immediately displays it in `SpectraViewer`.
+- **`Ctrl` + Click**: Adds another spectrum to the current selection (or toggles an already-selected site off).
+- **Click & Drag**: Draws a dashed selection box to select all spectra inside the region (`Ctrl` + drag adds the boxed spectra to your existing selection).
+- **Synchronized Highlights & Multi-Map Switching**: Selected sites are outlined in red across all active RGB subpanels and kept in sync with the main `MapViewer` and floating `VMapViewerDialog` windows. If you switched to another 2D map via the `◀ [2D Map] ▶` header control, clicking a site on it automatically makes that map your Primary map and loads its spectra. Clicks inside an open legend box remain dedicated to dragging or double-click label editing.
+
 ##### **Individual Subpanel Controls**
 Each subpanel provides dedicated controls:
 

@@ -313,3 +313,129 @@ def test_maps_workspace_multi_selection_gating_and_batch_delete(qapp, test_map_d
     finally:
         ws.close()
         ws.deleteLater()
+
+
+def _canvas_click_and_release(panel, x0: float, y0: float, x1: float = None, y1: float = None, *, key=None):
+    """Simulate click or rectangle drag directly on a LiveMapSubpanel Matplotlib canvas."""
+    from matplotlib.backend_bases import MouseEvent
+
+    if x1 is None:
+        x1, y1 = x0, y0
+    p0x, p0y = panel.ax.transData.transform((x0, y0))
+    p1x, p1y = panel.ax.transData.transform((x1, y1))
+    panel.canvas.callbacks.process(
+        "button_press_event",
+        MouseEvent("button_press_event", panel.canvas, int(round(p0x)), int(round(p0y)), button=1, key=key),
+    )
+    if (x1, y1) != (x0, y0):
+        panel.canvas.callbacks.process(
+            "motion_notify_event",
+            MouseEvent("motion_notify_event", panel.canvas, int(round(p1x)), int(round(p1y)), button=1, key=key),
+        )
+    panel.canvas.callbacks.process(
+        "button_release_event",
+        MouseEvent("button_release_event", panel.canvas, int(round(p1x)), int(round(p1y)), button=1, key=key),
+    )
+
+
+def test_maps_workspace_interactive_live_maps_selection_updates_spectra_viewer(qapp, test_map_data, monkeypatch):
+    """Clicking, Ctrl+Clicking, and dragging in Live Maps updates VSpectraViewer and VMapViewer cleanly."""
+    from spectroview.model.spectral_parameters import SELECTOR_BLUE
+
+    ws = VWorkspaceMaps()
+    ws.resize(1100, 760)
+    ws.show()
+    try:
+        # Prepare two 2D maps and one 1D profile map in the store
+        n2 = len(test_map_data.fnames)
+        m2 = MapData(
+            name="second_2d_map",
+            x0=test_map_data.x0.copy(),
+            Y0=test_map_data.Y0.copy() * 2.0,
+            coords=test_map_data.coords.copy() + np.array([10.0, 20.0]),
+            is_active=test_map_data.is_active.copy(),
+            fnames=[f"m2_{i}" for i in range(n2)],
+            colors=[None] * n2,
+            labels=[None] * n2,
+        )
+        p1 = _make_line_scan("prof_scan", n=8)
+        for md in (test_map_data, m2, p1):
+            ws.vm.store._maps[md.name] = md
+            ws.vm.maps[md.name] = None
+            ws.vm.maps_metadata[md.name] = {}
+        ws.v_maps_list.set_maps_names([test_map_data.name, m2.name, p1.name])
+
+        # Open Live Maps tab and activate Red + Blue selectors
+        ws.bottom_tabs.setCurrentWidget(ws.v_live_maps)
+        ws.v_spectra_viewer.btn_range_red.setChecked(True)
+        ws.v_spectra_viewer.btn_range_blue.setChecked(True)
+        ws.v_spectra_viewer.range_manager.set_range(SELECTOR_RED, 850.0, 950.0)
+        ws.vm_live_maps.set_selector_range(SELECTOR_RED, 850.0, 950.0, immediate=True)
+        ws.vm.select_maps([test_map_data.name], primary_name=test_map_data.name)
+        qapp.processEvents()
+
+        red = ws.v_live_maps.panels[SELECTOR_RED]
+        blue = ws.v_live_maps.panels[SELECTOR_BLUE]
+        red.canvas.draw()
+        blue.canvas.draw()
+
+        # Verify zero Live Maps recalculation on interactive XY selections
+        recompute_calls = []
+        orig_set = ws.vm_live_maps.set_map_datas
+        monkeypatch.setattr(
+            ws.vm_live_maps, "set_map_datas",
+            lambda *a, **k: recompute_calls.append(a[1] if len(a) > 1 else k.get("primary_name")) or orig_set(*a, **k),
+        )
+
+        # 1. Single click on (2.0, 1.0) in Red Live Map -> selects matching fname & plots spectrum
+        _canvas_click_and_release(red, 2.05, 0.95)
+        expected_fname = test_map_data.fnames[1 * 5 + 2]  # y=1, x=2 -> index 7
+        assert ws.vm.selected_fnames == [expected_fname]
+        assert ws.v_map_viewer.selected_points == [(2.0, 1.0)]
+        assert len(ws.v_spectra_viewer.ax.get_lines()) >= 1
+        assert blue._selector.selection_collection is not None
+        assert len(blue._selector.selection_collection.get_paths()) == 1
+        assert recompute_calls == []
+
+        # 2. Ctrl+Click on (4.0, 3.0) adds second spectrum without recomputation
+        _canvas_click_and_release(red, 3.95, 3.05, key="control")
+        expected_second = test_map_data.fnames[3 * 5 + 4]
+        assert ws.vm.selected_fnames == [expected_fname, expected_second]
+        assert ws.v_map_viewer.selected_points == [(2.0, 1.0), (4.0, 3.0)]
+        assert len(blue._selector.selection_collection.get_paths()) == 2
+        assert recompute_calls == []
+
+        # 3. Rectangular drag (0..1, 0..1) selects 4 spectra and mirrors to VMapViewer
+        _canvas_click_and_release(red, -0.2, -0.2, 1.2, 1.2)
+        assert len(ws.vm.selected_fnames) == 4
+        assert set(ws.v_map_viewer.selected_points) == {(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)}
+        assert len(blue._selector.selection_collection.get_paths()) == 4
+        assert recompute_calls == []
+
+        # 4. Multi-2D switcher: selecting on switched secondary map promotes it to Primary cleanly
+        recompute_calls.clear()
+        ws.vm.select_maps([test_map_data.name, m2.name], primary_name=test_map_data.name)
+        qapp.processEvents()
+        ws.v_live_maps.cbb_2d_map.setCurrentText(m2.name)
+        qapp.processEvents()
+        red.canvas.draw()
+        assert red._selector.selection_collection is None  # m1 highlights are not drawn on m2
+        _canvas_click_and_release(red, 11.0, 21.0)
+        assert ws.vm.current_map_name == m2.name
+        assert ws.vm.selected_fnames == [m2.fnames[1 * 5 + 1]]
+        assert ws.v_map_viewer.selected_points == [(11.0, 21.0)]
+
+        # 5. 1D profile map interactive click in Live Maps selects exact spectrum & updates SpectraViewer
+        ws.vm.select_maps([p1.name], primary_name=p1.name)
+        qapp.processEvents()
+        red.canvas.draw()
+        target_x = float(p1.coords[4, 0])
+        target_y = float(p1.coords[4, 1])
+        target_val = float(red._series_values[4])
+        _canvas_click_and_release(red, target_x, target_val)
+        assert ws.vm.selected_fnames == [p1.fnames[4]]
+        assert ws.v_map_viewer.selected_points == [(target_x, target_y)]
+        assert red._selector.selection_markers is not None
+    finally:
+        ws.close()
+        ws.deleteLater()

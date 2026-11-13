@@ -230,6 +230,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.vm_live_maps.map_2d_candidates_changed.connect(self.v_live_maps.update_2d_candidates)
         self.vm_live_maps.live_maps_cleared.connect(self.v_live_maps.clear_all)
         self.v_live_maps.active_2d_map_requested.connect(self.vm_live_maps.set_active_2d_map)
+        self.vm_live_maps.spatial_sites_changed.connect(self.v_live_maps.set_spatial_sites)
+        self.v_live_maps.spectra_selected.connect(self._on_live_maps_point_selection)
 
     def _on_selection_changed_for_live_maps(self, selected_data):
         """No-op in Maps workspace: spectra point clicks do not alter map-level Live Maps."""
@@ -298,12 +300,39 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         elif not new_primary:
             self.v_more_tab.clear_metadata()
 
+    def _sync_selected_points_to_live_maps(self, selected_points: list):
+        """Mirror selected (X, Y) coordinates onto Live Maps without recalculating."""
+        if hasattr(self, "v_live_maps"):
+            self.v_live_maps.set_selected_points(
+                selected_points,
+                map_name=getattr(self.vm, "current_map_name", None),
+            )
+
+    def _on_live_maps_point_selection(self, selected_points: list):
+        """Handle interactive XY spectrum selection originating from RGB Live Maps."""
+        pts = list(selected_points or [])
+        target_map = self.v_live_maps.active_site_map_name() if hasattr(self, "v_live_maps") else None
+        if target_map and target_map != self.vm.current_map_name:
+            names = list(getattr(self.vm, "selected_map_names", []))
+            if target_map not in names:
+                names.append(target_map)
+            self.vm.select_maps(names, primary_name=target_map)
+
+        old_state = self.v_map_viewer.blockSignals(True)
+        try:
+            self.v_map_viewer.set_selected_points(pts)
+        finally:
+            self.v_map_viewer.blockSignals(old_state)
+
+        self._on_map_viewer_selection(pts)
+
     def _on_map_viewer_selection(self, selected_points: list):
         """Handle spectrum selection from map viewer (single source of truth)."""
         if not selected_points or not self.vm.current_map_name:
             self.vm.set_selected_fnames([])
             for dialog in self.viewer_dialogs:
                 dialog.set_selected_points([])
+            self._sync_selected_points_to_live_maps([])
             return
         
         # Map (x, y) coordinates to spectrum filenames (supports multiple time-steps per site)
@@ -328,9 +357,10 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         self.vm.set_selected_fnames(selected_fnames)
         
-        # Sync selected points to all dialog viewers
+        # Sync selected points to all dialog viewers and Live Maps
         for dialog in self.viewer_dialogs:
             dialog.set_selected_points(selected_points)
+        self._sync_selected_points_to_live_maps(selected_points)
     
     def _on_add_viewer_requested(self, _count: int):
         """Handle request to open a new floating map viewer window."""
@@ -465,6 +495,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
 
         # Update Live Maps (deferred cleanly when Live Maps tab is hidden; clears on empty)
         self._sync_live_maps()
+        self._sync_selected_points_to_live_maps(initial_points)
     
     def _on_fit_results_updated(self, df_fit_results):
         """Update map viewer parameter lists when fit results change.
@@ -578,6 +609,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             self.v_map_viewer.set_selected_points(all_pts)
             for dialog in self.viewer_dialogs:
                 dialog.set_selected_points(all_pts)
+            self._sync_selected_points_to_live_maps(all_pts)
     
     def _on_reinit_spectra(self):
         """Reinitialize selected spectra (Ctrl for all maps)."""
@@ -668,6 +700,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self.vm.clear_workspace()
         if hasattr(self, 'vm_live_maps'):
             self.vm_live_maps.set_map_datas([])
+        self._sync_selected_points_to_live_maps([])
         if hasattr(self, 'vm_mva'):
             self.vm_mva.set_store(self.vm.store)
     

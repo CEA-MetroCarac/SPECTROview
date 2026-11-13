@@ -108,6 +108,62 @@ def _copy_view_options(src: Optional[dict] = None) -> dict:
     return base
 
 
+def _parse_norm_bound(raw: str) -> Optional[float]:
+    """Parse an optional numeric bound from Xmin/Xmax input, ignoring invalid text."""
+    text = str(raw or "").strip().replace(",", ".")
+    if not text:
+        return None
+    try:
+        val = float(text)
+    except ValueError:
+        return None
+    return val if np.isfinite(val) else None
+
+
+def _normalize_1d_values(
+    x: np.ndarray,
+    y: np.ndarray,
+    xmin: Optional[float] = None,
+    xmax: Optional[float] = None,
+) -> np.ndarray:
+    """Normalize a 1D curve to max height overall or within [xmin, xmax] (view-only)."""
+    y_arr = np.asarray(y, dtype=np.float64)
+    if y_arr.size == 0:
+        return y_arr
+    x_arr = np.asarray(x, dtype=np.float64)
+
+    sub_y = y_arr
+    if (xmin is not None or xmax is not None) and x_arr.size == y_arr.size:
+        valid_xy = np.isfinite(x_arr) & np.isfinite(y_arr)
+        lo, hi = xmin, xmax
+        if lo is not None and hi is not None and lo > hi:
+            lo, hi = hi, lo
+        mask = valid_xy.copy()
+        if lo is not None:
+            mask &= x_arr >= lo
+        if hi is not None:
+            mask &= x_arr <= hi
+        if np.any(mask):
+            sub_y = y_arr[mask]
+        elif lo is not None and hi is not None and np.any(valid_xy):
+            valid_x = x_arr[valid_xy]
+            x_min_val, x_max_val = float(np.min(valid_x)), float(np.max(valid_x))
+            if hi >= x_min_val and lo <= x_max_val:
+                # Narrow [xmin, xmax] inside the curve span without direct samples: use nearest point
+                mid = 0.5 * (lo + hi)
+                valid_idx = np.flatnonzero(valid_xy)
+                nearest = valid_idx[int(np.argmin(np.abs(x_arr[valid_idx] - mid)))]
+                sub_y = y_arr[nearest : nearest + 1]
+
+    finite_sub = sub_y[np.isfinite(sub_y)]
+    if finite_sub.size == 0:
+        return y_arr
+    norm_val = float(np.max(finite_sub))
+    if norm_val == 0.0 or not np.isfinite(norm_val):
+        return y_arr
+    return y_arr / norm_val
+
+
 class LiveMapSubpanel(QFrame):
     """Subpanel rendering a 2D heatmap or a 1D line plot for one spectral range.
 
@@ -120,6 +176,7 @@ class LiveMapSubpanel(QFrame):
     parameter_changed = Signal(str, str)  # (color_id, parameter_name)
     legend_edit_requested = Signal()
     view_reset_requested = Signal()
+    normalization_changed = Signal()      # 1D Y normalization toggled or range edited
     spectra_selected = Signal(list)       # List of (x, y) tuples selected interactively
 
     def __init__(self, color_id: str, parent=None, mode: str = "map"):
@@ -168,6 +225,7 @@ class LiveMapSubpanel(QFrame):
         self._spatial_sites: Optional[dict] = None
         self._selected_points: list[tuple[float, float]] = []
         self._selector: Optional[MapCanvasSelector] = None
+        self._last_norm_params: tuple[bool, Optional[float], Optional[float]] = (False, None, None)
 
         # Parented coalesce timer for option-change redraws (prevents UI lag during bursts)
         self._draw_timer = QTimer(self)
@@ -290,6 +348,42 @@ class LiveMapSubpanel(QFrame):
         self.cbb_palette.currentTextChanged.connect(self._on_palette_changed)
         row2_layout.addWidget(self.cbb_palette)
 
+        # 1D normalization controls (shown for 1D line plots, hidden on 2D heatmaps)
+        self.btn_norm = QToolButton(self)
+        self.btn_norm.setObjectName("btn_norm")
+        self.btn_norm.setCheckable(True)
+        self._update_norm_button_style()
+        self.btn_norm.setIcon(Icons.norm(color=icon_color))
+        self.btn_norm.setIconSize(QSize(14, 14))
+        self.btn_norm.setFixedSize(22, 22)
+        self.btn_norm.setToolTip(
+            "Intensity normalization to maximum of curve or selected [Xmin, Xmax] region.\n"
+            "Note: Visual change only; underlying data is not modified."
+        )
+        self.btn_norm.toggled.connect(self._on_norm_toggled)
+        self.btn_norm.setVisible(False)
+        row2_layout.addWidget(self.btn_norm)
+
+        self.norm_xmin = QLineEdit(self)
+        self.norm_xmin.setFixedSize(48, 22)
+        self.norm_xmin.setPlaceholderText("Xmin")
+        self.norm_xmin.setToolTip(
+            "Minimum X bound for local 1D normalization peak search"
+        )
+        self.norm_xmin.editingFinished.connect(self._on_norm_range_edited)
+        self.norm_xmin.setVisible(False)
+        row2_layout.addWidget(self.norm_xmin)
+
+        self.norm_xmax = QLineEdit(self)
+        self.norm_xmax.setFixedSize(48, 22)
+        self.norm_xmax.setPlaceholderText("Xmax")
+        self.norm_xmax.setToolTip(
+            "Maximum X bound for local 1D normalization peak search"
+        )
+        self.norm_xmax.editingFinished.connect(self._on_norm_range_edited)
+        self.norm_xmax.setVisible(False)
+        row2_layout.addWidget(self.norm_xmax)
+
         layout.addLayout(row2_layout)
 
         # ── Matplotlib Figure, Hidden Navigation Toolbar & Canvas ──
@@ -371,6 +465,13 @@ class LiveMapSubpanel(QFrame):
         except Exception:
             pass
 
+    def _update_norm_button_style(self):
+        """Update normalization toggle button styling based on current theme tokens."""
+        tok = current_tokens()
+        self.btn_norm.setStyleSheet(
+            f"QToolButton#btn_norm:checked {{ background-color: {tok.warning_tint}; border: 1px solid {tok.warning}; }}"
+        )
+
     def apply_icon_theme(self, icon_color: str):
         """Update subpanel Qt toolbar button icons independently of Matplotlib plot theme."""
         self._icon_color = icon_color
@@ -378,6 +479,48 @@ class LiveMapSubpanel(QFrame):
         self.btn_pan.setIcon(Icons.pan(color=icon_color))
         self.btn_zoom.setIcon(Icons.zoom(color=icon_color))
         self.btn_copy.setIcon(Icons.copy(color=icon_color))
+        self.btn_norm.setIcon(Icons.norm(color=icon_color))
+        self._update_norm_button_style()
+
+    def _current_norm_params(self) -> tuple[bool, Optional[float], Optional[float]]:
+        """Return ``(enabled, xmin, xmax)`` from this subpanel's normalization toolbar."""
+        enabled = bool(getattr(self, "btn_norm", None) and self.btn_norm.isChecked())
+        if not enabled:
+            return False, None, None
+        return (
+            True,
+            _parse_norm_bound(self.norm_xmin.text()),
+            _parse_norm_bound(self.norm_xmax.text()),
+        )
+
+    def _apply_normalization(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        """Apply view-only 1D curve normalization when enabled on this subpanel."""
+        y_arr = np.asarray(y, dtype=np.float64)
+        enabled, xmin, xmax = self._current_norm_params()
+        if not enabled:
+            return y_arr
+        return _normalize_1d_values(x, y_arr, xmin=xmin, xmax=xmax)
+
+    def _on_norm_toggled(self, _checked: bool):
+        """Re-render 1D curve(s) with view-only normalization and rescaled bounds."""
+        self._last_norm_params = self._current_norm_params()
+        if self._display_kind in ("series", "multi_profile"):
+            self._request_relayout()
+            self.rerender_cached(theme=self._current_theme)
+            self.normalization_changed.emit()
+
+    def _on_norm_range_edited(self):
+        """Re-render and rescale when normalization bounds change while active."""
+        if not self.btn_norm.isChecked():
+            return
+        params = self._current_norm_params()
+        if params == self._last_norm_params:
+            return
+        self._last_norm_params = params
+        if self._display_kind in ("series", "multi_profile"):
+            self._request_relayout()
+            self.rerender_cached(theme=self._current_theme)
+            self.normalization_changed.emit()
 
     def reset_view(self):
         """Restore natural autoscale bounds for the current plot and clear zoom/pan stack."""
@@ -400,7 +543,8 @@ class LiveMapSubpanel(QFrame):
             x_parts, y_parts = [], []
             for entry in self._multi_entries:
                 px = np.asarray(entry.get("positions", []), dtype=np.float64)
-                vy = np.asarray(entry.get("values", []), dtype=np.float64)
+                raw_vy = np.asarray(entry.get("values", []), dtype=np.float64)
+                vy = self._apply_normalization(px, raw_vy) if len(px) == len(raw_vy) else raw_vy
                 if len(px) > 0 and len(px) == len(vy):
                     m = np.isfinite(px) & np.isfinite(vy)
                     if np.any(m):
@@ -417,7 +561,7 @@ class LiveMapSubpanel(QFrame):
                 if is_index
                 else np.asarray(self._series_x, dtype=np.float64)
             )
-            val_arr = np.asarray(self._series_values, dtype=np.float64)
+            val_arr = self._apply_normalization(x_arr, self._series_values)
             m = np.isfinite(x_arr) & np.isfinite(val_arr)
             self._apply_1d_scales_and_limits(
                 x_arr[m] if np.any(m) else x_arr,
@@ -521,12 +665,23 @@ class LiveMapSubpanel(QFrame):
     def _get_primary_profile_values(self) -> Optional[np.ndarray]:
         """Return plotted Y values corresponding to the primary 1D spatial curve."""
         if self._display_kind == "series":
-            return self._series_values
+            vals = self._series_values
+            if vals is None:
+                return None
+            x_arr = (
+                self._series_x
+                if self._series_x is not None
+                else np.arange(1, len(vals) + 1, dtype=np.float64)
+            )
+            return self._apply_normalization(x_arr, vals)
         if self._display_kind == "multi_profile" and self._multi_entries:
-            for entry in self._multi_entries:
-                if entry.get("is_primary"):
-                    return np.asarray(entry.get("values", []), dtype=np.float64)
-            return np.asarray(self._multi_entries[0].get("values", []), dtype=np.float64)
+            target = next(
+                (entry for entry in self._multi_entries if entry.get("is_primary")),
+                self._multi_entries[0],
+            )
+            px = np.asarray(target.get("positions", []), dtype=np.float64)
+            vy = np.asarray(target.get("values", []), dtype=np.float64)
+            return self._apply_normalization(px, vy)
         return None
 
     def _filter_active_selected_points(self) -> list[tuple[float, float]]:
@@ -721,11 +876,17 @@ class LiveMapSubpanel(QFrame):
             self.cbb_param.setToolTip("Select spectral parameter for this graph")
         self._sync_palette_visibility()
 
+    def _sync_1d_controls_visibility(self):
+        """Show colormap picker on 2D heatmaps and normalization controls on 1D line plots."""
+        is_1d_plot = self._display_kind in ("series", "multi_profile")
+        self.cbb_palette.setVisible(self.mode == "map" and not is_1d_plot)
+        self.btn_norm.setVisible(is_1d_plot)
+        self.norm_xmin.setVisible(is_1d_plot)
+        self.norm_xmax.setVisible(is_1d_plot)
+
     def _sync_palette_visibility(self):
-        """Colormap selector only applies to heatmaps (Maps mode, not 1D line plots)."""
-        self.cbb_palette.setVisible(
-            self.mode == "map" and self._display_kind not in ("series", "multi_profile")
-        )
+        """Synchronize Row-2 palette and 1D normalization control visibility."""
+        self._sync_1d_controls_visibility()
 
     def _reset_axes(self):
         """Remove any colorbar, legend, clear lines, clear axes, and restore aspect scaling.
@@ -776,6 +937,7 @@ class LiveMapSubpanel(QFrame):
         self._display_kind = None
         self._valid_y_bounds = None
         self._valid_pos_y_bounds = None
+        self._sync_1d_controls_visibility()
         self._reset_axes()
         self._apply_figure_theme(self._current_theme)
         if self.canvas is not None:
@@ -1316,6 +1478,7 @@ class LiveMapSubpanel(QFrame):
         show_grid = bool(self._view_options.get("show_grid", False))
 
         has_valid = len(val_arr) > 0 and bool(np.any(np.isfinite(val_arr)))
+        plot_vals = self._apply_normalization(x_arr, val_arr) if has_valid else val_arr
         text_fs = max(6, int(self._view_options.get("text_fontsize", 10)))
 
         # Fast path: in-place single-line update during continuous bracket dragging
@@ -1324,19 +1487,20 @@ class LiveMapSubpanel(QFrame):
             and len(self.lines) == 1
             and self.line is not None
             and has_valid
-            and len(self.line.get_xdata()) == len(val_arr)
+            and len(self.line.get_xdata()) == len(plot_vals)
         ):
-            self.line.set_data(x_arr, val_arr)
+            self._sync_1d_controls_visibility()
+            self.line.set_data(x_arr, plot_vals)
             self.line.set_color(curve_color)
             self.line.set_linestyle(style_kw["linestyle"])
             self.line.set_linewidth(style_kw["linewidth"])
             self.line.set_marker(style_kw["marker"])
             self.line.set_markersize(style_kw["markersize"])
             self.line.set_label(curve_label)
-            finite_mask = np.isfinite(x_arr) & np.isfinite(val_arr)
+            finite_mask = np.isfinite(x_arr) & np.isfinite(plot_vals)
             self._apply_1d_scales_and_limits(
                 x_arr[finite_mask] if np.any(finite_mask) else x_arr,
-                val_arr[finite_mask] if np.any(finite_mask) else val_arr,
+                plot_vals[finite_mask] if np.any(finite_mask) else plot_vals,
                 is_index_axis=is_index_axis,
             )
             self._apply_grid_state(show_grid, active_theme)
@@ -1374,7 +1538,7 @@ class LiveMapSubpanel(QFrame):
         self.lines = list(
             self.ax.plot(
                 x_arr,
-                val_arr,
+                plot_vals,
                 color=curve_color,
                 alpha=0.95,
                 label=curve_label,
@@ -1382,10 +1546,10 @@ class LiveMapSubpanel(QFrame):
             )
         )
 
-        finite_mask = np.isfinite(x_arr) & np.isfinite(val_arr)
+        finite_mask = np.isfinite(x_arr) & np.isfinite(plot_vals)
         self._apply_1d_scales_and_limits(
             x_arr[finite_mask] if np.any(finite_mask) else x_arr,
-            val_arr[finite_mask] if np.any(finite_mask) else val_arr,
+            plot_vals[finite_mask] if np.any(finite_mask) else plot_vals,
             is_index_axis=is_index_axis,
         )
         self._apply_grid_state(show_grid, active_theme)
@@ -1428,12 +1592,15 @@ class LiveMapSubpanel(QFrame):
             else f"{shared_x_label or 'Position'} (mm)"
         )
 
-        # Compute manual finite bounds across all valid curves (guards NaN/empty curves)
+        # Compute finite bounds across normalized curves without mutating cached raw entries
+        plotted_curves = []
         finite_x_parts = []
         finite_y_parts = []
         for entry in self._multi_entries:
             px = np.asarray(entry.get("positions", []), dtype=np.float64)
-            vy = np.asarray(entry.get("values", []), dtype=np.float64)
+            raw_vy = np.asarray(entry.get("values", []), dtype=np.float64)
+            vy = self._apply_normalization(px, raw_vy) if len(px) == len(raw_vy) else raw_vy
+            plotted_curves.append((entry, px, vy))
             if len(px) == 0 or len(px) != len(vy):
                 continue
             mask = np.isfinite(px) & np.isfinite(vy)
@@ -1459,16 +1626,15 @@ class LiveMapSubpanel(QFrame):
             self._display_kind == "multi_profile"
             and has_valid
             and self.img is None
-            and len(self.lines) == len(self._multi_entries)
+            and len(self.lines) == len(plotted_curves)
             and len(self.lines) > 0
         ):
-            for idx, (ln, entry) in enumerate(zip(self.lines, self._multi_entries)):
-                px = np.asarray(entry.get("positions", []), dtype=np.float64)
-                vy = np.asarray(entry.get("values", []), dtype=np.float64)
+            self._sync_1d_controls_visibility()
+            for idx, (ln, (entry, px, vy)) in enumerate(zip(self.lines, plotted_curves)):
                 key = entry.get("name", f"Map {idx + 1}")
                 auto_color = (
                     self.color_hex
-                    if len(self._multi_entries) == 1
+                    if len(plotted_curves) == 1
                     else DEFAULT_COLORS[idx % len(DEFAULT_COLORS)]
                 )
                 color = custom_colors.get(key) or auto_color
@@ -1517,13 +1683,11 @@ class LiveMapSubpanel(QFrame):
             return
 
         new_lines = []
-        for idx, entry in enumerate(self._multi_entries):
-            px = np.asarray(entry.get("positions", []), dtype=np.float64)
-            vy = np.asarray(entry.get("values", []), dtype=np.float64)
+        for idx, (entry, px, vy) in enumerate(plotted_curves):
             key = entry.get("name", f"Map {idx + 1}")
             auto_color = (
                 self.color_hex
-                if len(self._multi_entries) == 1
+                if len(plotted_curves) == 1
                 else DEFAULT_COLORS[idx % len(DEFAULT_COLORS)]
             )
             color = custom_colors.get(key) or auto_color
@@ -1863,6 +2027,7 @@ class VLiveMaps(QWidget):
             panel.parameter_changed.connect(self.parameter_change_requested.emit)
             panel.legend_edit_requested.connect(self.open_legend_editor)
             panel.view_reset_requested.connect(self._sync_shared_y)
+            panel.normalization_changed.connect(self._sync_shared_y)
             panel.spectra_selected.connect(self._on_panel_spectra_selected)
             panel.set_view_options(self._view_options, redraw=False)
             panel.setVisible(False)  # Hidden by default until activated

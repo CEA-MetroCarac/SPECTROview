@@ -987,3 +987,193 @@ def test_v_live_maps_selection_guards_pan_zoom_legend_and_dark_theme(qapp):
 
 
 
+
+
+def test_v_live_maps_1d_normalization_controls_visibility_and_theme(qapp):
+    """Normalization controls appear on 1D line plots, hide on 2D heatmaps, and follow themes."""
+    live_maps = VLiveMaps(mode="map")
+    live_maps.resize(860, 420)
+    live_maps.show()
+    try:
+        live_maps.set_selector_active(SELECTOR_RED, True)
+        panel = live_maps.panels[SELECTOR_RED]
+
+        # Initially empty in map mode: 2D colormap shown, 1D norm controls hidden
+        assert panel.cbb_palette.isHidden() is False
+        assert panel.btn_norm.isHidden() is True
+        assert panel.norm_xmin.isHidden() is True
+        assert panel.norm_xmax.isHidden() is True
+
+        # Single 1D profile map: hides palette and reveals norm button + bounds
+        pos = np.array([5.0, 10.0, 15.0, 20.0])
+        vals = np.array([10.0, 100.0, 50.0, 25.0])
+        live_maps.update_profile_data(SELECTOR_RED, pos, vals, axis_label="X", status_msg="OK")
+        assert panel.cbb_palette.isHidden() is True
+        assert panel.btn_norm.isHidden() is False
+        assert panel.norm_xmin.isHidden() is False
+        assert panel.norm_xmax.isHidden() is False
+
+        # Multi-1D profile comparison: norm controls remain visible
+        entries = [
+            {"name": "p1", "positions": pos, "values": vals, "is_primary": True},
+            {"name": "p2", "positions": pos, "values": vals * 4.0, "is_primary": False},
+        ]
+        live_maps.update_multi_profile_data(SELECTOR_RED, entries, shared_x_label="X", status_msg="OK")
+        assert panel.cbb_palette.isHidden() is True
+        assert panel.btn_norm.isHidden() is False
+
+        # Check button + switch UI theme preserves checked state and warning style
+        panel.btn_norm.click()
+        assert panel.btn_norm.isChecked() is True
+        live_maps.apply_global_theme("Dark Mode")
+        assert panel.btn_norm.isChecked() is True
+        assert "border:" in panel.btn_norm.styleSheet()
+
+        # Switching to 2D heatmap hides norm controls and restores colormap selector
+        grid = np.arange(9, dtype=np.float64).reshape(3, 3)
+        live_maps.update_map_data(SELECTOR_RED, grid, [0.0, 3.0, 0.0, 3.0], 0.0, 8.0, "OK")
+        assert panel.cbb_palette.isHidden() is False
+        assert panel.btn_norm.isHidden() is True
+        assert panel.norm_xmin.isHidden() is True
+        assert panel.norm_xmax.isHidden() is True
+
+        # Switching back to 1D restores norm controls and keeps user's checked setting
+        live_maps.update_profile_data(SELECTOR_RED, pos, vals, axis_label="X", status_msg="OK")
+        assert panel.btn_norm.isHidden() is False
+        assert panel.btn_norm.isChecked() is True
+        np.testing.assert_allclose(panel.line.get_ydata(), vals / 100.0)
+    finally:
+        live_maps.close()
+        live_maps.deleteLater()
+
+
+def test_v_live_maps_1d_normalization_global_xrange_and_view_only(qapp):
+    """Normalization supports full-curve max, [Xmin, Xmax] peak search, edge guards, and Rescale."""
+    live_maps = VLiveMaps(mode="map")
+    live_maps.resize(860, 420)
+    live_maps.show()
+    try:
+        live_maps.set_selector_active(SELECTOR_RED, True)
+        panel = live_maps.panels[SELECTOR_RED]
+
+        pos = np.array([5.0, 10.0, 15.0, 20.0, 25.0, 30.0])
+        v1 = np.array([20.0, 40.0, 3400.0, 500.0, 800.0, 1500.0])
+        v2 = np.array([10.0, 20.0, 250.0, np.nan, 60.0, 100.0])
+        v_zero = np.zeros_like(pos)
+        entries = [
+            {"name": "100%", "positions": pos, "values": v1.copy(), "is_primary": True},
+            {"name": "10%", "positions": pos, "values": v2.copy(), "is_primary": False},
+            {"name": "zero", "positions": pos, "values": v_zero.copy(), "is_primary": False},
+        ]
+        live_maps.update_multi_profile_data(SELECTOR_RED, entries, shared_x_label="X", status_msg="OK")
+
+        # Raw curves before normalization
+        np.testing.assert_allclose(panel.lines[0].get_ydata(), v1)
+        np.testing.assert_allclose(panel.lines[1].get_ydata(), v2, equal_nan=True)
+
+        # Toggle global max normalization ON (view-only: cached raw data untouched)
+        panel.btn_norm.click()
+        assert panel.btn_norm.isChecked() is True
+        np.testing.assert_allclose(panel.lines[0].get_ydata(), v1 / 3400.0)
+        np.testing.assert_allclose(panel.lines[1].get_ydata(), v2 / 250.0, equal_nan=True)
+        np.testing.assert_allclose(panel.lines[2].get_ydata(), v_zero)
+        np.testing.assert_allclose(entries[0]["values"], v1)
+
+        # Restrict peak search to [Xmin, Xmax] = [20, 30]
+        panel.norm_xmin.setText("20")
+        panel.norm_xmax.setText("30")
+        panel.norm_xmax.editingFinished.emit()
+        np.testing.assert_allclose(panel.lines[0].get_ydata(), v1 / 1500.0)
+        np.testing.assert_allclose(panel.lines[1].get_ydata(), v2 / 100.0, equal_nan=True)
+
+        # Swapped bounds + comma decimal still normalize cleanly on [20, 30]
+        panel.norm_xmin.setText("30,0")
+        panel.norm_xmax.setText("20")
+        panel.norm_xmin.editingFinished.emit()
+        np.testing.assert_allclose(panel.lines[0].get_ydata(), v1 / 1500.0)
+
+        # Narrow range falling between discrete samples resolves nearest sample (x=15)
+        panel.norm_xmin.setText("14.1")
+        panel.norm_xmax.setText("14.9")
+        panel.norm_xmax.editingFinished.emit()
+        np.testing.assert_allclose(panel.lines[0].get_ydata(), v1 / 3400.0)
+
+        # Rescale (Home button) preserves normalized Y bounds instead of snapping to raw range
+        panel.ax.set_ylim(0.2, 0.6)
+        panel.btn_home.click()
+        ylo, yhi = panel.ax.get_ylim()
+        assert yhi < 2.0
+
+        # Invalid text safely falls back to global max
+        panel.norm_xmin.setText("bad")
+        panel.norm_xmax.setText("text")
+        panel.norm_xmax.editingFinished.emit()
+        np.testing.assert_allclose(panel.lines[0].get_ydata(), v1 / 3400.0)
+
+        # Toggle OFF restores exact raw curves and Y range
+        panel.btn_norm.click()
+        assert panel.btn_norm.isChecked() is False
+        np.testing.assert_allclose(panel.lines[0].get_ydata(), v1)
+        assert panel.ax.get_ylim()[1] > 3000.0
+    finally:
+        live_maps.close()
+        live_maps.deleteLater()
+
+
+def test_v_live_maps_normalization_per_panel_share_y_and_selection(qapp):
+    """Per-panel normalization syncs Share Y-axis and keeps 1D click/box selection aligned."""
+    live_maps = VLiveMaps(mode="map")
+    live_maps.resize(900, 440)
+    live_maps.show()
+    try:
+        live_maps.set_selector_active(SELECTOR_RED, True)
+        live_maps.set_selector_active(SELECTOR_BLUE, True)
+        red = live_maps.panels[SELECTOR_RED]
+        blue = live_maps.panels[SELECTOR_BLUE]
+
+        pos = np.array([0.0, 5.0, 10.0, 15.0])
+        coords = np.column_stack([np.full(4, 2.0), pos])
+        vals_red = np.array([50.0, 500.0, 200.0, 100.0])
+        vals_blue = np.array([100.0, 2000.0, 800.0, 400.0])
+
+        live_maps.set_spatial_sites({"map_name": "p1", "is_profile": True, "coords": coords, "positions": pos})
+        live_maps.update_profile_data(SELECTOR_RED, pos, vals_red, axis_label="Y", status_msg="OK")
+        live_maps.update_profile_data(SELECTOR_BLUE, pos, vals_blue, axis_label="Y", status_msg="OK")
+
+        # Normalize Red only; normalize Blue separately via Share Y-axis check
+        live_maps.set_view_options({"share_y": True}, emit_signal=False)
+        red.btn_norm.click()
+        # Blue is still unnormalized (~2000), so shared Y spans up to >2000
+        assert red.ax.get_ylim()[1] > 1800.0
+        assert blue.ax.get_ylim()[1] > 1800.0
+
+        # Normalize Blue too -> Share Y-axis collapses both panels cleanly onto [~ -0.1, 1.1]
+        blue.btn_norm.click()
+        assert red.ax.get_ylim()[1] < 2.0
+        assert blue.ax.get_ylim()[1] < 2.0
+        assert red.ax.get_ylim() == pytest.approx(blue.ax.get_ylim())
+
+        # Click at normalized coordinates selects the spectrum and places red dot at y=1.0
+        emitted = []
+        live_maps.spectra_selected.connect(emitted.append)
+        red.canvas.draw()
+        _fire_canvas_mouse(red, "button_press_event", 5.1, 0.96)
+        _fire_canvas_mouse(red, "button_release_event", 5.1, 0.96)
+        assert emitted[-1] == [(2.0, 5.0)]
+        markers = red._selector.selection_markers
+        assert markers is not None
+        np.testing.assert_allclose(markers.get_xdata(), [5.0])
+        np.testing.assert_allclose(markers.get_ydata(), [1.0])
+
+        # Box drag in normalized Y coordinates [0.3..0.5] selects only the x=10 (0.4) point
+        _fire_canvas_mouse(red, "button_press_event", -0.2, 0.3)
+        _fire_canvas_mouse(red, "motion_notify_event", 15.2, 0.5)
+        _fire_canvas_mouse(red, "button_release_event", 15.2, 0.5)
+        assert emitted[-1] == [(2.0, 10.0)]
+
+        # Unchecking normalization shifts the active red selection dot back to raw Y=200.0
+        red.btn_norm.click()
+        np.testing.assert_allclose(red._selector.selection_markers.get_ydata(), [200.0])
+    finally:
+        live_maps.close()
+        live_maps.deleteLater()

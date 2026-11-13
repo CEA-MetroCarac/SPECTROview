@@ -224,7 +224,8 @@ When working with 2D maps or 1D profile maps in the **Maps** workspace (whenever
 Each subpanel provides dedicated controls:
 
 - **Rescale / Pan / Zoom**: Independent navigation buttons in each subpanel header allow you to zoom into regions of interest, pan across the curve or heatmap, and reset back to the full plot range without affecting adjacent channels. Double-clicking on a legend still opens the legend editor rather than resetting zoom.
-- **Palette** *(Maps Workspace only)*: Choose any standard colormap (e.g., `viridis`, `plasma`, `inferno`, `jet`, `turbo`, `coolwarm`, `cividis`, `magma`, `Reds`, `Blues`, `Greens`). In the **Spectra Workspace**, each 1D variation curve is automatically styled in its matching selector color (Red, Blue, or Green).
+- **1D Curve Normalization** *(1D maps & 1D line plots)*: Toggle the normalization button beside the parameter dropdown (with optional `Xmin` and `Xmax` bounds) in each RGB subpanel to visually normalize each displayed 1D curve independently to `1.0` at its global maximum or within `[Xmin, Xmax]` without modifying underlying data—ideal for comparing profile shapes across maps with different signal amplitudes.
+- **Palette** *(2D heatmaps in Maps Workspace)*: Choose any standard colormap (e.g., `viridis`, `plasma`, `inferno`, `jet`, `turbo`, `coolwarm`, `cividis`, `magma`, `Reds`, `Blues`, `Greens`). In the **Spectra Workspace**, each 1D variation curve is automatically styled in its matching selector color (Red, Blue, or Green).
 - **Copy**: Copy the subpanel figure to the clipboard at the configured **Copied figure size** and **Copied figure theme** (independent of the current SPECTROview window size).
 - **Range / Status Badge**: Displays the current interval range $[x_{min}, x_{max}]$ or fitting status.
 

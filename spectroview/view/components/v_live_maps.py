@@ -14,14 +14,17 @@ from typing import Optional, Dict, Tuple, List
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm, Normalize
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator, AutoLocator
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
-    QPushButton, QFrame, QSizePolicy, QScrollArea,
+    QPushButton, QFrame, QSizePolicy, QScrollArea, QToolButton,
+    QMenu, QWidgetAction, QDoubleSpinBox, QSpinBox,
 )
 
 from spectroview import PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, DEFAULT_COLORS
@@ -40,6 +43,10 @@ from spectroview.view.components.v_range_selector import (
     SELECTOR_COLORS,
     SELECTOR_NAMES,
 )
+from spectroview.view.components.v_live_maps_legend_editor import (
+    LEGEND_LOCATIONS,
+    LiveMapsLegendEditorDialog,
+)
 
 
 DEFAULT_PALETTES = {
@@ -53,6 +60,35 @@ AVAILABLE_PALETTES = [
     "Reds", "Blues", "Greens", "coolwarm", "bwr", "jet", "rainbow"
 ]
 
+_DEFAULT_VIEW_OPTIONS = {
+    "xscale": "linear",
+    "yscale": "linear",
+    "zscale": "linear",
+    "plot_style": "line+dots",
+    "line_width": 1.8,
+    "dot_size": 4.0,
+    "show_legend": False,
+    "legend_loc": "best",
+    "legend_ncol": 1,
+    "legend_fontsize": 8,
+    "show_grid": True,
+    "share_y": False,
+    "heatmap_smoothing": False,
+    "show_colorbar": True,
+    "custom_labels": {},
+    "custom_colors": {},
+}
+
+
+def _copy_view_options(src: Optional[dict] = None) -> dict:
+    """Return an isolated copy of Live Maps view options with cloned dicts."""
+    base = dict(_DEFAULT_VIEW_OPTIONS)
+    if src:
+        base.update(src)
+    base["custom_labels"] = dict(base.get("custom_labels") or {})
+    base["custom_colors"] = dict(base.get("custom_colors") or {})
+    return base
+
 
 class LiveMapSubpanel(QFrame):
     """Subpanel rendering a 2D heatmap or a 1D line plot for one spectral range.
@@ -64,6 +100,7 @@ class LiveMapSubpanel(QFrame):
     """
 
     parameter_changed = Signal(str, str)  # (color_id, parameter_name)
+    legend_edit_requested = Signal()
 
     def __init__(self, color_id: str, parent=None, mode: str = "map"):
         super().__init__(parent)
@@ -102,6 +139,10 @@ class LiveMapSubpanel(QFrame):
         self.img = None
         self.cbar = None
         self.lines: List = []
+        self._legend = None
+        self._view_options = _copy_view_options()
+        self._valid_y_bounds: Optional[Tuple[float, float]] = None
+        self._valid_pos_y_bounds: Optional[Tuple[float, float]] = None
 
         self._init_ui()
         self.set_mode(mode)
@@ -199,7 +240,62 @@ class LiveMapSubpanel(QFrame):
 
         self.canvas = FigureCanvas(self.figure)
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.canvas.mpl_connect("button_press_event", self._on_canvas_button_press)
         layout.addWidget(self.canvas, stretch=1)
+
+    def _on_canvas_button_press(self, event):
+        """Open legend label editor when double-clicking inside the Matplotlib legend box."""
+        if not getattr(event, "dblclick", False) or self._legend is None:
+            return
+        if event.x is None or event.y is None:
+            return
+        try:
+            renderer = self.canvas.get_renderer()
+            if renderer is None:
+                return
+            if self._legend.get_window_extent(renderer=renderer).contains(event.x, event.y):
+                self.legend_edit_requested.emit()
+        except Exception:
+            pass
+
+    def set_view_options(self, options: dict, redraw: bool = False):
+        """Apply view options dictionary and optionally re-render cached artists."""
+        self._view_options = _copy_view_options(options)
+        if redraw and self._display_kind is not None:
+            self.rerender_cached(theme=self._current_theme)
+
+    def rerender_cached(self, theme: Optional[str] = None, force_rebuild: bool = False):
+        """Re-render the currently displayed plot from cached arrays without recomputing."""
+        active_theme = theme or self._current_theme
+        kind = self._display_kind or ("series" if self.mode == "spectra" else "map")
+        if force_rebuild:
+            self.img = None
+            self.lines.clear()
+        if kind == "multi_profile":
+            self.update_multi_profile(
+                self._multi_entries,
+                shared_x_label=self._multi_x_label,
+                status_msg=self._status_msg,
+                theme=active_theme,
+            )
+        elif kind == "series":
+            self.update_series(
+                self._series_values,
+                self._series_labels,
+                self._status_msg,
+                theme=active_theme,
+                x_values=self._series_x,
+                x_label=self._series_xlabel,
+            )
+        else:
+            self.update_map(
+                self._grid,
+                self._extent,
+                self._vmin,
+                self._vmax,
+                self._status_msg,
+                theme=active_theme,
+            )
 
     def set_mode(self, mode: str):
         """Configure subpanel for 'map' (2D heatmap) or 'spectra' (1D variation graph) mode."""
@@ -213,17 +309,25 @@ class LiveMapSubpanel(QFrame):
         self._sync_palette_visibility()
 
     def _sync_palette_visibility(self):
-        """Colormap selector only applies to heatmaps (Maps mode, not a 1D line plot)."""
-        self.cbb_palette.setVisible(self.mode == "map" and self._display_kind != "series")
+        """Colormap selector only applies to heatmaps (Maps mode, not 1D line plots)."""
+        self.cbb_palette.setVisible(
+            self.mode == "map" and self._display_kind not in ("series", "multi_profile")
+        )
 
     def _reset_axes(self):
-        """Remove any colorbar, clear lines, clear axes, and restore automatic aspect scaling.
+        """Remove any colorbar, legend, clear lines, clear axes, and restore aspect scaling.
 
         Matplotlib's ``Axes.clear()`` does not reset the aspect ratio set by
         ``imshow(..., aspect="equal")``; without resetting to ``"auto"``, a
         subsequent 1D line plot inherits a 1:1 data aspect and collapses into a
         thin vertical or horizontal strip when X and Y spans differ.
         """
+        if self._legend is not None:
+            try:
+                self._legend.remove()
+            except Exception:
+                pass
+            self._legend = None
         if self.cbar is not None:
             try:
                 self.cbar.remove()
@@ -248,6 +352,8 @@ class LiveMapSubpanel(QFrame):
         self._series_x = None
         self._multi_entries = []
         self._display_kind = None
+        self._valid_y_bounds = None
+        self._valid_pos_y_bounds = None
         self._reset_axes()
         if self.canvas is not None:
             self.canvas.draw_idle()
@@ -305,8 +411,24 @@ class LiveMapSubpanel(QFrame):
         pad = span * 0.12 if span > 1e-12 else (abs(ymin) * 0.1 if abs(ymin) > 1e-12 else 1.0)
         return ymin - pad, ymax + pad
 
+    def _curve_style_kwargs(self, is_primary: bool = True, multi: bool = False) -> dict:
+        """Build Matplotlib linestyle, linewidth, marker, and markersize from view options."""
+        opts = self._view_options
+        style = opts.get("plot_style", "line+dots")
+        lw = float(opts.get("line_width", 1.8))
+        ds = float(opts.get("dot_size", 4.0))
+        if multi:
+            lw = lw + 0.4 if is_primary else max(0.5, lw - 0.4)
+        if style == "dot":
+            return {"linestyle": "none", "linewidth": 0.0, "marker": "o", "markersize": ds}
+        if style == "line":
+            return {"linestyle": "-", "linewidth": lw, "marker": "", "markersize": 0.0}
+        return {"linestyle": "-", "linewidth": lw, "marker": "o", "markersize": ds}
+
     def _apply_x_limits(self, x: np.ndarray, is_index_axis: bool):
         """Set x-limits/ticks for an index axis (Spectrum #) or a spatial profile axis."""
+        if len(x) == 0:
+            return
         n = len(x)
         if is_index_axis:
             if n == 1:
@@ -323,6 +445,117 @@ class LiveMapSubpanel(QFrame):
         margin = span * 0.03 if span > 1e-12 else 0.5
         self.ax.set_xlim(x_lo - margin, x_hi + margin)
         self.ax.xaxis.set_major_locator(AutoLocator())
+
+    def _apply_1d_scales_and_limits(
+        self,
+        all_x: np.ndarray,
+        all_y: np.ndarray,
+        is_index_axis: bool,
+    ):
+        """Apply linear/log X and Y axis scaling with guards for non-positive domains."""
+        opts = self._view_options
+        req_xscale = opts.get("xscale", "linear")
+        req_yscale = opts.get("yscale", "linear")
+
+        finite_y = all_y[np.isfinite(all_y)]
+        if finite_y.size > 0:
+            self._valid_y_bounds = self._padded_ylim(finite_y)
+            pos_y = finite_y[finite_y > 0]
+            if pos_y.size > 0:
+                p_min = float(np.min(pos_y))
+                p_max = float(np.max(pos_y))
+                if p_max / max(p_min, 1e-30) < 1.05:
+                    self._valid_pos_y_bounds = (max(p_min * 0.7, 1e-300), p_max * 1.4)
+                else:
+                    self._valid_pos_y_bounds = (max(p_min * 0.85, 1e-300), p_max * 1.15)
+            else:
+                self._valid_pos_y_bounds = None
+        else:
+            self._valid_y_bounds = None
+            self._valid_pos_y_bounds = None
+
+        if req_yscale == "log" and self._valid_pos_y_bounds is not None:
+            self.ax.set_yscale("log")
+            self.ax.set_ylim(*self._valid_pos_y_bounds)
+        else:
+            self.ax.set_yscale("linear")
+            if self._valid_y_bounds is not None:
+                self.ax.set_ylim(*self._valid_y_bounds)
+
+        finite_x = all_x[np.isfinite(all_x)]
+        if req_xscale == "log":
+            pos_x = finite_x[finite_x > 0]
+            if pos_x.size > 0:
+                self.ax.set_xscale("log")
+                x_min = float(np.min(pos_x))
+                x_max = float(np.max(pos_x))
+                if x_max / max(x_min, 1e-30) < 1.05:
+                    self.ax.set_xlim(max(x_min * 0.8, 1e-300), x_max * 1.25)
+                else:
+                    self.ax.set_xlim(max(x_min * 0.92, 1e-300), x_max * 1.08)
+                return
+        self.ax.set_xscale("linear")
+        self._apply_x_limits(finite_x if not is_index_axis else all_x, is_index_axis)
+
+    def _sync_legend(self):
+        """Create, update, or remove the Matplotlib legend box per current view options."""
+        if self._legend is not None:
+            try:
+                self._legend.remove()
+            except Exception:
+                pass
+            self._legend = None
+
+        if not self._view_options.get("show_legend", False):
+            return
+        if self._display_kind not in ("series", "multi_profile"):
+            return
+
+        handles = []
+        labels = []
+        for ln in self.lines:
+            lbl = ln.get_label()
+            if lbl and not str(lbl).startswith("_"):
+                handles.append(ln)
+                labels.append(str(lbl))
+        if not handles:
+            return
+
+        loc = self._view_options.get("legend_loc", "best")
+        ncol = max(1, int(self._view_options.get("legend_ncol", 1)))
+        fontsize = max(6, int(self._view_options.get("legend_fontsize", 8)))
+        if loc == "outside right":
+            self._legend = self.ax.legend(
+                handles,
+                labels,
+                loc="center left",
+                bbox_to_anchor=(1.02, 0.5),
+                ncol=ncol,
+                fontsize=fontsize,
+                frameon=True,
+            )
+        elif loc == "outside top":
+            self._legend = self.ax.legend(
+                handles,
+                labels,
+                loc="lower center",
+                bbox_to_anchor=(0.5, 1.02),
+                ncol=ncol,
+                fontsize=fontsize,
+                frameon=True,
+            )
+        else:
+            if loc not in LEGEND_LOCATIONS:
+                loc = "best"
+            self._legend = self.ax.legend(
+                handles,
+                labels,
+                loc=loc,
+                ncol=ncol,
+                fontsize=fontsize,
+                frameon=True,
+            )
+            self._legend.set_draggable(True)
 
     def update_series(
         self,
@@ -357,6 +590,12 @@ class LiveMapSubpanel(QFrame):
 
         param_name = self.cbb_param.currentText()
         title_text = f"{self.color_name}: {param_name}"
+        custom_labels = self._view_options.get("custom_labels", {})
+        custom_colors = self._view_options.get("custom_colors", {})
+        curve_label = custom_labels.get(self.color_id) or title_text
+        curve_color = custom_colors.get(self.color_id) or self.color_hex
+        style_kw = self._curve_style_kwargs(is_primary=True, multi=False)
+        show_grid = bool(self._view_options.get("show_grid", True))
 
         has_valid = len(val_arr) > 0 and bool(np.any(np.isfinite(val_arr)))
 
@@ -369,12 +608,23 @@ class LiveMapSubpanel(QFrame):
             and len(self.line.get_xdata()) == len(val_arr)
         ):
             self.line.set_data(x_arr, val_arr)
-            if not is_index_axis:
-                self._apply_x_limits(x_arr, is_index_axis=False)
-            self.ax.set_ylim(*self._padded_ylim(val_arr))
+            self.line.set_color(curve_color)
+            self.line.set_linestyle(style_kw["linestyle"])
+            self.line.set_linewidth(style_kw["linewidth"])
+            self.line.set_marker(style_kw["marker"])
+            self.line.set_markersize(style_kw["markersize"])
+            self.line.set_label(curve_label)
+            finite_mask = np.isfinite(x_arr) & np.isfinite(val_arr)
+            self._apply_1d_scales_and_limits(
+                x_arr[finite_mask] if np.any(finite_mask) else x_arr,
+                val_arr[finite_mask] if np.any(finite_mask) else val_arr,
+                is_index_axis=is_index_axis,
+            )
+            self.ax.grid(show_grid, alpha=0.25, linestyle="--")
             self.ax.set_xlabel(x_label)
             self.ax.set_ylabel(param_name)
             self.ax.set_title(title_text, fontsize=10, pad=4)
+            self._sync_legend()
             self.canvas.draw_idle()
             return
 
@@ -388,6 +638,8 @@ class LiveMapSubpanel(QFrame):
             self._reset_axes()
 
             if not has_valid:
+                self._valid_y_bounds = None
+                self._valid_pos_y_bounds = None
                 msg = status_msg or ("No spectra selected" if is_index_axis else "No profile data available")
                 self.ax.text(
                     0.5, 0.5, msg,
@@ -399,26 +651,28 @@ class LiveMapSubpanel(QFrame):
                 self.canvas.draw_idle()
                 return
 
-            n = len(val_arr)
             self.lines = list(
                 self.ax.plot(
                     x_arr,
                     val_arr,
-                    color=self.color_hex,
-                    marker="o",
-                    markersize=5 if n <= 30 else 3,
-                    linewidth=1.8,
+                    color=curve_color,
                     alpha=0.95,
+                    label=curve_label,
+                    **style_kw,
                 )
             )
 
-            self._apply_x_limits(x_arr, is_index_axis)
-            self.ax.set_ylim(*self._padded_ylim(val_arr))
-
-            self.ax.grid(True, alpha=0.25, linestyle="--")
+            finite_mask = np.isfinite(x_arr) & np.isfinite(val_arr)
+            self._apply_1d_scales_and_limits(
+                x_arr[finite_mask] if np.any(finite_mask) else x_arr,
+                val_arr[finite_mask] if np.any(finite_mask) else val_arr,
+                is_index_axis=is_index_axis,
+            )
+            self.ax.grid(show_grid, alpha=0.25, linestyle="--")
             self.ax.set_xlabel(x_label)
             self.ax.set_ylabel(param_name)
             self.ax.set_title(title_text, fontsize=10, pad=4)
+            self._sync_legend()
 
             self.canvas.draw_idle()
 
@@ -463,14 +717,13 @@ class LiveMapSubpanel(QFrame):
         if has_valid:
             all_x = np.concatenate(finite_x_parts)
             all_y = np.concatenate(finite_y_parts)
-            y_lo, y_hi = self._padded_ylim(all_y)
-            x_min = float(np.min(all_x))
-            x_max = float(np.max(all_x))
-            x_span = x_max - x_min
-            x_margin = x_span * 0.03 if x_span > 1e-12 else 0.5
         else:
-            y_lo, y_hi = 0.0, 1.0
-            x_min, x_max, x_margin = 0.0, 1.0, 0.0
+            all_x = np.array([], dtype=np.float64)
+            all_y = np.array([], dtype=np.float64)
+
+        custom_labels = self._view_options.get("custom_labels", {})
+        custom_colors = self._view_options.get("custom_colors", {})
+        show_grid = bool(self._view_options.get("show_grid", True))
 
         # Fast path: reuse existing Line2D pool when entry count matches
         if (
@@ -483,22 +736,30 @@ class LiveMapSubpanel(QFrame):
             for idx, (ln, entry) in enumerate(zip(self.lines, self._multi_entries)):
                 px = np.asarray(entry.get("positions", []), dtype=np.float64)
                 vy = np.asarray(entry.get("values", []), dtype=np.float64)
-                color = (
+                key = entry.get("name", f"Map {idx + 1}")
+                auto_color = (
                     self.color_hex
                     if len(self._multi_entries) == 1
                     else DEFAULT_COLORS[idx % len(DEFAULT_COLORS)]
                 )
+                color = custom_colors.get(key) or auto_color
                 is_primary = bool(entry.get("is_primary", False))
+                style_kw = self._curve_style_kwargs(is_primary=is_primary, multi=True)
                 ln.set_data(px, vy)
                 ln.set_color(color)
-                ln.set_linewidth(2.2 if is_primary else 1.4)
+                ln.set_linestyle(style_kw["linestyle"])
+                ln.set_linewidth(style_kw["linewidth"])
+                ln.set_marker(style_kw["marker"])
+                ln.set_markersize(style_kw["markersize"])
                 ln.set_alpha(1.0 if is_primary else 0.78)
                 ln.set_zorder(5 if is_primary else 3)
-            self.ax.set_xlim(x_min - x_margin, x_max + x_margin)
-            self.ax.set_ylim(y_lo, y_hi)
+                ln.set_label(custom_labels.get(key) or key)
+            self._apply_1d_scales_and_limits(all_x, all_y, is_index_axis=False)
+            self.ax.grid(show_grid, alpha=0.25, linestyle="--")
             self.ax.set_xlabel(x_label)
             self.ax.set_ylabel(param_name)
             self.ax.set_title(title_text, fontsize=10, pad=4)
+            self._sync_legend()
             self.canvas.draw_idle()
             return
 
@@ -512,6 +773,8 @@ class LiveMapSubpanel(QFrame):
             self._reset_axes()
 
             if not has_valid:
+                self._valid_y_bounds = None
+                self._valid_pos_y_bounds = None
                 msg = status_msg or "No valid profile data within selected range"
                 self.ax.text(
                     0.5, 0.5, msg,
@@ -527,37 +790,83 @@ class LiveMapSubpanel(QFrame):
             for idx, entry in enumerate(self._multi_entries):
                 px = np.asarray(entry.get("positions", []), dtype=np.float64)
                 vy = np.asarray(entry.get("values", []), dtype=np.float64)
-                color = (
+                key = entry.get("name", f"Map {idx + 1}")
+                auto_color = (
                     self.color_hex
                     if len(self._multi_entries) == 1
                     else DEFAULT_COLORS[idx % len(DEFAULT_COLORS)]
                 )
+                color = custom_colors.get(key) or auto_color
                 is_primary = bool(entry.get("is_primary", False))
-                n_pts = len(px)
-                marker = "o" if n_pts <= 30 else ""
+                style_kw = self._curve_style_kwargs(is_primary=is_primary, multi=True)
                 created = self.ax.plot(
                     px,
                     vy,
                     color=color,
-                    marker=marker,
-                    markersize=4 if n_pts <= 30 else 0,
-                    linewidth=2.2 if is_primary else 1.4,
                     alpha=1.0 if is_primary else 0.78,
                     zorder=5 if is_primary else 3,
-                    label=entry.get("name", f"Map {idx + 1}"),
+                    label=custom_labels.get(key) or key,
+                    **style_kw,
                 )
                 new_lines.extend(created)
             self.lines = new_lines
 
-            self.ax.set_xlim(x_min - x_margin, x_max + x_margin)
-            self.ax.xaxis.set_major_locator(AutoLocator())
-            self.ax.set_ylim(y_lo, y_hi)
-            self.ax.grid(True, alpha=0.25, linestyle="--")
+            self._apply_1d_scales_and_limits(all_x, all_y, is_index_axis=False)
+            self.ax.grid(show_grid, alpha=0.25, linestyle="--")
             self.ax.set_xlabel(x_label)
             self.ax.set_ylabel(param_name)
             self.ax.set_title(title_text, fontsize=10, pad=4)
+            self._sync_legend()
 
             self.canvas.draw_idle()
+
+    def _resolve_2d_render_params(self, grid: np.ndarray, extent: list[float], vmin: float, vmax: float):
+        """Compute normalized grid, norm, interpolation, axis scales, and aspect for 2D heatmaps."""
+        opts = self._view_options
+        interp = "bilinear" if opts.get("heatmap_smoothing", False) else "none"
+        use_log_z = opts.get("zscale", "linear") == "log"
+        norm = None
+        display_grid = grid
+
+        if use_log_z and vmax > 0:
+            pos_vals = grid[np.isfinite(grid) & (grid > 0)]
+            if pos_vals.size > 0:
+                pos_min = float(np.min(pos_vals))
+                safe_vmin = max(vmin, pos_min) if vmin > 0 else pos_min
+                if safe_vmin >= vmax:
+                    safe_vmin = pos_min * 0.9 if pos_min > 0 else 1e-12
+                display_grid = np.where(np.isfinite(grid) & (grid > 0), grid, np.nan)
+                norm = LogNorm(vmin=max(safe_vmin, 1e-300), vmax=max(vmax, safe_vmin * 1.01))
+
+        if norm is None:
+            norm = Normalize(vmin=vmin, vmax=vmax)
+
+        req_xscale = "log" if (opts.get("xscale", "linear") == "log" and len(extent) >= 2 and extent[1] > 0) else "linear"
+        req_yscale = "log" if (opts.get("yscale", "linear") == "log" and len(extent) >= 4 and extent[3] > 0) else "linear"
+        aspect = "equal" if (req_xscale == "linear" and req_yscale == "linear") else "auto"
+        return display_grid, norm, interp, req_xscale, req_yscale, aspect
+
+    def _apply_2d_axis_scales(self, extent: list[float], xscale: str, yscale: str, show_grid: bool):
+        """Set linear/log scales and valid domain bounds on 2D heatmap axes."""
+        if xscale == "log":
+            self.ax.set_xscale("log")
+            x_hi = float(extent[1])
+            x_lo = float(extent[0]) if float(extent[0]) > 0 else max(x_hi * 1e-3, 1e-6)
+            self.ax.set_xlim(x_lo, x_hi)
+        else:
+            self.ax.set_xscale("linear")
+            self.ax.set_xlim(extent[0], extent[1])
+
+        if yscale == "log":
+            self.ax.set_yscale("log")
+            y_hi = float(extent[3])
+            y_lo = float(extent[2]) if float(extent[2]) > 0 else max(y_hi * 1e-3, 1e-6)
+            self.ax.set_ylim(y_lo, y_hi)
+        else:
+            self.ax.set_yscale("linear")
+            self.ax.set_ylim(extent[2], extent[3])
+
+        self.ax.grid(show_grid, alpha=0.25, linestyle="--")
 
     def update_map(
         self,
@@ -575,29 +884,40 @@ class LiveMapSubpanel(QFrame):
         self._vmax = vmax
         self._series_values = None
         self._multi_entries = []
+        self._valid_y_bounds = None
+        self._valid_pos_y_bounds = None
         self._status_msg = status_msg
         self._current_theme = theme
 
         param_name = self.cbb_param.currentText()
         title_text = f"{self.color_name}: {param_name}"
+        want_colorbar = bool(self._view_options.get("show_colorbar", True))
+        show_grid = bool(self._view_options.get("show_grid", True))
+        has_valid_grid = grid is not None and not np.all(np.isnan(grid))
 
-        # Fast path: in-place update if image and colorbar already exist and grid is valid
+        # Fast path: in-place update when image and colorbar presence match expectations
         if (
             self._display_kind == "map"
             and self.img is not None
-            and self.cbar is not None
-            and grid is not None
-            and not np.all(np.isnan(grid))
+            and (self.cbar is not None) == want_colorbar
+            and has_valid_grid
         ):
-            self.img.set_data(grid)
+            display_grid, norm, interp, xscale, yscale, aspect = self._resolve_2d_render_params(
+                grid, extent, vmin, vmax
+            )
+            self.img.set_data(display_grid)
             self.img.set_extent(extent)
-            self.img.set_clim(vmin, vmax)
+            self.img.set_norm(norm)
+            self.img.set_interpolation(interp)
+            self.ax.set_aspect(aspect, adjustable="box")
+            self._apply_2d_axis_scales(extent, xscale, yscale, show_grid)
             self.ax.set_title(title_text, fontsize=10, pad=4)
-            self.cbar.update_normal(self.img)
+            if self.cbar is not None:
+                self.cbar.update_normal(self.img)
             self.canvas.draw_idle()
             return
 
-        # Re-render path for status messages or first draw
+        # Re-render path for status messages, colorbar toggle, or first draw
         is_dark = theme in ("Dark Mode", "dark", "classic_dark")
         style_path = PLOT_POLICY_DARK if is_dark else PLOT_POLICY_LIGHT
 
@@ -607,7 +927,7 @@ class LiveMapSubpanel(QFrame):
         with plt.style.context(style_path):
             self._reset_axes()
 
-            if grid is None or np.all(np.isnan(grid)):
+            if not has_valid_grid:
                 msg = status_msg or "No map data available"
                 self.ax.text(
                     0.5, 0.5, msg,
@@ -623,19 +943,23 @@ class LiveMapSubpanel(QFrame):
             cmap = plt.get_cmap(cmap_name).copy()
             cmap.set_bad(color="none")
 
+            display_grid, norm, interp, xscale, yscale, aspect = self._resolve_2d_render_params(
+                grid, extent, vmin, vmax
+            )
             self.img = self.ax.imshow(
-                grid,
+                display_grid,
                 extent=extent,
                 origin="lower",
-                aspect="equal",
+                aspect=aspect,
                 cmap=cmap,
-                vmin=vmin,
-                vmax=vmax,
-                interpolation="none",
+                norm=norm,
+                interpolation=interp,
             )
 
-            self.cbar = self.figure.colorbar(self.img, ax=self.ax, fraction=0.046, pad=0.04)
+            if want_colorbar:
+                self.cbar = self.figure.colorbar(self.img, ax=self.ax, fraction=0.046, pad=0.04)
 
+            self._apply_2d_axis_scales(extent, xscale, yscale, show_grid)
             self.ax.set_xlabel("X (mm)")
             self.ax.set_ylabel("Y (mm)")
             self.ax.set_title(title_text, fontsize=10, pad=4)
@@ -667,7 +991,9 @@ class VLiveMaps(QWidget):
         }
         self._2d_candidates: List[str] = []
         self._legend_entries: List[Tuple[str, bool]] = []
+        self._last_raw_entries: List[dict] = []
         self._context_status: str = ""
+        self._view_options = _copy_view_options()
 
         self._current_theme = "Light Mode"
         self._init_ui()
@@ -678,8 +1004,15 @@ class VLiveMaps(QWidget):
         main_layout.setContentsMargins(4, 4, 4, 4)
         main_layout.setSpacing(4)
 
+        # ── Top bar: slim context header (left) + spacer + view options buttons (right) ──
+        self.top_bar = QWidget(self)
+        self.top_bar.setObjectName("liveMapsTopBar")
+        top_layout = QHBoxLayout(self.top_bar)
+        top_layout.setContentsMargins(0, 0, 0, 0)
+        top_layout.setSpacing(6)
+
         # ── Slim shared context header (multi-1D legend, 2D switcher, status) ──
-        self.header_bar = QFrame(self)
+        self.header_bar = QFrame(self.top_bar)
         self.header_bar.setObjectName("liveMapsContextHeader")
         self.header_bar.setFixedHeight(30)
         header_layout = QHBoxLayout(self.header_bar)
@@ -742,7 +1075,46 @@ class VLiveMaps(QWidget):
         header_layout.addWidget(self.lbl_context_status, stretch=0)
 
         self.header_bar.setVisible(False)
-        main_layout.addWidget(self.header_bar)
+        top_layout.addWidget(self.header_bar, stretch=1)
+
+        self._toolbar_spacer = QWidget(self.top_bar)
+        self._toolbar_spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        top_layout.addWidget(self._toolbar_spacer, stretch=1)
+
+        # ── Persistent View Options toolbar ([Show Legend | More view options ⋯]) ──
+        self.options_toolbar = QWidget(self.top_bar)
+        opts_layout = QHBoxLayout(self.options_toolbar)
+        opts_layout.setContentsMargins(0, 0, 0, 0)
+        opts_layout.setSpacing(4)
+
+        tok = current_tokens()
+        self.btn_legend = QToolButton(self.options_toolbar)
+        self.btn_legend.setObjectName("liveMapsBtnLegend")
+        self.btn_legend.setIcon(Icons.legend(color=tok.text_primary))
+        self.btn_legend.setIconSize(QSize(16, 16))
+        self.btn_legend.setFixedSize(26, 26)
+        self.btn_legend.setCheckable(True)
+        self.btn_legend.setChecked(self._view_options["show_legend"])
+        self.btn_legend.setToolTip(
+            "Show / Hide plot legend\n(Double-click a canvas legend box to edit labels)"
+        )
+        self.btn_legend.toggled.connect(self._on_legend_toggled)
+        opts_layout.addWidget(self.btn_legend)
+
+        self.btn_options = QToolButton(self.options_toolbar)
+        self.btn_options.setObjectName("liveMapsBtnOptions")
+        self.btn_options.setIcon(Icons.settings(color=tok.text_primary))
+        self.btn_options.setIconSize(QSize(16, 16))
+        self.btn_options.setFixedSize(26, 26)
+        self.btn_options.setPopupMode(QToolButton.InstantPopup)
+        self.btn_options.setToolTip("More view options")
+        self.options_menu = self._create_options_menu()
+        self.btn_options.setMenu(self.options_menu)
+        opts_layout.addWidget(self.btn_options)
+
+        top_layout.addWidget(self.options_toolbar, stretch=0)
+        self.top_bar.setVisible(False)
+        main_layout.addWidget(self.top_bar)
 
         # ── Placeholder when all selectors are off ──
         self.lbl_placeholder = QLabel(self)
@@ -759,12 +1131,329 @@ class VLiveMaps(QWidget):
         for color_id in SELECTOR_KEYS:
             panel = LiveMapSubpanel(color_id, self.maps_container, mode=self.mode)
             panel.parameter_changed.connect(self.parameter_change_requested.emit)
+            panel.legend_edit_requested.connect(self.open_legend_editor)
+            panel.set_view_options(self._view_options, redraw=False)
             panel.setVisible(False)  # Hidden by default until activated
             self.panels[color_id] = panel
             maps_layout.addWidget(panel, stretch=1)
 
         main_layout.addWidget(self.maps_container, stretch=1)
         self._update_visibility()
+
+    def _wrap_menu_row(self, parent_menu: QMenu, label: str, widget: QWidget) -> QWidgetAction:
+        """Embed a labeled control widget cleanly inside a QMenu row."""
+        row_widget = QWidget(parent_menu)
+        row_layout = QHBoxLayout(row_widget)
+        row_layout.setContentsMargins(10, 4, 10, 4)
+        row_layout.setSpacing(8)
+        row_layout.addWidget(QLabel(label, row_widget))
+        row_layout.addWidget(widget, stretch=1)
+        action = QWidgetAction(parent_menu)
+        action.setDefaultWidget(row_widget)
+        return action
+
+    def _create_options_menu(self) -> QMenu:
+        """Build 'More view options' menu mirroring VSpectraViewer idioms."""
+        menu = QMenu(self)
+
+        # ── Axis scales ──
+        self.cbb_xscale = QComboBox(menu)
+        self.cbb_xscale.addItems(["Linear", "Log"])
+        self.cbb_xscale.currentTextChanged.connect(
+            lambda txt: self._update_option("xscale", txt.lower())
+        )
+        menu.addAction(self._wrap_menu_row(menu, "X-scale:", self.cbb_xscale))
+
+        self.cbb_yscale = QComboBox(menu)
+        self.cbb_yscale.addItems(["Linear", "Log"])
+        self.cbb_yscale.currentTextChanged.connect(
+            lambda txt: self._update_option("yscale", txt.lower())
+        )
+        menu.addAction(self._wrap_menu_row(menu, "Y-scale:", self.cbb_yscale))
+
+        self.cbb_zscale = QComboBox(menu)
+        self.cbb_zscale.addItems(["Linear", "Log"])
+        self.cbb_zscale.currentTextChanged.connect(
+            lambda txt: self._update_option("zscale", txt.lower())
+        )
+        menu.addAction(self._wrap_menu_row(menu, "Color (Z) scale:", self.cbb_zscale))
+
+        menu.addSeparator()
+
+        # ── Plot style & sizes ──
+        self._style_labels_to_keys = {
+            "Line + Dots": "line+dots",
+            "Line": "line",
+            "Dot": "dot",
+        }
+        self._style_keys_to_labels = {v: k for k, v in self._style_labels_to_keys.items()}
+        self.cbb_plot_style = QComboBox(menu)
+        self.cbb_plot_style.addItems(list(self._style_labels_to_keys.keys()))
+        self.cbb_plot_style.currentTextChanged.connect(
+            lambda txt: self._update_option(
+                "plot_style", self._style_labels_to_keys.get(txt, "line+dots")
+            )
+        )
+        menu.addAction(self._wrap_menu_row(menu, "Plot style:", self.cbb_plot_style))
+
+        self.spb_linewidth = QDoubleSpinBox(menu)
+        self.spb_linewidth.setRange(0.5, 6.0)
+        self.spb_linewidth.setSingleStep(0.2)
+        self.spb_linewidth.setDecimals(1)
+        self.spb_linewidth.setValue(self._view_options["line_width"])
+        self.spb_linewidth.valueChanged.connect(
+            lambda val: self._update_option("line_width", float(val))
+        )
+        menu.addAction(self._wrap_menu_row(menu, "Line width:", self.spb_linewidth))
+
+        self.spb_dotsize = QDoubleSpinBox(menu)
+        self.spb_dotsize.setRange(1.0, 14.0)
+        self.spb_dotsize.setSingleStep(0.5)
+        self.spb_dotsize.setDecimals(1)
+        self.spb_dotsize.setValue(self._view_options["dot_size"])
+        self.spb_dotsize.valueChanged.connect(
+            lambda val: self._update_option("dot_size", float(val))
+        )
+        menu.addAction(self._wrap_menu_row(menu, "Dot size:", self.spb_dotsize))
+
+        menu.addSeparator()
+
+        # ── Legend options ──
+        self.act_show_legend = QAction("Show legend", menu)
+        self.act_show_legend.setCheckable(True)
+        self.act_show_legend.setChecked(self._view_options["show_legend"])
+        self.act_show_legend.toggled.connect(self._on_legend_toggled)
+        menu.addAction(self.act_show_legend)
+
+        self.cbb_legend_loc = QComboBox(menu)
+        self.cbb_legend_loc.addItems(LEGEND_LOCATIONS)
+        self.cbb_legend_loc.setCurrentText(self._view_options["legend_loc"])
+        self.cbb_legend_loc.currentTextChanged.connect(
+            lambda txt: self._update_option("legend_loc", txt)
+        )
+        menu.addAction(self._wrap_menu_row(menu, "Legend location:", self.cbb_legend_loc))
+
+        self.spb_legend_ncol = QSpinBox(menu)
+        self.spb_legend_ncol.setRange(1, 4)
+        self.spb_legend_ncol.setValue(self._view_options["legend_ncol"])
+        self.spb_legend_ncol.valueChanged.connect(
+            lambda val: self._update_option("legend_ncol", int(val))
+        )
+        menu.addAction(self._wrap_menu_row(menu, "Legend columns:", self.spb_legend_ncol))
+
+        self.spb_legend_fontsize = QSpinBox(menu)
+        self.spb_legend_fontsize.setRange(6, 16)
+        self.spb_legend_fontsize.setValue(self._view_options["legend_fontsize"])
+        self.spb_legend_fontsize.valueChanged.connect(
+            lambda val: self._update_option("legend_fontsize", int(val))
+        )
+        menu.addAction(self._wrap_menu_row(menu, "Legend font size:", self.spb_legend_fontsize))
+
+        self.act_edit_legend = QAction("Edit legend labels...", menu)
+        self.act_edit_legend.triggered.connect(self.open_legend_editor)
+        menu.addAction(self.act_edit_legend)
+
+        menu.addSeparator()
+
+        # ── Additional Live Maps aids ──
+        self.act_show_grid = QAction("Show grid", menu)
+        self.act_show_grid.setCheckable(True)
+        self.act_show_grid.setChecked(self._view_options["show_grid"])
+        self.act_show_grid.toggled.connect(
+            lambda chk: self._update_option("show_grid", bool(chk))
+        )
+        menu.addAction(self.act_show_grid)
+
+        self.act_share_y = QAction("Share Y-axis (1D)", menu)
+        self.act_share_y.setCheckable(True)
+        self.act_share_y.setChecked(self._view_options["share_y"])
+        self.act_share_y.toggled.connect(
+            lambda chk: self._update_option("share_y", bool(chk))
+        )
+        menu.addAction(self.act_share_y)
+
+        self.act_smoothing = QAction("Heatmap smoothing", menu)
+        self.act_smoothing.setCheckable(True)
+        self.act_smoothing.setChecked(self._view_options["heatmap_smoothing"])
+        self.act_smoothing.toggled.connect(
+            lambda chk: self._update_option("heatmap_smoothing", bool(chk))
+        )
+        menu.addAction(self.act_smoothing)
+
+        self.act_show_colorbar = QAction("Show colorbars", menu)
+        self.act_show_colorbar.setCheckable(True)
+        self.act_show_colorbar.setChecked(self._view_options["show_colorbar"])
+        self.act_show_colorbar.toggled.connect(
+            lambda chk: self._update_option("show_colorbar", bool(chk))
+        )
+        menu.addAction(self.act_show_colorbar)
+
+        menu.addSeparator()
+
+        self.act_reset_options = QAction("Reset view options", menu)
+        self.act_reset_options.triggered.connect(self.reset_view_options)
+        menu.addAction(self.act_reset_options)
+
+        return menu
+
+    def _on_legend_toggled(self, checked: bool):
+        """Keep top toggle button and menu action synchronized on legend toggle."""
+        checked = bool(checked)
+        self.btn_legend.blockSignals(True)
+        self.act_show_legend.blockSignals(True)
+        self.btn_legend.setChecked(checked)
+        self.act_show_legend.setChecked(checked)
+        self.btn_legend.blockSignals(False)
+        self.act_show_legend.blockSignals(False)
+        self._update_option("show_legend", checked)
+
+    def _update_option(self, key: str, value):
+        """Update one view option and apply cleanly to visible panels."""
+        if self._view_options.get(key) == value:
+            return
+        self._view_options[key] = value
+        self._apply_view_options_to_panels()
+
+    def _sync_options_controls(self):
+        """Synchronize menu widgets and toolbar toggles to self._view_options."""
+        opts = self._view_options
+        widgets = (
+            self.cbb_xscale, self.cbb_yscale, self.cbb_zscale,
+            self.cbb_plot_style, self.spb_linewidth, self.spb_dotsize,
+            self.btn_legend, self.act_show_legend,
+            self.cbb_legend_loc, self.spb_legend_ncol, self.spb_legend_fontsize,
+            self.act_show_grid, self.act_share_y, self.act_smoothing, self.act_show_colorbar,
+        )
+        for w in widgets:
+            w.blockSignals(True)
+        try:
+            self.cbb_xscale.setCurrentText("Log" if opts["xscale"] == "log" else "Linear")
+            self.cbb_yscale.setCurrentText("Log" if opts["yscale"] == "log" else "Linear")
+            self.cbb_zscale.setCurrentText("Log" if opts["zscale"] == "log" else "Linear")
+            self.cbb_plot_style.setCurrentText(
+                self._style_keys_to_labels.get(opts["plot_style"], "Line + Dots")
+            )
+            self.spb_linewidth.setValue(float(opts["line_width"]))
+            self.spb_dotsize.setValue(float(opts["dot_size"]))
+            self.btn_legend.setChecked(bool(opts["show_legend"]))
+            self.act_show_legend.setChecked(bool(opts["show_legend"]))
+            loc = opts["legend_loc"]
+            if self.cbb_legend_loc.findText(loc) >= 0:
+                self.cbb_legend_loc.setCurrentText(loc)
+            self.spb_legend_ncol.setValue(int(opts["legend_ncol"]))
+            self.spb_legend_fontsize.setValue(int(opts["legend_fontsize"]))
+            self.act_show_grid.setChecked(bool(opts["show_grid"]))
+            self.act_share_y.setChecked(bool(opts["share_y"]))
+            self.act_smoothing.setChecked(bool(opts["heatmap_smoothing"]))
+            self.act_show_colorbar.setChecked(bool(opts["show_colorbar"]))
+        finally:
+            for w in widgets:
+                w.blockSignals(False)
+
+    def get_view_options(self) -> dict:
+        """Return a deep copy of current Live Maps view options."""
+        return _copy_view_options(self._view_options)
+
+    def set_view_options(self, options: dict):
+        """Apply a partial or full view options dictionary and refresh visible panels."""
+        self._view_options = _copy_view_options({**self._view_options, **(options or {})})
+        self._sync_options_controls()
+        if self._last_raw_entries:
+            self._rebuild_legend_chips(self._last_raw_entries, force=True)
+        self._apply_view_options_to_panels()
+
+    def reset_view_options(self):
+        """Reset all view options and custom legend labels/colors to defaults."""
+        self._view_options = _copy_view_options()
+        self._sync_options_controls()
+        if self._last_raw_entries:
+            self._rebuild_legend_chips(self._last_raw_entries, force=True)
+        self._apply_view_options_to_panels()
+
+    def _apply_view_options_to_panels(self):
+        """Push view options into all subpanels and re-render visible populated ones."""
+        for panel in self.panels.values():
+            panel.set_view_options(self._view_options, redraw=False)
+            if panel.isVisible() and panel._display_kind is not None:
+                panel.rerender_cached(theme=self._current_theme)
+        self._sync_shared_y()
+
+    def _legend_editor_entries(self) -> List[dict]:
+        """Collect editable curve/series entries from active 1D subpanel contents."""
+        if self._last_raw_entries and len(self._last_raw_entries) >= 2:
+            return [
+                {
+                    "key": str(e.get("name", f"Map {idx + 1}")),
+                    "default_label": str(e.get("name", f"Map {idx + 1}")),
+                    "auto_color": DEFAULT_COLORS[idx % len(DEFAULT_COLORS)],
+                }
+                for idx, e in enumerate(self._last_raw_entries)
+            ]
+        entries = []
+        for cid in SELECTOR_KEYS:
+            panel = self.panels.get(cid)
+            if panel is not None and self._active_states.get(cid, False):
+                param = panel.get_selected_parameter()
+                entries.append({
+                    "key": cid,
+                    "default_label": f"{panel.color_name}: {param}",
+                    "auto_color": panel.color_hex,
+                })
+        if not entries:
+            for cid in SELECTOR_KEYS:
+                panel = self.panels[cid]
+                entries.append({
+                    "key": cid,
+                    "default_label": f"{panel.color_name}: {panel.get_selected_parameter()}",
+                    "auto_color": panel.color_hex,
+                })
+        return entries
+
+    def open_legend_editor(self):
+        """Open LiveMapsLegendEditorDialog to customize legend placement, labels, and colors."""
+        dlg = LiveMapsLegendEditorDialog(
+            entries=self._legend_editor_entries(),
+            custom_labels=self._view_options.get("custom_labels"),
+            custom_colors=self._view_options.get("custom_colors"),
+            legend_loc=self._view_options.get("legend_loc", "best"),
+            legend_ncol=self._view_options.get("legend_ncol", 1),
+            legend_fontsize=self._view_options.get("legend_fontsize", 8),
+            parent=self,
+        )
+        if dlg.exec():
+            res = dlg.result_state()
+            self.set_view_options({
+                **res,
+                "show_legend": True,
+            })
+
+    def _sync_shared_y(self):
+        """Synchronize Y-axis limits across visible 1D subpanels when Share Y-axis is enabled."""
+        if not self._view_options.get("share_y", False):
+            return
+        use_log = self._view_options.get("yscale", "linear") == "log"
+        target_panels = []
+        bounds = []
+        for cid in SELECTOR_KEYS:
+            panel = self.panels.get(cid)
+            if (
+                panel is not None
+                and panel.isVisible()
+                and panel._display_kind in ("series", "multi_profile")
+            ):
+                b = panel._valid_pos_y_bounds if use_log else panel._valid_y_bounds
+                if b is not None and panel.ax.get_yscale() == ("log" if use_log else "linear"):
+                    target_panels.append(panel)
+                    bounds.append(b)
+        if len(target_panels) < 2:
+            return
+        g_lo = min(b[0] for b in bounds)
+        g_hi = max(b[1] for b in bounds)
+        if not (np.isfinite(g_lo) and np.isfinite(g_hi)) or g_hi <= g_lo:
+            return
+        for panel in target_panels:
+            panel.ax.set_ylim(g_lo, g_hi)
+            panel.canvas.draw_idle()
 
     def set_mode(self, mode: str):
         """Configure tab for 'map' (2D spatial heatmaps) or 'spectra' (1D variation graphs) mode."""
@@ -801,28 +1490,43 @@ class VLiveMaps(QWidget):
             panel.set_range_text(x_min, x_max)
 
     def _update_visibility(self):
-        """Show or hide header, container, and placeholder based on active selectors."""
+        """Show or hide top bar, container, and placeholder based on active selectors."""
         any_active = any(self._active_states.values())
         self.lbl_placeholder.setVisible(not any_active)
         self.maps_container.setVisible(any_active)
         self._update_header_visibility(any_active)
 
     def _update_header_visibility(self, any_active: Optional[bool] = None):
-        """Show header bar only when selectors are active AND contextual controls/notes exist."""
+        """Show top options toolbar whenever selectors are active; show context header only when needed."""
         if any_active is None:
             any_active = any(self._active_states.values())
         has_legend = len(self._legend_entries) >= 2
         has_switcher = len(self._2d_candidates) >= 2
         has_status = bool(self._context_status)
+        show_context_header = any_active and (has_legend or has_switcher or has_status)
         self.legend_scroll.setVisible(has_legend)
         self.switcher_container.setVisible(has_switcher)
         self.lbl_context_status.setVisible(has_status)
-        self.header_bar.setVisible(any_active and (has_legend or has_switcher or has_status))
+        self.header_bar.setVisible(show_context_header)
+        self._toolbar_spacer.setVisible(any_active and not show_context_header)
+        self.top_bar.setVisible(any_active)
 
-    def _rebuild_legend_chips(self, entries: List[dict]):
+    def _rebuild_legend_chips(self, entries: List[dict], force: bool = False):
         """Populate compact colored legend chips matching multi-1D profile colors."""
-        pairs = [(e.get("name", f"Map {i + 1}"), bool(e.get("is_primary", False))) for i, e in enumerate(entries)]
-        if pairs == self._legend_entries:
+        self._last_raw_entries = list(entries) if entries else []
+        custom_labels = self._view_options.get("custom_labels", {})
+        custom_colors = self._view_options.get("custom_colors", {})
+        pairs = [
+            (
+                custom_labels.get(str(e.get("name", f"Map {i + 1}")))
+                or str(e.get("name", f"Map {i + 1}")),
+                bool(e.get("is_primary", False)),
+                custom_colors.get(str(e.get("name", f"Map {i + 1}")))
+                or DEFAULT_COLORS[i % len(DEFAULT_COLORS)],
+            )
+            for i, e in enumerate(self._last_raw_entries)
+        ]
+        if not force and pairs == self._legend_entries:
             return
         self._legend_entries = pairs
 
@@ -833,11 +1537,10 @@ class VLiveMaps(QWidget):
                 w.deleteLater()
 
         if len(pairs) >= 2:
-            for idx, (name, is_primary) in enumerate(pairs):
-                color = DEFAULT_COLORS[idx % len(DEFAULT_COLORS)]
+            for display_name, is_primary, color in pairs:
                 chip = QLabel(self.legend_container)
                 suffix = " (Primary)" if is_primary else ""
-                chip.setText(f"<span style='color:{color}; font-size:13px;'>●</span> {name}{suffix}")
+                chip.setText(f"<span style='color:{color}; font-size:13px;'>●</span> {display_name}{suffix}")
                 weight = "bold" if is_primary else "normal"
                 chip.setStyleSheet(
                     f"font-size: 11px; font-weight: {weight}; "
@@ -920,6 +1623,7 @@ class VLiveMaps(QWidget):
         panel = self.panels.get(color_id)
         if panel:
             panel.update_series(values, labels, status_msg, theme=self._current_theme)
+        self._sync_shared_y()
 
     def update_profile_data(
         self,
@@ -940,6 +1644,7 @@ class VLiveMaps(QWidget):
                 x_values=positions if positions is not None else np.array([]),
                 x_label=f"{axis_label or 'Position'} (mm)",
             )
+        self._sync_shared_y()
 
     def update_multi_profile_data(
         self,
@@ -960,10 +1665,12 @@ class VLiveMaps(QWidget):
                 entries, shared_x_label=shared_x_label, status_msg=status_msg,
                 theme=self._current_theme,
             )
+        self._sync_shared_y()
 
     def clear_all(self):
         """Clear all subpanel artists, legend chips, 2D candidate switcher, and status."""
         self._rebuild_legend_chips([])
+        self._last_raw_entries = []
         self._2d_candidates = []
         self._context_status = ""
         self.lbl_context_status.setText("")
@@ -976,34 +1683,17 @@ class VLiveMaps(QWidget):
             panel.clear_plot()
 
     def apply_theme(self, theme_name: str):
-        """Update theme for all subpanels."""
+        """Update theme for toolbar buttons and all subpanels."""
         self._current_theme = theme_name
         tok = current_tokens()
         icon_color = tok.text_primary
+        self.btn_legend.setIcon(Icons.legend(color=icon_color))
+        self.btn_options.setIcon(Icons.settings(color=icon_color))
         for panel in self.panels.values():
             panel.btn_copy.setIcon(Icons.copy(color=icon_color))
+            panel.set_view_options(self._view_options, redraw=False)
             panel.img = None
             panel.lines.clear()
             if panel.isVisible():
-                kind = panel._display_kind or ("series" if self.mode == "spectra" else "map")
-                if kind == "multi_profile":
-                    panel.update_multi_profile(
-                        panel._multi_entries,
-                        shared_x_label=panel._multi_x_label,
-                        status_msg=panel._status_msg,
-                        theme=theme_name,
-                    )
-                elif kind == "series":
-                    panel.update_series(
-                        panel._series_values,
-                        panel._series_labels,
-                        panel._status_msg,
-                        theme=theme_name,
-                        x_values=panel._series_x,
-                        x_label=panel._series_xlabel,
-                    )
-                else:
-                    panel.update_map(
-                        panel._grid, panel._extent, panel._vmin, panel._vmax,
-                        panel._status_msg, theme=theme_name
-                    )
+                panel.rerender_cached(theme=theme_name)
+        self._sync_shared_y()

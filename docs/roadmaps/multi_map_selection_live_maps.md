@@ -676,7 +676,20 @@ Requires **Phase 3**.
 
 ---
 
-### Phase 5: Optional Thresholded Async Worker & Documentation Sync
+### Phase 5 & Phase 6 (Implemented): Thresholded Async Worker, Live Maps View Options & Documentation Sync
+
+- **Phase 5 (`spectroview/viewmodel/vm_live_maps.py`, `spectroview/main.py`)**:
+  - `ASYNC_SPECTRUM_THRESHOLD = 25_000` (configurable on `VMLiveMaps(..., async_threshold=...)`): batches below 25k active spectra remain synchronous; batches `>= 25,000` dispatch to a dedicated `QThreadPool(maxThreadCount=1)` `_LiveMapWorker` (`QRunnable`) bridged via parented `_LiveMapWorkerBridge(QObject)`.
+  - Monotonic `_generation_id` + `MapData.data_version` verification discards superseded drag/clear frames safely, and `shutdown()` drains active workers on `Main.closeEvent()`.
+  - Verified by `tests/unit/viewmodel/test_vm_live_maps_async.py`.
+- **Phase 6 (`spectroview/view/components/v_live_maps.py`, `v_live_maps_legend_editor.py`)**:
+  - Added top-right `[Show Legend | More view options]` toolbar in `VLiveMaps` with client-side cached re-rendering (zero spectral recomputation): Linear/Log X, Y, and Color (Z) `LogNorm` scaling with non-positive domain fallbacks, `Line` / `Dot` / `Line + Dots` styles + line width & dot size, Show/Hide legend, legend location/columns/font size, draggable & double-click-editable canvas legends (`LiveMapsLegendEditorDialog`) synchronized with multi-1D header chips, `Show grid`, `Share Y-axis (1D)`, `Heatmap smoothing`, `Show colorbars`, and `Reset view options`.
+  - Synchronized `docs/developer/maps.md`, `docs/developer/spectra.md`, and `docs/user_manual/spectra_maps.md`.
+  - Verified by expanded `tests/unit/view/test_live_maps.py`.
+
+---
+
+### Archive of Original Phase 5 Specification
 
 #### A. Objective
 Keep the GUI responsive during heavy multi-map batches (`total active spectra > 25,000` or massive `90,000+` single maps), and synchronize all SPECTROview documentation surfaces required by `AGENTS.md`.

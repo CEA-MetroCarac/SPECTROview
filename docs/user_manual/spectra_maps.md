@@ -219,6 +219,16 @@ Each subpanel provides dedicated controls:
 - **Copy**: Quickly copy the rendered graph or heatmap figure to the clipboard as an image.
 - **Range / Status Badge**: Displays the current interval range $[x_{min}, x_{max}]$ or fitting status.
 
+##### **Live Maps View Options & Legend Customization**
+Whenever one or more selectors are active, two quick controls appear in the top-right corner of the **Live Maps** tab:
+
+- **Show / Hide Legend (`btn_legend`)**: Toggles interactive canvas legends across 1D subpanels. You can drag inside legends directly with the mouse, or double-click a canvas legend box to customize its labels and colors.
+- **More View Options (`⋯`)**: Opens a compact menu matching `SpectraViewer`:
+  - **Axis & Color Scales**: Toggle **X-scale**, **Y-scale**, and **Color (Z) scale** between **Linear** and **Log** (non-positive domains automatically fall back safely).
+  - **Plot Style & Sizing**: Switch 1D curves between **Line + Dots**, **Line**, and **Dot**, and tune **Line width** and **Dot size**.
+  - **Legend Box Settings**: Toggle legend visibility, change **Legend location** (`best`, corners, `outside right`, `outside top`), **Legend columns**, **Legend font size**, or open **Edit legend labels...** to rename series labels and pick custom colors (automatically synchronized with multi-profile header chips).
+  - **Display & Comparison Aids**: Toggle **Show grid**, synchronize Y-limits across panels with **Share Y-axis (1D)**, enable bilinear **Heatmap smoothing**, show/hide **Colorbars**, or **Reset view options**.
+
 _______
 
 ### **4. `FitModelBuilder`**

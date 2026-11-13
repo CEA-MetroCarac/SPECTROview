@@ -1,6 +1,7 @@
 """Unit tests for VLiveMaps and LiveMapSubpanel."""
 
 import numpy as np
+from matplotlib.colors import LogNorm
 
 from spectroview.model.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
@@ -13,6 +14,9 @@ from spectroview.model.spectral_parameters import (
 from spectroview.view.components.v_live_maps import (
     VLiveMaps,
     LiveMapSubpanel,
+)
+from spectroview.view.components.v_live_maps_legend_editor import (
+    LiveMapsLegendEditorDialog,
 )
 
 
@@ -314,3 +318,158 @@ def test_v_live_maps_2d_switcher_emits_active_map_requested(qapp):
     live_maps.update_2d_candidates(["m1"], "m1", "")
     assert live_maps.switcher_container.isVisible() is False
     assert live_maps.header_bar.isVisible() is False
+
+
+def test_v_live_maps_view_options_plot_styles_and_scales(qapp):
+    """Plot styles (line/dot/line+dots), line width, dot size, and Linear/Log X & Y scaling."""
+    live_maps = VLiveMaps(mode="map")
+    live_maps.show()
+    assert live_maps.top_bar.isVisible() is False
+
+    live_maps.set_selector_active(SELECTOR_RED, True)
+    assert live_maps.top_bar.isVisible() is True
+    assert live_maps.btn_legend.isVisible() is True
+    assert live_maps.btn_options.isVisible() is True
+    assert live_maps.header_bar.isVisible() is False  # context bar stays hidden for single profile
+
+    pos = np.array([1.0, 2.0, 4.0, 8.0])
+    vals = np.array([10.0, 100.0, 500.0, 1000.0])
+    live_maps.update_profile_data(SELECTOR_RED, pos, vals, axis_label="X", status_msg="OK")
+
+    panel = live_maps.panels[SELECTOR_RED]
+    assert panel.line.get_linestyle() == "-"
+    assert panel.line.get_marker() == "o"
+
+    # Switch to Line only with thicker width
+    live_maps.cbb_plot_style.setCurrentText("Line")
+    live_maps.spb_linewidth.setValue(3.2)
+    assert panel.line.get_linestyle() == "-"
+    assert panel.line.get_marker() in ("", "None")
+    assert panel.line.get_linewidth() == 3.2
+
+    # Switch to Dot only with larger dot size
+    live_maps.cbb_plot_style.setCurrentText("Dot")
+    live_maps.spb_dotsize.setValue(8.0)
+    assert panel.line.get_linestyle() in ("None", "none")
+    assert panel.line.get_marker() == "o"
+    assert panel.line.get_markersize() == 8.0
+
+    # Switch X and Y scales to Log on strictly positive data
+    live_maps.cbb_xscale.setCurrentText("Log")
+    live_maps.cbb_yscale.setCurrentText("Log")
+    assert panel.ax.get_xscale() == "log"
+    assert panel.ax.get_yscale() == "log"
+
+    # Non-positive values gracefully fall back to linear instead of raising
+    live_maps.update_profile_data(
+        SELECTOR_RED, np.array([-2.0, -1.0, 0.0]), np.array([-5.0, 0.0, -1.0]), axis_label="X", status_msg="OK"
+    )
+    assert panel.ax.get_xscale() == "linear"
+    assert panel.ax.get_yscale() == "linear"
+
+    # Reset restores defaults cleanly
+    live_maps.reset_view_options()
+    opts = live_maps.get_view_options()
+    assert opts["xscale"] == "linear"
+    assert opts["yscale"] == "linear"
+    assert opts["plot_style"] == "line+dots"
+
+
+def test_v_live_maps_2d_view_options_zscale_smoothing_colorbar_and_grid(qapp):
+    """2D heatmaps support LogNorm Z-scale, bilinear smoothing, colorbar toggle, and grid."""
+    live_maps = VLiveMaps(mode="map")
+    live_maps.show()
+    live_maps.set_selector_active(SELECTOR_RED, True)
+
+    grid = np.array([[1.0, 10.0], [100.0, 1000.0]])
+    live_maps.update_map_data(SELECTOR_RED, grid, [1.0, 3.0, 1.0, 3.0], 1.0, 1000.0, "OK")
+    panel = live_maps.panels[SELECTOR_RED]
+    assert panel.img is not None
+    assert panel.cbar is not None
+    assert panel.img.get_interpolation() == "none"
+
+    live_maps.cbb_zscale.setCurrentText("Log")
+    assert isinstance(panel.img.norm, LogNorm)
+
+    live_maps.act_smoothing.setChecked(True)
+    assert panel.img.get_interpolation() == "bilinear"
+
+    live_maps.act_show_colorbar.setChecked(False)
+    assert panel.cbar is None
+
+    live_maps.act_show_colorbar.setChecked(True)
+    assert panel.cbar is not None
+
+    # Non-positive 2D grid safely avoids invalid LogNorm
+    neg_grid = np.array([[-5.0, -1.0], [0.0, -2.0]])
+    live_maps.update_map_data(SELECTOR_RED, neg_grid, [0.0, 2.0, 0.0, 2.0], -5.0, 0.0, "OK")
+    assert not isinstance(panel.img.norm, LogNorm)
+
+
+def test_v_live_maps_share_y_and_legend_customization(qapp, monkeypatch):
+    """Share Y-axis synchronizes 1D limits and legend editor updates canvas labels, colors, and header chips."""
+    live_maps = VLiveMaps(mode="map")
+    live_maps.show()
+    live_maps.set_selector_active(SELECTOR_RED, True)
+    live_maps.set_selector_active(SELECTOR_BLUE, True)
+
+    entries_r = [
+        {"name": "p1", "positions": np.array([0.0, 1.0]), "values": np.array([10.0, 20.0]), "is_primary": True, "axis_label": "X", "out_of_range": False, "msg": "OK"},
+        {"name": "p2", "positions": np.array([0.0, 1.0]), "values": np.array([15.0, 30.0]), "is_primary": False, "axis_label": "X", "out_of_range": False, "msg": "OK"},
+    ]
+    entries_b = [
+        {"name": "p1", "positions": np.array([0.0, 1.0]), "values": np.array([100.0, 500.0]), "is_primary": True, "axis_label": "X", "out_of_range": False, "msg": "OK"},
+        {"name": "p2", "positions": np.array([0.0, 1.0]), "values": np.array([200.0, 1000.0]), "is_primary": False, "axis_label": "X", "out_of_range": False, "msg": "OK"},
+    ]
+    live_maps.update_multi_profile_data(SELECTOR_RED, entries_r, shared_x_label="X", status_msg="OK")
+    live_maps.update_multi_profile_data(SELECTOR_BLUE, entries_b, shared_x_label="X", status_msg="OK")
+
+    panel_r = live_maps.panels[SELECTOR_RED]
+    panel_b = live_maps.panels[SELECTOR_BLUE]
+    assert panel_r.ax.get_ylim() != panel_b.ax.get_ylim()
+
+    live_maps.act_share_y.setChecked(True)
+    assert panel_r.ax.get_ylim() == panel_b.ax.get_ylim()
+
+    # Toggle legend on & verify button + action sync + box creation
+    live_maps.btn_legend.click()
+    assert live_maps.act_show_legend.isChecked() is True
+    assert panel_r._legend is not None
+
+    # Location, columns, font size
+    live_maps.cbb_legend_loc.setCurrentText("outside right")
+    live_maps.spb_legend_ncol.setValue(2)
+    live_maps.spb_legend_fontsize.setValue(11)
+    assert panel_r._legend is not None
+    assert round(panel_r._legend.get_texts()[0].get_fontsize()) == 11
+
+    # Mock dialog edit via LiveMapsLegendEditorDialog
+    def _fake_exec(self):
+        self.cbb_loc.setCurrentText("upper left")
+        self._row_widgets[0][4].setText("Sample Alpha")
+        self._row_widgets[0][3].setCurrentIndex(1)
+        return 1
+
+    monkeypatch.setattr(LiveMapsLegendEditorDialog, "exec", _fake_exec)
+    live_maps.open_legend_editor()
+
+    texts = [t.get_text() for t in panel_r._legend.get_texts()]
+    assert "Sample Alpha" in texts
+    assert live_maps._legend_entries[0][0] == "Sample Alpha"
+    assert live_maps.get_view_options()["custom_colors"].get("p1") is not None
+
+    # Double-clicking inside rendered legend box emits legend_edit_requested
+    edited = []
+    panel_r.legend_edit_requested.connect(lambda: edited.append(True))
+    panel_r.canvas.draw()
+    bbox = panel_r._legend.get_window_extent(renderer=panel_r.canvas.get_renderer())
+    cx = 0.5 * (bbox.x0 + bbox.x1)
+    cy = 0.5 * (bbox.y0 + bbox.y1)
+    fake_event = type("Evt", (), {"dblclick": True, "x": cx, "y": cy})()
+    panel_r._on_canvas_button_press(fake_event)
+    assert edited == [True]
+
+    # Toggle legend off hides canvas legend box cleanly
+    live_maps.btn_legend.click()
+    assert panel_r._legend is None
+

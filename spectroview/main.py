@@ -1015,6 +1015,10 @@ class Main(QMainWindow):
                 self.v_spectra_workspace.vm._cancel_fit_thread()
             if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace.vm, '_cancel_fit_thread'):
                 self.v_maps_workspace.vm._cancel_fit_thread()
+            if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'vm_live_maps'):
+                self.v_spectra_workspace.vm_live_maps.shutdown()
+            if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'vm_live_maps'):
+                self.v_maps_workspace.vm_live_maps.shutdown()
         except Exception:
             pass
 

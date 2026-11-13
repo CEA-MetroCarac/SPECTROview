@@ -107,6 +107,7 @@ class VSpectraViewer(QWidget):
     # ── Spectral Range Selector signals ──
     range_toggled = Signal(str, bool)          # (color_id, is_active)
     range_changed = Signal(str, float, float)  # (color_id, x_min, x_max)
+    range_drag_finished = Signal(str)          # (color_id) emitted on mouse release
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -141,6 +142,9 @@ class VSpectraViewer(QWidget):
         self._range_drag_cids = []
         self._range_hover_active = False
         self._ranges_initialized = False
+        self._range_drag_bg = None
+        self._range_drag_bg_size = None
+        self._suspended_range_layout = None
         
     def _init_ui(self):
         main_layout = QVBoxLayout(self)
@@ -769,6 +773,8 @@ class VSpectraViewer(QWidget):
             self._plot_internal()
 
     def _plot_internal(self):
+        if self._range_drag_bg is not None or self._suspended_range_layout is not None:
+            self._end_range_drag_blit()
         if not self._tensor_data:
             self.ax.clear()
             self._remove_heatmap_colorbar()
@@ -2132,6 +2138,7 @@ class VSpectraViewer(QWidget):
 
                 color_id, target = hit
                 self.range_manager.start_drag(color_id, target, event.xdata)
+                self._prepare_range_drag_blit()
                 self.canvas.setCursor(Qt.ClosedHandCursor if target == "body" else Qt.SizeHorCursor)
                 cid_m = self.canvas.mpl_connect("motion_notify_event", self._on_range_drag_motion)
                 cid_r = self.canvas.mpl_connect("button_release_event", self._on_range_drag_release)
@@ -2243,6 +2250,8 @@ class VSpectraViewer(QWidget):
         if event.inaxes != self.ax:
             return
 
+        self._range_drag_bg = None
+        self._range_drag_bg_size = None
         y_min, y_max = self.ax.get_ylim()
         dy = (y_max - y_min) * 0.1
 
@@ -2290,6 +2299,10 @@ class VSpectraViewer(QWidget):
     def _on_hover(self, event):
         self._update_coordinates(event)
 
+        # Skip heavy hover/peak hit-testing while dragging a range bracket
+        if hasattr(self, "range_manager") and self.range_manager.is_dragging():
+            return
+
         # Same early exits as legacy
         if event.inaxes != self.ax:
             self._hide_tooltip()
@@ -2298,20 +2311,19 @@ class VSpectraViewer(QWidget):
 
         # ── Range selector hover feedback ──
         if hasattr(self, "range_manager") and any(s.is_active for s in self.range_manager.selectors.values()):
-            if not self.range_manager.is_dragging():
-                hit = self.range_manager.hit_test(self.ax, event, zoom_active=self.zoom_pan_active)
-                if hit:
-                    if hit[1] in ("min", "max"):
-                        self.canvas.setCursor(Qt.SizeHorCursor)
-                        self._range_hover_active = True
-                        return
-                    elif hit[1] == "body":
-                        self.canvas.setCursor(Qt.OpenHandCursor)
-                        self._range_hover_active = True
-                        return
-                elif getattr(self, "_range_hover_active", False):
-                    self.canvas.unsetCursor()
-                    self._range_hover_active = False
+            hit = self.range_manager.hit_test(self.ax, event, zoom_active=self.zoom_pan_active)
+            if hit:
+                if hit[1] in ("min", "max"):
+                    self.canvas.setCursor(Qt.SizeHorCursor)
+                    self._range_hover_active = True
+                    return
+                elif hit[1] == "body":
+                    self.canvas.setCursor(Qt.OpenHandCursor)
+                    self._range_hover_active = True
+                    return
+            elif getattr(self, "_range_hover_active", False):
+                self.canvas.unsetCursor()
+                self._range_hover_active = False
 
         if not self._fitted_lines:
             self._hide_tooltip()
@@ -2528,6 +2540,8 @@ class VSpectraViewer(QWidget):
 
     def deactivate_all_range_selectors(self):
         """Deactivate all range selectors and clear their visual markers."""
+        if self._range_drag_bg is not None or self._suspended_range_layout is not None:
+            self._end_range_drag_blit()
         for color_id, btn in self.range_panel.buttons.items():
             if btn.isChecked():
                 btn.blockSignals(True)
@@ -2565,6 +2579,8 @@ class VSpectraViewer(QWidget):
 
     def _toggle_range_selector(self, color_id: str, checked: bool):
         """Activate or deactivate one of the spectral range selectors."""
+        if self._range_drag_bg is not None or self._suspended_range_layout is not None:
+            self._end_range_drag_blit()
         if checked and self.btn_zoom.isChecked():
             self.btn_zoom.blockSignals(True)
             self.btn_zoom.setChecked(False)
@@ -2581,16 +2597,105 @@ class VSpectraViewer(QWidget):
             self.range_manager.render(self.ax)
             self.canvas.draw_idle()
 
+    def _prepare_range_drag_blit(self) -> bool:
+        """Capture clean static canvas background once before blitted bracket dragging."""
+        self._end_range_drag_blit()
+        if self.ax is None or self.canvas is None:
+            return False
+        if not (
+            hasattr(self.canvas, "copy_from_bbox")
+            and hasattr(self.canvas, "restore_region")
+            and hasattr(self.canvas, "blit")
+        ):
+            return False
+        try:
+            w = int(self.canvas.width())
+            h = int(self.canvas.height())
+            if w <= 0 or h <= 0:
+                return False
+
+            # Ensure selector artists exist, then mark them animated before capturing
+            # the background so the initial bracket position isn't baked into the buffer.
+            if not self.range_manager.active_artists():
+                self.range_manager.render(self.ax)
+            self.range_manager.set_animated(True)
+            self.canvas.draw()
+
+            # Suspend constrained/compressed layout during drag in case any fallback redraw runs.
+            layout_engine = self.figure.get_layout_engine()
+            if layout_engine is not None:
+                self._suspended_range_layout = layout_engine
+                self.figure.set_layout_engine(None)
+
+            self._range_drag_bg = self.canvas.copy_from_bbox(self.figure.bbox)
+            self._range_drag_bg_size = (w, h)
+            # Re-paint selector artists over the freshly captured clean buffer.
+            self._blit_range_selectors()
+            return True
+        except Exception:
+            self._end_range_drag_blit()
+            return False
+
+    def _blit_range_selectors(self) -> bool:
+        """Redraw only range-selector artists on top of the cached background."""
+        if self.ax is None or self.canvas is None or self._range_drag_bg is None:
+            return False
+        try:
+            cur_size = (int(self.canvas.width()), int(self.canvas.height()))
+            if cur_size != self._range_drag_bg_size:
+                if not self._prepare_range_drag_blit():
+                    return False
+            self.canvas.restore_region(self._range_drag_bg)
+            for art in self.range_manager.active_artists():
+                self.ax.draw_artist(art)
+            self.canvas.blit(self.figure.bbox)
+            return True
+        except Exception:
+            self._end_range_drag_blit()
+            return False
+
+    def _end_range_drag_blit(self) -> None:
+        """Restore layout engine and normal non-animated drawing after range drag."""
+        if getattr(self, "_suspended_range_layout", None) is not None:
+            try:
+                if self.figure.get_layout_engine() is None:
+                    self.figure.set_layout_engine(self._suspended_range_layout)
+            except Exception:
+                pass
+            self._suspended_range_layout = None
+        self._range_drag_bg = None
+        self._range_drag_bg_size = None
+        if hasattr(self, "range_manager"):
+            self.range_manager.set_animated(False)
+
+    def _event_to_clamped_xdata(self, event) -> Optional[float]:
+        """Extract or invert event X coordinate clamped to current axes X limits."""
+        if self.ax is None:
+            return None
+        xdata = event.xdata if event.inaxes == self.ax and event.xdata is not None else None
+        if xdata is None:
+            if event.x is None or event.y is None:
+                return None
+            try:
+                xdata = float(self.ax.transData.inverted().transform((event.x, event.y))[0])
+            except Exception:
+                return None
+        xlim = self.ax.get_xlim()
+        lo, hi = min(float(xlim[0]), float(xlim[1])), max(float(xlim[0]), float(xlim[1]))
+        return float(np.clip(xdata, lo, hi))
+
     def _on_range_drag_motion(self, event):
         """Update range selector boundaries while user drags."""
         if not hasattr(self, "range_manager") or not self.range_manager.is_dragging():
             return
-        if event.inaxes != self.ax or event.xdata is None:
+        xdata = self._event_to_clamped_xdata(event)
+        if xdata is None:
             return
-        color_id = self.range_manager.update_drag(event.xdata)
+        color_id = self.range_manager.update_drag(xdata)
         if color_id and self.ax is not None:
             self.range_manager.render(self.ax)
-            self.canvas.draw_idle()
+            if not self._blit_range_selectors():
+                self.canvas.draw_idle()
 
     def _on_range_drag_release(self, event):
         """Finalize range selector dragging on mouse button release."""
@@ -2613,12 +2718,17 @@ class VSpectraViewer(QWidget):
                 pass
 
         if hasattr(self, "range_manager") and self.range_manager.is_dragging():
-            self.range_manager.finish_drag()
+            color_id = self.range_manager.finish_drag()
+            self._end_range_drag_blit()
             if self.ax is not None:
                 self.range_manager.render(self.ax)
                 self.canvas.draw_idle()
             self.canvas.unsetCursor()
             self._range_hover_active = False
+            if color_id:
+                self.range_drag_finished.emit(color_id)
+        elif self._range_drag_bg is not None or self._suspended_range_layout is not None:
+            self._end_range_drag_blit()
 
     # ═════════════════════════════════════════════════════════════════════
     # Cosmic-Ray Eraser Tool

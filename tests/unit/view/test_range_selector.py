@@ -195,3 +195,47 @@ def test_refresh_or_clamp_ranges(qapp):
     assert np.isclose(b_min, 550.0)
     assert np.isclose(b_max, 700.0)
 
+
+def test_range_selector_render_reuses_artists_in_place_and_supports_animated(qapp):
+    """Repeated render() updates geometry in-place instead of recreating artists."""
+    mgr = RangeSelectorManager()
+    fig, ax = plt.subplots()
+    try:
+        ax.plot([100.0, 900.0], [0.0, 1.0])
+        mgr.set_range(SELECTOR_RED, 200.0, 400.0)
+        mgr.set_active(SELECTOR_RED, True)
+        mgr.set_range(SELECTOR_BLUE, 600.0, 700.0)
+        mgr.set_active(SELECTOR_BLUE, True)
+        mgr.render(ax)
+
+        red_artists = list(mgr._artists[SELECTOR_RED])
+        red_ids = [id(a) for a in red_artists]
+        assert len(red_artists) == 7
+        assert len(mgr.active_artists()) == 14
+
+        mgr.set_animated(True)
+        assert all(a.get_animated() for a in mgr.active_artists())
+
+        # Re-render after dragging Red bounds -> exact same Matplotlib artist instances reused
+        mgr.set_range(SELECTOR_RED, 250.0, 500.0)
+        mgr.render(ax)
+        assert [id(a) for a in mgr._artists[SELECTOR_RED]] == red_ids
+        rect, line_left, line_right = red_artists[0], red_artists[1], red_artists[2]
+        assert np.isclose(rect.get_x(), 250.0)
+        assert np.isclose(rect.get_width(), 250.0)
+        assert np.allclose(line_left.get_xdata(), [250.0, 250.0])
+        assert np.allclose(line_right.get_xdata(), [500.0, 500.0])
+        assert all(a.get_animated() for a in mgr.active_artists())
+
+        # Detached artists (e.g. after ax.clear()) are rebuilt cleanly preserving animated flag
+        ax.clear()
+        mgr.render(ax)
+        assert [id(a) for a in mgr._artists[SELECTOR_RED]] != red_ids
+        assert all(a.axes is ax and a.get_animated() for a in mgr.active_artists())
+
+        mgr.set_animated(False)
+        assert all(not a.get_animated() for a in mgr.active_artists())
+    finally:
+        plt.close(fig)
+
+

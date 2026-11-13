@@ -520,3 +520,27 @@ def test_vm_is_active_masking_and_empty_clear(qapp, sample_map_data):
     assert vm._timer.isActive() is False
     assert vm._pending_calc == set()
     assert cleared == [True]
+
+
+def test_vm_flush_pending_stops_timer_and_computes_immediately(qapp, sample_map_data):
+    """flush_pending() evaluates queued debounced recalculations immediately on release."""
+    vm = VMLiveMaps()
+    out = _collect(vm)
+    vm.set_selector_range(SELECTOR_RED, 650.0, 750.0)
+    vm.set_selector_active(SELECTOR_RED, True)
+    vm.set_map_data(sample_map_data)
+
+    out["map"].clear()
+    vm.set_selector_range(SELECTOR_RED, 660.0, 740.0, immediate=False, calculate=True)
+    assert vm._timer.isActive() is True
+    assert out["map"] == {}
+
+    flushed = vm.flush_pending()
+    assert flushed is True
+    assert vm._timer.isActive() is False
+    assert vm._pending_calc == set()
+    assert SELECTOR_RED in out["map"]
+
+    # Subsequent flush with empty queue is a clean no-op
+    assert vm.flush_pending() is False
+

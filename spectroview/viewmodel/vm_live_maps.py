@@ -717,6 +717,15 @@ class VMLiveMaps(QObject):
         self._pending_calc.clear()
         self._recalculate_batch(cid for cid in to_calc if self._states[cid]["active"])
 
+    def flush_pending(self) -> bool:
+        """Stop debounce timer and immediately evaluate queued selector ranges."""
+        if hasattr(self, "_timer") and self._timer.isActive():
+            self._timer.stop()
+        if not self._pending_calc:
+            return False
+        self._recalculate_pending()
+        return True
+
     def recalculate(self, color_id: str):
         """Compute and emit the display data for a single selector."""
         if color_id not in self._states:

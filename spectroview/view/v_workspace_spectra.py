@@ -280,6 +280,7 @@ class VWorkspaceSpectra(QWidget):
         # ═════════════════════════════════════════════════════════════════
         self.v_spectra_viewer.range_toggled.connect(self._on_range_selector_toggled)
         self.v_spectra_viewer.range_changed.connect(self._on_range_selector_changed)
+        self.v_spectra_viewer.range_drag_finished.connect(self._on_range_drag_finished)
         self.v_live_maps.parameter_change_requested.connect(self.vm_live_maps.set_selector_parameter)
         self.vm_live_maps.map_data_ready.connect(self.v_live_maps.update_map_data)
         self.vm_live_maps.series_data_ready.connect(self.v_live_maps.update_series_data)
@@ -443,6 +444,11 @@ class VWorkspaceSpectra(QWidget):
         if not tab_active:
             self._live_maps_dirty = True
         self.vm_live_maps.set_selector_range(color_id, x_min, x_max, calculate=tab_active)
+
+    def _on_range_drag_finished(self, _color_id: str):
+        """Flush queued Live Maps calculations immediately when bracket drag ends."""
+        if hasattr(self, "vm_live_maps") and self._is_live_maps_tab_active():
+            self.vm_live_maps.flush_pending()
 
     def _on_selection_changed_for_live_maps(self, selected_data):
         """Update Live Maps with the currently selected spectra (deferred when tab hidden)."""

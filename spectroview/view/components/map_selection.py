@@ -433,23 +433,37 @@ class MapCanvasSelector:
         draw: bool = True,
     ) -> Optional[Line2D]:
         """Render red circle markers at selected points on a 1D profile curve."""
-        self.clear_overlay()
         xs = list(x_points)
         ys = list(y_points)
         if xs and len(xs) == len(ys):
-            (line,) = self.ax.plot(
-                xs,
-                ys,
-                linestyle="None",
-                marker="o",
-                markersize=float(markersize),
-                markerfacecolor="none",
-                markeredgecolor="red",
-                markeredgewidth=1.6,
-                zorder=10,
-                label="_selection_overlay_",
-            )
-            self.selection_markers = line
+            if self.selection_collection is not None:
+                try:
+                    self.selection_collection.remove()
+                except Exception:
+                    pass
+                self.selection_collection = None
+            existing = self.selection_markers
+            if existing is not None and getattr(existing, "axes", None) is self.ax:
+                existing.set_data(xs, ys)
+                existing.set_markersize(float(markersize))
+                existing.set_visible(True)
+            else:
+                self.clear_overlay()
+                (line,) = self.ax.plot(
+                    xs,
+                    ys,
+                    linestyle="None",
+                    marker="o",
+                    markersize=float(markersize),
+                    markerfacecolor="none",
+                    markeredgecolor="red",
+                    markeredgewidth=1.6,
+                    zorder=10,
+                    label="_selection_overlay_",
+                )
+                self.selection_markers = line
+        else:
+            self.clear_overlay()
         if draw and self.canvas is not None:
             self.canvas.draw_idle()
         return self.selection_markers

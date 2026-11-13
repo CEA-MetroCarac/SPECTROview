@@ -1177,3 +1177,56 @@ def test_v_live_maps_normalization_per_panel_share_y_and_selection(qapp):
     finally:
         live_maps.close()
         live_maps.deleteLater()
+
+
+def test_live_map_subpanel_style_cache_skips_redundant_tick_work_and_reuses_1d_overlay(qapp, monkeypatch):
+    """Repeated fast-path 1D updates reuse overlay markers and skip redundant tick/grid churn."""
+    panel = LiveMapSubpanel(SELECTOR_RED, mode="map")
+    panel.resize(480, 320)
+    panel.show()
+    try:
+        pos = np.array([0.0, 5.0, 10.0, 15.0])
+        coords = np.column_stack([np.full(4, 2.0), pos])
+        vals = np.array([10.0, 40.0, 20.0, 30.0])
+
+        panel.set_spatial_sites({"map_name": "p1", "is_profile": True, "coords": coords, "positions": pos})
+        panel.set_selected_points([(2.0, 5.0)])
+        panel.update_series(vals, labels=[], status_msg="OK", x_values=pos, x_label="X (mm)")
+
+        orig_line_id = id(panel.line)
+        orig_marker_id = id(panel._selector.selection_markers)
+
+        tick_calls = []
+        grid_calls = []
+        locator_calls = []
+        orig_tick_params = panel.ax.tick_params
+        orig_grid = panel.ax.grid
+        orig_set_locator = panel.ax.xaxis.set_major_locator
+
+        monkeypatch.setattr(panel.ax, "tick_params", lambda *a, **kw: (tick_calls.append((a, kw)), orig_tick_params(*a, **kw))[1])
+        monkeypatch.setattr(panel.ax, "grid", lambda *a, **kw: (grid_calls.append((a, kw)), orig_grid(*a, **kw))[1])
+        monkeypatch.setattr(panel.ax.xaxis, "set_major_locator", lambda *a, **kw: (locator_calls.append(a), orig_set_locator(*a, **kw))[1])
+
+        # Second series update with identical domain and styling takes fast cached path
+        panel.update_series(vals * 3.0, labels=[], status_msg="OK", x_values=pos, x_label="X (mm)")
+        assert id(panel.line) == orig_line_id
+        assert id(panel._selector.selection_markers) == orig_marker_id
+        np.testing.assert_allclose(panel._selector.selection_markers.get_ydata(), [120.0])
+        assert tick_calls == []
+        assert grid_calls == []
+        assert locator_calls == []
+
+        # Style/grid changes invalidate and apply cleanly
+        panel.apply_view_options_fast({"plot_theme": "Dark Mode", "show_grid": True}, {"plot_theme", "show_grid"})
+        assert len(tick_calls) >= 1
+        assert len(grid_calls) >= 1
+
+        # Explicit zoom followed by reset_view() clears cached X domain signature and restores limits
+        panel.ax.set_xlim(4.0, 6.0)
+        panel.reset_view()
+        x0, x1 = panel.ax.get_xlim()
+        assert x0 < 0.0 and x1 > 15.0
+    finally:
+        panel.close()
+        panel.deleteLater()
+

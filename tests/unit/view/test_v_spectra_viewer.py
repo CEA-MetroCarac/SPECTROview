@@ -570,5 +570,88 @@ def test_spectra_viewer_copy_feedback(viewer):
     assert not viewer.btn_copy.icon().isNull()
 
 
+def test_spectra_viewer_range_drag_blitting_clamping_and_release(viewer):
+    """Verify range bracket drag prepares blitting, clamps outside Y, skips peak hover, and restores state on release."""
+    import matplotlib.backend_bases as mbb
+
+    x = np.linspace(400.0, 800.0, 41)
+    y = np.exp(-((x - 600.0) ** 2) / (2.0 * 25.0 ** 2))
+    viewer.resize(640, 400)
+    viewer.show()
+    viewer.set_plot_data(
+        {
+            "type": "tensor",
+            "x": x,
+            "y": y[None, :],
+            "x0": x,
+            "y0": y[None, :],
+            "colors": [None],
+            "labels": ["spec_0"],
+            "fnames": ["spec_0"],
+            "proxies": [],
+        }
+    )
+    viewer._toggle_range_selector("red", True)
+    viewer.canvas.draw()
+
+    r_min, _ = viewer.range_manager.get_range("red")
+
+    # Dummy fitted line to ensure _on_hover skips peak hit-testing while dragging
+    hover_calls = []
+
+    class _DummyLine:
+        figure = viewer.figure
+
+        def contains(self, _ev):
+            hover_calls.append(True)
+            return False, {}
+
+    viewer._fitted_lines = [(_DummyLine(), {"x0": 600.0, "fwhm": 20.0})]
+
+    finished_signals = []
+    viewer.range_drag_finished.connect(finished_signals.append)
+
+    px, py = viewer.ax.transData.transform((r_min, 0.5))
+    press = mbb.MouseEvent("button_press_event", viewer.canvas, px, py, button=1)
+    press.inaxes = viewer.ax
+    press.xdata = r_min
+    press.ydata = 0.5
+    viewer._on_mouse_click(press)
+
+    assert viewer.range_manager.is_dragging() is True
+    assert viewer._range_drag_bg is not None
+    assert viewer.figure.get_layout_engine() is None
+    assert all(a.get_animated() for a in viewer.range_manager.active_artists())
+
+    # Hover during drag must skip fitted-line contains() scan
+    hover = mbb.MouseEvent("motion_notify_event", viewer.canvas, px + 5, py)
+    hover.inaxes = viewer.ax
+    hover.xdata = r_min + 10.0
+    hover.ydata = 0.5
+    viewer._on_hover(hover)
+    assert hover_calls == []
+
+    # Motion vertically outside axes still clamps and updates dragged boundary
+    new_x = r_min + 25.0
+    px_out, _ = viewer.ax.transData.transform((new_x, 0.5))
+    motion = mbb.MouseEvent("motion_notify_event", viewer.canvas, px_out, -20.0)
+    motion.inaxes = None
+    motion.xdata = None
+    motion.ydata = None
+    viewer._on_range_drag_motion(motion)
+    updated_min, _ = viewer.range_manager.get_range("red")
+    assert updated_min == pytest.approx(new_x, abs=2.0)
+
+    # Release restores normal drawing mode, layout engine, and emits range_drag_finished
+    release = mbb.MouseEvent("button_release_event", viewer.canvas, px_out, py, button=1)
+    viewer._on_range_drag_release(release)
+    assert viewer.range_manager.is_dragging() is False
+    assert viewer._range_drag_bg is None
+    assert viewer.figure.get_layout_engine() is not None
+    assert all(not a.get_animated() for a in viewer.range_manager.active_artists())
+    assert finished_signals == ["red"]
+
+
+
 
 

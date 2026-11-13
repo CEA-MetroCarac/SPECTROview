@@ -165,6 +165,7 @@ class RangeSelectorManager(QObject):
 
         # Drag state
         self._drag_state: Optional[dict] = None
+        self._animated: bool = False
         # Track artists created on axes so they can be cleaned up
         self._artists: Dict[str, List[Any]] = {
             SELECTOR_RED: [],
@@ -269,39 +270,79 @@ class RangeSelectorManager(QObject):
                     sel.x_max = clamped_max
                     self.range_changed.emit(color_id, sel.x_min, sel.x_max)
 
+    def _clear_color_artists(self, color_id: str) -> None:
+        """Remove tracked selector artists for a single color channel."""
+        artist_list = self._artists.get(color_id)
+        if not artist_list:
+            return
+        for art in artist_list:
+            try:
+                art.remove()
+            except Exception:
+                pass
+        artist_list.clear()
+
     def clear_artists(self, ax=None):
         """Remove all selector artists from the axes."""
-        for color_id, artist_list in self._artists.items():
+        for color_id in list(self._artists.keys()):
+            self._clear_color_artists(color_id)
+
+    def active_artists(self) -> List[Any]:
+        """Return rendered artists for currently active range selectors."""
+        out: List[Any] = []
+        for color_id in SELECTOR_KEYS:
+            if self.selectors[color_id].is_active:
+                out.extend(self._artists[color_id])
+        return out
+
+    def set_animated(self, animated: bool) -> None:
+        """Set Matplotlib animated flag on all selector artists for blitting."""
+        self._animated = bool(animated)
+        for artist_list in self._artists.values():
             for art in artist_list:
-                try:
-                    art.remove()
-                except Exception:
-                    pass
-            artist_list.clear()
+                art.set_animated(self._animated)
 
     def render(self, ax):
         """Render all active range selectors on the given Matplotlib axes.
 
+        Reuses existing artists in-place when already attached to *ax* so
+        interactive bracket dragging does not thrash Matplotlib's artist list.
         Uses ax.add_artist for all patches and lines so that ax.dataLim is never
         polluted, ensuring rescale/autoscale operates exclusively on data lines.
         """
-        self.clear_artists(ax)
-
-        # Matplotlib blended transform: x in data coordinates, y in axes coordinates (0 to 1)
-        trans = mtransforms.blended_transform_factory(ax.transData, ax.transAxes)
-
         # Estimate tick width in data coordinates
         xlim = ax.get_xlim()
         tick_w = abs(xlim[1] - xlim[0]) * 0.015
+        trans = None
 
         for color_id in SELECTOR_KEYS:
             sel = self.selectors[color_id]
             if not sel.is_active:
+                self._clear_color_artists(color_id)
                 continue
 
-            color = sel.color_hex
             x_min = sel.x_min
             x_max = sel.x_max
+            artists = self._artists[color_id]
+
+            if len(artists) == 7 and all(getattr(art, "axes", None) is ax for art in artists):
+                rect, line_left, line_right, t_l_top, t_l_bot, t_r_top, t_r_bot = artists
+                rect.set_x(x_min)
+                rect.set_width(x_max - x_min)
+                line_left.set_xdata([x_min, x_min])
+                line_right.set_xdata([x_max, x_max])
+                t_l_top.set_xdata([x_min, x_min + tick_w])
+                t_l_bot.set_xdata([x_min, x_min + tick_w])
+                t_r_top.set_xdata([x_max, x_max - tick_w])
+                t_r_bot.set_xdata([x_max, x_max - tick_w])
+                continue
+
+            self._clear_color_artists(color_id)
+            if trans is None:
+                # Matplotlib blended transform: x in data coordinates, y in axes coordinates (0 to 1)
+                trans = mtransforms.blended_transform_factory(ax.transData, ax.transAxes)
+
+            color = sel.color_hex
 
             # 1. Shaded interval span (mpatches.Rectangle -> does NOT mutate dataLim)
             rect = mpatches.Rectangle(
@@ -314,8 +355,6 @@ class RangeSelectorManager(QObject):
                 alpha=0.18,
                 zorder=3,
             )
-            ax.add_artist(rect)
-            self._artists[color_id].append(rect)
 
             # 2. Left boundary line (Line2D -> does NOT mutate dataLim)
             line_left = mlines.Line2D(
@@ -327,8 +366,6 @@ class RangeSelectorManager(QObject):
                 linewidth=1.5,
                 zorder=4,
             )
-            ax.add_artist(line_left)
-            self._artists[color_id].append(line_left)
 
             # 3. Right boundary line
             line_right = mlines.Line2D(
@@ -340,8 +377,6 @@ class RangeSelectorManager(QObject):
                 linewidth=1.5,
                 zorder=4,
             )
-            ax.add_artist(line_right)
-            self._artists[color_id].append(line_right)
 
             # 4. Bracket tick heads (top and bottom)
             t_left_top = mlines.Line2D(
@@ -360,9 +395,13 @@ class RangeSelectorManager(QObject):
                 [x_max, x_max - tick_w], [0.03, 0.03],
                 transform=trans, color=color, linewidth=2.0, zorder=5
             )
-            for t in (t_left_top, t_left_bot, t_right_top, t_right_bot):
-                ax.add_artist(t)
-                self._artists[color_id].append(t)
+
+            created = (rect, line_left, line_right, t_left_top, t_left_bot, t_right_top, t_right_bot)
+            for art in created:
+                if self._animated:
+                    art.set_animated(True)
+                ax.add_artist(art)
+            artists.extend(created)
 
     def hit_test(self, ax, event, zoom_active: bool = False) -> Optional[Tuple[str, str]]:
         """Determine if mouse event is near a selector boundary or body.

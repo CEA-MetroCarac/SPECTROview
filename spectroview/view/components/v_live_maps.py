@@ -226,6 +226,12 @@ class LiveMapSubpanel(QFrame):
         self._selected_points: list[tuple[float, float]] = []
         self._selector: Optional[MapCanvasSelector] = None
         self._last_norm_params: tuple[bool, Optional[float], Optional[float]] = (False, None, None)
+        self._styled_theme_sig = None
+        self._styled_text_fs_sig = None
+        self._styled_grid_sig = None
+        self._styled_x_domain_sig = None
+        self._vis_controls_sig = None
+        self._last_range_label_text: Optional[str] = None
 
         # Parented coalesce timer for option-change redraws (prevents UI lag during bursts)
         self._draw_timer = QTimer(self)
@@ -524,6 +530,7 @@ class LiveMapSubpanel(QFrame):
 
     def reset_view(self):
         """Restore natural autoscale bounds for the current plot and clear zoom/pan stack."""
+        self._styled_x_domain_sig = None
         if self._display_kind is None:
             self.toolbar.home()
             return
@@ -876,9 +883,20 @@ class LiveMapSubpanel(QFrame):
             self.cbb_param.setToolTip("Select spectral parameter for this graph")
         self._sync_palette_visibility()
 
+    def _invalidate_style_caches(self):
+        """Reset cached axes styling signatures so the next render reapplies them."""
+        self._styled_theme_sig = None
+        self._styled_text_fs_sig = None
+        self._styled_grid_sig = None
+        self._styled_x_domain_sig = None
+
     def _sync_1d_controls_visibility(self):
         """Show colormap picker on 2D heatmaps and normalization controls on 1D line plots."""
         is_1d_plot = self._display_kind in ("series", "multi_profile")
+        sig = (self.mode, is_1d_plot)
+        if self._vis_controls_sig == sig:
+            return
+        self._vis_controls_sig = sig
         self.cbb_palette.setVisible(self.mode == "map" and not is_1d_plot)
         self.btn_norm.setVisible(is_1d_plot)
         self.norm_xmin.setVisible(is_1d_plot)
@@ -897,6 +915,7 @@ class LiveMapSubpanel(QFrame):
         thin vertical or horizontal strip when X and Y spans differ.
         """
         self._request_relayout()
+        self._invalidate_style_caches()
         if self._legend is not None:
             try:
                 self._legend.remove()
@@ -1021,10 +1040,13 @@ class LiveMapSubpanel(QFrame):
 
     def _refresh_range_label(self):
         if self.is_ratio_display():
-            self.lbl_range.setText("I(Red) / I(Blue)")
+            target = "I(Red) / I(Blue)"
         else:
             x_min, x_max = self._x_range
-            self.lbl_range.setText(f"[{x_min:.1f}, {x_max:.1f}]")
+            target = f"[{x_min:.1f}, {x_max:.1f}]"
+        if self._last_range_label_text != target:
+            self._last_range_label_text = target
+            self.lbl_range.setText(target)
 
     def get_selected_parameter(self) -> str:
         """Return currently selected parameter name."""
@@ -1106,10 +1128,12 @@ class LiveMapSubpanel(QFrame):
             self._valid_pos_y_bounds = None
 
         if req_yscale == "log" and self._valid_pos_y_bounds is not None:
-            self.ax.set_yscale("log")
+            if self.ax.get_yscale() != "log":
+                self.ax.set_yscale("log")
             self.ax.set_ylim(*self._valid_pos_y_bounds)
         else:
-            self.ax.set_yscale("linear")
+            if self.ax.get_yscale() != "linear":
+                self.ax.set_yscale("linear")
             if self._valid_y_bounds is not None:
                 self.ax.set_ylim(*self._valid_y_bounds)
 
@@ -1117,21 +1141,42 @@ class LiveMapSubpanel(QFrame):
         if req_xscale == "log":
             pos_x = finite_x[finite_x > 0]
             if pos_x.size > 0:
-                self.ax.set_xscale("log")
                 x_min = float(np.min(pos_x))
                 x_max = float(np.max(pos_x))
                 if x_max / max(x_min, 1e-30) < 1.05:
-                    self.ax.set_xlim(max(x_min * 0.8, 1e-300), x_max * 1.25)
+                    x_bounds = (max(x_min * 0.8, 1e-300), x_max * 1.25)
                 else:
-                    self.ax.set_xlim(max(x_min * 0.92, 1e-300), x_max * 1.08)
+                    x_bounds = (max(x_min * 0.92, 1e-300), x_max * 1.08)
+                x_sig = ("log", x_bounds[0], x_bounds[1])
+                if self.ax.get_xscale() != "log" or self._styled_x_domain_sig != x_sig:
+                    if self.ax.get_xscale() != "log":
+                        self.ax.set_xscale("log")
+                    self.ax.set_xlim(*x_bounds)
+                    self._styled_x_domain_sig = x_sig
                 return
-        self.ax.set_xscale("linear")
-        self._apply_x_limits(finite_x if not is_index_axis else all_x, is_index_axis)
+        if self.ax.get_xscale() != "linear":
+            self.ax.set_xscale("linear")
+            self._styled_x_domain_sig = None
+        x_target = finite_x if not is_index_axis else all_x
+        if is_index_axis:
+            x_sig = ("index", len(x_target))
+        elif finite_x.size > 0:
+            x_sig = ("linear", len(finite_x), float(np.min(finite_x)), float(np.max(finite_x)))
+        else:
+            x_sig = ("empty", 0)
+        if self._styled_x_domain_sig != x_sig:
+            self._apply_x_limits(x_target, is_index_axis)
+            self._styled_x_domain_sig = x_sig
 
-    def _apply_grid_state(self, show_grid: bool, theme: Optional[str] = None):
+    def _apply_grid_state(self, show_grid: bool, theme: Optional[str] = None, force: bool = True):
         """Apply Matplotlib grid state cleanly without raising false+kwargs warnings."""
+        active_theme = _normalize_plot_theme(theme if theme is not None else self._current_theme)
+        sig = (bool(show_grid), active_theme if show_grid else None)
+        if not force and self._styled_grid_sig == sig:
+            return
+        self._styled_grid_sig = sig
         if show_grid:
-            _, style_path = _resolve_style_path(theme if theme is not None else self._current_theme)
+            _, style_path = _resolve_style_path(active_theme)
             grid_col = _get_cached_style_dict(style_path).get("grid.color", "#888888")
             self.ax.grid(True, alpha=0.25, linestyle="--", color=grid_col)
         else:
@@ -1254,10 +1299,16 @@ class LiveMapSubpanel(QFrame):
         self._legend_signature = sig
         self._apply_legend_theme_colors()
 
-    def _apply_figure_theme(self, theme: Optional[str] = None):
+    def _apply_figure_theme(self, theme: Optional[str] = None, force: bool = True):
         """Explicitly paint Figure, Axes, ticks, spines, grid, legend, and colorbar for the active theme."""
         active_theme = _normalize_plot_theme(theme if theme is not None else self._current_theme)
         self._current_theme = active_theme
+        grid_on = bool(self._display_kind is not None and self._view_options.get("show_grid", False))
+        sig = (active_theme, self.cbar is not None, grid_on)
+        if not force and self._styled_theme_sig == sig:
+            self._apply_legend_theme_colors()
+            return
+        self._styled_theme_sig = sig
         _is_dark, style_path = _resolve_style_path(active_theme)
         s = _get_cached_style_dict(style_path)
         self.figure.patch.set_facecolor(s.get("figure.facecolor", "#FFFFFF"))
@@ -1278,13 +1329,17 @@ class LiveMapSubpanel(QFrame):
                 self.cbar.outline.set_edgecolor(edge_col)
             except Exception:
                 pass
-        if self._display_kind is not None and bool(self._view_options.get("show_grid", False)):
-            self._apply_grid_state(True, active_theme)
+        if grid_on:
+            self._apply_grid_state(True, active_theme, force=force)
         self._apply_legend_theme_colors()
 
-    def _apply_text_sizes(self):
+    def _apply_text_sizes(self, force: bool = True):
         """Apply user-configured text size to title, axis labels, ticks, and colorbar ticks."""
         text_fs = max(6, int(self._view_options.get("text_fontsize", 10)))
+        sig = (text_fs, self.cbar is not None)
+        if not force and self._styled_text_fs_sig == sig:
+            return
+        self._styled_text_fs_sig = sig
         tick_fs = max(6, text_fs - 1)
         self.ax.title.set_fontsize(text_fs)
         self.ax.xaxis.label.set_fontsize(text_fs)
@@ -1503,14 +1558,14 @@ class LiveMapSubpanel(QFrame):
                 plot_vals[finite_mask] if np.any(finite_mask) else plot_vals,
                 is_index_axis=is_index_axis,
             )
-            self._apply_grid_state(show_grid, active_theme)
+            self._apply_grid_state(show_grid, active_theme, force=False)
             if self.ax.get_xlabel() != x_label:
                 self.ax.set_xlabel(x_label)
             if self.ax.get_ylabel() != param_name:
                 self.ax.set_ylabel(param_name)
             self._sync_title(has_content=True)
-            self._apply_figure_theme(active_theme)
-            self._apply_text_sizes()
+            self._apply_figure_theme(active_theme, force=False)
+            self._apply_text_sizes(force=False)
             self._sync_legend()
             self._update_selection_overlay(draw=False)
             self.canvas.draw_idle()
@@ -1650,14 +1705,14 @@ class LiveMapSubpanel(QFrame):
                 ln.set_zorder(5 if is_primary else 3)
                 ln.set_label(custom_labels.get(key) or key)
             self._apply_1d_scales_and_limits(all_x, all_y, is_index_axis=False)
-            self._apply_grid_state(show_grid, active_theme)
+            self._apply_grid_state(show_grid, active_theme, force=False)
             if self.ax.get_xlabel() != x_label:
                 self.ax.set_xlabel(x_label)
             if self.ax.get_ylabel() != param_name:
                 self.ax.set_ylabel(param_name)
             self._sync_title(has_content=True)
-            self._apply_figure_theme(active_theme)
-            self._apply_text_sizes()
+            self._apply_figure_theme(active_theme, force=False)
+            self._apply_text_sizes(force=False)
             self._sync_legend()
             self._update_selection_overlay(draw=False)
             self.canvas.draw_idle()
@@ -2563,8 +2618,13 @@ class VLiveMaps(QWidget):
                     ):
                         b = panel._valid_pos_y_bounds if use_log else panel._valid_y_bounds
                         if b is not None and np.isfinite(b[0]) and np.isfinite(b[1]) and b[1] > b[0]:
-                            panel.ax.set_ylim(b[0], b[1])
-                            panel.canvas.draw_idle()
+                            cur_lo, cur_hi = panel.ax.get_ylim()
+                            if not (
+                                np.isclose(cur_lo, b[0], rtol=1e-9, atol=1e-12)
+                                and np.isclose(cur_hi, b[1], rtol=1e-9, atol=1e-12)
+                            ):
+                                panel.ax.set_ylim(b[0], b[1])
+                                panel.canvas.draw_idle()
             return
         target_panels = []
         bounds = []
@@ -2586,8 +2646,13 @@ class VLiveMaps(QWidget):
         if not (np.isfinite(g_lo) and np.isfinite(g_hi)) or g_hi <= g_lo:
             return
         for panel in target_panels:
-            panel.ax.set_ylim(g_lo, g_hi)
-            panel.canvas.draw_idle()
+            cur_lo, cur_hi = panel.ax.get_ylim()
+            if not (
+                np.isclose(cur_lo, g_lo, rtol=1e-9, atol=1e-12)
+                and np.isclose(cur_hi, g_hi, rtol=1e-9, atol=1e-12)
+            ):
+                panel.ax.set_ylim(g_lo, g_hi)
+                panel.canvas.draw_idle()
 
     def set_mode(self, mode: str):
         """Configure tab for 'map' (2D spatial heatmaps) or 'spectra' (1D variation graphs) mode."""

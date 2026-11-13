@@ -404,6 +404,26 @@ class TestLabSpec6WorkspaceAndMoreTabIntegration:
         assert api_map_df.shape == (1368, 1026)
         assert api_map_meta["File Format"] == "HORIBA LabSpec 6 Map"
 
+        # 4. Compressed LabSpec 6 (.l6s) file from LabRAM HR Evol into Spectra ViewModel + More tab + API
+        l6s_comp_path = examples_dir / "spectroscopic_data" / "spectrum_ls6_2.l6s"
+        assert l6s_comp_path.exists()
+        vm_spec.load_files([str(l6s_comp_path)])
+        assert "spectrum_ls6_2" in vm_spec.store.map_names
+        md_comp = vm_spec.store.get_map_data("spectrum_ls6_2")
+        assert md_comp.n_spectra == 1
+        assert md_comp.n_wavenumbers == 1022
+        assert md_comp.map_metadata["Laser Wavelength (nm)"] == "325"
+
+        proxy_comp = SpectrumProxy(md_comp, 0, "spectrum_ls6_2")
+        more_tab.show_metadata(proxy_comp)
+        comp_table_keys = [more_tab.table.item(r, 0).text() for r in range(more_tab.table.rowCount())]
+        assert "Instrument" in comp_table_keys
+        assert "S/N" in comp_table_keys
+
+        api_comp_spec = api_io.load_spectra(l6s_comp_path)
+        assert len(api_comp_spec["items"]) == 1
+        assert api_comp_spec["items"][0]["metadata"]["Instrument"] == "LabRAM HR Evol"
+
     def test_load_ngs_into_viewmodel_api_and_more_tab(self, settings, examples_dir, qapp):
         from spectroview.api import io as api_io
         from spectroview.model.m_io import _METADATA_ORDERED_KEYS

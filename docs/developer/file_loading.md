@@ -47,7 +47,7 @@ flowchart TD
 | Fast file classifier | all supported | `detect_file_type()` | `'spectra'` \| `'map'` \| `'dataframe'` \| `'fit_model'` \| `'spectra_workspace'` \| `'maps_workspace'` \| `'graphs_workspace'` |
 | WDF header peek | `.wdf` | `peek_wdf_measurement_type()` / `WdfReader.peek_header()` | `'spectra'` \| `'map'` / `dict` (reads 512-byte `WDF1` header) |
 | SPC header peek | `.spc` | `SpcReader.peek_header()` | `dict` (reads 512-byte Galactic SPC header) |
-| LabSpec 6 header peek | `.l6s`, `.l6m` | `L6sReader.peek_header()` | `dict` (validates 76-byte `"LabSpec6\x00"` binary header) |
+| LabSpec 6 header peek | `.l6s`, `.l6m` | `L6sReader.peek_header()` | `dict` (validates uncompressed or compressed `"LabSpec6\x00"` container header) |
 | LabSpec 5 header peek | `.ngs`, `.ngc` | `NgsReader.peek_header()` | `dict` (validates `"NGSNextGen"` v1/v3 header and peeks `DataMatrix` subtype) |
 | Renishaw WiRE spectrum / series | `.wdf` | `load_wdf_spectrum()` (`m_wdf.WdfReader`) | `spectra dict` |
 | Renishaw WiRE map / line profile | `.wdf` | `load_wdf_map()` (`m_wdf.WdfReader`) | `(DataFrame, metadata dict)` |
@@ -218,7 +218,7 @@ When opening or dragging files into `Main._load_files_by_paths()`, `detect_file_
 
 - **`.wdf`**: `peek_wdf_measurement_type()` reads only the first 144 bytes of the `WDF1` header (`measurement_type` at offset `132`) rather than decoding multi-megabyte spectral cubes twice.
 - **`.spc`**: `SpcReader.peek_header()` (`header_only=True`) reads only the 512-byte Galactic SPC header (`fnsub` subfile count) and skips subfile/log reading.
-- **`.l6s` / `.l6m`**: `L6sReader.peek_header()` validates the 76-byte `"LabSpec6\x00"` binary header (`magic`, `version`, `root_offset`) in microseconds without reading full node trees or spectral arrays.
+- **`.l6s` / `.l6m`**: `L6sReader.peek_header()` validates the `"LabSpec6\x00"` container header and flags (`0x01` compressed, `0x04` 4-plane byte-shuffled) without reading full spectral arrays — decompressing small headers (`<= 256 KiB`) to inspect the root descriptor and validating the `lzhuf` stream prefix in `< 1 ms` for large compressed maps.
 - **`.ngs` / `.ngc`**: `NgsReader.peek_header()` validates the `"NGSNextGen"` v1/v3 binary header and peeks the first 96 bytes of the block stream (`DataMatrix` subtype `"Spectrum"` vs `"SpIm"` and `n_dims`) in ~1 ms without decompressing the full spectral payload.
 - **`.txt` / `.csv`**: Inspects up to 12 non-empty lines in pure Python without launching regex-engine `pandas` reads during routing.
 
@@ -229,7 +229,7 @@ When opening or dragging files into `Main._load_files_by_paths()`, `detect_file_
 - **Vectorized WDF, SPC, LabSpec 6 & LabSpec 5 binary readers**:
   - `WdfReader` (`spectroview/model/m_wdf.py`) parses Renishaw `.wdf` blocks (`WDF1`, `DATA`, `XLST`, `YLST`, `ORGN`, `WMAP`) natively via single-read `struct.unpack_from` and `np.frombuffer` operations without third-party `renishawWiRE` or `PIL` dependencies, eliminating per-point Python `ORGN` coordinate loops and redundant `WHTL` JPEG decoding.
   - `SpcReader` (`spectroview/model/m_spc.py`) reads uniform multi-subfile `.spc` maps in a single buffered I/O call via structured NumPy `np.frombuffer` dtypes (supporting IEEE `float32`, `TSPREC` `int16`, and `int32` fixed-point scaling), falling back to sequential parsing only for variable-length `TXYXYS` files.
-  - `L6sReader` (`spectroview/model/m_l6s.py`) decodes HORIBA LabSpec 6 `.l6s` (1D spectrum) and `.l6m` (2D spectral image `SpIm`) binary node trees (`"LabSpec6\x00"` magic, 24-byte DFS records, shared `0x8000` pointer blocks, and `b'temx'` runtime subtrees), extracting spectral cubes (`float32`), spatial `(X, Y)` stage grids, calibrated laser wavelengths (`Laser.pos`), `S/N`, and all acquisition/description/history metadata tables (`_reorder_metadata()` orders canonical `_METADATA_ORDERED_KEYS` first and appends additional instrument parameters at the end).
+  - `L6sReader` (`spectroview/model/m_l6s.py`) decodes HORIBA LabSpec 6 `.l6s` (1D spectrum) and `.l6m` (2D spectral image `SpIm`) binary node trees (`"LabSpec6\x00"` magic, both uncompressed 76-byte headers and compressed `lzhuf` + byte-delta + 4-plane byte-shuffled containers via `_decompress_ngc()`, 24-byte DFS records, shared `0x8000` / pointer-ID deduplicated blocks, and `b'temx'` runtime subtrees), extracting spectral cubes (`float32`), spatial `(X, Y)` stage grids, calibrated laser wavelengths (`Laser.pos` or `Laser (nm).pos`), `S/N`, and all acquisition/description/history metadata tables (`_reorder_metadata()` orders canonical `_METADATA_ORDERED_KEYS` first and appends additional instrument parameters at the end).
   - `NgsReader` (`spectroview/model/m_ngs.py`) decodes HORIBA LabSpec 5 `.ngs` (v1 uncompressed) and `.ngc` (v3 Haruhiko Okumura `lzhuf` adaptive Huffman + LZSS compressed + byte-level `np.cumsum` delta-coded) containers (`"NGSNextGen"` magic), parsing `DataMatrix` spectral/spatial tensors and `Table` blocks (`Param`, `Acq`, `Extra`, `Hist`) with canonical `_METADATA_ORDERED_KEYS` ordering and full preservation of extra instrument parameters.
 
 ### Headerless Spectra, Ascending Axes & Duplicate Coordinates

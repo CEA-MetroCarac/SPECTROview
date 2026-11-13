@@ -18,7 +18,7 @@ Examples of all supported data types can be found in the [`/examples`](https://g
 **SPECTROview** natively supports binary spectrometer formats without requiring external vendor software:
 
 - **`.wdf`** — Data recorded using WiRE software on Renishaw instruments (discrete spectra, temporal/repeatability series, 1D line-scan profiles, and 2D hyperspectral maps).
-- **`.l6s` and `.l6m`** — Native binary spectra (`.l6s`) and 2D spectral images/maps (`.l6m`) recorded using HORIBA LabSpec 6 software.
+- **`.l6s` and `.l6m`** — Native binary spectra (`.l6s`) and 2D spectral images/maps (`.l6m`), both uncompressed and compressed, recorded using HORIBA LabSpec 6 software.
 - **`.ngs` and `.ngc`** — Native binary spectra (`.ngs`) and compressed 2D spectral images/maps (`.ngc`) recorded using HORIBA LabSpec 5 software.
 - **`.spc`** — Data recorded using LabSpec 6 / T64000 / GRAMS software on HORIBA and Thermo instruments (discrete Raman/PL spectra and 2D hyperspectral maps).
 

@@ -1126,8 +1126,14 @@ def _construct_l6s_metadata(
 
     if reader.laser_wavelength_nm is not None:
         metadata["Laser Wavelength (nm)"] = f"{reader.laser_wavelength_nm:g}"
-    elif "Laser" in tbl and str(tbl["Laser"]).strip():
-        metadata["Laser Wavelength (nm)"] = str(tbl["Laser"]).strip()
+        mapped_source_keys.add("Laser (nm)")
+    else:
+        for laser_key in ("Laser", "Laser (nm)"):
+            if laser_key in tbl and str(tbl[laser_key]).strip():
+                metadata["Laser Wavelength (nm)"] = str(tbl[laser_key]).strip()
+                if laser_key == "Laser (nm)":
+                    mapped_source_keys.add("Laser (nm)")
+                break
 
     # Preserve all remaining LabSpec 6 parameters at the end of the metadata list
     for key, val in tbl.items():

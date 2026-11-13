@@ -367,6 +367,8 @@ class TestDetectFileType:
             (spec_dir / "MoS2_PL.spc", "spectra"),
             (spec_dir / "MoS2_Raman.spc", "spectra"),
             (spec_dir / "spectrum.l6s", "spectra"),
+            (spec_dir / "spectrum_ls6.l6s", "spectra"),
+            (spec_dir / "spectrum_ls6_2.l6s", "spectra"),
             (spec_dir / "spectrum.ngs", "spectra"),
             (spec_dir / "specturm_TRPL.dat", "spectra"),
             (spec_dir / "XRDspectra.txt", "spectra"),
@@ -823,6 +825,79 @@ class TestL6sAndL6mBinaryReader:
         assert meta["Acquired"] == "21.05.2026 16:39:38"
         assert meta["S/N"] == "57.7"
 
+    def test_compressed_l6s_spectrum_loading_and_metadata_ordering(self, examples_dir):
+        l6s_path = examples_dir / "spectroscopic_data" / "spectrum_ls6_2.l6s"
+        assert l6s_path.exists()
+
+        assert detect_file_type(l6s_path) == "spectra"
+
+        hdr = L6sReader.peek_header(l6s_path)
+        assert hdr["root_tag"] == "datas"
+        assert hdr["version"] == 2
+        assert hdr["root_count"] == 10
+        assert hdr["is_compressed"] is True
+
+        res = load_l6s_spectrum(l6s_path)
+        assert res["type"] == "spectra"
+        assert len(res["items"]) == 1
+
+        item = res["items"][0]
+        assert item["name"] == "spectrum_ls6_2"
+        assert item["x0"].shape == (1022,)
+        assert item["y0"].shape == (1022,)
+        # Raw eV axis in spectrum_ls6_2.l6s is descending [3.6923..1.8634]; loader sorts ascending
+        assert np.all(np.diff(item["x0"]) > 0)
+        assert item["x0"][0] == pytest.approx(1.86339, abs=1e-4)
+        assert item["x0"][-1] == pytest.approx(3.69226, abs=1e-4)
+
+        # GaN NBE photoluminescence peak around 3.422 eV
+        peak_idx = int(np.argmax(item["y0"]))
+        assert item["x0"][peak_idx] == pytest.approx(3.4221, abs=1e-3)
+        assert item["y0"][peak_idx] == pytest.approx(515.0, abs=0.05)
+
+        meta = item["metadata"]
+        keys = list(meta.keys())
+        ordered_present = [k for k in _METADATA_ORDERED_KEYS if k in meta]
+        assert keys[: len(ordered_present)] == ordered_present
+
+        assert meta["File Format"] == "HORIBA LabSpec 6"
+        assert meta["Date"] == "12.11.2026 18:44"
+        assert meta["Grating"] == "100 gr/mm Vis"
+        assert meta["Objective Used"] == "x15 NUV"
+        assert meta["Laser Wavelength (nm)"] == "325"
+        assert meta["Laser Power (%)"] == "0.01%"
+        assert meta["Exposure Time (s)"] == 100
+        assert meta["Accumulations"] == 2
+        assert meta["Slit Opening (µm)"] == pytest.approx(250.0225)
+        assert meta["X-axis Unit"] == "eV"
+        assert meta["Points"] == 1022
+        assert meta["Title"] == "D_1"
+        assert meta["Application"] == "LabSpec 6"
+        assert meta["Measurement Type"] == "Spectrum"
+        assert meta["Spectral Unit"] == "Cnt"
+        assert meta["X-axis Type"] == "Spectr"
+
+        tail_keys = keys[len(ordered_present) :]
+        assert "Instrument" in tail_keys
+        assert meta["Instrument"] == "LabRAM HR Evol"
+        assert meta["Detector"] == "Synapse CCD"
+        assert meta["Detector temperature (°C)"] == pytest.approx(-70.16)
+        assert meta["Acquired"] == "12.11.2026 18:44:03"
+        assert meta["S/N"] == "36.1"
+        assert "Laser (nm)" not in meta
+
+    def test_compressed_l6s_fast_peek_for_large_archives(self, examples_dir, monkeypatch):
+        from spectroview.model import m_l6s
+
+        l6s_path = examples_dir / "spectroscopic_data" / "spectrum_ls6_2.l6s"
+        # Force the large-archive (<1 ms) fast-peek branch used for multi-MB compressed .l6m maps
+        monkeypatch.setattr(m_l6s, "_PEEK_DECOMPRESS_LIMIT", 1024)
+        hdr = L6sReader.peek_header(l6s_path)
+        assert hdr["root_tag"] == "datas"
+        assert hdr["is_compressed"] is True
+        assert hdr["flags"] == 0x0D
+        assert detect_file_type(l6s_path) == "spectra"
+
     def test_l6m_map_loading_coordinates_and_metadata_ordering(self, examples_dir):
         spec_dir = examples_dir / "spectroscopic_data"
         l6m_path = spec_dir / "mapls6.l6m" if (spec_dir / "mapls6.l6m").exists() else spec_dir / "map.l6m"
@@ -888,6 +963,36 @@ class TestL6sAndL6mBinaryReader:
             detect_file_type(bad_magic)
         with pytest.raises(ValueError, match="Invalid LabSpec 6 binary file"):
             L6sReader(bad_magic)
+
+        # Corrupt compressed header: uncomp_size not divisible by 4 with 0x04 shuffle flag
+        bad_uncomp = tmp_path / "bad_uncomp.l6s"
+        bad_uncomp.write_bytes(
+            b"LabSpec6\x00\x00\x00\x00" + struct.pack("<IIII", 0x0D, 0, 101, 32) + b"\x00" * 32
+        )
+        with pytest.raises(ValueError, match="Corrupt LabSpec 6 compression header"):
+            L6sReader.peek_header(bad_uncomp)
+        with pytest.raises(ValueError, match="Corrupt LabSpec 6 compression header"):
+            L6sReader(bad_uncomp)
+
+        # Corrupt compressed header: comp_size exceeds actual file length
+        trunc_comp = tmp_path / "trunc_comp.l6s"
+        trunc_comp.write_bytes(
+            b"LabSpec6\x00\x00\x00\x00" + struct.pack("<IIII", 0x0D, 0, 1024, 5000) + b"\x00" * 32
+        )
+        with pytest.raises(ValueError, match="Corrupt LabSpec 6 compression header"):
+            L6sReader.peek_header(trunc_comp)
+        with pytest.raises(ValueError, match="Corrupt LabSpec 6 compression header"):
+            L6sReader(trunc_comp)
+
+        # Corrupt compressed payload bytes (non-LabSpec root descriptor after decode)
+        bad_payload = tmp_path / "bad_payload.l6s"
+        bad_payload.write_bytes(
+            b"LabSpec6\x00\x00\x00\x00" + struct.pack("<IIII", 0x0D, 0, 128, 64) + b"\xff" * 64
+        )
+        with pytest.raises(ValueError, match="Invalid LabSpec 6 root descriptor"):
+            L6sReader.peek_header(bad_payload)
+        with pytest.raises(ValueError, match="Invalid LabSpec 6 root descriptor"):
+            L6sReader(bad_payload)
 
 
 class TestNgsAndNgcBinaryReader:

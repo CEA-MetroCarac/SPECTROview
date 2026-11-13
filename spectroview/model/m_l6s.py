@@ -1,21 +1,31 @@
 """Native binary reader for HORIBA LabSpec 6 (.l6s and .l6m) spectroscopic files.
 
-Decodes the proprietary ``LabSpec6`` binary serialization container (76-byte file
-header + recursive 24-byte Depth-First Search node descriptors with ``block_id``
-pointer deduplication) using pure Python ``struct`` and NumPy without external
-dependencies or Qt imports.
+Decodes the proprietary ``LabSpec6`` binary serialization container (both
+uncompressed 76-byte-header streams and ``lzhuf`` + delta + 4-plane
+byte-shuffled compressed containers, plus recursive 24-byte Depth-First Search
+node descriptors with ``block_id`` pointer deduplication) using pure Python
+``struct`` and NumPy without external dependencies or Qt imports.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 import struct
+from pathlib import Path
 from typing import Any
 
 import numpy as np
 
+from spectroview.model.m_ngs import _decompress_ngc
+
 _LABSPEC6_MAGIC = b"LabSpec6\x00"
-_HEADER_SIZE = 0x4C  # 76 bytes before root 24-byte node descriptor
+_PREFIX_SIZE = 0x14  # 20 bytes: magic(12) + flags(4) + reserved(4)
+_COMP_HEADER_SIZE = 0x1C  # 28 bytes: prefix(20) + uncomp_size(4) + comp_size(4)
+_HEADER_SIZE = 0x4C  # 76 bytes before root 24-byte node descriptor (uncompressed)
+_SUB_VERSION_OFFSET = 0x44 - _PREFIX_SIZE  # 0x30 into stream starting at 0x14
+_SUB_ROOT_DESC_OFFSET = _HEADER_SIZE - _PREFIX_SIZE  # 0x38 into stream starting at 0x14
+_FLAG_COMPRESSED = 0x01
+_FLAG_BYTE_SHUFFLE = 0x04
+_PEEK_DECOMPRESS_LIMIT = 262_144  # 256 KiB cap for full root-descriptor peek on shuffled streams
 
 _DTYPE_SIZES: dict[int, int] = {
     0x00: 0,
@@ -235,25 +245,108 @@ def _parse_node(
     }, cursor
 
 
+def _validate_compressed_header(
+    buf: bytes | memoryview,
+    total_len: int,
+    flags: int,
+    fname: str,
+) -> tuple[int, int]:
+    """Validate and extract ``(uncomp_size, comp_size)`` for a compressed LabSpec 6 container."""
+    uncomp_size, comp_size = struct.unpack_from("<II", buf, _PREFIX_SIZE)
+    min_uncomp = _SUB_ROOT_DESC_OFFSET + 24
+    # In lzhuf (F=60), theoretical expansion cannot exceed ~480x compressed size
+    max_uncomp = max(4096, comp_size * 512)
+    if (
+        uncomp_size < min_uncomp
+        or comp_size == 0
+        or _COMP_HEADER_SIZE + comp_size > total_len
+        or uncomp_size > max_uncomp
+        or ((flags & _FLAG_BYTE_SHUFFLE) != 0 and (uncomp_size % 4) != 0)
+    ):
+        raise ValueError(f"Corrupt LabSpec 6 compression header in {fname}")
+    return uncomp_size, comp_size
+
+
+def _decode_compressed_stream(
+    payload: bytes | memoryview,
+    uncomp_size: int,
+    flags: int,
+    fname: str,
+) -> memoryview:
+    """Decompress a compressed LabSpec 6 payload (``lzhuf`` + delta + optional 4-plane shuffle)."""
+    try:
+        decoded = _decompress_ngc(payload, uncomp_size)
+    except (IndexError, ValueError) as exc:
+        raise ValueError(f"Truncated or corrupt LabSpec 6 compressed payload in {fname}") from exc
+
+    if (flags & _FLAG_BYTE_SHUFFLE) != 0:
+        if len(decoded) % 4 != 0:
+            raise ValueError(f"Invalid 4-plane LabSpec 6 compressed size in {fname}")
+        # LabSpec 6 splits 4-byte record lanes into 4 contiguous planes before lzhuf
+        unshuffled = np.ascontiguousarray(
+            np.frombuffer(decoded, dtype=np.uint8).reshape(4, -1).T
+        ).reshape(-1)
+        return memoryview(unshuffled)
+    return memoryview(decoded)
+
+
 class L6sReader:
     """Native binary reader for HORIBA LabSpec 6 ``.l6s`` and ``.l6m`` files."""
 
     @staticmethod
     def peek_header(filename: str | Path) -> dict[str, Any]:
-        """Validate the 76-byte LabSpec 6 binary header without reading full data arrays."""
+        """Validate the LabSpec 6 binary header without reading full spectral arrays."""
         p = Path(filename)
         with open(p, "rb") as f:
-            hdr = f.read(128)
+            hdr = f.read(512)
 
-        if len(hdr) < _HEADER_SIZE + 24:
+        if len(hdr) < _COMP_HEADER_SIZE:
             raise ValueError(f"File too small to be a valid LabSpec 6 binary file: {p.name}")
         if not hdr.startswith(_LABSPEC6_MAGIC):
             raise ValueError(f"Invalid LabSpec 6 magic header in {p.name}")
 
-        root_tag = hdr[20:24]
-        cls_id = struct.unpack_from("<I", hdr, 24)[0]
-        version = struct.unpack_from("<I", hdr, 0x44)[0]
-        root_df, _, _, root_blk, root_cnt = struct.unpack_from("<II8sII", hdr, _HEADER_SIZE)
+        flags = struct.unpack_from("<I", hdr, 0x0C)[0]
+        is_compressed = (flags & _FLAG_COMPRESSED) != 0
+
+        if not is_compressed:
+            if len(hdr) < _HEADER_SIZE + 24:
+                raise ValueError(f"File too small to be a valid LabSpec 6 binary file: {p.name}")
+            stream: bytes | memoryview = memoryview(hdr)[_PREFIX_SIZE:]
+        else:
+            file_size = p.stat().st_size
+            uncomp_size, comp_size = _validate_compressed_header(hdr, file_size, flags, p.name)
+            if (flags & _FLAG_BYTE_SHUFFLE) == 0:
+                comp_slice = memoryview(hdr)[_COMP_HEADER_SIZE : min(len(hdr), _COMP_HEADER_SIZE + comp_size)]
+                stream = _decode_compressed_stream(comp_slice, _SUB_ROOT_DESC_OFFSET + 24, 0, p.name)
+            elif uncomp_size <= _PEEK_DECOMPRESS_LIMIT:
+                with open(p, "rb") as f:
+                    f.seek(_COMP_HEADER_SIZE)
+                    comp_payload = f.read(comp_size)
+                if len(comp_payload) < comp_size:
+                    raise ValueError(f"Truncated LabSpec 6 compressed payload in {p.name}")
+                stream = _decode_compressed_stream(comp_payload, uncomp_size, flags, p.name)
+            else:
+                # Large 4-plane shuffled archive (e.g. compressed .l6m): validate lzhuf prefix in <1 ms
+                try:
+                    prefix1 = _decompress_ngc(memoryview(hdr)[_COMP_HEADER_SIZE:], 1)
+                except (IndexError, ValueError) as exc:
+                    raise ValueError(f"Truncated or corrupt LabSpec 6 compressed payload in {p.name}") from exc
+                if prefix1[0:1] != b"\xd7":
+                    raise ValueError(f"Invalid LabSpec 6 root descriptor in {p.name}")
+                return {
+                    "root_tag": "datas",
+                    "class_id": None,
+                    "version": None,
+                    "root_count": None,
+                    "root_block_id": None,
+                    "is_compressed": True,
+                    "flags": flags,
+                }
+
+        root_tag = bytes(stream[0:4])
+        cls_id = struct.unpack_from("<I", stream, 4)[0]
+        version = struct.unpack_from("<I", stream, _SUB_VERSION_OFFSET)[0]
+        root_df, _, _, root_blk, root_cnt = struct.unpack_from("<II8sII", stream, _SUB_ROOT_DESC_OFFSET)
         if (root_df & 0xFF) != 0x09 or root_cnt == 0:
             raise ValueError(f"Invalid LabSpec 6 root descriptor in {p.name}")
 
@@ -263,6 +356,8 @@ class L6sReader:
             "version": version,
             "root_count": root_cnt,
             "root_block_id": root_blk,
+            "is_compressed": is_compressed,
+            "flags": flags,
         }
 
     def __init__(self, filename: str | Path) -> None:
@@ -270,14 +365,32 @@ class L6sReader:
         p = Path(filename)
         raw = p.read_bytes()
 
-        if len(raw) < _HEADER_SIZE + 24 or not raw.startswith(_LABSPEC6_MAGIC):
+        if len(raw) < _COMP_HEADER_SIZE or not raw.startswith(_LABSPEC6_MAGIC):
             raise ValueError(f"Invalid LabSpec 6 binary file: {p.name}")
 
-        mv = memoryview(raw)
+        flags = struct.unpack_from("<I", raw, 0x0C)[0]
+        self.file_flags: int = flags
+        self.is_compressed: bool = (flags & _FLAG_COMPRESSED) != 0
+
+        if self.is_compressed:
+            uncomp_size, comp_size = _validate_compressed_header(raw, len(raw), flags, p.name)
+            comp_payload = memoryview(raw)[_COMP_HEADER_SIZE : _COMP_HEADER_SIZE + comp_size]
+            mv = _decode_compressed_stream(comp_payload, uncomp_size, flags, p.name)
+        else:
+            if len(raw) < _HEADER_SIZE + 24:
+                raise ValueError(f"Invalid LabSpec 6 binary file: {p.name}")
+            mv = memoryview(raw)[_PREFIX_SIZE:]
+
+        root_raw = mv[_SUB_ROOT_DESC_OFFSET : _SUB_ROOT_DESC_OFFSET + 24]
+        root_df, _, _, _, root_cnt = struct.unpack_from("<II8sII", root_raw, 0)
+        if (root_df & 0xFF) != 0x09 or root_cnt == 0:
+            raise ValueError(f"Invalid LabSpec 6 root descriptor in {p.name}")
+
         self.block_table: dict[int, Any] = {}
-        self.root_node, self.end_cursor = _parse_node(
-            mv, mv[_HEADER_SIZE : _HEADER_SIZE + 24], _HEADER_SIZE + 24, self.block_table
+        self.root_node, end_rel_cursor = _parse_node(
+            mv, root_raw, _SUB_ROOT_DESC_OFFSET + 24, self.block_table
         )
+        self.end_cursor = _PREFIX_SIZE + end_rel_cursor
 
         root_map: dict[str, Any] = {}
         for ch in self.root_node.get("value", []):
@@ -382,8 +495,12 @@ class L6sReader:
                 val = _format_scalar(ef.get("value"))
                 pos = _format_scalar(ef.get("pos"))
 
-                # Capture calibrated laser wavelength stored in 'pos' of 'Laser' entry (e.g. 532.43 nm)
-                if name.lower() == "laser" and isinstance(pos, (int, float)) and 100.0 <= float(pos) <= 5000.0:
+                # Capture calibrated laser wavelength stored in 'pos' of 'Laser' or 'Laser (nm)' entry
+                if (
+                    name.lower() in ("laser", "laser (nm)")
+                    and isinstance(pos, (int, float))
+                    and 100.0 <= float(pos) <= 5000.0
+                ):
                     self.laser_wavelength_nm = float(pos)
 
                 if val is not None and str(val) != "":

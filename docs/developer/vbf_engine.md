@@ -17,7 +17,7 @@ The **Vectorized Batch Fit Engine (`VBF Engine`)** achieves massive speedups thr
 1.  **All-at-Once Optimization**: It optimizes all \(N\) spectra simultaneously. The parameter matrices, data arrays, and residuals are manipulated as large 2D or 3D tensors.
 2.  **Vectorized Operations (BLAS/LAPACK)**: By framing the problem as tensors, the heavy lifting is offloaded to highly optimized C/Fortran libraries.
     - Matrix multiplications and transpositions for the normal equations (\(J^T J\) and \(J^T r\)) are performed using `np.matmul`, which dispatches to a batched BLAS `gemm` call. (An earlier version used `np.einsum` for this; `einsum` does not dispatch to BLAS for this contraction pattern and was measured 13–20× slower — see §2.)
-    - The linear systems for all spectra are solved via an **adaptive strategy**: NumPy's batched `np.linalg.solve` (LAPACK) for large batches, or a per-matrix SciPy `cho_solve` (Cholesky) loop for small batches with many parameters. See `_batched_solve()` in §2.
+    - The linear systems for all spectra are solved via **batched `np.linalg.solve`** directly across `(Na, K, K)` (`np.linalg.solve(A, b[..., None])[..., 0]`), dispatching all independent solves in a single LAPACK batch call instead of a Python loop, with per-matrix Cholesky/`np.linalg.solve`/`0.0` strictly as a singular-matrix `LinAlgError` fallback. See `_batched_solve()` in §2.
 3.  **Analytical Jacobians**: Instead of estimating derivatives numerically, the engine uses exact analytical formulas for every registered peak shape (`Gaussian`, `Lorentzian`, `PseudoVoigt`, `GaussianAsym`, `LorentzianAsym`, `Fano`, `DecaySingleExp`, `DecayBiExp`). This eliminates the \(2K\) extra evaluations entirely.
 4.  **No Spatial Propagation**: Unlike older map-fitting approaches that used spiral traversal to propagate guesses from neighbor to neighbor (forcing sequential execution), the `VBF Engine` initializes all pixels independently using amplitude scaling, allowing purely parallel tensor math.
 5.  **Variable Length Support**: When spectra don't share a common x-axis, `x` is passed as an `(N, M)` matrix instead of `(M,)`, and every batched model/Jacobian function branches on `x.ndim` to broadcast per-row instead of per-column.
@@ -33,12 +33,14 @@ The items below are specific to the numerical core in `fit_engine/`. Preprocessi
 1. **Batched normal-equation assembly via `np.matmul` instead of `np.einsum`** (13–20× faster for \(J^TJ\), 3–4× for \(J^Tr\), measured across realistic N/M/K sizes): `np.einsum('nmk,nml->nkl', J, J)` does not dispatch to BLAS for this contraction pattern and falls back to a generic reduction loop. The mathematically identical `J.transpose(0, 2, 1) @ J` dispatches to a batched BLAS `gemm` call.
 2. **Skip redundant Jacobian/normal-equation recomputation for rejected steps**: a rejected LM trial leaves a spectrum's parameters unchanged, so its Jacobian — and therefore \(J^TJ\)/\(J^Tr\) — is still exactly valid; only the damping term needs to change before retrying. `optimizer.py` caches \(J^TJ\)/\(J^Tr\) per spectrum (`JTJ_cache`, `JTr_cache`) and only recomputes them for spectra whose *last* step was accepted (tracked via a `dirty` boolean array), instead of for every active spectrum on every iteration. This is exact, not an approximation — verified to add zero additional numerical drift versus eager recomputation. On a slow-converging map (many spectra retrying at the same point under increasing damping), roughly 30% of active-spectrum iterations are rejected steps, so this directly eliminates ~30% of the two most expensive per-iteration operations.
 3. **Guarded `np.nan_to_num`**: `np.nan_to_num` runs three separate full-array passes (`isnan`/`isposinf`/`isneginf`) plus fancy-index assignment, even when nothing is actually wrong — true on the overwhelming majority of iterations. `optimizer._finite_or_clean()` checks `np.isfinite(arr).all()` first (a single fused pass) and only pays for the cleanup when something needs fixing — ~10× faster on the common, clean path.
-4. **Reduced temporaries in the batched peak models**: every function in `models.py` computes each repeated quantity (`1/w²`, `1/w³`, `dx²`, …) once and reuses it, replacing repeated `(N,M)`-sized divisions with a single `(N,1)` reciprocal plus a broadcasted multiply, and using in-place ops (`*=`, `+=`, `np.exp(..., out=...)`) to avoid allocating extra full-size arrays. `PseudoVoigt` computes its blend as `L + alpha*(G-L)` in place instead of building two fresh `(N,M[,3])` arrays. `GaussianAsym`/`LorentzianAsym` select the per-point effective FWHM with `np.where(dx < 0, wl, wr)` instead of casting a boolean mask to float and blending. Measured 1.0–1.4× per-function speedup (largest on `eval`-only calls; smaller on Jacobians where `exp()` or division already dominates the cost). All rewrites were validated against the original formulas over thousands of random trials (including near-zero/negative widths and near-overflow decay rates) to ≤1e-10 relative error.
-5. **Shared noise-floor statistics**: `apply_noise_threshold()` runs once before the fit (to seed a clean initial guess) and once after (to clean up any peaks that drifted into a noisy region — see §5.2 and §10). Both calls need the same median/smoothing-based noise statistics. `VBFevaluator.compute_noise_stats()` computes them once per `fit_spectra()` call and both invocations reuse the result, instead of repeating the median pass twice.
-6. **Adaptive Batched Solver** (`_batched_solve()`): dynamically chooses between NumPy's batched `np.linalg.solve` (best for large N, or small K) and a per-matrix SciPy `cho_solve` loop (Cholesky decomposition — best for small N with large K, exploiting the symmetric positive-definite structure of the normal equations).
-7. **Mean-Based Convergence Criteria**: the convergence check uses `mean(|Δp| / |p|) < xtol` rather than `max()`, preventing a single slowly converging parameter in multi-peak models from stalling the entire spectrum.
-8. **Vectorized Write-Back**: `build_results_batch()` evaluates all best-fit curves and computes R² simultaneously across all spectra using a single `_to_full()` expansion — no per-spectrum Python loop.
-9. **Zero-Weight Early Exit**: spectra identified as pure noise (all weights zero) are marked converged instantly, skipping every Levenberg-Marquardt iteration for them.
+4. **Reduced temporaries, fused PseudoVoigt, and `out=` buffers in batched peak models**: every function in `models.py` computes each repeated quantity (`1/w²`, `1/w³`, `dx²`, …) once and reuses it, replacing repeated `(N,M)`-sized divisions with a single `(N,1)` reciprocal plus a broadcasted multiply, and using in-place ops (`*=`, `+=`, `np.exp(..., out=...)`). `batched_pseudovoigt()` and `batched_pseudovoigt_jac()` fuse shared intermediates (`dx`, `inv_w`, `inv_w2`, `dx2`, `t2`, `g_unit`, `invD`) and compute `dPV/dw = (dx / w) * dPV/dx0` cleanly in place, while Gaussian Jacobians reuse `g_unit` directly for `dG/da`. `GaussianAsym`/`LorentzianAsym` select the per-point effective FWHM with `np.where(dx < 0, wl, wr)`. Every batched eval and Jacobian function in `BATCHED_MODELS` accepts an optional `out=` array so `VBFevaluator` fills slices in place without allocating intermediate peak tensors.
+5. **Shared noise-floor statistics & O(N) peak-index lookup**: `apply_noise_threshold()` runs once before the fit (to seed a clean initial guess) and once after (to clean up any peaks that drifted into a noisy region — see §5.2 and §10). Both calls reuse statistics cached by `VBFevaluator.compute_noise_stats()`, and peak-to-grid index lookup uses O(1) uniform arithmetic, O(N log M) `np.searchsorted`, or chunk-256 fallback instead of allocating an `(N, M)` distance matrix.
+6. **Batched Linear Solver** (`_batched_solve()`): dispatches all active `(Na, K, K)` normal-equation systems through a single NumPy batched `np.linalg.solve(A, b[..., None])[..., 0]` call regardless of batch size or parameter count, retaining per-matrix SciPy `cho_solve` / `np.linalg.solve` / `0.0` strictly as a singular-matrix `LinAlgError` fallback.
+7. **Post-Clip Mean-Based Convergence Criteria**: the convergence check measures `mean(|dp_actual| / |p|) < xtol` using actual post-clip displacement (`p_trial_active - p_improved_old`) rather than unconstrained `dp` or `max()`, preventing both slowly drifting wings and bound-pinned parameters from stalling spectra until `max_iter`.
+8. **Vectorized Write-Back**: `build_results_batch()` evaluates all best-fit curves and computes R² simultaneously across all spectra using zero-copy fast path or `_to_full()` expansion — no per-spectrum Python loop.
+9. **Zero-Weight Early Exit & Uniform-Weights Fast Path**: spectra identified as pure noise (all weights zero) are marked converged instantly, and `weights` of `None` or uniform `1.0` bypass per-iteration `(N, M)` weighted residual/Jacobian multiplications.
+10. **Preallocated LM Buffer Reuse & Zero-Copy Parameter Views**: `batched_levenberg_marquardt()` inspects `out=` support once before the loop to reuse `(N, M)` evaluation and `(N, M, K)` Jacobian buffers across iterations, while `VBFevaluator` precomputes `_all_free_identity` to skip `_to_full()` and `_free_idx` copies on unconstrained all-free models.
+11. **Pure-NumPy Linear Baseline Interpolation**: `eval_baseline()` and `eval_baseline_batch()` evaluate piecewise linear baselines (with domain-edge linear extrapolation) via `_interp_linear_extrap()` in pure NumPy, eliminating cold `scipy.interpolate` import overhead.
 
 ## **3. Code Logic and Core Implementation Principles**
 
@@ -93,7 +95,7 @@ graph TD
 | `vbf_thread.py` | `VBFthread` | `QThread` wrapper. Groups tasks into single-map, mega-batch (`grouped_2d_maps`), or length-grouped (`map_names`) modes; builds the weights matrix; calls `VBFengine.fit_spectra()`; writes results back into `SpectraStore`. Emits `progress_changed` and `timings_ready` signals. Sets an 8 MB stack on macOS to prevent LAPACK segfaults. |
 | `vbf_engine.py` | `VBFengine` | Public API orchestrator for a single fit call. Builds the evaluator, builds `p0` + applies the noise threshold, runs the optimizer, re-applies the noise threshold, and builds the result arrays. Records step-level timings in `self.timings`. |
 | `evaluator.py` | `VBFevaluator` | Bridge between the dictionary-based `fit_model` and the flat tensor API. Parses peak definitions, manages free/fixed parameter indexing, evaluates expressions, routes to the correct batched model functions, and builds the returned result arrays (parameters, R², best fits, per-peak curves) — no intermediate `FitResult` objects. |
-| `optimizer.py` | `batched_levenberg_marquardt()` | Pure numerical optimizer. Solves N independent least-squares problems simultaneously using batched `np.matmul` for the normal equations, with `JᵀJ`/`Jᵀr` caching to skip recomputation for rejected trial steps (§2). Uses an adaptive solver (`cho_solve` or `np.linalg.solve`) depending on matrix size. GUI-agnostic. |
+| `optimizer.py` | `batched_levenberg_marquardt()` | Pure numerical optimizer. Solves N independent least-squares problems simultaneously using batched `np.matmul` for the normal equations, with `JᵀJ`/`Jᵀr` caching to skip recomputation for rejected trial steps (§2). Uses batched `np.linalg.solve` with per-matrix singular fallback, reuses `eval_buf`/`J_buf` via `out=`, skips uniform weights, and checks post-clip `dp` convergence. GUI-agnostic. |
 | `models.py` | `batched_*()` functions | Vectorized peak shape functions and their analytical Jacobians. Contains the `BATCHED_MODELS` registry and the `numerical_jacobian()` fallback for models without one. |
 | `scalar_models.py` | scalar peak functions | Single-spectrum reference implementations, and the `PEAK_MODEL_REGISTRY` they're registered under. Used by `eval_peak_initial()` (UI preview curves) and as the scalar fallback wrapped by `_make_batched_scalar()` in `evaluator.py` when a model exists in `PEAK_MODEL_REGISTRY` but has no batched implementation in `BATCHED_MODELS` — currently every registered model has both, so this fallback path is a safety net for future additions rather than something exercised today. |
 
@@ -181,15 +183,13 @@ Parameters can reference other parameters via mathematical expressions (e.g., `m
 
 ### **6.3. Model Routing**
 
-The evaluator's `evaluate()` and `jacobian()` methods iterate over all registered peaks and sum their contributions:
+The evaluator's `evaluate()` and `jacobian()` methods iterate over all registered peaks and write or sum their contributions cleanly into `out` when provided:
 
 ```python
-def evaluate(self, x, p_free):
-    p_full = self._to_full(p_free)           # (N, K_total)
-    Y = np.zeros((N, M))
-    for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
-        Y += eval_fn(x, p_full[:, slc])      # Each peak adds its contribution
-    return Y
+def evaluate(self, x, p_free, out=None):
+    p_full = p_free if self._all_free_identity else self._to_full(p_free)  # (N, K_total)
+    # Single-peak models write directly into `out`; multi-peak models reuse one scratch buffer
+    ...
 ```
 
 For the Jacobian, if a peak has an analytical Jacobian (`has_jac=True`), it is used directly. Otherwise, `numerical_jacobian()` is called as a fallback with central differences and relative perturbation scaling.
@@ -203,15 +203,16 @@ For the Jacobian, if a peak has an analytical Jacobian (`has_jac=True`), it is u
 All batched functions follow the same signature:
 
 ```python
-def batched_shape(x, params):
+def batched_shape(x, params, out=None):
     """
     x:      (M,) shared axis  OR  (N, M) per-spectrum axis
     params: (N, n_p) parameter matrix
+    out:    optional preallocated (N, M) output buffer
     Returns: (N, M) predicted values
     """
 
-def batched_shape_jac(x, params):
-    """Returns: (N, M, n_p) Jacobian tensor"""
+def batched_shape_jac(x, params, out=None):
+    """Returns: (N, M, n_p) Jacobian tensor (written into `out` when provided)"""
 ```
 
 Internally, every function follows the same efficiency pattern (§2.4): compute each repeated quantity once (typically a reciprocal like `1/w²`), reuse it via broadcasted multiplication instead of re-dividing, and write into pre-allocated Jacobian slices in place.
@@ -281,7 +282,7 @@ The engine behavior can be tuned via the `fit_params` dictionary passed to `fit_
 
 ### **9.1. Key Parameters**
 *   **`max_ite`** (default: 200): The maximum number of Levenberg-Marquardt iterations. Increasing this might help extremely difficult spectra converge but will increase total execution time.
-*   **`xtol`** (default: 1e-4): The relative tolerance for the parameter step size \(\delta p\). Convergence is reached when the **mean** relative change across all parameters (\(\operatorname{mean}(|\delta p| / |p|)\)) is less than `xtol`. This mean-based criterion ensures that a single slowly oscillating parameter does not artificially delay convergence for the entire spectrum.
+*   **`xtol`** (default: 1e-4): The relative tolerance for the parameter step size \(\delta p\). Convergence is reached when the **mean** relative post-clip change across all active parameters (\(\operatorname{mean}(|\Delta p_{\text{actual}}| / |p|)\)) is less than `xtol`. Measuring post-clip displacement ensures that spectra pinned at parameter bounds converge cleanly instead of stalling until `max_ite`, and the mean-based criterion prevents a single slowly oscillating parameter from delaying convergence for the entire spectrum.
 *   **`ftol`** (default: 1e-4): The relative tolerance for the cost function (sum of squared residuals). If the relative change in the cost is less than `ftol`, the spectrum is considered converged.
 *   **`fit_negative`** (default: `False`): Whether to include negative intensity values in the fit. When `False`, negative points receive zero weight (`VBFthread._prepare_weights()`).
 *   **`coef_noise`** (default: 1): Noise coefficient multiplier. When > 0, activates noise-based weight masking (`VBFthread._prepare_weights()`) and peak suppression (`VBFevaluator.apply_noise_threshold()`). See [Section 10](#10-noise-level-estimation-and-noise-threshold) for a detailed explanation.
@@ -413,13 +414,14 @@ The default value in `spectroview/__init__.py` is `1`. The `Settings` UI exposes
 
 To add a new peak shape with maximum performance:
 
-**Step 1** — Define the batched evaluation function in `models.py`:
+**Step 1** — Define the batched evaluation function in `models.py` (with optional `out=None` buffer reuse):
 
 ```python
-def batched_newshape(x, params):
+def batched_newshape(x, params, out=None):
     """
     x:      (M,) or (N, M)
     params: (N, n_p) where columns are [param1, param2, ...]
+    out:    optional (N, M) preallocated array
     Returns: (N, M)
     """
     p1 = params[:, 0:1]    # (N, 1) — broadcasts over M
@@ -428,17 +430,21 @@ def batched_newshape(x, params):
         dx = x[None, :] - p2    # (N, M)
     else:
         dx = x - p2
-    return p1 * some_function(dx)
+    result = p1 * some_function(dx)
+    if out is not None:
+        out[...] = result
+        return out
+    return result
 ```
 
-**Step 2** — Derive and define the analytical Jacobian:
+**Step 2** — Derive and define the analytical Jacobian (accepting `out=None` for slice-in-place evaluation):
 
 ```python
-def batched_newshape_jac(x, params):
+def batched_newshape_jac(x, params, out=None):
     """Returns: (N, M, n_p) — partial derivatives w.r.t. each parameter."""
     # ... compute intermediates ...
     N, M = result.shape
-    J = np.empty((N, M, n_p))
+    J = np.empty((N, M, n_p), dtype=np.float64) if out is None else out
     J[:, :, 0] = d_result_d_p1
     J[:, :, 1] = d_result_d_p2
     return J

@@ -351,3 +351,77 @@ class TestEvalPeakInitial:
         x = np.linspace(300, 700, 20)
         y = eval_peak_initial(x, {"NotAShape": {}})
         assert np.array_equal(y, np.zeros_like(x))
+
+
+class TestEvaluatorZeroCopyAndThresholdLookup:
+    def test_evaluate_and_jacobian_out_buffers_across_modes(self):
+        x = np.linspace(350, 650, 120)
+        p1 = _lorentzian_peak(value=120.0, x0=450.0)
+        p2 = {
+            "PseudoVoigt": {
+                "ampli": {"value": 80.0, "min": 0.0, "max": 1e5, "vary": True, "expr": None},
+                "fwhm": {"value": 8.0, "min": 1e-3, "max": 100.0, "vary": True, "expr": None},
+                "x0": {"value": 520.0, "min": 480.0, "max": 560.0, "vary": True, "expr": None},
+                "alpha": {"value": 0.5, "min": 0.0, "max": 1.0, "vary": True, "expr": None},
+            }
+        }
+
+        # 1. All-free fast path
+        ev_free = VBFevaluator.from_fit_model({"peak_models": {"0": p1, "1": p2}})
+        assert ev_free._all_free_identity is True
+        p_mat = np.tile(ev_free.initial_params, (5, 1))
+        y_buf = np.empty((5, len(x)))
+        j_buf = np.empty((5, len(x), ev_free.n_params_free))
+        assert ev_free.evaluate(x, p_mat, out=y_buf) is y_buf
+        assert ev_free.jacobian(x, p_mat, out=j_buf) is j_buf
+        np.testing.assert_allclose(y_buf, ev_free.evaluate(x, p_mat))
+        np.testing.assert_allclose(j_buf, ev_free.jacobian(x, p_mat))
+
+        # Single peak and 1D evaluate parity
+        ev_one = VBFevaluator.from_fit_model({"peak_models": {"0": p1}})
+        assert ev_one.evaluate(x, ev_one.initial_params).shape == (1, len(x))
+        y1 = y_buf[:1]
+        assert ev_one.evaluate(x, ev_one.initial_params[None, :], out=y1) is y1
+
+        # 2. Fixed parameter & expression paths
+        ev_fixed = VBFevaluator.from_fit_model({
+            "peak_models": {"0": _lorentzian_peak(value=90.0, vary=False), "1": p2}
+        })
+        assert ev_fixed._all_free_identity is False
+        j_fixed = np.empty((3, len(x), ev_fixed.n_params_free))
+        assert ev_fixed.jacobian(x, np.tile(ev_fixed.initial_params, (3, 1)), out=j_fixed) is j_fixed
+        np.testing.assert_allclose(j_fixed, ev_fixed.jacobian(x, np.tile(ev_fixed.initial_params, (3, 1))))
+
+        ev_expr = VBFevaluator.from_fit_model({
+            "peak_models": {"0": p1, "1": _lorentzian_peak(x0=999.0, x0_expr="P1_x0 + 30")}
+        })
+        assert ev_expr._all_free_identity is False
+        j_expr = np.empty((2, len(x), ev_expr.n_params_free))
+        p_e = np.tile(ev_expr.initial_params, (2, 1))
+        assert ev_expr.jacobian(x, p_e, out=j_expr) is j_expr
+        np.testing.assert_allclose(j_expr, ev_expr.jacobian(x, p_e))
+
+    @pytest.mark.parametrize("descending", [False, True])
+    def test_noise_threshold_varying_x0_matches_exact_argmin(self, descending):
+        x = np.linspace(300.0, 500.0, 201)  # spacing = 1.0
+        if descending:
+            x = x[::-1].copy()
+        peak = _lorentzian_peak(value=10.0, x0=400.0)
+        ev = VBFevaluator.from_fit_model({"peak_models": {"0": peak}})
+
+        rng = np.random.default_rng(11)
+        N = 12
+        Y = rng.normal(0.0, 1.0, size=(N, len(x)))
+        # Plant a strong peak only on even rows at varying positions (including midpoints .5)
+        x0_targets = np.array([320.5, 340.0, 355.5, 380.2, 399.8, 410.5, 420.0, 445.5, 460.0, 470.5, 480.0, 490.5])
+        x0_free = np.searchsorted(ev._free_idx, ev._param_names.index("P1_x0"))
+        ampli_free = np.searchsorted(ev._free_idx, ev._param_names.index("P1_ampli"))
+        for i in range(0, N, 2):
+            Y[i] += 500.0 * np.exp(-0.5 * ((x - x0_targets[i]) / 3.0) ** 2)
+
+        p = np.tile(ev.initial_params, (N, 1))
+        p[:, x0_free] = x0_targets
+        ev.apply_noise_threshold(x, Y, p, {"coef_noise": 2.0})
+
+        assert np.all(p[0::2, ampli_free] > 0.0)
+        assert np.all(p[1::2, ampli_free] == 0.0)

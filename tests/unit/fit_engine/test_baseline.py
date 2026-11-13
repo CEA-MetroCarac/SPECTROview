@@ -166,3 +166,46 @@ class TestEvalBaselineBatchMatchesPerSpectrumLoop:
         config = {"mode": "Linear", "attached": False, "points": [[], []]}
         result = eval_baseline_batch(x, Y, config)
         assert np.array_equal(result, np.zeros_like(Y))
+
+
+
+class TestLinearBaselinePureNumpy:
+    @pytest.mark.parametrize("points", [
+        [[80.0, 20.0], [163.0, 43.0]],              # reversed 2-point extrapolation
+        [[85.0, 15.0, 45.0], [200.0, 5.0, 120.0]],  # unsorted 3-point piecewise + tail extrap
+    ])
+    def test_linear_interpolation_and_extrapolation_matches_scipy_without_importing_it(
+        self, x, points, monkeypatch
+    ):
+        from scipy.interpolate import interp1d
+
+        expected_1d = interp1d(points[0], points[1], fill_value="extrapolate")(x)
+        N = 4
+        Y_pts = np.tile(points[1], (N, 1)) * np.arange(1, N + 1)[:, None]
+        expected_2d = interp1d(points[0], Y_pts, axis=-1, fill_value="extrapolate")(x).astype(np.float32)
+
+        real_import = builtins.__import__
+
+        def block_scipy_interpolate(name, *args, **kwargs):
+            if name == "scipy.interpolate" or name.startswith("scipy.interpolate."):
+                raise AssertionError("Linear baseline must not import scipy.interpolate")
+            return real_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", block_scipy_interpolate)
+
+        cfg_1d = {"mode": "Linear", "attached": False, "points": points}
+        got_1d = eval_baseline(x, np.zeros_like(x), cfg_1d)
+        np.testing.assert_allclose(got_1d, expected_1d, rtol=1e-12, atol=1e-12)
+
+        Y_grid = np.tile(expected_1d, (N, 1))
+        cfg_batch = {"mode": "Linear", "attached": False, "points": points}
+        got_batch = eval_baseline_batch(x, Y_grid, cfg_batch)
+        np.testing.assert_allclose(got_batch, np.tile(expected_1d.astype(np.float32), (N, 1)), rtol=1e-6, atol=1e-5)
+
+        from spectroview.fit_engine.baseline import _interp_linear_extrap
+        np.testing.assert_allclose(
+            _interp_linear_extrap(x, np.asarray(points[0]), Y_pts).astype(np.float32),
+            expected_2d,
+            rtol=1e-6,
+            atol=1e-5,
+        )

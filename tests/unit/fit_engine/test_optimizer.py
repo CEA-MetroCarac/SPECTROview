@@ -384,3 +384,83 @@ class TestRobustLosses:
             _robust_cost(r_inlier, loss="huber", f_scale=1.0),
             _robust_cost(r_inlier, loss="linear"),
         )
+
+
+class TestPriority1Optimizations:
+    def test_bound_pinned_parameter_exits_early_before_max_iter(self):
+        """Post-clip dp check must allow bound-pinned fits to converge cleanly."""
+        x = np.linspace(-20.0, 20.0, 80)
+        # Model: y = a1 / (1 + x^2) + a2 * 1/(1 + (x-10)^2) where a2 >= 0 is active at boundary.
+        b1 = 1.0 / (1.0 + x ** 2)
+        b2 = 1.0 / (1.0 + (x - 10.0) ** 2)
+        Y = np.tile(50.0 * b1, (4, 1))
+        eval_calls = {"n": 0}
+
+        def evaluate_fn(x_in, p):
+            eval_calls["n"] += 1
+            return p[:, 0:1] * b1[None, :] + p[:, 1:2] * b2[None, :]
+
+        def jacobian_fn(x_in, p):
+            N = p.shape[0]
+            J = np.empty((N, len(x_in), 2))
+            J[:, :, 0] = b1[None, :]
+            J[:, :, 1] = b2[None, :]
+            return J
+
+        # Seed slightly positive amplitude on absent second peak: optimal unconstrained
+        # step tries to drive p[:, 1] negative (clipped to 0.0), which pre-clip dp
+        # previously treated as non-converged until max_iter.
+        p0 = np.tile([45.0, 1e-4], (4, 1))
+        p_opt, success, _ = batched_levenberg_marquardt(
+            x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+            p0=p0, lower_bounds=np.array([0.0, 0.0]), upper_bounds=np.array([1e4, 1e4]),
+            max_iter=200, xtol=1e-3, ftol=1e-4,
+        )
+        assert success.all()
+        assert eval_calls["n"] < 20
+        np.testing.assert_allclose(p_opt[:, 0], 50.0, atol=1e-3)
+        np.testing.assert_allclose(p_opt[:, 1], 0.0, atol=1e-6)
+
+    def test_uniform_ones_weights_bit_identical_to_none(self):
+        x, evaluate_fn, jacobian_fn = _linear_problem()
+        Y = evaluate_fn(x, np.array([[3.0, -2.0], [1.5, 4.0]]))
+        p0 = np.array([[0.5, 0.5], [0.5, 0.5]])
+        lo, hi = np.array([-100.0, -100.0]), np.array([100.0, 100.0])
+
+        for loss_name in ("linear", "soft_l1"):
+            p_none, s_none, c_none = batched_levenberg_marquardt(
+                x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+                p0=p0, lower_bounds=lo, upper_bounds=hi, loss=loss_name,
+            )
+            p_ones, s_ones, c_ones = batched_levenberg_marquardt(
+                x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+                p0=p0, lower_bounds=lo, upper_bounds=hi,
+                weights=np.ones_like(Y), loss=loss_name,
+            )
+            np.testing.assert_array_equal(p_none, p_ones)
+            np.testing.assert_array_equal(s_none, s_ones)
+            np.testing.assert_array_equal(c_none, c_ones)
+
+    def test_batched_solve_small_large_and_singular_fallback(self):
+        from spectroview.fit_engine.optimizer import _batched_solve
+
+        rng = np.random.default_rng(42)
+        for Na, K in ((25, 12), (600, 18), (1, 1)):
+            M_rand = rng.normal(size=(Na, K, K))
+            A = np.matmul(M_rand.transpose(0, 2, 1), M_rand) + 0.5 * np.eye(K)[None, :, :]
+            b = rng.normal(size=(Na, K))
+            expected = np.linalg.solve(A, b[..., None])[..., 0]
+            np.testing.assert_allclose(_batched_solve(A, b), expected, rtol=1e-12, atol=1e-12)
+
+        # Empty shapes return safely without error
+        assert _batched_solve(np.empty((0, 3, 3)), np.empty((0, 3))).shape == (0, 3)
+
+        # Singular row in mixed batch must fall back without poisoning healthy rows
+        A_mix = np.broadcast_to(np.eye(4), (3, 4, 4)).copy()
+        A_mix[1] = 0.0  # singular
+        b_mix = np.array([[1.0, 2.0, 3.0, 4.0], [9.0, 9.0, 9.0, 9.0], [-1.0, 0.5, 2.0, 3.0]])
+        out = _batched_solve(A_mix, b_mix)
+        assert np.isfinite(out).all()
+        np.testing.assert_allclose(out[0], b_mix[0])
+        np.testing.assert_array_equal(out[1], np.zeros(4))
+        np.testing.assert_allclose(out[2], b_mix[2])

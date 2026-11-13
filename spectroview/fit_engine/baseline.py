@@ -71,9 +71,9 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
                 d = dict(zip(pts_x, y_at_points))
                 return np.array([d[xi] for xi in x])
             else:
-                from scipy.interpolate import interp1d
-                func_interp = interp1d(pts_x, y_at_points, fill_value="extrapolate")
-                return func_interp(x)
+                return _interp_linear_extrap(x, pts_x, y_at_points)
+
+
                 
     elif mode == "Polynomial":
         bl_points_x = np.array(points[0])
@@ -143,6 +143,39 @@ def eval_baseline(x: np.ndarray, y: np.ndarray, config: dict) -> np.ndarray:
         except Exception as exc:
             raise _evaluation_error(mode, exc) from exc
 
+def _interp_linear_extrap(x: np.ndarray, pts_x: np.ndarray, y_pts: np.ndarray) -> np.ndarray:
+    """Piecewise linear interpolation with linear tail extrapolation for 1D or (N, K) anchor values."""
+    x_arr = np.asarray(x, dtype=np.float64)
+    px = np.asarray(pts_x, dtype=np.float64)
+    py = np.asarray(y_pts, dtype=np.float64)
+
+    if px.size == 2:
+        dx = px[1] - px[0]
+        if dx == 0.0:
+            fill = py[:, 0:1] if py.ndim == 2 else py[0]
+            shape = (py.shape[0], x_arr.size) if py.ndim == 2 else x_arr.shape
+            return np.broadcast_to(fill, shape).copy()
+        if py.ndim == 1:
+            slope = (py[1] - py[0]) / dx
+            return py[0] + slope * (x_arr - px[0])
+        slope = (py[:, 1:2] - py[:, 0:1]) / dx
+        return py[:, 0:1] + slope * (x_arr[None, :] - px[0])
+
+    # General >= 3 points: sort anchor coordinates, then interpolate/extrapolate per segment.
+    order = np.argsort(px, kind="mergesort")
+    px = px[order]
+    py = py[..., order]
+
+    seg = np.clip(np.searchsorted(px, x_arr, side="right") - 1, 0, px.size - 2)
+    dx_seg = np.diff(px)
+    step = dx_seg[seg]
+    safe_step = np.where(step != 0.0, step, 1.0)
+    t = np.where(step != 0.0, (x_arr - px[seg]) / safe_step, 0.0)
+    if py.ndim == 1:
+        return py[seg] + t * (py[seg + 1] - py[seg])
+    return py[:, seg] + t[None, :] * (py[:, seg + 1] - py[:, seg])
+
+
 def eval_baseline_batch(x: np.ndarray, Y: np.ndarray, config: dict) -> np.ndarray:
     """Evaluate baseline for a batch of spectra (N, M)."""
     mode = config.get("mode")
@@ -182,10 +215,10 @@ def eval_baseline_batch(x: np.ndarray, Y: np.ndarray, config: dict) -> np.ndarra
                 if set(pts_x.tolist()).issubset(set(x.tolist())) and len(pts_x) == len(x):
                     return y_at_points
                 else:
-                    from scipy.interpolate import interp1d
-                    # interp1d vectorizes naturally if provided a 2D array, interpolating along axis=-1
-                    func_interp = interp1d(pts_x, y_at_points, axis=-1, fill_value="extrapolate")
-                    return func_interp(x).astype(np.float32)
+                    return _interp_linear_extrap(x, pts_x, y_at_points).astype(np.float32)
+
+
+
 
         elif mode == "Polynomial":
             pts_x = x[bl_point_indices]

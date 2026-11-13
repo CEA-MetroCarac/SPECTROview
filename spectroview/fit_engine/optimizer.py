@@ -1,13 +1,15 @@
 """Batched Levenberg-Marquardt optimizer.
 
 Solves N independent least-squares problems simultaneously using
-NumPy tensor operations.  All N normal-equation systems are assembled
-and solved via Cholesky factorisation (scipy cho_factor/cho_solve),
-which exploits the symmetric positive-definite structure of the
-normal equations for optimal performance.
+NumPy tensor operations.  Normal-equation systems are assembled via
+batched matrix multiplication and solved with batched LAPACK
+(``np.linalg.solve``), falling back to per-matrix Cholesky/solve on
+singular cases.
 
 Bound handling uses simple projection (clipping) after each step.
 """
+
+import inspect
 
 import numpy as np
 
@@ -28,12 +30,10 @@ def _finite_or_clean(arr):
 def _batched_solve(A, b):
     """Solve A @ x = b for each spectrum.
 
-    Adaptive strategy:
-    - For large N (many spectra), np.linalg.solve is faster because NumPy's
-      batched LAPACK dispatch amortises the overhead.
-    - For small N with large K (few spectra, many parameters), a per-matrix
-      Cholesky decomposition is faster because it exploits the symmetric
-      positive-definite structure of the normal equations (JᵀJ + λI).
+    Uses NumPy's batched ``np.linalg.solve`` (vectorized LAPACK across all
+    ``Na`` systems) as the primary path for every batch size and parameter
+    count, falling back to per-matrix SciPy Cholesky / ``np.linalg.solve`` /
+    zeros only when a matrix in the batch is singular.
 
     Args:
         A: (Na, K, K) symmetric positive-definite matrices
@@ -43,17 +43,17 @@ def _batched_solve(A, b):
         x: (Na, K) solution vectors
     """
     Na, K = b.shape
+    if Na == 0 or K == 0:
+        return np.empty_like(b)
 
-    # Crossover heuristic: cho_solve loop wins when Na is small and K is large.
-    # For Na > ~500 or K < ~10, np.linalg.solve's batched path is faster.
-    if Na > 500 or K < 10:
-        try:
-            return np.linalg.solve(A, b[..., None])[..., 0]
-        except np.linalg.LinAlgError:
-            # Fall through to per-matrix solve
-            pass
+    # Batched C/LAPACK solve outperforms the Python cho_factor/cho_solve loop
+    # across all realistic Na and K ranges (including small Na tails).
+    try:
+        return np.linalg.solve(A, b[..., None])[..., 0]
+    except np.linalg.LinAlgError:
+        pass
 
-    # Per-matrix Cholesky solve (best for small Na, large K).
+    # Per-matrix fallback when one or more systems in the batch are singular.
     # scipy.linalg is imported here so it stays off the app's startup path.
     from scipy.linalg import cho_factor, cho_solve
     x = np.empty_like(b)
@@ -199,14 +199,16 @@ def batched_levenberg_marquardt(
     lo = np.asarray(lower_bounds, dtype=np.float64)
     hi = np.asarray(upper_bounds, dtype=np.float64)
 
+    weights_is_ones = False
     if weights is None:
-        weights = np.ones((N, M), dtype=np.float64)
+        weights_is_ones = True
     else:
         weights = np.asarray(weights, dtype=np.float64)
         if weights.ndim == 1:
             weights = np.tile(weights, (N, 1))
         if weights.shape != (N, M):
             raise ValueError(f"weights must have shape ({N}, {M}), got {weights.shape}")
+        weights_is_ones = bool(np.all(weights == 1.0))
 
     # Broadcast p0 if 1-D
     if p0.ndim == 1:
@@ -217,15 +219,34 @@ def batched_levenberg_marquardt(
     # Clip initial guess to bounds
     p = np.clip(p, lo, hi)
 
+    try:
+        _eval_supports_out = "out" in inspect.signature(evaluate_fn).parameters
+    except (TypeError, ValueError):
+        _eval_supports_out = False
+    try:
+        _jac_supports_out = "out" in inspect.signature(jacobian_fn).parameters
+    except (TypeError, ValueError):
+        _jac_supports_out = False
+
+    eval_buf = np.empty((N, M), dtype=np.float64) if _eval_supports_out and N > 0 else None
+    J_buf = np.empty((N, M, K), dtype=np.float64) if _jac_supports_out and N > 0 and K > 0 else None
+
     # Initial residuals and cost
-    Y_pred = evaluate_fn(x, p)
-    residuals = weights * (Y_pred - Y_data)        # (N, M)
+    Y_pred = evaluate_fn(x, p, out=eval_buf) if eval_buf is not None else evaluate_fn(x, p)
+    if weights_is_ones:
+        residuals = Y_pred - Y_data            # (N, M), distinct buffer from eval_buf
+    else:
+        residuals = weights * (Y_pred - Y_data)  # (N, M)
     cost = _robust_cost(residuals, loss, f_scale)  # (N,)
 
     # Per-spectrum damping factor
     lam = np.full(N, 1e-2)
     converged = np.zeros(N, dtype=bool)
-    converged |= (weights.sum(axis=1) == 0)
+    if weights_is_ones:
+        if M == 0:
+            converged[:] = True
+    else:
+        converged |= (weights.sum(axis=1) == 0)
 
     # Track consecutive rejections to detect stuck spectra
     consecutive_rejects = np.zeros(N, dtype=int)
@@ -262,16 +283,21 @@ def batched_levenberg_marquardt(
         if recompute_idx.size:
             p_r = p[recompute_idx]
             x_r = x[recompute_idx] if x.ndim == 2 else x
-            J_r = jacobian_fn(x_r, p_r)          # (Nr, M, K)
+            if J_buf is not None:
+                J_r = jacobian_fn(x_r, p_r, out=J_buf[:recompute_idx.size])
+            else:
+                J_r = jacobian_fn(x_r, p_r)          # (Nr, M, K)
             _finite_or_clean(J_r)
 
             # ── Normal equations: (JᵀJ + λ·diag(JᵀJ)) δp = -Jᵀr ──
             if loss != "linear":
                 w_r = _robust_scale_factor(residuals[recompute_idx], loss, f_scale)
-                J_r *= (weights[recompute_idx] * w_r)[:, :, None]
+                scale_r = w_r if weights_is_ones else (weights[recompute_idx] * w_r)
+                J_r *= scale_r[:, :, None]
                 scaled_r_r = w_r * residuals[recompute_idx]
             else:
-                J_r *= weights[recompute_idx, :, None]
+                if not weights_is_ones:
+                    J_r *= weights[recompute_idx, :, None]
                 scaled_r_r = residuals[recompute_idx]
 
             JT_r = J_r.transpose(0, 2, 1)
@@ -293,8 +319,7 @@ def batched_levenberg_marquardt(
 
         A = JTJ + eye_K[None, :, :] * damping[:, :, None]
 
-        # Solve using Cholesky decomposition (8x faster than np.linalg.solve
-        # for symmetric positive-definite normal equations)
+        # Solve normal equations in batched C/LAPACK
         dp = _batched_solve(A, -JTr)
 
         # Replace NaN steps with zero
@@ -304,8 +329,18 @@ def batched_levenberg_marquardt(
         p_trial_active = np.clip(p_active + dp, lo, hi)
 
         # Evaluate only the active spectra
-        Y_trial_active = evaluate_fn(x_active, p_trial_active)
-        r_trial_active = weights[active_idx] * (Y_trial_active - Y_data[active_idx])
+        if eval_buf is not None:
+            r_trial_active = evaluate_fn(x_active, p_trial_active, out=eval_buf[:n_active])
+            r_trial_active -= Y_data[active_idx]
+            if not weights_is_ones:
+                r_trial_active *= weights[active_idx]
+        else:
+            Y_trial_active = evaluate_fn(x_active, p_trial_active)
+            r_trial_active = (
+                Y_trial_active - Y_data[active_idx]
+                if weights_is_ones
+                else weights[active_idx] * (Y_trial_active - Y_data[active_idx])
+            )
         cost_trial_active = _robust_cost(r_trial_active, loss, f_scale)
 
         improved_active = cost_trial_active <= cost[active_idx]
@@ -332,11 +367,11 @@ def batched_levenberg_marquardt(
         if improved_active.any():
             rel_cost_change = np.abs(old_cost_improved - cost[improved_idx]) / (cost[improved_idx] + 1e-30)
 
-            # Use mean of relative parameter changes instead of max.
-            # With max, a single slowly-converging parameter out of K blocks
-            # the entire spectrum from converging, which scales very poorly
-            # as K increases (e.g. K=18 for 6-peak models).
-            dp_abs_rel = np.abs(dp[improved_active]) / np.maximum(np.abs(p_active[improved_active]), 1.0)
+            # Measure actual post-clip displacement so bound-pinned spectra do not
+            # stay active until max_iter when unconstrained dp != 0 was clipped.
+            p_improved_old = p_active[improved_active]
+            dp_actual = p_trial_active[improved_active] - p_improved_old
+            dp_abs_rel = np.abs(dp_actual) / np.maximum(np.abs(p_improved_old), 1.0)
             dp_rel = np.mean(dp_abs_rel, axis=1)
 
             effective_xtol = max(xtol, 1e-3)

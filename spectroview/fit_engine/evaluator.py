@@ -8,10 +8,13 @@ Handles:
   - Building batched fit results (parameters, R², best fits, per-peak curves)
 """
 
+import inspect
+
 import numpy as np
-from spectroview.fit_engine.scalar_models import PEAK_MODEL_REGISTRY
+
 from spectroview.fit_engine.models import BATCHED_MODELS, numerical_jacobian
 from spectroview.fit_engine.noise import mad_noise, moving_average_5
+from spectroview.fit_engine.scalar_models import PEAK_MODEL_REGISTRY
 
 
 class VBFevaluator:
@@ -25,7 +28,8 @@ class VBFevaluator:
     """
 
     def __init__(self):
-        self._peaks = []            # list of (model_name, param_slice, eval_fn, jac_fn)
+        self._peaks = []            # list of (model_name, param_slice, eval_fn, jac_fn, has_jac)
+        self._peak_out_flags = []   # parallel list of (eval_supports_out, jac_supports_out)
         self._param_names = []      # full prefixed names e.g. "m01_ampli"
         self._param_values = []     # initial values (all params)
         self._param_lower = []      # lower bounds
@@ -37,6 +41,7 @@ class VBFevaluator:
         self._free_idx = None       # indices of free params in the full vector
         self._fixed_idx = None
         self._fixed_values = None
+        self._all_free_identity = False
 
     @classmethod
     def from_fit_model(cls, fit_model_dict):
@@ -97,7 +102,10 @@ class VBFevaluator:
                     ev._param_vary.append(bool(vary))
 
                 end = len(ev._param_names)
+                eval_out = "out" in inspect.signature(eval_fn).parameters
+                jac_out = jac_fn is not None and "out" in inspect.signature(jac_fn).parameters
                 ev._peaks.append((model_name, slice(start, end), eval_fn, jac_fn, has_analytical_jac))
+                ev._peak_out_flags.append((eval_out, jac_out))
 
         # Finalise indexing
         ev._n_total = len(ev._param_names)
@@ -105,6 +113,11 @@ class VBFevaluator:
         ev._free_idx = np.where(vary_arr)[0]
         ev._fixed_idx = np.where(~vary_arr)[0]
         ev._fixed_values = np.array(ev._param_values)[ev._fixed_idx]
+        ev._all_free_identity = (
+            len(ev._fixed_idx) == 0
+            and not ev._exprs
+            and np.array_equal(ev._free_idx, np.arange(ev._n_total))
+        )
 
         return ev
 
@@ -180,44 +193,111 @@ class VBFevaluator:
 
     # ── Model evaluation ─────────────────────────────────────────────────
 
-    def evaluate(self, x, p_free):
+    def evaluate(self, x, p_free, out=None):
         """Evaluate the composite model for all spectra.
 
         Args:
             x: (M,) or (N, M)  — shared or per-spectrum x-axis
-            p_free: (N, K_free)  free parameters
+            p_free: (N, K_free) or (K_free,)  free parameters
+            out: optional preallocated (N, M) output buffer
 
         Returns: (N, M)
         """
-        p_full = self._to_full(p_free)
-        N = p_full.shape[0] if p_full.ndim == 2 else 1
+        is_all_free_2d = self._all_free_identity and p_free.ndim == 2
+        if is_all_free_2d:
+            p_full = p_free
+        else:
+            p_full = self._to_full(p_free)
+            if p_full.ndim == 1:
+                p_full = p_full[None, :]
+        N = p_full.shape[0]
         M = x.shape[-1] if hasattr(x, 'shape') else len(x)
-        Y = np.zeros((N, M))
 
-        for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
-            Y += eval_fn(x, p_full[:, slc] if p_full.ndim == 2 else p_full[slc][None, :])
+        n_peaks = len(self._peaks)
+        if n_peaks == 0:
+            if out is not None:
+                out.fill(0.0)
+                return out
+            return np.zeros((N, M))
+
+        if n_peaks == 1:
+            _, slc, eval_fn, _, _ = self._peaks[0]
+            eval_out, _ = self._peak_out_flags[0]
+            p_slice = p_full if is_all_free_2d else p_full[:, slc]
+            if out is not None and eval_out:
+                return eval_fn(x, p_slice, out=out)
+            res = eval_fn(x, p_slice)
+            if out is not None:
+                out[:] = res
+                return out
+            return res
+
+        _, slc0, eval_fn0, _, _ = self._peaks[0]
+        eval_out0, _ = self._peak_out_flags[0]
+        if out is not None:
+            Y = out
+            if eval_out0:
+                eval_fn0(x, p_full[:, slc0], out=Y)
+            else:
+                Y[:] = eval_fn0(x, p_full[:, slc0])
+        else:
+            Y = eval_fn0(x, p_full[:, slc0])
+
+        scratch = None
+        for idx_p in range(1, n_peaks):
+            _, slc, eval_fn, _, _ = self._peaks[idx_p]
+            eval_out, _ = self._peak_out_flags[idx_p]
+            p_slice = p_full[:, slc]
+            if eval_out:
+                if scratch is None:
+                    scratch = np.empty((N, M), dtype=np.float64)
+                Y += eval_fn(x, p_slice, out=scratch)
+            else:
+                Y += eval_fn(x, p_slice)
 
         return Y
 
-    def jacobian(self, x, p_free):
+    def jacobian(self, x, p_free, out=None):
         """Compute Jacobian w.r.t. free parameters.
 
         Returns: (N, M, K_free)
         """
+        M = x.shape[-1] if hasattr(x, 'shape') else len(x)
+
+        if self._all_free_identity and p_free.ndim == 2:
+            N = p_free.shape[0]
+            J = np.empty((N, M, self._n_total), dtype=np.float64) if out is None else out
+            for (_, slc, eval_fn, jac_fn, has_jac), (_, jac_out) in zip(self._peaks, self._peak_out_flags):
+                p_peak = p_free[:, slc]
+                if has_jac and jac_fn is not None:
+                    if jac_out:
+                        jac_fn(x, p_peak, out=J[:, :, slc])
+                    else:
+                        J[:, :, slc] = jac_fn(x, p_peak)
+                else:
+                    J[:, :, slc] = numerical_jacobian(eval_fn, x, p_peak)
+            return J
+
         p_full = self._to_full(p_free)
         N = p_full.shape[0]
-        M = x.shape[-1] if hasattr(x, 'shape') else len(x)
-        J_full = np.zeros((N, M, self._n_total))
+        J_full = np.empty((N, M, self._n_total), dtype=np.float64)
 
-        for model_name, slc, eval_fn, jac_fn, has_jac in self._peaks:
+        for (_, slc, eval_fn, jac_fn, has_jac), (_, jac_out) in zip(self._peaks, self._peak_out_flags):
             p_peak = p_full[:, slc]
             if has_jac and jac_fn is not None:
-                J_full[:, :, slc] = jac_fn(x, p_peak)
+                if jac_out:
+                    jac_fn(x, p_peak, out=J_full[:, :, slc])
+                else:
+                    J_full[:, :, slc] = jac_fn(x, p_peak)
             else:
                 J_full[:, :, slc] = numerical_jacobian(eval_fn, x, p_peak)
 
         if not getattr(self, '_exprs', []):
             # Return only columns for free parameters
+            if out is not None:
+                if self._free_idx.size > 0:
+                    np.take(J_full, self._free_idx, axis=2, out=out)
+                return out
             return J_full[:, :, self._free_idx]
 
         # Chain rule via J_expr: J_true = J_full @ J_expr
@@ -242,7 +322,10 @@ class VBFevaluator:
             J_true = np.einsum('nmk,nkf->nmf', J_full[None, :, :], J_expr)[0]
         else:
             J_true = np.einsum('nmk,nkf->nmf', J_full, J_expr)
-            
+
+        if out is not None:
+            out[:] = J_true
+            return out
         return J_true
 
     # ── Result construction ──────────────────────────────────────────────
@@ -411,15 +494,35 @@ class VBFevaluator:
             else:
                 x0_vals = np.full(N, self._param_values[x0_global_idx]) # (N,)
 
-            # Find closest index in x
+            # Find closest index in x without materializing an (N, M) distance matrix.
             if x.ndim == 1:
-                dists = np.abs(x[None, :] - x0_vals[:, None]) # (N, M)
-                inds = np.argmin(dists, axis=1) # (N,)
+                if N == 0:
+                    inds = np.empty(0, dtype=np.intp)
+                elif x0_vals.size > 0 and np.all(x0_vals == x0_vals[0]):
+                    inds = int(np.argmin(np.abs(x - x0_vals[0])))
+                elif x.size > 1 and np.all(x[1:] > x[:-1]):
+                    hi = np.minimum(np.searchsorted(x, x0_vals, side="left"), x.size - 1)
+                    lo = np.maximum(hi - 1, 0)
+                    inds = np.where(
+                        np.abs(x0_vals - x[lo]) <= np.abs(x[hi] - x0_vals),
+                        lo,
+                        hi,
+                    )
+                else:
+                    inds = np.empty(N, dtype=np.intp)
+                    for s in range(0, N, 256):
+                        e = min(s + 256, N)
+                        inds[s:e] = np.argmin(np.abs(x[None, :] - x0_vals[s:e, None]), axis=1)
             else:
-                dists = np.abs(x - x0_vals[:, None]) # (N, M)
-                inds = np.argmin(dists, axis=1) # (N,)
-                
-            ymean_at_x0 = ymean[np.arange(N), inds] if Y.ndim == 2 else ymean[inds]
+                inds = np.empty(N, dtype=np.intp)
+                for s in range(0, N, 256):
+                    e = min(s + 256, N)
+                    inds[s:e] = np.argmin(np.abs(x[s:e] - x0_vals[s:e, None]), axis=1)
+
+            if isinstance(inds, int):
+                ymean_at_x0 = ymean[:, inds] if Y.ndim == 2 else np.full(N, ymean[inds])
+            else:
+                ymean_at_x0 = ymean[np.arange(N), inds] if Y.ndim == 2 else ymean[inds]
             below_noise = ymean_at_x0 < noise_level # (N,) bool array
 
             for local_j, pname_j in enumerate(peak_pnames):

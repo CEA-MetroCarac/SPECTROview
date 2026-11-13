@@ -197,3 +197,60 @@ class TestNumericalJacobianHelper:
         assert np.isfinite(J_large).all()
         # dY/d(ampli) is exactly linear in ampli for Lorentzian -> ratio ~1 regardless of scale
         np.testing.assert_allclose(J_small[0, :, 0], J_large[0, :, 0], rtol=1e-4)
+
+
+class TestFusedPseudoVoigtAndOutBuffers:
+    def test_fused_pseudovoigt_matches_explicit_blend(self, x_axis):
+        from spectroview.fit_engine.models import (
+            batched_gaussian,
+            batched_gaussian_jac,
+            batched_lorentzian,
+            batched_lorentzian_jac,
+            batched_pseudovoigt,
+            batched_pseudovoigt_jac,
+        )
+
+        rng = np.random.default_rng(123)
+        N = 40
+        params = np.column_stack([
+            rng.uniform(0.0, 5000.0, N),
+            rng.uniform(0.5, 25.0, N),
+            rng.uniform(350.0, 650.0, N),
+            np.concatenate([np.array([0.0, 0.5, 1.0]), rng.uniform(0.0, 1.0, N - 3)]),
+        ])
+        alpha = params[:, 3:4]
+        p3 = params[:, :3]
+
+        G = batched_gaussian(x_axis, p3)
+        L = batched_lorentzian(x_axis, p3)
+        PV_ref = alpha * G + (1.0 - alpha) * L
+        np.testing.assert_allclose(batched_pseudovoigt(x_axis, params), PV_ref, rtol=1e-12, atol=1e-12)
+
+        JG = batched_gaussian_jac(x_axis, p3)
+        JL = batched_lorentzian_jac(x_axis, p3)
+        J_ref = np.empty((N, len(x_axis), 4))
+        J_ref[:, :, :3] = alpha[:, :, None] * JG + (1.0 - alpha[:, :, None]) * JL
+        J_ref[:, :, 3] = G - L
+        np.testing.assert_allclose(batched_pseudovoigt_jac(x_axis, params), J_ref, rtol=1e-11, atol=1e-11)
+
+    @pytest.mark.parametrize("shape", ALL_SHAPES)
+    def test_out_slice_writes_in_place_without_corrupting_neighbors(self, shape, x_axis, decay_x_axis):
+        x = _axis_for(shape, decay_x_axis, x_axis)
+        eval_fn, jac_fn, canonical = BATCHED_MODELS[shape]
+        base = _params_row(shape)[0]
+        params = np.vstack([base, base * 1.25])
+        N, M, k_p = params.shape[0], len(x), len(canonical)
+
+        for x_in in (x, np.vstack([x, x])):
+            y_buf = np.full((N, M), -777.0)
+            y_out = eval_fn(x_in, params, out=y_buf)
+            assert y_out is y_buf
+            np.testing.assert_allclose(y_out, eval_fn(x_in, params))
+
+            j_full = np.full((N, M, k_p + 2), -999.0)
+            j_slice = j_full[:, :, 1:1 + k_p]
+            j_out = jac_fn(x_in, params, out=j_slice)
+            assert j_out is j_slice
+            np.testing.assert_allclose(j_out, jac_fn(x_in, params))
+            assert np.all(j_full[:, :, 0] == -999.0)
+            assert np.all(j_full[:, :, -1] == -999.0)

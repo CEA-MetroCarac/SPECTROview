@@ -21,47 +21,44 @@ _4LOG2 = 4.0 * _LOG2
 #   params[:, 0] = ampli,  params[:, 1] = fwhm,  params[:, 2] = x0
 # ═══════════════════════════════════════════════════════════════════════════
 
-def batched_lorentzian(x, params):
+def batched_lorentzian(x, params, out=None):
     a = params[:, 0:1]          # (N,1)
     w = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     c = params[:, 2:3]
-    if x.ndim == 1:
-        dx = x[None, :] - c         # (N,M)
-    else:
-        dx = x - c
+    D = x[None, :] - c if x.ndim == 1 else x - c  # (N,M), squared in-place below
     inv_w2 = 1.0 / (w * w)      # (N,1) — one reciprocal instead of dividing (N,M) by w2 below
-    D = dx * dx
+    D *= D
     D *= (4.0 * inv_w2)
     D += 1.0
+    if out is not None:
+        np.divide(a, D, out=out)
+        return out
     return a / D                # (N,M)
 
 
-def batched_lorentzian_jac(x, params):
+def batched_lorentzian_jac(x, params, out=None):
     a = params[:, 0:1]
     w = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     c = params[:, 2:3]
-    if x.ndim == 1:
-        dx = x[None, :] - c
-    else:
-        dx = x - c
+    dx = x[None, :] - c if x.ndim == 1 else x - c
     inv_w2 = 1.0 / (w * w)
     dx2 = dx * dx
-    D = dx2 * (4.0 * inv_w2)
-    D += 1.0
-    invD = np.reciprocal(D)
+    invD = dx2 * (4.0 * inv_w2)
+    invD += 1.0
+    np.reciprocal(invD, out=invD)
     invD2 = invD * invD
 
     N, M = dx.shape
-    J = np.empty((N, M, 3))
+    J = np.empty((N, M, 3)) if out is None else out
     J[:, :, 0] = invD                               # dL/da
     coef_w = (8.0 * a) * inv_w2 * np.sqrt(inv_w2)   # (N,1) == 8a/w^3, avoids an (N,M) divide
-    tmp = dx2 * invD2
-    tmp *= coef_w
-    J[:, :, 1] = tmp                                # dL/dw
+    dx2 *= invD2
+    dx2 *= coef_w
+    J[:, :, 1] = dx2                                # dL/dw
     coef_x0 = (8.0 * a) * inv_w2
-    tmp2 = dx * invD2
-    tmp2 *= coef_x0
-    J[:, :, 2] = tmp2                               # dL/dx0
+    dx *= invD2
+    dx *= coef_x0
+    J[:, :, 2] = dx                                 # dL/dx0
     return J
 
 
@@ -70,41 +67,45 @@ def batched_lorentzian_jac(x, params):
 #   params[:, 0] = ampli,  params[:, 1] = fwhm,  params[:, 2] = x0
 # ═══════════════════════════════════════════════════════════════════════════
 
-def batched_gaussian(x, params):
+def batched_gaussian(x, params, out=None):
     a = params[:, 0:1]
     w = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     c = params[:, 2:3]
-    if x.ndim == 1:
-        dx = x[None, :] - c
-    else:
-        dx = x - c
+    t2 = x[None, :] - c if x.ndim == 1 else x - c
     inv_w2 = 1.0 / (w * w)
-    t2 = dx * dx
-    t2 *= inv_w2
-    t2 *= -_4LOG2
-    return a * np.exp(t2)
+    t2 *= t2
+    t2 *= (-_4LOG2 * inv_w2)
+    np.exp(t2, out=t2)
+    if out is not None:
+        np.multiply(t2, a, out=out)
+        return out
+    t2 *= a
+    return t2
 
 
-def batched_gaussian_jac(x, params):
+def batched_gaussian_jac(x, params, out=None):
     a = params[:, 0:1]
     w = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     c = params[:, 2:3]
-    if x.ndim == 1:
-        dx = x[None, :] - c
-    else:
-        dx = x - c
-    inv_w2 = 1.0 / (w * w)
+    dx = x[None, :] - c if x.ndim == 1 else x - c
+    inv_w = 1.0 / w
+    inv_w2 = inv_w * inv_w
     dx2 = dx * dx
-    t2 = dx2 * inv_w2
-    G = a * np.exp(-_4LOG2 * t2)       # (N,M)
+    g_unit = dx2 * (-_4LOG2 * inv_w2)
+    np.exp(g_unit, out=g_unit)
 
     N, M = dx.shape
-    J = np.empty((N, M, 3))
-    J[:, :, 0] = G / (a + 1e-30)                       # dG/da  = G/a
-    coef_w = 2.0 * _4LOG2 * inv_w2 / w                 # (N,1) == 2*4log2/w^3
-    J[:, :, 1] = G * dx2 * coef_w                      # dG/dw
-    coef_x0 = 2.0 * _4LOG2 * inv_w2                    # (N,1) == 2*4log2/w^2
-    J[:, :, 2] = G * dx * coef_x0                      # dG/dx0
+    J = np.empty((N, M, 3)) if out is None else out
+    J[:, :, 0] = g_unit                               # dG/da  = exp(-4·ln2·t²)
+    G = g_unit * a
+    coef_w = (2.0 * _4LOG2) * inv_w2 * inv_w          # (N,1) == 2·4log2/w^3
+    dx2 *= G
+    dx2 *= coef_w
+    J[:, :, 1] = dx2                                  # dG/dw
+    coef_x0 = (2.0 * _4LOG2) * inv_w2                 # (N,1) == 2·4log2/w^2
+    dx *= G
+    dx *= coef_x0
+    J[:, :, 2] = dx                                   # dG/dx0
     return J
 
 
@@ -114,37 +115,78 @@ def batched_gaussian_jac(x, params):
 #   params[:, 3] = alpha
 # ═══════════════════════════════════════════════════════════════════════════
 
-def batched_pseudovoigt(x, params):
-    p3 = params[:, :3]                # (N,3) — [ampli, fwhm, x0]
-    alpha = params[:, 3:4]            # (N,1)
-    G = batched_gaussian(x, p3)
-    L = batched_lorentzian(x, p3)
-    # alpha*G + (1-alpha)*L == L + alpha*(G-L); reuses G's buffer in place
-    # instead of allocating two more (N,M) arrays for the blend.
-    G -= L
-    G *= alpha
-    G += L
-    return G
-
-
-def batched_pseudovoigt_jac(x, params):
-    p3 = params[:, :3]
+def batched_pseudovoigt(x, params, out=None):
+    a = params[:, 0:1]
+    w = np.maximum(np.abs(params[:, 1:2]), 1e-15)
+    c = params[:, 2:3]
     alpha = params[:, 3:4]
-    G = batched_gaussian(x, p3)        # (N,M)
-    L = batched_lorentzian(x, p3)
-    JG = batched_gaussian_jac(x, p3)   # (N,M,3)
-    JL = batched_lorentzian_jac(x, p3)
+    t2 = x[None, :] - c if x.ndim == 1 else x - c
+    t2 *= t2
+    t2 *= (1.0 / (w * w))
 
-    N, M = G.shape
-    J = np.empty((N, M, 4))
-    # dPV/d(ampli,fwhm,x0) = alpha*JG + (1-alpha)*JL == JL + alpha*(JG-JL);
-    # reuses JG's buffer instead of allocating fresh (N,M,3) temporaries.
-    JG -= JL
-    JG *= alpha[:, :, None]
-    JG += JL
-    J[:, :, :3] = JG
-    # dPV/dalpha = G - L
-    J[:, :, 3] = G - L
+    g_unit = t2 * (-_4LOG2)
+    np.exp(g_unit, out=g_unit)
+
+    # Reuse t2 buffer in-place for l_unit = 1 / (4·t2 + 1).
+    t2 *= 4.0
+    t2 += 1.0
+    np.reciprocal(t2, out=t2)
+
+    # alpha*G_unit + (1-alpha)*L_unit == L_unit + alpha*(G_unit - L_unit)
+    g_unit -= t2
+    g_unit *= alpha
+    g_unit += t2
+    if out is not None:
+        np.multiply(a, g_unit, out=out)
+        return out
+    g_unit *= a
+    return g_unit
+
+
+def batched_pseudovoigt_jac(x, params, out=None):
+    a = params[:, 0:1]
+    w = np.maximum(np.abs(params[:, 1:2]), 1e-15)
+    c = params[:, 2:3]
+    alpha = params[:, 3:4]
+    dx = x[None, :] - c if x.ndim == 1 else x - c
+    inv_w = 1.0 / w
+    inv_w2 = inv_w * inv_w
+    dx2 = dx * dx
+    t2 = dx2 * inv_w2
+
+    # Compute g_unit and invD once cleanly from shared t2 instead of calling
+    # Gaussian/Lorentzian eval+jac four times.
+    g_unit = t2 * (-_4LOG2)
+    np.exp(g_unit, out=g_unit)
+
+    invD = t2
+    invD *= 4.0
+    invD += 1.0
+    np.reciprocal(invD, out=invD)
+    invD2 = invD * invD
+
+    N, M = dx.shape
+    J = np.empty((N, M, 4)) if out is None else out
+
+    # dPV/dampli = invD + alpha*(g_unit - invD); dPV/dalpha = a*(g_unit - invD)
+    diff_unit = g_unit - invD
+    d_ampli = diff_unit * alpha
+    d_ampli += invD
+    J[:, :, 0] = d_ampli
+    J[:, :, 3] = a * diff_unit
+
+    # dPV/dx0 = dx * inv_w2 * a * (alpha*(2*4*ln2)*g_unit + (1-alpha)*8*invD^2)
+    # dPV/dw  = (dx / w) * dPV/dx0  (both G and L depend strictly on u = dx/w)
+    g_unit *= ((2.0 * _4LOG2) * alpha)
+    invD2 *= (8.0 * (1.0 - alpha))
+    g_unit += invD2
+    g_unit *= (a * inv_w2)
+    g_unit *= dx
+    J[:, :, 2] = g_unit
+
+    g_unit *= dx
+    g_unit *= inv_w
+    J[:, :, 1] = g_unit
     return J
 
 
@@ -154,42 +196,41 @@ def batched_pseudovoigt_jac(x, params):
 #   params[:, 2] = fwhm_r, params[:, 3] = x0
 # ═══════════════════════════════════════════════════════════════════════════
 
-def batched_gaussian_asym(x, params):
+def batched_gaussian_asym(x, params, out=None):
     a  = params[:, 0:1]
     wl = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     wr = np.maximum(np.abs(params[:, 2:3]), 1e-15)
     c  = params[:, 3:4]
-    if x.ndim == 1:
-        dx = x[None, :] - c
-    else:
-        dx = x - c
+    dx = x[None, :] - c if x.ndim == 1 else x - c
     w = np.where(dx < 0, wl, wr)        # effective FWHM per point (exact select, no float-cast blend)
     inv_w2 = 1.0 / (w * w)
-    t2 = dx * dx
-    t2 *= inv_w2
-    t2 *= -_4LOG2
-    return a * np.exp(t2)
+    dx *= dx
+    dx *= (-_4LOG2 * inv_w2)
+    np.exp(dx, out=dx)
+    if out is not None:
+        np.multiply(a, dx, out=out)
+        return out
+    dx *= a
+    return dx
 
 
-def batched_gaussian_asym_jac(x, params):
+def batched_gaussian_asym_jac(x, params, out=None):
     a  = params[:, 0:1]
     wl = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     wr = np.maximum(np.abs(params[:, 2:3]), 1e-15)
     c  = params[:, 3:4]
-    if x.ndim == 1:
-        dx = x[None, :] - c
-    else:
-        dx = x - c
+    dx = x[None, :] - c if x.ndim == 1 else x - c
     neg = dx < 0
     w = np.where(neg, wl, wr)
     inv_w2 = 1.0 / (w * w)
     dx2 = dx * dx
-    t2 = dx2 * inv_w2
-    G = a * np.exp(-_4LOG2 * t2)
+    g_unit = dx2 * (-_4LOG2 * inv_w2)
+    np.exp(g_unit, out=g_unit)
 
     N, M = dx.shape
-    J = np.empty((N, M, 4))
-    J[:, :, 0] = G / (a + 1e-30)                        # dG/d_ampli
+    J = np.empty((N, M, 4)) if out is None else out
+    J[:, :, 0] = g_unit                                 # dG/d_ampli
+    G = g_unit * a
     coef = G * dx2 * (2.0 * _4LOG2) * inv_w2 / w        # shared magnitude, |w|-side selected below
     J[:, :, 1] = np.where(neg, coef, 0.0)               # dG/d_fwhm_l
     J[:, :, 2] = np.where(neg, 0.0, coef)                # dG/d_fwhm_r
@@ -203,43 +244,40 @@ def batched_gaussian_asym_jac(x, params):
 #   params[:, 2] = fwhm_r, params[:, 3] = x0
 # ═══════════════════════════════════════════════════════════════════════════
 
-def batched_lorentzian_asym(x, params):
+def batched_lorentzian_asym(x, params, out=None):
     a  = params[:, 0:1]
     wl = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     wr = np.maximum(np.abs(params[:, 2:3]), 1e-15)
     c  = params[:, 3:4]
-    if x.ndim == 1:
-        dx = x[None, :] - c
-    else:
-        dx = x - c
+    dx = x[None, :] - c if x.ndim == 1 else x - c
     w = np.where(dx < 0, wl, wr)
     inv_w2 = 1.0 / (w * w)
-    D = dx * dx
-    D *= (4.0 * inv_w2)
-    D += 1.0
-    return a / D
+    dx *= dx
+    dx *= (4.0 * inv_w2)
+    dx += 1.0
+    if out is not None:
+        np.divide(a, dx, out=out)
+        return out
+    return a / dx
 
 
-def batched_lorentzian_asym_jac(x, params):
+def batched_lorentzian_asym_jac(x, params, out=None):
     a  = params[:, 0:1]
     wl = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     wr = np.maximum(np.abs(params[:, 2:3]), 1e-15)
     c  = params[:, 3:4]
-    if x.ndim == 1:
-        dx = x[None, :] - c
-    else:
-        dx = x - c
+    dx = x[None, :] - c if x.ndim == 1 else x - c
     neg = dx < 0
     w = np.where(neg, wl, wr)
     inv_w2 = 1.0 / (w * w)
     dx2 = dx * dx
-    D = dx2 * (4.0 * inv_w2)
-    D += 1.0
-    invD = np.reciprocal(D)
+    invD = dx2 * (4.0 * inv_w2)
+    invD += 1.0
+    np.reciprocal(invD, out=invD)
     invD2 = invD * invD
 
     N, M = dx.shape
-    J = np.empty((N, M, 4))
+    J = np.empty((N, M, 4)) if out is None else out
     J[:, :, 0] = invD                                    # dL/d_ampli
     coef = (8.0 * a) * dx2 * invD2 * inv_w2 / w          # shared magnitude, |w|-side selected below
     J[:, :, 1] = np.where(neg, coef, 0.0)                # dL/d_fwhm_l
@@ -254,33 +292,31 @@ def batched_lorentzian_asym_jac(x, params):
 #   params[:, 2] = x0,     params[:, 3] = q
 # ═══════════════════════════════════════════════════════════════════════════
 
-def batched_fano(x, params):
+def batched_fano(x, params, out=None):
     a = params[:, 0:1]
     w = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     c = params[:, 2:3]
     q = params[:, 3:4]
-    if x.ndim == 1:
-        dx = x[None, :] - c
-    else:
-        dx = x - c
+    dx = x[None, :] - c if x.ndim == 1 else x - c
     inv_w = 1.0 / w
     eps = dx * (2.0 * inv_w)             # ε = (x - x0) / (Γ/2)
     qe = q + eps
     num = qe * qe
     den = eps * eps
     den += 1.0
-    return a * num / den
+    num *= a
+    if out is not None:
+        np.divide(num, den, out=out)
+        return out
+    return num / den
 
 
-def batched_fano_jac(x, params):
+def batched_fano_jac(x, params, out=None):
     a = params[:, 0:1]
     w = np.maximum(np.abs(params[:, 1:2]), 1e-15)
     c = params[:, 2:3]
     q = params[:, 3:4]
-    if x.ndim == 1:
-        dx = x[None, :] - c
-    else:
-        dx = x - c
+    dx = x[None, :] - c if x.ndim == 1 else x - c
     inv_w = 1.0 / w
     eps = dx * (2.0 * inv_w)
     qe = q + eps
@@ -296,7 +332,7 @@ def batched_fano_jac(x, params):
     df_deps *= inv_den2
 
     N, M = dx.shape
-    J = np.empty((N, M, 4))
+    J = np.empty((N, M, 4)) if out is None else out
     J[:, :, 0] = num * inv_den                      # df/d_ampli
     J[:, :, 1] = df_deps * (-eps * inv_w)           # df/d_fwhm  (dε/dw = -ε/w)
     J[:, :, 2] = df_deps * (-2.0 * inv_w)           # df/d_x0    (dε/dx0 = -2/w)
@@ -309,35 +345,33 @@ def batched_fano_jac(x, params):
 #   params[:, 0] = A,  params[:, 1] = tau,  params[:, 2] = B
 # ═══════════════════════════════════════════════════════════════════════════
 
-def batched_decay_single_exp(x, params):
+def batched_decay_single_exp(x, params, out=None):
     A   = params[:, 0:1]
     tau = np.maximum(np.abs(params[:, 1:2]), 1e-30)
     B   = params[:, 2:3]
-    if x.ndim == 1:
-        xv = x[None, :]
-    else:
-        xv = x
+    xv = x[None, :] if x.ndim == 1 else x
     inv_tau = 1.0 / tau
     E = xv * (-inv_tau)
     np.exp(E, out=E)
+    if out is not None:
+        np.multiply(E, A, out=out)
+        out += B
+        return out
     E *= A
     E += B
     return E
 
 
-def batched_decay_single_exp_jac(x, params):
+def batched_decay_single_exp_jac(x, params, out=None):
     A   = params[:, 0:1]
     tau = np.maximum(np.abs(params[:, 1:2]), 1e-30)
-    if x.ndim == 1:
-        xv = x[None, :]
-    else:
-        xv = x
+    xv = x[None, :] if x.ndim == 1 else x
     inv_tau = 1.0 / tau
     E = xv * (-inv_tau)
     np.exp(E, out=E)
 
     N, M = E.shape
-    J = np.empty((N, M, 3))
+    J = np.empty((N, M, 3)) if out is None else out
     J[:, :, 0] = E                                    # df/dA
     J[:, :, 1] = (A * inv_tau) * xv * E * inv_tau     # df/dτ = A·x·exp(-x/τ)/τ²
     J[:, :, 2] = 1.0                                  # df/dB
@@ -350,16 +384,13 @@ def batched_decay_single_exp_jac(x, params):
 #   params[:, 3] = tau2, params[:, 4] = B
 # ═══════════════════════════════════════════════════════════════════════════
 
-def batched_decay_bi_exp(x, params):
+def batched_decay_bi_exp(x, params, out=None):
     A1   = params[:, 0:1]
     tau1 = np.maximum(np.abs(params[:, 1:2]), 1e-30)
     A2   = params[:, 2:3]
     tau2 = np.maximum(np.abs(params[:, 3:4]), 1e-30)
     B    = params[:, 4:5]
-    if x.ndim == 1:
-        xv = x[None, :]
-    else:
-        xv = x
+    xv = x[None, :] if x.ndim == 1 else x
     Y = xv * (-1.0 / tau1)
     np.exp(Y, out=Y)
     Y *= A1
@@ -367,19 +398,19 @@ def batched_decay_bi_exp(x, params):
     np.exp(E2, out=E2)
     E2 *= A2
     Y += E2
+    if out is not None:
+        np.add(Y, B, out=out)
+        return out
     Y += B
     return Y
 
 
-def batched_decay_bi_exp_jac(x, params):
+def batched_decay_bi_exp_jac(x, params, out=None):
     A1   = params[:, 0:1]
     tau1 = np.maximum(np.abs(params[:, 1:2]), 1e-30)
     A2   = params[:, 2:3]
     tau2 = np.maximum(np.abs(params[:, 3:4]), 1e-30)
-    if x.ndim == 1:
-        xv = x[None, :]
-    else:
-        xv = x
+    xv = x[None, :] if x.ndim == 1 else x
     inv_tau1 = 1.0 / tau1
     E1 = xv * (-inv_tau1)
     np.exp(E1, out=E1)
@@ -388,7 +419,7 @@ def batched_decay_bi_exp_jac(x, params):
     np.exp(E2, out=E2)
 
     N, M = E1.shape
-    J = np.empty((N, M, 5))
+    J = np.empty((N, M, 5)) if out is None else out
     J[:, :, 0] = E1                                     # df/dA1
     J[:, :, 1] = (A1 * inv_tau1) * xv * E1 * inv_tau1   # df/dτ1
     J[:, :, 2] = E2                                     # df/dA2

@@ -11,7 +11,7 @@ The Green panel can alternatively display the Red/Blue intensity ratio (R/B).
 
 from __future__ import annotations
 from functools import lru_cache
-from typing import Optional, Dict, Tuple, List
+from typing import Callable, Optional, Dict, Tuple, List
 
 import numpy as np
 import matplotlib as mpl
@@ -42,7 +42,7 @@ from spectroview.view.components.map_selection import (
     resolve_1d_profile_selection,
     resolve_xy_selection,
 )
-from spectroview.viewmodel.utils import copy_fig_to_clb
+from spectroview.viewmodel.utils import copy_df_to_clb, copy_fig_to_clb
 from spectroview.model.spectral_parameters import (
     SPECTRAL_PARAMETERS,
     PARAM_INTEGRATED_INTENSITY,
@@ -178,6 +178,7 @@ class LiveMapSubpanel(QFrame):
     view_reset_requested = Signal()
     normalization_changed = Signal()      # 1D Y normalization toggled or range edited
     spectra_selected = Signal(list)       # List of (x, y) tuples selected interactively
+    copy_data_requested = Signal(str)     # color_id when user Ctrl+Clicks Copy button
 
     def __init__(self, color_id: str, parent=None, mode: str = "map"):
         super().__init__(parent)
@@ -223,6 +224,7 @@ class LiveMapSubpanel(QFrame):
         self._valid_pos_y_bounds: Optional[Tuple[float, float]] = None
         self._relayout_needed: bool = True
         self._spatial_sites: Optional[dict] = None
+        self._2d_data_provider: Optional[Callable[[str], Optional[tuple]]] = None
         self._selected_points: list[tuple[float, float]] = []
         self._selector: Optional[MapCanvasSelector] = None
         self._last_norm_params: tuple[bool, Optional[float], Optional[float]] = (False, None, None)
@@ -315,7 +317,7 @@ class LiveMapSubpanel(QFrame):
         self.btn_copy.setIcon(Icons.copy(color=icon_color))
         self.btn_copy.setIconSize(QSize(14, 14))
         self.btn_copy.setFixedSize(22, 22)
-        self.btn_copy.setToolTip("Copy map to clipboard")
+        self.btn_copy.setToolTip("Copy map to clipboard. Hold Ctrl + Click to copy data to clipboard")
         self.btn_copy.clicked.connect(self._copy_to_clipboard)
         row1_layout.addWidget(self.btn_copy)
 
@@ -876,10 +878,10 @@ class LiveMapSubpanel(QFrame):
         """Configure subpanel for 'map' (2D heatmap) or 'spectra' (1D variation graph) mode."""
         self.mode = mode
         if mode == "map":
-            self.btn_copy.setToolTip("Copy map to clipboard")
+            self.btn_copy.setToolTip("Copy map to clipboard. Hold Ctrl + Click to copy data to clipboard")
             self.cbb_param.setToolTip("Select spectral parameter for this map")
         else:
-            self.btn_copy.setToolTip("Copy graph to clipboard")
+            self.btn_copy.setToolTip("Copy graph to clipboard. Hold Ctrl + Click to copy data to clipboard")
             self.cbb_param.setToolTip("Select spectral parameter for this graph")
         self._sync_palette_visibility()
 
@@ -986,8 +988,140 @@ class LiveMapSubpanel(QFrame):
             _parse_one(self._view_options.get("copy_fig_height"), 4.0),
         )
 
+    def set_2d_data_provider(self, provider: Optional[Callable[[str], Optional[tuple]]]):
+        """Register optional callable supplying raw ``(x, y, values)`` points for 2D map copy."""
+        self._2d_data_provider = provider
+
+    @staticmethod
+    def _unique_column_name(base: str, used: set[str]) -> str:
+        """Return a unique DataFrame column name avoiding key collisions."""
+        candidate = base
+        suffix = 2
+        while candidate in used:
+            candidate = f"{base} ({suffix})"
+            suffix += 1
+        used.add(candidate)
+        return candidate
+
+    def build_clipboard_dataframe(self):
+        """Build a pandas DataFrame containing the current subpanel's underlying numerical data."""
+        import pandas as pd
+
+        param_name = self.cbb_param.currentText() or "Value"
+        kind = self._display_kind
+
+        if kind == "multi_profile":
+            custom_labels = self._view_options.get("custom_labels", {})
+            valid_entries = []
+            for idx, entry in enumerate(self._multi_entries):
+                px = np.asarray(entry.get("positions", []), dtype=np.float64)
+                vy = np.asarray(entry.get("values", []), dtype=np.float64)
+                if len(px) == 0 or len(px) != len(vy):
+                    continue
+                if not np.any(np.isfinite(px) & np.isfinite(vy)):
+                    continue
+                raw_name = str(entry.get("name") or f"Map {idx + 1}")
+                display_name = str(custom_labels.get(raw_name) or raw_name)
+                valid_entries.append((display_name, px, vy))
+            if not valid_entries:
+                return None
+
+            x_label = (
+                self._multi_x_label
+                if self._multi_x_label.endswith("(mm)")
+                else f"{self._multi_x_label or 'Position'} (mm)"
+            )
+            ref_x = valid_entries[0][1]
+            shared_x = all(
+                len(px) == len(ref_x) and np.allclose(px, ref_x, rtol=1e-7, atol=1e-9, equal_nan=True)
+                for _, px, _ in valid_entries[1:]
+            )
+            used: set[str] = set()
+            data = {}
+            if shared_x:
+                data[self._unique_column_name(x_label, used)] = pd.Series(ref_x)
+                for label, _px, vy in valid_entries:
+                    data[self._unique_column_name(label, used)] = pd.Series(vy)
+            else:
+                for label, px, vy in valid_entries:
+                    data[self._unique_column_name(f"{label} ({x_label})", used)] = pd.Series(px)
+                    data[self._unique_column_name(f"{label} ({param_name})", used)] = pd.Series(vy)
+            return pd.DataFrame(data)
+
+        if kind == "series":
+            if self._series_values is None or len(self._series_values) == 0:
+                return None
+            val_arr = np.asarray(self._series_values, dtype=np.float64)
+            if not np.any(np.isfinite(val_arr)):
+                return None
+            if self._series_x is not None and len(self._series_x) == len(val_arr):
+                x_label = self._series_xlabel or "Position (mm)"
+                return pd.DataFrame({
+                    x_label: np.asarray(self._series_x, dtype=np.float64),
+                    param_name: val_arr,
+                })
+            data = {"Spectrum #": np.arange(1, len(val_arr) + 1)}
+            if self._series_labels and len(self._series_labels) == len(val_arr):
+                data["Spectrum"] = [str(lbl) for lbl in self._series_labels]
+            data[param_name] = val_arr
+            return pd.DataFrame(data)
+
+        if kind == "map":
+            if self._2d_data_provider is not None:
+                raw_pts = self._2d_data_provider(self.color_id)
+                if raw_pts is not None and len(raw_pts) == 3:
+                    x_raw, y_raw, v_raw = (np.asarray(arr, dtype=np.float64) for arr in raw_pts)
+                    if len(x_raw) > 0 and len(x_raw) == len(y_raw) == len(v_raw):
+                        return pd.DataFrame({
+                            "X (mm)": x_raw,
+                            "Y (mm)": y_raw,
+                            param_name: v_raw,
+                        })
+            if self._grid is None:
+                return None
+            grid = np.asarray(self._grid, dtype=np.float64)
+            if grid.ndim != 2 or grid.shape[0] == 0 or grid.shape[1] == 0 or not np.any(np.isfinite(grid)):
+                return None
+            ny, nx = grid.shape
+            if self._extent and len(self._extent) >= 4:
+                x0, x1, y0, y1 = (float(self._extent[i]) for i in range(4))
+                dx = (x1 - x0) / nx
+                dy = (y1 - y0) / ny
+                xs = (
+                    x0 + (np.arange(nx, dtype=np.float64) + 0.5) * dx
+                    if (np.isfinite(dx) and abs(dx) > 0)
+                    else np.arange(nx, dtype=np.float64)
+                )
+                ys = (
+                    y0 + (np.arange(ny, dtype=np.float64) + 0.5) * dy
+                    if (np.isfinite(dy) and abs(dy) > 0)
+                    else np.arange(ny, dtype=np.float64)
+                )
+            else:
+                xs = np.arange(nx, dtype=np.float64)
+                ys = np.arange(ny, dtype=np.float64)
+            gx, gy = np.meshgrid(xs, ys)
+            return pd.DataFrame({
+                "X (mm)": gx.ravel(),
+                "Y (mm)": gy.ravel(),
+                param_name: grid.ravel(),
+            })
+
+        return None
+
+    def copy_data_to_clipboard(self) -> bool:
+        """Copy current subpanel numerical data as TSV to the Qt clipboard."""
+        df = self.build_clipboard_dataframe()
+        return copy_df_to_clb(df)
+
     def _copy_to_clipboard(self):
-        """Copy figure to clipboard at configured fixed size ratio and copy theme."""
+        """Copy figure (click) or raw plot data (Ctrl+Click) to the system clipboard."""
+        if is_ctrl_event(None):
+            self.copy_data_requested.emit(self.color_id)
+            if self.copy_data_to_clipboard():
+                self._flash_copy_feedback()
+            return
+
         size_ratio = self._parse_copied_figure_size()
         target_theme = _normalize_plot_theme(
             self._view_options.get("copy_fig_theme", "Light Mode")
@@ -1936,6 +2070,7 @@ class VLiveMaps(QWidget):
     active_2d_map_requested = Signal(str)          # active 2D map name from switcher
     view_options_changed = Signal(dict)            # emitted on user/reset view option edits
     spectra_selected = Signal(list)                # (X, Y) spectrum points clicked/dragged in Live Maps
+    copy_data_requested = Signal(str)              # color_id when user Ctrl+Clicks a subpanel Copy button
 
     def __init__(self, parent=None, mode: str = "map"):
         super().__init__(parent)
@@ -2084,6 +2219,7 @@ class VLiveMaps(QWidget):
             panel.view_reset_requested.connect(self._sync_shared_y)
             panel.normalization_changed.connect(self._sync_shared_y)
             panel.spectra_selected.connect(self._on_panel_spectra_selected)
+            panel.copy_data_requested.connect(self.copy_data_requested.emit)
             panel.set_view_options(self._view_options, redraw=False)
             panel.setVisible(False)  # Hidden by default until activated
             self.panels[color_id] = panel
@@ -2683,6 +2819,11 @@ class VLiveMaps(QWidget):
     def active_site_map_name(self) -> Optional[str]:
         """Return the name of the map currently backing interactive Live Maps selection."""
         return self._spatial_sites.get("map_name") if self._spatial_sites else None
+
+    def set_2d_data_provider(self, provider: Optional[Callable[[str], Optional[tuple]]]):
+        """Register optional ``provider(color_id) -> (x, y, values)`` on all R/B/G subpanels."""
+        for panel in self.panels.values():
+            panel.set_2d_data_provider(provider)
 
     def set_spatial_sites(self, sites: Optional[dict]):
         """Propagate current map spatial site metadata to all R/B/G subpanels."""

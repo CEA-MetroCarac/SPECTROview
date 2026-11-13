@@ -333,6 +333,17 @@ def copy_fig_to_clb(canvas, size_ratio=None):
         figure.set_dpi(original_dpi)
         canvas.draw()
 
+
+def copy_df_to_clb(df) -> bool:
+    """Copy a pandas DataFrame to the Qt clipboard as tab-separated text."""
+    if df is None or getattr(df, "empty", True):
+        return False
+    clipboard = QApplication.clipboard()
+    if clipboard is None:
+        return False
+    clipboard.setText(df.to_csv(sep="\t", index=False))
+    return True
+
 # Vector formats where embedding real (editable/searchable) text instead of
 # outlined paths matters for publication use.
 _VECTOR_FORMATS = ('pdf', 'eps', 'svg')

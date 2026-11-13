@@ -1230,3 +1230,121 @@ def test_live_map_subpanel_style_cache_skips_redundant_tick_work_and_reuses_1d_o
         panel.close()
         panel.deleteLater()
 
+
+def test_v_live_maps_ctrl_click_copy_data_across_1d_and_2d_modes(qapp):
+    """Click copies figure canvas; Ctrl+Click emits copy_data_requested and copies TSV data across modes."""
+    import io
+    import pandas as pd
+    from PySide6.QtCore import Qt
+    from PySide6.QtTest import QTest
+    from PySide6.QtWidgets import QApplication
+
+    live_maps = VLiveMaps(mode="map")
+    live_maps.resize(700, 420)
+    live_maps.show()
+    try:
+        red = live_maps.panels[SELECTOR_RED]
+        blue = live_maps.panels[SELECTOR_BLUE]
+        live_maps.set_selector_active(SELECTOR_RED, True)
+        live_maps.set_selector_active(SELECTOR_BLUE, True)
+
+        assert "Ctrl + Click" in red.btn_copy.toolTip()
+
+        requested = []
+        live_maps.copy_data_requested.connect(requested.append)
+
+        # Empty panel: Ctrl+Click does not emit/overwrite clipboard
+        QApplication.clipboard().setText("keep-me")
+        QTest.mouseClick(red.btn_copy, Qt.LeftButton, Qt.ControlModifier)
+        assert QApplication.clipboard().text() == "keep-me"
+
+        # 1) Single 1D profile: raw values copied even when view-only Normalization is checked
+        pos = np.array([0.0, 5.0, 10.0])
+        vals = np.array([100.0, 250.0, 50.0])
+        live_maps.update_profile_data(SELECTOR_RED, pos, vals, axis_label="X", status_msg="OK")
+        red.btn_norm.setChecked(True)
+        qapp.processEvents()
+
+        QTest.mouseClick(red.btn_copy, Qt.LeftButton, Qt.ControlModifier)
+        assert requested[-1] == SELECTOR_RED
+        df_prof = pd.read_csv(io.StringIO(QApplication.clipboard().text()), sep="\t")
+        assert list(df_prof.columns) == ["X (mm)", PARAM_INTEGRATED_INTENSITY]
+        np.testing.assert_allclose(df_prof["X (mm)"], pos)
+        np.testing.assert_allclose(df_prof[PARAM_INTEGRATED_INTENSITY], vals)
+
+        # Plain click still copies figure image
+        QApplication.clipboard().clear()
+        QTest.mouseClick(red.btn_copy, Qt.LeftButton)
+        assert not QApplication.clipboard().pixmap().isNull()
+
+        # 2) Multi-1D profile: shared X grid & custom legend labels -> shared X column
+        live_maps.set_view_options({"custom_labels": {"P1": "Sample A"}}, emit_signal=False)
+        live_maps.update_multi_profile_data(
+            SELECTOR_RED,
+            [
+                {"name": "P1", "positions": np.array([0.0, 2.0, 4.0]), "values": np.array([10.0, 20.0, 30.0]), "axis_label": "Y", "is_primary": True},
+                {"name": "P2", "positions": np.array([0.0, 2.0, 4.0]), "values": np.array([5.0, 15.0, 25.0]), "axis_label": "Y", "is_primary": False},
+            ],
+            shared_x_label="Y",
+            status_msg="OK",
+        )
+        QTest.mouseClick(red.btn_copy, Qt.LeftButton, Qt.ControlModifier)
+        df_multi_shared = pd.read_csv(io.StringIO(QApplication.clipboard().text()), sep="\t")
+        assert list(df_multi_shared.columns) == ["Y (mm)", "Sample A", "P2"]
+        np.testing.assert_allclose(df_multi_shared["Sample A"], [10.0, 20.0, 30.0])
+
+        # Differing X grids across multi-profile -> paired columns per profile
+        live_maps.update_multi_profile_data(
+            SELECTOR_BLUE,
+            [
+                {"name": "M1", "positions": np.array([0.0, 1.0]), "values": np.array([1.0, 2.0]), "axis_label": "X", "is_primary": True},
+                {"name": "M2", "positions": np.array([0.5, 1.5, 2.5]), "values": np.array([3.0, 4.0, 5.0]), "axis_label": "X", "is_primary": False},
+            ],
+            shared_x_label="X",
+            status_msg="OK",
+        )
+        QTest.mouseClick(blue.btn_copy, Qt.LeftButton, Qt.ControlModifier)
+        df_multi_diff = pd.read_csv(io.StringIO(QApplication.clipboard().text()), sep="\t")
+        assert list(df_multi_diff.columns) == [
+            "M1 (X (mm))",
+            f"M1 ({PARAM_INTEGRATED_INTENSITY})",
+            "M2 (X (mm))",
+            f"M2 ({PARAM_INTEGRATED_INTENSITY})",
+        ]
+        assert len(df_multi_diff) == 3
+
+        # 3) 2D map standalone fallback (reconstructs exact cell centers from grid & extent)
+        grid = np.array([[1.0, 2.0], [3.0, 4.0]])
+        live_maps.update_map_data(SELECTOR_RED, grid, [0.0, 2.0, 10.0, 14.0], 1.0, 4.0, "OK")
+        QTest.mouseClick(red.btn_copy, Qt.LeftButton, Qt.ControlModifier)
+        df_2d_fallback = pd.read_csv(io.StringIO(QApplication.clipboard().text()), sep="\t")
+        assert list(df_2d_fallback.columns) == ["X (mm)", "Y (mm)", PARAM_INTEGRATED_INTENSITY]
+        np.testing.assert_allclose(df_2d_fallback["X (mm)"], [0.5, 1.5, 0.5, 1.5])
+        np.testing.assert_allclose(df_2d_fallback["Y (mm)"], [11.0, 11.0, 13.0, 13.0])
+        np.testing.assert_allclose(df_2d_fallback[PARAM_INTEGRATED_INTENSITY], [1.0, 2.0, 3.0, 4.0])
+
+        # 4) 2D map with raw site provider -> exact un-interpolated coordinates & values
+        live_maps.set_2d_data_provider(
+            lambda cid: (np.array([-1.2, 3.4]), np.array([5.6, -7.8]), np.array([42.0, 84.0]))
+            if cid == SELECTOR_RED else None
+        )
+        QTest.mouseClick(red.btn_copy, Qt.LeftButton, Qt.ControlModifier)
+        df_2d_raw = pd.read_csv(io.StringIO(QApplication.clipboard().text()), sep="\t")
+        np.testing.assert_allclose(df_2d_raw["X (mm)"], [-1.2, 3.4])
+        np.testing.assert_allclose(df_2d_raw["Y (mm)"], [5.6, -7.8])
+        np.testing.assert_allclose(df_2d_raw[PARAM_INTEGRATED_INTENSITY], [42.0, 84.0])
+
+        # 5) Spectra workspace mode -> Spectrum #, Spectrum, <parameter>
+        live_maps.set_mode("spectra")
+        assert "Ctrl + Click" in red.btn_copy.toolTip()
+        live_maps.update_series_data(SELECTOR_RED, np.array([11.0, 22.0, 33.0]), ["Sp1", "Sp2", "Sp3"], "OK")
+        QTest.mouseClick(red.btn_copy, Qt.LeftButton, Qt.ControlModifier)
+        df_spec = pd.read_csv(io.StringIO(QApplication.clipboard().text()), sep="\t")
+        assert list(df_spec.columns) == ["Spectrum #", "Spectrum", PARAM_INTEGRATED_INTENSITY]
+        assert list(df_spec["Spectrum"]) == ["Sp1", "Sp2", "Sp3"]
+        np.testing.assert_allclose(df_spec[PARAM_INTEGRATED_INTENSITY], [11.0, 22.0, 33.0])
+    finally:
+        live_maps.close()
+        live_maps.deleteLater()
+
+

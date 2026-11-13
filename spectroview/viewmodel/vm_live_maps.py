@@ -951,6 +951,22 @@ class VMLiveMaps(QObject):
             return self._integrated_intensity_for_md(md, color_id)
         return self._compute_values_for_md(md, state["range"], state["param"])
 
+    def get_2d_copy_points(self, color_id: str) -> Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+        """Return un-gridded ``(x, y, values)`` arrays for *color_id* in 2D map mode, or ``None``."""
+        if self.mode != "map" or self._display_mode != "map_2d" or color_id not in self._states:
+            return None
+        md = self._current_md
+        if md is None or md.coords is None or len(md.coords) == 0:
+            return None
+        coords = np.asarray(md.coords, dtype=np.float64)
+        if coords.ndim != 2 or coords.shape[1] < 2:
+            return None
+        vals, _, ok, _ = self._evaluate_selector_for_md(md, color_id)
+        vals_arr = np.asarray(vals, dtype=np.float64)
+        if not ok or len(vals_arr) != len(coords) or not np.any(np.isfinite(vals_arr)):
+            return None
+        return coords[:, 0].copy(), coords[:, 1].copy(), vals_arr
+
     def _recalculate_multi_profile(self, color_id: str):
         """Compute and emit stacked 1D profile entries for all selected 1D maps."""
         entries = []

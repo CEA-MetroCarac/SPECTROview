@@ -544,3 +544,34 @@ def test_vm_flush_pending_stops_timer_and_computes_immediately(qapp, sample_map_
     # Subsequent flush with empty queue is a clean no-op
     assert vm.flush_pending() is False
 
+
+def test_vm_get_2d_copy_points_returns_ungridded_sites_and_handles_modes(qapp, sample_map_data):
+    """get_2d_copy_points returns raw (X, Y, values) in 2D map mode and None in 1D/spectra modes."""
+    vm = VMLiveMaps(mode="map")
+    vm.set_selector_range(SELECTOR_RED, 650.0, 750.0)
+    vm.set_selector_active(SELECTOR_RED, True)
+
+    sample_map_data.is_active[2] = False
+    vm.set_map_data(sample_map_data)
+
+    pts = vm.get_2d_copy_points(SELECTOR_RED)
+    assert pts is not None
+    x_raw, y_raw, v_raw = pts
+    assert len(x_raw) == len(sample_map_data.coords)
+    np.testing.assert_allclose(x_raw, sample_map_data.coords[:, 0])
+    np.testing.assert_allclose(y_raw, sample_map_data.coords[:, 1])
+    assert np.isnan(v_raw[2])
+    assert np.all(np.isfinite(np.delete(v_raw, 2)))
+
+    assert vm.get_2d_copy_points("unknown") is None
+
+    # 1D profile map returns None from get_2d_copy_points (1D copy uses profile arrays directly)
+    profile_md = _make_profile_map(along="x", n=4)
+    vm.set_map_data(profile_md)
+    assert vm.get_2d_copy_points(SELECTOR_RED) is None
+
+    # Spectra workspace mode also returns None
+    vm.set_mode("spectra")
+    assert vm.get_2d_copy_points(SELECTOR_RED) is None
+
+

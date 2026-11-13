@@ -282,6 +282,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_viewer.range_changed.connect(self._on_range_selector_changed)
         self.v_spectra_viewer.range_drag_finished.connect(self._on_range_drag_finished)
         self.v_live_maps.parameter_change_requested.connect(self.vm_live_maps.set_selector_parameter)
+        self.v_live_maps.set_2d_data_provider(self.vm_live_maps.get_2d_copy_points)
         self.vm_live_maps.map_data_ready.connect(self.v_live_maps.update_map_data)
         self.vm_live_maps.series_data_ready.connect(self.v_live_maps.update_series_data)
         self.vm_live_maps.profile_data_ready.connect(self.v_live_maps.update_profile_data)

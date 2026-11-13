@@ -763,4 +763,53 @@ def test_v_live_maps_copied_figure_size_theme_and_two_column_menu(qapp):
     assert layout_warnings == []
 
 
+def test_v_live_maps_show_figure_label_toggle(qapp):
+    """Figure title label above RGB canvas defaults to Off and toggles cleanly across 1D and 2D."""
+    import warnings
+
+    live_maps = VLiveMaps(mode="map")
+    live_maps.resize(700, 420)
+    live_maps.show()
+    live_maps.set_selector_active(SELECTOR_RED, True)
+    panel = live_maps.panels[SELECTOR_RED]
+
+    # Default is Off across options, QAction, and menu checkbox
+    assert live_maps.get_view_options()["show_figure_label"] is False
+    assert live_maps.act_show_figure_label.isChecked() is False
+    assert live_maps.chk_show_figure_label.isChecked() is False
+
+    pos = np.array([0.0, 1.0, 2.0])
+    vals = np.array([10.0, 20.0, 30.0])
+    live_maps.update_profile_data(SELECTOR_RED, pos, vals, axis_label="X", status_msg="OK")
+    assert panel.ax.get_title() == ""
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        # Turn On via checkbox -> label appears on 1D plot & syncs QAction
+        live_maps.chk_show_figure_label.click()
+        assert live_maps.act_show_figure_label.isChecked() is True
+        assert live_maps.get_view_options()["show_figure_label"] is True
+        assert panel.ax.get_title() == f"Red: {PARAM_INTEGRATED_INTENSITY}"
+
+        # Also persists onto 2D heatmap renders & parameter switches
+        grid = np.arange(9, dtype=float).reshape(3, 3)
+        live_maps.update_map_data(SELECTOR_RED, grid, [0.0, 2.0, 0.0, 2.0], 0.0, 8.0, "OK")
+        assert panel.ax.get_title() == f"Red: {PARAM_INTEGRATED_INTENSITY}"
+
+        # Reset or uncheck restores Off state (empty axes title)
+        live_maps.chk_show_figure_label.click()
+        assert live_maps.act_show_figure_label.isChecked() is False
+        assert panel.ax.get_title() == ""
+
+        live_maps.act_show_figure_label.setChecked(True)
+        assert panel.ax.get_title() == f"Red: {PARAM_INTEGRATED_INTENSITY}"
+        live_maps.reset_view_options()
+        assert live_maps.chk_show_figure_label.isChecked() is False
+        assert panel.ax.get_title() == ""
+
+    layout_warnings = [str(w.message) for w in caught if "constrained_layout" in str(w.message).lower()]
+    assert layout_warnings == []
+
+
+
 

@@ -342,6 +342,7 @@ class TestLiveMapsViewOptions:
         assert opts["plot_style"] == "line"
         assert opts["line_width"] == 1.5
         assert opts["dot_size"] == 1.5
+        assert opts["show_figure_label"] is False
         assert opts["show_grid"] is False
         assert opts["copy_fig_width"] == "5.5"
         assert opts["copy_fig_height"] == "4.0"
@@ -363,6 +364,7 @@ class TestLiveMapsViewOptions:
             "legend_loc": "outside right",
             "legend_ncol": 2,
             "legend_fontsize": 11,
+            "show_figure_label": True,
             "show_grid": True,
             "share_y": True,
             "heatmap_smoothing": True,

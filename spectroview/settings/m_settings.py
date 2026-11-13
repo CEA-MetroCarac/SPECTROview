@@ -23,6 +23,7 @@ LIVE_MAPS_VIEW_OPTION_DEFAULTS = {
     "legend_loc": "best",
     "legend_ncol": 1,
     "legend_fontsize": 8,
+    "show_figure_label": False,
     "show_grid": False,
     "share_y": False,
     "heatmap_smoothing": False,
@@ -150,6 +151,9 @@ class MSettings:
             "legend_ncol": self.settings.value("live_maps_view_options/legend_ncol", defaults["legend_ncol"], int),
             "legend_fontsize": self.settings.value(
                 "live_maps_view_options/legend_fontsize", defaults["legend_fontsize"], int
+            ),
+            "show_figure_label": self.settings.value(
+                "live_maps_view_options/show_figure_label", defaults["show_figure_label"], bool
             ),
             "show_grid": self.settings.value("live_maps_view_options/show_grid", defaults["show_grid"], bool),
             "share_y": self.settings.value("live_maps_view_options/share_y", defaults["share_y"], bool),

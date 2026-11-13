@@ -230,7 +230,7 @@ Whenever one or more selectors are active, two quick controls appear in the top-
   - **Plot Style & Sizing**: Switch 1D curves between **Line** (default), **Line + Dots**, and **Dot**, and tune **Line width** (default `1.5`), **Dot size** (default `1.5`), and graph **Text size** (`6–24 pt`, scaling axis titles, labels, ticks, and colorbar labels).
   - **Copied Figure Size & Theme**: Set fixed clipboard figure dimensions in inches (**Copied figure size**, default `5.5` × `4.0`) and choose **Copied figure theme** (**Light Mode** default or **Dark Mode**) so copied figures retain constant proportions and readable text sizes regardless of window resizing.
   - **Legend Box Settings**: Toggle legend visibility, change **Legend location** (`best`, corners, `outside right`, `outside top`), **Legend columns**, **Legend font size**, or open **Edit legend labels...** to rename series labels and pick custom colors directly on the canvas legend box.
-  - **Display & Comparison Aids**: Toggle **Show grid** (default Off), synchronize Y-limits across panels with **Share Y-axis (1D)**, enable bilinear **Heatmap smoothing**, show/hide **Colorbars**, or **Reset view options**.
+  - **Display & Comparison Aids**: Show or hide the **Show figure label** title above each RGB canvas (default Off), toggle **Show grid** (default Off), synchronize Y-limits across panels with **Share Y-axis (1D)**, enable bilinear **Heatmap smoothing**, show/hide **Colorbars**, or **Reset view options**.
 
 _______
 

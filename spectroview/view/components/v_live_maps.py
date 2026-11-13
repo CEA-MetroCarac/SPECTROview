@@ -94,6 +94,7 @@ def _copy_view_options(src: Optional[dict] = None) -> dict:
     base["copy_fig_theme"] = _normalize_plot_theme(base.get("copy_fig_theme"))
     base["copy_fig_width"] = str(base.get("copy_fig_width") or "5.5").strip() or "5.5"
     base["copy_fig_height"] = str(base.get("copy_fig_height") or "4.0").strip() or "4.0"
+    base["show_figure_label"] = bool(base.get("show_figure_label", False))
     base["custom_labels"] = dict(base.get("custom_labels") or {})
     base["custom_colors"] = dict(base.get("custom_colors") or {})
     return base
@@ -887,6 +888,16 @@ class LiveMapSubpanel(QFrame):
             except Exception:
                 pass
 
+    def _sync_title(self, has_content: Optional[bool] = None):
+        """Show or clear the Matplotlib axes title label per ``show_figure_label``."""
+        if has_content is None:
+            has_content = bool(self.img is not None or self.lines)
+        want_label = bool(self._view_options.get("show_figure_label", False)) and bool(has_content)
+        target = f"{self.color_name}: {self.cbb_param.currentText()}" if want_label else ""
+        if self.ax.get_title() != target:
+            text_fs = max(6, int(self._view_options.get("text_fontsize", 10)))
+            self.ax.set_title(target, fontsize=text_fs, pad=4)
+
     def _sync_1d_line_styles(self):
         """Update curve linestyle, linewidth, marker, markersize, and legend handles in place."""
         if not self.lines:
@@ -950,6 +961,12 @@ class LiveMapSubpanel(QFrame):
 
         if "show_grid" in changed_keys:
             self._apply_grid_state(bool(self._view_options.get("show_grid", False)), self._current_theme)
+
+        if "show_figure_label" in changed_keys:
+            self._sync_title()
+            self._apply_figure_theme(self._current_theme)
+            self._apply_text_sizes()
+            self._request_relayout()
 
         if "text_fontsize" in changed_keys:
             self._apply_text_sizes()
@@ -1079,8 +1096,7 @@ class LiveMapSubpanel(QFrame):
                 self.ax.set_xlabel(x_label)
             if self.ax.get_ylabel() != param_name:
                 self.ax.set_ylabel(param_name)
-            if self.ax.get_title() != title_text:
-                self.ax.set_title(title_text, fontsize=text_fs, pad=4)
+            self._sync_title(has_content=True)
             self._apply_figure_theme(active_theme)
             self._apply_text_sizes()
             self._sync_legend()
@@ -1126,7 +1142,7 @@ class LiveMapSubpanel(QFrame):
         self._apply_grid_state(show_grid, active_theme)
         self.ax.set_xlabel(x_label)
         self.ax.set_ylabel(param_name)
-        self.ax.set_title(title_text, fontsize=text_fs, pad=4)
+        self._sync_title(has_content=True)
         self._apply_figure_theme(active_theme)
         self._apply_text_sizes()
         self._sync_legend()
@@ -1156,7 +1172,6 @@ class LiveMapSubpanel(QFrame):
         self._current_theme = active_theme
 
         param_name = self.cbb_param.currentText()
-        title_text = f"{self.color_name}: {param_name}"
         x_label = (
             shared_x_label
             if shared_x_label.endswith("(mm)")
@@ -1224,8 +1239,7 @@ class LiveMapSubpanel(QFrame):
                 self.ax.set_xlabel(x_label)
             if self.ax.get_ylabel() != param_name:
                 self.ax.set_ylabel(param_name)
-            if self.ax.get_title() != title_text:
-                self.ax.set_title(title_text, fontsize=text_fs, pad=4)
+            self._sync_title(has_content=True)
             self._apply_figure_theme(active_theme)
             self._apply_text_sizes()
             self._sync_legend()
@@ -1280,7 +1294,7 @@ class LiveMapSubpanel(QFrame):
         self._apply_grid_state(show_grid, active_theme)
         self.ax.set_xlabel(x_label)
         self.ax.set_ylabel(param_name)
-        self.ax.set_title(title_text, fontsize=text_fs, pad=4)
+        self._sync_title(has_content=True)
         self._apply_figure_theme(active_theme)
         self._apply_text_sizes()
         self._sync_legend()
@@ -1362,8 +1376,6 @@ class LiveMapSubpanel(QFrame):
         )
         self._current_theme = active_theme
 
-        param_name = self.cbb_param.currentText()
-        title_text = f"{self.color_name}: {param_name}"
         want_colorbar = bool(self._view_options.get("show_colorbar", True))
         show_grid = bool(self._view_options.get("show_grid", False))
         has_valid_grid = grid is not None and not np.all(np.isnan(grid))
@@ -1385,8 +1397,7 @@ class LiveMapSubpanel(QFrame):
             self.img.set_interpolation(interp)
             self.ax.set_aspect(aspect, adjustable="box")
             self._apply_2d_axis_scales(extent, xscale, yscale, show_grid)
-            if self.ax.get_title() != title_text:
-                self.ax.set_title(title_text, fontsize=text_fs, pad=4)
+            self._sync_title(has_content=True)
             if self.cbar is not None:
                 self.cbar.update_normal(self.img)
             self._apply_figure_theme(active_theme)
@@ -1435,7 +1446,7 @@ class LiveMapSubpanel(QFrame):
         self._apply_2d_axis_scales(extent, xscale, yscale, show_grid)
         self.ax.set_xlabel("X (mm)")
         self.ax.set_ylabel("Y (mm)")
-        self.ax.set_title(title_text, fontsize=text_fs, pad=4)
+        self._sync_title(has_content=True)
         self._apply_figure_theme(active_theme)
         self._apply_text_sizes()
         try:
@@ -1872,6 +1883,15 @@ class VLiveMaps(QWidget):
 
         right_layout.addWidget(self._menu_h_separator(right_col))
 
+        self.act_show_figure_label, self.chk_show_figure_label = self._bind_menu_checkbox(
+            right_col, menu, "Show figure label", self._view_options["show_figure_label"],
+            lambda chk: self._update_option("show_figure_label", bool(chk)),
+        )
+        self.chk_show_figure_label.setToolTip(
+            "Show or hide the title label above each RGB plot canvas"
+        )
+        right_layout.addWidget(self.chk_show_figure_label)
+
         self.act_show_grid, self.chk_show_grid = self._bind_menu_checkbox(
             right_col, menu, "Show grid", self._view_options["show_grid"],
             lambda chk: self._update_option("show_grid", bool(chk)),
@@ -1963,6 +1983,7 @@ class VLiveMaps(QWidget):
             self.width_entry, self.height_entry, self.cbb_copy_theme,
             self.btn_legend, self.act_show_legend, self.chk_show_legend,
             self.cbb_legend_loc, self.spb_legend_ncol, self.spb_legend_fontsize,
+            self.act_show_figure_label, self.chk_show_figure_label,
             self.act_show_grid, self.chk_show_grid,
             self.act_share_y, self.chk_share_y,
             self.act_smoothing, self.chk_smoothing,
@@ -1992,6 +2013,8 @@ class VLiveMaps(QWidget):
                 self.cbb_legend_loc.setCurrentText(loc)
             self.spb_legend_ncol.setValue(int(opts["legend_ncol"]))
             self.spb_legend_fontsize.setValue(int(opts["legend_fontsize"]))
+            self.act_show_figure_label.setChecked(bool(opts["show_figure_label"]))
+            self.chk_show_figure_label.setChecked(bool(opts["show_figure_label"]))
             self.act_show_grid.setChecked(bool(opts["show_grid"]))
             self.chk_show_grid.setChecked(bool(opts["show_grid"]))
             self.act_share_y.setChecked(bool(opts["share_y"]))

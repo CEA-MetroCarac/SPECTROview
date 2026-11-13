@@ -275,7 +275,13 @@ def test_v_live_maps_multi_profile_legend_theme_and_fast_path(qapp):
     assert panel.img is None
     assert panel.ax.get_aspect() == "auto"
     assert len(panel.lines) == 3
-    assert panel.lines[0].get_linewidth() > panel.lines[1].get_linewidth()
+    expected_lw = live_maps.get_view_options()["line_width"]
+    assert panel.lines[0].get_linewidth() == pytest.approx(expected_lw)
+    assert panel.lines[1].get_linewidth() == pytest.approx(expected_lw)
+    live_maps.spb_linewidth.setValue(2.6)
+    assert panel.lines[0].get_linewidth() == pytest.approx(2.6)
+    assert panel.lines[1].get_linewidth() == pytest.approx(2.6)
+    live_maps.spb_linewidth.setValue(expected_lw)
     ymin, ymax = panel.ax.get_ylim()
     assert np.isfinite(ymin) and np.isfinite(ymax)
     assert live_maps.header_bar.isVisible() is True

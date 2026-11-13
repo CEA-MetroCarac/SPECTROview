@@ -573,13 +573,11 @@ class LiveMapSubpanel(QFrame):
         return ymin - pad, ymax + pad
 
     def _curve_style_kwargs(self, is_primary: bool = True, multi: bool = False) -> dict:
-        """Build Matplotlib linestyle, linewidth, marker, and markersize from view options."""
+        """Build uniform Matplotlib linestyle, linewidth, marker, and markersize from view options."""
         opts = self._view_options
-        style = opts.get("plot_style", "line+dots")
-        lw = float(opts.get("line_width", 1.8))
-        ds = float(opts.get("dot_size", 4.0))
-        if multi:
-            lw = lw + 0.4 if is_primary else max(0.5, lw - 0.4)
+        style = opts.get("plot_style", "line")
+        lw = float(opts.get("line_width", 1.5))
+        ds = float(opts.get("dot_size", 1.5))
         if style == "dot":
             return {"linestyle": "none", "linewidth": 0.0, "marker": "o", "markersize": ds}
         if style == "line":

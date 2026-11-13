@@ -100,7 +100,11 @@ def test_v_live_maps_update_data_and_theme(qapp):
 
     # Apply dark theme
     live_maps.apply_theme("dark")
-    assert live_maps._current_theme == "dark"
+    assert live_maps._current_theme == "Dark Mode"
+    assert live_maps.get_view_options()["plot_theme"] == "Dark Mode"
+    # Global UI theme updates Qt icons only without overriding plot_theme
+    live_maps.apply_global_theme("light")
+    assert live_maps.get_view_options()["plot_theme"] == "Dark Mode"
 
 
 def test_live_map_subpanel_spectra_series_render(qapp):
@@ -338,22 +342,36 @@ def test_v_live_maps_view_options_plot_styles_and_scales(qapp):
     live_maps.update_profile_data(SELECTOR_RED, pos, vals, axis_label="X", status_msg="OK")
 
     panel = live_maps.panels[SELECTOR_RED]
+    # Defaults: Light Mode, Line style, linewidth=1.5, dotsize=1.5, grid=False
+    init_opts = live_maps.get_view_options()
+    assert init_opts["plot_theme"] == "Light Mode"
+    assert init_opts["plot_style"] == "line"
+    assert init_opts["line_width"] == pytest.approx(1.5)
+    assert init_opts["dot_size"] == pytest.approx(1.5)
+    assert init_opts["show_grid"] is False
+    assert panel.line.get_linestyle() == "-"
+    assert panel.line.get_marker() in ("", "None")
+    assert panel.line.get_linewidth() == pytest.approx(1.5)
+
+    # Switch to Line + Dots and verify marker uses default dot size
+    live_maps.cbb_plot_style.setCurrentText("Line + Dots")
     assert panel.line.get_linestyle() == "-"
     assert panel.line.get_marker() == "o"
+    assert panel.line.get_markersize() == pytest.approx(1.5)
 
-    # Switch to Line only with thicker width
+    # Switch back to Line only with thicker width
     live_maps.cbb_plot_style.setCurrentText("Line")
     live_maps.spb_linewidth.setValue(3.2)
     assert panel.line.get_linestyle() == "-"
     assert panel.line.get_marker() in ("", "None")
-    assert panel.line.get_linewidth() == 3.2
+    assert panel.line.get_linewidth() == pytest.approx(3.2)
 
     # Switch to Dot only with larger dot size
     live_maps.cbb_plot_style.setCurrentText("Dot")
     live_maps.spb_dotsize.setValue(8.0)
     assert panel.line.get_linestyle() in ("None", "none")
     assert panel.line.get_marker() == "o"
-    assert panel.line.get_markersize() == 8.0
+    assert panel.line.get_markersize() == pytest.approx(8.0)
 
     # Switch X and Y scales to Log on strictly positive data
     live_maps.cbb_xscale.setCurrentText("Log")
@@ -371,9 +389,13 @@ def test_v_live_maps_view_options_plot_styles_and_scales(qapp):
     # Reset restores defaults cleanly
     live_maps.reset_view_options()
     opts = live_maps.get_view_options()
+    assert opts["plot_theme"] == "Light Mode"
     assert opts["xscale"] == "linear"
     assert opts["yscale"] == "linear"
-    assert opts["plot_style"] == "line+dots"
+    assert opts["plot_style"] == "line"
+    assert opts["line_width"] == pytest.approx(1.5)
+    assert opts["dot_size"] == pytest.approx(1.5)
+    assert opts["show_grid"] is False
 
 
 def test_v_live_maps_2d_view_options_zscale_smoothing_colorbar_and_grid(qapp):
@@ -427,10 +449,14 @@ def test_v_live_maps_share_y_and_legend_customization(qapp, monkeypatch):
 
     panel_r = live_maps.panels[SELECTOR_RED]
     panel_b = live_maps.panels[SELECTOR_BLUE]
-    assert panel_r.ax.get_ylim() != panel_b.ax.get_ylim()
+    orig_ylim_r = panel_r.ax.get_ylim()
+    assert orig_ylim_r != panel_b.ax.get_ylim()
 
     live_maps.act_share_y.setChecked(True)
     assert panel_r.ax.get_ylim() == panel_b.ax.get_ylim()
+
+    live_maps.act_share_y.setChecked(False)
+    assert panel_r.ax.get_ylim() == pytest.approx(orig_ylim_r)
 
     # Toggle legend on & verify button + action sync + box creation
     live_maps.btn_legend.click()
@@ -545,4 +571,103 @@ def test_v_live_maps_dark_theme_legend_contrast_and_text_size(qapp):
     live_maps.reset_view_options()
     assert live_maps.spb_text_fontsize.value() == 10
     assert panel.ax.title.get_fontsize() == pytest.approx(10.0)
+
+
+def test_v_live_maps_plot_theme_option_and_grid_warning_free(qapp):
+    """Plot theme combo switches canvas independently of apply_global_theme; grid toggles cleanly without warnings."""
+    import warnings
+    from matplotlib import colors as mcolors
+
+    live_maps = VLiveMaps(mode="map")
+    live_maps.show()
+    live_maps.set_selector_active(SELECTOR_RED, True)
+    panel = live_maps.panels[SELECTOR_RED]
+
+    # Global UI theme updates Qt icons only, leaving Plot theme Light Mode by default
+    live_maps.apply_global_theme("dark")
+    assert live_maps.get_view_options()["plot_theme"] == "Light Mode"
+    assert min(mcolors.to_rgb(panel.ax.get_facecolor())) > 0.9
+
+    pos = np.array([0.0, 1.0, 2.0])
+    vals = np.array([10.0, 20.0, 30.0])
+    live_maps.update_profile_data(SELECTOR_RED, pos, vals, axis_label="X", status_msg="OK")
+
+    emitted = []
+    live_maps.view_options_changed.connect(emitted.append)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        live_maps.cbb_plot_theme.setCurrentText("Dark Mode")
+        assert live_maps.get_view_options()["plot_theme"] == "Dark Mode"
+        assert max(mcolors.to_rgb(panel.ax.get_facecolor())) < 0.3
+        assert emitted and emitted[-1]["plot_theme"] == "Dark Mode"
+
+        live_maps.act_show_grid.setChecked(True)
+        panel.canvas.draw()
+        assert any(gl.get_visible() for gl in panel.ax.get_xgridlines())
+
+        live_maps.act_show_grid.setChecked(False)
+        panel.canvas.draw()
+        assert not any(gl.get_visible() for gl in panel.ax.get_xgridlines())
+
+    grid_warnings = [str(w.message) for w in caught if "grid" in str(w.message).lower()]
+    assert grid_warnings == []
+
+
+def test_v_live_maps_subpanel_rescale_pan_zoom_tools(qapp):
+    """Each LiveMapSubpanel provides Rescale, Pan, and Zoom actions without breaking legend double-click."""
+    from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
+
+    live_maps = VLiveMaps(mode="map")
+    live_maps.show()
+    live_maps.set_selector_active(SELECTOR_RED, True)
+    panel = live_maps.panels[SELECTOR_RED]
+
+    assert isinstance(panel.toolbar, NoDoubleClickZoomToolbar)
+    assert panel.btn_home is panel.btn_rescale
+
+    # Mutually exclusive Pan <-> Zoom toggling synced with toolbar mode
+    panel.btn_pan.click()
+    assert panel.btn_pan.isChecked() is True
+    assert panel.btn_zoom.isChecked() is False
+    assert panel.toolbar.mode == "pan/zoom"
+
+    panel.btn_zoom.click()
+    assert panel.btn_zoom.isChecked() is True
+    assert panel.btn_pan.isChecked() is False
+    assert panel.toolbar.mode == "zoom rect"
+
+    # Double-click while zoom is active must be ignored cleanly by NoDoubleClickZoomToolbar
+    dbl_evt = type(
+        "DblEvt",
+        (),
+        {"dblclick": True, "button": 1, "x": 10.0, "y": 10.0, "inaxes": panel.ax, "key": None, "step": 0},
+    )()
+    panel.toolbar.press_zoom(dbl_evt)  # Should return early without crash or view push
+
+    panel.btn_zoom.click()
+    assert panel.btn_zoom.isChecked() is False
+    assert panel.toolbar.mode == ""
+
+    # 1D Rescale restores full domain bounds after zoom
+    live_maps.update_profile_data(
+        SELECTOR_RED, np.array([0.0, 5.0, 10.0]), np.array([10.0, 30.0, 50.0]), axis_label="X", status_msg="OK"
+    )
+    nat_xlim = panel.ax.get_xlim()
+    nat_ylim = panel.ax.get_ylim()
+    panel.ax.set_xlim(2.0, 4.0)
+    panel.ax.set_ylim(15.0, 25.0)
+    panel.btn_home.click()
+    assert panel.ax.get_xlim() == pytest.approx(nat_xlim)
+    assert panel.ax.get_ylim() == pytest.approx(nat_ylim)
+
+    # 2D Rescale restores full map extent after zoom
+    grid = np.arange(16, dtype=float).reshape(4, 4)
+    live_maps.update_map_data(SELECTOR_RED, grid, [0.0, 10.0, 0.0, 10.0], 0.0, 15.0, "OK")
+    panel.ax.set_xlim(2.0, 6.0)
+    panel.ax.set_ylim(3.0, 7.0)
+    panel.btn_home.click()
+    assert panel.ax.get_xlim() == pytest.approx((0.0, 10.0))
+    assert panel.ax.get_ylim() == pytest.approx((0.0, 10.0))
+
 

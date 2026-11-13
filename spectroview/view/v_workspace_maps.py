@@ -165,9 +165,12 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         if hasattr(self, 'v_fit_model_builder'):
             self.v_fit_model_builder.apply_theme(theme)
 
-        # Propagate to Live Maps
+        # Propagate Qt icon theme to Live Maps without overriding its Plot theme
         if hasattr(self, 'v_live_maps'):
-            self.v_live_maps.apply_theme(theme)
+            if hasattr(self.v_live_maps, 'apply_global_theme'):
+                self.v_live_maps.apply_global_theme(theme)
+            elif hasattr(self.v_live_maps, 'apply_theme'):
+                self.v_live_maps.apply_theme(theme)
 
         # Map viewer toolbar icons
         if hasattr(self, 'v_map_viewer'):

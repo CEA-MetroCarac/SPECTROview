@@ -333,3 +333,62 @@ class TestPortableConfiguration:
         assert fresh_settings.get_plot_style_folder() == str(pc_b_folder / "plot_style")
         assert fresh_settings.get_history_folder() == str(pc_b_folder / "ai_chat_history")
         assert fresh_settings.get_template_folder() == str(pc_b_folder / "template")
+
+
+class TestLiveMapsViewOptions:
+    def test_defaults_when_unset(self, settings):
+        opts = settings.load_live_maps_view_options()
+        assert opts["plot_theme"] == "Light Mode"
+        assert opts["plot_style"] == "line"
+        assert opts["line_width"] == 1.5
+        assert opts["dot_size"] == 1.5
+        assert opts["show_grid"] is False
+        assert opts["custom_labels"] == {}
+        assert opts["custom_colors"] == {}
+
+    def test_save_and_reload_round_trip(self, settings):
+        payload = {
+            "plot_theme": "Dark Mode",
+            "xscale": "log",
+            "yscale": "log",
+            "zscale": "log",
+            "plot_style": "dot",
+            "line_width": 2.4,
+            "dot_size": 5.5,
+            "text_fontsize": 14,
+            "show_legend": True,
+            "legend_loc": "outside right",
+            "legend_ncol": 2,
+            "legend_fontsize": 11,
+            "show_grid": True,
+            "share_y": True,
+            "heatmap_smoothing": True,
+            "show_colorbar": False,
+            "custom_labels": {"red": "Peak A", "Line1": "Sample X"},
+            "custom_colors": {"red": "#e11d48", "Line1": "#2563eb"},
+        }
+        settings.save_live_maps_view_options(payload)
+        reloaded = MSettings().load_live_maps_view_options()
+        assert reloaded == payload
+
+    def test_config_export_and_import_preserves_live_maps_options(self, settings, tmp_path):
+        settings.save_live_maps_view_options({
+            "plot_theme": "Dark Mode",
+            "plot_style": "line+dots",
+            "line_width": 3.0,
+            "show_grid": True,
+            "custom_labels": {"blue": "Shift B"},
+        })
+        export_path = str(tmp_path / "live_maps_backup.json")
+        assert settings.export_config(export_path) == export_path
+
+        settings.save_live_maps_view_options({"plot_theme": "Light Mode", "line_width": 1.5, "show_grid": False})
+        assert settings.import_config(export_path) is True
+
+        restored = MSettings().load_live_maps_view_options()
+        assert restored["plot_theme"] == "Dark Mode"
+        assert restored["plot_style"] == "line+dots"
+        assert restored["line_width"] == 3.0
+        assert restored["show_grid"] is True
+        assert restored["custom_labels"] == {"blue": "Shift B"}
+

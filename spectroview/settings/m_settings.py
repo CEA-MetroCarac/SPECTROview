@@ -10,6 +10,28 @@ from typing import Optional
 from PySide6.QtCore import QSettings
 
 
+LIVE_MAPS_VIEW_OPTION_DEFAULTS = {
+    "plot_theme": "Light Mode",
+    "xscale": "linear",
+    "yscale": "linear",
+    "zscale": "linear",
+    "plot_style": "line",
+    "line_width": 1.5,
+    "dot_size": 1.5,
+    "text_fontsize": 10,
+    "show_legend": False,
+    "legend_loc": "best",
+    "legend_ncol": 1,
+    "legend_fontsize": 8,
+    "show_grid": False,
+    "share_y": False,
+    "heatmap_smoothing": False,
+    "show_colorbar": True,
+    "custom_labels": {},
+    "custom_colors": {},
+}
+
+
 class MSettings:
     """Model: persistent application settings"""
 
@@ -81,6 +103,73 @@ class MSettings:
     def save_view_options(self, data: dict):
         for key, value in data.items():
             self.settings.setValue(f"view_options/{key}", value)
+        self.settings.sync()
+        self._auto_export_config()
+
+    # ---------- Live Maps View Options ----------
+    @staticmethod
+    def _parse_json_dict(raw) -> dict:
+        if isinstance(raw, dict):
+            return dict(raw)
+        if isinstance(raw, str) and raw:
+            try:
+                parsed = json.loads(raw)
+                if isinstance(parsed, dict):
+                    return parsed
+            except (json.JSONDecodeError, TypeError):
+                pass
+        return {}
+
+    def load_live_maps_view_options(self) -> dict:
+        """Load persistent RGB Live Maps view options from QSettings."""
+        defaults = LIVE_MAPS_VIEW_OPTION_DEFAULTS
+        raw_theme = str(
+            self.settings.value("live_maps_view_options/plot_theme", defaults["plot_theme"], str)
+        )
+        plot_theme = "Dark Mode" if "dark" in raw_theme.lower() else "Light Mode"
+        result = {
+            "plot_theme": plot_theme,
+            "xscale": self.settings.value("live_maps_view_options/xscale", defaults["xscale"], str),
+            "yscale": self.settings.value("live_maps_view_options/yscale", defaults["yscale"], str),
+            "zscale": self.settings.value("live_maps_view_options/zscale", defaults["zscale"], str),
+            "plot_style": self.settings.value("live_maps_view_options/plot_style", defaults["plot_style"], str),
+            "line_width": self.settings.value("live_maps_view_options/line_width", defaults["line_width"], float),
+            "dot_size": self.settings.value("live_maps_view_options/dot_size", defaults["dot_size"], float),
+            "text_fontsize": self.settings.value("live_maps_view_options/text_fontsize", defaults["text_fontsize"], int),
+            "show_legend": self.settings.value("live_maps_view_options/show_legend", defaults["show_legend"], bool),
+            "legend_loc": self.settings.value("live_maps_view_options/legend_loc", defaults["legend_loc"], str),
+            "legend_ncol": self.settings.value("live_maps_view_options/legend_ncol", defaults["legend_ncol"], int),
+            "legend_fontsize": self.settings.value(
+                "live_maps_view_options/legend_fontsize", defaults["legend_fontsize"], int
+            ),
+            "show_grid": self.settings.value("live_maps_view_options/show_grid", defaults["show_grid"], bool),
+            "share_y": self.settings.value("live_maps_view_options/share_y", defaults["share_y"], bool),
+            "heatmap_smoothing": self.settings.value(
+                "live_maps_view_options/heatmap_smoothing", defaults["heatmap_smoothing"], bool
+            ),
+            "show_colorbar": self.settings.value(
+                "live_maps_view_options/show_colorbar", defaults["show_colorbar"], bool
+            ),
+            "custom_labels": self._parse_json_dict(
+                self.settings.value("live_maps_view_options/custom_labels", "{}")
+            ),
+            "custom_colors": self._parse_json_dict(
+                self.settings.value("live_maps_view_options/custom_colors", "{}")
+            ),
+        }
+        return result
+
+    def save_live_maps_view_options(self, data: dict):
+        """Persist RGB Live Maps view options to QSettings and working-folder config."""
+        if not isinstance(data, dict):
+            return
+        for key in LIVE_MAPS_VIEW_OPTION_DEFAULTS:
+            if key not in data:
+                continue
+            val = data[key]
+            if isinstance(val, dict):
+                val = json.dumps(val, ensure_ascii=False)
+            self.settings.setValue(f"live_maps_view_options/{key}", val)
         self.settings.sync()
         self._auto_export_config()
 
@@ -199,6 +288,7 @@ class MSettings:
             "version": "1.0",
             "fit_settings": self.load_fit_settings(),
             "view_options": self.load_view_options(),
+            "live_maps_view_options": self.load_live_maps_view_options(),
             "export_options": self.load_export_options(),
             "theme": self.get_theme(),
             "default_graph_style": self.get_default_graph_style(),
@@ -218,6 +308,9 @@ class MSettings:
 
             if "view_options" in data and isinstance(data["view_options"], dict):
                 self.save_view_options(data["view_options"])
+
+            if "live_maps_view_options" in data and isinstance(data["live_maps_view_options"], dict):
+                self.save_live_maps_view_options(data["live_maps_view_options"])
 
             if "export_options" in data and isinstance(data["export_options"], dict):
                 self.save_export_options(data["export_options"])

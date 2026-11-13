@@ -57,10 +57,21 @@ def test_workspace_modes_and_live_maps_tab_position(qapp):
     maps_tab_texts = [ws_maps.bottom_tabs.tabText(i) for i in range(ws_maps.bottom_tabs.count())]
     assert "Live Maps" in maps_tab_texts, "Live Maps must be present in Maps workspace"
     assert maps_tab_texts.index("Live Maps") == 2, "Live Maps must be at index 2 (after Fit Results)"
+    assert ws_maps.bottom_tabs.tabText(maps_tab_texts.index("Live Maps")) == "Live Maps"
     assert maps_tab_texts[-1] == "More", "More tab must be at the end"
     assert ws_maps.v_spectra_viewer.range_panel.isHidden() is False
     assert ws_maps.v_live_maps.mode == "map"
     assert ws_maps.vm_live_maps.mode == "map"
+
+    # Global Dark UI theme updates Qt icons while keeping Live Maps default Plot theme Light Mode
+    ws_spectra.apply_theme("dark")
+    ws_maps.apply_theme("dark")
+    assert ws_spectra.v_live_maps.get_view_options()["plot_theme"] == "Light Mode"
+    assert ws_maps.v_live_maps.get_view_options()["plot_theme"] == "Light Mode"
+    ws_spectra.close()
+    ws_maps.close()
+    ws_spectra.deleteLater()
+    ws_maps.deleteLater()
 
 
 def test_spectra_workspace_range_selector_to_live_series_synchronization(qapp):

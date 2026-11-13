@@ -223,6 +223,52 @@ class Main(QMainWindow):
             # Save view options whenever they change in either workspace
             self.v_spectra_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(self.settings.save_view_options)
             self.v_maps_workspace.v_spectra_viewer.allOptionsSyncChanged.connect(self.settings.save_view_options)
+
+        # Synchronize & persist Live Maps view options between Spectra and Maps workspaces
+        self._pending_live_maps_view_options = None
+        self._live_maps_save_timer = QTimer(self)
+        self._live_maps_save_timer.setSingleShot(True)
+        self._live_maps_save_timer.setInterval(250)
+        self._live_maps_save_timer.timeout.connect(self._flush_live_maps_view_options)
+
+        lm_widgets = [
+            ws.v_live_maps
+            for ws in (getattr(self, 'v_spectra_workspace', None), getattr(self, 'v_maps_workspace', None))
+            if ws is not None and hasattr(ws, 'v_live_maps')
+        ]
+        if lm_widgets:
+            persisted_lm_options = self.settings.load_live_maps_view_options()
+            for lm in lm_widgets:
+                lm.set_view_options(persisted_lm_options, emit_signal=False)
+                lm.view_options_changed.connect(self._schedule_live_maps_view_options_save)
+            if len(lm_widgets) == 2:
+                spec_lm, maps_lm = lm_widgets[0], lm_widgets[1]
+                spec_lm.view_options_changed.connect(
+                    lambda opts, target=maps_lm: target.set_view_options(opts, emit_signal=False)
+                )
+                maps_lm.view_options_changed.connect(
+                    lambda opts, target=spec_lm: target.set_view_options(opts, emit_signal=False)
+                )
+
+    def _schedule_live_maps_view_options_save(self, options: dict):
+        """Debounce Live Maps view-option disk writes so spinbox ticks never stall the UI."""
+        self._pending_live_maps_view_options = dict(options or {})
+        if hasattr(self, '_live_maps_save_timer'):
+            self._live_maps_save_timer.start()
+
+    def _flush_live_maps_view_options(self):
+        """Write pending (or current) Live Maps view options to persistent settings."""
+        if hasattr(self, '_live_maps_save_timer') and self._live_maps_save_timer.isActive():
+            self._live_maps_save_timer.stop()
+        opts = self._pending_live_maps_view_options
+        if opts is None:
+            for ws in (getattr(self, 'v_spectra_workspace', None), getattr(self, 'v_maps_workspace', None)):
+                if ws is not None and hasattr(ws, 'v_live_maps'):
+                    opts = ws.v_live_maps.get_view_options()
+                    break
+        if opts is not None:
+            self.settings.save_live_maps_view_options(opts)
+            self._pending_live_maps_view_options = None
         
 
     def show_notification(
@@ -1028,6 +1074,7 @@ class Main(QMainWindow):
                 self.settings.save_view_options(self.v_spectra_workspace.v_spectra_viewer.get_options_state())
             elif hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
                 self.settings.save_view_options(self.v_maps_workspace.v_spectra_viewer.get_options_state())
+            self._flush_live_maps_view_options()
         except Exception:
             pass
 

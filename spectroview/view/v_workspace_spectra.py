@@ -390,9 +390,12 @@ class VWorkspaceSpectra(QWidget):
         if hasattr(self, 'v_mva') and hasattr(self.v_mva, 'apply_theme'):
             self.v_mva.apply_theme(theme)
 
-        # Propagate to Live Maps
-        if hasattr(self, 'v_live_maps') and hasattr(self.v_live_maps, 'apply_theme'):
-            self.v_live_maps.apply_theme(theme)
+        # Propagate Qt icon theme to Live Maps without overriding its Plot theme
+        if hasattr(self, 'v_live_maps'):
+            if hasattr(self.v_live_maps, 'apply_global_theme'):
+                self.v_live_maps.apply_global_theme(theme)
+            elif hasattr(self.v_live_maps, 'apply_theme'):
+                self.v_live_maps.apply_theme(theme)
 
     def _is_live_maps_tab_active(self) -> bool:
         """True when the Live Maps bottom tab is currently visible to the user."""

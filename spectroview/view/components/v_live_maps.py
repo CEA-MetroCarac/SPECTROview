@@ -275,7 +275,7 @@ class LiveMapSubpanel(QFrame):
         layout.addLayout(row2_layout)
 
         # ── Matplotlib Figure, Hidden Navigation Toolbar & Canvas ──
-        self.figure = Figure(dpi=96, layout="compressed")
+        self.figure = Figure(dpi=96, layout="none")
         self.ax = self.figure.add_subplot(111)
 
         self.canvas = FigureCanvas(self.figure)
@@ -313,29 +313,38 @@ class LiveMapSubpanel(QFrame):
             return
         self._draw_timer.start()
 
+    def _has_layout_headroom(self) -> bool:
+        """Return True when canvas dimensions are large enough for compressed layout."""
+        return (
+            self.canvas is not None
+            and self.canvas.width() >= 180
+            and self.canvas.height() >= 120
+        )
+
     def _request_relayout(self):
-        """Ensure Matplotlib's compressed layout engine runs on the next draw."""
+        """Enable compressed layout when the canvas has headroom; skip on tiny surfaces."""
         self._relayout_needed = True
         try:
+            target = "compressed" if self._has_layout_headroom() else "none"
             engine = self.figure.get_layout_engine()
-            if engine is None or type(engine).__name__ != "CompressedLayoutEngine":
-                self.figure.set_layout_engine("compressed")
+            cur_name = type(engine).__name__ if engine is not None else "None"
+            already_ok = (
+                (target == "compressed" and cur_name in ("ConstrainedLayoutEngine", "CompressedLayoutEngine"))
+                or (target == "none" and cur_name == "PlaceHolderLayoutEngine")
+            )
+            if not already_ok:
+                self.figure.set_layout_engine(target)
         except Exception:
             pass
 
     def _on_canvas_resize(self, _event):
-        """Re-enable compressed layout whenever canvas dimensions change."""
+        """Re-evaluate compressed layout whenever canvas dimensions change."""
         self._request_relayout()
 
     def _on_canvas_draw(self, _event):
         """Freeze settled layout engine so pure restyles and pan/zoom skip constraint solving."""
         try:
-            if (
-                self._relayout_needed
-                and self.canvas is not None
-                and self.canvas.width() > 50
-                and self.canvas.height() > 50
-            ):
+            if self._relayout_needed and self._has_layout_headroom():
                 self._relayout_needed = False
                 self.figure.set_layout_engine("none")
         except Exception:

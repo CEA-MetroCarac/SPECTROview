@@ -617,7 +617,21 @@ def test_v_live_maps_plot_theme_option_and_grid_warning_free(qapp):
         assert not any(gl.get_visible() for gl in panel.ax.get_xgridlines())
 
     grid_warnings = [str(w.message) for w in caught if "grid" in str(w.message).lower()]
+    layout_warnings = [str(w.message) for w in caught if "constrained_layout" in str(w.message).lower()]
     assert grid_warnings == []
+    assert layout_warnings == []
+
+    # Expanding to normal height engages compressed layout safely then freezes once settled
+    live_maps.resize(900, 450)
+    qapp.processEvents()
+    assert panel._has_layout_headroom() is True
+    panel._request_relayout()
+    engine = panel.figure.get_layout_engine()
+    assert type(engine).__name__ in ("ConstrainedLayoutEngine", "CompressedLayoutEngine")
+    assert getattr(engine, "_compress", True) is True
+    panel.canvas.draw()
+    assert panel._relayout_needed is False
+    assert type(panel.figure.get_layout_engine()).__name__ == "PlaceHolderLayoutEngine"
 
 
 def test_v_live_maps_subpanel_rescale_pan_zoom_tools(qapp):

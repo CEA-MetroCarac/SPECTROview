@@ -618,7 +618,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 'x0': md.x0.copy(),
                 'Y0': md.Y0[i:i+1].copy(),
                 'baseline_config': deepcopy(md.baseline_config),
-                'fit_model': deepcopy(md.fit_model),
+                'fit_model': deepcopy(md.fit_model) if md.fit_model else None,
                 'range_min': md.range_min,
                 'range_max': md.range_max,
                 'is_subtracted': is_sub
@@ -809,7 +809,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if apply_all:
             for map_name in self.store.map_names:
                 md = self.store.get_map_data(map_name)
-                if md and md.fit_model:
+                if md and md.fit_model and md.fit_model.get("peak_models"):
                     self._reindex_fit_model(md)
                     tasks.append({
                         "map_name": map_name,
@@ -818,7 +818,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                     })
         else:
             md = self.store.get_map_data(self.current_map_name)
-            if not md or not md.fit_model:
+            if not md or not md.fit_model or not md.fit_model.get("peak_models"):
                 self.notify.emit("No peaks to fit.")
                 return
             self._reindex_fit_model(md)

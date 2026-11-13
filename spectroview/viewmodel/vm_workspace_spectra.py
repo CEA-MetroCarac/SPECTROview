@@ -247,7 +247,8 @@ class VMWorkspaceSpectra(QObject):
             md = self.store.get_map_data(name)
             if md:
                 md.baseline_config = data['baseline_config']
-                md.fit_model = data['fit_model']
+                raw_fm = data.get('fit_model')
+                md.fit_model = raw_fm if isinstance(raw_fm, dict) and raw_fm else None
                 md.range_min = data['range_min']
                 md.range_max = data['range_max']
                 if data['is_subtracted']:
@@ -448,7 +449,7 @@ class VMWorkspaceSpectra(QObject):
                 md.Y_baseline = None
 
         # 6. Reconstruct Y_peaks and Y_bestfit
-        if md.Y_bestfit is None and md.fit_model and "peak_models" in md.fit_model:
+        if md.Y_bestfit is None and md.fit_model and md.fit_model.get("peak_models"):
             md.Y_peaks = []
             x_arr = md.x
             N = md.Y.shape[0]
@@ -679,8 +680,13 @@ class VMWorkspaceSpectra(QObject):
         # Clear fit state to prevent _update_fit_model_from_params overwriting with stale parameters
         self._clear_fit_state(md)
 
-        if md.fit_model is None:
+        if not isinstance(md.fit_model, dict):
             md.fit_model = {"peak_labels": [], "peak_models": {}}
+        else:
+            if not isinstance(md.fit_model.get("peak_models"), dict):
+                md.fit_model["peak_models"] = {}
+            if not isinstance(md.fit_model.get("peak_labels"), list):
+                md.fit_model["peak_labels"] = []
 
         fit_settings = self.settings.load_fit_settings()
         maxshift = fit_settings.get("maxshift", 20.0)
@@ -1444,7 +1450,7 @@ class VMWorkspaceSpectra(QObject):
         tasks = []
         for fname in spectra_fnames:
             md = self.store.get_map_data(fname)
-            if md and md.fit_model:
+            if md and md.fit_model and md.fit_model.get("peak_models"):
                 self._reindex_fit_model(md)
                 
                 # Inject current fit settings

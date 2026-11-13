@@ -753,3 +753,58 @@ class TestReceiveSpectra:
             'range_min': None, 'range_max': None, 'is_subtracted': False,
         }])
         assert len(vm.store.map_names) == before
+
+    def test_receive_spectra_normalizes_empty_fit_model_dict(self, vm):
+        x, y = _synthetic_lorentzian()
+        vm.receive_spectra([{
+            'name': "from_maps_empty_fm",
+            'x0': x.astype(np.float64),
+            'Y0': y[None, :].astype(np.float32),
+            'baseline_config': None,
+            'fit_model': {},
+            'range_min': None,
+            'range_max': None,
+            'is_subtracted': False,
+        }])
+        md = vm.store.get_map_data("from_maps_empty_fm")
+        assert md.fit_model is None
+
+
+class TestEmptyFitModelPeakAddition:
+    def test_add_peak_at_handles_empty_or_partial_fit_model_dict(self, vm):
+        x, y = _synthetic_lorentzian()
+        md = _add_spectrum(vm, "s1", x, y)
+        vm.selected_fnames = ["s1"]
+
+        # Simulate pre-existing saved workspace where fit_model was deserialized as {}
+        md.fit_model = {}
+        vm.add_peak_at(500.0)
+        assert md.fit_model is not None
+        assert "0" in md.fit_model["peak_models"]
+        assert len(md.fit_model["peak_labels"]) == 1
+
+        # Partial fit_model dict without peak_models/peak_labels (e.g. baseline/range only)
+        md.fit_model = {"baseline": None}
+        vm.add_peak_at(510.0)
+        assert "0" in md.fit_model["peak_models"]
+        assert len(md.fit_model["peak_labels"]) == 1
+
+    def test_save_and_reload_unfitted_spectra_workspace_allows_add_peak_at(self, vm, qapp, tmp_path, monkeypatch):
+        from PySide6.QtWidgets import QFileDialog
+
+        x, y = _synthetic_lorentzian()
+        _add_spectrum(vm, "s1", x, y)
+        vm.selected_fnames = ["s1"]
+
+        save_path = tmp_path / "unfitted.spectra"
+        monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: (str(save_path), ""))
+        vm.save_work()
+
+        vm2 = VMWorkspaceSpectra(vm.settings)
+        vm2.load_work(str(save_path))
+        md2 = vm2.store.get_map_data("s1")
+        assert md2.fit_model is None
+
+        vm2.add_peak_at(500.0)
+        assert "0" in md2.fit_model["peak_models"]
+        assert len(md2.fit_model["peak_labels"]) == 1

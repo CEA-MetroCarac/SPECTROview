@@ -586,6 +586,9 @@ class SpectraStore:
             labels=labels,
         )
 
+        raw_fit_model = meta.get('fit_model')
+        loaded_fit_model = raw_fit_model if isinstance(raw_fit_model, dict) and raw_fit_model else None
+
         # Restore fit results if present
         pk = f'{pfx}_peak_params'
         if pk in arrays:
@@ -599,7 +602,7 @@ class SpectraStore:
                 success=arrays.get(f'{pfx}_fit_success', np.zeros(N, dtype=bool)),
                 r2=arrays.get(f'{pfx}_fit_r2', np.zeros(N, dtype=np.float64)),
                 param_names=param_names,
-                fit_model=meta.get('fit_model', {}),
+                fit_model=loaded_fit_model,
             )
 
         md = store.get_map_data(map_name)
@@ -615,7 +618,7 @@ class SpectraStore:
             md.xcorrection_value = meta.get('xcorrection_value', 0.0)
             md.intensity_norm_factor = meta.get('intensity_norm_factor', 1.0)
             md.map_metadata = meta.get('map_metadata', {})
-            md.fit_model = meta.get('fit_model', {})
+            md.fit_model = loaded_fit_model
             
             if f'{pfx}_Y_bestfit' in arrays:
                 md.Y_bestfit = arrays[f'{pfx}_Y_bestfit']

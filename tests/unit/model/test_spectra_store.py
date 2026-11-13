@@ -317,6 +317,17 @@ class TestNpzSerializationRoundTrip:
         SpectraStore.load_map_from_npz(arrays, meta, "map1", store=other_store)
         assert set(other_store.map_names) == {"other_map", "map1"}
 
+    def test_round_trip_without_fit_model_keeps_fit_model_none(self):
+        store = SpectraStore()
+        _add_simple_map(store, "unfitted_map", n=2, m=15)
+        arrays = store.to_npz_dict("unfitted_map")
+        meta = store.to_metadata_dict("unfitted_map")
+        assert meta["fit_model"] == {}
+
+        restored = SpectraStore.load_map_from_npz(arrays, meta, "unfitted_map")
+        md_restored = restored.get_map_data("unfitted_map")
+        assert md_restored.fit_model is None
+
     @staticmethod
     def _make_fitted_store():
         store = SpectraStore()

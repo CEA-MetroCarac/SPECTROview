@@ -514,3 +514,29 @@ class TestTwoTierMultiSelectionAndBatchDelete:
         assert vm.selected_map_names == []
         assert live_sel[-1] == ([], None)
 
+    def test_save_reload_unfitted_map_send_to_spectra_and_add_peak(self, vm, qapp, tmp_path, monkeypatch):
+        from PySide6.QtWidgets import QFileDialog
+
+        _load_map(vm, "m1", n_rows_side=2)
+        save_path = tmp_path / "unfitted.maps"
+        monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: (str(save_path), ""))
+        vm.save_work()
+
+        vm2 = VMWorkspaceMaps(vm.settings)
+        vm2.load_work(str(save_path))
+        md2 = vm2.store.get_map_data("m1")
+        assert md2.fit_model is None
+
+        # Sending selected spectra from a reloaded unfitted map must preserve fit_model=None
+        payloads = []
+        vm2.send_spectra_to_workspace.connect(payloads.extend)
+        vm2.selected_fnames = [md2.fnames[0]]
+        vm2.send_selected_spectra_to_spectra_workspace()
+        assert len(payloads) == 1
+        assert payloads[0]["fit_model"] is None
+
+        # Clicking to add a peak on the reloaded map must succeed cleanly
+        vm2.add_peak_at(500.0)
+        assert "0" in md2.fit_model["peak_models"]
+        assert len(md2.fit_model["peak_labels"]) == 1
+

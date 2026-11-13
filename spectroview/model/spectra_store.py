@@ -88,6 +88,24 @@ class MapData:
     Y_baseline: Optional[np.ndarray] = None   # float32[N, M_proc]  baseline curves
     Y_peaks: Optional[list] = None            # list of float32[N, M_proc] per-peak curves
 
+    # Monotonic version counter bumped on any spectral, active-mask, or fit mutation.
+    data_version: int = field(default=0, repr=False, compare=False)
+
+    _VERSIONED_FIELDS = frozenset({
+        "x0", "Y0", "coords", "is_active", "Y", "x",
+        "peak_params", "fit_success", "fit_r2", "param_names", "fit_model",
+        "is_baseline_subtracted", "Y_bestfit", "Y_baseline", "Y_peaks",
+    })
+
+    def __setattr__(self, name: str, value):
+        super().__setattr__(name, value)
+        if name in self._VERSIONED_FIELDS and "data_version" in self.__dict__:
+            super().__setattr__("data_version", self.__dict__["data_version"] + 1)
+
+    def touch(self) -> None:
+        """Increment data_version after an in-place NumPy array or mask mutation."""
+        super().__setattr__("data_version", self.data_version + 1)
+
     @property
     def n_spectra(self) -> int:
         return len(self.fnames)
@@ -341,6 +359,7 @@ class SpectraStore:
         md.fit_r2[indices] = r2
         md.param_names = param_names
         md.fit_model = fit_model
+        md.touch()
 
     def has_fit_results(self, map_name: Optional[str] = None) -> bool:
         """Check if any fit results exist.

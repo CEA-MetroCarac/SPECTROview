@@ -337,9 +337,15 @@ def test_vm_rb_ratio_reuses_red_intensity_within_pass(qapp, sample_map_data, mon
     real = vm._compute_values
     monkeypatch.setattr(vm, "_compute_values", lambda rng, p: calls.append(rng) or real(rng, p))
     vm.set_selector_range(SELECTOR_RED, 600.0, 800.0, immediate=True)
-    # Red computed once (shared with ratio) + Blue once — not three times
-    assert sorted(calls) == [(600.0, 800.0), (1250.0, 1350.0)]
+    # Red computed once (shared with ratio) + Blue served from versioned cache
+    assert calls == [(600.0, 800.0)]
     assert vm._intensity_cache == {}  # pass-scoped cache is released
+
+    # Bumping data_version (in-place mutation) invalidates versioned cache cleanly
+    calls.clear()
+    sample_map_data.touch()
+    vm.set_map_datas([sample_map_data], primary_name=sample_map_data.name)
+    assert sorted(calls) == [(600.0, 800.0), (1250.0, 1350.0)]
 
 
 def test_vm_rb_ratio_profile_masks_zero_blue(qapp):
@@ -396,3 +402,121 @@ def test_vm_rb_ratio_spectra_series_mode(qapp):
     vals, msg = series[SELECTOR_GREEN]
     assert len(vals) == 3
     assert np.all(np.diff(vals) > 0)
+
+
+def test_vm_multi_1d_profiles_stack_and_primary_precedence(qapp, sample_map_data):
+    vm = VMLiveMaps()
+    multi = {}
+    cand = []
+    vm.multi_profile_data_ready.connect(lambda cid, e, xl, m: multi.update({cid: (e, xl, m)}))
+    vm.map_2d_candidates_changed.connect(lambda c, a, s: cand.append((c, a, s)))
+
+    p1 = _make_profile_map(along="x", n=5)
+    p1.name = "p1"
+    p2 = _make_profile_map(along="x", n=6)
+    p2.name = "p2"
+    # p3 has disjoint x-axis -> out-of-range NaN values cleanly handled
+    p3 = MapData(
+        name="p_disjoint",
+        x0=np.linspace(2000.0, 2200.0, 20),
+        Y0=np.ones((4, 20), dtype=np.float32),
+        coords=np.column_stack([np.arange(4.0), np.zeros(4)]),
+        is_active=np.ones(4, dtype=bool),
+        fnames=[f"d_{i}" for i in range(4)],
+        colors=[None] * 4,
+        labels=[None] * 4,
+    )
+
+    vm.set_selector_range(SELECTOR_RED, 650.0, 750.0)
+    vm.set_selector_active(SELECTOR_RED, True)
+
+    # Primary=p2 + p1 + mixed 2D map -> Primary=1D excludes 2D map with status notice
+    vm.set_map_datas([p1, p2, sample_map_data], primary_name="p2")
+    entries, xlabel, msg = multi[SELECTOR_RED]
+    assert [e["name"] for e in entries] == ["p1", "p2"]
+    assert [e["is_primary"] for e in entries] == [False, True]
+    assert xlabel == "X"
+    assert "Excluded 2D map(s): test_map" in msg
+    assert cand[-1][0] == [] and cand[-1][1] is None
+
+    # Disjoint spectral range profile gets NaN array rather than crashing
+    vm.set_map_datas([p1, p3], primary_name="p1")
+    entries2, _, msg2 = multi[SELECTOR_RED]
+    assert len(entries2) == 2
+    assert np.all(np.isfinite(entries2[0]["values"]))
+    assert entries2[1]["out_of_range"] is True
+    assert np.all(np.isnan(entries2[1]["values"]))
+    assert "p_disjoint" in msg2
+
+
+def test_vm_multi_2d_candidates_and_switcher(qapp, sample_map_data):
+    vm = VMLiveMaps()
+    out = _collect(vm)
+    cand = []
+    vm.map_2d_candidates_changed.connect(lambda c, a, s: cand.append((c, a, s)))
+    vm.set_selector_range(SELECTOR_RED, 650.0, 750.0)
+    vm.set_selector_active(SELECTOR_RED, True)
+
+    m2 = MapData(
+        name="map_two",
+        x0=sample_map_data.x0.copy(),
+        Y0=sample_map_data.Y0.copy() * 3.0,
+        coords=sample_map_data.coords.copy(),
+        is_active=sample_map_data.is_active.copy(),
+        fnames=list(sample_map_data.fnames),
+        colors=list(sample_map_data.colors),
+        labels=list(sample_map_data.labels),
+    )
+    p1 = _make_profile_map(along="x", n=5)
+    p1.name = "prof"
+
+    # Primary = sample_map_data (2D): excludes 1D profile and computes only active 2D map
+    vm.set_map_datas([sample_map_data, m2, p1], primary_name=sample_map_data.name)
+    assert cand[-1] == ([sample_map_data.name, "map_two"], sample_map_data.name, "Excluded 1D profile(s): prof")
+    grid_first = out["map"][SELECTOR_RED][0].copy()
+
+    # Switching 2D candidate switches computed grid cleanly (scaled ~3x)
+    vm.set_active_2d_map("map_two")
+    assert cand[-1][1] == "map_two"
+    grid_second = out["map"][SELECTOR_RED][0]
+    valid = np.isfinite(grid_first) & np.isfinite(grid_second)
+    assert np.allclose(grid_second[valid], grid_first[valid] * 3.0, rtol=1e-5)
+
+    # Duplicate signature call is a no-op
+    out["map"].clear()
+    recomputed = vm.set_map_datas([sample_map_data, m2, p1], primary_name=sample_map_data.name)
+    assert recomputed is False
+    assert out["map"] == {}
+
+
+def test_vm_is_active_masking_and_empty_clear(qapp, sample_map_data):
+    vm = VMLiveMaps()
+    cleared = []
+    vm.live_maps_cleared.connect(lambda: cleared.append(True))
+    out = _collect(vm)
+
+    # Uncheck pixel 0 on 1D profile -> NaN at sorted position 0 or last
+    p = _make_profile_map(along="x", n=5)
+    p.is_active[0] = False  # acquisition index 0 has pos = 4.0 -> last sorted element
+    vm.set_selector_range(SELECTOR_RED, 650.0, 750.0)
+    vm.set_selector_active(SELECTOR_RED, True)
+    vm.set_map_data(p)
+    _, vals, _, _ = out["profile"][SELECTOR_RED]
+    assert np.isnan(vals[-1])
+    assert np.all(np.isfinite(vals[:-1]))
+
+    # Uncheck ALL spectra -> graceful message / no valid values
+    p.is_active[:] = False
+    p.touch()
+    vm.set_map_data(p)
+    pos_empty, vals_empty, _, msg_empty = out["profile"][SELECTOR_RED]
+    assert len(vals_empty) == 0
+    assert "no active" in msg_empty.lower() or "unchecked" in msg_empty.lower()
+
+    # Empty workspace clear stops pending timer and emits live_maps_cleared
+    vm._pending_calc.add(SELECTOR_RED)
+    vm._timer.start()
+    vm.set_map_datas([])
+    assert vm._timer.isActive() is False
+    assert vm._pending_calc == set()
+    assert cleared == [True]

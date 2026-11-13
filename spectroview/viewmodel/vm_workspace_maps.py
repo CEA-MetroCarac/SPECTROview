@@ -31,6 +31,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     
     maps_list_changed = Signal(list)
     map_data_updated = Signal(object)
+    live_maps_selection_changed = Signal(list, object)  # (selected_names, primary_name)
     send_spectra_to_workspace = Signal(list)
     clear_map_cache_requested = Signal(str)
     switch_to_graphs_tab = Signal()  # Request to switch to Graphs tab
@@ -39,6 +40,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         super().__init__(settings)
         self.maps = {}
         self.current_map_name: str | None = None
+        self.selected_map_names: list[str] = []
         self.current_map_df = None
         
         # Store metadata for each map (for WDF files)
@@ -115,27 +117,56 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
                 self.settings.set_last_directory(str(last_valid_path.parent))
     
     def select_map(self, map_name: str):
-        """Select a map, auto-select its first spectrum, and update map data."""
+        """Select a single map as Primary and synchronize spectra/map viewers."""
         if map_name not in self.maps:
             return
-        
-        self.current_map_name = map_name
-        self.current_map_df = self.maps[map_name]
-        
-        # Filter and show spectra for this map (already extracted during load)
-        self._show_map_spectra(map_name)
-        
-        # Automatically select the first spectrum in the map
-        md = self.store.get_map_data(map_name)
-        if md is not None and len(md.fnames) > 0:
-            self.selected_fnames = [md.fnames[0]]
-            self._emit_selected_spectra()
-        else:
-            self.selected_fnames = []
-            self.spectra_selection_changed.emit([])
+        self.select_maps([map_name], primary_name=map_name)
 
-        # Emit single signal to update view
-        self.map_data_updated.emit(self.current_map_df)
+    def select_maps(self, map_names: list[str], primary_name: str | None = None):
+        """Select one or more maps using the Two-Tier Selection Model.
+
+        * ``current_map_name`` (Primary Map) drives single-map viewers and tools.
+        * ``selected_map_names`` drives multi-map comparison in Live Maps.
+        Changing only the comparison set while keeping ``primary_name`` fixed
+        avoids resetting ``VMapViewer``, ``VSpectraViewer``, or fit tools.
+        """
+        valid_names = [n for n in dict.fromkeys(map_names) if n in self.maps]
+        if valid_names:
+            resolved_primary = primary_name if primary_name in valid_names else valid_names[-1]
+        else:
+            resolved_primary = None
+
+        self.selected_map_names = valid_names
+
+        if resolved_primary is None:
+            had_primary = self.current_map_name is not None or bool(self.selected_fnames)
+            self.current_map_name = None
+            self.current_map_df = None
+            self.selected_fnames = []
+            if had_primary:
+                self.spectra_list_changed.emit([])
+                self.count_changed.emit(0)
+                self.spectra_selection_changed.emit([])
+                self.map_data_updated.emit(pd.DataFrame())
+            self.live_maps_selection_changed.emit([], None)
+            return
+
+        if resolved_primary != self.current_map_name:
+            self.current_map_name = resolved_primary
+            self.current_map_df = self.maps[resolved_primary]
+            self._show_map_spectra(resolved_primary)
+
+            md = self.store.get_map_data(resolved_primary)
+            if md is not None and len(md.fnames) > 0:
+                self.selected_fnames = [md.fnames[0]]
+                self._emit_selected_spectra()
+            else:
+                self.selected_fnames = []
+                self.spectra_selection_changed.emit([])
+
+            self.map_data_updated.emit(self.current_map_df)
+
+        self.live_maps_selection_changed.emit(list(self.selected_map_names), self.current_map_name)
 
     def _get_unique_map_data(self, fnames: list[str]) -> list:
         """Override parent to fetch MapData of the active map for interactive tools.
@@ -371,7 +402,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             self.notify.emit(f"Error saving map: {e}")
     
     def delete_current_map(self):
-        """Delete the currently selected map."""
+        """Delete the currently selected Primary map."""
         if not self.current_map_name:
             self.notify.emit("No map selected.")
             return
@@ -379,6 +410,48 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         map_name = self.current_map_name
         self.remove_map(map_name)
         self.notify.emit(f"Map '{map_name}' deleted.")
+
+    def delete_selected_maps(self):
+        """Delete all currently selected maps (batch delete when multiple selected)."""
+        targets = [n for n in self.selected_map_names if n in self.maps]
+        if not targets and self.current_map_name and self.current_map_name in self.maps:
+            targets = [self.current_map_name]
+        if not targets:
+            self.notify.emit("No map selected.")
+            return
+
+        if len(targets) == 1:
+            self.remove_map(targets[0])
+            self.notify.emit(f"Map '{targets[0]}' deleted.")
+            return
+
+        existing_order = list(self.maps.keys())
+        deleted_indices = [existing_order.index(n) for n in targets if n in existing_order]
+        min_idx = min(deleted_indices) if deleted_indices else 0
+
+        for name in targets:
+            del self.maps[name]
+            self.maps_metadata.pop(name, None)
+            self.store.remove_map(name)
+
+        self.selected_map_names = []
+        self.current_map_name = None
+        self.current_map_df = None
+        self.selected_fnames = []
+
+        self._emit_maps_list_update()
+        remaining = list(self.maps.keys())
+        if remaining:
+            next_name = remaining[min(min_idx, len(remaining) - 1)]
+            self.select_maps([next_name], primary_name=next_name)
+        else:
+            self.spectra_list_changed.emit([])
+            self.count_changed.emit(0)
+            self.spectra_selection_changed.emit([])
+            self.map_data_updated.emit(pd.DataFrame())
+            self.live_maps_selection_changed.emit([], None)
+
+        self.notify.emit(f"Deleted {len(targets)} map(s).")
     
     def select_all_current_map_spectra(self):
         """Select all spectra from the currently displayed map."""
@@ -407,6 +480,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if bool(md.is_active[idx]) == is_active:
             return
         md.is_active[idx] = is_active
+        md.touch()
         self.clear_map_cache_requested.emit(self.current_map_name)
         self.map_data_updated.emit(self.get_current_map_dataframe())
 
@@ -418,6 +492,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if md is None:
             return
         md.is_active[:] = is_active
+        md.touch()
         self.clear_map_cache_requested.emit(self.current_map_name)
         self.map_data_updated.emit(self.get_current_map_dataframe())
 
@@ -559,23 +634,35 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         """Remove a map and its spectra from the loaded maps."""
         if map_name not in self.maps:
             return
-        
+
+        old_order = list(self.maps.keys())
+        old_idx = old_order.index(map_name)
         del self.maps[map_name]
+        self.maps_metadata.pop(map_name, None)
         self.store.remove_map(map_name)
-        
-        # If removed map was selected, clear view
-        if self.current_map_name == map_name:
+        self.selected_map_names = [n for n in self.selected_map_names if n != map_name]
+
+        was_primary = (self.current_map_name == map_name)
+        if was_primary:
             self.current_map_name = None
             self.current_map_df = None
             self.selected_fnames = []
+
+        self._emit_maps_list_update()
+        remaining = list(self.maps.keys())
+
+        if remaining and (was_primary or not self.selected_map_names):
+            new_sel = self.selected_map_names if self.selected_map_names else [remaining[min(old_idx, len(remaining) - 1)]]
+            next_primary = new_sel[-1] if was_primary else self.current_map_name
+            self.select_maps(new_sel, primary_name=next_primary)
+        elif not remaining:
             self.spectra_list_changed.emit([])
             self.count_changed.emit(0)
             self.spectra_selection_changed.emit([])
-            # Clear map plot by emitting empty DataFrame
             self.map_data_updated.emit(pd.DataFrame())
-        
-        # Update maps list in View
-        self._emit_maps_list_update()
+            self.live_maps_selection_changed.emit([], None)
+        else:
+            self.live_maps_selection_changed.emit(list(self.selected_map_names), self.current_map_name)
     
     def _emit_maps_list_update(self):
         """Emit updated list of map names."""
@@ -1073,6 +1160,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.maps.clear()
         self.maps_metadata.clear()
         self.current_map_name = None
+        self.selected_map_names = []
         self.current_map_df = None
 
         # Stop any running fit thread and clear base structures (via parent)
@@ -1086,6 +1174,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         self.maps_list_changed.emit([])
         self.spectra_list_changed.emit([])
         self.map_data_updated.emit(pd.DataFrame())
+        self.live_maps_selection_changed.emit([], None)
         self.count_changed.emit(0)
 
 

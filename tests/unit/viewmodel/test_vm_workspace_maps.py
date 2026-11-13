@@ -435,3 +435,62 @@ class TestLabSpec6WorkspaceAndMoreTabIntegration:
         assert len(api_spec["items"]) == 1
         assert api_spec["items"][0]["metadata"]["File Format"] == "HORIBA LabSpec 5"
 
+
+class TestTwoTierMultiSelectionAndBatchDelete:
+    def test_select_maps_comparison_does_not_reemit_primary(self, vm):
+        _load_map(vm, "m1", n_rows_side=2)
+        _load_map(vm, "m2", n_rows_side=2)
+        _load_map(vm, "m3", n_rows_side=2)
+        vm.select_map("m1")
+
+        map_updates = []
+        spec_updates = []
+        live_sel = []
+        vm.map_data_updated.connect(lambda df: map_updates.append(df))
+        vm.spectra_selection_changed.connect(lambda s: spec_updates.append(s))
+        vm.live_maps_selection_changed.connect(lambda names, prim: live_sel.append((list(names), prim)))
+
+        # Adding m2 and m3 alongside unchanged Primary m1 emits ONLY live_maps_selection_changed
+        vm.select_maps(["m1", "m2", "m3"], primary_name="m1")
+        assert vm.current_map_name == "m1"
+        assert vm.selected_map_names == ["m1", "m2", "m3"]
+        assert map_updates == []
+        assert spec_updates == []
+        assert live_sel == [(["m1", "m2", "m3"], "m1")]
+
+        # Changing Primary to m2 emits map_data_updated AND live_maps_selection_changed
+        vm.select_maps(["m1", "m2", "m3"], primary_name="m2")
+        assert vm.current_map_name == "m2"
+        assert len(map_updates) == 1
+        assert live_sel[-1] == (["m1", "m2", "m3"], "m2")
+
+    def test_delete_selected_maps_and_active_version_bump(self, vm):
+        m1 = _load_map(vm, "m1", n_rows_side=2)
+        _load_map(vm, "m2", n_rows_side=2)
+        _load_map(vm, "m3", n_rows_side=2)
+
+        # set_spectrum_active and set_all_current_map_spectra_active bump data_version
+        vm.select_map("m1")
+        v0 = m1.data_version
+        vm.set_spectrum_active(m1.fnames[0], False)
+        assert m1.data_version > v0
+        v1 = m1.data_version
+        vm.set_all_current_map_spectra_active(True)
+        assert m1.data_version > v1
+
+        # Batch delete m1 and m3 -> m2 survives and becomes Primary
+        live_sel = []
+        vm.live_maps_selection_changed.connect(lambda names, prim: live_sel.append((list(names), prim)))
+        vm.select_maps(["m1", "m3"], primary_name="m1")
+        vm.delete_selected_maps()
+        assert list(vm.maps.keys()) == ["m2"]
+        assert vm.current_map_name == "m2"
+        assert vm.selected_map_names == ["m2"]
+
+        # Delete last remaining map -> empty selection signals
+        vm.delete_selected_maps()
+        assert vm.maps == {}
+        assert vm.current_map_name is None
+        assert vm.selected_map_names == []
+        assert live_sel[-1] == ([], None)
+

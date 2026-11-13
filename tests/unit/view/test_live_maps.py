@@ -245,3 +245,72 @@ def test_green_panel_offers_rb_ratio_option(qapp):
     assert "Red" in green.lbl_range.text()
     green.set_selected_parameter(PARAM_INTEGRATED_INTENSITY)
     assert "[810.0, 910.0]" in green.lbl_range.text()
+
+
+def test_v_live_maps_multi_profile_legend_theme_and_fast_path(qapp):
+    live_maps = VLiveMaps(mode="map")
+    live_maps.show()
+    live_maps.set_selector_active(SELECTOR_RED, True)
+    panel = live_maps.panels[SELECTOR_RED]
+
+    # Switching from 2D heatmap -> multi-1D must reset aspect="auto" and show legend header
+    live_maps.update_map_data(SELECTOR_RED, np.ones((4, 4)), [-10, 10, -10, 10], 0.0, 1.0, "OK")
+    entries = [
+        {"name": "p1", "positions": np.array([0.0, 1.0, 2.0]), "values": np.array([10.0, 20.0, 30.0]), "is_primary": True, "axis_label": "X", "out_of_range": False, "msg": "OK"},
+        {"name": "p2", "positions": np.array([0.0, 1.0, 2.0]), "values": np.array([5.0, np.nan, 15.0]), "is_primary": False, "axis_label": "X", "out_of_range": False, "msg": "OK"},
+        {"name": "p3_disjoint", "positions": np.array([0.0, 1.0]), "values": np.array([np.nan, np.nan]), "is_primary": False, "axis_label": "X", "out_of_range": True, "msg": "Out of range"},
+    ]
+    live_maps.update_multi_profile_data(SELECTOR_RED, entries, shared_x_label="X", status_msg="Excluded 2D map(s): m2d")
+    panel.canvas.draw()
+
+    assert panel.img is None
+    assert panel.ax.get_aspect() == "auto"
+    assert len(panel.lines) == 3
+    assert panel.lines[0].get_linewidth() > panel.lines[1].get_linewidth()
+    ymin, ymax = panel.ax.get_ylim()
+    assert np.isfinite(ymin) and np.isfinite(ymax)
+    assert live_maps.header_bar.isVisible() is True
+    assert live_maps.legend_scroll.isVisible() is True
+    assert "Excluded 2D" in live_maps.lbl_context_status.text()
+
+    # Fast path reuses Line2D objects in-place on value change
+    first_line = panel.lines[0]
+    entries_moved = [dict(e) for e in entries]
+    entries_moved[0]["values"] = np.array([12.0, 24.0, 36.0])
+    live_maps.update_multi_profile_data(SELECTOR_RED, entries_moved, shared_x_label="X", status_msg="Excluded 2D map(s): m2d")
+    assert panel.lines[0] is first_line
+
+    # Theme switch preserves multi-profile curves
+    live_maps.apply_theme("dark")
+    assert len(panel.lines) == 3
+
+    # Clear resets all artists & header
+    live_maps.clear_all()
+    assert panel.lines == []
+    assert live_maps.header_bar.isVisible() is False
+
+
+def test_v_live_maps_2d_switcher_emits_active_map_requested(qapp):
+    live_maps = VLiveMaps(mode="map")
+    live_maps.show()
+    live_maps.set_selector_active(SELECTOR_RED, True)
+
+    requested = []
+    live_maps.active_2d_map_requested.connect(requested.append)
+
+    live_maps.update_2d_candidates(["m1", "m2", "m3"], "m1", "Excluded 1D profile(s): p1")
+    assert live_maps.switcher_container.isVisible() is True
+    assert live_maps.btn_prev_2d.isEnabled() is False
+    assert live_maps.btn_next_2d.isEnabled() is True
+
+    live_maps.btn_next_2d.click()
+    assert requested[-1] == "m2"
+    assert live_maps.btn_prev_2d.isEnabled() is True
+    live_maps.btn_next_2d.click()
+    assert requested[-1] == "m3"
+    assert live_maps.btn_next_2d.isEnabled() is False
+
+    # Shrinking to 1 candidate without exclusion hides header
+    live_maps.update_2d_candidates(["m1"], "m1", "")
+    assert live_maps.switcher_container.isVisible() is False
+    assert live_maps.header_bar.isVisible() is False

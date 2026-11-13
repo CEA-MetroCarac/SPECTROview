@@ -198,3 +198,41 @@ class TestVWorkspaceMapsHeatmapSelection:
         finally:
             workspace.close()
             workspace.deleteLater()
+
+    def test_multi_selection_placeholders_and_preservation(self, qapp):
+        from PySide6.QtWidgets import QAbstractItemView
+        from PySide6.QtCore import Qt
+        from spectroview.view.components.v_map_list import VMapsList
+
+        v = VMapsList()
+        assert v.maps_list.selectionMode() == QAbstractItemView.ExtendedSelection
+
+        # Default placeholders have NoItemFlags and emit empty selection cleanly
+        events = []
+        v.maps_selection_changed.connect(lambda names, prim: events.append((list(names), prim)))
+        v.maps_list.setCurrentRow(0)
+        qapp.processEvents()
+        assert v.get_selected_map_names() == []
+        assert v.get_primary_map_name() is None
+
+        # Populate real maps and test multi-selection + Primary preservation
+        v.set_maps_names(["map_A", "map_B", "map_C"])
+        events.clear()
+        v.set_selected_maps(["map_A", "map_C"], "map_A")
+        assert v.get_selected_map_names() == ["map_A", "map_C"]
+        assert v.get_primary_map_name() == "map_A"
+
+        # Simulate Ctrl-Click deselecting current item (map_A) -> promotes remaining survivor (map_C)
+        item_a = v._items_by_name["map_A"]
+        item_a.setSelected(False)
+        qapp.processEvents()
+        assert v.get_selected_map_names() == ["map_C"]
+        assert v.get_primary_map_name() == "map_C"
+        assert events[-1] == (["map_C"], "map_C")
+
+        # set_maps_names preserves multi-selection across additions
+        v.set_selected_maps(["map_A", "map_C"], "map_C")
+        v.set_maps_names(["map_A", "map_B", "map_C", "map_D"])
+        assert v.get_selected_map_names() == ["map_A", "map_C"]
+        assert v.get_primary_map_name() == "map_C"
+        assert v.maps_list.item(0).flags() & Qt.ItemIsSelectable

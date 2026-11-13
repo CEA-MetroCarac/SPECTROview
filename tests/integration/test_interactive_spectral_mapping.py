@@ -234,3 +234,71 @@ def test_maps_workspace_live_maps_adapt_to_map_dimensionality_and_rb_ratio(qapp,
     for cid in (SELECTOR_RED, SELECTOR_BLUE, SELECTOR_GREEN):
         assert panels[cid].img is not None and panels[cid].line is None
     assert panels[SELECTOR_GREEN]._grid.shape == (4, 5)
+
+
+def test_maps_workspace_multi_selection_gating_and_batch_delete(qapp, test_map_data, monkeypatch):
+    """End-to-end multi-map Live Maps, tab visibility gating, point-click immunity, and batch delete."""
+    from PySide6.QtWidgets import QMessageBox
+
+    ws = VWorkspaceMaps()
+    ws.show()
+    try:
+        p1 = _make_line_scan("prof_1", n=10)
+        p2 = _make_line_scan("prof_2", n=10)
+        p2.Y0 = p2.Y0 * 1.8
+
+        for md in (p1, p2, test_map_data):
+            ws.vm.store._maps[md.name] = md
+            ws.vm.maps[md.name] = None
+            ws.vm.maps_metadata[md.name] = {}
+        ws.v_maps_list.set_maps_names(["prof_1", "prof_2", test_map_data.name])
+
+        # Activate Red selector while on Live Maps tab
+        ws.bottom_tabs.setCurrentWidget(ws.v_live_maps)
+        ws.v_spectra_viewer.btn_range_red.setChecked(True)
+        ws.v_spectra_viewer.range_manager.set_range(SELECTOR_RED, 650.0, 750.0)
+        ws.vm_live_maps.set_selector_range(SELECTOR_RED, 650.0, 750.0, immediate=True)
+
+        # 1. Select prof_1 (Primary), then Ctrl-select prof_2 + 2D map -> 2 curves + excluded 2D notice
+        ws.v_maps_list.maps_list.setCurrentItem(ws.v_maps_list._items_by_name["prof_1"])
+        ws.v_maps_list._items_by_name["prof_2"].setSelected(True)
+        ws.v_maps_list._items_by_name[test_map_data.name].setSelected(True)
+        qapp.processEvents()
+        red_panel = ws.v_live_maps.panels[SELECTOR_RED]
+        assert len(red_panel.lines) == 2
+        assert red_panel.img is None
+        assert ws.v_live_maps.legend_scroll.isVisible() is True
+        assert test_map_data.name in ws.v_live_maps.lbl_context_status.text()
+
+        # 2. Clicking a point in VMapViewer causes ZERO Live Maps recomputation
+        calls = []
+        orig_set = ws.vm_live_maps.set_map_datas
+        monkeypatch.setattr(
+            ws.vm_live_maps, "set_map_datas",
+            lambda *a, **k: calls.append(True) or orig_set(*a, **k),
+        )
+        ws._on_map_viewer_selection([(float(p1.coords[0, 0]), float(p1.coords[0, 1]))])
+        assert calls == []
+
+        # 3. Switching away from Live Maps tab gates updates until tab becomes active again
+        ws.bottom_tabs.setCurrentIndex(0)  # Fit Model Builder (Live Maps hidden)
+        ws.vm.select_maps(["prof_1", test_map_data.name], test_map_data.name)
+        assert calls == []
+        assert ws._live_maps_dirty is True
+
+        ws.bottom_tabs.setCurrentWidget(ws.v_live_maps)
+        assert len(calls) == 1
+        assert ws._live_maps_dirty is False
+        assert red_panel.img is not None and red_panel.lines == []
+
+        # 4. Batch delete selected maps with confirmation clears Live Maps cleanly when empty
+        monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.Yes)
+        ws.vm.select_maps(["prof_1", "prof_2", test_map_data.name], "prof_1")
+        ws._on_delete_maps_requested()
+        qapp.processEvents()
+        assert ws.vm.maps == {}
+        assert ws.vm.current_map_name is None
+        assert red_panel.img is None and red_panel.lines == []
+    finally:
+        ws.close()
+        ws.deleteLater()

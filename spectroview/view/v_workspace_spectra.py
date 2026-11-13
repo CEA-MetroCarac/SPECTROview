@@ -74,7 +74,8 @@ class VWorkspaceSpectra(QWidget):
         self.v_more_tab = VMoreTab()
         self.v_mva = VMVA()
         self.vm_fit_model_builder = VMFitModelBuilder(self.m_settings)
-        self.vm_live_maps = VMLiveMaps(self.m_settings, mode="spectra")
+        self.vm_live_maps = VMLiveMaps(self.m_settings, parent=self, mode="spectra")
+        self._live_maps_dirty = False
         self.vm_mva = VMMVA(self.m_settings)
         self.vm.set_fit_model_builder(self.vm_fit_model_builder) # 🔑 inject dependency
         
@@ -283,6 +284,8 @@ class VWorkspaceSpectra(QWidget):
         self.vm_live_maps.map_data_ready.connect(self.v_live_maps.update_map_data)
         self.vm_live_maps.series_data_ready.connect(self.v_live_maps.update_series_data)
         self.vm_live_maps.profile_data_ready.connect(self.v_live_maps.update_profile_data)
+        self.vm_live_maps.selector_state_changed.connect(self._on_vm_selector_state_changed)
+        self.bottom_tabs.currentChanged.connect(self._on_bottom_tab_changed)
         vm.spectra_selection_changed.connect(self._on_selection_changed_for_live_maps)
 
 
@@ -391,22 +394,23 @@ class VWorkspaceSpectra(QWidget):
         if hasattr(self, 'v_live_maps') and hasattr(self.v_live_maps, 'apply_theme'):
             self.v_live_maps.apply_theme(theme)
 
-    def _on_range_selector_toggled(self, color_id: str, is_active: bool):
-        """Handle activation / deactivation of a spectral range selector."""
-        if is_active and hasattr(self, "v_spectra_viewer"):
-            x_min, x_max = self.v_spectra_viewer.range_manager.get_range(color_id)
+    def _is_live_maps_tab_active(self) -> bool:
+        """True when the Live Maps bottom tab is currently visible to the user."""
+        return hasattr(self, "bottom_tabs") and self.bottom_tabs.currentWidget() is self.v_live_maps
+
+    def _on_bottom_tab_changed(self, _index: int):
+        """Flush deferred Live Maps computation when switching to the Live Maps tab."""
+        if self._is_live_maps_tab_active() and getattr(self, "_live_maps_dirty", False):
+            self._live_maps_dirty = False
+            self._flush_live_maps_sync()
+
+    def _on_vm_selector_state_changed(self, color_id: str, _is_active: bool, x_min: float, x_max: float):
+        """Keep subpanel range label synchronized when VMLiveMaps clamps or initializes a range."""
+        if hasattr(self, "v_live_maps"):
             self.v_live_maps.set_selector_range(color_id, x_min, x_max)
-            self.vm_live_maps.set_selector_range(color_id, x_min, x_max, immediate=False)
-        self.v_live_maps.set_selector_active(color_id, is_active)
-        self.vm_live_maps.set_selector_active(color_id, is_active)
 
-    def _on_range_selector_changed(self, color_id: str, x_min: float, x_max: float):
-        """Handle boundary change of a spectral range selector."""
-        self.v_live_maps.set_selector_range(color_id, x_min, x_max)
-        self.vm_live_maps.set_selector_range(color_id, x_min, x_max)
-
-    def _on_selection_changed_for_live_maps(self, selected_data):
-        """Update Live Maps with the currently selected spectra."""
+    def _flush_live_maps_sync(self):
+        """Push current selected series to Live Maps immediately."""
         if not hasattr(self, "vm_live_maps"):
             return
         fnames = self.vm._get_selected_spectra()
@@ -416,6 +420,36 @@ class VWorkspaceSpectra(QWidget):
             if self.vm.store.get_map_data(fname) is not None
         ]
         self.vm_live_maps.set_series_data(mds)
+
+    def _on_range_selector_toggled(self, color_id: str, is_active: bool):
+        """Handle activation / deactivation of a spectral range selector."""
+        tab_active = self._is_live_maps_tab_active()
+        if is_active and hasattr(self, "v_spectra_viewer"):
+            x_min, x_max = self.v_spectra_viewer.range_manager.get_range(color_id)
+            self.v_live_maps.set_selector_range(color_id, x_min, x_max)
+            self.vm_live_maps.set_selector_range(color_id, x_min, x_max, immediate=False, calculate=False)
+        self.v_live_maps.set_selector_active(color_id, is_active)
+        if not tab_active:
+            self._live_maps_dirty = True
+        self.vm_live_maps.set_selector_active(color_id, is_active, calculate=tab_active)
+
+    def _on_range_selector_changed(self, color_id: str, x_min: float, x_max: float):
+        """Handle boundary change of a spectral range selector."""
+        self.v_live_maps.set_selector_range(color_id, x_min, x_max)
+        tab_active = self._is_live_maps_tab_active()
+        if not tab_active:
+            self._live_maps_dirty = True
+        self.vm_live_maps.set_selector_range(color_id, x_min, x_max, calculate=tab_active)
+
+    def _on_selection_changed_for_live_maps(self, selected_data):
+        """Update Live Maps with the currently selected spectra (deferred when tab hidden)."""
+        if not hasattr(self, "vm_live_maps"):
+            return
+        if not self._is_live_maps_tab_active():
+            self._live_maps_dirty = True
+            return
+        self._live_maps_dirty = False
+        self._flush_live_maps_sync()
 
     def _update_fit_results(self, df):
         """Update fit results table display."""

@@ -186,7 +186,11 @@ Each button activates a corresponding pair of draggable vertical markers (bracke
 - **Multiple Simultaneous Ranges**: Any combination of the three selectors can be activated at once. Each maintains its own color, interval, and visibility independently.
 - **Rescale Integrity**: Range selector markers do not expand or pollute the spectrum autoscale boundaries, ensuring the **Rescale** button (`Ctrl+R`) always zooms perfectly to the loaded spectral data.
 - **Auto-Clamping**: When cropping or loading new spectral data, range selectors automatically clamp and reposition within the visible spectrum domain.
-- **Real-Time Updating**: Moving any selector or changing the selected spectra in the `SpectraList` immediately recalculates and updates the corresponding graph (in the **Spectra Workspace**) or 2D spatial heatmap (in the **Maps Workspace**) in the **Live Maps** tab (with a smooth 60 ms debounce to prevent lagging).
+- **Real-Time Updating**: Moving any selector or changing the selected spectra/maps immediately recalculates and updates the corresponding 1D variation graph (in the **Spectra Workspace**) or 2D spatial heatmap / 1D profile plot (in the **Maps Workspace**) whenever the **Live Maps** tab is open (with an adaptive 60–250 ms debounce to keep dragging smooth on large datasets). Unchecked spectra in the active map or spectrum list are automatically masked out so masked outliers never bias colorscales or profiles.
+- **Multi-Map Selection & Comparison (Maps Workspace)**: Use `Ctrl+Click` or `Shift+Click` in the **Maps** list to select multiple maps simultaneously while keeping your **Primary Map** active for preprocessing, fitting, and the `MapViewer`:
+  - **Comparing Multiple 1D Profiles**: When the Primary map is a 1D line scan, all selected 1D profiles are overlaid together inside each channel subpanel with a shared color legend in the tab header (and the Primary curve highlighted with thicker stroke).
+  - **Switching Between Selected 2D Maps**: When the Primary map is a 2D map, a compact `◀ [2D Map Selector] ▶` switcher appears in the Live Maps header so you can cycle through selected 2D heatmaps without losing your selection.
+  - **Batch Deletion**: Pressing **Delete** while multiple maps are selected prompts for confirmation before removing all selected maps together.
 
 ##### **Live Maps Tab Visualization & Subpanels**
 The **Live Maps** tab is located on the bottom tab bar between **Fit Results** and **MVA** (with the **More** tab positioned at the end of the tabs list).

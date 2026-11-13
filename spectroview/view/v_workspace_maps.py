@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QVBoxLayout, QHBoxLayout, QFrame, QDialog, QApplication, QFileDialog
+    QVBoxLayout, QHBoxLayout, QFrame, QDialog, QApplication, QFileDialog, QMessageBox
 )
 
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
@@ -185,17 +185,17 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     def _connect_signals(self):
         """Connect Maps-specific signals between View and ViewModel."""
         # ── VMapsList → ViewModel connections ──
-        self.v_maps_list.map_selection_changed.connect(self._on_map_selected)
-        
+        self.v_maps_list.maps_selection_changed.connect(self._on_maps_selection_changed)
+
         # ── VMapsList button connections ──
         self.v_maps_list.view_map_requested.connect(self._on_view_map_requested)
-        self.v_maps_list.delete_map_requested.connect(self.vm.delete_current_map)
+        self.v_maps_list.delete_map_requested.connect(self._on_delete_maps_requested)
         self.v_maps_list.save_requested.connect(self._on_save_map_requested)
         self.v_maps_list.select_all_requested.connect(self._on_select_all_spectra)
         self.v_maps_list.reinitialize_requested.connect(self._on_reinit_spectra)
         self.v_maps_list.reinitialize_requested.connect(self.v_spectra_viewer._rescale)  # Auto-rescale after reinit
         self.v_maps_list.send_to_spectra_requested.connect(self._on_send_to_spectra)
-        
+
         # ── VMapViewer → ViewModel connections ──
         self.v_map_viewer.spectra_selected.connect(self._on_map_viewer_selection)
         self.v_map_viewer.multi_viewer_requested.connect(self._on_add_viewer_requested)
@@ -204,11 +204,12 @@ class VWorkspaceMaps(VWorkspaceSpectra):
 
         # ── VSpectraViewer → ViewModel connections ──
         # (Connected in parent class VWorkspaceSpectra to self.vm methods)
-        
+
         # ── ViewModel → VMapsList connections ──
         self.vm.maps_list_changed.connect(self.v_maps_list.set_maps_names)
+        self.vm.live_maps_selection_changed.connect(self._on_live_maps_selection_changed)
         self.v_maps_list.set_map_metadata_provider(self._get_map_metadata)
-        
+
         # Clear griddata cache when map data changes (after fitting)
         self.vm.clear_map_cache_requested.connect(self.v_map_viewer.clear_cache_for_map)
 
@@ -221,17 +222,78 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # Update parameter lists when fit results change (e.g., computed columns added)
         self.vm.fit_results_updated.connect(self._on_fit_results_updated)
 
-        # Note: Live Maps signals (range_toggled, range_changed, parameter_change_requested,
-        # map_data_ready, series_data_ready, profile_data_ready, spectra_selection_changed)
-        # are connected in super().setup_connections(). The 2D heatmap vs. 1D profile
-        # line plot choice is made by VMLiveMaps from the selected map's coordinates.
+        # ── Multi-Map Live Maps connections ──
+        self.vm_live_maps.multi_profile_data_ready.connect(self.v_live_maps.update_multi_profile_data)
+        self.vm_live_maps.map_2d_candidates_changed.connect(self.v_live_maps.update_2d_candidates)
+        self.vm_live_maps.live_maps_cleared.connect(self.v_live_maps.clear_all)
+        self.v_live_maps.active_2d_map_requested.connect(self.vm_live_maps.set_active_2d_map)
 
     def _on_selection_changed_for_live_maps(self, selected_data):
-        """Update Live Maps MapData reference on selection change."""
-        if hasattr(self, 'vm_live_maps') and self.vm.current_map_name:
-            md = self.vm.store.get_map_data(self.vm.current_map_name)
-            if md is not None:
-                self.vm_live_maps.set_map_data(md)
+        """No-op in Maps workspace: spectra point clicks do not alter map-level Live Maps."""
+        pass
+
+    def _push_live_maps_selection(self) -> bool:
+        """Push current multi-map selection and primary name into VMLiveMaps."""
+        if not hasattr(self, "vm_live_maps"):
+            return False
+        names = list(getattr(self.vm, "selected_map_names", []))
+        if not names and self.vm.current_map_name:
+            names = [self.vm.current_map_name]
+        mds = [
+            self.vm.store.get_map_data(n)
+            for n in names
+            if self.vm.store.get_map_data(n) is not None
+        ]
+        return self.vm_live_maps.set_map_datas(mds, primary_name=self.vm.current_map_name)
+
+    def _flush_live_maps_sync(self):
+        """Push pending map selection and recalculate active Live Maps when tab becomes visible."""
+        recomputed = self._push_live_maps_selection()
+        if not recomputed and hasattr(self, "vm_live_maps"):
+            self.vm_live_maps.recalculate_active()
+
+    def _sync_live_maps(self):
+        """Synchronize Live Maps with selected maps when Live Maps tab is visible, else mark dirty."""
+        if not hasattr(self, "vm_live_maps"):
+            return
+        if not self._is_live_maps_tab_active():
+            self._live_maps_dirty = True
+            return
+        self._live_maps_dirty = False
+        self._push_live_maps_selection()
+
+    def _on_live_maps_selection_changed(self, _selected_names: list, _primary_name: object):
+        """Update Live Maps when multi-map selection changes in VMWorkspaceMaps."""
+        self._sync_live_maps()
+
+    def _on_delete_maps_requested(self):
+        """Delete single map directly, or confirm batch deletion when multiple maps are selected."""
+        selected = list(getattr(self.vm, "selected_map_names", []))
+        if len(selected) > 1:
+            reply = QMessageBox.question(
+                self,
+                "Delete Selected Maps",
+                f"Delete {len(selected)} selected maps?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+            if reply != QMessageBox.Yes:
+                return
+            self.vm.delete_selected_maps()
+        else:
+            self.vm.delete_current_map()
+
+    def _on_maps_selection_changed(self, selected_names: list, primary_name: object):
+        """Handle single or multi-map selection changes from VMapsList."""
+        old_primary = self.vm.current_map_name
+        self.vm.select_maps(selected_names, primary_name)
+        new_primary = self.vm.current_map_name
+        if new_primary and new_primary != old_primary:
+            self.vm_mva.set_current_map_name(new_primary)
+            map_metadata = self.vm.maps_metadata.get(new_primary, {})
+            self.v_more_tab.show_metadata(map_metadata)
+        elif not new_primary:
+            self.v_more_tab.clear_metadata()
 
     def _on_map_viewer_selection(self, selected_points: list):
         """Handle spectrum selection from map viewer (single source of truth)."""
@@ -371,9 +433,15 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             # Restore signal state
             self.v_map_viewer.blockSignals(old_state)
         
-        # Sync maps list UI selection
-        if self.vm.current_map_name:
-            self.v_maps_list.set_selected_map_name(self.vm.current_map_name)
+        # Sync maps list UI selection (block signals to avoid redundant ViewModel re-entry)
+        selected = getattr(self.vm, "selected_map_names", None) or (
+            [self.vm.current_map_name] if self.vm.current_map_name else []
+        )
+        old_list_state = self.v_maps_list.blockSignals(True)
+        try:
+            self.v_maps_list.set_selected_maps(selected, self.vm.current_map_name)
+        finally:
+            self.v_maps_list.blockSignals(old_list_state)
 
         # Update all dialog viewers (they share the same dataframe references - no duplication)
         initial_points = self.v_map_viewer.selected_points
@@ -392,10 +460,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             finally:
                 dialog.blockSignals(dialog_old_state)
 
-        # Update Live Maps with current MapData
-        if hasattr(self, 'vm_live_maps') and self.vm.current_map_name:
-            md = self.vm.store.get_map_data(self.vm.current_map_name)
-            self.vm_live_maps.set_map_data(md)
+        # Update Live Maps (deferred cleanly when Live Maps tab is hidden; clears on empty)
+        self._sync_live_maps()
     
     def _on_fit_results_updated(self, df_fit_results):
         """Update map viewer parameter lists when fit results change.
@@ -414,9 +480,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
             dialog.map_viewer._update_parameter_lists()
 
         # Update Live Maps with updated fit results
-        if hasattr(self, 'vm_live_maps') and self.vm.current_map_name:
-            md = self.vm.store.get_map_data(self.vm.current_map_name)
-            self.vm_live_maps.set_map_data(md)
+        self._sync_live_maps()
     
     def _on_map_selected(self, index: int):
         """Handle map selection - convert index to map name and call ViewModel."""
@@ -599,6 +663,8 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Delegate to ViewModel for data clearing
         self.vm.clear_workspace()
+        if hasattr(self, 'vm_live_maps'):
+            self.vm_live_maps.set_map_datas([])
         if hasattr(self, 'vm_mva'):
             self.vm_mva.set_store(self.vm.store)
     

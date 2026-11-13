@@ -10,7 +10,7 @@ The Green panel can alternatively display the Red/Blue intensity ratio (R/B).
 """
 
 from __future__ import annotations
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, List
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,10 +21,10 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
-    QPushButton, QFrame, QSizePolicy
+    QPushButton, QFrame, QSizePolicy, QScrollArea,
 )
 
-from spectroview import PLOT_POLICY_LIGHT, PLOT_POLICY_DARK
+from spectroview import PLOT_POLICY_LIGHT, PLOT_POLICY_DARK, DEFAULT_COLORS
 from spectroview.view.theme import Icons, current_tokens
 from spectroview.viewmodel.utils import copy_fig_to_clb
 from spectroview.model.spectral_parameters import (
@@ -87,20 +87,33 @@ class LiveMapSubpanel(QFrame):
         self._series_x: Optional[np.ndarray] = None  # None → spectrum index axis
         self._series_xlabel: str = "Spectrum #"
 
-        # What is currently drawn: None, "map" (heatmap) or "series" (line plot)
+        # Cached multi-1D profile entries
+        self._multi_entries: List[dict] = []
+        self._multi_x_label: str = "X"
+
+        # What is currently drawn: None, "map", "series", or "multi_profile"
         self._display_kind: Optional[str] = None
 
         self._status_msg = ""
         self._x_range = (0.0, 100.0)
         self._current_theme = "Light Mode"
 
-        # Artist references
+        # Artist references (multiple Line2Ds supported for multi-1D overlay)
         self.img = None
         self.cbar = None
-        self.line = None
+        self.lines: List = []
 
         self._init_ui()
         self.set_mode(mode)
+
+    @property
+    def line(self):
+        """Primary single Line2D artist for backward-compatible callers and tests."""
+        return self.lines[0] if self.lines else None
+
+    @line.setter
+    def line(self, value):
+        self.lines = [] if value is None else [value]
 
     def _init_ui(self):
         layout = QVBoxLayout(self)
@@ -204,7 +217,7 @@ class LiveMapSubpanel(QFrame):
         self.cbb_palette.setVisible(self.mode == "map" and self._display_kind != "series")
 
     def _reset_axes(self):
-        """Remove any colorbar, clear the axes, and restore automatic aspect scaling.
+        """Remove any colorbar, clear lines, clear axes, and restore automatic aspect scaling.
 
         Matplotlib's ``Axes.clear()`` does not reset the aspect ratio set by
         ``imshow(..., aspect="equal")``; without resetting to ``"auto"``, a
@@ -218,9 +231,26 @@ class LiveMapSubpanel(QFrame):
                 pass
             self.cbar = None
         self.img = None
-        self.line = None
+        for ln in self.lines:
+            try:
+                ln.remove()
+            except Exception:
+                pass
+        self.lines.clear()
         self.ax.clear()
         self.ax.set_aspect("auto", adjustable="box")
+
+    def clear_plot(self):
+        """Clear all plotted artists and cached data."""
+        self._grid = None
+        self._series_values = None
+        self._series_labels = []
+        self._series_x = None
+        self._multi_entries = []
+        self._display_kind = None
+        self._reset_axes()
+        if self.canvas is not None:
+            self.canvas.draw_idle()
 
     def is_ratio_display(self) -> bool:
         """True if this panel currently displays the Red/Blue ratio."""
@@ -321,6 +351,7 @@ class LiveMapSubpanel(QFrame):
         self._series_labels = list(labels) if labels else []
         self._series_x = None if is_index_axis else x_arr
         self._series_xlabel = x_label
+        self._multi_entries = []
         self._status_msg = status_msg
         self._current_theme = theme
 
@@ -329,9 +360,11 @@ class LiveMapSubpanel(QFrame):
 
         has_valid = len(val_arr) > 0 and bool(np.any(np.isfinite(val_arr)))
 
-        # Fast path: in-place line update during continuous bracket dragging
+        # Fast path: in-place single-line update during continuous bracket dragging
         if (
-            self.line is not None
+            self._display_kind == "series"
+            and len(self.lines) == 1
+            and self.line is not None
             and has_valid
             and len(self.line.get_xdata()) == len(val_arr)
         ):
@@ -367,19 +400,158 @@ class LiveMapSubpanel(QFrame):
                 return
 
             n = len(val_arr)
-            (self.line,) = self.ax.plot(
-                x_arr,
-                val_arr,
-                color=self.color_hex,
-                marker="o",
-                markersize=5 if n <= 30 else 3,
-                linewidth=1.8,
-                alpha=0.95,
+            self.lines = list(
+                self.ax.plot(
+                    x_arr,
+                    val_arr,
+                    color=self.color_hex,
+                    marker="o",
+                    markersize=5 if n <= 30 else 3,
+                    linewidth=1.8,
+                    alpha=0.95,
+                )
             )
 
             self._apply_x_limits(x_arr, is_index_axis)
             self.ax.set_ylim(*self._padded_ylim(val_arr))
 
+            self.ax.grid(True, alpha=0.25, linestyle="--")
+            self.ax.set_xlabel(x_label)
+            self.ax.set_ylabel(param_name)
+            self.ax.set_title(title_text, fontsize=10, pad=4)
+
+            self.canvas.draw_idle()
+
+    def update_multi_profile(
+        self,
+        entries: List[dict],
+        shared_x_label: str = "X",
+        status_msg: str = "",
+        theme: str = "Light Mode",
+    ):
+        """Render or update multiple stacked 1D spatial profiles in one subpanel."""
+        self._multi_entries = list(entries) if entries else []
+        self._multi_x_label = shared_x_label
+        self._series_values = None
+        self._series_labels = []
+        self._series_x = None
+        self._status_msg = status_msg
+        self._current_theme = theme
+
+        param_name = self.cbb_param.currentText()
+        title_text = f"{self.color_name}: {param_name}"
+        x_label = (
+            shared_x_label
+            if shared_x_label.endswith("(mm)")
+            else f"{shared_x_label or 'Position'} (mm)"
+        )
+
+        # Compute manual finite bounds across all valid curves (guards NaN/empty curves)
+        finite_x_parts = []
+        finite_y_parts = []
+        for entry in self._multi_entries:
+            px = np.asarray(entry.get("positions", []), dtype=np.float64)
+            vy = np.asarray(entry.get("values", []), dtype=np.float64)
+            if len(px) == 0 or len(px) != len(vy):
+                continue
+            mask = np.isfinite(px) & np.isfinite(vy)
+            if np.any(mask):
+                finite_x_parts.append(px[mask])
+                finite_y_parts.append(vy[mask])
+
+        has_valid = len(finite_y_parts) > 0
+        if has_valid:
+            all_x = np.concatenate(finite_x_parts)
+            all_y = np.concatenate(finite_y_parts)
+            y_lo, y_hi = self._padded_ylim(all_y)
+            x_min = float(np.min(all_x))
+            x_max = float(np.max(all_x))
+            x_span = x_max - x_min
+            x_margin = x_span * 0.03 if x_span > 1e-12 else 0.5
+        else:
+            y_lo, y_hi = 0.0, 1.0
+            x_min, x_max, x_margin = 0.0, 1.0, 0.0
+
+        # Fast path: reuse existing Line2D pool when entry count matches
+        if (
+            self._display_kind == "multi_profile"
+            and has_valid
+            and self.img is None
+            and len(self.lines) == len(self._multi_entries)
+            and len(self.lines) > 0
+        ):
+            for idx, (ln, entry) in enumerate(zip(self.lines, self._multi_entries)):
+                px = np.asarray(entry.get("positions", []), dtype=np.float64)
+                vy = np.asarray(entry.get("values", []), dtype=np.float64)
+                color = (
+                    self.color_hex
+                    if len(self._multi_entries) == 1
+                    else DEFAULT_COLORS[idx % len(DEFAULT_COLORS)]
+                )
+                is_primary = bool(entry.get("is_primary", False))
+                ln.set_data(px, vy)
+                ln.set_color(color)
+                ln.set_linewidth(2.2 if is_primary else 1.4)
+                ln.set_alpha(1.0 if is_primary else 0.78)
+                ln.set_zorder(5 if is_primary else 3)
+            self.ax.set_xlim(x_min - x_margin, x_max + x_margin)
+            self.ax.set_ylim(y_lo, y_hi)
+            self.ax.set_xlabel(x_label)
+            self.ax.set_ylabel(param_name)
+            self.ax.set_title(title_text, fontsize=10, pad=4)
+            self.canvas.draw_idle()
+            return
+
+        is_dark = theme in ("Dark Mode", "dark", "classic_dark")
+        style_path = PLOT_POLICY_DARK if is_dark else PLOT_POLICY_LIGHT
+
+        self._display_kind = "multi_profile"
+        self._sync_palette_visibility()
+
+        with plt.style.context(style_path):
+            self._reset_axes()
+
+            if not has_valid:
+                msg = status_msg or "No valid profile data within selected range"
+                self.ax.text(
+                    0.5, 0.5, msg,
+                    ha="center", va="center", transform=self.ax.transAxes,
+                    fontsize=10, color="gray", wrap=True,
+                )
+                self.ax.set_xticks([])
+                self.ax.set_yticks([])
+                self.canvas.draw_idle()
+                return
+
+            new_lines = []
+            for idx, entry in enumerate(self._multi_entries):
+                px = np.asarray(entry.get("positions", []), dtype=np.float64)
+                vy = np.asarray(entry.get("values", []), dtype=np.float64)
+                color = (
+                    self.color_hex
+                    if len(self._multi_entries) == 1
+                    else DEFAULT_COLORS[idx % len(DEFAULT_COLORS)]
+                )
+                is_primary = bool(entry.get("is_primary", False))
+                n_pts = len(px)
+                marker = "o" if n_pts <= 30 else ""
+                created = self.ax.plot(
+                    px,
+                    vy,
+                    color=color,
+                    marker=marker,
+                    markersize=4 if n_pts <= 30 else 0,
+                    linewidth=2.2 if is_primary else 1.4,
+                    alpha=1.0 if is_primary else 0.78,
+                    zorder=5 if is_primary else 3,
+                    label=entry.get("name", f"Map {idx + 1}"),
+                )
+                new_lines.extend(created)
+            self.lines = new_lines
+
+            self.ax.set_xlim(x_min - x_margin, x_max + x_margin)
+            self.ax.xaxis.set_major_locator(AutoLocator())
+            self.ax.set_ylim(y_lo, y_hi)
             self.ax.grid(True, alpha=0.25, linestyle="--")
             self.ax.set_xlabel(x_label)
             self.ax.set_ylabel(param_name)
@@ -401,6 +573,8 @@ class LiveMapSubpanel(QFrame):
         self._extent = extent
         self._vmin = vmin
         self._vmax = vmax
+        self._series_values = None
+        self._multi_entries = []
         self._status_msg = status_msg
         self._current_theme = theme
 
@@ -409,7 +583,8 @@ class LiveMapSubpanel(QFrame):
 
         # Fast path: in-place update if image and colorbar already exist and grid is valid
         if (
-            self.img is not None
+            self._display_kind == "map"
+            and self.img is not None
             and self.cbar is not None
             and grid is not None
             and not np.all(np.isnan(grid))
@@ -472,6 +647,7 @@ class VLiveMaps(QWidget):
     """Live Maps Tab View coordinating the 3 spectral range subpanels."""
 
     parameter_change_requested = Signal(str, str)  # (color_id, parameter)
+    active_2d_map_requested = Signal(str)          # active 2D map name from switcher
 
     def __init__(self, parent=None, mode: str = "map"):
         super().__init__(parent)
@@ -489,6 +665,9 @@ class VLiveMaps(QWidget):
             SELECTOR_BLUE: (500.0, 700.0),
             SELECTOR_GREEN: (800.0, 1000.0),
         }
+        self._2d_candidates: List[str] = []
+        self._legend_entries: List[Tuple[str, bool]] = []
+        self._context_status: str = ""
 
         self._current_theme = "Light Mode"
         self._init_ui()
@@ -498,6 +677,72 @@ class VLiveMaps(QWidget):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(4, 4, 4, 4)
         main_layout.setSpacing(4)
+
+        # ── Slim shared context header (multi-1D legend, 2D switcher, status) ──
+        self.header_bar = QFrame(self)
+        self.header_bar.setObjectName("liveMapsContextHeader")
+        self.header_bar.setFixedHeight(30)
+        header_layout = QHBoxLayout(self.header_bar)
+        header_layout.setContentsMargins(6, 2, 6, 2)
+        header_layout.setSpacing(8)
+
+        # Multi-1D colored chip legend strip (scrollable horizontally if many profiles)
+        self.legend_scroll = QScrollArea(self.header_bar)
+        self.legend_scroll.setWidgetResizable(True)
+        self.legend_scroll.setFrameShape(QFrame.NoFrame)
+        self.legend_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.legend_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.legend_scroll.setFixedHeight(26)
+        self.legend_scroll.setStyleSheet("background: transparent;")
+
+        self.legend_container = QWidget(self.legend_scroll)
+        self.legend_layout = QHBoxLayout(self.legend_container)
+        self.legend_layout.setContentsMargins(0, 0, 0, 0)
+        self.legend_layout.setSpacing(6)
+        self.legend_layout.addStretch(1)
+        self.legend_scroll.setWidget(self.legend_container)
+        self.legend_scroll.setVisible(False)
+        header_layout.addWidget(self.legend_scroll, stretch=1)
+
+        # Multi-2D candidate switcher: ◀ [ComboBox] ▶
+        self.switcher_container = QWidget(self.header_bar)
+        switcher_layout = QHBoxLayout(self.switcher_container)
+        switcher_layout.setContentsMargins(0, 0, 0, 0)
+        switcher_layout.setSpacing(4)
+
+        lbl_2d = QLabel("2D Map:", self.switcher_container)
+        lbl_2d.setStyleSheet("font-size: 11px; font-weight: bold;")
+        switcher_layout.addWidget(lbl_2d)
+
+        self.btn_prev_2d = QPushButton("◀", self.switcher_container)
+        self.btn_prev_2d.setFixedSize(22, 22)
+        self.btn_prev_2d.setToolTip("Previous selected 2D map")
+        self.btn_prev_2d.clicked.connect(lambda: self._step_2d_candidate(-1))
+        switcher_layout.addWidget(self.btn_prev_2d)
+
+        self.cbb_2d_map = QComboBox(self.switcher_container)
+        self.cbb_2d_map.setMinimumWidth(140)
+        self.cbb_2d_map.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.cbb_2d_map.currentTextChanged.connect(self._on_2d_combo_changed)
+        switcher_layout.addWidget(self.cbb_2d_map)
+
+        self.btn_next_2d = QPushButton("▶", self.switcher_container)
+        self.btn_next_2d.setFixedSize(22, 22)
+        self.btn_next_2d.setToolTip("Next selected 2D map")
+        self.btn_next_2d.clicked.connect(lambda: self._step_2d_candidate(1))
+        switcher_layout.addWidget(self.btn_next_2d)
+
+        self.switcher_container.setVisible(False)
+        header_layout.addWidget(self.switcher_container, stretch=0)
+
+        # Exclusion / diagnostic status badge
+        self.lbl_context_status = QLabel("", self.header_bar)
+        self.lbl_context_status.setStyleSheet("font-size: 11px; color: #b08840;")
+        self.lbl_context_status.setVisible(False)
+        header_layout.addWidget(self.lbl_context_status, stretch=0)
+
+        self.header_bar.setVisible(False)
+        main_layout.addWidget(self.header_bar)
 
         # ── Placeholder when all selectors are off ──
         self.lbl_placeholder = QLabel(self)
@@ -556,10 +801,93 @@ class VLiveMaps(QWidget):
             panel.set_range_text(x_min, x_max)
 
     def _update_visibility(self):
-        """Show or hide container and placeholder based on active count."""
+        """Show or hide header, container, and placeholder based on active selectors."""
         any_active = any(self._active_states.values())
         self.lbl_placeholder.setVisible(not any_active)
         self.maps_container.setVisible(any_active)
+        self._update_header_visibility(any_active)
+
+    def _update_header_visibility(self, any_active: Optional[bool] = None):
+        """Show header bar only when selectors are active AND contextual controls/notes exist."""
+        if any_active is None:
+            any_active = any(self._active_states.values())
+        has_legend = len(self._legend_entries) >= 2
+        has_switcher = len(self._2d_candidates) >= 2
+        has_status = bool(self._context_status)
+        self.legend_scroll.setVisible(has_legend)
+        self.switcher_container.setVisible(has_switcher)
+        self.lbl_context_status.setVisible(has_status)
+        self.header_bar.setVisible(any_active and (has_legend or has_switcher or has_status))
+
+    def _rebuild_legend_chips(self, entries: List[dict]):
+        """Populate compact colored legend chips matching multi-1D profile colors."""
+        pairs = [(e.get("name", f"Map {i + 1}"), bool(e.get("is_primary", False))) for i, e in enumerate(entries)]
+        if pairs == self._legend_entries:
+            return
+        self._legend_entries = pairs
+
+        while self.legend_layout.count() > 0:
+            item = self.legend_layout.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.deleteLater()
+
+        if len(pairs) >= 2:
+            for idx, (name, is_primary) in enumerate(pairs):
+                color = DEFAULT_COLORS[idx % len(DEFAULT_COLORS)]
+                chip = QLabel(self.legend_container)
+                suffix = " (Primary)" if is_primary else ""
+                chip.setText(f"<span style='color:{color}; font-size:13px;'>●</span> {name}{suffix}")
+                weight = "bold" if is_primary else "normal"
+                chip.setStyleSheet(
+                    f"font-size: 11px; font-weight: {weight}; "
+                    f"padding: 1px 6px; border-radius: 3px; "
+                    f"background: rgba(128, 128, 128, 0.10);"
+                )
+                self.legend_layout.addWidget(chip)
+        self.legend_layout.addStretch(1)
+
+    def _on_2d_combo_changed(self, name: str):
+        if name:
+            self.active_2d_map_requested.emit(name)
+            self._sync_2d_nav_buttons()
+
+    def _step_2d_candidate(self, delta: int):
+        idx = self.cbb_2d_map.currentIndex() + delta
+        if 0 <= idx < self.cbb_2d_map.count():
+            self.cbb_2d_map.setCurrentIndex(idx)
+
+    def _sync_2d_nav_buttons(self):
+        count = self.cbb_2d_map.count()
+        idx = self.cbb_2d_map.currentIndex()
+        self.btn_prev_2d.setEnabled(count > 1 and idx > 0)
+        self.btn_next_2d.setEnabled(count > 1 and 0 <= idx < count - 1)
+
+    def update_2d_candidates(
+        self,
+        candidates: List[str],
+        active_name: Optional[str],
+        status_msg: str = "",
+    ):
+        """Update the 2D switcher combo box and exclusion/diagnostic badge."""
+        self._2d_candidates = list(candidates) if candidates else []
+        self._context_status = status_msg or ""
+        self.lbl_context_status.setText(self._context_status)
+
+        self.cbb_2d_map.blockSignals(True)
+        try:
+            self.cbb_2d_map.clear()
+            for name in self._2d_candidates:
+                self.cbb_2d_map.addItem(name)
+            if active_name:
+                idx = self.cbb_2d_map.findText(active_name)
+                if idx >= 0:
+                    self.cbb_2d_map.setCurrentIndex(idx)
+        finally:
+            self.cbb_2d_map.blockSignals(False)
+
+        self._sync_2d_nav_buttons()
+        self._update_header_visibility()
 
     def update_map_data(
         self,
@@ -571,6 +899,9 @@ class VLiveMaps(QWidget):
         status_msg: str = "",
     ):
         """Forward calculated 2D grid data to matching subpanel."""
+        if self._legend_entries:
+            self._rebuild_legend_chips([])
+            self._update_header_visibility()
         panel = self.panels.get(color_id)
         if panel:
             panel.update_map(grid, extent, vmin, vmax, status_msg, theme=self._current_theme)
@@ -583,6 +914,9 @@ class VLiveMaps(QWidget):
         status_msg: str = "",
     ):
         """Forward calculated 1D parameter series data to matching subpanel."""
+        if self._legend_entries:
+            self._rebuild_legend_chips([])
+            self._update_header_visibility()
         panel = self.panels.get(color_id)
         if panel:
             panel.update_series(values, labels, status_msg, theme=self._current_theme)
@@ -595,7 +929,10 @@ class VLiveMaps(QWidget):
         axis_label: str = "X",
         status_msg: str = "",
     ):
-        """Forward a 1D profile (values along the profile axis) to the matching subpanel."""
+        """Forward a single 1D profile (values along the profile axis) to the matching subpanel."""
+        if self._legend_entries:
+            self._rebuild_legend_chips([])
+            self._update_header_visibility()
         panel = self.panels.get(color_id)
         if panel:
             panel.update_series(
@@ -603,6 +940,40 @@ class VLiveMaps(QWidget):
                 x_values=positions if positions is not None else np.array([]),
                 x_label=f"{axis_label or 'Position'} (mm)",
             )
+
+    def update_multi_profile_data(
+        self,
+        color_id: str,
+        entries: List[dict],
+        shared_x_label: str = "X",
+        status_msg: str = "",
+    ):
+        """Forward stacked multi-1D profile entries and refresh shared color legend."""
+        self._rebuild_legend_chips(entries)
+        if status_msg and status_msg != "OK":
+            self._context_status = status_msg
+            self.lbl_context_status.setText(self._context_status)
+        self._update_header_visibility()
+        panel = self.panels.get(color_id)
+        if panel:
+            panel.update_multi_profile(
+                entries, shared_x_label=shared_x_label, status_msg=status_msg,
+                theme=self._current_theme,
+            )
+
+    def clear_all(self):
+        """Clear all subpanel artists, legend chips, 2D candidate switcher, and status."""
+        self._rebuild_legend_chips([])
+        self._2d_candidates = []
+        self._context_status = ""
+        self.lbl_context_status.setText("")
+        self.cbb_2d_map.blockSignals(True)
+        self.cbb_2d_map.clear()
+        self.cbb_2d_map.blockSignals(False)
+        self._sync_2d_nav_buttons()
+        self._update_header_visibility()
+        for panel in self.panels.values():
+            panel.clear_plot()
 
     def apply_theme(self, theme_name: str):
         """Update theme for all subpanels."""
@@ -612,10 +983,17 @@ class VLiveMaps(QWidget):
         for panel in self.panels.values():
             panel.btn_copy.setIcon(Icons.copy(color=icon_color))
             panel.img = None
-            panel.line = None
+            panel.lines.clear()
             if panel.isVisible():
                 kind = panel._display_kind or ("series" if self.mode == "spectra" else "map")
-                if kind == "series":
+                if kind == "multi_profile":
+                    panel.update_multi_profile(
+                        panel._multi_entries,
+                        shared_x_label=panel._multi_x_label,
+                        status_msg=panel._status_msg,
+                        theme=theme_name,
+                    )
+                elif kind == "series":
                     panel.update_series(
                         panel._series_values,
                         panel._series_labels,

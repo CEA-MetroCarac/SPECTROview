@@ -568,6 +568,7 @@ class VMWorkspaceSpectra(QObject):
 
         if md_row < md.Y.shape[0] and y_arr.shape == md.Y[md_row].shape:
             md.Y[md_row] = y_arr
+            md.touch()
 
     def validate_cosmic_ray_erase(self):
         """Permanently commit cosmic-ray erasures to both Y and Y0.

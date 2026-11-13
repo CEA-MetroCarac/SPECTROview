@@ -91,86 +91,95 @@ def compute_spectral_parameter(
     peak_params: Optional[np.ndarray] = None,
     param_names: Optional[list[str]] = None,
     fit_model: Optional[Dict[str, Any]] = None,
+    active_mask: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, bool, str]:
     """Vectorized calculation of spectral parameter across N spectra.
 
-    Parameters
-    ----------
-    x_axis : np.ndarray
-        Spectral wavenumber axis of shape (M,).
-    Y : np.ndarray
-        Intensity matrix of shape (N, M) or 1D array of shape (M,).
-    x_range : tuple of (float, float)
-        Spectral interval (x_start, x_end).
-    parameter : str
-        The parameter to calculate.
-    baseline_subtracted : bool
-        Whether Y is already baseline-subtracted.
-    peak_params : np.ndarray, optional
-        Fitted parameters matrix of shape (N, K).
-    param_names : list of str, optional
-        List of K fitted parameter names (e.g. ['m01_x0', 'm01_ampli', ...]).
-    fit_model : dict, optional
-        Fit model specification.
-
-    Returns
-    -------
-    values : np.ndarray
-        Array of shape (N,) containing calculated parameter values.
-    is_valid : bool
-        True if calculation succeeded, False if parameters could not be calculated.
-    message : str
-        Status message or reason for fallback.
+    Slices only the requested wavenumber band (and active rows, when provided)
+    before converting to ``float64`` to minimize peak memory overhead on large
+    hyperspectral maps.
     """
     if x_axis is None or len(x_axis) == 0:
         return np.array([np.nan]), False, "Empty spectral axis"
 
     x_arr = np.asarray(x_axis, dtype=np.float64)
-    y_arr = np.asarray(Y, dtype=np.float64)
+    y_raw = np.asarray(Y)
 
-    # Ensure 2D (N, M)
-    is_1d = (y_arr.ndim == 1)
-    if is_1d:
-        y_arr = y_arr[np.newaxis, :]
-    n_spectra, n_points = y_arr.shape
+    is_1d = (y_raw.ndim == 1)
+    if y_raw.ndim not in (1, 2):
+        return np.array([np.nan]), False, "Invalid intensity array dimensions"
+    n_spectra = 1 if is_1d else int(y_raw.shape[0])
+    n_points = int(y_raw.shape[0] if is_1d else y_raw.shape[1])
 
     if n_points != len(x_arr):
         return np.full(n_spectra, np.nan), False, f"Axis length mismatch: {len(x_arr)} vs {n_points}"
 
-    # Normalize range
     if x_range is None or len(x_range) < 2:
         return np.full(n_spectra, np.nan), False, "Invalid spectral interval"
 
     x_min = min(float(x_range[0]), float(x_range[1]))
     x_max = max(float(x_range[0]), float(x_range[1]))
 
-    # Find points inside interval
-    mask = (x_arr >= x_min) & (x_arr <= x_max)
-    n_sub = int(np.sum(mask))
+    act_mask: Optional[np.ndarray] = None
+    if active_mask is not None and not is_1d:
+        act_arr = np.asarray(active_mask, dtype=bool)
+        if len(act_arr) == n_spectra:
+            if not np.any(act_arr):
+                return np.full(n_spectra, np.nan, dtype=np.float64), False, "No active spectra in map"
+            if not np.all(act_arr):
+                act_mask = act_arr
 
+    # ── Fit-dependent parameters (no Y slicing or upcasting needed) ──
+    if is_fit_parameter(parameter):
+        val, ok, msg = _compute_fit_parameter(
+            x_min, x_max, n_spectra, parameter,
+            peak_params, param_names, fit_model,
+        )
+        if ok and act_mask is not None:
+            val = val.copy()
+            val[~act_mask] = np.nan
+        return val, ok, msg
+
+    # Slice columns BEFORE float64 conversion to avoid full-matrix allocation
+    mask = (x_arr >= x_min) & (x_arr <= x_max)
+    n_sub = int(np.count_nonzero(mask))
     if n_sub == 0:
         return np.full(n_spectra, np.nan), False, f"No spectral points in interval [{x_min:.1f}, {x_max:.1f}]"
 
     x_sub = x_arr[mask]
-    Y_sub = y_arr[:, mask]
+    if is_1d:
+        Y_sub = np.asarray(y_raw[mask], dtype=np.float64)[np.newaxis, :]
+    elif act_mask is not None:
+        if int(np.count_nonzero(act_mask)) < (n_spectra // 2):
+            Y_sub = np.asarray(y_raw[act_mask][:, mask], dtype=np.float64)
+        else:
+            Y_sub = np.asarray(y_raw[:, mask][act_mask], dtype=np.float64)
+    else:
+        Y_sub = np.asarray(y_raw[:, mask], dtype=np.float64)
 
-    # Clean NaNs and Infs
     if np.isnan(Y_sub).any() or np.isinf(Y_sub).any():
         Y_sub = np.nan_to_num(Y_sub, nan=0.0, posinf=0.0, neginf=0.0)
 
-    # ── Fit-dependent parameters ──
-    if is_fit_parameter(parameter):
-        return _compute_fit_parameter(
-            x_min, x_max, n_spectra, parameter,
-            peak_params, param_names, fit_model
-        )
+    val, ok, msg = _compute_raw_parameter(x_sub, Y_sub, parameter, baseline_subtracted)
+    if act_mask is not None:
+        out = np.full(n_spectra, np.nan, dtype=np.float64)
+        out[act_mask] = val
+        return out, ok, msg
+    return val, ok, msg
 
-    # ── Direct / Raw parameters ──
-    # 1. Integrated intensity
+
+def _compute_raw_parameter(
+    x_sub: np.ndarray,
+    Y_sub: np.ndarray,
+    parameter: str,
+    baseline_subtracted: bool,
+) -> Tuple[np.ndarray, bool, str]:
+    """Compute non-fit spectral parameter on a pre-sliced ``float64`` sub-band."""
+    n_sub = len(x_sub)
+
     if parameter == PARAM_INTEGRATED_INTENSITY:
         if n_sub >= 2:
-            trapz_fn = getattr(np, 'trapezoid', getattr(np, 'trapz', None))
-            # Sort x_sub if descending so integration is positive
+            trapz_fn = getattr(np, "trapezoid", getattr(np, "trapz", None))
             if x_sub[0] > x_sub[-1]:
                 val = np.abs(trapz_fn(Y_sub[:, ::-1], x_sub[::-1], axis=1))
             else:
@@ -179,45 +188,28 @@ def compute_spectral_parameter(
             val = Y_sub[:, 0].copy()
         return val, True, "OK"
 
-    # 2. Mean intensity
-    elif parameter == PARAM_MEAN_INTENSITY:
-        val = np.mean(Y_sub, axis=1)
-        return val, True, "OK"
+    if parameter == PARAM_MEAN_INTENSITY:
+        return np.mean(Y_sub, axis=1), True, "OK"
 
-    # 3. Maximum intensity
-    elif parameter == PARAM_MAX_INTENSITY:
-        val = np.max(Y_sub, axis=1)
-        return val, True, "OK"
+    if parameter == PARAM_MAX_INTENSITY:
+        return np.max(Y_sub, axis=1), True, "OK"
 
-    # 4. Peak position (raw/spectrum)
-    elif parameter == PARAM_PEAK_POSITION:
-        idx_max = np.argmax(Y_sub, axis=1)
-        val = x_sub[idx_max]
-        return val, True, "OK"
+    if parameter == PARAM_PEAK_POSITION:
+        return x_sub[np.argmax(Y_sub, axis=1)], True, "OK"
 
-    # 5. Peak height (raw/spectrum, relative to local baseline)
-    elif parameter == PARAM_PEAK_HEIGHT:
+    if parameter == PARAM_PEAK_HEIGHT:
         if baseline_subtracted:
-            # Already baseline corrected; height is simply max intensity
-            val = np.max(Y_sub, axis=1)
-        else:
-            if n_sub >= 2:
-                # Local linear baseline connecting interval endpoints
-                dx = x_sub[-1] - x_sub[0]
-                if abs(dx) > 1e-12:
-                    frac = (x_sub - x_sub[0]) / dx
-                    baseline = Y_sub[:, :1] + frac[None, :] * (Y_sub[:, -1:] - Y_sub[:, :1])
-                    val = np.max(Y_sub - baseline, axis=1)
-                else:
-                    val = np.max(Y_sub, axis=1) - np.min(Y_sub, axis=1)
-            else:
-                val = Y_sub[:, 0].copy()
-        return val, True, "OK"
+            return np.max(Y_sub, axis=1), True, "OK"
+        if n_sub >= 2:
+            dx = x_sub[-1] - x_sub[0]
+            if abs(dx) > 1e-12:
+                frac = (x_sub - x_sub[0]) / dx
+                baseline = Y_sub[:, :1] + frac[None, :] * (Y_sub[:, -1:] - Y_sub[:, :1])
+                return np.max(Y_sub - baseline, axis=1), True, "OK"
+            return np.max(Y_sub, axis=1) - np.min(Y_sub, axis=1), True, "OK"
+        return Y_sub[:, 0].copy(), True, "OK"
 
-    # Unknown parameter fallback
-    else:
-        val = np.mean(Y_sub, axis=1)
-        return val, True, f"Unknown parameter '{parameter}', defaulted to mean intensity"
+    return np.mean(Y_sub, axis=1), True, f"Unknown parameter '{parameter}', defaulted to mean intensity"
 
 
 def _compute_fit_parameter(
@@ -420,29 +412,150 @@ def compute_series_spectral_parameter(
     return vals, labels, True, last_msg or "OK"
 
 
+@dataclass(frozen=True)
+class MapGridder:
+    """Precomputed spatial lookup/weights for repeated 2D heatmap rendering.
+
+    Caches either regular-lattice integer indices or scattered Delaunay
+    barycentric weights (falling back to cKDTree nearest-neighbor on Qhull errors)
+    so interactive Live Maps bracket dragging avoids re-triangulating coordinates.
+    """
+
+    n_points: int
+    is_regular: bool
+    extent: list[float]
+    grid_res: int = 80
+    n_x: int = 0
+    n_y: int = 0
+    x_idx: Optional[np.ndarray] = None
+    y_idx: Optional[np.ndarray] = None
+    valid_idx: Optional[np.ndarray] = None
+    vertices: Optional[np.ndarray] = None
+    weights: Optional[np.ndarray] = None
+    valid_q: Optional[np.ndarray] = None
+    nn_indices: Optional[np.ndarray] = None
+
+    def evaluate(self, values: np.ndarray) -> np.ndarray:
+        """Project a length-``n_points`` value vector onto a 2D heatmap grid."""
+        v_arr = np.asarray(values, dtype=np.float64)
+        if self.is_regular:
+            grid = np.full((self.n_y, self.n_x), np.nan, dtype=np.float64)
+            v_idx = self.valid_idx
+            grid[self.y_idx[v_idx], self.x_idx[v_idx]] = v_arr[v_idx]
+            return grid
+
+        if self.vertices is not None and self.weights is not None and self.valid_q is not None:
+            out_flat = np.full(self.grid_res * self.grid_res, np.nan, dtype=np.float64)
+            gathered = v_arr[self.vertices]
+            out_flat[self.valid_q] = np.sum(self.weights * gathered, axis=1)
+            return out_flat.reshape(self.grid_res, self.grid_res)
+
+        if self.nn_indices is not None:
+            return v_arr[self.nn_indices].reshape(self.grid_res, self.grid_res)
+
+        return np.array([v_arr])
+
+
+def build_map_gridder(
+    coords: np.ndarray,
+    grid_res: int = 80,
+    active_mask: Optional[np.ndarray] = None,
+) -> Optional[MapGridder]:
+    """Precompute regular-grid indices or scattered Delaunay weights for ``coords``."""
+    if coords is None or len(coords) == 0:
+        return None
+    c_arr = np.asarray(coords, dtype=np.float64)
+    if c_arr.ndim != 2 or c_arr.shape[1] != 2:
+        return None
+
+    X = c_arr[:, 0]
+    Y = c_arr[:, 1]
+    u_x = np.sort(np.unique(X))
+    u_y = np.sort(np.unique(Y))
+    dx = float(u_x[1] - u_x[0]) if len(u_x) > 1 else 1.0
+    dy = float(u_y[1] - u_y[0]) if len(u_y) > 1 else 1.0
+    extent = [
+        float(u_x[0] - 0.5 * dx),
+        float(u_x[-1] + 0.5 * dx),
+        float(u_y[0] - 0.5 * dy),
+        float(u_y[-1] + 0.5 * dy),
+    ]
+
+    n_expected = len(u_x) * len(u_y)
+    if n_expected <= len(X) * 4 and len(u_x) >= 1 and len(u_y) >= 1:
+        x_idx = np.searchsorted(u_x, X)
+        y_idx = np.searchsorted(u_y, Y)
+        valid_idx = (x_idx < len(u_x)) & (y_idx < len(u_y))
+        return MapGridder(
+            n_points=len(c_arr),
+            is_regular=True,
+            extent=extent,
+            grid_res=grid_res,
+            n_x=len(u_x),
+            n_y=len(u_y),
+            x_idx=x_idx,
+            y_idx=y_idx,
+            valid_idx=valid_idx,
+        )
+
+    src_idx = np.flatnonzero(np.asarray(active_mask, dtype=bool)) if active_mask is not None else np.arange(len(c_arr))
+    if len(src_idx) < 4:
+        return None
+
+    pts = c_arr[src_idx]
+    gx, gy = np.meshgrid(
+        np.linspace(u_x[0], u_x[-1], grid_res),
+        np.linspace(u_y[0], u_y[-1], grid_res),
+    )
+    q_pts = np.column_stack((gx.ravel(), gy.ravel()))
+
+    try:
+        from scipy.spatial import Delaunay, QhullError  # deferred: startup import rule
+        tri = Delaunay(pts)
+        simplices = tri.find_simplex(q_pts)
+        valid_q = simplices >= 0
+        s_valid = simplices[valid_q]
+        T = tri.transform[s_valid, :2, :]
+        r = q_pts[valid_q] - tri.transform[s_valid, 2, :]
+        b01 = np.einsum("qij,qj->qi", T, r)
+        b2 = 1.0 - b01.sum(axis=1, keepdims=True)
+        weights = np.hstack((b01, b2))
+        vertices = src_idx[tri.simplices[s_valid]]
+        return MapGridder(
+            n_points=len(c_arr),
+            is_regular=False,
+            extent=extent,
+            grid_res=grid_res,
+            vertices=vertices,
+            weights=weights,
+            valid_q=valid_q,
+        )
+    except QhullError:
+        try:
+            from scipy.spatial import cKDTree  # deferred: startup import rule
+            _, nn_local = cKDTree(pts).query(q_pts)
+            return MapGridder(
+                n_points=len(c_arr),
+                is_regular=False,
+                extent=extent,
+                grid_res=grid_res,
+                nn_indices=src_idx[nn_local],
+            )
+        except Exception:
+            return None
+    except Exception:
+        return None
+
+
 def compute_map_grid(
     coords: np.ndarray,
     values: np.ndarray,
+    gridder: Optional[MapGridder] = None,
 ) -> Tuple[Optional[np.ndarray], list[float], float, float]:
     """Construct 2D interpolated or pixelated grid from coordinates and values.
 
-    Parameters
-    ----------
-    coords : np.ndarray
-        Array of shape (N, 2) containing spatial (X, Y) positions.
-    values : np.ndarray
-        Array of shape (N,) containing parameter values to map.
-
-    Returns
-    -------
-    grid : np.ndarray or None
-        2D array of shape (n_y, n_x) representing the map grid.
-    extent : list of 4 floats
-        Bounding box [xmin, xmax, ymin, ymax] for imshow.
-    vmin : float
-        Suggested minimum display value.
-    vmax : float
-        Suggested maximum display value.
+    When ``gridder`` is supplied and matches ``len(coords)``, reuses its
+    precomputed regular indices or scattered Delaunay barycentric weights.
     """
     if coords is None or len(coords) == 0 or values is None or len(values) == 0:
         return None, [0.0, 1.0, 0.0, 1.0], 0.0, 100.0
@@ -453,78 +566,39 @@ def compute_map_grid(
     if c_arr.ndim != 2 or c_arr.shape[1] != 2 or len(c_arr) != len(v_arr):
         return None, [0.0, 1.0, 0.0, 1.0], 0.0, 100.0
 
-    X = c_arr[:, 0]
-    Y = c_arr[:, 1]
-
     # Robust vmin and vmax (ignoring NaNs)
     valid_vals = v_arr[np.isfinite(v_arr)]
-    if len(valid_vals) > 0:
-        vmin = float(np.percentile(valid_vals, 1))
-        vmax = float(np.percentile(valid_vals, 99))
-        if vmin == vmax:
-            vmin = float(valid_vals.min())
-            vmax = float(valid_vals.max())
-        if vmin == vmax:
-            vmin -= 1.0
-            vmax += 1.0
-    else:
-        vmin, vmax = 0.0, 1.0
+    if len(valid_vals) == 0:
+        return None, [0.0, 1.0, 0.0, 1.0], 0.0, 1.0
+    vmin = float(np.percentile(valid_vals, 1))
+    vmax = float(np.percentile(valid_vals, 99))
+    if vmin == vmax:
+        vmin = float(valid_vals.min())
+        vmax = float(valid_vals.max())
+    if vmin == vmax:
+        vmin -= 1.0
+        vmax += 1.0
 
+    if gridder is not None and gridder.n_points == len(c_arr):
+        return gridder.evaluate(v_arr), list(gridder.extent), vmin, vmax
+
+    resolved = build_map_gridder(c_arr, active_mask=np.isfinite(v_arr))
+    if resolved is not None:
+        return resolved.evaluate(v_arr), list(resolved.extent), vmin, vmax
+
+    X = c_arr[:, 0]
+    Y = c_arr[:, 1]
     u_x = np.sort(np.unique(X))
     u_y = np.sort(np.unique(Y))
-
-    # Calculate pixel extents
-    if len(u_x) > 1:
-        dx = float(u_x[1] - u_x[0])
-    else:
-        dx = 1.0
-
-    if len(u_y) > 1:
-        dy = float(u_y[1] - u_y[0])
-    else:
-        dy = 1.0
-
+    dx = float(u_x[1] - u_x[0]) if len(u_x) > 1 else 1.0
+    dy = float(u_y[1] - u_y[0]) if len(u_y) > 1 else 1.0
     extent = [
         float(u_x[0] - 0.5 * dx),
         float(u_x[-1] + 0.5 * dx),
         float(u_y[0] - 0.5 * dy),
         float(u_y[-1] + 0.5 * dy),
     ]
-
-    # Fast 2D regular grid via searchsorted
-    # Check if grid is reasonably compact
-    n_expected = len(u_x) * len(u_y)
-    if n_expected <= len(X) * 4 and len(u_x) >= 1 and len(u_y) >= 1:
-        grid = np.full((len(u_y), len(u_x)), np.nan, dtype=np.float64)
-        x_idx = np.searchsorted(u_x, X)
-        y_idx = np.searchsorted(u_y, Y)
-        # Safe indexing
-        valid_idx = (x_idx < len(u_x)) & (y_idx < len(u_y))
-        grid[y_idx[valid_idx], x_idx[valid_idx]] = v_arr[valid_idx]
-        return grid, extent, vmin, vmax
-
-    # Non-regular / scattered points fallback
-    if len(valid_vals) >= 4:
-        try:
-            from scipy.interpolate import griddata
-            grid_x, grid_y = np.meshgrid(
-                np.linspace(u_x[0], u_x[-1], 80),
-                np.linspace(u_y[0], u_y[-1], 80),
-            )
-            valid_mask = np.isfinite(v_arr)
-            grid_z = griddata(
-                (X[valid_mask], Y[valid_mask]),
-                v_arr[valid_mask],
-                (grid_x, grid_y),
-                method="linear",
-            )
-            return grid_z, extent, vmin, vmax
-        except Exception:
-            pass
-
-    # Simple fallback: 1xN or Nx1 grid
-    grid = np.array([v_arr])
-    return grid, extent, vmin, vmax
+    return np.array([v_arr]), extent, vmin, vmax
 
 
 @dataclass(frozen=True)

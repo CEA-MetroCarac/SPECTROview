@@ -1,10 +1,13 @@
 # spectroview/view/components/v_map_list.py
 """View component for Maps list and spectrum action controls."""
+from __future__ import annotations
+from typing import Optional
+
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
-    QListWidgetItem, QAbstractItemView, QPushButton
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget,
+    QListWidgetItem, QAbstractItemView, QPushButton,
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QItemSelectionModel
 from PySide6.QtGui import QFont
 
 from spectroview.viewmodel.utils import MetadataTooltipManager
@@ -12,29 +15,32 @@ from spectroview.view.theme import Icons, current_tokens
 
 
 class VMapsList(QWidget):
-    """Maps list widget with map actions and spectrum selection action buttons.
-    
-    Provides navigation across loaded maps (view, delete, save) and actions
-    operating on spectra selected via the 2D Map Viewer (select all, reinit,
-    send to Spectra workspace).
+    """Maps list widget with multi-selection and spectrum/map action controls.
+
+    Supports ``ExtendedSelection`` (Click, Ctrl+Click, Shift+Click) and emits
+    both the legacy ``map_selection_changed(int)`` (focused/primary row) and
+    ``maps_selection_changed(selected_names, primary_name)``.
     """
-    
+
     # ═══ View → ViewModel signals ═══
-    map_selection_changed = Signal(int)           # Selected map index
-    view_map_requested = Signal()                 # View map DataFrame
-    delete_map_requested = Signal()               # Delete selected map
-    save_requested = Signal()                     # Save map to Excel / CSV
-    select_all_requested = Signal()               # Select all spectra
-    reinitialize_requested = Signal()             # Reinitialize selected spectra
-    send_to_spectra_requested = Signal()          # Send to Spectra workspace
-    
+    map_selection_changed = Signal(int)               # Focused/primary map index
+    maps_selection_changed = Signal(list, object)     # (selected_names, primary_name)
+    view_map_requested = Signal()                     # View map DataFrame
+    delete_map_requested = Signal()                   # Delete selected map(s)
+    save_requested = Signal()                         # Save map to Excel / CSV
+    select_all_requested = Signal()                   # Select all spectra
+    reinitialize_requested = Signal()                 # Reinitialize selected spectra
+    send_to_spectra_requested = Signal()              # Send to Spectra workspace
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._has_maps_placeholder = False  # Track placeholder state
+        self._has_maps_placeholder = False
+        self._items_by_name: dict[str, QListWidgetItem] = {}
+        self._last_emitted_selection: Optional[tuple[tuple[str, ...], Optional[str]]] = None
 
         # Metadata tooltip support
         self._map_metadata_provider = None
-        
+
         self._init_ui()
         self._maps_tooltip_manager = MetadataTooltipManager(self.maps_list, self._get_map_metadata)
         self._update_maps_placeholder()  # Show placeholder initially
@@ -68,9 +74,9 @@ class VMapsList(QWidget):
         maps_container = QHBoxLayout()
         maps_container.setSpacing(4)
         
-        # Left: Maps list (occupies remaining height)
+        # Left: Maps list (occupies remaining height; Ctrl/Shift multi-select supported)
         self.maps_list = QListWidget()
-        self.maps_list.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.maps_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.maps_list.setMinimumHeight(80)
         self.maps_list.itemSelectionChanged.connect(self._on_map_selected)
         maps_container.addWidget(self.maps_list, stretch=1)
@@ -153,53 +159,137 @@ class VMapsList(QWidget):
             self.maps_list.addItem(placeholder)
             self._has_maps_placeholder = True
 
+    def _selectable_selected_items(self) -> list[QListWidgetItem]:
+        """Return currently selected non-placeholder items in visual list order."""
+        items: list[QListWidgetItem] = []
+        for row in range(self.maps_list.count()):
+            item = self.maps_list.item(row)
+            if item is not None and bool(item.flags() & Qt.ItemIsSelectable) and item.isSelected():
+                items.append(item)
+        return items
+
+    def _resolve_selection(self) -> tuple[list[str], Optional[str], int]:
+        """Resolve ordered selected names, Primary Map name, and Primary row index.
+
+        When Ctrl+Click deselects the currently focused item while other maps
+        remain selected, promotes the last remaining selected item as Primary
+        so ``primary_name`` is always an actually selected map when non-empty.
+        """
+        selected_items = self._selectable_selected_items()
+        if not selected_items:
+            return [], None, -1
+
+        selected_names = [it.text() for it in selected_items]
+        curr = self.maps_list.currentItem()
+        if curr is not None and curr in selected_items:
+            primary_item = curr
+        else:
+            primary_item = selected_items[-1]
+            was_blocked = self.maps_list.blockSignals(True)
+            try:
+                self.maps_list.setCurrentItem(primary_item, QItemSelectionModel.NoUpdate)
+            finally:
+                self.maps_list.blockSignals(was_blocked)
+
+        return selected_names, primary_item.text(), self.maps_list.row(primary_item)
+
     # ───── Public API (ViewModel → View) ─────────────────────────
     def set_maps_names(self, names: list[str]):
-        """Replace entire maps list (ViewModel-driven)."""
-        current_selection = self.get_selected_map_index()
-        
-        self.maps_list.clear()
-        self._has_maps_placeholder = False  # Reset placeholder flag
-        
-        for i, name in enumerate(names):
-            item = QListWidgetItem(name)
-            item.setData(Qt.UserRole, i)  # Store index
-            self.maps_list.addItem(item)
-        
-        # Auto-select first map if no selection and maps exist
-        if current_selection < 0 and len(names) > 0:
-            self.maps_list.setCurrentRow(0)
-        elif 0 <= current_selection < len(names):
-            self.maps_list.setCurrentRow(current_selection)
-        
-        # Update placeholder only if list is empty after adding items
-        if len(names) == 0:
-            self._update_maps_placeholder()
-    
+        """Replace entire maps list while preserving multi-selection by map name."""
+        prev_selected = self.get_selected_map_names()
+        prev_primary = self.get_primary_map_name()
+
+        was_blocked = self.maps_list.blockSignals(True)
+        try:
+            self.maps_list.clear()
+            self._has_maps_placeholder = False
+            self._items_by_name.clear()
+
+            for i, name in enumerate(names):
+                item = QListWidgetItem(name)
+                item.setData(Qt.UserRole, i)
+                self._items_by_name[name] = item
+                self.maps_list.addItem(item)
+
+            if len(names) == 0:
+                self._update_maps_placeholder()
+            else:
+                surviving = [n for n in prev_selected if n in self._items_by_name]
+                if surviving:
+                    for n in surviving:
+                        self._items_by_name[n].setSelected(True)
+                    target_primary = prev_primary if prev_primary in self._items_by_name else surviving[-1]
+                    self.maps_list.setCurrentItem(
+                        self._items_by_name[target_primary], QItemSelectionModel.NoUpdate
+                    )
+                else:
+                    first_item = self._items_by_name[names[0]]
+                    first_item.setSelected(True)
+                    self.maps_list.setCurrentItem(first_item, QItemSelectionModel.NoUpdate)
+        finally:
+            self.maps_list.blockSignals(was_blocked)
+
+        selected_names, primary_name, _ = self._resolve_selection()
+        self._last_emitted_selection = (tuple(selected_names), primary_name)
+
     def get_selected_map_index(self) -> int:
-        """Return currently selected map index, or -1 if none."""
-        selected = self.maps_list.selectedItems()
-        if selected:
-            return self.maps_list.row(selected[0])
-        return -1
+        """Return currently focused/primary selected map index, or -1 if none."""
+        _, _, row = self._resolve_selection()
+        return row
+
+    def get_selected_map_names(self) -> list[str]:
+        """Return ordered list of all currently selected map names."""
+        return [it.text() for it in self._selectable_selected_items()]
+
+    def get_primary_map_name(self) -> Optional[str]:
+        """Return the Primary (focused) selected map name, or None."""
+        _, primary_name, _ = self._resolve_selection()
+        return primary_name
 
     def set_selected_map_name(self, name: str):
-        """Select a map by name in the list without emitting duplicate signals if already selected."""
-        for i in range(self.maps_list.count()):
-            item = self.maps_list.item(i)
-            if item and item.text() == name:
-                if self.maps_list.currentRow() != i:
-                    self.maps_list.blockSignals(True)
-                    self.maps_list.setCurrentRow(i)
-                    self.maps_list.blockSignals(False)
-                break
+        """Select a single map by name cleanly without emitting duplicate signals."""
+        self.set_selected_maps([name] if name else [], primary_name=name or None)
+
+    def set_selected_maps(self, names: list[str], primary_name: Optional[str] = None):
+        """Programmatically highlight *names* and set *primary_name* without emitting."""
+        valid = [n for n in names if n in self._items_by_name]
+        if primary_name not in self._items_by_name or (valid and primary_name not in valid):
+            resolved_primary = valid[-1] if valid else None
+        else:
+            resolved_primary = primary_name
+
+        # Skip redundant programmatic resets if selection & primary already match
+        curr_sel = self.get_selected_map_names()
+        curr_item = self.maps_list.currentItem()
+        curr_prim = curr_item.text() if (curr_item and bool(curr_item.flags() & Qt.ItemIsSelectable)) else None
+        if curr_sel == valid and curr_prim == resolved_primary:
+            return
+
+        was_blocked = self.maps_list.blockSignals(True)
+        try:
+            self.maps_list.clearSelection()
+            for n in valid:
+                self._items_by_name[n].setSelected(True)
+            if resolved_primary and resolved_primary in self._items_by_name:
+                self.maps_list.setCurrentItem(
+                    self._items_by_name[resolved_primary], QItemSelectionModel.NoUpdate
+                )
+        finally:
+            self.maps_list.blockSignals(was_blocked)
+
+        self._last_emitted_selection = (tuple(valid), resolved_primary)
 
     # ───── Internal signal handlers ──────────────────────────────
     def _on_map_selected(self):
-        """Emit signal when map selection changes."""
-        idx = self.get_selected_map_index()
-        if idx >= 0:
-            self.map_selection_changed.emit(idx)
+        """Emit deduplicated legacy index and multi-selection signals."""
+        selected_names, primary_name, primary_row = self._resolve_selection()
+        sig_key = (tuple(selected_names), primary_name)
+        if sig_key == self._last_emitted_selection:
+            return
+        self._last_emitted_selection = sig_key
+        if primary_row >= 0:
+            self.map_selection_changed.emit(primary_row)
+        self.maps_selection_changed.emit(selected_names, primary_name)
 
     def apply_theme(self, theme: str):
         """Update icons based on the global application theme."""

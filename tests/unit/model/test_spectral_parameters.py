@@ -266,3 +266,86 @@ def test_compute_series_spectral_parameter_homogeneous_and_heterogeneous(synthet
     assert len(het_vals) == 2
     assert het_labels == ["Label_1", "Dense"]
     assert np.allclose(het_vals, 800.0, atol=6.0)
+
+
+def test_compute_spectral_parameter_active_mask_and_descending_x():
+    from spectroview.model.spectral_parameters import (
+        compute_spectral_parameter,
+        PARAM_INTEGRATED_INTENSITY,
+    )
+
+    # Descending x-axis in float32 matrix (ensures slice-before-cast works in both orientations)
+    x = np.linspace(1500.0, 500.0, 101)
+    Y = np.ones((4, 101), dtype=np.float32) * 3.0
+    Y[2, :] = 9.0
+    active = np.array([True, False, True, True], dtype=bool)
+
+    vals, ok, msg = compute_spectral_parameter(
+        x_axis=x, Y=Y, x_range=(700.0, 900.0),
+        parameter=PARAM_INTEGRATED_INTENSITY, active_mask=active,
+    )
+    assert ok is True
+    assert msg == "OK"
+    assert np.isnan(vals[1])
+    assert np.isfinite(vals[0]) and np.isfinite(vals[2])
+    assert vals[2] > vals[0]
+
+    # All spectra unchecked → ok=False with diagnostic & all-NaN values
+    vals_none, ok_none, msg_none = compute_spectral_parameter(
+        x_axis=x, Y=Y, x_range=(700.0, 900.0),
+        parameter=PARAM_INTEGRATED_INTENSITY, active_mask=np.zeros(4, dtype=bool),
+    )
+    assert ok_none is False
+    assert "no active" in msg_none.lower()
+    assert np.all(np.isnan(vals_none))
+
+
+def test_map_gridder_regular_scattered_and_qhuii_fallback():
+    from spectroview.model.spectral_parameters import build_map_gridder, compute_map_grid
+    from scipy.interpolate import griddata
+
+    # 1. Regular Cartesian grid fast path + active_mask masking
+    xs, ys = np.meshgrid(np.linspace(0, 6, 4), np.linspace(0, 4, 3))
+    coords = np.column_stack([xs.ravel(), ys.ravel()])
+    values = coords[:, 0] * 2.0 + coords[:, 1]
+    active = np.ones(len(coords), dtype=bool)
+    active[5] = False  # uncheck one interior pixel
+    values[5] = np.nan
+
+    gridder = build_map_gridder(coords, grid_res=80, active_mask=active)
+    assert gridder.is_regular is True
+    grid, extent, vmin, vmax = compute_map_grid(coords, values, gridder=gridder)
+    assert grid.shape == (3, 4)
+    assert np.isnan(grid[5 // 4, 5 % 4])
+    assert vmin == pytest.approx(np.nanpercentile(values, 1))
+    assert vmax == pytest.approx(np.nanpercentile(values, 99))
+
+    # All inactive -> returns None grid cleanly
+    grid_none, _, _, _ = compute_map_grid(coords, np.full(len(coords), np.nan), gridder=gridder)
+    assert grid_none is None
+
+    # 2. Scattered irregular points -> Delaunay barycentric cache matches scipy.griddata
+    rng = np.random.default_rng(42)
+    pts = rng.uniform(-5.0, 5.0, size=(60, 2))
+    z = 3.0 * pts[:, 0] - 2.0 * pts[:, 1] + 10.0  # linear field -> exact under barycentric
+    g_scat = build_map_gridder(pts, grid_res=25)
+    assert g_scat.is_regular is False and g_scat.vertices is not None
+    grid_cached, ext_c, _, _ = compute_map_grid(pts, z, gridder=g_scat)
+
+    gx = np.linspace(pts[:, 0].min(), pts[:, 0].max(), 25)
+    gy = np.linspace(pts[:, 1].min(), pts[:, 1].max(), 25)
+    gxx, gyy = np.meshgrid(gx, gy)
+    ref = griddata(pts, z, (gxx, gyy), method="linear")
+    both = np.isfinite(grid_cached) & np.isfinite(ref)
+    assert np.any(both)
+    assert np.allclose(grid_cached[both], ref[both], atol=1e-9)
+
+    # 3. Non-regular collinear points (len(u_x)*len(u_y) > 4*N) -> QhullError falls back cleanly to cKDTree nearest
+    pts_collinear = np.column_stack([np.arange(6.0), np.arange(6.0)])
+    g_deg = build_map_gridder(pts_collinear, grid_res=10)
+    assert g_deg.is_regular is False and g_deg.nn_indices is not None
+    vals_d = np.arange(1.0, 7.0)
+    grid_deg, _, vmin_d, vmax_d = compute_map_grid(pts_collinear, vals_d, gridder=g_deg)
+    assert grid_deg is not None
+    assert vmin_d == pytest.approx(np.percentile(vals_d, 1))
+    assert vmax_d == pytest.approx(np.percentile(vals_d, 99))

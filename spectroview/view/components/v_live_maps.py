@@ -23,7 +23,7 @@ from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
-    QPushButton, QFrame, QSizePolicy, QScrollArea, QToolButton,
+    QPushButton, QFrame, QSizePolicy, QToolButton,
     QMenu, QWidgetAction, QDoubleSpinBox, QSpinBox,
 )
 
@@ -67,6 +67,7 @@ _DEFAULT_VIEW_OPTIONS = {
     "plot_style": "line+dots",
     "line_width": 1.8,
     "dot_size": 4.0,
+    "text_fontsize": 10,
     "show_legend": False,
     "legend_loc": "best",
     "legend_ncol": 1,
@@ -78,6 +79,12 @@ _DEFAULT_VIEW_OPTIONS = {
     "custom_labels": {},
     "custom_colors": {},
 }
+
+
+def _resolve_style_path(theme: Optional[str]) -> Tuple[bool, str]:
+    """Return ``(is_dark, mplstyle_path)`` for a Qt/app theme string."""
+    is_dark = "dark" in str(theme or "").lower()
+    return is_dark, (PLOT_POLICY_DARK if is_dark else PLOT_POLICY_LIGHT)
 
 
 def _copy_view_options(src: Optional[dict] = None) -> dict:
@@ -235,7 +242,7 @@ class LiveMapSubpanel(QFrame):
 
         # ── Matplotlib Figure & Canvas ──
         with plt.style.context(PLOT_POLICY_LIGHT):
-            self.figure = Figure(dpi=70, layout="compressed")
+            self.figure = Figure(dpi=96, layout="compressed")
             self.ax = self.figure.add_subplot(111)
 
         self.canvas = FigureCanvas(self.figure)
@@ -557,6 +564,57 @@ class LiveMapSubpanel(QFrame):
             )
             self._legend.set_draggable(True)
 
+        # Enforce explicit theme contrast on legend frame and labels so dark/light
+        # transitions or global rcParams never produce invisible text.
+        is_dark, _ = _resolve_style_path(self._current_theme)
+        leg_fg = "#FFFFFF" if is_dark else "#111111"
+        leg_bg = "#2A2A2A" if is_dark else "#FFFFFF"
+        leg_edge = "#555555" if is_dark else "#CCCCCC"
+        frame = self._legend.get_frame()
+        if frame is not None:
+            frame.set_facecolor(leg_bg)
+            frame.set_edgecolor(leg_edge)
+            frame.set_alpha(0.88)
+        for text in self._legend.get_texts():
+            text.set_color(leg_fg)
+
+    def _apply_figure_theme(self, theme: Optional[str] = None):
+        """Explicitly paint Figure, Axes, ticks, spines, and colorbar for the active theme."""
+        active_theme = theme if theme is not None else self._current_theme
+        _is_dark, style_path = _resolve_style_path(active_theme)
+        with plt.style.context(style_path):
+            self.figure.patch.set_facecolor(plt.rcParams["figure.facecolor"])
+            self.figure.patch.set_edgecolor(plt.rcParams["figure.edgecolor"])
+            self.ax.set_facecolor(plt.rcParams["axes.facecolor"])
+            self.ax.xaxis.label.set_color(plt.rcParams["axes.labelcolor"])
+            self.ax.yaxis.label.set_color(plt.rcParams["axes.labelcolor"])
+            self.ax.title.set_color(plt.rcParams["text.color"])
+            tick_col = plt.rcParams["xtick.color"]
+            self.ax.tick_params(axis="both", colors=tick_col)
+            edge_col = plt.rcParams["axes.edgecolor"]
+            for spine in self.ax.spines.values():
+                spine.set_edgecolor(edge_col)
+            if self.cbar is not None:
+                try:
+                    self.cbar.ax.tick_params(colors=plt.rcParams["ytick.color"])
+                    self.cbar.outline.set_edgecolor(edge_col)
+                except Exception:
+                    pass
+
+    def _apply_text_sizes(self):
+        """Apply user-configured text size to title, axis labels, ticks, and colorbar ticks."""
+        text_fs = max(6, int(self._view_options.get("text_fontsize", 10)))
+        tick_fs = max(6, text_fs - 1)
+        self.ax.title.set_fontsize(text_fs)
+        self.ax.xaxis.label.set_fontsize(text_fs)
+        self.ax.yaxis.label.set_fontsize(text_fs)
+        self.ax.tick_params(axis="both", labelsize=tick_fs)
+        if self.cbar is not None:
+            try:
+                self.cbar.ax.tick_params(labelsize=tick_fs)
+            except Exception:
+                pass
+
     def update_series(
         self,
         values: Optional[np.ndarray],
@@ -598,6 +656,8 @@ class LiveMapSubpanel(QFrame):
         show_grid = bool(self._view_options.get("show_grid", True))
 
         has_valid = len(val_arr) > 0 and bool(np.any(np.isfinite(val_arr)))
+        _is_dark, style_path = _resolve_style_path(theme)
+        text_fs = max(6, int(self._view_options.get("text_fontsize", 10)))
 
         # Fast path: in-place single-line update during continuous bracket dragging
         if (
@@ -607,35 +667,36 @@ class LiveMapSubpanel(QFrame):
             and has_valid
             and len(self.line.get_xdata()) == len(val_arr)
         ):
-            self.line.set_data(x_arr, val_arr)
-            self.line.set_color(curve_color)
-            self.line.set_linestyle(style_kw["linestyle"])
-            self.line.set_linewidth(style_kw["linewidth"])
-            self.line.set_marker(style_kw["marker"])
-            self.line.set_markersize(style_kw["markersize"])
-            self.line.set_label(curve_label)
-            finite_mask = np.isfinite(x_arr) & np.isfinite(val_arr)
-            self._apply_1d_scales_and_limits(
-                x_arr[finite_mask] if np.any(finite_mask) else x_arr,
-                val_arr[finite_mask] if np.any(finite_mask) else val_arr,
-                is_index_axis=is_index_axis,
-            )
-            self.ax.grid(show_grid, alpha=0.25, linestyle="--")
-            self.ax.set_xlabel(x_label)
-            self.ax.set_ylabel(param_name)
-            self.ax.set_title(title_text, fontsize=10, pad=4)
-            self._sync_legend()
-            self.canvas.draw_idle()
+            with plt.style.context(style_path):
+                self.line.set_data(x_arr, val_arr)
+                self.line.set_color(curve_color)
+                self.line.set_linestyle(style_kw["linestyle"])
+                self.line.set_linewidth(style_kw["linewidth"])
+                self.line.set_marker(style_kw["marker"])
+                self.line.set_markersize(style_kw["markersize"])
+                self.line.set_label(curve_label)
+                finite_mask = np.isfinite(x_arr) & np.isfinite(val_arr)
+                self._apply_1d_scales_and_limits(
+                    x_arr[finite_mask] if np.any(finite_mask) else x_arr,
+                    val_arr[finite_mask] if np.any(finite_mask) else val_arr,
+                    is_index_axis=is_index_axis,
+                )
+                self.ax.grid(show_grid, alpha=0.25, linestyle="--")
+                self.ax.set_xlabel(x_label)
+                self.ax.set_ylabel(param_name)
+                self.ax.set_title(title_text, fontsize=text_fs, pad=4)
+                self._apply_figure_theme(theme)
+                self._apply_text_sizes()
+                self._sync_legend()
+                self.canvas.draw_idle()
             return
-
-        is_dark = theme in ("Dark Mode", "dark", "classic_dark")
-        style_path = PLOT_POLICY_DARK if is_dark else PLOT_POLICY_LIGHT
 
         self._display_kind = "series"
         self._sync_palette_visibility()
 
         with plt.style.context(style_path):
             self._reset_axes()
+            self._apply_figure_theme(theme)
 
             if not has_valid:
                 self._valid_y_bounds = None
@@ -644,7 +705,7 @@ class LiveMapSubpanel(QFrame):
                 self.ax.text(
                     0.5, 0.5, msg,
                     ha="center", va="center", transform=self.ax.transAxes,
-                    fontsize=10, color="gray", wrap=True
+                    fontsize=text_fs, color="gray", wrap=True
                 )
                 self.ax.set_xticks([])
                 self.ax.set_yticks([])
@@ -671,7 +732,9 @@ class LiveMapSubpanel(QFrame):
             self.ax.grid(show_grid, alpha=0.25, linestyle="--")
             self.ax.set_xlabel(x_label)
             self.ax.set_ylabel(param_name)
-            self.ax.set_title(title_text, fontsize=10, pad=4)
+            self.ax.set_title(title_text, fontsize=text_fs, pad=4)
+            self._apply_figure_theme(theme)
+            self._apply_text_sizes()
             self._sync_legend()
 
             self.canvas.draw_idle()
@@ -724,6 +787,8 @@ class LiveMapSubpanel(QFrame):
         custom_labels = self._view_options.get("custom_labels", {})
         custom_colors = self._view_options.get("custom_colors", {})
         show_grid = bool(self._view_options.get("show_grid", True))
+        _is_dark, style_path = _resolve_style_path(theme)
+        text_fs = max(6, int(self._view_options.get("text_fontsize", 10)))
 
         # Fast path: reuse existing Line2D pool when entry count matches
         if (
@@ -733,44 +798,45 @@ class LiveMapSubpanel(QFrame):
             and len(self.lines) == len(self._multi_entries)
             and len(self.lines) > 0
         ):
-            for idx, (ln, entry) in enumerate(zip(self.lines, self._multi_entries)):
-                px = np.asarray(entry.get("positions", []), dtype=np.float64)
-                vy = np.asarray(entry.get("values", []), dtype=np.float64)
-                key = entry.get("name", f"Map {idx + 1}")
-                auto_color = (
-                    self.color_hex
-                    if len(self._multi_entries) == 1
-                    else DEFAULT_COLORS[idx % len(DEFAULT_COLORS)]
-                )
-                color = custom_colors.get(key) or auto_color
-                is_primary = bool(entry.get("is_primary", False))
-                style_kw = self._curve_style_kwargs(is_primary=is_primary, multi=True)
-                ln.set_data(px, vy)
-                ln.set_color(color)
-                ln.set_linestyle(style_kw["linestyle"])
-                ln.set_linewidth(style_kw["linewidth"])
-                ln.set_marker(style_kw["marker"])
-                ln.set_markersize(style_kw["markersize"])
-                ln.set_alpha(1.0 if is_primary else 0.78)
-                ln.set_zorder(5 if is_primary else 3)
-                ln.set_label(custom_labels.get(key) or key)
-            self._apply_1d_scales_and_limits(all_x, all_y, is_index_axis=False)
-            self.ax.grid(show_grid, alpha=0.25, linestyle="--")
-            self.ax.set_xlabel(x_label)
-            self.ax.set_ylabel(param_name)
-            self.ax.set_title(title_text, fontsize=10, pad=4)
-            self._sync_legend()
-            self.canvas.draw_idle()
+            with plt.style.context(style_path):
+                for idx, (ln, entry) in enumerate(zip(self.lines, self._multi_entries)):
+                    px = np.asarray(entry.get("positions", []), dtype=np.float64)
+                    vy = np.asarray(entry.get("values", []), dtype=np.float64)
+                    key = entry.get("name", f"Map {idx + 1}")
+                    auto_color = (
+                        self.color_hex
+                        if len(self._multi_entries) == 1
+                        else DEFAULT_COLORS[idx % len(DEFAULT_COLORS)]
+                    )
+                    color = custom_colors.get(key) or auto_color
+                    is_primary = bool(entry.get("is_primary", False))
+                    style_kw = self._curve_style_kwargs(is_primary=is_primary, multi=True)
+                    ln.set_data(px, vy)
+                    ln.set_color(color)
+                    ln.set_linestyle(style_kw["linestyle"])
+                    ln.set_linewidth(style_kw["linewidth"])
+                    ln.set_marker(style_kw["marker"])
+                    ln.set_markersize(style_kw["markersize"])
+                    ln.set_alpha(1.0 if is_primary else 0.78)
+                    ln.set_zorder(5 if is_primary else 3)
+                    ln.set_label(custom_labels.get(key) or key)
+                self._apply_1d_scales_and_limits(all_x, all_y, is_index_axis=False)
+                self.ax.grid(show_grid, alpha=0.25, linestyle="--")
+                self.ax.set_xlabel(x_label)
+                self.ax.set_ylabel(param_name)
+                self.ax.set_title(title_text, fontsize=text_fs, pad=4)
+                self._apply_figure_theme(theme)
+                self._apply_text_sizes()
+                self._sync_legend()
+                self.canvas.draw_idle()
             return
-
-        is_dark = theme in ("Dark Mode", "dark", "classic_dark")
-        style_path = PLOT_POLICY_DARK if is_dark else PLOT_POLICY_LIGHT
 
         self._display_kind = "multi_profile"
         self._sync_palette_visibility()
 
         with plt.style.context(style_path):
             self._reset_axes()
+            self._apply_figure_theme(theme)
 
             if not has_valid:
                 self._valid_y_bounds = None
@@ -779,7 +845,7 @@ class LiveMapSubpanel(QFrame):
                 self.ax.text(
                     0.5, 0.5, msg,
                     ha="center", va="center", transform=self.ax.transAxes,
-                    fontsize=10, color="gray", wrap=True,
+                    fontsize=text_fs, color="gray", wrap=True,
                 )
                 self.ax.set_xticks([])
                 self.ax.set_yticks([])
@@ -815,7 +881,9 @@ class LiveMapSubpanel(QFrame):
             self.ax.grid(show_grid, alpha=0.25, linestyle="--")
             self.ax.set_xlabel(x_label)
             self.ax.set_ylabel(param_name)
-            self.ax.set_title(title_text, fontsize=10, pad=4)
+            self.ax.set_title(title_text, fontsize=text_fs, pad=4)
+            self._apply_figure_theme(theme)
+            self._apply_text_sizes()
             self._sync_legend()
 
             self.canvas.draw_idle()
@@ -894,6 +962,8 @@ class LiveMapSubpanel(QFrame):
         want_colorbar = bool(self._view_options.get("show_colorbar", True))
         show_grid = bool(self._view_options.get("show_grid", True))
         has_valid_grid = grid is not None and not np.all(np.isnan(grid))
+        _is_dark, style_path = _resolve_style_path(theme)
+        text_fs = max(6, int(self._view_options.get("text_fontsize", 10)))
 
         # Fast path: in-place update when image and colorbar presence match expectations
         if (
@@ -902,37 +972,38 @@ class LiveMapSubpanel(QFrame):
             and (self.cbar is not None) == want_colorbar
             and has_valid_grid
         ):
-            display_grid, norm, interp, xscale, yscale, aspect = self._resolve_2d_render_params(
-                grid, extent, vmin, vmax
-            )
-            self.img.set_data(display_grid)
-            self.img.set_extent(extent)
-            self.img.set_norm(norm)
-            self.img.set_interpolation(interp)
-            self.ax.set_aspect(aspect, adjustable="box")
-            self._apply_2d_axis_scales(extent, xscale, yscale, show_grid)
-            self.ax.set_title(title_text, fontsize=10, pad=4)
-            if self.cbar is not None:
-                self.cbar.update_normal(self.img)
-            self.canvas.draw_idle()
+            with plt.style.context(style_path):
+                display_grid, norm, interp, xscale, yscale, aspect = self._resolve_2d_render_params(
+                    grid, extent, vmin, vmax
+                )
+                self.img.set_data(display_grid)
+                self.img.set_extent(extent)
+                self.img.set_norm(norm)
+                self.img.set_interpolation(interp)
+                self.ax.set_aspect(aspect, adjustable="box")
+                self._apply_2d_axis_scales(extent, xscale, yscale, show_grid)
+                self.ax.set_title(title_text, fontsize=text_fs, pad=4)
+                if self.cbar is not None:
+                    self.cbar.update_normal(self.img)
+                self._apply_figure_theme(theme)
+                self._apply_text_sizes()
+                self.canvas.draw_idle()
             return
 
         # Re-render path for status messages, colorbar toggle, or first draw
-        is_dark = theme in ("Dark Mode", "dark", "classic_dark")
-        style_path = PLOT_POLICY_DARK if is_dark else PLOT_POLICY_LIGHT
-
         self._display_kind = "map"
         self._sync_palette_visibility()
 
         with plt.style.context(style_path):
             self._reset_axes()
+            self._apply_figure_theme(theme)
 
             if not has_valid_grid:
                 msg = status_msg or "No map data available"
                 self.ax.text(
                     0.5, 0.5, msg,
                     ha="center", va="center", transform=self.ax.transAxes,
-                    fontsize=10, color="gray", wrap=True
+                    fontsize=text_fs, color="gray", wrap=True
                 )
                 self.ax.set_xticks([])
                 self.ax.set_yticks([])
@@ -962,7 +1033,9 @@ class LiveMapSubpanel(QFrame):
             self._apply_2d_axis_scales(extent, xscale, yscale, show_grid)
             self.ax.set_xlabel("X (mm)")
             self.ax.set_ylabel("Y (mm)")
-            self.ax.set_title(title_text, fontsize=10, pad=4)
+            self.ax.set_title(title_text, fontsize=text_fs, pad=4)
+            self._apply_figure_theme(theme)
+            self._apply_text_sizes()
 
             self.canvas.draw_idle()
 
@@ -990,7 +1063,6 @@ class VLiveMaps(QWidget):
             SELECTOR_GREEN: (800.0, 1000.0),
         }
         self._2d_candidates: List[str] = []
-        self._legend_entries: List[Tuple[str, bool]] = []
         self._last_raw_entries: List[dict] = []
         self._context_status: str = ""
         self._view_options = _copy_view_options()
@@ -1011,31 +1083,13 @@ class VLiveMaps(QWidget):
         top_layout.setContentsMargins(0, 0, 0, 0)
         top_layout.setSpacing(6)
 
-        # ── Slim shared context header (multi-1D legend, 2D switcher, status) ──
+        # ── Slim shared context header (2D switcher and diagnostic/exclusion status) ──
         self.header_bar = QFrame(self.top_bar)
         self.header_bar.setObjectName("liveMapsContextHeader")
         self.header_bar.setFixedHeight(30)
         header_layout = QHBoxLayout(self.header_bar)
         header_layout.setContentsMargins(6, 2, 6, 2)
         header_layout.setSpacing(8)
-
-        # Multi-1D colored chip legend strip (scrollable horizontally if many profiles)
-        self.legend_scroll = QScrollArea(self.header_bar)
-        self.legend_scroll.setWidgetResizable(True)
-        self.legend_scroll.setFrameShape(QFrame.NoFrame)
-        self.legend_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.legend_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.legend_scroll.setFixedHeight(26)
-        self.legend_scroll.setStyleSheet("background: transparent;")
-
-        self.legend_container = QWidget(self.legend_scroll)
-        self.legend_layout = QHBoxLayout(self.legend_container)
-        self.legend_layout.setContentsMargins(0, 0, 0, 0)
-        self.legend_layout.setSpacing(6)
-        self.legend_layout.addStretch(1)
-        self.legend_scroll.setWidget(self.legend_container)
-        self.legend_scroll.setVisible(False)
-        header_layout.addWidget(self.legend_scroll, stretch=1)
 
         # Multi-2D candidate switcher: ◀ [ComboBox] ▶
         self.switcher_container = QWidget(self.header_bar)
@@ -1072,7 +1126,7 @@ class VLiveMaps(QWidget):
         self.lbl_context_status = QLabel("", self.header_bar)
         self.lbl_context_status.setStyleSheet("font-size: 11px; color: #b08840;")
         self.lbl_context_status.setVisible(False)
-        header_layout.addWidget(self.lbl_context_status, stretch=0)
+        header_layout.addWidget(self.lbl_context_status, stretch=1)
 
         self.header_bar.setVisible(False)
         top_layout.addWidget(self.header_bar, stretch=1)
@@ -1216,6 +1270,15 @@ class VLiveMaps(QWidget):
         )
         menu.addAction(self._wrap_menu_row(menu, "Dot size:", self.spb_dotsize))
 
+        self.spb_text_fontsize = QSpinBox(menu)
+        self.spb_text_fontsize.setRange(6, 24)
+        self.spb_text_fontsize.setSuffix(" pt")
+        self.spb_text_fontsize.setValue(self._view_options["text_fontsize"])
+        self.spb_text_fontsize.valueChanged.connect(
+            lambda val: self._update_option("text_fontsize", int(val))
+        )
+        menu.addAction(self._wrap_menu_row(menu, "Text size:", self.spb_text_fontsize))
+
         menu.addSeparator()
 
         # ── Legend options ──
@@ -1320,6 +1383,7 @@ class VLiveMaps(QWidget):
         widgets = (
             self.cbb_xscale, self.cbb_yscale, self.cbb_zscale,
             self.cbb_plot_style, self.spb_linewidth, self.spb_dotsize,
+            self.spb_text_fontsize,
             self.btn_legend, self.act_show_legend,
             self.cbb_legend_loc, self.spb_legend_ncol, self.spb_legend_fontsize,
             self.act_show_grid, self.act_share_y, self.act_smoothing, self.act_show_colorbar,
@@ -1335,6 +1399,7 @@ class VLiveMaps(QWidget):
             )
             self.spb_linewidth.setValue(float(opts["line_width"]))
             self.spb_dotsize.setValue(float(opts["dot_size"]))
+            self.spb_text_fontsize.setValue(int(opts["text_fontsize"]))
             self.btn_legend.setChecked(bool(opts["show_legend"]))
             self.act_show_legend.setChecked(bool(opts["show_legend"]))
             loc = opts["legend_loc"]
@@ -1358,16 +1423,12 @@ class VLiveMaps(QWidget):
         """Apply a partial or full view options dictionary and refresh visible panels."""
         self._view_options = _copy_view_options({**self._view_options, **(options or {})})
         self._sync_options_controls()
-        if self._last_raw_entries:
-            self._rebuild_legend_chips(self._last_raw_entries, force=True)
         self._apply_view_options_to_panels()
 
     def reset_view_options(self):
         """Reset all view options and custom legend labels/colors to defaults."""
         self._view_options = _copy_view_options()
         self._sync_options_controls()
-        if self._last_raw_entries:
-            self._rebuild_legend_chips(self._last_raw_entries, force=True)
         self._apply_view_options_to_panels()
 
     def _apply_view_options_to_panels(self):
@@ -1500,55 +1561,14 @@ class VLiveMaps(QWidget):
         """Show top options toolbar whenever selectors are active; show context header only when needed."""
         if any_active is None:
             any_active = any(self._active_states.values())
-        has_legend = len(self._legend_entries) >= 2
         has_switcher = len(self._2d_candidates) >= 2
         has_status = bool(self._context_status)
-        show_context_header = any_active and (has_legend or has_switcher or has_status)
-        self.legend_scroll.setVisible(has_legend)
+        show_context_header = any_active and (has_switcher or has_status)
         self.switcher_container.setVisible(has_switcher)
         self.lbl_context_status.setVisible(has_status)
         self.header_bar.setVisible(show_context_header)
         self._toolbar_spacer.setVisible(any_active and not show_context_header)
         self.top_bar.setVisible(any_active)
-
-    def _rebuild_legend_chips(self, entries: List[dict], force: bool = False):
-        """Populate compact colored legend chips matching multi-1D profile colors."""
-        self._last_raw_entries = list(entries) if entries else []
-        custom_labels = self._view_options.get("custom_labels", {})
-        custom_colors = self._view_options.get("custom_colors", {})
-        pairs = [
-            (
-                custom_labels.get(str(e.get("name", f"Map {i + 1}")))
-                or str(e.get("name", f"Map {i + 1}")),
-                bool(e.get("is_primary", False)),
-                custom_colors.get(str(e.get("name", f"Map {i + 1}")))
-                or DEFAULT_COLORS[i % len(DEFAULT_COLORS)],
-            )
-            for i, e in enumerate(self._last_raw_entries)
-        ]
-        if not force and pairs == self._legend_entries:
-            return
-        self._legend_entries = pairs
-
-        while self.legend_layout.count() > 0:
-            item = self.legend_layout.takeAt(0)
-            w = item.widget()
-            if w is not None:
-                w.deleteLater()
-
-        if len(pairs) >= 2:
-            for display_name, is_primary, color in pairs:
-                chip = QLabel(self.legend_container)
-                suffix = " (Primary)" if is_primary else ""
-                chip.setText(f"<span style='color:{color}; font-size:13px;'>●</span> {display_name}{suffix}")
-                weight = "bold" if is_primary else "normal"
-                chip.setStyleSheet(
-                    f"font-size: 11px; font-weight: {weight}; "
-                    f"padding: 1px 6px; border-radius: 3px; "
-                    f"background: rgba(128, 128, 128, 0.10);"
-                )
-                self.legend_layout.addWidget(chip)
-        self.legend_layout.addStretch(1)
 
     def _on_2d_combo_changed(self, name: str):
         if name:
@@ -1602,9 +1622,7 @@ class VLiveMaps(QWidget):
         status_msg: str = "",
     ):
         """Forward calculated 2D grid data to matching subpanel."""
-        if self._legend_entries:
-            self._rebuild_legend_chips([])
-            self._update_header_visibility()
+        self._last_raw_entries = []
         panel = self.panels.get(color_id)
         if panel:
             panel.update_map(grid, extent, vmin, vmax, status_msg, theme=self._current_theme)
@@ -1617,9 +1635,7 @@ class VLiveMaps(QWidget):
         status_msg: str = "",
     ):
         """Forward calculated 1D parameter series data to matching subpanel."""
-        if self._legend_entries:
-            self._rebuild_legend_chips([])
-            self._update_header_visibility()
+        self._last_raw_entries = []
         panel = self.panels.get(color_id)
         if panel:
             panel.update_series(values, labels, status_msg, theme=self._current_theme)
@@ -1634,9 +1650,7 @@ class VLiveMaps(QWidget):
         status_msg: str = "",
     ):
         """Forward a single 1D profile (values along the profile axis) to the matching subpanel."""
-        if self._legend_entries:
-            self._rebuild_legend_chips([])
-            self._update_header_visibility()
+        self._last_raw_entries = []
         panel = self.panels.get(color_id)
         if panel:
             panel.update_series(
@@ -1653,8 +1667,8 @@ class VLiveMaps(QWidget):
         shared_x_label: str = "X",
         status_msg: str = "",
     ):
-        """Forward stacked multi-1D profile entries and refresh shared color legend."""
-        self._rebuild_legend_chips(entries)
+        """Forward stacked multi-1D profile entries and update status."""
+        self._last_raw_entries = list(entries) if entries else []
         if status_msg and status_msg != "OK":
             self._context_status = status_msg
             self.lbl_context_status.setText(self._context_status)
@@ -1668,8 +1682,7 @@ class VLiveMaps(QWidget):
         self._sync_shared_y()
 
     def clear_all(self):
-        """Clear all subpanel artists, legend chips, 2D candidate switcher, and status."""
-        self._rebuild_legend_chips([])
+        """Clear all subpanel artists, 2D candidate switcher, and status."""
         self._last_raw_entries = []
         self._2d_candidates = []
         self._context_status = ""
@@ -1691,6 +1704,8 @@ class VLiveMaps(QWidget):
         self.btn_options.setIcon(Icons.settings(color=icon_color))
         for panel in self.panels.values():
             panel.btn_copy.setIcon(Icons.copy(color=icon_color))
+            panel._current_theme = theme_name
+            panel._apply_figure_theme(theme_name)
             panel.set_view_options(self._view_options, redraw=False)
             panel.img = None
             panel.lines.clear()

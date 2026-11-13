@@ -1,6 +1,7 @@
 """Unit tests for VLiveMaps and LiveMapSubpanel."""
 
 import numpy as np
+import pytest
 from matplotlib.colors import LogNorm
 
 from spectroview.model.spectral_parameters import (
@@ -274,7 +275,7 @@ def test_v_live_maps_multi_profile_legend_theme_and_fast_path(qapp):
     ymin, ymax = panel.ax.get_ylim()
     assert np.isfinite(ymin) and np.isfinite(ymax)
     assert live_maps.header_bar.isVisible() is True
-    assert live_maps.legend_scroll.isVisible() is True
+    assert not hasattr(live_maps, "legend_scroll")
     assert "Excluded 2D" in live_maps.lbl_context_status.text()
 
     # Fast path reuses Line2D objects in-place on value change
@@ -455,7 +456,6 @@ def test_v_live_maps_share_y_and_legend_customization(qapp, monkeypatch):
 
     texts = [t.get_text() for t in panel_r._legend.get_texts()]
     assert "Sample Alpha" in texts
-    assert live_maps._legend_entries[0][0] == "Sample Alpha"
     assert live_maps.get_view_options()["custom_colors"].get("p1") is not None
 
     # Double-clicking inside rendered legend box emits legend_edit_requested
@@ -472,4 +472,77 @@ def test_v_live_maps_share_y_and_legend_customization(qapp, monkeypatch):
     # Toggle legend off hides canvas legend box cleanly
     live_maps.btn_legend.click()
     assert panel_r._legend is None
+
+
+def test_v_live_maps_dark_theme_legend_contrast_and_text_size(qapp):
+    """Dark mode paints non-white canvas + readable legend text; text_fontsize scales 1D and 2D fonts."""
+    from matplotlib import colors as mcolors
+
+    live_maps = VLiveMaps(mode="map")
+    live_maps.show()
+    live_maps.set_selector_active(SELECTOR_RED, True)
+    panel = live_maps.panels[SELECTOR_RED]
+
+    # Crisp 96 DPI baseline & default 10 pt text size
+    assert panel.figure.get_dpi() == 96
+    assert live_maps.spb_text_fontsize.value() == 10
+
+    entries = [
+        {"name": "p1", "positions": np.array([0.0, 1.0, 2.0]), "values": np.array([10.0, 20.0, 30.0]), "is_primary": True, "axis_label": "X", "out_of_range": False, "msg": "OK"},
+        {"name": "p2", "positions": np.array([0.0, 1.0, 2.0]), "values": np.array([15.0, 25.0, 35.0]), "is_primary": False, "axis_label": "X", "out_of_range": False, "msg": "OK"},
+    ]
+    live_maps.update_multi_profile_data(SELECTOR_RED, entries, shared_x_label="X", status_msg="OK")
+    live_maps.btn_legend.click()
+    assert panel._legend is not None
+
+    # Switch to Modern Dark: figure/axes must NOT remain white, and legend text must be white on dark frame
+    live_maps.apply_theme("dark")
+    panel.canvas.draw()
+    fig_rgb = mcolors.to_rgb(panel.figure.get_facecolor())
+    ax_rgb = mcolors.to_rgb(panel.ax.get_facecolor())
+    assert max(fig_rgb) < 0.3
+    assert max(ax_rgb) < 0.3
+    assert panel._legend is not None
+    assert mcolors.to_rgb(panel._legend.get_texts()[0].get_color()) == pytest.approx((1.0, 1.0, 1.0))
+    frame_rgb = mcolors.to_rgb(panel._legend.get_frame().get_facecolor())
+    assert max(frame_rgb) < 0.35
+
+    # Fast-path legend toggle off -> on in dark mode must preserve high-contrast colors
+    live_maps.btn_legend.click()
+    assert panel._legend is None
+    live_maps.btn_legend.click()
+    assert panel._legend is not None
+    assert mcolors.to_rgb(panel._legend.get_texts()[0].get_color()) == pytest.approx((1.0, 1.0, 1.0))
+
+    # Fast-path value update in dark mode must keep dark background and white legend text
+    entries2 = [dict(e) for e in entries]
+    entries2[0]["values"] = np.array([11.0, 22.0, 33.0])
+    live_maps.update_multi_profile_data(SELECTOR_RED, entries2, shared_x_label="X", status_msg="OK")
+    assert max(mcolors.to_rgb(panel.ax.get_facecolor())) < 0.3
+    assert mcolors.to_rgb(panel._legend.get_texts()[0].get_color()) == pytest.approx((1.0, 1.0, 1.0))
+
+    # Light theme sets dark legend text on light frame
+    live_maps.apply_theme("light")
+    assert mcolors.to_rgb(panel._legend.get_texts()[0].get_color()) == pytest.approx(mcolors.to_rgb("#111111"))
+    assert min(mcolors.to_rgb(panel._legend.get_frame().get_facecolor())) > 0.9
+
+    # Adjusting Text size scales 1D labels, title, and tick labels
+    live_maps.spb_text_fontsize.setValue(15)
+    assert panel.ax.title.get_fontsize() == pytest.approx(15.0)
+    assert panel.ax.xaxis.label.get_fontsize() == pytest.approx(15.0)
+    assert panel.ax.yaxis.label.get_fontsize() == pytest.approx(15.0)
+    assert panel.ax.get_xticklabels()[0].get_fontsize() == pytest.approx(14.0)
+
+    # Adjusting Text size also scales 2D heatmap title/labels and colorbar ticks
+    grid = np.arange(9, dtype=float).reshape(3, 3)
+    live_maps.update_map_data(SELECTOR_RED, grid, [0.0, 2.0, 0.0, 2.0], 0.0, 8.0, "OK")
+    assert panel.ax.title.get_fontsize() == pytest.approx(15.0)
+    assert panel.ax.xaxis.label.get_fontsize() == pytest.approx(15.0)
+    assert panel.cbar is not None
+    assert panel.cbar.ax.get_yticklabels()[0].get_fontsize() == pytest.approx(14.0)
+
+    # Reset restores 10 pt default
+    live_maps.reset_view_options()
+    assert live_maps.spb_text_fontsize.value() == 10
+    assert panel.ax.title.get_fontsize() == pytest.approx(10.0)
 

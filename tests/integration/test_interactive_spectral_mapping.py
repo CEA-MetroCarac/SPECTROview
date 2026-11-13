@@ -267,7 +267,7 @@ def test_maps_workspace_multi_selection_gating_and_batch_delete(qapp, test_map_d
         red_panel = ws.v_live_maps.panels[SELECTOR_RED]
         assert len(red_panel.lines) == 2
         assert red_panel.img is None
-        assert ws.v_live_maps.legend_scroll.isVisible() is True
+        assert ws.v_live_maps.header_bar.isVisible() is True
         assert test_map_data.name in ws.v_live_maps.lbl_context_status.text()
 
         # 2. Clicking a point in VMapViewer causes ZERO Live Maps recomputation

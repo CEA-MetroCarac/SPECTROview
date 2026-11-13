@@ -188,7 +188,7 @@ Each button activates a corresponding pair of draggable vertical markers (bracke
 - **Auto-Clamping**: When cropping or loading new spectral data, range selectors automatically clamp and reposition within the visible spectrum domain.
 - **Real-Time Updating**: Moving any selector or changing the selected spectra/maps immediately recalculates and updates the corresponding 1D variation graph (in the **Spectra Workspace**) or 2D spatial heatmap / 1D profile plot (in the **Maps Workspace**) whenever the **Live Maps** tab is open (with an adaptive 60–250 ms debounce to keep dragging smooth on large datasets). Unchecked spectra in the active map or spectrum list are automatically masked out so masked outliers never bias colorscales or profiles.
 - **Multi-Map Selection & Comparison (Maps Workspace)**: Use `Ctrl+Click` or `Shift+Click` in the **Maps** list to select multiple maps simultaneously while keeping your **Primary Map** active for preprocessing, fitting, and the `MapViewer`:
-  - **Comparing Multiple 1D Profiles**: When the Primary map is a 1D line scan, all selected 1D profiles are overlaid together inside each channel subpanel with a shared color legend in the tab header (and the Primary curve highlighted with thicker stroke).
+  - **Comparing Multiple 1D Profiles**: When the Primary map is a 1D line scan, all selected 1D profiles are overlaid together inside each channel subpanel (with the Primary curve highlighted with thicker stroke; toggle the **Legend** button to identify individual curves on the canvas).
   - **Switching Between Selected 2D Maps**: When the Primary map is a 2D map, a compact `◀ [2D Map Selector] ▶` switcher appears in the Live Maps header so you can cycle through selected 2D heatmaps without losing your selection.
   - **Batch Deletion**: Pressing **Delete** while multiple maps are selected prompts for confirmation before removing all selected maps together.
 
@@ -225,8 +225,8 @@ Whenever one or more selectors are active, two quick controls appear in the top-
 - **Show / Hide Legend (`btn_legend`)**: Toggles interactive canvas legends across 1D subpanels. You can drag inside legends directly with the mouse, or double-click a canvas legend box to customize its labels and colors.
 - **More View Options (`⋯`)**: Opens a compact menu matching `SpectraViewer`:
   - **Axis & Color Scales**: Toggle **X-scale**, **Y-scale**, and **Color (Z) scale** between **Linear** and **Log** (non-positive domains automatically fall back safely).
-  - **Plot Style & Sizing**: Switch 1D curves between **Line + Dots**, **Line**, and **Dot**, and tune **Line width** and **Dot size**.
-  - **Legend Box Settings**: Toggle legend visibility, change **Legend location** (`best`, corners, `outside right`, `outside top`), **Legend columns**, **Legend font size**, or open **Edit legend labels...** to rename series labels and pick custom colors (automatically synchronized with multi-profile header chips).
+  - **Plot Style & Sizing**: Switch 1D curves between **Line + Dots**, **Line**, and **Dot**, and tune **Line width**, **Dot size**, and graph **Text size** (`6–24 pt`, scaling axis titles, labels, ticks, and colorbar labels).
+  - **Legend Box Settings**: Toggle legend visibility, change **Legend location** (`best`, corners, `outside right`, `outside top`), **Legend columns**, **Legend font size**, or open **Edit legend labels...** to rename series labels and pick custom colors directly on the canvas legend box.
   - **Display & Comparison Aids**: Toggle **Show grid**, synchronize Y-limits across panels with **Share Y-axis (1D)**, enable bilinear **Heatmap smoothing**, show/hide **Colorbars**, or **Reset view options**.
 
 _______

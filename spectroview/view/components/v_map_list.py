@@ -22,9 +22,113 @@ class VMapsList(QWidget):
     ``maps_selection_changed(selected_names, primary_name)``.
     """
 
+    class _ReorderableMapsList(QListWidget):
+        """QListWidget supporting internal drag-and-drop reordering while ignoring external URLs."""
+
+        order_changed = Signal(list)       # New model index order after internal drop
+        drop_completed = Signal()          # Emitted after internal drop so item lookup stays fresh
+
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+            self.setDragDropMode(QAbstractItemView.InternalMove)
+            self.setAcceptDrops(True)
+            self.setDefaultDropAction(Qt.MoveAction)
+            self._order_before_drag: list[int] = []
+
+        def dragEnterEvent(self, event):
+            mime = event.mimeData()
+            if mime is not None and mime.hasUrls():
+                event.ignore()
+            else:
+                super().dragEnterEvent(event)
+
+        def dragMoveEvent(self, event):
+            mime = event.mimeData()
+            if mime is not None and mime.hasUrls():
+                event.ignore()
+            else:
+                super().dragMoveEvent(event)
+
+        def dropEvent(self, event):
+            # External files dropped - ignore them so they propagate to parent
+            mime = event.mimeData()
+            if mime is not None and mime.hasUrls():
+                event.ignore()
+                return
+
+            selected_names = [
+                item.text()
+                for item in self.selectedItems()
+                if bool(item.flags() & Qt.ItemIsSelectable)
+            ]
+            current = self.currentItem()
+            primary_name = (
+                current.text()
+                if current is not None and bool(current.flags() & Qt.ItemIsSelectable)
+                else None
+            )
+
+            was_blocked = self.blockSignals(True)
+            try:
+                # Internal reorder
+                super().dropEvent(event)
+                self._restore_selection_by_name(selected_names, primary_name)
+            finally:
+                self.blockSignals(was_blocked)
+
+            self.drop_completed.emit()
+            order_after = self._current_order()
+            if (
+                order_after != self._order_before_drag
+                and len(order_after) == len(self._order_before_drag)
+            ):
+                self.order_changed.emit(order_after)
+
+        def startDrag(self, supportedActions):
+            self._order_before_drag = self._current_order()
+            super().startDrag(supportedActions)
+
+        def _current_order(self) -> list[int]:
+            """Return model indices in current visual order."""
+            order = []
+            for row in range(self.count()):
+                item = self.item(row)
+                if item is None or not bool(item.flags() & Qt.ItemIsSelectable):
+                    continue
+                idx = item.data(Qt.UserRole)
+                if idx is not None:
+                    order.append(idx)
+            return order
+
+        def _restore_selection_by_name(
+            self, selected_names: list[str], primary_name: Optional[str]
+        ):
+            """Restore selected items and current focus item by map name after drop."""
+            selected_set = set(selected_names)
+            primary_row = None
+            self.clearSelection()
+            for row in range(self.count()):
+                item = self.item(row)
+                if item is None or not bool(item.flags() & Qt.ItemIsSelectable):
+                    continue
+                name = item.text()
+                if name in selected_set:
+                    item.setSelected(True)
+                if primary_name is not None and name == primary_name:
+                    primary_row = row
+
+            if primary_row is not None:
+                sm = self.selectionModel()
+                sm.setCurrentIndex(
+                    self.model().index(primary_row, 0),
+                    sm.SelectionFlag.NoUpdate,
+                )
+
     # ═══ View → ViewModel signals ═══
     map_selection_changed = Signal(int)               # Focused/primary map index
     maps_selection_changed = Signal(list, object)     # (selected_names, primary_name)
+    maps_order_changed = Signal(list)                 # New order of map indices after drag-drop
     view_map_requested = Signal()                     # View map DataFrame
     delete_map_requested = Signal()                   # Delete selected map(s)
     save_requested = Signal()                         # Save map to Excel / CSV
@@ -74,11 +178,12 @@ class VMapsList(QWidget):
         maps_container = QHBoxLayout()
         maps_container.setSpacing(4)
         
-        # Left: Maps list (occupies remaining height; Ctrl/Shift multi-select supported)
-        self.maps_list = QListWidget()
-        self.maps_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        # Left: Maps list (Ctrl/Shift multi-select + internal drag-and-drop reorder)
+        self.maps_list = self._ReorderableMapsList(self)
         self.maps_list.setMinimumHeight(80)
         self.maps_list.itemSelectionChanged.connect(self._on_map_selected)
+        self.maps_list.drop_completed.connect(self._sync_items_cache)
+        self.maps_list.order_changed.connect(self.maps_order_changed.emit)
         maps_container.addWidget(self.maps_list, stretch=1)
         
         # Right: Action buttons vertical strip (Spectra actions on top, Maps actions below)
@@ -231,6 +336,18 @@ class VMapsList(QWidget):
 
         selected_names, primary_name, _ = self._resolve_selection()
         self._last_emitted_selection = (tuple(selected_names), primary_name)
+
+    def _sync_items_cache(self):
+        """Rebuild the name-to-item lookup after internal Qt drag-and-drop."""
+        if self._has_maps_placeholder:
+            self._items_by_name.clear()
+            return
+        items_by_name: dict[str, QListWidgetItem] = {}
+        for row in range(self.maps_list.count()):
+            item = self.maps_list.item(row)
+            if item is not None and bool(item.flags() & Qt.ItemIsSelectable):
+                items_by_name[item.text()] = item
+        self._items_by_name = items_by_name
 
     def get_selected_map_index(self) -> int:
         """Return currently focused/primary selected map index, or -1 if none."""

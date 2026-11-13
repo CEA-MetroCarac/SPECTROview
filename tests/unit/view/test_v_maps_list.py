@@ -236,3 +236,243 @@ class TestVWorkspaceMapsHeatmapSelection:
         assert v.get_selected_map_names() == ["map_A", "map_C"]
         assert v.get_primary_map_name() == "map_C"
         assert v.maps_list.item(0).flags() & Qt.ItemIsSelectable
+
+
+def _simulate_qlistwidget_internal_drop(list_widget, new_row_indices: list[int]):
+    """Build a side-effect for QListWidget.dropEvent mirroring Qt InternalMove."""
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QListWidgetItem
+
+    def _apply(_self, _event):
+        snapshots = []
+        for idx in new_row_indices:
+            src = list_widget.item(idx)
+            snapshots.append((src.text(), src.data(Qt.UserRole), src.flags()))
+        list_widget.clear()
+        for text, role, flags in snapshots:
+            new_item = QListWidgetItem(text)
+            new_item.setData(Qt.UserRole, role)
+            new_item.setFlags(flags)
+            list_widget.addItem(new_item)
+
+    return _apply
+
+
+class TestVMapsListDragDropReorder:
+    """Unit tests for internal drag-and-drop map reordering inside VMapsList."""
+
+    def test_maps_list_drag_drop_configuration(self, qapp):
+        from PySide6.QtCore import Qt
+        from PySide6.QtWidgets import QAbstractItemView
+        from spectroview.view.components.v_map_list import VMapsList
+
+        widget = VMapsList()
+        assert widget.maps_list.selectionMode() == QAbstractItemView.ExtendedSelection
+        assert widget.maps_list.dragDropMode() == QAbstractItemView.InternalMove
+        assert widget.maps_list.acceptDrops() is True
+        assert widget.maps_list.defaultDropAction() == Qt.MoveAction
+
+    def test_empty_placeholder_is_not_draggable_and_items_are_draggable(self, qapp):
+        from PySide6.QtCore import Qt
+        from spectroview.view.components.v_map_list import VMapsList
+
+        widget = VMapsList()
+        placeholder = widget.maps_list.item(0)
+        assert not bool(placeholder.flags() & Qt.ItemIsSelectable)
+        assert not bool(placeholder.flags() & Qt.ItemIsDragEnabled)
+
+        widget.set_maps_names(["map_a", "map_b"])
+        for row in range(2):
+            item = widget.maps_list.item(row)
+            assert bool(item.flags() & Qt.ItemIsSelectable)
+            assert bool(item.flags() & Qt.ItemIsDragEnabled)
+            assert item.data(Qt.UserRole) == row
+
+    def test_external_url_drag_drop_ignored(self, qapp):
+        from PySide6.QtCore import QMimeData, QPoint, QPointF, QUrl, Qt
+        from PySide6.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
+        from spectroview.view.components.v_map_list import VMapsList
+
+        widget = VMapsList()
+        widget.set_maps_names(["map_a", "map_b"])
+        reorders = []
+        widget.maps_order_changed.connect(reorders.append)
+
+        mime = QMimeData()
+        mime.setUrls([QUrl.fromLocalFile("C:/tmp/external_map.txt")])
+
+        enter_ev = QDragEnterEvent(QPoint(10, 10), Qt.CopyAction, mime, Qt.LeftButton, Qt.NoModifier)
+        move_ev = QDragMoveEvent(QPoint(10, 10), Qt.CopyAction, mime, Qt.LeftButton, Qt.NoModifier)
+        drop_ev = QDropEvent(QPointF(10, 10), Qt.CopyAction, mime, Qt.LeftButton, Qt.NoModifier)
+
+        widget.maps_list.dragEnterEvent(enter_ev)
+        widget.maps_list.dragMoveEvent(move_ev)
+        widget.maps_list.dropEvent(drop_ev)
+
+        assert not enter_ev.isAccepted()
+        assert not move_ev.isAccepted()
+        assert not drop_ev.isAccepted()
+        assert reorders == []
+
+    def test_internal_drop_reorders_and_preserves_selection_and_primary(self, qapp):
+        from unittest.mock import patch
+        from PySide6.QtCore import QMimeData, QPointF, Qt
+        from PySide6.QtGui import QDropEvent
+        from PySide6.QtWidgets import QAbstractItemView, QListWidget
+        from spectroview.view.components.v_map_list import VMapsList
+
+        widget = VMapsList()
+        widget.set_maps_names(["m0", "m1", "m2"])
+        widget.set_selected_maps(["m0"], primary_name="m0")
+
+        reorders = []
+        selection_events = []
+        widget.maps_order_changed.connect(reorders.append)
+        widget.maps_selection_changed.connect(lambda names, pri: selection_events.append((names, pri)))
+
+        with patch.object(QAbstractItemView, "startDrag"):
+            widget.maps_list.startDrag(Qt.MoveAction)
+
+        mime = QMimeData()
+        drop_ev = QDropEvent(QPointF(10, 40), Qt.MoveAction, mime, Qt.LeftButton, Qt.NoModifier)
+        with patch.object(
+            QListWidget,
+            "dropEvent",
+            new=_simulate_qlistwidget_internal_drop(widget.maps_list, [1, 2, 0]),
+        ):
+            widget.maps_list.dropEvent(drop_ev)
+
+        assert reorders == [[1, 2, 0]]
+        assert selection_events == []
+        assert widget.get_selected_map_names() == ["m0"]
+        assert widget.get_primary_map_name() == "m0"
+        assert [widget.maps_list.item(i).text() for i in range(3)] == ["m1", "m2", "m0"]
+        # Lookup cache points to the newly created live QListWidgetItem instances.
+        assert widget._items_by_name["m0"] is widget.maps_list.item(2)
+
+    def test_internal_drop_multi_selection_preserves_selected_set_and_primary(self, qapp):
+        from unittest.mock import patch
+        from PySide6.QtCore import QMimeData, QPointF, Qt
+        from PySide6.QtGui import QDropEvent
+        from PySide6.QtWidgets import QAbstractItemView, QListWidget
+        from spectroview.view.components.v_map_list import VMapsList
+
+        widget = VMapsList()
+        widget.set_maps_names(["m0", "m1", "m2", "m3"])
+        widget.set_selected_maps(["m0", "m2"], primary_name="m2")
+
+        reorders = []
+        widget.maps_order_changed.connect(reorders.append)
+
+        with patch.object(QAbstractItemView, "startDrag"):
+            widget.maps_list.startDrag(Qt.MoveAction)
+
+        mime = QMimeData()
+        drop_ev = QDropEvent(QPointF(10, 60), Qt.MoveAction, mime, Qt.LeftButton, Qt.NoModifier)
+        with patch.object(
+            QListWidget,
+            "dropEvent",
+            new=_simulate_qlistwidget_internal_drop(widget.maps_list, [1, 3, 0, 2]),
+        ):
+            widget.maps_list.dropEvent(drop_ev)
+
+        assert reorders == [[1, 3, 0, 2]]
+        assert widget.get_selected_map_names() == ["m0", "m2"]
+        assert widget.get_primary_map_name() == "m2"
+
+    def test_internal_drop_same_order_does_not_emit(self, qapp):
+        from unittest.mock import patch
+        from PySide6.QtCore import QMimeData, QPointF, Qt
+        from PySide6.QtGui import QDropEvent
+        from PySide6.QtWidgets import QAbstractItemView, QListWidget
+        from spectroview.view.components.v_map_list import VMapsList
+
+        widget = VMapsList()
+        widget.set_maps_names(["m0", "m1", "m2"])
+        widget.set_selected_maps(["m1"], primary_name="m1")
+
+        reorders = []
+        widget.maps_order_changed.connect(reorders.append)
+
+        with patch.object(QAbstractItemView, "startDrag"):
+            widget.maps_list.startDrag(Qt.MoveAction)
+
+        mime = QMimeData()
+        drop_ev = QDropEvent(QPointF(10, 10), Qt.MoveAction, mime, Qt.LeftButton, Qt.NoModifier)
+        with patch.object(
+            QListWidget,
+            "dropEvent",
+            new=_simulate_qlistwidget_internal_drop(widget.maps_list, [0, 1, 2]),
+        ):
+            widget.maps_list.dropEvent(drop_ev)
+
+        assert reorders == []
+        assert widget._items_by_name["m1"] is widget.maps_list.item(1)
+
+
+class TestVWorkspaceMapsReorderIntegration:
+    """Integration tests connecting VMapsList reorder to VMWorkspaceMaps and SpectraStore."""
+
+    def _load_three_maps(self, workspace, map_2d_file, tmp_path):
+        import shutil
+
+        paths = []
+        for name in ("map_A", "map_B", "map_C"):
+            dst = tmp_path / f"{name}{map_2d_file.suffix}"
+            shutil.copy(map_2d_file, dst)
+            paths.append(str(dst))
+        workspace.vm.load_map_files(paths)
+
+    def test_reorder_updates_view_viewmodel_store_and_live_maps(
+        self, qapp, settings, map_2d_file, tmp_path
+    ):
+        from PySide6.QtCore import Qt
+        from spectroview.view.v_workspace_maps import VWorkspaceMaps
+
+        ws = VWorkspaceMaps()
+        self._load_three_maps(ws, map_2d_file, tmp_path)
+
+        ws.v_maps_list.set_selected_maps(["map_A", "map_C"], primary_name="map_A")
+        ws._on_maps_selection_changed(["map_A", "map_C"], "map_A")
+
+        live_signals = []
+        map_updates = []
+        ws.vm.live_maps_selection_changed.connect(
+            lambda names, pri: live_signals.append((list(names), pri))
+        )
+        ws.vm.map_data_updated.connect(map_updates.append)
+
+        ws.v_maps_list.maps_order_changed.emit([2, 0, 1])
+
+        expected = ["map_C", "map_A", "map_B"]
+        assert list(ws.vm.maps.keys()) == expected
+        assert ws.vm.store.map_names == expected
+        assert [ws.v_maps_list.maps_list.item(i).text() for i in range(3)] == expected
+        assert [
+            ws.v_maps_list.maps_list.item(i).data(Qt.UserRole) for i in range(3)
+        ] == [0, 1, 2]
+        assert ws.vm.current_map_name == "map_A"
+        assert ws.v_maps_list.get_primary_map_name() == "map_A"
+        assert ws.vm.selected_map_names == ["map_C", "map_A"]
+        assert ws.v_maps_list.get_selected_map_names() == ["map_C", "map_A"]
+        assert live_signals == [(["map_C", "map_A"], "map_A")]
+        assert map_updates == []
+
+    def test_reorder_maps_ignores_invalid_or_identity_orders(
+        self, qapp, settings, map_2d_file, tmp_path
+    ):
+        import shutil
+        from spectroview.view.v_workspace_maps import VWorkspaceMaps
+
+        ws = VWorkspaceMaps()
+        paths = []
+        for name in ("map_A", "map_B"):
+            dst = tmp_path / f"{name}{map_2d_file.suffix}"
+            shutil.copy(map_2d_file, dst)
+            paths.append(str(dst))
+        ws.vm.load_map_files(paths)
+
+        for bad_order in ([0, 1], [0], [0, 0], [0, 5], [-1, 1]):
+            ws.vm.reorder_maps(bad_order)
+            assert list(ws.vm.maps.keys()) == ["map_A", "map_B"]
+            assert ws.vm.store.map_names == ["map_A", "map_B"]

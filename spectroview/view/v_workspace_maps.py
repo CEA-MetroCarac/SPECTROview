@@ -189,6 +189,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         """Connect Maps-specific signals between View and ViewModel."""
         # ── VMapsList → ViewModel connections ──
         self.v_maps_list.maps_selection_changed.connect(self._on_maps_selection_changed)
+        self.v_maps_list.maps_order_changed.connect(self.vm.reorder_maps)
 
         # ── VMapsList button connections ──
         self.v_maps_list.view_map_requested.connect(self._on_view_map_requested)

@@ -15,7 +15,7 @@ _______
 
 The action buttons located beside the `MapList` allow you to: (1) view the selected map data, (2) delete the selected map from the workspace, or (3) export the selected map directly to an Excel file.
 
-You can easily navigate between loaded 2D maps using the `MapList`. The selected map is rendered in the `MapViewer`. When opening or selecting a map, **the first spectrum in the map is automatically selected** and highlighted on the heatmap plot, immediately rendering its curve in `SpectraViewer` and synchronizing the baseline, peak table, and metadata. By default, the `MapViewer` displays a heatmap of signal "Intensity" or "Area". If the map has been fitted, you can select and visualize the heatmap of any fitted parameter.
+You can easily navigate between loaded 2D maps using the `MapList`, select multiple maps with `Ctrl+Click` or `Shift+Click`, and **drag and drop** one or more selected maps within the list to reorder them (updating Live Maps comparison order while keeping your active Primary map unchanged). The Primary selected map is rendered in the `MapViewer`. When opening or selecting a map, **the first spectrum in the map is automatically selected** and highlighted on the heatmap plot, immediately rendering its curve in `SpectraViewer` and synchronizing the baseline, peak table, and metadata. By default, the `MapViewer` displays a heatmap of signal "Intensity" or "Area". If the map has been fitted, you can select and visualize the heatmap of any fitted parameter.
 
 <div align="center">
   <img src="../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Switching Maps" width="350"><br>

@@ -669,6 +669,33 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         map_names = list(self.maps.keys())
         self.maps_list_changed.emit(map_names)
 
+    def reorder_maps(self, new_order: list[int]):
+        """Reorder loaded maps according to a visual index permutation."""
+        keys = list(self.maps.keys())
+        if len(new_order) != len(keys) or sorted(new_order) != list(range(len(keys))):
+            return
+        if new_order == list(range(len(keys))):
+            return
+
+        ordered_names = [keys[idx] for idx in new_order]
+        self.maps = {name: self.maps[name] for name in ordered_names}
+
+        store_names = self.store.map_names
+        if store_names == keys:
+            self.store.reorder_maps(new_order)
+        elif len(store_names) == len(ordered_names) and set(store_names) == set(ordered_names):
+            store_index = {name: i for i, name in enumerate(store_names)}
+            self.store.reorder_maps([store_index[name] for name in ordered_names])
+
+        selected_set = set(self.selected_map_names)
+        self.selected_map_names = [name for name in ordered_names if name in selected_set]
+
+        self._emit_maps_list_update()
+        if self.selected_map_names or self.current_map_name:
+            self.live_maps_selection_changed.emit(
+                list(self.selected_map_names), self.current_map_name
+            )
+
 
     def _extract_coords_for_spectra(self, spectra):
         """Extract (X, Y) spatial coordinates for a list of map spectra.

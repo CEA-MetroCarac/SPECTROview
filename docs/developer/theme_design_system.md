@@ -1,6 +1,6 @@
 # **SPECTROview Theme & Design System Architecture**
 
-This specification defines the design system, color tokens, typography, component geometry, native OS integration, and vector SVG icon engine for **SPECTROview**. The architecture is adapted directly from the production-proven design system in **PLUME** (`C:\Users\VL251876\Documents\Python\PLUME_perso`), specifically auditing commits `4af3dbb` and `8242faf`.
+This specification defines the design system, color tokens, typography, component geometry, native OS integration, and vector SVG icon engine for **SPECTROview**. The architecture is adapted from the production-proven design system in **PLUME** (commits `4af3dbb` and `8242faf`).
 
 ---
 
@@ -24,11 +24,11 @@ The SPECTROview UI/UX redesign upgrades the application from legacy rasterized i
 
 2. **`8242faf` — Refined Contrast, 3-Tier Hierarchy & Compact Control Geometry**:
    - **3-Tier Surface Depth**:
-     - *Tier 0 (Rail / Root Navigation)*: `rail_bg` (`#0E0F14` Dark / `#E2E5EE` Light)
-     - *Tier 1 (Sidebars / File Trees)*: `sidebar_bg` (`#13151B` Dark / `#EBEEF4` Light)
-     - *Tier 2 (Main Workspace Canvas)*: `background` (`#181A20` Dark / `#F3F4F8` Light)
-     - *Tier 3 (Cards / Floating Panels / Toolboxes)*: `surface` (`#20232C` Dark / `#FFFFFF` Light), `surface_elevated` (`#282C37` Dark / `#FFFFFF` Light)
-     - *Sunken (Terminals / Data Tables / Logs)*: `surface_sunken` (`#12141A` Dark / `#E8EBF2` Light)
+     - *Tier 0 (Rail / Root Navigation)*: `rail_bg` (`#111111` Dark / `#E2E5EE` Light)
+     - *Tier 1 (Sidebars / File Trees)*: `sidebar_bg` (`#161616` Dark / `#EBEEF4` Light)
+     - *Tier 2 (Main Workspace Canvas)*: `background` (`#1B1B1B` Dark / `#F3F4F8` Light)
+     - *Tier 3 (Cards / Floating Panels / Toolboxes)*: `surface` (`#232323` Dark / `#FFFFFF` Light), `surface_elevated` (`#2C2C2C` Dark / `#FFFFFF` Light)
+     - *Sunken (Terminals / Data Tables / Logs)*: `surface_sunken` (`#141414` Dark / `#E8EBF2` Light)
    - **Strengthened Input & Panel Borders**: Introduced dedicated `input_bg`, `input_border`, and `border_strong` tokens to guarantee readable contrast between active fields and surrounding containers.
    - **Compact Control Heights**: Standardized single-line inputs (`QLineEdit`, `QComboBox`, `QSpinBox`, `QDoubleSpinBox`) to `min-height: 18px; max-height: 22px; padding: 1px 8px; font-size: 12px` (outer bounding height ~25px), preserving valuable screen real estate for spectral plots and 2D wafer maps.
    - **18px Spinbox Controls**: Replaced native OS spinners with custom 18px subcontrols utilizing dedicated SVG vector chevrons (`chevron_up_{dark,light}.svg`, `chevron_down_{dark,light}.svg`).
@@ -54,7 +54,7 @@ flowchart TD
 ```
 
 ### 1. Modern Dark (`"dark"`) — Default Flagship
-- **Surfaces**: High-contrast layered slate/charcoal tones (`#181A20` canvas, `#13151B` sidebars, `#20232C` cards).
+- **Surfaces**: Neutral layered charcoal tones (`#1B1B1B` canvas, `#161616` sidebars, `#232323` cards).
 - **Accents**: Electric cobalt (`#5B8CFF`), subtle selection tint (`rgba(91, 140, 255, 68)`).
 - **Styling**: Complete global QSS, 6px control radius, 8px container radius, visible 5px splitters with grip SVGs.
 - **OS Integration**: Native Windows 11 immersive dark title bar (`DWMWA_USE_IMMERSIVE_DARK_MODE = True`).
@@ -86,30 +86,30 @@ The core token system defines 36 semantic variables. All translucent colors use 
 
 | Token Name | Modern Dark (`DARK_TOKENS`) | Modern Light (`LIGHT_TOKENS`) | Description / Semantic Usage |
 |:---|:---:|:---:|:---|
-| `background` | `#181A20` | `#F3F4F8` | Main window background and canvas base |
-| `rail_bg` | `#0E0F14` | `#E2E5EE` | Deepest root activity rail / sidebar edge |
-| `sidebar_bg` | `#13151B` | `#EBEEF4` | File list sidebar, tree views, and left navigation |
-| `surface` | `#20232C` | `#FFFFFF` | Primary cards, group boxes, dialog containers |
-| `surface_sunken` | `#12141A` | `#E8EBF2` | Sunken log viewers, data tables, console outputs |
-| `surface_elevated` | `#282C37` | `#FFFFFF` | Dropdown menus, tooltips, hover popups |
-| `surface_hover` | `#323746` | `#E4E8F0` | Hover state on list items, tabs, and buttons |
-| `surface_pressed` | `#3B4152` | `#D8DDE8` | Pressed / active state on buttons and controls |
-| `input_bg` | `#262A35` | `#F7F8FB` | Resting background for text inputs, combos, spinboxes |
-| `input_border` | `#404659` | `#BEC5D4` | Resting border for text inputs, combos, spinboxes |
-| `border` | `#353A4A` | `#CBD1DF` | Standard container, group box, and card borders |
-| `border_subtle` | `#2C303D` | `#D8DDE8` | Internal dividers, inactive tab borders |
-| `border_strong` | `#4D5468` | `#A6AEBF` | High-contrast borders, focused control borders |
-| `card_user_bg` | `#1D283B` | `#EBF1FF` | Embedded AI chat user query message card background |
+| `background` | `#1B1B1B` | `#F3F4F8` | Main window background and canvas base |
+| `rail_bg` | `#111111` | `#E2E5EE` | Deepest root activity rail / sidebar edge |
+| `sidebar_bg` | `#161616` | `#EBEEF4` | File list sidebar, tree views, and left navigation |
+| `surface` | `#232323` | `#FFFFFF` | Primary cards, group boxes, dialog containers |
+| `surface_sunken` | `#141414` | `#E8EBF2` | Sunken log viewers, data tables, console outputs |
+| `surface_elevated` | `#2C2C2C` | `#FFFFFF` | Dropdown menus, tooltips, hover popups |
+| `surface_hover` | `#363636` | `#E4E8F0` | Hover state on list items, tabs, and buttons |
+| `surface_pressed` | `#404040` | `#D8DDE8` | Pressed / active state on buttons and controls |
+| `input_bg` | `#292929` | `#F7F8FB` | Resting background for text inputs, combos, spinboxes |
+| `input_border` | `#474747` | `#BEC5D4` | Resting border for text inputs, combos, spinboxes |
+| `border` | `#3A3A3A` | `#CBD1DF` | Standard container, group box, and card borders |
+| `border_subtle` | `#303030` | `#D8DDE8` | Internal dividers, inactive tab borders |
+| `border_strong` | `#545454` | `#A6AEBF` | High-contrast borders, focused control borders |
+| `card_user_bg` | `#1F293D` | `#EBF1FF` | Embedded AI chat user query message card background |
 | `card_user_border` | `#3E5C94` | `#ADC4F5` | Embedded AI chat user query message card border |
-| `card_assistant_bg` | `#232732` | `#FFFFFF` | Embedded AI chat assistant response card background |
-| `card_assistant_border` | `#3C4254` | `#C7CEDE` | Embedded AI chat assistant response card border |
+| `card_assistant_bg` | `#262626` | `#FFFFFF` | Embedded AI chat assistant response card background |
+| `card_assistant_border` | `#424242` | `#C7CEDE` | Embedded AI chat assistant response card border |
 | `text_primary` | `#EDEDEF` | `#141519` | High-contrast primary headings, values, and labels |
-| `text_secondary` | `#B0B4C0` | `#525663` | Subdued labels, axis units, descriptive text |
-| `text_muted` | `#8A8F9E` | `#7B808F` | Disabled text, placeholders, footnote metadata |
+| `text_secondary` | `#B5B5B5` | `#525663` | Subdued labels, axis units, descriptive text |
+| `text_muted` | `#909090` | `#7B808F` | Disabled text, placeholders, footnote metadata |
 | `solid` | `#EDEDEF` | `#141519` | Primary CTA button background (monochrome solid) |
-| `solid_hover` | `#D8D8DE` | `#2A2C34` | Primary CTA button hover |
-| `solid_pressed` | `#C4C4CC` | `#3A3D47` | Primary CTA button pressed |
-| `on_solid` | `#0E0F14` | `#FFFFFF` | Text/icon color drawn over `solid` CTA background |
+| `solid_hover` | `#D9D9D9` | `#2A2C34` | Primary CTA button hover |
+| `solid_pressed` | `#C4C4C4` | `#3A3D47` | Primary CTA button pressed |
+| `on_solid` | `#141414` | `#FFFFFF` | Text/icon color drawn over `solid` CTA background |
 | `accent` | `#5B8CFF` | `#2F62F0` | Brand accent, radio/checkbox checked, link text |
 | `accent_hover` | `#749DFF` | `#2452D6` | Hover state for accent-colored actions |
 | `accent_pressed` | `#4476EB` | `#1B43B8` | Pressed state for accent-colored actions |

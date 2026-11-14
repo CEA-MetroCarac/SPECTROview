@@ -74,7 +74,7 @@ In the Spectra workspace, each loaded spectrum is stored as an independent `MapD
 
 ### `VWorkspaceSpectra` — The View Coordinator
 
-**File**: [`v_workspace_spectra.py`](file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/v_workspace_spectra.py)
+**File**: [`v_workspace_spectra.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/v_workspace_spectra.py)
 
 `VWorkspaceSpectra` is a pure UI assembly class. It:
 
@@ -98,9 +98,9 @@ self.btn_reinit.clicked.connect(lambda: self._apply_with_ctrl(vm.reinit_spectra)
 
 All bulk actions (baseline subtract, peak paste, reinit, fit) follow this pattern. A normal click applies to selected spectra; Ctrl+click applies to all spectra in the store.
 
-### `VSpectraViewer` — Plotting and 2D Heatmap Mode
+### `VSpectraViewer` — 2D Heatmap Mode
 
-**File**: [`v_spectra_viewer.py`](file:///spectroview/view/components/v_spectra_viewer.py)
+**File**: [`v_spectra_viewer.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_spectra_viewer.py)
 
 `VSpectraViewer` is the core spectral canvas widget. In addition to multi-line 1D spectrum visualization, it provides a native **2D Heatmap Mode** for visualizing series data (e.g., temperature variations, kinetics, line scans):
 
@@ -151,12 +151,12 @@ graph TD
   - *Direct*: `Integrated intensity`, `Mean intensity`, `Maximum intensity`, `Peak position`, `Peak height` (baseline-subtracted).
   - *Derived (Green channel)*: `R/B ratio` ($I_{\mathrm{Red}} / I_{\mathrm{Blue}}$).
   - *Fitted*: `Peak position (fit)`, `Peak height (fit)`, `Peak area (fit)` using fitted peak parameters when available.
-- **`VLiveMaps`**: QWidget tab installed in `bottom_tabs` (between `Fit Results` and `MVA`, with `More` placed at the end of the tabs). Hosts a top toolbar row combining a contextual left strip (`[◀ | ComboBox | ▶]` 2D map switcher and diagnostic notices — hidden when unused) with persistent right-aligned **Show Legend** and compact 2-column **More view options** controls (`btn_legend`, `btn_options`, `(2, 2, 2, 2)` row margins matching `VSpectraViewer`), plus 3 independent subpanels (`LiveMapSubpanel`, 96 DPI baseline) featuring per-panel **Rescale**, **Pan**, and **Zoom** buttons synced to `NoDoubleClickZoomToolbar` (preserving legend double-click editing) and size-invariant clipboard copy (`Copied figure size` default `5.5 × 4.0` in & `Copied figure theme`). In `mode="map"`, `LiveMapSubpanel` reuses shared [`map_selection.py`](file:///c:/Users/VL251876/Documents/Python/SPECTROview-2/spectroview/view/components/map_selection.py) helpers (`MapCanvasSelector`, `resolve_xy_selection()`, `resolve_1d_profile_selection()`) to provide click, Ctrl+Click, and marquee-drag spectrum selection across R/B/G plots when Pan/Zoom and legend hits are inactive, emitting `VLiveMaps.spectra_selected` back to `VWorkspaceMaps` while keeping interactive XY selection disabled in `mode="spectra"`. View options default to `plot_theme="Light Mode"` (independent of Qt UI theme via `apply_global_theme()`), `plot_style="line"`, `line_width=1.5`, `dot_size=1.5`, `show_figure_label=False`, and `show_grid=False`, persist across restarts in `MSettings` (`live_maps_view_options/*`, cross-synced across Spectra & Maps workspaces), and use `apply_view_options_fast()`, `@lru_cache` `mplstyle` dicts (`_get_cached_style_dict`), settled-layout freezing (`_on_canvas_draw`), and parented 35 ms redraw timers for stall-free X/Y/Z scale, style, text size (`6–24 pt`), figure title label, gridline, shared-Y, heatmap smoothing, colorbar, and legend-editor updates backed by [`v_live_maps_legend_editor.py`](file:///c:/Users/VL251876/Documents/Python/SPECTROview-2/spectroview/view/components/v_live_maps_legend_editor.py).
+- **`VLiveMaps`**: QWidget tab installed in `bottom_tabs` (between `Fit Results` and `MVA`, with `More` placed at the end of the tabs). Hosts a top toolbar row combining a contextual left strip (`[◀ | ComboBox | ▶]` 2D map switcher and diagnostic notices — hidden when unused) with persistent right-aligned **Show Legend** and compact 2-column **More view options** controls (`btn_legend`, `btn_options`, `(2, 2, 2, 2)` row margins matching `VSpectraViewer`), plus 3 independent subpanels (`LiveMapSubpanel`, 96 DPI baseline) featuring per-panel **Rescale**, **Pan**, and **Zoom** buttons synced to `NoDoubleClickZoomToolbar` (preserving legend double-click editing) and size-invariant clipboard copy (`Copied figure size` default `5.5 × 4.0` in & `Copied figure theme`). In `mode="map"`, `LiveMapSubpanel` reuses shared [`map_selection.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/map_selection.py) helpers (`MapCanvasSelector`, `resolve_xy_selection()`, `resolve_1d_profile_selection()`) to provide click, Ctrl+Click, and marquee-drag spectrum selection across R/B/G plots when Pan/Zoom and legend hits are inactive, emitting `VLiveMaps.spectra_selected` back to `VWorkspaceMaps` while keeping interactive XY selection disabled in `mode="spectra"`. View options default to `plot_theme="Light Mode"` (independent of Qt UI theme via `apply_global_theme()`), `plot_style="line"`, `line_width=1.5`, `dot_size=1.5`, `show_figure_label=False`, and `show_grid=False`, persist across restarts in `MSettings` (`live_maps_view_options/*`, cross-synced across Spectra & Maps workspaces), and use `apply_view_options_fast()`, `@lru_cache` `mplstyle` dicts (`_get_cached_style_dict`), settled-layout freezing (`_on_canvas_draw`), and parented 35 ms redraw timers for stall-free X/Y/Z scale, style, text size (`6–24 pt`), figure title label, gridline, shared-Y, heatmap smoothing, colorbar, and legend-editor updates backed by [`v_live_maps_legend_editor.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_live_maps_legend_editor.py).
 - **Zoom & Range Coordination**: When a range selector is activated, `btn_zoom` is automatically deactivated so bracket adjustment can occur without triggering simultaneous zoom rectangles. The Zoom button can also be toggled off by clicking it, and while Zoom is active, clicking inside the range span performs a zoom rather than moving the range body.
 
 ### `VMWorkspaceSpectra` — The ViewModel
 
-**File**: [`vm_workspace_spectra.py`](file:///Users/HoanLe/Documents/SPECTROview/spectroview/viewmodel/vm_workspace_spectra.py)
+**File**: [`vm_workspace_spectra.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/viewmodel/vm_workspace_spectra.py)
 
 This is the largest and most critical class in the application. It owns the `SpectraStore` and orchestrates every operation.
 
@@ -214,7 +214,7 @@ def _post_bulk_action(self, apply_all: bool, action: str):
 
 ### `VSpectraViewer` — The Plot Canvas
 
-**File**: [`v_spectra_viewer.py`](file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_spectra_viewer.py)
+**File**: [`v_spectra_viewer.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_spectra_viewer.py)
 
 The Matplotlib canvas renders everything visible in the spectrum plot. It receives a data dictionary from `VMWorkspaceSpectra.spectra_selection_changed` and redraws accordingly.
 
@@ -271,7 +271,7 @@ The View Option menu and bottom toolbar provide user-configurable display settin
 
 ### `VFitModelBuilder` — The Controls Panel
 
-**File**: [`v_fit_model_builder.py`](file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_fit_model_builder.py)
+**File**: [`v_fit_model_builder.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_fit_model_builder.py)
 
 A splitter panel containing the full preprocessing and fitting control surface:
 
@@ -281,7 +281,7 @@ A splitter panel containing the full preprocessing and fitting control surface:
 
 ### `VPeakTable` — The Parameter Table
 
-**File**: [`v_peak_table.py`](file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_peak_table.py)
+**File**: [`v_peak_table.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_peak_table.py)
 
 An interactive table where each row represents one peak. Columns show label, model shape, center (x₀), FWHM, amplitude, and bound toggles. Editing any cell emits a signal to `VMWorkspaceSpectra`, which updates `md.fit_model` and immediately reconstructs the Y_peaks preview.
 

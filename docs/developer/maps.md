@@ -93,7 +93,7 @@ The same pattern applies at the View level: `VWorkspaceMaps` extends `VWorkspace
 
 ### `VMWorkspaceMaps` — The ViewModel
 
-**File**: [`vm_workspace_maps.py`](file:///Users/HoanLe/Documents/SPECTROview/spectroview/viewmodel/vm_workspace_maps.py)
+**File**: [`vm_workspace_maps.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/viewmodel/vm_workspace_maps.py)
 
 Additional state beyond the inherited [VMWorkspaceSpectra](spectra.md#vmworkspacespectra-the-viewmodel):
 
@@ -130,7 +130,7 @@ switch_to_graphs_tab    = Signal()        # request tab switch after profile ext
 
 ### `VWorkspaceMaps` — The View
 
-**File**: [`v_workspace_maps.py`](file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/v_workspace_maps.py)
+**File**: [`v_workspace_maps.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/v_workspace_maps.py)
 
 Overrides `_add_maps_panel()` to replace the inherited spectra sidebar with:
 
@@ -150,7 +150,7 @@ In the Maps workspace, when maps are loaded or selected, `VWorkspaceMaps` synchr
 - **Primary is 2D map**: Populates `map_2d_candidates_changed` for the tab's `[◀ | ComboBox | ▶]` 2D map switcher, excludes 1D profiles, and computes/renders only the single currently visible 2D heatmap via `map_data_ready`.
 - **Red/Blue Intensity Ratio (`R/B ratio`)**: Computes $I_{\mathrm{Red}} / I_{\mathrm{Blue}}$ dynamically across both single/multi-1D profiles and 2D heatmaps, masking zero/near-zero Blue intensities and unchecked spectra as `NaN`.
 
-For massive batches (`>= 25,000` active spectra by default via `ASYNC_SPECTRUM_THRESHOLD`), `VMLiveMaps` offloads pure-NumPy evaluation and gridding to a single-worker `QThreadPool` (`_LiveMapWorker`) bridged via a parented `QObject` (`_LiveMapWorkerBridge`) with monotonic `_generation_id` cancellation and clean `shutdown()` teardown on exit. `VMLiveMaps` also emits `spatial_sites_changed` (carrying ordered active site coordinates, optional 1D profile positions, and target map name) so Live Maps panels stay aligned with the active dataset. On the UI side, `VLiveMaps` provides persistent **Show Legend** and a compact 2-column **More view options** (`btn_legend` / `btn_options`) menu matching `VSpectraViewer` row spacing (`(2, 2, 2, 2)` margins) for instant client-side restyling at a crisp 96 DPI baseline: independent **Plot theme** (`"Light Mode"` default vs `"Dark Mode"`, decoupled from global Qt UI icons via `apply_global_theme()`), Linear/Log X, Y, and Z color scaling with non-positive domain guards, `line`/`dot`/`line+dots` plot styles (default `"line"`), line width (`1.5`), dot size (`1.5`), graph text size (`6–24 pt`), **Copied figure size** (`copy_fig_width`/`copy_fig_height`, default `5.5 × 4.0` in) & **Copied figure theme** (`Light Mode`/`Dark Mode`) so clipboard figures are rendered at fixed physical size/aspect independent of window resizing, legend placement/columns/font size, `LiveMapsLegendEditorDialog` for custom canvas legend labels & colors, shared 1D Y-axis synchronization (restoring per-panel bounds when toggled off), axes figure label toggle (`show_figure_label`, default Off), warning-free gridlines (default Off), heatmap smoothing, and colorbar visibility. View options persist across restarts in `MSettings` (`live_maps_view_options/*`, debounced 250 ms save and exit flush) and cross-sync between Spectra and Maps workspaces. Each `LiveMapSubpanel` also embeds per-panel **Rescale**, **Pan**, and **Zoom** buttons synchronized bidirectionally with `NoDoubleClickZoomToolbar` (preserving legend double-click editing), shares spatial geometry (`compute_2d_spatial_geometry()`), click/Ctrl+Click/marquee selection resolution (`resolve_xy_selection()` / `resolve_1d_profile_selection()`), and red selection overlays (`MapCanvasSelector`) with `VMapViewer` via [`map_selection.py`](file:///c:/Users/VL251876/Documents/Python/SPECTROview-2/spectroview/view/components/map_selection.py) whenever Pan/Zoom tools and legend boxes are inactive (routing `VLiveMaps.spectra_selected` through `VWorkspaceMaps._on_live_maps_point_selection()` to update `VSpectraViewer`, `VMapViewer`, dialog viewers, and all R/B/G panels without recalculating grids), while fast UI restyling (`apply_view_options_fast()`), `@lru_cache` `mplstyle` dicts (`_get_cached_style_dict`), settled-layout freezing (`_on_canvas_draw` / `_request_relayout`), and parented 35 ms coalesced redraw timers keep interactive option changes stall-free.
+For massive batches (`>= 25,000` active spectra by default via `ASYNC_SPECTRUM_THRESHOLD`), `VMLiveMaps` offloads pure-NumPy evaluation and gridding to a single-worker `QThreadPool` (`_LiveMapWorker`) bridged via a parented `QObject` (`_LiveMapWorkerBridge`) with monotonic `_generation_id` cancellation and clean `shutdown()` teardown on exit. `VMLiveMaps` also emits `spatial_sites_changed` (carrying ordered active site coordinates, optional 1D profile positions, and target map name) so Live Maps panels stay aligned with the active dataset. On the UI side, `VLiveMaps` provides persistent **Show Legend** and a compact 2-column **More view options** (`btn_legend` / `btn_options`) menu matching `VSpectraViewer` row spacing (`(2, 2, 2, 2)` margins) for instant client-side restyling at a crisp 96 DPI baseline: independent **Plot theme** (`"Light Mode"` default vs `"Dark Mode"`, decoupled from global Qt UI icons via `apply_global_theme()`), Linear/Log X, Y, and Z color scaling with non-positive domain guards, `line`/`dot`/`line+dots` plot styles (default `"line"`), line width (`1.5`), dot size (`1.5`), graph text size (`6–24 pt`), **Copied figure size** (`copy_fig_width`/`copy_fig_height`, default `5.5 × 4.0` in) & **Copied figure theme** (`Light Mode`/`Dark Mode`) so clipboard figures are rendered at fixed physical size/aspect independent of window resizing, legend placement/columns/font size, `LiveMapsLegendEditorDialog` for custom canvas legend labels & colors, shared 1D Y-axis synchronization (restoring per-panel bounds when toggled off), axes figure label toggle (`show_figure_label`, default Off), warning-free gridlines (default Off), heatmap smoothing, and colorbar visibility. View options persist across restarts in `MSettings` (`live_maps_view_options/*`, debounced 250 ms save and exit flush) and cross-sync between Spectra and Maps workspaces. Each `LiveMapSubpanel` also embeds per-panel **Rescale**, **Pan**, and **Zoom** buttons synchronized bidirectionally with `NoDoubleClickZoomToolbar` (preserving legend double-click editing), shares spatial geometry (`compute_2d_spatial_geometry()`), click/Ctrl+Click/marquee selection resolution (`resolve_xy_selection()` / `resolve_1d_profile_selection()`), and red selection overlays (`MapCanvasSelector`) with `VMapViewer` via [`map_selection.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/map_selection.py) whenever Pan/Zoom tools and legend boxes are inactive (routing `VLiveMaps.spectra_selected` through `VWorkspaceMaps._on_live_maps_point_selection()` to update `VSpectraViewer`, `VMapViewer`, dialog viewers, and all R/B/G panels without recalculating grids), while fast UI restyling (`apply_view_options_fast()`), `@lru_cache` `mplstyle` dicts (`_get_cached_style_dict`), settled-layout freezing (`_on_canvas_draw` / `_request_relayout`), and parented 35 ms coalesced redraw timers keep interactive option changes stall-free.
 
 Range selector updates adaptively debounce (60–250 ms), and range selector artists use Matplotlib's `ax.add_artist()` so that `ax.dataLim` is never polluted, ensuring that the **Rescale** button (`Ctrl+R`) zooms exclusively to spectral data.
 
@@ -158,7 +158,7 @@ Range selector updates adaptively debounce (60–250 ms), and range selector art
 
 ### `VMapViewer` — The Heatmap Canvas
 
-**File**: [`v_map_viewer.py`](file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_map_viewer.py)
+**File**: [`v_map_viewer.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_map_viewer.py)
 
 The most complex View component (~1 300 lines). It renders both 2D rectangular maps and circular wafer maps. Features:
 
@@ -175,13 +175,13 @@ The most complex View component (~1 300 lines). It renders both 2D rectangular m
 
 ### `VMapsList` — The Maps List & Actions Panel
 
-**File**: [`v_map_list.py`](file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_map_list.py)
+**File**: [`v_map_list.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_map_list.py)
 
 Displays loaded map names in `ExtendedSelection` mode (`Shift+Click` / `Ctrl+Click` multi-selection with Primary focus tracking via `maps_selection_changed(selected_names, primary_name)`), paired with quick management buttons (View, Delete — prompting confirmation when deleting multiple selected maps, Export CSV) and unified spectra action buttons (Select All, Reinitialize, Fitting Statistics, Send to Spectra Workspace) targeting the Primary map and its spatially selected spectra.
 
 ### `VMapViewerDialog` — Detachable Window
 
-**File**: [`v_map_viewer_dialog.py`](file:///Users/HoanLe/Documents/SPECTROview/spectroview/view/components/v_map_viewer_dialog.py)
+**File**: [`v_map_viewer_dialog.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_map_viewer_dialog.py)
 
 A `QDialog` wrapper around a second `VMapViewer` instance. Uses `Qt.WindowStaysOnTopHint` so the user can select pixels in the floating window while the main window shows the spectrum. Multiple dialogs can be open simultaneously, each showing a different Z-parameter on the same spatial data. Data is shared by reference — no duplication.
 
@@ -226,11 +226,11 @@ Coordinate parsing is centralized in `parse_coords_from_fname()` (`viewmodel/uti
 2. **View → ViewModel**: The View calls `vm.load_map_files(paths)`.
 3. **File Parsing**: For each file, the ViewModel delegates to the `m_io` module (`load_wdf_map`, `load_spc_map`, `load_l6m_map`, `load_ngc_map`, etc.). The IO module returns a DataFrame containing `X`, `Y`, and all wavenumber columns, plus metadata.
 4. **Data Storage (Legacy)**: The ViewModel caches the returned DataFrame in `self.maps[name]`.
-5. **Data Extraction**: The ViewModel calls `_extract_spectra_from_map(name, map_df)` to extract the `x0`, `Y0`, and spatial `coords` arrays from the DataFrame. It also builds the `fnames` list here.
+5. **Data Extraction**: The ViewModel calls `_extract_spectra_from_map(name, map_df)`, which delegates to `extract_map_arrays(name, map_df)` in `m_io.py` to extract the `x0`, `Y0`, and spatial `coords` arrays from the DataFrame and build the pixel `fnames` list.
 6. **Data Storage (Tensor)**: The ViewModel registers the data in the `SpectraStore` via `add_map(name, x0, Y0, coords, fnames, is_active)`.
 7. **UI Update**: Once all files are processed, the ViewModel emits the `maps_list_changed` signal with the list of loaded map names.
 
-`_extract_spectra_from_map()` performs one critical operation: it drops the **last wavenumber column** before building `x0`. This follows a legacy convention from early SPC/WDF parsers that include an artifact value at the upper bound.
+`extract_map_arrays()` filters out any trailing or non-numeric `Unnamed:` columns while preserving all valid numeric wavenumber channels, and automatically appends `_{k}` suffixes to `fnames` only when duplicate `(X, Y)` spatial coordinates occur (e.g., time-resolved multi-scan maps at fixed wafer sites).
 
 ### Map Selection
 
@@ -421,13 +421,13 @@ The profile DataFrame has columns `distance` (µm) and `values` (Z intensity). T
 
 ```python
 # After super().collect_fit_results():
-# base DataFrame has: Filename, x0_Peak1, fwhm_Peak1, ...
+# base DataFrame includes: Filename, X, Y, [Quadrant, Zone for wafers],
+# sorted fit parameters (x0_Peak1, fwhm_Peak1, area_Peak1, ...), and trailing R2
 
-# Maps workspace adds: X, Y (from fname parsing)
-# For wafer maps, also: Zone, Quadrant
+# Maps workspace adds X, Y, and ensures Quadrant and Zone are present for wafer maps
 
 # Final columns:
-# Filename | X | Y | x0_Peak1 | fwhm_Peak1 | area_Peak1 | ... | Zone | Quadrant
+# Filename | X | Y | Quadrant | Zone | x0_Peak1 | fwhm_Peak1 | area_Peak1 | ... | R2
 ```
 
 `Zone` classifies by radial distance:
@@ -520,6 +520,6 @@ New spatial layouts require:
 
 **Memory spike when loading many large maps**
 
-- Each `MapData.Y0` for a 50×50 map at 1000 wavenumbers is ~100 MB. After fitting, `Y_bestfit` and `Y_peaks` add another ~100 MB each. Plan for ~300–400 MB per map if fits are stored. Use `remove_map()` for maps no longer needed, or reduce `float64 → float32` in `x0` if precision allows.
+- For a 50×50 map (2,500 spectra) at 1,000 wavenumbers, `MapData.Y0` (`float32`) is ~10 MB; for a 25,000-spectrum map at 1,000 wavenumbers, `Y0` is ~100 MB, and fitting allocates additional arrays (`Y_bestfit` and one `Y_peaks` entry per peak). Use `remove_map()` for maps no longer needed.
 
 For data-model troubleshooting (preprocessing not applied, memory management), see [SpectraStore: Troubleshooting](spectra_store.md#troubleshooting).

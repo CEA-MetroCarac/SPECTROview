@@ -283,14 +283,16 @@ The thread sets an 8 MB stack size on macOS (`setStackSize(8 * 1024 * 1024)`) be
 The engine behavior can be tuned via the `fit_params` dictionary passed to `fit_spectra()`.
 
 ### **9.1. Key Parameters**
+
 *   **`max_ite`** (default: 200): The maximum number of Levenberg-Marquardt iterations. Increasing this might help extremely difficult spectra converge but will increase total execution time.
 *   **`xtol`** (default: 1e-4): The relative tolerance for the parameter step size \(\delta p\). Convergence is reached when the **mean** relative post-clip change across all active parameters (\(\operatorname{mean}(|\Delta p_{\text{actual}}| / |p|)\)) is less than `xtol`. Measuring post-clip displacement ensures that spectra pinned at parameter bounds converge cleanly instead of stalling until `max_ite`, and the mean-based criterion prevents a single slowly oscillating parameter from delaying convergence for the entire spectrum.
 *   **`ftol`** (default: 1e-4): The relative tolerance for the cost function (sum of squared residuals). If the relative change in the cost is less than `ftol`, the spectrum is considered converged.
 *   **`fit_negative`** (default: `False`): Whether to include negative intensity values in the fit. When `False`, negative points receive zero weight (`VBFthread._prepare_weights()`).
-*   **`coef_noise`** (default: 1): Noise coefficient multiplier. When > 0, activates noise-based weight masking (`VBFthread._prepare_weights()`) and peak suppression (`VBFevaluator.apply_noise_threshold()`). See [Section 10](#10-noise-level-estimation-and-noise-threshold) for a detailed explanation.
+*   **`coef_noise`** (default: `0.0`): Noise coefficient multiplier. When > 0, activates noise-based weight masking (`VBFthread._prepare_weights()`) and peak suppression (`VBFevaluator.apply_noise_threshold()`). See [Section 10](#10-noise-level-estimation-and-noise-threshold) for a detailed explanation.
 *   **`fit_outliers`** — **legacy key, not read by the current engine.** Older saved `fit_model` JSON files may still contain it, but nothing in `fit_engine/` (or anywhere else in the codebase) checks it anymore; it's silently ignored. Safe to leave in old files.
 
 ### **9.2. Tuning for Performance vs. Accuracy**
+
 - **Fast Mapping**: For rapid previews, you can increase `xtol` and `ftol` to `1e-3` or `1e-2`. The optimizer will exit much earlier, providing a rough fit in a fraction of the time.
 - **Precision Fitting**: For publication-quality results, decrease `xtol` and `ftol` to `1e-5` or `1e-6`.
 - **Handling "Stuck" Spectra**: The optimizer tracks `consecutive_rejects`. If a spectrum's cost fails to improve for 15 consecutive iterations (despite damping adjustments), it is marked as converged (stuck) to prevent it from holding back the rest of the batch. This threshold (`MAX_REJECTS` in `optimizer.py`) can be adjusted if needed.
@@ -406,7 +408,7 @@ With coef_noise = 1:
 | `3.0 – 5.0` | **Aggressive** — may suppress real weak peaks; use with caution |
 | `> 5.0` | **Very aggressive** — only strong, unambiguous peaks survive |
 
-The default value in `spectroview/__init__.py` is `1`. The `Settings` UI exposes it as a spin box with range `[0, 100]` and step `0.5`.
+The default value in `MSettings.load_fit_settings()` is `0.0` (disabled). The `Settings` UI exposes it as a spin box with range `[0.0, 10.0]` and step `0.5`.
 
 ---
 

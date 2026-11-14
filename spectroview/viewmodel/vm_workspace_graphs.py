@@ -13,7 +13,6 @@ from PySide6.QtWidgets import QFileDialog
 from spectroview.model.m_graph import MGraph
 from spectroview.model.graph_control import (
     GRAPH_PROPERTY_SET,
-    apply_graph_patch,
     normalize_graph_patch,
 )
 from spectroview.model.m_settings import MSettings
@@ -101,17 +100,34 @@ class VMWorkspaceGraphs(QObject):
         self._redo_stack.clear()  # a new action invalidates prior redo history
         self.undo_state_changed.emit()
 
+    def _populate_graphs_from_dict(
+        self, plots_dict: dict, *, legacy_x_as_numeric_false: Optional[bool] = None
+    ) -> None:
+        """Populate ``self.graphs`` and ``self._next_graph_id`` from a serialized plots mapping."""
+        self.graphs.clear()
+        for graph_id_key, graph_data in plots_dict.items():
+            graph_id = int(graph_id_key)
+            graph = MGraph(graph_id=graph_id)
+            if legacy_x_as_numeric_false is None:
+                graph.load(graph_data)
+            else:
+                graph.load(graph_data, legacy_x_as_numeric_false=legacy_x_as_numeric_false)
+            self.graphs[graph_id] = graph
+        self._next_graph_id = max(self.graphs.keys()) + 1 if self.graphs else 1
+
+    @staticmethod
+    def _filter_creation_config(plot_config: Dict) -> Dict:
+        """Return a deep-copied creation patch containing only valid mutable MGraph fields."""
+        patch = copy.deepcopy(plot_config)
+        patch.pop('graph_id', None)
+        return {key: value for key, value in patch.items() if key in GRAPH_PROPERTY_SET}
+
     def _restore_snapshot(self, snapshot: Dict[int, dict]) -> None:
         """Replace self.graphs wholesale with `snapshot`'s contents (mirrors
         load_workspace()'s graph-restoration loop). The View is responsible
         for reconciling its own VGraph widgets/MDI subwindows against the
         new self.graphs afterward -- this only updates ViewModel state."""
-        self.graphs.clear()
-        for graph_id, graph_data in snapshot.items():
-            graph = MGraph(graph_id=graph_id)
-            graph.load(graph_data)
-            self.graphs[graph_id] = graph
-        self._next_graph_id = max(self.graphs.keys()) + 1 if self.graphs else 1
+        self._populate_graphs_from_dict(snapshot)
         self._emit_graphs_list()
 
     def _reset_undo_history(self) -> None:
@@ -370,12 +386,12 @@ class VMWorkspaceGraphs(QObject):
         for offset, slot_num in enumerate(slot_numbers):
             slot_filters = self._merge_filters_with_slot(base_filters, slot_num)
             graph = MGraph(graph_id=self._next_graph_id + offset)
-            patch = copy.deepcopy(plot_config)
-            patch.pop('graph_id', None)
-            patch = {key: value for key, value in patch.items() if key in GRAPH_PROPERTY_SET}
+            patch = self._filter_creation_config(plot_config)
             patch['df_name'] = df_name
             patch['filters'] = slot_filters
-            apply_graph_patch(graph, patch, dataframe=dataframe)
+            normalized = normalize_graph_patch(patch, current=graph, dataframe=dataframe)
+            for name, value in normalized.items():
+                setattr(graph, name, value)
             pending.append(graph)
 
         # The batch is validated before the first mutation, so one bad config
@@ -428,14 +444,14 @@ class VMWorkspaceGraphs(QObject):
         # A saved recipe/config may carry the source graph's ID.  Identity is
         # owned by this ViewModel and must never be copied into a new graph.
         if plot_config:
-            patch = copy.deepcopy(plot_config)
-            patch.pop('graph_id', None)
             # Recipes/workspace-adjacent callers may contain obsolete fields
             # from older releases.  Creation remains backward compatible by
             # ignoring them; runtime updates and MCP GraphPatch are strict.
-            patch = {key: value for key, value in patch.items() if key in GRAPH_PROPERTY_SET}
+            patch = self._filter_creation_config(plot_config)
             target_df = self.dataframes.get(patch.get('df_name'))
-            apply_graph_patch(graph, patch, dataframe=target_df)
+            normalized = normalize_graph_patch(patch, current=graph, dataframe=target_df)
+            for name, value in normalized.items():
+                setattr(graph, name, value)
 
         # Validate before taking an undo snapshot: a rejected command is not
         # a mutation and therefore must not create a phantom undo step.
@@ -471,7 +487,8 @@ class VMWorkspaceGraphs(QObject):
         dataframe = self.dataframes.get(prospective_df_name)
         patch = normalize_graph_patch(properties, current=graph, dataframe=dataframe)
         self._record_undo_point_if_needed()
-        apply_graph_patch(graph, patch, dataframe=dataframe)
+        for name, value in patch.items():
+            setattr(graph, name, copy.deepcopy(value))
         self.graph_state_changed.emit()
         return patch
 
@@ -562,14 +579,9 @@ class VMWorkspaceGraphs(QObject):
             # Load graphs.  Before format 4, x_as_numeric=False meant Auto;
             # current files use it for the explicit Category selection.
             legacy_axis_type = int(metadata.get('format_version', 0) or 0) < 4
-            for graph_id_str, graph_data in metadata.get('plots', {}).items():
-                graph_id = int(graph_id_str)
-                graph = MGraph(graph_id=graph_id)
-                graph.load(graph_data, legacy_x_as_numeric_false=legacy_axis_type)
-                self.graphs[graph_id] = graph
-            
-            # Update next graph ID
-            self._next_graph_id = max(self.graphs.keys()) + 1 if self.graphs else 1
+            self._populate_graphs_from_dict(
+                metadata.get('plots', {}), legacy_x_as_numeric_false=legacy_axis_type
+            )
             
             # Emit updates
             self._emit_dataframes_list()
@@ -599,14 +611,9 @@ class VMWorkspaceGraphs(QObject):
                 self.dataframe_sources = data['dataframe_sources']
             
             # Load graphs
-            for graph_id_str, graph_data in data.get('plots', {}).items():
-                graph_id = int(graph_id_str)
-                graph = MGraph(graph_id=graph_id)
-                graph.load(graph_data, legacy_x_as_numeric_false=True)
-                self.graphs[graph_id] = graph
-            
-            # Update next graph ID
-            self._next_graph_id = max(self.graphs.keys()) + 1 if self.graphs else 1
+            self._populate_graphs_from_dict(
+                data.get('plots', {}), legacy_x_as_numeric_false=True
+            )
             
             # Emit updates
             self._emit_dataframes_list()

@@ -630,6 +630,17 @@ class TestTrendlineCustomization:
         vg.trendline_anchor_origin = True
         vg.plot(excel_df)  # must not raise
 
+    def test_trendline_handles_misaligned_nans_in_x_and_y(self, vg):
+        """Regression: NaNs at different row indices in X and Y must not raise ValueError."""
+        df_nan = pd.DataFrame({
+            "x0_Si": [1.0, float("nan"), 3.0, 4.0, 5.0],
+            "area_Si": [2.0, 4.0, float("nan"), 8.0, 10.0],
+        })
+        _configure(vg, x="x0_Si", y=["area_Si"], z=None, plot_style="trendline")
+        vg.plot(df_nan)
+        assert len(vg.trendline_equations) == 1
+        assert vg.trendline_equations[0]["r2"] == "1.0000"
+
 
 class TestFigureStyle:
     """figure_facecolor/plot_subtitle/spines_visible are optional and

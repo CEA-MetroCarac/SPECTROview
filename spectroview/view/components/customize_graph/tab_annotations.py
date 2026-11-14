@@ -12,7 +12,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QGroupBox,
     QHBoxLayout,
-    QLabel,
     QListWidget,
     QListWidgetItem,
     QMessageBox,
@@ -213,8 +212,6 @@ class TabAnnotations(QWidget):
             )
 
     def _refresh_plot(self) -> None:
-        if hasattr(self.graph_widget, "ax") and self.graph_widget.ax is not None:
-            self.graph_widget.ax.clear()
         if getattr(self.graph_widget, "df", None) is not None:
             self.graph_widget.plot(self.graph_widget.df)
 

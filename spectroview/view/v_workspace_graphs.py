@@ -1454,28 +1454,22 @@ class VWorkspaceGraphs(QWidget):
                 if plot_config['plot_style'] == 'wafer' and getattr(graph_model, 'spines_visible', None) == {'top': True, 'right': True, 'bottom': True, 'left': True}:
                     plot_config['spines_visible'] = {'top': False, 'right': False, 'bottom': False, 'left': True}
 
-            # Check if Z-axis has changed (reset legend properties if so)
+            # Check if Z-axis or filters changed (reset legend properties if so)
             z_changed = plot_config['z'] != graph_model.z
-            if z_changed:
+            current_filters = plot_config['filters']
+            if z_changed or current_filters != graph_model.filters:
                 graph_widget.legend_properties = []
-
-            # Check if filters have changed
-            current_filters = self.v_data_filter.get_filters()
-            if current_filters != graph_model.filters:
-                graph_widget.legend_properties = []
-
-            # Update graph model
-            self.vm.update_graph(graph_model.graph_id, plot_config)
 
             # Capture current legend position from matplotlib before syncing
             graph_widget._save_legend_position()
 
-            # Sync current legend properties to model BEFORE reconfiguring
-            # (so customizations from the dialog are not lost)
-            self.vm.update_graph(graph_model.graph_id, {
-                'legend_properties': graph_widget.legend_properties,
-                'legend_bbox': graph_widget.legend_bbox
-            })
+            # Preserve dialog-edited legend settings across a single update_graph call
+            # (also prevents series_context normalization from wiping legend_properties)
+            plot_config['legend_properties'] = graph_widget.legend_properties
+            plot_config['legend_bbox'] = graph_widget.legend_bbox
+
+            # Update graph model once
+            self.vm.update_graph(graph_model.graph_id, plot_config)
 
             # Get updated model
             graph_model = self.vm.get_graph(graph_model.graph_id)
@@ -1495,10 +1489,10 @@ class VWorkspaceGraphs(QWidget):
                 self._show_notification(f"Error updating plot: {str(e)}", notification_type="error")
                 return
 
-            # Save legend properties back to model after rendering
-            self.vm.update_graph(graph_model.graph_id, {
+            # Sync renderer-derived legend state back without creating an extra undo step
+            self.vm.sync_derived_graph_properties(graph_model.graph_id, {
                 'legend_properties': graph_widget.legend_properties,
-                'legend_bbox': graph_widget.legend_bbox
+                'legend_bbox': graph_widget.legend_bbox,
             })
 
             # If Z changed and CustomizeGraphDialog is open, reload its content

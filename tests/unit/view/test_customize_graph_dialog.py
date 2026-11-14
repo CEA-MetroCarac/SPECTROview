@@ -1403,6 +1403,23 @@ class TestCustomizeGraphDialogTopLevel:
         dialog.switch_graph(vg, graph_id=1)
         assert dialog.graph_widget is vg
 
+    def test_apply_all_emits_properties_changed_for_viewmodel_sync(self, qapp, excel_df):
+        """Regression: Apply must emit properties_changed even after live preview."""
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        dialog = CustomizeGraphDialog(vg, graph_id=1)
+        received = []
+        vg.properties_changed.connect(lambda gid, props: received.append((gid, props)))
+
+        dialog.tab_general._spin_title_fontsize.setValue(21)
+        dialog._preview_apply()
+        assert received == []
+
+        dialog.apply_all()
+        assert len(received) == 1
+        gid, props = received[0]
+        assert gid == 1
+        assert props["title_fontsize"] == 21
+
 
 class TestLivePreview:
     """Phase 5D: every tab now previews live (debounced) instead of only

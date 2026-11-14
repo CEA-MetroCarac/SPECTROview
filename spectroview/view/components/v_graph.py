@@ -165,6 +165,7 @@ class VGraph(QWidget):
         self.ax3 = None
         self.ax_x2 = None
         self.canvas = None
+        self.renderer = PlotRenderer(self)
 
         # Layout setup
         self.graph_layout = QVBoxLayout()
@@ -874,7 +875,6 @@ class VGraph(QWidget):
     
     def _plot_primary_axis(self, df):
         """Plots data on the primary axis based on the current plot style."""
-        self.renderer = PlotRenderer(self)
         # Determine number of hue categories
         n_categories = df[self.z].nunique() if self.z and self.z in df.columns else 0
         
@@ -1798,7 +1798,6 @@ class VGraph(QWidget):
                 annotation['label'] = f"V-Line at x={annotation['x']:.2f}"
             elif annotation['type'] == 'hline':
                 annotation['label'] = f"H-Line at y={annotation['y']:.2f}"
-            self.ax.clear()
             if self.df is not None:
                 self.plot(self.df)
 

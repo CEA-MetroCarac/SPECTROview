@@ -24,16 +24,6 @@ from spectroview import PLOT_STYLES
 from spectroview.view.components.v_graph import VGraph
 
 
-@pytest.fixture(scope="module")
-def excel_df(dataframe_excel_file):
-    """sheet1 of the real dataset_Excel.xlsx: 588 rows of wafer Si-peak fit
-    results (X, Y, x0_Si, ampli_Si, area_Si, fwhm_Si, Quadrant, Zone, Slot,
-    DeltaW, 'Strain (GPa)', 'NB pts')."""
-    if not dataframe_excel_file.exists():
-        pytest.skip("dataset_Excel.xlsx not present")
-    return pd.read_excel(dataframe_excel_file, sheet_name="sheet1")
-
-
 @pytest.fixture
 def vg(qapp):
     widget = VGraph(graph_id=1)
@@ -1491,9 +1481,10 @@ class TestToolbarIconsAndRescale:
 class TestMinorTicksLogic:
     """Tests for plot-style- and axis-type-aware minor tick defaults and overrides."""
 
-    def test_scatter_numeric_shows_both_minor_ticks_by_default(self, vg, excel_df):
+    @pytest.mark.parametrize("style", ["scatter", "histogram", "line", "trendline"])
+    def test_numeric_styles_show_both_minor_ticks_by_default(self, vg, excel_df, style):
         from matplotlib.ticker import NullLocator
-        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style=style)
         vg.plot(excel_df)
         assert vg._is_x_numeric() == True
         assert vg._is_y_numeric() == True
@@ -1501,27 +1492,6 @@ class TestMinorTicksLogic:
         assert vg._resolve_minor_ticks("left") == True
         assert not isinstance(vg.ax.xaxis.get_minor_locator(), NullLocator)
         assert not isinstance(vg.ax.yaxis.get_minor_locator(), NullLocator)
-
-    def test_histogram_shows_both_minor_ticks_by_default(self, vg, excel_df):
-        from matplotlib.ticker import NullLocator
-        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="histogram")
-        vg.plot(excel_df)
-        assert vg._is_x_numeric() == True
-        assert vg._is_y_numeric() == True
-        assert vg._resolve_minor_ticks("bottom") == True
-        assert vg._resolve_minor_ticks("left") == True
-        assert not isinstance(vg.ax.xaxis.get_minor_locator(), NullLocator)
-        assert not isinstance(vg.ax.yaxis.get_minor_locator(), NullLocator)
-
-    def test_line_and_trendline_show_both_minor_ticks_by_default(self, vg, excel_df):
-        from matplotlib.ticker import NullLocator
-        for style in ("line", "trendline"):
-            _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style=style)
-            vg.plot(excel_df)
-            assert vg._resolve_minor_ticks("bottom") == True
-            assert vg._resolve_minor_ticks("left") == True
-            assert not isinstance(vg.ax.xaxis.get_minor_locator(), NullLocator)
-            assert not isinstance(vg.ax.yaxis.get_minor_locator(), NullLocator)
 
     def test_bar_and_box_hide_bottom_minor_ticks_by_default(self, vg, excel_df):
         from matplotlib.ticker import NullLocator

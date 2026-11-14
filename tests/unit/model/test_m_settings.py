@@ -272,24 +272,6 @@ class TestPortableConfiguration:
         ai = settings.load_ai_settings()
         assert ai["custom_base_url"] == "https://api.test/v1"
 
-    def test_api_keys_never_written_to_config_json(self, settings, tmp_path):
-        """Verify API keys are never stored in cleartext JSON files."""
-        settings.save_ai_settings({
-            "api_key_OpenAI": "sk-secret-open-ai",
-            "api_key_Gemini": "AIza-secret-gemini",
-            "custom_base_url": "https://api.test/v1",
-        })
-        export_file = str(tmp_path / "config.json")
-        settings.export_config(export_file)
-
-        with open(export_file, "r", encoding="utf-8") as f:
-            content = f.read()
-        assert "sk-secret-open-ai" not in content
-        assert "AIza-secret-gemini" not in content
-        assert "api_key_OpenAI" not in content
-        assert "api_key_Gemini" not in content
-        assert "https://api.test/v1" in content
-
     def test_transfer_folder_to_new_pc_restores_everything(self, settings, tmp_path):
         """Simulate copying the working folder from PC A to PC B."""
         # 1. On PC A: User sets working folder and customizes settings

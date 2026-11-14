@@ -7,6 +7,7 @@ decoding, sees and is constrained by) rather than just the Python source.
 """
 import asyncio
 import dataclasses
+import functools
 
 from mcp import ClientSession
 from mcp.client._memory import InMemoryTransport
@@ -18,6 +19,7 @@ from spectroview.ai_agent.utils.plot_utils import VALID_PLOT_STYLES as PLOT_UTIL
 from spectroview.model.m_graph import MGraph
 
 
+@functools.lru_cache(maxsize=1)
 def _list_tools():
     async def _run():
         server = create_mcp_server(RecordingContext())

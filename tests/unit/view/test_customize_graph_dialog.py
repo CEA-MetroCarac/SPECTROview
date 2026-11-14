@@ -7,7 +7,6 @@ VGraph (real dataset_Excel.xlsx data) exactly as CustomizeGraphDialog wires
 them up -- no mocking of the graph widget itself, only of modal dialogs
 (QColorDialog/QMessageBox) that would otherwise block a headless test.
 """
-import pandas as pd
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
@@ -30,13 +29,6 @@ def _is_grayed(spin) -> bool:
     line edit's own Text color role rather than a stylesheet string.
     """
     return spin.lineEdit().palette().color(QPalette.ColorRole.Text) == Qt.GlobalColor.gray
-
-
-@pytest.fixture(scope="module")
-def excel_df(dataframe_excel_file):
-    if not dataframe_excel_file.exists():
-        pytest.skip("dataset_Excel.xlsx not present")
-    return pd.read_excel(dataframe_excel_file, sheet_name="sheet1")
 
 
 _active_test_widgets = []
@@ -1100,7 +1092,7 @@ class TestCustomizeAnnotations:
         vg = _plotted_graph(qapp, excel_df)
         widget = CustomizeAnnotations(vg)
         widget._add_vline()
-        ann_id = vg.annotations[0]["id"]
+        assert len(vg.annotations) == 1
 
         widget.annotation_list.setCurrentRow(0)
         widget._delete_annotation()

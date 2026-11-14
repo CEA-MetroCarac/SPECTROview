@@ -8,7 +8,6 @@ sheet1 (588 rows: X, Y, x0_Si, ampli_Si, area_Si, fwhm_Si, Quadrant
 [Q1-Q4 + NaN], Zone [Center/Mid-Radius/Edge], Slot [2..12], DeltaW,
 'Strain (GPa)', 'NB pts') and sheet2 (588 rows, no Slot column).
 """
-import numpy as np
 import pandas as pd
 import pytest
 

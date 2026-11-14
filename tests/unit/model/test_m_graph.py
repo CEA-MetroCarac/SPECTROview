@@ -11,7 +11,6 @@ widget (VGraph) but never made it into MGraph.__init__/save()/load(), so
 those two customizations silently didn't survive a save/reload. See
 docs/log.md and tests/README.md for details.
 """
-import pytest
 
 from spectroview.model.m_graph import MGraph
 
@@ -172,44 +171,6 @@ class TestMGraphSaveLoad:
         assert isinstance(data, dict)
         assert set(data.keys()) == ALL_SAVE_KEYS
 
-    def test_save_includes_all_properties(self):
-        graph = MGraph(graph_id=10)
-        graph.df_name = "test_df"
-        graph.plot_style = "line"
-        graph.x = "X_column"
-        graph.y = ["Y1", "Y2"]
-        graph.xlabel = "X Label"
-        graph.ylabel = "Y Label"
-
-        data = graph.save()
-        assert data['df_name'] == "test_df"
-        assert data['plot_style'] == "line"
-        assert data['x'] == "X_column"
-        assert data['y'] == ["Y1", "Y2"]
-        assert data['xlabel'] == "X Label"
-        assert data['ylabel'] == "Y Label"
-
-    def test_load_from_dict(self):
-        graph = MGraph()
-        data = {
-            'graph_id': 99, 'df_name': 'loaded_df', 'plot_style': 'bar',
-            'x': 'Category', 'y': ['Value1', 'Value2'],
-            'xlabel': 'Categories', 'ylabel': 'Values',
-            'xmin': 0.0, 'xmax': 10.0, 'grid': True,
-        }
-        graph.load(data)
-
-        assert graph.graph_id == 99
-        assert graph.df_name == 'loaded_df'
-        assert graph.plot_style == 'bar'
-        assert graph.x == 'Category'
-        assert graph.y == ['Value1', 'Value2']
-        assert graph.xlabel == 'Categories'
-        assert graph.ylabel == 'Values'
-        assert graph.xmin == 0.0
-        assert graph.xmax == 10.0
-        assert graph.grid is True
-
     def test_save_load_roundtrip_every_customizable_field(self):
         """The exhaustive version of the round-trip test: every single field
         in CUSTOM_VALUES (mirroring every tab of CustomizeGraphDialog) must
@@ -223,22 +184,6 @@ class TestMGraphSaveLoad:
         assert graph2.graph_id == graph1.graph_id
         for key, expected in CUSTOM_VALUES.items():
             assert getattr(graph2, key) == expected, f"field '{key}' did not round-trip"
-
-    def test_scatter_edgecolor_round_trips(self):
-        """Regression test for the scatter_edgecolor persistence gap."""
-        graph1 = MGraph(graph_id=1)
-        graph1.scatter_edgecolor = "#123456"
-        graph2 = MGraph()
-        graph2.load(graph1.save())
-        assert graph2.scatter_edgecolor == "#123456"
-
-    def test_axis_breaks_round_trip(self):
-        """Regression test for the axis_breaks ('Broken axis (beta)') persistence gap."""
-        graph1 = MGraph(graph_id=1)
-        graph1.axis_breaks = {'x': {'start': 5.0, 'end': 15.0}, 'y': None}
-        graph2 = MGraph()
-        graph2.load(graph1.save())
-        assert graph2.axis_breaks == {'x': {'start': 5.0, 'end': 15.0}, 'y': None}
 
     def test_load_handles_none_limits(self):
         graph = MGraph()
@@ -311,20 +256,3 @@ class TestMGraphDisplayName:
         graph.x = "X"
         graph.y = ["Y1", "Y2", "Y3"]
         assert graph.get_display_name() == "3-point_plot: [X] - [Y1] - [None]"
-
-
-class TestMGraphProperties:
-    def test_set_plot_configuration(self):
-        graph = MGraph()
-        graph.plot_width, graph.plot_height, graph.dpi = 800, 600, 150
-        assert (graph.plot_width, graph.plot_height, graph.dpi) == (800, 600, 150)
-
-    def test_set_axis_limits(self):
-        graph = MGraph()
-        graph.xmin, graph.xmax, graph.ymin, graph.ymax = -10.0, 10.0, 0.0, 100.0
-        assert (graph.xmin, graph.xmax, graph.ymin, graph.ymax) == (-10.0, 10.0, 0.0, 100.0)
-
-    def test_set_filters(self):
-        graph = MGraph()
-        graph.filters = [{"expression": "X > 5", "state": True}, {"expression": "Y < 100", "state": False}]
-        assert len(graph.filters) == 2

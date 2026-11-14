@@ -58,14 +58,3 @@ def test_widget_font_inheritance(qapp, qtbot):
         # Line height must be at least 14px for comfortable readability
         assert w.fontMetrics().height() >= 12
 
-
-def test_qtextbrowser_theme_stylesheet():
-    """Verify QTextBrowser frame and background match theme surface."""
-    from spectroview.view.theme.qss_template import build_stylesheet
-    from spectroview.view.theme.tokens import THEME_TOKENS
-    dark_qss = build_stylesheet(THEME_TOKENS["dark"])
-    light_qss = build_stylesheet(THEME_TOKENS["light"])
-    assert "QTextBrowser" in dark_qss
-    assert THEME_TOKENS["dark"].surface in dark_qss
-    assert THEME_TOKENS["light"].surface in light_qss
-

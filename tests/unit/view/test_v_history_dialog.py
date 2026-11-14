@@ -1,5 +1,3 @@
-import pytest
-from PySide6.QtCore import Qt
 from spectroview.ai_agent.m_conversation_store import MConversationStore
 from spectroview.ai_agent.v_history_dialog import VHistoryDialog, _ConversationItemWidget
 

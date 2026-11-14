@@ -38,6 +38,8 @@ def _make_stub_main() -> Main:
     win._startup_check_worker = None
     win._manual_check_found_update = False
     win._manual_check_error = ""
+    win._mcp_runtime = None
+    win._chat_panel = None
     return win
 
 
@@ -73,90 +75,103 @@ def _sample_result(tag: str = "v26.47.0", available: bool = True) -> UpdateCheck
 
 def test_startup_check_shows_banner_unless_skipped(qapp, monkeypatch):
     win = _make_stub_main()
-    central = QWidget()
-    QVBoxLayout(central)
-    win.centralWidget = lambda: central
+    try:
+        central = QWidget()
+        QVBoxLayout(central)
+        win.centralWidget = lambda: central
 
-    shown = []
-    monkeypatch.setattr(win, "_show_update_banner_from_result", lambda r: shown.append(r.release.tag))
+        shown = []
+        monkeypatch.setattr(win, "_show_update_banner_from_result", lambda r: shown.append(r.release.tag))
 
-    # Up-to-date -> nothing shown
-    win._on_startup_check_succeeded(_sample_result(available=False))
-    assert shown == []
+        # Up-to-date -> nothing shown
+        win._on_startup_check_succeeded(_sample_result(available=False))
+        assert shown == []
 
-    # Skipped version -> nothing shown
-    win.settings.set_skipped_version("v26.47.0")
-    win._on_startup_check_succeeded(_sample_result("v26.47.0", available=True))
-    assert shown == []
+        # Skipped version -> nothing shown
+        win.settings.set_skipped_version("v26.47.0")
+        win._on_startup_check_succeeded(_sample_result("v26.47.0", available=True))
+        assert shown == []
 
-    # Different version -> banner displayed
-    win._on_startup_check_succeeded(_sample_result("v26.48.0", available=True))
-    assert shown == ["v26.48.0"]
+        # Different version -> banner displayed
+        win._on_startup_check_succeeded(_sample_result("v26.48.0", available=True))
+        assert shown == ["v26.48.0"]
+    finally:
+        win.close()
+        win.deleteLater()
 
 
 def test_manual_check_done_reports_error_or_up_to_date(qapp, monkeypatch):
     win = _make_stub_main()
-    warnings = []
-    infos = []
-    monkeypatch.setattr(QMessageBox, "warning", lambda p, title, msg: warnings.append((title, msg)))
-    monkeypatch.setattr(QMessageBox, "information", lambda p, title, msg: infos.append((title, msg)))
+    try:
+        warnings = []
+        infos = []
+        monkeypatch.setattr(QMessageBox, "warning", lambda p, title, msg: warnings.append((title, msg)))
+        monkeypatch.setattr(QMessageBox, "information", lambda p, title, msg: infos.append((title, msg)))
 
-    win._manual_check_error = "GitHub API rate limit reached"
-    win._on_manual_check_done()
-    assert len(warnings) == 1
-    assert "rate limit" in warnings[0][1]
+        win._manual_check_error = "GitHub API rate limit reached"
+        win._on_manual_check_done()
+        assert len(warnings) == 1
+        assert "rate limit" in warnings[0][1]
 
-    win._manual_check_error = ""
-    win._manual_check_found_update = False
-    win._on_manual_check_done()
-    assert len(infos) == 1
-    assert "latest version" in infos[0][1]
+        win._manual_check_error = ""
+        win._manual_check_found_update = False
+        win._on_manual_check_done()
+        assert len(infos) == 1
+        assert "latest version" in infos[0][1]
 
-    win._manual_check_found_update = True
-    win._on_manual_check_done()
-    assert len(infos) == 1  # No extra modal when banner was already presented
+        win._manual_check_found_update = True
+        win._on_manual_check_done()
+        assert len(infos) == 1  # No extra modal when banner was already presented
+    finally:
+        win.close()
+        win.deleteLater()
 
 
 def test_on_update_download_finished_handles_restart_and_guided_paths(qapp, monkeypatch, tmp_path):
     win = _make_stub_main()
-    guided_calls = []
-    restarts = []
-    closed = []
-
-    class FakeManager:
-        def __init__(self, result):
-            self._result = result
-
-        def install_update(self, path, release=None):
-            return self._result
-
-        def restart_application(self):
-            restarts.append(True)
-            return True
-
-    # 1) Auto restart flow (Velopack / pip wheel)
-    auto_mgr = FakeManager(
-        InstallResult(status=UpdateStatus.RESTART_REQUIRED, success=True, restart_required=True)
-    )
-    monkeypatch.setattr(win, "_get_update_manager", lambda: auto_mgr)
-    monkeypatch.setattr(win, "close", lambda: closed.append(True))
-    win._on_update_download_finished(str(tmp_path / "update.whl"))
-    assert restarts == [True]
-    assert closed == [True]
-
-    # 2) Guided flow (Portable ZIP / macOS DMG / Linux .deb)
     win2 = _make_stub_main()
-    guided_res = InstallResult(
-        status=UpdateStatus.GUIDED_ACTION_REQUIRED,
-        success=True,
-        requires_manual_action=True,
-        artifact_path=str(tmp_path / "app.dmg"),
-        instructions="Drag to Applications",
-    )
-    monkeypatch.setattr(win2, "_get_update_manager", lambda: FakeManager(guided_res))
-    monkeypatch.setattr(win2, "_show_guided_update_dialog", lambda r: guided_calls.append(r))
-    win2._on_update_download_finished(str(tmp_path / "app.dmg"))
-    assert guided_calls == [guided_res]
+    try:
+        guided_calls = []
+        restarts = []
+        closed = []
+
+        class FakeManager:
+            def __init__(self, result):
+                self._result = result
+
+            def install_update(self, path, release=None):
+                return self._result
+
+            def restart_application(self):
+                restarts.append(True)
+                return True
+
+        # 1) Auto restart flow (Velopack / pip wheel)
+        auto_mgr = FakeManager(
+            InstallResult(status=UpdateStatus.RESTART_REQUIRED, success=True, restart_required=True)
+        )
+        monkeypatch.setattr(win, "_get_update_manager", lambda: auto_mgr)
+        monkeypatch.setattr(win, "close", lambda: closed.append(True))
+        win._on_update_download_finished(str(tmp_path / "update.whl"))
+        assert restarts == [True]
+        assert closed == [True]
+
+        # 2) Guided flow (Portable ZIP / macOS DMG / Linux .deb)
+        guided_res = InstallResult(
+            status=UpdateStatus.GUIDED_ACTION_REQUIRED,
+            success=True,
+            requires_manual_action=True,
+            artifact_path=str(tmp_path / "app.dmg"),
+            instructions="Drag to Applications",
+        )
+        monkeypatch.setattr(win2, "_get_update_manager", lambda: FakeManager(guided_res))
+        monkeypatch.setattr(win2, "_show_guided_update_dialog", lambda r: guided_calls.append(r))
+        win2._on_update_download_finished(str(tmp_path / "app.dmg"))
+        assert guided_calls == [guided_res]
+    finally:
+        win.deleteLater()
+        win2.close()
+        win2.deleteLater()
 
 
 def test_run_velopack_bootstrap_only_imports_when_needed(monkeypatch):
@@ -243,24 +258,34 @@ def test_repeated_manual_update_check_does_not_crash(qapp, monkeypatch):
     """Calling _manual_update_check multiple times after worker deletion must not raise RuntimeError."""
     from spectroview.model.m_update_manager import UpdateManager
 
+    monkeypatch.setattr(
+        UpdateManager,
+        "check_for_updates",
+        lambda self, force=False: _sample_result(available=False),
+    )
+
     win = _make_stub_main()
-    monkeypatch.setattr(win, "_get_update_manager", lambda: UpdateManager("26.46.1"))
-    monkeypatch.setattr(win, "_on_manual_check_done", lambda: None)
-    monkeypatch.setattr(win, "_on_manual_check_succeeded", lambda r: None)
-    monkeypatch.setattr(win, "_on_manual_check_failed", lambda e: None)
+    try:
+        monkeypatch.setattr(win, "_get_update_manager", lambda: UpdateManager("26.46.1"))
+        monkeypatch.setattr(win, "_on_manual_check_done", lambda: None)
+        monkeypatch.setattr(win, "_on_manual_check_succeeded", lambda r: None)
+        monkeypatch.setattr(win, "_on_manual_check_failed", lambda e: None)
 
-    # First check
-    win._manual_update_check()
-    assert win._manual_check_worker is not None
-    first_worker = win._manual_check_worker
-    first_worker.wait(2000)
-    qapp.processEvents()
+        # First check
+        win._manual_update_check()
+        assert win._manual_check_worker is not None
+        first_worker = win._manual_check_worker
+        first_worker.wait(2000)
+        qapp.processEvents()
 
-    # Second check must safely proceed without RuntimeError: Internal C++ object already deleted
-    win._manual_update_check()
-    assert win._manual_check_worker is not None
-    win._manual_check_worker.wait(2000)
-    qapp.processEvents()
+        # Second check must safely proceed without RuntimeError: Internal C++ object already deleted
+        win._manual_update_check()
+        assert win._manual_check_worker is not None
+        win._manual_check_worker.wait(2000)
+        qapp.processEvents()
+    finally:
+        win.close()
+        win.deleteLater()
 
 
 def test_manual_update_check_with_deleted_cpp_worker_does_not_crash(qapp, monkeypatch):
@@ -268,23 +293,33 @@ def test_manual_update_check_with_deleted_cpp_worker_does_not_crash(qapp, monkey
     from PySide6.QtCore import QThread
     from spectroview.model.m_update_manager import UpdateManager
 
+    monkeypatch.setattr(
+        UpdateManager,
+        "check_for_updates",
+        lambda self, force=False: _sample_result(available=False),
+    )
+
     win = _make_stub_main()
-    monkeypatch.setattr(win, "_get_update_manager", lambda: UpdateManager("26.46.1"))
-    monkeypatch.setattr(win, "_on_manual_check_done", lambda: None)
-    monkeypatch.setattr(win, "_on_manual_check_succeeded", lambda r: None)
-    monkeypatch.setattr(win, "_on_manual_check_failed", lambda e: None)
+    try:
+        monkeypatch.setattr(win, "_get_update_manager", lambda: UpdateManager("26.46.1"))
+        monkeypatch.setattr(win, "_on_manual_check_done", lambda: None)
+        monkeypatch.setattr(win, "_on_manual_check_succeeded", lambda r: None)
+        monkeypatch.setattr(win, "_on_manual_check_failed", lambda e: None)
 
-    # Artificially set a worker that has been destroyed via deleteLater
-    dead_worker = QThread()
-    dead_worker.deleteLater()
-    qapp.processEvents()
-    win._manual_check_worker = dead_worker
+        # Artificially set a worker that has been destroyed via deleteLater
+        dead_worker = QThread()
+        dead_worker.deleteLater()
+        qapp.processEvents()
+        win._manual_check_worker = dead_worker
 
-    # Calling _manual_update_check must not raise RuntimeError: Internal C++ object already deleted
-    win._manual_update_check()
-    assert win._manual_check_worker is not None
-    assert win._manual_check_worker is not dead_worker
-    win._manual_check_worker.wait(2000)
-    qapp.processEvents()
+        # Calling _manual_update_check must not raise RuntimeError: Internal C++ object already deleted
+        win._manual_update_check()
+        assert win._manual_check_worker is not None
+        assert win._manual_check_worker is not dead_worker
+        win._manual_check_worker.wait(2000)
+        qapp.processEvents()
+    finally:
+        win.close()
+        win.deleteLater()
 
 

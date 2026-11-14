@@ -287,7 +287,8 @@ class TestRobustLosses:
                 upper_bounds=np.array([10.0, 10.0]), loss="soft_l1", f_scale=0.0,
             )
 
-    def test_soft_l1_outperforms_linear_with_outliers(self):
+    @pytest.mark.parametrize("loss_name", ["soft_l1", "huber"])
+    def test_robust_loss_outperforms_linear_with_outliers(self, loss_name):
         x, evaluate_fn, jacobian_fn = _linear_problem()
         true_p = np.array([[3.0, -2.0]])
         Y = evaluate_fn(x, true_p)
@@ -300,48 +301,21 @@ class TestRobustLosses:
         p0 = np.array([[1.0, 1.0]])
         bounds = (np.array([-100.0, -100.0]), np.array([100.0, 100.0]))
 
-        p_lin, s_lin, _ = batched_levenberg_marquardt(
-            x=x, Y_data=Y_spikes, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
-            p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss="linear",
-        )
-        p_soft, s_soft, _ = batched_levenberg_marquardt(
-            x=x, Y_data=Y_spikes, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
-            p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss="soft_l1", f_scale=1.0,
-        )
-
-        err_lin = np.linalg.norm(p_lin[0] - true_p[0])
-        err_soft = np.linalg.norm(p_soft[0] - true_p[0])
-
-        assert s_soft[0]
-        # soft_l1 should be substantially closer to true parameters than linear
-        assert err_soft < err_lin / 3.0
-
-    def test_huber_outperforms_linear_with_outliers(self):
-        x, evaluate_fn, jacobian_fn = _linear_problem()
-        true_p = np.array([[3.0, -2.0]])
-        Y = evaluate_fn(x, true_p)
-        Y_spikes = Y.copy()
-        Y_spikes[0, 10] += 50.0
-        Y_spikes[0, 25] += 80.0
-        Y_spikes[0, 40] -= 60.0
-
-        p0 = np.array([[1.0, 1.0]])
-        bounds = (np.array([-100.0, -100.0]), np.array([100.0, 100.0]))
-
         p_lin, _, _ = batched_levenberg_marquardt(
             x=x, Y_data=Y_spikes, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
             p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss="linear",
         )
-        p_huber, s_huber, _ = batched_levenberg_marquardt(
+        p_rob, s_rob, _ = batched_levenberg_marquardt(
             x=x, Y_data=Y_spikes, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
-            p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss="huber", f_scale=1.0,
+            p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss=loss_name, f_scale=1.0,
         )
 
         err_lin = np.linalg.norm(p_lin[0] - true_p[0])
-        err_huber = np.linalg.norm(p_huber[0] - true_p[0])
+        err_rob = np.linalg.norm(p_rob[0] - true_p[0])
 
-        assert s_huber[0]
-        assert err_huber < err_lin / 3.0
+        assert s_rob[0]
+        # robust loss should be substantially closer to true parameters than linear
+        assert err_rob < err_lin / 3.0
 
     def test_clean_data_inliers_converge_accurately(self):
         x, evaluate_fn, jacobian_fn = _linear_problem()

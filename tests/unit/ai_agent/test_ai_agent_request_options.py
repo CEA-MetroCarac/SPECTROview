@@ -52,7 +52,7 @@ class TestOllamaToolCallsAreJsonSerializable:
     discovered via live verification against real qwen3:8b, where every
     successful tool-calling turn failed to persist to conversation history."""
 
-    def test_tool_calls_are_normalized_to_plain_dicts(self):
+    def test_tool_calls_are_normalized_to_plain_dicts(self, monkeypatch):
         fake_tc = _FakePydanticToolCall("plot_graph", {"x": "Slot", "grid": True})
 
         def fake_chat(**kwargs):
@@ -60,7 +60,7 @@ class TestOllamaToolCallsAreJsonSerializable:
 
         with patch.object(m, "_ollama") as fake_ollama:
             fake_ollama.chat.side_effect = fake_chat
-            m.OLLAMA_AVAILABLE = True
+            monkeypatch.setattr(m, "OLLAMA_AVAILABLE", True)
 
             captured = {}
             worker = m.LLMWorker(model="qwen3:8b", messages=[], tools=None)
@@ -73,7 +73,7 @@ class TestOllamaToolCallsAreJsonSerializable:
         json.dumps(tool_calls)
         assert tool_calls[0] == {"function": {"name": "plot_graph", "arguments": {"x": "Slot", "grid": True}}}
 
-    def test_plain_dict_tool_calls_pass_through_unchanged(self):
+    def test_plain_dict_tool_calls_pass_through_unchanged(self, monkeypatch):
         """If a future ollama version ever returns plain dicts directly,
         the normalization must be a no-op, not an error."""
         plain_tc = {"function": {"name": "plot_graph", "arguments": {"x": "Slot"}}}
@@ -83,7 +83,7 @@ class TestOllamaToolCallsAreJsonSerializable:
 
         with patch.object(m, "_ollama") as fake_ollama:
             fake_ollama.chat.side_effect = fake_chat
-            m.OLLAMA_AVAILABLE = True
+            monkeypatch.setattr(m, "OLLAMA_AVAILABLE", True)
 
             captured = {}
             worker = m.LLMWorker(model="qwen3:8b", messages=[], tools=None)
@@ -97,7 +97,7 @@ class TestOllamaWorkerAppliesOptions:
     """Constructs LLMWorker directly and calls .run() synchronously —
     no LLMClient, no .start(), no real thread."""
 
-    def test_num_ctx_and_think_forwarded_to_ollama_chat(self):
+    def test_num_ctx_and_think_forwarded_to_ollama_chat(self, monkeypatch):
         captured = {}
 
         def fake_chat(**kwargs):
@@ -106,7 +106,7 @@ class TestOllamaWorkerAppliesOptions:
 
         with patch.object(m, "_ollama") as fake_ollama:
             fake_ollama.chat.side_effect = fake_chat
-            m.OLLAMA_AVAILABLE = True
+            monkeypatch.setattr(m, "OLLAMA_AVAILABLE", True)
 
             worker = m.LLMWorker(
                 model="qwen3:8b",
@@ -120,12 +120,12 @@ class TestOllamaWorkerAppliesOptions:
         assert captured["options"] == {"num_ctx": 8192, "num_predict": 4096}
         assert captured["think"] is False
 
-    def test_no_timeout_uses_module_level_chat(self):
+    def test_no_timeout_uses_module_level_chat(self, monkeypatch):
         """When timeout is None, the module-level ollama.chat() convenience
         function is used directly rather than constructing a Client."""
         with patch.object(m, "_ollama") as fake_ollama:
             fake_ollama.chat.return_value = _FakeStream()
-            m.OLLAMA_AVAILABLE = True
+            monkeypatch.setattr(m, "OLLAMA_AVAILABLE", True)
 
             worker = m.LLMWorker(model="qwen3:8b", messages=[], tools=None)
             worker.run()
@@ -133,10 +133,10 @@ class TestOllamaWorkerAppliesOptions:
             fake_ollama.chat.assert_called_once()
             fake_ollama.Client.assert_not_called()
 
-    def test_timeout_constructs_a_client_with_timeout(self):
+    def test_timeout_constructs_a_client_with_timeout(self, monkeypatch):
         with patch.object(m, "_ollama") as fake_ollama:
             fake_ollama.Client.return_value.chat.return_value = _FakeStream()
-            m.OLLAMA_AVAILABLE = True
+            monkeypatch.setattr(m, "OLLAMA_AVAILABLE", True)
 
             worker = m.LLMWorker(model="qwen3:8b", messages=[], tools=None, timeout=120.0)
             worker.run()

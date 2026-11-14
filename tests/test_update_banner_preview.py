@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout,
     QLabel, QPushButton, QHBoxLayout, QFrame
 )
-from PySide6.QtCore import Qt, QTimer
 
 from spectroview.view.components.v_update_banner import VUpdateBanner
 
@@ -136,9 +135,10 @@ def _run_real_check():
     from spectroview.model.m_update_checker import UpdateCheckerWorker
 
     print(f"\n[Real check] Current app version : {VERSION}")
-    print(f"[Real check] Querying GitHub API  : https://api.github.com/repos/CEA-MetroCarac/SPECTROview/releases/latest\n")
+    print("[Real check] Querying GitHub API  : https://api.github.com/repos/CEA-MetroCarac/SPECTROview/releases/latest\n")
 
-    app = QApplication.instance() or QApplication(sys.argv)
+    if QApplication.instance() is None:
+        QApplication(sys.argv)
 
     worker = UpdateCheckerWorker(current_version=VERSION)
 
@@ -178,3 +178,20 @@ if __name__ == "__main__":
     win = BannerPreviewWindow()
     win.show()
     sys.exit(app.exec())
+
+
+def test_banner_preview_window_modes(qapp):
+    """BannerPreviewWindow builds both dark and light preview cards and supports dismiss/reset."""
+    win = BannerPreviewWindow()
+    try:
+        assert win._dark_banner is not None
+        assert win._light_banner is not None
+        assert not win._dark_banner.isHidden()
+        assert not win._light_banner.isHidden()
+        win._dark_banner._dismiss()
+        assert win._dark_banner.isHidden()
+        win._reset_banner("dark")
+        assert not win._dark_banner.isHidden()
+    finally:
+        win.close()
+        win.deleteLater()

@@ -1,6 +1,7 @@
 """Discovery, validation, resources, and errors for the full desktop profile."""
 
 import asyncio
+import functools
 import json
 
 from mcp import ClientSession
@@ -59,6 +60,11 @@ async def _catalog(full=True):
             return tools, resources
 
 
+@functools.lru_cache(maxsize=2)
+def _cached_catalog(full: bool = True):
+    return asyncio.run(_catalog(full=full))
+
+
 def _call(tool_name, arguments):
     async def run():
         server = create_desktop_mcp_server(DesktopContext())
@@ -75,7 +81,7 @@ def _json_result(result):
 
 class TestDiscoveryAndSchemas:
     def test_full_profile_exposes_high_value_capabilities(self):
-        tools, resources = asyncio.run(_catalog())
+        tools, resources = _cached_catalog()
         names = {tool.name for tool in tools}
         assert {
             "get_application_state", "list_datasets", "get_spectrum",
@@ -89,13 +95,13 @@ class TestDiscoveryAndSchemas:
         }
 
     def test_internal_chat_profile_stays_compact(self):
-        tools, _ = asyncio.run(_catalog(full=False))
+        tools, _ = _cached_catalog(full=False)
         assert {tool.name for tool in tools} == {
             "query_dataframe", "plot_graph", "plot_graphs", "get_statistics", "update_graph", "delete_graph"
         }
 
     def test_workspace_and_limits_are_typed(self):
-        tools, _ = asyncio.run(_catalog())
+        tools, _ = _cached_catalog()
         schemas = {tool.name: tool.input_schema for tool in tools}
         assert set(schemas["fit_spectrum"]["properties"]["workspace"]["enum"]) == {
             "spectra", "maps"
@@ -105,7 +111,7 @@ class TestDiscoveryAndSchemas:
         assert schemas["export_results"]["properties"]["overwrite"]["default"] is False
 
     def test_permission_hints_distinguish_reads_mutations_and_filesystem_writes(self):
-        tools, _ = asyncio.run(_catalog())
+        tools, _ = _cached_catalog()
         catalog = {tool.name: tool for tool in tools}
         assert catalog["get_application_state"].annotations.read_only_hint is True
         assert catalog["crop_spectrum"].annotations.destructive_hint is True

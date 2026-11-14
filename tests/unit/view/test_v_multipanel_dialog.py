@@ -7,7 +7,6 @@ as VWorkspaceGraphs wires them up (see test_v_graph_plotting.py's own
 docstring for why this codebase makes an exception to its usual
 "View layer: not tested" policy for the Graph Workspace).
 """
-import pandas as pd
 import pytest
 
 from spectroview.view.components.v_graph import VGraph
@@ -49,13 +48,6 @@ class TestSuggestGrid:
     def test_grid_always_has_enough_cells(self, n):
         rows, cols = suggest_grid(n)
         assert rows * cols >= n
-
-
-@pytest.fixture(scope="module")
-def excel_df(dataframe_excel_file):
-    if not dataframe_excel_file.exists():
-        pytest.skip("dataset_Excel.xlsx not present")
-    return pd.read_excel(dataframe_excel_file, sheet_name="sheet1")
 
 
 def _plotted_graph(graph_id, excel_df, plot_style="scatter", x="x0_Si", y=None, z=None):

@@ -5,6 +5,7 @@ import pytest
 
 @pytest.fixture(scope="module")
 def _shared_main_window(qapp):
+    from PySide6.QtCore import QEvent
     import spectroview.main as main_mod
     original_prewarm = getattr(main_mod.Main, "_prewarm_ai_chat", None)
     main_mod.Main._prewarm_ai_chat = lambda self: None
@@ -31,6 +32,9 @@ def _shared_main_window(qapp):
 
     yield window
     window.close()
+    window.deleteLater()
+    qapp.sendPostedEvents(None, QEvent.DeferredDelete)
+    qapp.processEvents()
     if original_prewarm:
         main_mod.Main._prewarm_ai_chat = original_prewarm
 
@@ -131,8 +135,13 @@ def test_plot_theme_defaults_to_light_mode(main_window):
     settings = main_window.settings
     settings.set_theme("dark")
     settings.save_view_options({})
-    main_window.setup_connections()
-    main_window._propagate_theme(main_window.settings.get_theme())
+    persisted_view_options = settings.load_view_options()
+    main_window.v_spectra_workspace.v_spectra_viewer.set_options_state(persisted_view_options)
+    main_window.v_maps_workspace.v_spectra_viewer.set_options_state(persisted_view_options)
+    main_window.v_maps_workspace.v_map_viewer.apply_plot_style(
+        main_window.v_maps_workspace.v_spectra_viewer.cbb_theme.currentText()
+    )
+    main_window._propagate_theme(settings.get_theme())
 
     assert main_window.v_spectra_workspace.v_spectra_viewer.cbb_theme.currentText() == "Light Mode"
     assert main_window.v_maps_workspace.v_spectra_viewer.cbb_theme.currentText() == "Light Mode"
@@ -145,9 +154,14 @@ def test_plot_theme_persists_across_app_restart(main_window):
     settings.set_theme("dark")
     settings.save_view_options({"theme": "Dark Mode"})
 
-    # Simulate application startup sequence
-    main_window.setup_connections()
-    main_window._propagate_theme(main_window.settings.get_theme())
+    # Simulate application startup sequence without duplicating signal connections
+    persisted_view_options = settings.load_view_options()
+    main_window.v_spectra_workspace.v_spectra_viewer.set_options_state(persisted_view_options)
+    main_window.v_maps_workspace.v_spectra_viewer.set_options_state(persisted_view_options)
+    main_window.v_maps_workspace.v_map_viewer.apply_plot_style(
+        main_window.v_maps_workspace.v_spectra_viewer.cbb_theme.currentText()
+    )
+    main_window._propagate_theme(settings.get_theme())
 
     assert main_window.settings.get_theme() == "dark"
     assert main_window.v_spectra_workspace.v_spectra_viewer.cbb_theme.currentText() == "Dark Mode"

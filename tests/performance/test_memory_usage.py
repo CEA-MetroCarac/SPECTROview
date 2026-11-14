@@ -15,27 +15,13 @@ not seconds); it does not change what's being measured.
 """
 import tracemalloc
 
-import numpy as np
 import pytest
 
 from spectroview.model.m_io import load_map_file
 from spectroview.fit_engine.vbf_engine import VBFengine
+from tests.performance.conftest import _get_xy_from_map, _load_fit_model
 
 pytestmark = pytest.mark.slow
-
-
-def _get_xy_from_map(df):
-    wavenumbers = [float(c) for c in df.columns[2:]]
-    x = np.array(wavenumbers, dtype=np.float64)
-    Y = df.iloc[:, 2:].to_numpy(dtype=np.float64)
-    return x, Y
-
-
-def _load_fit_model(json_path):
-    import json
-    with open(json_path, "r") as f:
-        data = json.load(f)
-    return data.get("0", data)
 
 
 def _peak_traced_memory_mb(fn):

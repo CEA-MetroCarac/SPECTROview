@@ -27,7 +27,7 @@ class TestThinkingChannelNeverMergedIntoAnswer:
     """Worker-level regression test: message["thinking"] must never reach
     chunk_received/response_ready — only thinking_chunk_received."""
 
-    def test_thinking_and_content_stay_on_separate_signals(self):
+    def test_thinking_and_content_stay_on_separate_signals(self, monkeypatch):
         def fake_chat(**kwargs):
             return [
                 {"message": {"thinking": "Let me plan this out..."}},
@@ -37,7 +37,7 @@ class TestThinkingChannelNeverMergedIntoAnswer:
 
         with patch.object(m, "_ollama") as fake_ollama:
             fake_ollama.chat.side_effect = fake_chat
-            m.OLLAMA_AVAILABLE = True
+            monkeypatch.setattr(m, "OLLAMA_AVAILABLE", True)
 
             thinking_fragments = []
             content_fragments = []
@@ -49,13 +49,13 @@ class TestThinkingChannelNeverMergedIntoAnswer:
         assert thinking_fragments == ["Let me plan this out...", " I'll call plot_graph."]
         assert content_fragments == ["Done!"]
 
-    def test_no_thinking_field_produces_no_thinking_signal(self):
+    def test_no_thinking_field_produces_no_thinking_signal(self, monkeypatch):
         def fake_chat(**kwargs):
             return [{"message": {"content": "Plain answer."}}]
 
         with patch.object(m, "_ollama") as fake_ollama:
             fake_ollama.chat.side_effect = fake_chat
-            m.OLLAMA_AVAILABLE = True
+            monkeypatch.setattr(m, "OLLAMA_AVAILABLE", True)
 
             thinking_fragments = []
             worker = m.LLMWorker(model="qwen2.5-coder:7b", messages=[], tools=None)

@@ -13,6 +13,7 @@ into both tiers and into the schema the model is actually constrained by, so a
 future prompt edit cannot quietly drop it again.
 """
 import asyncio
+import functools
 
 import pandas as pd
 import pytest
@@ -24,6 +25,7 @@ from spectroview.ai_agent.mcp.server import create_mcp_server
 from spectroview.ai_agent.vm_chat import VMChat
 
 
+@functools.lru_cache(maxsize=1)
 def _schemas():
     async def _run():
         server = create_mcp_server(RecordingContext())

@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from spectroview.model.spectra_store import SpectraStore
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 
 
@@ -544,7 +543,6 @@ class TestFitting:
         assert vm._fit_thread is None
 
     def test_apply_fit_model_and_run_via_fit_model_builder(self, vm, qapp, fit_model_si_file, tmp_path):
-        import json
         from unittest.mock import MagicMock
 
         x = np.linspace(460, 570, 300)
@@ -644,23 +642,13 @@ class TestResultsExtraction:
         numeric = vm.df_fit_results.select_dtypes("number")
         assert numeric.equals(numeric.round(2))
 
-    def test_compute_column_from_expression(self, vm, qapp, monkeypatch):
-        from PySide6.QtWidgets import QMessageBox
-        monkeypatch.setattr(QMessageBox, "information", lambda *a, **k: None)
-        monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: None)
-        monkeypatch.setattr(QMessageBox, "critical", lambda *a, **k: None)
-
+    def test_compute_column_from_expression(self, vm):
         vm.df_fit_results = pd.DataFrame({"Filename": ["s1", "s2"], "ampli_P1": [10.0, 20.0], "fwhm_P1": [2.0, 4.0]})
         vm.compute_column_from_expression("area_P1", "ampli_P1 * fwhm_P1")
         assert "area_P1" in vm.df_fit_results.columns
         assert vm.df_fit_results["area_P1"].tolist() == [20.0, 80.0]
 
-    def test_compute_column_uses_results_decimals(self, vm, monkeypatch):
-        from PySide6.QtWidgets import QMessageBox
-        monkeypatch.setattr(QMessageBox, "information", lambda *a, **k: None)
-        monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: None)
-        monkeypatch.setattr(QMessageBox, "critical", lambda *a, **k: None)
-
+    def test_compute_column_uses_results_decimals(self, vm):
         vm.set_results_decimals(1)
         vm.df_fit_results = pd.DataFrame({"Filename": ["s1", "s2"], "a": [1.0, 2.0], "b": [3.0, 3.0]})
         vm.compute_column_from_expression("ratio", "a / b")
@@ -676,9 +664,49 @@ class TestResultsExtraction:
         assert "already exists" in warnings[0]
 
     def test_add_column_from_filename(self, vm):
-        vm.df_fit_results = pd.DataFrame({"Filename": ["sampleA_run1", "sampleB_run2"], "x0_P1": [1.0, 2.0]})
-        vm.add_column_from_filename("sample", 0)
-        assert vm.df_fit_results["sample"].tolist() == ["sampleA", "sampleB"]
+        vm.df_fit_results = pd.DataFrame({
+            "Filename": ["map1_10.5_zoneA", "map1_20.3_zoneB", "map1_30.1_zoneC"],
+            "x0_P1": [1.0, 2.0, 3.0],
+        })
+        vm.add_column_from_filename("Sample", 0)
+        assert vm.df_fit_results["Sample"].tolist() == ["map1", "map1", "map1"]
+
+        vm.add_column_from_filename("Power", 1)
+        assert "Power" in vm.df_fit_results.columns
+        assert pd.api.types.is_numeric_dtype(vm.df_fit_results["Power"])
+        assert vm.df_fit_results["Power"].tolist() == [10.5, 20.3, 30.1]
+
+        vm.add_column_from_filename("Zone", 2)
+        assert vm.df_fit_results["Zone"].tolist() == ["zoneA", "zoneB", "zoneC"]
+
+    def test_save_df_to_excel(self, tmp_path):
+        import openpyxl
+        from spectroview.viewmodel.utils import save_df_to_excel
+
+        df = pd.DataFrame({
+            "Filename": ["map1_10.5_zoneA", "map1_20.3_zoneB", "map1_30.1_zoneC"],
+            "X": [1.0, 2.0, 3.0],
+            "Y": [4.0, 5.0, 6.0],
+            "P1_x0": [520.0, 521.0, 522.0],
+        })
+        out_file = tmp_path / "test_results.xlsx"
+        ok, _ = save_df_to_excel(str(out_file), df)
+        assert ok is True
+        assert out_file.exists()
+
+        wb = openpyxl.load_workbook(out_file)
+        ws = wb["Results"]
+        assert ws["A1"].value == "Filename"
+        assert ws["D1"].value == "P1_x0"
+        assert ws["B2"].value == 1.0
+        wb.close()
+
+    def test_save_df_to_excel_empty(self, tmp_path):
+        from spectroview.viewmodel.utils import save_df_to_excel
+
+        out_file = tmp_path / "empty.xlsx"
+        ok, _ = save_df_to_excel(str(out_file), pd.DataFrame())
+        assert ok is False
 
 
 class TestErrorHandling:

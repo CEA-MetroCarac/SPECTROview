@@ -425,3 +425,66 @@ class TestEvaluatorZeroCopyAndThresholdLookup:
 
         assert np.all(p[0::2, ampli_free] > 0.0)
         assert np.all(p[1::2, ampli_free] == 0.0)
+
+    def test_jacobian_parameter_slices_are_c_contiguous(self):
+        x = np.linspace(350.0, 650.0, 100)
+        ev = VBFevaluator.from_fit_model({
+            "peak_models": {
+                "0": _lorentzian_peak(value=100.0, x0=450.0),
+                "1": _lorentzian_peak(value=80.0, x0=550.0),
+            }
+        })
+        p = np.tile(ev.initial_params, (10, 1))
+        J = ev.jacobian(x, p)
+        assert J.shape == (10, 100, 6)
+        for k in range(J.shape[2]):
+            assert J[:, :, k].flags["C_CONTIGUOUS"]
+
+    def test_dual_number_expression_jacobian_matches_richardson_extrapolation(self):
+        x = np.linspace(350.0, 650.0, 120)
+        # Out-of-order chained expressions: Peak 2 depends on Peak 3, which depends on Peak 1
+        fit_model = {
+            "peak_models": {
+                "0": _lorentzian_peak(value=100.0, fwhm=6.0, x0=450.0),
+                "1": {
+                    "Lorentzian": {
+                        "ampli": {"value": 10.0, "min": 0.0, "max": 1e5, "vary": False, "expr": "0.5 * P3_ampli + sqrt(P1_ampli)"},
+                        "fwhm": {"value": 6.0, "min": 0.1, "max": 100.0, "vary": False, "expr": "P3_fwhm * exp(0.01 * P1_fwhm)"},
+                        "x0": {"value": 520.0, "min": 300.0, "max": 700.0, "vary": False, "expr": "P3_x0 + 25.0 + log(P1_fwhm)"},
+                    }
+                },
+                "2": {
+                    "Lorentzian": {
+                        "ampli": {"value": 60.0, "min": 0.0, "max": 1e5, "vary": False, "expr": "0.6 * P1_ampli"},
+                        "fwhm": {"value": 6.0, "min": 0.1, "max": 100.0, "vary": False, "expr": "P1_fwhm ** 1.1"},
+                        "x0": {"value": 490.0, "min": 300.0, "max": 700.0, "vary": False, "expr": "P1_x0 + 40.0 + sin(P1_fwhm) - cos(P1_fwhm)"},
+                    }
+                },
+            }
+        }
+        ev = VBFevaluator.from_fit_model(fit_model)
+        p_batch = np.array([
+            [100.0, 6.0, 450.0],
+            [140.0, 8.5, 462.0],
+            [75.0, 4.5, 441.0],
+        ])
+        J_ana = ev.jacobian(x, p_batch)
+
+        # 4th-order Richardson finite difference reference
+        J_fd = np.empty_like(J_ana)
+        for k in range(p_batch.shape[1]):
+            h = np.maximum(np.abs(p_batch[:, k]) * 1e-5, 1e-6)
+            p_p1, p_m1 = p_batch.copy(), p_batch.copy()
+            p_p2, p_m2 = p_batch.copy(), p_batch.copy()
+            p_p1[:, k] += h
+            p_m1[:, k] -= h
+            p_p2[:, k] += 2.0 * h
+            p_m2[:, k] -= 2.0 * h
+            f_p1 = ev.evaluate(x, p_p1)
+            f_m1 = ev.evaluate(x, p_m1)
+            f_p2 = ev.evaluate(x, p_p2)
+            f_m2 = ev.evaluate(x, p_m2)
+            J_fd[:, :, k] = (-f_p2 + 8.0 * f_p1 - 8.0 * f_m1 + f_m2) / (12.0 * h[:, None])
+
+        np.testing.assert_allclose(J_ana, J_fd, rtol=1e-8, atol=1e-8)
+

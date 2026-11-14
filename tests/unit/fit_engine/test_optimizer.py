@@ -438,3 +438,61 @@ class TestPriority1Optimizations:
         np.testing.assert_allclose(out[0], b_mix[0])
         np.testing.assert_array_equal(out[1], np.zeros(4))
         np.testing.assert_allclose(out[2], b_mix[2])
+
+    def test_large_batch_chunking_matches_unchunked_and_supports_progress_and_cancel(self):
+        from spectroview.fit_engine.optimizer import _lm_batch_core
+
+        rng = np.random.default_rng(77)
+        N, M, K = 2200, 300, 2  # N >= 2048 and N * M * K = 1,320,000 > 1,048,576 triggers chunking
+        x = np.linspace(0.0, 10.0, M)
+
+        def evaluate_fn(x_in, p, out=None):
+            res = p[:, 0:1] * x_in[None, :] + p[:, 1:2]
+            if out is not None:
+                out[:] = res
+                return out
+            return res
+
+        def jacobian_fn(x_in, p, out=None):
+            n_r = p.shape[0]
+            J = np.empty((n_r, len(x_in), 2)) if out is None else out
+            J[:, :, 0] = x_in[None, :]
+            J[:, :, 1] = 1.0
+            return J
+
+        true_p = np.column_stack([rng.uniform(1.0, 5.0, N), rng.uniform(-3.0, 3.0, N)])
+        Y = evaluate_fn(x, true_p)
+        p0 = np.tile([0.5, 0.0], (N, 1))
+        lo = np.array([-50.0, -50.0])
+        hi = np.array([50.0, 50.0])
+
+        progress = []
+        p_chunked, s_chunked, c_chunked = batched_levenberg_marquardt(
+            x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+            p0=p0, lower_bounds=lo, upper_bounds=hi,
+            progress_callback=lambda cur, tot: progress.append((cur, tot)),
+        )
+        assert s_chunked.all()
+        assert progress[-1] == (N, N)
+
+        # Compare against direct unchunked _lm_batch_core
+        p_unchunked, s_unchunked, c_unchunked, _ = _lm_batch_core(
+            x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+            p=p0.copy(), lo=lo, hi=hi, weights=None, weights_is_ones=True,
+            max_iter=200, xtol=1e-4, ftol=1e-4, loss="linear", f_scale=1.0,
+            eval_buf=np.empty((N, M)), J_buf_base=np.empty((K, N, M)),
+        )
+        np.testing.assert_allclose(p_chunked, p_unchunked, rtol=1e-12, atol=1e-12)
+        np.testing.assert_array_equal(s_chunked, s_unchunked)
+        np.testing.assert_allclose(c_chunked, c_unchunked, rtol=1e-12, atol=1e-12)
+
+        # Verify early cancellation across chunk boundaries populates remaining costs finitely
+        calls = {"n": 0}
+        p_canc, s_canc, c_canc = batched_levenberg_marquardt(
+            x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+            p0=p0, lower_bounds=lo, upper_bounds=hi,
+            cancel_check=lambda: (calls.__setitem__("n", calls["n"] + 1) or calls["n"] > 1),
+        )
+        assert np.isfinite(p_canc).all()
+        assert np.isfinite(c_canc).all()
+

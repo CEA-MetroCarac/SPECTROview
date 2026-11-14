@@ -22,10 +22,11 @@ The VBF engine is a custom **batched Levenberg-Marquardt** optimizer that simult
    - Register in `BATCHED_MODELS` and register the scalar reference in `scalar_models.py`.
    - Add the model name to `PEAK_MODELS` in `spectroview/__init__.py`.
    - Validate the Jacobian against `numerical_jacobian()` on random parameters across the parameter domain.
-4. **In-Place Arithmetic in `models.py`**:
-   - Compute reciprocal terms (`1 / width`) once and broadcast.
-   - Accumulate Jacobian slices in place (`*=`, `+=`, `out=`).
-   - Validate rewrites against reference implementations to $\le 10^{-10}$ relative error.
+4. **In-Place Arithmetic & `(K, N, M)` Jacobian Layout in `models.py` / `optimizer.py`**:
+   - Compute reciprocal terms (`1 / width`) once as `(N, 1)` vectors and broadcast.
+   - Write model evaluations and Jacobian derivatives directly into `out=` and `J[:, :, k]` slices from the first operation (`np.subtract(..., out=...)`, `J[:, :, 1] = dx * J[:, :, 2] * inv_w`) to avoid temporary `(N, M)` heap allocations.
+   - Keep `J_buf_base` allocated as `(K, N, M)` and transposed via `.transpose(1, 2, 0)` so that both `J[:, :, k]` slices are C-contiguous `(N, M)` arrays and the contraction dimension `M` is stride-8 contiguous for `JT_r @ J_r` BLAS calls.
+   - Preserve exact scalar/batched parity (`1e-15` width clamp, `1e-30` tau clamp) between `scalar_models.py` and `models.py`, and validate rewrites against reference implementations to $\le 10^{-10}$ relative error.
 
 ---
 

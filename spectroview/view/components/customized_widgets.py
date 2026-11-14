@@ -6,8 +6,7 @@ from PySide6.QtWidgets import QComboBox, QLineEdit, QLabel, QSizePolicy
 
 import numpy as np
 import matplotlib as mpl
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT
 
 from spectroview import PALETTE
 

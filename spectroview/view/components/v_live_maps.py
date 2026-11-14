@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, Normalize
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator, AutoLocator
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QAction, QDoubleValidator
@@ -1873,10 +1873,10 @@ class VLiveMaps(QWidget):
         self._update_visibility()
 
     def _wrap_menu_row(self, parent_widget: QWidget, label: str, widget: QWidget) -> QWidget:
-        """Build a compact label + control row with VSpectraViewer-matching (2, 2, 2, 2) margins."""
+        """Build a compact label + control row with compact vertical margins."""
         row_widget = QWidget(parent_widget)
         row_layout = QHBoxLayout(row_widget)
-        row_layout.setContentsMargins(2, 2, 2, 2)
+        row_layout.setContentsMargins(2, 1, 2, 1)
         row_layout.setSpacing(6)
         row_layout.addWidget(QLabel(label, row_widget))
         row_layout.addWidget(widget, stretch=1)
@@ -2061,7 +2061,7 @@ class VLiveMaps(QWidget):
 
         ratio_widget = QWidget(left_col)
         ratio_layout = QHBoxLayout(ratio_widget)
-        ratio_layout.setContentsMargins(2, 2, 2, 2)
+        ratio_layout.setContentsMargins(2, 1, 2, 1)
         ratio_layout.setSpacing(4)
         ratio_layout.addWidget(QLabel("Copied figure size:", ratio_widget))
         ratio_layout.addStretch(1)

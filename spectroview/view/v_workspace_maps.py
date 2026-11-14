@@ -1,9 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QVBoxLayout, QHBoxLayout, QFrame, QDialog, QApplication, QFileDialog, QMessageBox
+    QVBoxLayout, QHBoxLayout, QFrame, QDialog, QFileDialog, QMessageBox
 )
 
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
@@ -12,7 +12,6 @@ from spectroview.view.components.v_map_viewer import VMapViewer
 from spectroview.view.components.v_map_viewer_dialog import VMapViewerDialog
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
-from spectroview.view.components.v_notification import show_notification
 from spectroview.viewmodel.utils import parse_coords_from_fname
 
 
@@ -22,10 +21,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     Inherits discrete spectra visualization, fit model builder, drag-and-drop fit model
     loading, and adds hyperspectral 2D/wafer map visualization.
     """
-    
-    # ───── Additional signals for Maps ─────
-    map_type_changed = Signal(str)
-    send_to_spectra_requested = Signal()
     
     def __init__(self, parent=None):
         # Temporarily store original setup_connections to prevent parent from calling it
@@ -160,17 +155,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         super().apply_theme(theme)
         if hasattr(self, 'v_maps_list'):
             self.v_maps_list.apply_theme(theme)
-        
-        # Propagate to Fit Model Builder
-        if hasattr(self, 'v_fit_model_builder'):
-            self.v_fit_model_builder.apply_theme(theme)
-
-        # Propagate Qt icon theme to Live Maps without overriding its Plot theme
-        if hasattr(self, 'v_live_maps'):
-            if hasattr(self.v_live_maps, 'apply_global_theme'):
-                self.v_live_maps.apply_global_theme(theme)
-            elif hasattr(self.v_live_maps, 'apply_theme'):
-                self.v_live_maps.apply_theme(theme)
 
         # Map viewer toolbar icons
         if hasattr(self, 'v_map_viewer'):
@@ -515,20 +499,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
 
         # Update Live Maps with updated fit results
         self._sync_live_maps()
-    
-    def _on_map_selected(self, index: int):
-        """Handle map selection - convert index to map name and call ViewModel."""
-        if index >= 0 and index < len(self.vm.maps):
-            map_names = list(self.vm.maps.keys())
-            map_name = map_names[index]
-            self.vm.select_map(map_name)
-            
-            # Tell MVA to operate on this map's spectra
-            self.vm_mva.set_current_map_name(map_name)
-            
-            # Display metadata for the selected map (not per-spectrum)
-            map_metadata = self.vm.maps_metadata.get(map_name, {})
-            self.v_more_tab.show_metadata(map_metadata)
 
     def _get_map_metadata(self, item_or_map_name):
         """Retrieve metadata for a map item or map name."""
@@ -542,12 +512,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
                     return getattr(md, "map_metadata", {})
         if hasattr(item_or_map_name, "data"):
             return item_or_map_name.data(Qt.UserRole + 2) or {}
-        return {}
-
-    def _get_map_spectrum_metadata(self, item_or_fname):
-        """Retrieve metadata for a spectrum belonging to the current map."""
-        if self.vm and self.vm.current_map_name:
-            return self._get_map_metadata(self.vm.current_map_name)
         return {}
     
     def _on_view_map_requested(self):
@@ -613,61 +577,30 @@ class VWorkspaceMaps(VWorkspaceSpectra):
     
     def _on_reinit_spectra(self):
         """Reinitialize selected spectra (Ctrl for all maps)."""
-        
-        # Check if Ctrl is held
-        modifiers = QApplication.keyboardModifiers()
-        apply_all = bool(modifiers & Qt.ControlModifier)
-        
-        self.vm.reinit_current_map_spectra(apply_all)
+        self._apply_with_ctrl(self.vm.reinit_current_map_spectra)
     
     def _on_send_to_spectra(self):
         """Send selected spectra to the Spectra workspace."""
         self.vm.send_selected_spectra_to_spectra_workspace()
+
+    def _extract_and_send_profile(self, profile_name: str, viewer: VMapViewer):
+        """Extract a 2-point spatial profile from `viewer` and forward it to Graphs."""
+        profile_df = viewer._extract_profile()
+        if profile_df is None or profile_df.empty:
+            self._show_notification(
+                "Select exactly 2 points in 2D map mode to extract a profile.",
+                notification_type="warning",
+            )
+            return
+        self.vm.extract_and_send_profile_to_graphs(profile_name, profile_df)
     
     def _on_extract_profile_requested(self, profile_name: str):
         """Handle profile extraction request from map viewer."""
-        # Extract profile data from map viewer
-        profile_df = self.v_map_viewer._extract_profile()
-        
-        if profile_df is None or profile_df.empty:
-            self._show_notification(
-                "Select exactly 2 points in 2D map mode to extract a profile.",
-                notification_type="warning",
-            )
-            return
-        
-        # Send to ViewModel which will emit signal to Graphs workspace
-        self.vm.extract_and_send_profile_to_graphs(profile_name, profile_df)
+        self._extract_and_send_profile(profile_name, self.v_map_viewer)
     
     def _on_extract_profile_from_dialog(self, profile_name: str, dialog):
         """Handle profile extraction request from dialog viewer."""
-        # Extract profile data from dialog's map viewer
-        profile_df = dialog.map_viewer._extract_profile()
-        
-        if profile_df is None or profile_df.empty:
-            self._show_notification(
-                "Select exactly 2 points in 2D map mode to extract a profile.",
-                notification_type="warning",
-            )
-            return
-        
-        # Send to ViewModel which will emit signal to Graphs workspace
-        self.vm.extract_and_send_profile_to_graphs(profile_name, profile_df)
-    
-
-    def _show_notification(self, message: str, notification_type=None, duration: int = 3500, title: str | None = None):
-        """Show native floating notification in the application toolbar."""
-        show_notification(
-            message=message,
-            notification_type=notification_type,
-            duration=duration,
-            title=title,
-            parent=self,
-        )
-
-    def _show_toast_notification(self, message: str):
-        """Backward-compatible alias for _show_notification."""
-        self._show_notification(message)
+        self._extract_and_send_profile(profile_name, dialog.map_viewer)
     
     def clear_workspace(self):
         """Clear the Maps workspace (called from main window)."""
@@ -703,10 +636,6 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         self._sync_selected_points_to_live_maps([])
         if hasattr(self, 'vm_mva'):
             self.vm_mva.set_store(self.vm.store)
-    
-    def save_work(self):
-        """Trigger save work in ViewModel."""
-        self.vm.save_work()
 
     def load_work(self, file_path: str):
         """Trigger load work in ViewModel."""

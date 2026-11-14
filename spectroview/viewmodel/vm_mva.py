@@ -270,11 +270,6 @@ class VMMVA(QObject):
         cols = [f"PC{i+1}" for i in range(result.scores.shape[1])]
         df = pd.DataFrame(result.scores, columns=cols)
         df.insert(0, "Spectrum", fnames)
-
-        # Add explained variance row as metadata
-        var_row = {"Spectrum": "Explained Var. (%)"}
-        for i, col in enumerate(cols):
-            var_row[col] = f"{result.explained_variance_ratio[i]*100:.2f}%"
         
         self.send_df_to_graphs.emit(df_name, df)
         self.notify.emit(f"PCA scores sent to Graphs as '{df_name}'.")

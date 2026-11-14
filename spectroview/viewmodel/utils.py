@@ -1,6 +1,6 @@
 # spectroview/viewmodel/utils.py
 from functools import lru_cache
-from PySide6.QtGui import QColor, QPixmap, QImage, QTextCursor, QIcon, QPainter, QCursor, QPalette
+from PySide6.QtGui import QColor, QPixmap, QImage, QIcon, QPainter, QCursor, QPalette
 
 @lru_cache(maxsize=128)
 def get_tinted_icon(path: str, color_str: str) -> QIcon:
@@ -35,7 +35,7 @@ def get_tinted_icon(path: str, color_str: str) -> QIcon:
 from PySide6.QtCore import Qt, QObject, QEvent, QPoint, QTimer, Slot
 from PySide6.QtWidgets import (
     QMessageBox, QApplication, QListWidgetItem,
-    QDialog, QTextBrowser, QVBoxLayout,
+    QVBoxLayout,
     QFrame, QLabel
 )    
 
@@ -45,46 +45,6 @@ import matplotlib
 from io import BytesIO
 
 from copy import deepcopy
-
-from spectroview import DEFAULT_COLORS
-from spectroview.model.m_io import parse_wdf_metadata  # noqa: F401 (re-exported for compatibility)
-
-
-def view_text(ui, title, text):
-        """ Create a QTextBrowser to display a text content"""
-        report_viewer = QDialog(ui)
-        report_viewer.setWindowTitle(title)
-        report_viewer.setGeometry(100, 100, 800, 600)
-        text_browser = QTextBrowser(report_viewer)
-        text_browser.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        text_browser.setOpenExternalLinks(True)
-        text_browser.setPlainText(text)
-        text_browser.moveCursor(QTextCursor.Start)
-        layout = QVBoxLayout(report_viewer)
-        layout.addWidget(text_browser)
-        report_viewer.show()  
-
-        
-def rgba_to_default_color(rgba, default_colors=DEFAULT_COLORS):
-    """
-    Convert an RGBA tuple to the closest color in DEFAULT_COLORS.
-    If no DEFAULT_COLORS are given, falls back to hex.
-    """
-    import matplotlib.colors as mcolors
-    # Convert input to RGB array
-    rgb = np.array(mcolors.to_rgb(rgba)) # drops alpha
-
-    # Compute distance to each default color
-    best_color = None
-    best_dist = float("inf")
-    for dc in default_colors:
-        dc_rgb = np.array(mcolors.to_rgb(dc))
-        dist = np.linalg.norm(rgb - dc_rgb)  # Euclidean distance in RGB
-        if dist < best_dist:
-            best_dist = dist
-            best_color = dc
-
-    return best_color if best_color else mcolors.to_hex(rgba)
 
 
 def set_spectrum_item_color(item: QListWidgetItem, spectrum_info: dict):
@@ -288,18 +248,6 @@ def save_df_to_excel(save_path, df):
 
     except Exception as e:
         return False, f"Error when saving DataFrame: {str(e)}"
-    
-def replace_peak_labels(fit_model, param):
-        """Replace prefix 'm01' of peak model by labels designed by user"""
-        peak_labels = fit_model["peak_labels"]
-        if "_" in param:
-            prefix, param = param.split("_", 1)  
-            # Convert prefix to peak_label
-            peak_index = int(prefix[1:]) - 1
-            if 0 <= peak_index < len(peak_labels):
-                peak_label = peak_labels[peak_index]
-                return f"{param}_{peak_label}"
-        return param
 
 def copy_fig_to_clb(canvas, size_ratio=None):
     """Copy matplotlib figure canvas to clipboard with optional resizing. """

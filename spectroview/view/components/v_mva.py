@@ -23,11 +23,11 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, Signal, QObject, QEvent, QTimer
 from spectroview.view.theme import Icons, current_tokens
+from spectroview.viewmodel.utils import parse_coords_from_fname
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
 
 from spectroview import PLOT_POLICY_LIGHT
 
@@ -517,15 +517,11 @@ class VMVA(QWidget):
         valid_indices = []
         
         for i, fname in enumerate(fnames):
-            if '(' in fname and ')' in fname:
-                coords_str = fname[fname.rfind('(')+1:fname.rfind(')')]
-                try:
-                    x_str, y_str = coords_str.split(',')
-                    coords_x.append(float(x_str.strip()))
-                    coords_y.append(float(y_str.strip()))
-                    valid_indices.append(i)
-                except:
-                    pass
+            coords = parse_coords_from_fname(fname)
+            if coords is not None:
+                coords_x.append(coords[0])
+                coords_y.append(coords[1])
+                valid_indices.append(i)
                     
         if not coords_x:
             self.tab_heatmap.clear_and_placeholder("Cannot render heatmap:\nNo spatial (x, y) coordinates found in spectra names.")

@@ -117,6 +117,23 @@ class MapData:
     def has_fit_results(self) -> bool:
         return self.peak_params is not None and len(self.param_names) > 0
 
+    def fname_to_index_map(self) -> dict[str, int]:
+        """Return a cached ``{fname: local_idx}`` lookup, rebuilding if ``fnames`` length changed."""
+        cache = getattr(self, "_fname_to_idx", None)
+        if cache is None or len(cache) != len(self.fnames):
+            cache = {fn: i for i, fn in enumerate(self.fnames)}
+            self._fname_to_idx = cache
+        return cache
+
+    def get_fname_index(self, fname: str) -> Optional[int]:
+        """Return the 0-based row index of ``fname`` in ``self.fnames``, or ``None`` if absent."""
+        idx = self.fname_to_index_map().get(fname)
+        if idx is not None and idx < len(self.fnames) and self.fnames[idx] == fname:
+            return idx
+        # Rebuild cache in case fnames were mutated in place without length change
+        self._fname_to_idx = {fn: i for i, fn in enumerate(self.fnames)}
+        return self._fname_to_idx.get(fname)
+
     @property
     def x_axis(self) -> Optional[np.ndarray]:
         """Processed wavenumber axis if present, else the raw x0 axis."""
@@ -639,8 +656,8 @@ class SpectraStore:
     def _apply_peak_labels(param_names: list, peak_labels: list) -> list:
         """Replace numeric peak prefixes with user labels using legacy column format.
 
-        Legacy format (matching replace_peak_labels in utils.py):
-            m01_x0 → x0_Si    (param first, then label)
+        Legacy format (``m01_x0`` -> ``x0_Si``, parameter first, then peak label):
+            m01_x0 → x0_Si
             m01_fwhm → fwhm_Si
 
         This keeps column names consistent between the fast tensor path and

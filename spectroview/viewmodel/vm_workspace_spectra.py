@@ -65,11 +65,9 @@ class VMWorkspaceSpectra(QObject):
         self.selected_fnames = []  # Changed from indices to fnames for robust identification
         self._baseline_clipboard = None  # for copy/paste baseline
         self._peaks_clipboard = None    # for copy/paste peaks
-        self._loaded_fit_model = None  # for applying loaded fit model
         self._current_peak_shape = "Lorentzian"
         self._fit_thread = None  # Track active fit thread
         self._is_fitting = False  # Track if fitting is in progress
-        self._use_batch_engine = True  # Use high-performance batch engine
         
         # Fit results data
         self.df_fit_results = None
@@ -384,8 +382,8 @@ class VMWorkspaceSpectra(QObject):
                 except Exception as e:
                     print(f"Error updating parameter {p_name} from fit: {e}")
 
-    def _reconstruct_y_peaks(self, md, indices=None):
-        """Reconstruct md.Y_peaks from current fit_model."""
+    def _reconstruct_y_peaks(self, md, indices=None, include_bestfit: bool = False):
+        """Reconstruct md.Y_peaks (and optionally md.Y_bestfit) from current fit_model."""
         if not md or not md.fit_model or not md.fit_model.get("peak_models"):
             md.Y_peaks = None
             return
@@ -399,9 +397,20 @@ class VMWorkspaceSpectra(QObject):
         
         if indices is None:
             md.Y_peaks = []
+            total_peaks = np.zeros((N, M), dtype=np.float32) if include_bestfit else None
             for p_model in peak_models:
                 y_curve = eval_peak_initial(x_arr, p_model)
-                md.Y_peaks.append(np.tile(y_curve, (N, 1)).astype(np.float32))
+                y_curve_batch = np.tile(y_curve, (N, 1)).astype(np.float32)
+                md.Y_peaks.append(y_curve_batch)
+                if include_bestfit:
+                    total_peaks += y_curve_batch
+            if include_bestfit:
+                is_sub = md.is_baseline_subtracted
+                is_sub_all = is_sub.all() if isinstance(is_sub, np.ndarray) else bool(is_sub)
+                if not is_sub_all and md.Y_baseline is not None:
+                    md.Y_bestfit = (total_peaks + md.Y_baseline).astype(np.float32)
+                else:
+                    md.Y_bestfit = total_peaks.astype(np.float32)
         else:
             if md.Y_peaks is None or len(md.Y_peaks) != num_peaks:
                 md.Y_peaks = [np.zeros((N, M), dtype=np.float32) for _ in range(num_peaks)]
@@ -449,21 +458,16 @@ class VMWorkspaceSpectra(QObject):
 
         # 6. Reconstruct Y_peaks and Y_bestfit
         if md.Y_bestfit is None and md.fit_model and "peak_models" in md.fit_model:
-            md.Y_peaks = []
-            x_arr = md.x
-            N = md.Y.shape[0]
-            total_peaks = np.zeros_like(md.Y)
-            for p_model in md.fit_model["peak_models"].values():
-                y_curve = eval_peak_initial(x_arr, p_model)
-                y_curve_batch = np.tile(y_curve, (N, 1))
-                md.Y_peaks.append(y_curve_batch.astype(np.float32))
-                total_peaks += y_curve_batch
-            
-            is_sub_all = is_sub.all() if isinstance(is_sub, np.ndarray) else bool(is_sub)
-            if not is_sub_all and md.Y_baseline is not None:
-                md.Y_bestfit = (total_peaks + md.Y_baseline).astype(np.float32)
+            if md.fit_model["peak_models"]:
+                self._reconstruct_y_peaks(md, include_bestfit=True)
             else:
-                md.Y_bestfit = total_peaks.astype(np.float32)
+                md.Y_peaks = []
+                total_peaks = np.zeros_like(md.Y)
+                is_sub_all = is_sub.all() if isinstance(is_sub, np.ndarray) else bool(is_sub)
+                if not is_sub_all and md.Y_baseline is not None:
+                    md.Y_bestfit = (total_peaks + md.Y_baseline).astype(np.float32)
+                else:
+                    md.Y_bestfit = total_peaks.astype(np.float32)
 
     def _reindex_fit_model(self, md):
         """Re-index all peak models to consecutive keys and update default labels accordingly."""
@@ -630,12 +634,27 @@ class VMWorkspaceSpectra(QObject):
         self.spectra_list_changed.emit(spectra_info)
         self.count_changed.emit(len(self.store.map_names))
 
+    def _get_primary_selected_map_data(self):
+        """Return MapData for the first active selected spectrum, or None if unavailable."""
+        selected = self._get_selected_spectra()
+        if not selected:
+            return None
+        mds = self._get_unique_map_data(selected[:1])
+        return mds[0] if mds else None
+
     def _get_interactive_map_data(self):
         """Helper to fetch MapData for interactive tools in Spectra Workspace."""
-        if not self.selected_fnames:
-            return None
-        fname = self._get_selected_spectra()[0]
-        return self.store.get_map_data(fname)
+        return self._get_primary_selected_map_data()
+
+    @staticmethod
+    def _build_map_df_from_md(md) -> pd.DataFrame:
+        """Build a legacy [X, Y, <wavenumbers...>] DataFrame from a MapData object."""
+        col_names = list(map(str, md.x0))
+        df = pd.DataFrame(md.Y0, columns=col_names)
+        coords = md.coords if md.coords is not None else np.zeros((md.n_spectra, 2), dtype=np.float64)
+        df.insert(0, 'Y', coords[:, 1])
+        df.insert(0, 'X', coords[:, 0])
+        return df
 
     @staticmethod
     def _reset_mapdata_arrays(md):
@@ -690,8 +709,10 @@ class VMWorkspaceSpectra(QObject):
 
         # Determine which spectrum index to use
         spec_idx = 0
-        if self.selected_fnames and self.selected_fnames[0] in md.fnames:
-            spec_idx = md.fnames.index(self.selected_fnames[0])
+        if self.selected_fnames:
+            fname_idx = md.get_fname_index(self.selected_fnames[0])
+            if fname_idx is not None:
+                spec_idx = fname_idx
 
         # Determine y value
         idx = closest_index(md.x_axis, x)
@@ -990,8 +1011,7 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No spectrum selected.")
             return False
 
-        fnames = self._get_selected_spectra()
-        md = self._get_unique_map_data(fnames)[0]
+        md = self._get_primary_selected_map_data()
         if not (md and md.baseline_config):
             self.notify.emit("No baseline to copy.")
             return False
@@ -1145,10 +1165,8 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No spectrum selected.")
             return False
 
-        fnames = self._get_selected_spectra()
-        md = self._get_unique_map_data(fnames)[0]
-
-        if not md.fit_model or not md.fit_model.get("peak_models"):
+        md = self._get_primary_selected_map_data()
+        if not md or not md.fit_model or not md.fit_model.get("peak_models"):
             self.notify.emit("No peaks to copy.")
             return False
         self._peaks_clipboard = deepcopy(md.fit_model)
@@ -1168,15 +1186,7 @@ class VMWorkspaceSpectra(QObject):
         for md in mds:
             if md:
                 md.fit_model = deepcopy(self._peaks_clipboard)
-                
-                # Dynamically reconstruct Y_peaks for instant preview
-                md.Y_peaks = []
-                x_arr = md.x_axis
-                N = md.y_matrix.shape[0]
-                
-                for p_model in md.fit_model.get("peak_models", {}).values():
-                    y_curve = eval_peak_initial(x_arr, p_model)
-                    md.Y_peaks.append(np.tile(y_curve, (N, 1)))
+                self._reconstruct_y_peaks(md)
                 self._on_map_data_changed(md, "paste_peaks")
 
         self._post_bulk_action(apply_all, "paste_peaks")
@@ -1323,10 +1333,8 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No spectrum selected.")
             return False
 
-        fnames = self._get_selected_spectra()
-        md = self._get_unique_map_data(fnames)[0]
-
-        if not md.fit_model:
+        md = self._get_primary_selected_map_data()
+        if not md or not md.fit_model:
             self.notify.emit("No fit results to copy.")
             return False
 
@@ -1363,10 +1371,8 @@ class VMWorkspaceSpectra(QObject):
             self.notify.emit("No spectrum selected.")
             return
 
-        fnames = self._get_selected_spectra()
-        md = self._get_unique_map_data(fnames)[0]
-
-        if not md.fit_model:
+        md = self._get_primary_selected_map_data()
+        if not md or not md.fit_model:
             self.notify.emit("No fit model to save.")
             return
 
@@ -1400,22 +1406,28 @@ class VMWorkspaceSpectra(QObject):
 
         self.notify.emit("Fit model saved successfully.")
 
-    def apply_fit_model(self, apply_all: bool = False):
-        if not hasattr(self, "_vm_fit_model_builder"):
+    def _load_selected_fit_model_dict(self) -> dict | None:
+        """Load the fit model dictionary currently selected in FitModelBuilder."""
+        if not hasattr(self, "_vm_fit_model_builder") or self._vm_fit_model_builder is None:
             self.notify.emit("Fit model manager not connected.")
-            return
+            return None
 
         model_path = self._vm_fit_model_builder.get_current_model_path()
         if model_path is None or not model_path.exists():
             self.notify.emit("No fit model selected.")
-            return
-        #Load fit model from JSON file
+            return None
+
         try:
             with open(model_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            fit_model = data.get("0", {})
+            return data.get("0", {})
         except Exception as e:
             self.notify.emit(f"Failed to load fit model: {e}")
+            return None
+
+    def apply_fit_model(self, apply_all: bool = False):
+        fit_model = self._load_selected_fit_model_dict()
+        if fit_model is None:
             return
 
         fnames = self._get_active_spectra() if apply_all else self._get_selected_spectra()
@@ -1555,7 +1567,7 @@ class VMWorkspaceSpectra(QObject):
 
 
     def update_peak_label(self, index, text):
-        md = self._get_unique_map_data(self._get_selected_spectra())[0]
+        md = self._get_primary_selected_map_data()
         if md and md.fit_model and "peak_models" in md.fit_model:
             if "peak_labels" not in md.fit_model:
                 md.fit_model["peak_labels"] = []
@@ -1568,7 +1580,7 @@ class VMWorkspaceSpectra(QObject):
         self._emit_selected_spectra()
 
     def update_peak_model(self, index, model_name):
-        md = self._get_unique_map_data(self._get_selected_spectra())[0]
+        md = self._get_primary_selected_map_data()
         if not md or not md.fit_model or str(index) not in md.fit_model.get("peak_models", {}):
             return
 
@@ -1590,8 +1602,10 @@ class VMWorkspaceSpectra(QObject):
         
         # Determine which spectrum index to use
         spec_idx = 0
-        if self.selected_fnames and self.selected_fnames[0] in md.fnames:
-            spec_idx = md.fnames.index(self.selected_fnames[0])
+        if self.selected_fnames:
+            fname_idx = md.get_fname_index(self.selected_fnames[0])
+            if fname_idx is not None:
+                spec_idx = fname_idx
             
         y_arr = md.y_matrix[spec_idx]
         self._initialize_peak_params(new_params, model_name, x0, ampli, minfwhm, maxfwhm, maxshift, y_arr)
@@ -1602,7 +1616,7 @@ class VMWorkspaceSpectra(QObject):
 
 
     def update_peak_param(self, index, key, field, value):
-        md = self._get_unique_map_data(self._get_selected_spectra())[0]
+        md = self._get_primary_selected_map_data()
         if not md or not md.fit_model: return
 
         # Clear fit state
@@ -1617,7 +1631,7 @@ class VMWorkspaceSpectra(QObject):
         self._emit_selected_spectra()
 
     def delete_peak(self, index):
-        md = self._get_unique_map_data(self._get_selected_spectra())[0]
+        md = self._get_primary_selected_map_data()
         if not md or not md.fit_model: return
 
         old_models = md.fit_model.get("peak_models", {})
@@ -1638,7 +1652,7 @@ class VMWorkspaceSpectra(QObject):
         if not self.selected_fnames:
             return
 
-        md = self._get_unique_map_data(self._get_selected_spectra())[0]
+        md = self._get_primary_selected_map_data()
         if not md or not md.fit_model: return
         
         # Determine the peak being dragged
@@ -1687,7 +1701,9 @@ class VMWorkspaceSpectra(QObject):
             return
         
         md = unique_mds[0]
-        local_idx = md.fnames.index(fnames[0])
+        local_idx = md.get_fname_index(fnames[0])
+        if local_idx is None:
+            return
         x_values = md.x_axis
         y_values = md.y_matrix[local_idx]
 
@@ -1704,12 +1720,12 @@ class VMWorkspaceSpectra(QObject):
 
             peak_models = list(md.fit_model["peak_models"].values())
             peak_labels = md.fit_model.get("peak_labels", [])
+            self._update_fit_model_from_params(md, local_idx)
             
             y_bestfit_fine = np.zeros_like(x_fine)
 
             for i, p_model in enumerate(peak_models):
                 try:
-                    self._update_fit_model_from_params(md, local_idx)
                     y_peak_fine = eval_peak_initial(x_fine, p_model)
                     y_bestfit_fine += y_peak_fine
 
@@ -1827,16 +1843,7 @@ class VMWorkspaceSpectra(QObject):
                 
                 for map_name in self.store.map_names:
                     md = self.store.get_map_data(map_name)
-                    x0 = md.x0
-                    coords = md.coords
-                    intensities = md.Y0
-
-                    # 18.7x faster and memory-efficient DataFrame builder:
-                    col_names = list(map(str, x0))
-                    df = pd.DataFrame(intensities, columns=col_names)
-                    df.insert(0, 'Y', coords[:, 1])
-                    df.insert(0, 'X', coords[:, 0])
-                    self.maps[map_name] = df
+                    self.maps[map_name] = self._build_map_df_from_md(md)
 
             # 3. Restore DataFrames
             self.df_fit_results = dataframes.get('df_fit_results') if dataframes else None
@@ -1952,23 +1959,7 @@ class VMWorkspaceSpectra(QObject):
                         "peak_labels": legacy_labels,
                         "peak_models": legacy_peaks
                     }
-                    
-                    # Reconstruct Y_peaks and Y_bestfit
-                    md.Y_peaks = []
-                    x_arr = md.x
-                    N = md.Y.shape[0]
-                    total_peaks = np.zeros_like(md.Y)
-                    for p_model in md.fit_model["peak_models"].values():
-                        y_curve = eval_peak_initial(x_arr, p_model)
-                        y_curve_batch = np.tile(y_curve, (N, 1))
-                        md.Y_peaks.append(y_curve_batch.astype(np.float32))
-                        total_peaks += y_curve_batch
-                    
-                    if md.Y_baseline is not None:
-                        md.Y_bestfit = (total_peaks + md.Y_baseline).astype(np.float32)
-                    else:
-                        md.Y_bestfit = total_peaks.astype(np.float32)
-
+                    self._reconstruct_y_peaks(md, include_bestfit=True)
                     md.fit_success = np.array([sdata.get("result_fit_success", False)], dtype=bool)
 
         legacy_results = data.get("df_fit_results")
@@ -1998,7 +1989,6 @@ class VMWorkspaceSpectra(QObject):
         self._baseline_clipboard = None
         self._peaks_clipboard = None
         self._fitmodel_clipboard = None
-        self._loaded_fit_model = None
         
         # Stop any running fit thread
         self._cancel_fit_thread()
@@ -2297,7 +2287,9 @@ class VMWorkspaceSpectra(QObject):
             try:
                 md = self.store.get_map_data(fname)
                 if md:
-                    local_idx = md.fnames.index(fname)
+                    local_idx = md.get_fname_index(fname)
+                    if local_idx is None:
+                        continue
                     x = md.x_axis
                     y = md.y_matrix[local_idx]
                     data = np.column_stack((x, y))

@@ -3,7 +3,6 @@ import io
 import json
 import gzip
 import re
-from io import StringIO
 from copy import deepcopy
 import numpy as np
 import pandas as pd
@@ -58,6 +57,13 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         """Load hyperspectral map files and extract spectra."""
         loaded_maps = []
         last_valid_path = None
+        suffix_loaders = {
+            ".wdf": load_wdf_map,
+            ".spc": load_spc_map,
+            ".l6m": load_l6m_map,
+            ".ngc": load_ngc_map,
+            ".ngs": load_ngc_map,
+        }
         
         for p in paths:
             path = Path(p)
@@ -69,30 +75,9 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             
             try:
                 # Use appropriate loader based on file extension
-                if path.suffix.lower() == '.wdf':
-                    result = load_wdf_map(path)
-                    # Handle tuple return (DataFrame, metadata)
-                    if isinstance(result, tuple):
-                        map_df, metadata = result
-                        self.maps_metadata[map_name] = metadata
-                    else:
-                        map_df = result
-                elif path.suffix.lower() == '.spc':
-                     result = load_spc_map(path)
-                     if isinstance(result, tuple):
-                         map_df, metadata = result
-                         self.maps_metadata[map_name] = metadata
-                     else:
-                         map_df = result
-                elif path.suffix.lower() == '.l6m':
-                    result = load_l6m_map(path)
-                    if isinstance(result, tuple):
-                        map_df, metadata = result
-                        self.maps_metadata[map_name] = metadata
-                    else:
-                        map_df = result
-                elif path.suffix.lower() in ('.ngc', '.ngs'):
-                    result = load_ngc_map(path)
+                loader = suffix_loaders.get(path.suffix.lower())
+                if loader is not None:
+                    result = loader(path)
                     if isinstance(result, tuple):
                         map_df, metadata = result
                         self.maps_metadata[map_name] = metadata
@@ -200,9 +185,7 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             md = self.store.get_map_data(map_name)
             
             # Find indices for the selected fnames (cached on MapData for speed)
-            if not hasattr(md, "_fname_to_idx") or md._fname_to_idx is None or len(md._fname_to_idx) != len(md.fnames):
-                md._fname_to_idx = {name: i for i, name in enumerate(md.fnames)}
-            idx_map = md._fname_to_idx
+            idx_map = md.fname_to_index_map()
             indices = [idx_map[name] for name in self.selected_fnames if name in idx_map]
             
             if indices:
@@ -474,9 +457,11 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if not self.current_map_name:
             return
         md = self.store.get_map_data(self.current_map_name)
-        if md is None or fname not in md.fnames:
+        if md is None:
             return
-        idx = md.fnames.index(fname)
+        idx = md.get_fname_index(fname)
+        if idx is None:
+            return
         if bool(md.is_active[idx]) == is_active:
             return
         md.is_active[idx] = is_active
@@ -535,8 +520,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
             self.store.clear_preprocess(md.name)
         elif action in ("delete_baseline", "subtract_baseline", "apply_spectral_range"):
             self.store.batch_preprocess(md.name, md.baseline_config, md.range_min, md.range_max)
-        elif action == "paste_peaks":
-            self._reconstruct_y_peaks(md)
             
         # Always clear cache for the map in the viewer after any destructive action
         self.clear_map_cache_requested.emit(md.name)
@@ -554,28 +537,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
         if self.current_map_name:
             self._show_map_spectra(self.current_map_name)
             self._emit_selected_spectra()
-            
-    def _update_store_preprocessing(self):
-        """Helper to sync the first spectrum's baseline and crop settings to the Store."""
-        if not self.current_map_name: return
-        
-        md = self.store.get_map_data(self.current_map_name)
-        if not md or not md.is_active.any():
-            self.store.clear_preprocess(self.current_map_name)
-            return
-            
-        b_dict = md.baseline_config or {}
-        rmin, rmax = md.range_min, md.range_max
-        is_sub = getattr(md, "is_baseline_subtracted", False)
-        is_subtracted = is_sub.any() if isinstance(is_sub, np.ndarray) else bool(is_sub)
-        
-        if not is_subtracted and rmin is None and rmax is None:
-            self.store.clear_preprocess(self.current_map_name)
-        else:
-            if not is_subtracted:
-                # pass an empty baseline dict so it only crops
-                b_dict = {}
-            self.store.batch_preprocess(self.current_map_name, b_dict, rmin, rmax)
 
     def validate_cosmic_ray_erase(self):
         """Override: commit erasures and refresh the map heatmap cache.
@@ -735,21 +696,8 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
     def apply_fit_model(self, apply_all: bool = False):
         """Override parent to apply loaded fit model and sync preprocessing/fit thread."""
-        if not hasattr(self, "_vm_fit_model_builder"):
-            self.notify.emit("Fit model manager not connected.")
-            return
-
-        model_path = self._vm_fit_model_builder.get_current_model_path()
-        if model_path is None or not model_path.exists():
-            self.notify.emit("No fit model selected.")
-            return
-
-        try:
-            with open(model_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            fit_model = data.get("0", {})
-        except Exception as e:
-            self.notify.emit(f"Failed to load fit model: {e}")
+        fit_model = self._load_selected_fit_model_dict()
+        if fit_model is None:
             return
 
         self._apply_fit_model_and_run(fit_model, apply_all)
@@ -937,40 +885,6 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
     # ─────────────────────────────────────────────────────────────────
     # SAVE/LOAD WORKSPACE
     # ─────────────────────────────────────────────────────────────────
-    
-    def _map_df_to_binary(self, map_df: pd.DataFrame) -> dict:
-        """Serialize a map DataFrame to a compact binary form (numpy + gzip).
-        
-        Much faster than to_csv() which formats each float as ASCII text.
-        Returns a dict with 'cols' (column names) and 'data' (gzip+hex bytes).
-        """
-        # Use native float64 (no precision loss). copy=False avoids unnecessary data duplication.
-        arr = map_df.to_numpy(copy=False)
-        cols = list(map_df.columns.astype(str))  # preserve column names
-        buf = io.BytesIO()
-        np.save(buf, arr)
-        # Use compresslevel=1 for massive speedup (~70s -> ~3s) with barely any size penalty
-        return {'cols': cols, 'data': gzip.compress(buf.getvalue(), compresslevel=1).hex()}
-    
-    @staticmethod
-    def _binary_to_map_df(entry: dict | str) -> pd.DataFrame:
-        """Deserialize a map DataFrame from binary form.
-        
-        Supports both the new binary format (dict with 'cols'+'data')
-        and the legacy CSV+gzip+hex format (plain hex string).
-        """
-        if isinstance(entry, str):
-            # Legacy format: gzip-compressed CSV encoded as hex
-            csv_data = gzip.decompress(bytes.fromhex(entry)).decode('utf-8')
-            return pd.read_csv(StringIO(csv_data))
-        else:
-            # New binary format: {'cols': [...], 'data': hex}
-            raw = gzip.decompress(bytes.fromhex(entry['data']))
-            arr = np.load(io.BytesIO(raw))
-            # Cast back to float64 to match standard dataframe precision
-            return pd.DataFrame(arr, columns=entry['cols'], dtype=np.float64)
-
-
 
     def _load_legacy_maps(self, file_path: str):
         """Load legacy JSON-based .maps workspace (OLD version)."""
@@ -1127,12 +1041,9 @@ class VMWorkspaceMaps(VMWorkspaceSpectra):
 
                 self._restore_preprocessed_state(md)
 
-            # Rebuild legacy maps entry for visual heatmap representation (highly optimized)
-            col_names = list(map(str, x0))
-            df = pd.DataFrame(Y0, columns=col_names)
-            df.insert(0, 'Y', coords[:, 1])
-            df.insert(0, 'X', coords[:, 0])
-            self.maps[map_name] = df
+            # Rebuild legacy maps entry for visual heatmap representation
+            if md is not None:
+                self.maps[map_name] = self._build_map_df_from_md(md)
 
         # Restore df_fit_results
         legacy_results = data.get("df_fit_results")

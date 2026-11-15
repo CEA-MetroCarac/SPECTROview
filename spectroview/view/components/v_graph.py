@@ -458,6 +458,13 @@ class VGraph(QWidget):
         else:
             self.ax.plot([], [])
 
+        self._auto_limits = {
+            "x": self.ax.get_xlim(),
+            "y": self.ax.get_ylim(),
+            "y2": self.ax2.get_ylim() if self.ax2 else None,
+            "y3": self.ax3.get_ylim() if self.ax3 else None,
+            "x2": self.ax_x2.get_xlim() if self.ax_x2 else None,
+        }
         self._set_limits()
         self._set_axis_scale(df)
         self._set_axis_direction()  # must run after _set_limits: it flips whatever the current limits are
@@ -479,7 +486,7 @@ class VGraph(QWidget):
             return False
 
         with plt.style.context(_THEME_STYLE_MAP.get(self.figure_theme, PLOT_POLICY_LIGHT)):
-            self._set_limits()
+            self._set_limits(restore_unset=True)
             self._set_axis_scale(self.df)
             self._set_axis_direction()
             self._set_labels()
@@ -1128,32 +1135,74 @@ class VGraph(QWidget):
             label.set_rotation_mode(rotation_mode)
     
     
-    def _apply_limit_pair(self, setter, vmin, vmax, axis_name: str) -> None:
+    def _apply_limit_pair(
+        self,
+        setter,
+        vmin,
+        vmax,
+        axis_name: str,
+        getter=None,
+        auto_key: str = "",
+        restore_unset: bool = False,
+    ) -> None:
         """Apply a (min, max) limit pair via *setter* (e.g. ax.set_xlim),
-        skipping degenerate equal bounds instead of handing matplotlib a
+        supporting single-sided overrides (only *vmin* or only *vmax* set)
+        and skipping degenerate equal bounds instead of handing matplotlib a
         zero-width range (which triggers a "singular transformation"
         UserWarning and silently auto-expands anyway). Uses explicit
         `is not None` checks (not truthy checks) so a limit of exactly 0.0
         -- a common, legitimate axis bound -- is not silently ignored.
         """
-        if vmin is None or vmax is None:
+        auto_bounds = getattr(self, "_auto_limits", {}).get(auto_key) if auto_key else None
+        if auto_bounds is None and getter is not None:
+            auto_bounds = getter()
+
+        if vmin is None and vmax is None:
+            if restore_unset and auto_bounds is not None:
+                cur_a, cur_b = auto_bounds
+                if cur_a != cur_b:
+                    setter(float(cur_a), float(cur_b))
             return
+
+        if vmin is None or vmax is None:
+            if auto_bounds is None:
+                return
+            cur_a, cur_b = auto_bounds
+            cur_lo, cur_hi = (cur_a, cur_b) if cur_a <= cur_b else (cur_b, cur_a)
+            vmin = cur_lo if vmin is None else vmin
+            vmax = cur_hi if vmax is None else vmax
+
         vmin, vmax = float(vmin), float(vmax)
         if vmin == vmax:
             self.notify.emit(f"Skipping {axis_name} limits: min == max ({vmin}).")
             return
         setter(vmin, vmax)
 
-    def _set_limits(self):
+    def _set_limits(self, restore_unset: bool = False):
         """Set the limits of axis."""
-        self._apply_limit_pair(self.ax.set_xlim, self.xmin, self.xmax, "x-axis")
-        self._apply_limit_pair(self.ax.set_ylim, self.ymin, self.ymax, "y-axis")
+        self._apply_limit_pair(
+            self.ax.set_xlim, self.xmin, self.xmax, "x-axis",
+            getter=self.ax.get_xlim, auto_key="x", restore_unset=restore_unset,
+        )
+        self._apply_limit_pair(
+            self.ax.set_ylim, self.ymin, self.ymax, "y-axis",
+            getter=self.ax.get_ylim, auto_key="y", restore_unset=restore_unset,
+        )
         if self.ax2:
-            self._apply_limit_pair(self.ax2.set_ylim, self.y2min, self.y2max, "y2-axis")
+            self._apply_limit_pair(
+                self.ax2.set_ylim, self.y2min, self.y2max, "y2-axis",
+                getter=self.ax2.get_ylim, auto_key="y2", restore_unset=restore_unset,
+            )
         if self.ax3:
-            self._apply_limit_pair(self.ax3.set_ylim, self.y3min, self.y3max, "y3-axis")
+            self._apply_limit_pair(
+                self.ax3.set_ylim, self.y3min, self.y3max, "y3-axis",
+                getter=self.ax3.get_ylim, auto_key="y3", restore_unset=restore_unset,
+            )
         if self.ax_x2:
-            self._apply_limit_pair(self.ax_x2.set_xlim, self.x2min, self.x2max, "x2-axis")
+            self._apply_limit_pair(
+                self.ax_x2.set_xlim, self.x2min, self.x2max, "x2-axis",
+                getter=self.ax_x2.get_xlim, auto_key="x2", restore_unset=restore_unset,
+            )
     
     def _set_axis_scale(self, df):
         """Apply log/symlog scale only if the corresponding axis column is numeric."""

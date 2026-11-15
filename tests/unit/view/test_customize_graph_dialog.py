@@ -1412,6 +1412,32 @@ class TestCustomizeGraphDialogTopLevel:
         assert gid == 1
         assert props["title_fontsize"] == 21
 
+    def test_single_sided_limit_spinbox_updates_plot_immediately(self, qapp, excel_df):
+        """Typing into only one limit spinbox (min or max) on a fresh plot
+        must update that axis bound immediately on live preview/apply without
+        requiring a value in the opposite spinbox."""
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        dialog = CustomizeGraphDialog(vg, graph_id=1)
+        auto_xlo, auto_xhi = vg.ax.get_xlim()
+        auto_ylo, auto_yhi = vg.ax.get_ylim()
+
+        dialog.tab_axes_limits.spin_ymax.setValue(8000.0)
+        dialog._preview_apply()
+        assert vg.ymin is None
+        assert vg.ymax == 8000.0
+        assert vg.ax.get_ylim() == pytest.approx((auto_ylo, 8000.0))
+
+        dialog.tab_axes_limits.spin_xmin.setValue(514.5)
+        dialog._preview_apply()
+        assert vg.xmin == 514.5
+        assert vg.xmax is None
+        assert vg.ax.get_xlim() == pytest.approx((514.5, auto_xhi))
+
+        dialog.tab_axes_limits._on_clear_limits()
+        dialog._preview_apply()
+        assert vg.ax.get_xlim() == pytest.approx((auto_xlo, auto_xhi))
+        assert vg.ax.get_ylim() == pytest.approx((auto_ylo, auto_yhi))
+
 
 class TestLivePreview:
     """Phase 5D: every tab now previews live (debounced) instead of only

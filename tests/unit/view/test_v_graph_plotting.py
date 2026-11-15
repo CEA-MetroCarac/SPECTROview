@@ -240,6 +240,36 @@ class TestAxisCustomization:
         vg.plot(excel_df)
         assert vg.ax.get_ylim() == (0.0, 20000.0)
 
+    def test_single_sided_limits_are_applied_on_plot_and_restyle(self, vg, excel_df):
+        """Setting only one limit bound (min or max) must apply immediately
+        while preserving the auto-scaled opposite bound, and resetting both
+        to None during restyle() must restore auto-scaled bounds."""
+        _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
+        vg.plot(excel_df)
+        auto_xlo, auto_xhi = vg.ax.get_xlim()
+        auto_ylo, auto_yhi = vg.ax.get_ylim()
+
+        vg.ymax = 8000.0
+        assert vg.restyle() is True
+        assert vg.ax.get_ylim() == pytest.approx((auto_ylo, 8000.0))
+
+        vg.ymin, vg.ymax = 7000.0, None
+        assert vg.restyle() is True
+        assert vg.ax.get_ylim() == pytest.approx((7000.0, auto_yhi))
+
+        vg.xmin, vg.xmax = 514.5, None
+        assert vg.restyle() is True
+        assert vg.ax.get_xlim() == pytest.approx((514.5, auto_xhi))
+
+        vg.xmin, vg.xmax = None, 515.2
+        assert vg.restyle() is True
+        assert vg.ax.get_xlim() == pytest.approx((auto_xlo, 515.2))
+
+        vg.xmin = vg.xmax = vg.ymin = vg.ymax = None
+        assert vg.restyle() is True
+        assert vg.ax.get_xlim() == pytest.approx((auto_xlo, auto_xhi))
+        assert vg.ax.get_ylim() == pytest.approx((auto_ylo, auto_yhi))
+
     def test_log_scale_applied(self, vg, excel_df):
         _configure(vg, x="x0_Si", y=["ampli_Si"], plot_style="scatter")
         vg.ylogscale = True

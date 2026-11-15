@@ -598,6 +598,7 @@ class PlotRenderer:
         zmin, zmax = _clear_degenerate_zlim(self.vg.zmin, self.vg.zmax)
         vmin = zmin if zmin is not None else heatmap_data.min().min()
         vmax = zmax if zmax is not None else heatmap_data.max().max()
+        vmin, vmax = _clear_degenerate_zlim(vmin, vmax)
 
         norm = _build_color_norm(
             float(vmin) if pd.notna(vmin) else None,
@@ -780,15 +781,14 @@ class WaferPlot:
         xi, yi = np.meshgrid(np.linspace(-r, r, 600), np.linspace(-r, r, 600))
         zi = griddata((x, y), z, (xi, yi), method=self.inter_method)
 
+        zi_valid = zi[~np.isnan(zi)]
+        resolved_vmin = vmin if vmin is not None else (float(zi_valid.min()) if zi_valid.size else None)
+        resolved_vmax = vmax if vmax is not None else (float(zi_valid.max()) if zi_valid.size else None)
+        resolved_vmin, resolved_vmax = _clear_degenerate_zlim(resolved_vmin, resolved_vmax)
         norm = None
         if norm_kind != 'linear':
-            # A custom norm needs concrete numbers even if vmin/vmax are
-            # unset -- resolve from the grid, ignoring NaN (sparse regions).
-            zi_valid = zi[~np.isnan(zi)]
-            resolved_vmin = vmin if vmin is not None else (float(zi_valid.min()) if zi_valid.size else None)
-            resolved_vmax = vmax if vmax is not None else (float(zi_valid.max()) if zi_valid.size else None)
             norm = _build_color_norm(resolved_vmin, resolved_vmax, norm_kind, norm_center)
-        imshow_kwargs = dict(vmin=vmin, vmax=vmax) if norm is None else dict(norm=norm)
+        imshow_kwargs = dict(vmin=resolved_vmin, vmax=resolved_vmax) if norm is None else dict(norm=norm)
 
         im = ax.imshow(
             zi,

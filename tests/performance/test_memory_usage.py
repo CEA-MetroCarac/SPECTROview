@@ -17,9 +17,7 @@ import tracemalloc
 
 import pytest
 
-from spectroview.model.m_io import load_map_file
 from spectroview.fit_engine.vbf_engine import VBFengine
-from tests.performance.conftest import _get_xy_from_map, _load_fit_model
 
 pytestmark = pytest.mark.slow
 
@@ -35,13 +33,11 @@ def _peak_traced_memory_mb(fn):
 
 
 class TestMoS2MapMemory:
-    def test_peak_memory_within_budget(self, mos2_map_txt, mos2_map_json):
+    def test_peak_memory_within_budget(self, mos2_map_txt, mos2_map_json, load_benchmark_inputs):
         if not (mos2_map_txt.exists() and mos2_map_json.exists()):
             pytest.skip("MoS2 benchmark data not present")
 
-        map_df = load_map_file(mos2_map_txt)
-        x, Y = _get_xy_from_map(map_df)
-        fit_model = _load_fit_model(mos2_map_json)
+        x, Y, fit_model = load_benchmark_inputs(mos2_map_txt, mos2_map_json)
         N, M = Y.shape
         K_free = 9  # 3 Lorentzian peaks x 3 free params each
         fit_params = {**fit_model.get("fit_params", {}), "max_ite": 10}
@@ -66,14 +62,12 @@ class TestCLMapMemoryScaling:
     """Uses a 2048-row subset (not the full 16384) to keep this practical
     check fast while still exercising realistic tensor sizes."""
 
-    def test_peak_memory_within_budget_for_subset(self, cl_map_txt, cl_map_json):
+    def test_peak_memory_within_budget_for_subset(self, cl_map_txt, cl_map_json, load_benchmark_inputs):
         if not (cl_map_txt.exists() and cl_map_json.exists()):
             pytest.skip("CL map benchmark data not present")
 
-        map_df = load_map_file(cl_map_txt)
-        x, Y_full = _get_xy_from_map(map_df)
+        x, Y_full, fit_model = load_benchmark_inputs(cl_map_txt, cl_map_json)
         Y = Y_full[:2048].copy()
-        fit_model = _load_fit_model(cl_map_json)
         N, M = Y.shape
         K_free = 3  # single Lorentzian, all params free
         fit_params = {**fit_model.get("fit_params", {}), "max_ite": 10}

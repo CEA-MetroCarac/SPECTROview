@@ -91,6 +91,18 @@ def _two_runs(name, txt_path, json_path):
     return {"run1": run1, "run2": run2}
 
 
+@pytest.fixture(scope="session")
+def load_benchmark_inputs():
+    """Return a loader returning `(x, Y, fit_model)` for a benchmark txt/json pair."""
+    def _loader(txt_path, json_path):
+        map_df = load_map_file(txt_path)
+        x, Y = _get_xy_from_map(map_df)
+        fit_model = _load_fit_model(json_path)
+        return x, Y, fit_model
+
+    return _loader
+
+
 @pytest.fixture(scope="module")
 def cl_map_benchmark(cl_map_txt, cl_map_json):
     return _two_runs("cl_map", cl_map_txt, cl_map_json)

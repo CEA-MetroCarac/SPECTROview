@@ -82,7 +82,7 @@ class TestVDataFilterSelectionAndHover:
         assert filter_widget.filter_query.text() == ""
 
     def test_click_checkbox_populates_query_and_toggles(self, filter_widget, qtbot):
-        """Requirement 4: Clicking checkbox explicitly loads expression into QLineEdit."""
+        """Requirement 4: Clicking checkbox explicitly loads expression into QLineEdit and registers selection."""
         filter_widget.add_filter("Intensity > 100", state=False)
         filter_widget.filter_query.clear()
 
@@ -94,9 +94,34 @@ class TestVDataFilterSelectionAndHover:
         qtbot.mouseClick(cb, Qt.LeftButton, pos=QPoint(10, 10))
         assert filter_widget.filter_query.text() == "Intensity > 100"
         assert cb.isChecked() is True
+        assert filter_widget.filter_listbox.currentItem() is item
+        assert filter_widget.filter_listbox.selectedItems() == [item]
+
+    def test_click_switches_selection_across_items(self, filter_widget, qtbot):
+        """Clicking different filter items updates both QLineEdit and QListWidget selection."""
+        filter_widget.add_filter('Sample == "S13"')
+        filter_widget.add_filter('Sample == "S9"')
+        filter_widget.add_filter('Temperature == 300')
+
+        item0 = filter_widget.filter_listbox.item(0)
+        item1 = filter_widget.filter_listbox.item(1)
+        cb0 = filter_widget.filter_listbox.itemWidget(item0)
+        cb1 = filter_widget.filter_listbox.itemWidget(item1)
+
+        qtbot.mouseClick(cb0, Qt.LeftButton, pos=QPoint(40, 8))
+        assert filter_widget.filter_query.text() == 'Sample == "S13"'
+        assert filter_widget.filter_listbox.selectedItems() == [item0]
+        assert filter_widget.filter_listbox.currentItem() is item0
+
+        qtbot.mouseClick(cb1, Qt.LeftButton, pos=QPoint(40, 8))
+        assert filter_widget.filter_query.text() == 'Sample == "S9"'
+        assert filter_widget.filter_listbox.selectedItems() == [item1]
+        assert filter_widget.filter_listbox.currentItem() is item1
+        assert item0.isSelected() is False
 
     def test_click_item_row_populates_query(self, filter_widget):
-        """Requirement 4: Clicking item row explicitly loads expression into QLineEdit."""
+        """Requirement 4: Clicking item row explicitly loads expression into QLineEdit and selects item."""
+        filter_widget.add_filter("Intensity > 100")
         filter_widget.add_filter("Peak position > 500")
         filter_widget.filter_query.clear()
 
@@ -104,7 +129,22 @@ class TestVDataFilterSelectionAndHover:
         rect = filter_widget.filter_listbox.visualItemRect(item)
         QTest.mouseClick(filter_widget.filter_listbox.viewport(), Qt.LeftButton, Qt.NoModifier, rect.center())
 
-        assert filter_widget.filter_query.text() == "Peak position > 500"
+        assert filter_widget.filter_query.text() == "Intensity > 100"
+        assert filter_widget.filter_listbox.selectedItems() == [item]
+        assert filter_widget.filter_listbox.currentItem() is item
+
+    def test_keyboard_navigation_works_after_clicking_checkbox(self, filter_widget, qtbot):
+        """Clicking a checkbox keeps keyboard navigation focus on the listbox."""
+        filter_widget.add_filter("Filter 1")
+        filter_widget.add_filter("Filter 2")
+
+        item0 = filter_widget.filter_listbox.item(0)
+        cb0 = filter_widget.filter_listbox.itemWidget(item0)
+        qtbot.mouseClick(cb0, Qt.LeftButton, pos=QPoint(40, 8))
+
+        QTest.keyClick(filter_widget.filter_listbox, Qt.Key_Down)
+        assert filter_widget.filter_query.text() == "Filter 2"
+        assert filter_widget.filter_listbox.currentRow() == 1
 
     def test_keyboard_navigation_populates_query(self, filter_widget):
         """Keyboard navigation (Up/Down) updates query on selection change."""
@@ -203,6 +243,24 @@ class TestVDataFilterRemovalAndClear:
 
         assert filter_widget.filter_listbox.count() == 1
         assert filter_widget.get_filters()[0]["expression"] == "Filter 2"
+
+    def test_remove_clicked_filter_via_button(self, filter_widget, qtbot):
+        """Clicking a filter item registers selection so Remove button deletes that item."""
+        filter_widget.add_filter('Sample == "S13"')
+        filter_widget.add_filter('Sample == "S9"')
+        filter_widget.add_filter('Temperature == 300')
+
+        item1 = filter_widget.filter_listbox.item(1)
+        cb1 = filter_widget.filter_listbox.itemWidget(item1)
+        qtbot.mouseClick(cb1, Qt.LeftButton, pos=QPoint(40, 8))
+
+        assert filter_widget.filter_listbox.selectedItems() == [item1]
+        qtbot.mouseClick(filter_widget.btn_remove, Qt.LeftButton)
+
+        assert [f["expression"] for f in filter_widget.get_filters()] == [
+            'Sample == "S13"',
+            'Temperature == 300',
+        ]
 
     def test_clear_filters(self, filter_widget):
         """clear_filters removes all items and clears query."""

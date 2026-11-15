@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap, QPainter
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QDoubleSpinBox, 
-    QGroupBox, QLineEdit, QLabel, QFrame, QSizePolicy
+    QGroupBox, QLineEdit, QLabel, QSizePolicy
 )
 from spectroview import ICON_DIR
 from spectroview.model.m_quick_calculators import calc_spot_size, calc_penetration_depth, convert_absolute_units, convert_relative_units

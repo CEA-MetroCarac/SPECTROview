@@ -71,7 +71,8 @@ spectroview/
 │
 ├── settings/               # Unified settings architecture (Model, ViewModel, & 2-panel Settings UI)
 │   ├── m_settings.py          # Persistent app settings & portable config.json
-│   ├── vm_settings.py         # Settings ViewModel
+│   ├── vm_settings.py         # Settings ViewModel & background LLM connection tester
+│   ├── secrets.py             # Cross-platform obfuscated QSettings secret store (_credentials/)
 │   ├── build_info.py          # Dual-mode runtime dependency resolution & build snapshot capture
 │   └── ui/                    # Two-panel settings dialog with sidebar & instant search
 │       ├── settings_dialog.py # Host dialog with sidebar navigation & instant search
@@ -84,12 +85,19 @@ spectroview/
 │   ├── spectra_store.py    # Tensor-centric SpectraStore & MapData structures
 │   ├── workspace_io.py     # Unified serialization for Workspaces
 │   ├── peak_model.py       # Helper functions for peak parameters
-│   ├── m_graph.py          # Plot configuration model
+│   ├── heatmap.py          # Pure-NumPy 2D heatmap grid interpolation & triangulation
+│   ├── spectral_parameters.py # Vectorized raw spectral metrics (Area, Max, Pos_Max, Barycenter, FWHM)
+│   ├── m_graph.py          # Plot configuration model (MGraph dataclass)
+│   ├── graph_control.py    # Graph control model
+│   ├── graph_style.py      # Graph styling & restyle-without-replot predicate
+│   ├── m_plot_recipe.py    # Plot recipe dataclass (+ m_plot_recipe_store.py)
+│   ├── m_style_template_store.py # Graph style template persistence
 │   ├── m_settings.py       # Persistent app settings (QSettings wrapper)
 │   ├── m_io.py             # File loaders (TXT, CSV, WDF, SPC, L6S, L6M, NGS, NGC, TRPL, DAT)
 │   ├── m_mva.py            # PCA + NMF engine
 │   ├── m_fit_model_manager.py # Saved fit model file management
 │   ├── m_quick_calculators.py     # Pure math logic for scientific calculators (Spot Size, Depth, Unit conversion)
+│   ├── m_macos_font_patch.py # macOS font rendering compatibility patch
 │   ├── m_tls.py              # Hardened TLS trust-store & certifi/pip security validation (GHSA-6q48-6c7w-9gw2)
 │   ├── m_installation.py     # Centralized runtime install detection (InstallType & InstallationManager)
 │   ├── m_update_manager.py   # Multi-platform UpdateManager facade, ETag cache, SHA256SUMS, platform backends
@@ -103,6 +111,7 @@ spectroview/
 │   ├── vm_workspace_spectra.py   # Spectra workspace logic (base class)
 │   ├── vm_workspace_maps.py      # Maps workspace (extends Spectra VM)
 │   ├── vm_workspace_graphs.py    # Graphs workspace logic
+│   ├── vm_live_maps.py           # Live Maps ViewModel & async _LiveMapWorker
 │   ├── vm_fit_model_builder.py   # Fit model file management orchestration
 │   ├── vm_mva.py                 # MVA orchestration
 │   ├── vm_settings.py            # Settings persistence
@@ -117,26 +126,36 @@ spectroview/
 │   ├── mcp/runtime.py           # Opt-in loopback Streamable HTTP lifecycle
 │   ├── config/, prompts/, rules/, knowledge/, examples/, utils/  # Prompt assets + helpers (see ai_agent.md)
 │   ├── vm_chat.py               # Chat ViewModel (prompt-tier selection, agentic loop)
-│   └── v_chat_panel.py          # Floating chat dialog (+ v_history_dialog.py)
+│   └── v_chat_panel.py          # Embedded chat panel (+ v_history_dialog.py)
 │
 ├── view/                   # Qt widgets and UI layout
 │   ├── v_workspace_spectra.py    # Spectra workspace View
 │   ├── v_workspace_maps.py       # Maps workspace View (extends Spectra)
 │   ├── v_workspace_graphs.py     # Graphs workspace View
-│   ├── v_quick_calculators.py    # Scientific calculators GUI
 │   └── components/               # Shared / reusable widgets
-│       ├── v_spectra_viewer.py        # Matplotlib spectra canvas
+│       ├── v_spectra_viewer.py        # Matplotlib spectra & 2D heatmap canvas
 │       ├── v_spectra_legend_editor.py  # Batch spectrum label/color editor
 │       ├── v_fit_model_builder.py     # Baseline + Peak + Fit controls
 │       ├── v_peak_table.py            # Interactive peak parameter table
 │       ├── v_map_viewer.py            # Heatmap / wafer canvas
 │       ├── v_map_viewer_dialog.py     # Detachable map viewer window
-│       ├── v_map_list.py              # Loaded maps list panel
+│       ├── v_map_list.py              # Loaded maps list panel (Two-Tier Selection)
+│       ├── v_live_maps.py             # Live Maps multi-panel dock widget
+│       ├── v_live_maps_legend_editor.py # Live Maps display names & order editor
+│       ├── v_range_selector.py        # Drag-to-zoom range selector for Live Maps
+│       ├── map_selection.py           # Shared spatial/heatmap selection engine (MapSelectionController)
 │       ├── v_graph.py                 # Single graph widget (matplotlib)
+│       ├── v_plot_renderer.py         # Stateless Matplotlib plot rendering engine (PlotRenderer)
+│       ├── graph_commit.py            # Graph state snapshot & undo/redo diff engine
+│       ├── v_export_dialog.py         # Single-graph figure export dialog
+│       ├── v_multipanel_dialog.py     # Multi-panel publication figure composer
+│       ├── v_plot_recipe_dialog.py    # Plot Recipe manager dialog
+│       ├── v_style_template_dialog.py # Graph Style Template manager dialog
 │       ├── v_mva.py                   # PCA/NMF controls and plots
 │       ├── v_fit_results.py           # Fit results DataFrame table
 │       ├── v_data_filter.py           # Dynamic query filter panel
 │       ├── v_dataframe_table.py       # Generic DataFrame viewer
+│       ├── v_quick_calculators.py     # Scientific calculators GUI
 │       ├── v_notification.py          # Native floating notification badges & manager
 │       ├── v_spectra_list.py          # Spectrum list with checkboxes
 │       ├── v_moretab.py               # Metadata / tab panel
@@ -172,7 +191,8 @@ spectroview/
 │   ├── scalar_models.py         # Fallback scalar functions + PEAK_MODEL_REGISTRY
 │   ├── vbf_thread.py            # QThread wrapper
 │   ├── baseline.py              # Baseline algorithms (arPLS, airPLS, etc)
-│   └── noise.py                 # Noise estimation functions
+│   ├── noise.py                 # Noise estimation functions
+│   └── weights.py               # Region-weighted fitting mask & weight computation
 │
 ├── resources/              # Icons, fonts, build_info schema, Matplotlib stylesheets
 │   ├── icons/
@@ -369,9 +389,11 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 | Thread Class | Location | Purpose |
 |-------------|----------|---------|
 | `VBFthread` | `fit_engine/vbf_thread.py` | Batched fitting (primary engine) |
+| `_LiveMapWorker` | `viewmodel/vm_live_maps.py` | Asynchronous `QRunnable` (`QThreadPool`) for Live Maps computation on large datasets ($\ge 25,000$ spectra) |
 | `UnifiedUpdateCheckWorker` / `UnifiedUpdateDownloadWorker` | `model/m_update_manager.py` | Multi-platform release checks (ETag cached) and SHA-256 verified downloads |
 | `UpdateCheckerWorker` | `model/m_update_checker.py` | Legacy pip/wheel background checker & updater (backward compatibility) |
 | `LLMWorker` / `APIWorker` / `AnthropicWorker` | `ai_agent/m_llm_client.py` | Streaming chat requests for AI Data Chat — one worker per backend (Ollama / OpenAI-compatible / Anthropic) |
+| `_ConnectionTestWorker` | `settings/vm_settings.py` | Non-blocking background LLM provider connection verification |
 
 **Thread lifecycle**:
 
@@ -410,9 +432,10 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 
 | Constant | Purpose |
 |----------|---------|
-| `PEAK_MODELS` | Registered peak shapes (`Gaussian`, `Lorentzian`, `PseudoVoigt`, `Fano`, ...) |
-| `FIT_PARAMS` | Default fitting parameters (`max_ite`, `xtol`, `ftol`, bounds) |
-| `PLOT_STYLES` | Available graph types (`point`, `scatter`, `box`, `bar`, `line`, `wafer`, ...) |
+| `VERSION`, `BUILD_NUMBER` | Application semantic version and immutable build timestamp |
+| `PEAK_MODELS` | Registered peak shapes (`Lorentzian`, `Gaussian`, `PseudoVoigt`, `GaussianAsym`, `LorentzianAsym`, `Fano`, `DecaySingleExp`, `DecayBiExp`) |
+| `PLOT_STYLES` | Available graph types (`point`, `scatter`, `box`, `bar`, `line`, `trendline`, `histogram`, `wafer`, `2Dmap`) |
+| `PALETTE`, `DEFAULT_COLORS`, `MARKERS` | Colormaps, 20-color publication-safe default cycle, and Matplotlib marker styles |
 | `X_AXIS_UNIT`, `Y_AXIS_UNIT` | Axis label registries |
 | `AXIS_LABELS` | Autocomplete suggestions for graph labels |
 | `ICON_DIR` | Resolved path to `resources/icons/` |

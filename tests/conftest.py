@@ -285,6 +285,20 @@ def dataframe_excel_file(examples_dir, tmp_path_factory):
     return generated
 
 
+@pytest.fixture(scope="session")
+def _session_excel_df(dataframe_excel_file):
+    """Parse sheet1 of dataset_Excel.xlsx once per session."""
+    if not dataframe_excel_file.exists():
+        pytest.skip("dataset_Excel.xlsx not present")
+    return pd.read_excel(dataframe_excel_file, sheet_name="sheet1")
+
+
+@pytest.fixture(scope="module")
+def excel_df(_session_excel_df):
+    """Return a clean copy of sheet1 of dataset_Excel.xlsx per test module."""
+    return _session_excel_df.copy()
+
+
 # ── Benchmark datasets (performance/regression suite) ───────────────────────
 
 @pytest.fixture(scope="session")

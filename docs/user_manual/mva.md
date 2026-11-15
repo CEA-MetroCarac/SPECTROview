@@ -12,7 +12,7 @@ A statistical procedure that orthogonally transforms and reduces the dimensional
   - **Parameters**:
     - *Components* (2–50): Number of principal components to retain.
     - *Mean centering* (on/off): Whether to subtract the mean spectrum before analysis. Default: on.
-  - **Available Visualizations**: Scree plots (variance explained), Principal Component Loadings, Score plots, and Residual reconstruction error plots.
+  - **Available Visualizations**: Summary dashboard, Scree plots (variance explained), Principal Component Loadings, 2D spatial component Heatmap, Score plots, and Residual reconstruction error plots.
 
 #### **1.2. Non-negative Matrix Factorization (NMF)**
 A powerful decomposition algorithm that factors the spectral data into distinct, additive, non-negative components, often representing pure chemical endmembers.
@@ -22,7 +22,7 @@ A powerful decomposition algorithm that factors the spectral data into distinct,
     - *Max Iterations* (50–5000): Maximum number of update iterations.
     - *Tolerance*: Convergence threshold for early stopping.
     - *Random Seed*: For reproducible results.
-  - **Available Visualizations**: Component Loadings, Score plots, and Residual reconstruction error plots.
+  - **Available Visualizations**: Summary dashboard, Component Loadings, 2D spatial component Heatmap, Score plots, and Residual reconstruction error plots.
 
 > **Why doesn't NMF have a Scree Plot?**  
 > Unlike PCA, which strictly orders orthogonal components by the maximum variance they explain, NMF finds non-orthogonal, additive components (endmembers) that mix together. Because NMF components are not orthogonal and are not sequentially ordered by variance, an isolated percentage of "variance explained" cannot be calculated for each individual component. To evaluate an NMF model, rely on the **Residuals** plot to assess reconstruction quality, and the **Loadings** to ensure components correspond to physically meaningful spectra.
@@ -46,12 +46,14 @@ Results are displayed across multiple tabs, each with its own interactive `matpl
 | **Summary** | ✅ | ✅ | A combined dashboard plot showing Scree, Loadings, and Scores all at once |
 | **Scree Plot** | ✅ | - | Bar chart of explained variance per component with cumulative line |
 | **Loadings** | ✅ | ✅ | Spectral loading profiles overlaid on the wavenumber axis |
+| **Heatmap** | ✅ | ✅ | 2D spatial score map for a selectable component *(when spatial `(x, y)` coordinates exist in spectrum names)* |
 | **Scores** | ✅ | ✅ | 2D scatter plot with selectable X/Y component axes |
 | **Residuals** | ✅ | ✅ | Per-spectrum reconstruction error for assessing model quality |
 
 ### **3. Tips**
 - Use the **Scree Plot** to determine the optimal number of components (look for the "elbow" in the cumulative variance curve).
 - The **Loadings** plot shows which spectral features contribute most to each component.
+- The **Heatmap** tab visualizes where a chosen component score concentrates across spatial `(x, y)` map coordinates.
 - The **Scores** plot reveals groupings and outliers in your dataset.
 - The **Residuals** tab helps identify spectra that are poorly reconstructed by the model.
 - Each plot tab includes a **`matplotlib` toolbar** for zooming, panning, and saving figures.

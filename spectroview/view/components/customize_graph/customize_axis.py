@@ -936,7 +936,6 @@ class CustomizeAxis(QWidget):
 
     def _refresh_plot(self):
         """Refresh the plot with updated axis settings."""
-        self.graph_widget.ax.clear()
         if self.graph_widget.df is not None:
             self.graph_widget.plot(self.graph_widget.df)
 

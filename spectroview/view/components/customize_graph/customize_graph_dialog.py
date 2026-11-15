@@ -498,28 +498,47 @@ class CustomizeGraphDialog(QDialog):
     # Apply, Cancel, Switch Graph
     # ──────────────────────────────────────────────
     def apply_all(self) -> None:
-        """Apply changes from all tabs and commit undo batch."""
+        """Apply changes from all tabs, commit to ViewModel, and record one undo batch."""
         self._preview_timer.stop()
+        gw = self.graph_widget
         vm = self._vm()
         if vm:
             vm.begin_undo_batch()
         try:
-            self.tab_general.apply_settings(replot=False)
-            self.tab_axes_limits.apply_settings(silent=False, replot=False)
-            self.tab_ticks_spines.apply_settings(replot=False)
-            self.tab_secondary_inset.apply_settings(replot=False)
-            self.tab_legend.apply_settings(replot=False)
-            self.tab_plot_styles.apply_settings(replot=False)
-            self.tab_annotations.apply_settings(replot=False)
+            merged_props = {}
+            for props in (
+                self.tab_general.apply_settings(replot=False),
+                self.tab_axes_limits.apply_settings(silent=False, replot=False),
+                self.tab_ticks_spines.apply_settings(replot=False),
+                self.tab_secondary_inset.apply_settings(replot=False),
+                self.tab_legend.apply_settings(replot=False),
+                self.tab_plot_styles.apply_settings(replot=False),
+                self.tab_annotations.apply_settings(replot=False),
+            ):
+                if isinstance(props, dict):
+                    merged_props.update(props)
+
+            if hasattr(gw, "_save_legend_position"):
+                gw._save_legend_position()
+            if getattr(gw, "df", None) is not None:
+                gw.plot(gw.df)
+            elif hasattr(gw, "canvas") and gw.canvas is not None:
+                gw.canvas.draw()
+
+            if self._original_snapshot is not None:
+                merged_props.update(diff(gw, self._original_snapshot))
+            if hasattr(gw, "legend_properties"):
+                merged_props["legend_properties"] = copy.deepcopy(
+                    getattr(gw, "legend_properties", []) or []
+                )
+            if hasattr(gw, "legend_bbox"):
+                merged_props["legend_bbox"] = copy.deepcopy(getattr(gw, "legend_bbox", None))
+
+            if merged_props and hasattr(gw, "properties_changed") and gw.graph_id is not None:
+                gw.properties_changed.emit(gw.graph_id, merged_props)
         finally:
             if vm:
                 vm.end_undo_batch()
-
-        gw = self.graph_widget
-        if getattr(gw, "df", None) is not None:
-            gw.plot(gw.df)
-        elif hasattr(gw, "canvas") and gw.canvas is not None:
-            gw.canvas.draw()
 
         if getattr(gw, "plot_style", "") == "trendline":
             self.tab_plot_styles._refresh_equation_table()

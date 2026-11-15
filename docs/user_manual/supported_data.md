@@ -46,7 +46,7 @@ Both discrete spectra and hyperspectral datasets are routed automatically when o
 - The **first two columns** define the X and Y spatial coordinates of each spectrum within the map.
 - The **remaining columns** contain the corresponding intensity values for each spectrum (I1 → In), extending from the second row to the last.
 
-> **Note**: Text-exported 2D map formats from Renishaw tools often use a different structure and must be converted before they can be loaded into **SPECTROview**. An integrated conversion tool is provided within the application for this exact purpose (see the `Hyperspectral Data Converter Tool` section).
+> **Note**: Native Renishaw `.wdf` map files can be loaded directly into **SPECTROview** without conversion. Long-format text-exported 2D maps from Renishaw WiRE (`#X`, `#Y`, `#Wave`, `#Intensity` columns) can be converted into wide-matrix `.txt` format using `spectroview.api.io.convert_renishaw_map(input_path, output_path)`.
 
 ### **4. Datasheet (Excel or CSV)**
 

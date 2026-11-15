@@ -99,3 +99,29 @@ class TestDecayModels:
         y_bi = decay_bi_exp(x, A1=100.0, tau1=5.0, A2=0.0, tau2=20.0, B=1.0)
         y_single = decay_single_exp(x, A=100.0, tau=5.0, B=1.0)
         np.testing.assert_allclose(y_bi, y_single)
+
+    def test_scalar_matches_batched_to_machine_precision_even_for_narrow_widths(self):
+        from spectroview.fit_engine.models import BATCHED_MODELS
+
+        x_spec = np.linspace(495.0, 505.0, 201)
+        x_dec = np.linspace(0.0, 10.0, 201)
+        narrow_cases = {
+            "Gaussian": (x_spec, [100.0, 0.01, 500.0]),
+            "Lorentzian": (x_spec, [100.0, 0.01, 500.0]),
+            "PseudoVoigt": (x_spec, [100.0, 0.01, 500.0, 0.35]),
+            "GaussianAsym": (x_spec, [100.0, 0.01, 0.02, 500.0]),
+            "LorentzianAsym": (x_spec, [100.0, 0.01, 0.02, 500.0]),
+            "Fano": (x_spec, [40.0, 0.01, 500.0, 2.5]),
+            "DecaySingleExp": (x_dec, [100.0, 0.05, 1.5]),
+            "DecayBiExp": (x_dec, [80.0, 0.05, 40.0, 0.5, 1.5]),
+        }
+        for name, (x_in, p_vals) in narrow_cases.items():
+            scalar_fn, _ = PEAK_MODEL_REGISTRY[name]
+            batched_fn, _, _ = BATCHED_MODELS[name]
+            y_s = scalar_fn(x_in, *p_vals)
+            y_b = batched_fn(x_in, np.array([p_vals], dtype=np.float64))[0]
+            np.testing.assert_allclose(y_s, y_b, rtol=1e-12, atol=1e-11)
+
+        # At x == x0 with fwhm == 0, Lorentzian peak maximum equals ampli (not 0)
+        assert lorentzian(np.array([500.0]), 123.0, 0.0, 500.0)[0] == pytest.approx(123.0)
+

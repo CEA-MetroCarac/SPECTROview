@@ -7,7 +7,6 @@ VGraph (real dataset_Excel.xlsx data) exactly as CustomizeGraphDialog wires
 them up -- no mocking of the graph widget itself, only of modal dialogs
 (QColorDialog/QMessageBox) that would otherwise block a headless test.
 """
-import pandas as pd
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
@@ -30,13 +29,6 @@ def _is_grayed(spin) -> bool:
     line edit's own Text color role rather than a stylesheet string.
     """
     return spin.lineEdit().palette().color(QPalette.ColorRole.Text) == Qt.GlobalColor.gray
-
-
-@pytest.fixture(scope="module")
-def excel_df(dataframe_excel_file):
-    if not dataframe_excel_file.exists():
-        pytest.skip("dataset_Excel.xlsx not present")
-    return pd.read_excel(dataframe_excel_file, sheet_name="sheet1")
 
 
 _active_test_widgets = []
@@ -1100,7 +1092,7 @@ class TestCustomizeAnnotations:
         vg = _plotted_graph(qapp, excel_df)
         widget = CustomizeAnnotations(vg)
         widget._add_vline()
-        ann_id = vg.annotations[0]["id"]
+        assert len(vg.annotations) == 1
 
         widget.annotation_list.setCurrentRow(0)
         widget._delete_annotation()
@@ -1402,6 +1394,23 @@ class TestCustomizeGraphDialogTopLevel:
         dialog = CustomizeGraphDialog(vg, graph_id=1)
         dialog.switch_graph(vg, graph_id=1)
         assert dialog.graph_widget is vg
+
+    def test_apply_all_emits_properties_changed_for_viewmodel_sync(self, qapp, excel_df):
+        """Regression: Apply must emit properties_changed even after live preview."""
+        vg = _plotted_graph(qapp, excel_df, plot_style="scatter")
+        dialog = CustomizeGraphDialog(vg, graph_id=1)
+        received = []
+        vg.properties_changed.connect(lambda gid, props: received.append((gid, props)))
+
+        dialog.tab_general._spin_title_fontsize.setValue(21)
+        dialog._preview_apply()
+        assert received == []
+
+        dialog.apply_all()
+        assert len(received) == 1
+        gid, props = received[0]
+        assert gid == 1
+        assert props["title_fontsize"] == 21
 
 
 class TestLivePreview:

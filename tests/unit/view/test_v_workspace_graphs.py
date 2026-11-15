@@ -11,10 +11,9 @@ coordinator logic that's non-trivial enough to deserve direct coverage: the
 widget-build sequence three call sites used to duplicate, and its
 success/failure contract.
 """
-import pandas as pd
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShortcut, QKeySequence
+from PySide6.QtGui import QShortcut
 from PySide6.QtWidgets import QMessageBox, QInputDialog
 
 from spectroview.model.graph_style import default_style
@@ -24,14 +23,10 @@ from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 
 @pytest.fixture
 def ws(qapp):
-    return VWorkspaceGraphs()
-
-
-@pytest.fixture(scope="module")
-def excel_df(dataframe_excel_file):
-    if not dataframe_excel_file.exists():
-        pytest.skip("dataset_Excel.xlsx not present")
-    return pd.read_excel(dataframe_excel_file, sheet_name="sheet1")
+    w = VWorkspaceGraphs()
+    yield w
+    w.close()
+    w.deleteLater()
 
 
 class TestBuildGraphWidget:
@@ -881,7 +876,7 @@ class TestUndoRedo:
         assert ws.btn_undo.isEnabled() is False
         assert ws.btn_redo.isEnabled() is False
 
-        gw = self._graph(ws, excel_df)
+        self._graph(ws, excel_df)
         ws._on_undo_state_changed()
         assert ws.btn_undo.isEnabled() is True
         assert ws.btn_redo.isEnabled() is False

@@ -415,10 +415,6 @@ class Icons:
         return svg_icon("check", size=size, color=color)
 
     @classmethod
-    def check_circle(cls, color: str | None = None, size: int = 16) -> QIcon:
-        return svg_icon("check_circle", size=size, color=color)
-
-    @classmethod
     def search(cls, color: str | None = None, size: int = 16) -> QIcon:
         return svg_icon("search", size=size, color=color)
 

@@ -6,22 +6,11 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-from PySide6.QtCore import QSize
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
 from spectroview import LOGO_APPLI, LOGO_APPLI_ICO, get_app_icon
 from spectroview.winapi.app_identity import apply_windows_taskbar_icon, set_current_process_app_id
-
-
-@pytest.fixture(scope="module")
-def qapp():
-    """Ensure a QApplication instance exists for QIcon queries."""
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication([])
-    return app
 
 
 def test_resource_paths_exist():

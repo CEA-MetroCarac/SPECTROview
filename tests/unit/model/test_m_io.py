@@ -51,10 +51,17 @@ from spectroview.viewmodel.utils import parse_coords_from_fname
 class TestLoadSpectrumFile:
     def test_load_txt_spectrum(self, single_spectrum_file):
         spectrum = load_spectrum_file(single_spectrum_file)
+        assert spectrum["type"] == "spectra"
+        assert len(spectrum["items"]) == 1
         item = spectrum["items"][0]
-        assert len(item["x0"]) > 0
-        assert len(item["x0"]) == len(item["y0"])
         assert item["name"] == single_spectrum_file.stem
+        assert isinstance(item["x0"], np.ndarray)
+        assert isinstance(item["y0"], np.ndarray)
+        assert len(item["x0"]) > 100
+        assert item["x0"].shape == item["y0"].shape
+        assert np.all(np.isfinite(item["x0"]))
+        assert np.all(np.isfinite(item["y0"]))
+        assert isinstance(item["metadata"], dict)
 
     def test_load_multiple_spectra(self, multiple_spectra_files):
         spectra = [load_spectrum_file(p) for p in multiple_spectra_files]

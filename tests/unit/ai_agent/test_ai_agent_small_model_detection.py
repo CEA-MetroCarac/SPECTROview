@@ -24,7 +24,8 @@ def _fake_model_info(parameter_size):
 def vm(qapp):
     v = VMChat()
     v.set_dataframes({"df": pd.DataFrame({"A": [1, 2]})}, "df")
-    return v
+    yield v
+    v.shutdown()
 
 
 class TestParamSizeParsing:

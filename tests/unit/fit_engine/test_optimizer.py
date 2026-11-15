@@ -287,7 +287,8 @@ class TestRobustLosses:
                 upper_bounds=np.array([10.0, 10.0]), loss="soft_l1", f_scale=0.0,
             )
 
-    def test_soft_l1_outperforms_linear_with_outliers(self):
+    @pytest.mark.parametrize("loss_name", ["soft_l1", "huber"])
+    def test_robust_loss_outperforms_linear_with_outliers(self, loss_name):
         x, evaluate_fn, jacobian_fn = _linear_problem()
         true_p = np.array([[3.0, -2.0]])
         Y = evaluate_fn(x, true_p)
@@ -300,48 +301,21 @@ class TestRobustLosses:
         p0 = np.array([[1.0, 1.0]])
         bounds = (np.array([-100.0, -100.0]), np.array([100.0, 100.0]))
 
-        p_lin, s_lin, _ = batched_levenberg_marquardt(
-            x=x, Y_data=Y_spikes, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
-            p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss="linear",
-        )
-        p_soft, s_soft, _ = batched_levenberg_marquardt(
-            x=x, Y_data=Y_spikes, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
-            p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss="soft_l1", f_scale=1.0,
-        )
-
-        err_lin = np.linalg.norm(p_lin[0] - true_p[0])
-        err_soft = np.linalg.norm(p_soft[0] - true_p[0])
-
-        assert s_soft[0]
-        # soft_l1 should be substantially closer to true parameters than linear
-        assert err_soft < err_lin / 3.0
-
-    def test_huber_outperforms_linear_with_outliers(self):
-        x, evaluate_fn, jacobian_fn = _linear_problem()
-        true_p = np.array([[3.0, -2.0]])
-        Y = evaluate_fn(x, true_p)
-        Y_spikes = Y.copy()
-        Y_spikes[0, 10] += 50.0
-        Y_spikes[0, 25] += 80.0
-        Y_spikes[0, 40] -= 60.0
-
-        p0 = np.array([[1.0, 1.0]])
-        bounds = (np.array([-100.0, -100.0]), np.array([100.0, 100.0]))
-
         p_lin, _, _ = batched_levenberg_marquardt(
             x=x, Y_data=Y_spikes, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
             p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss="linear",
         )
-        p_huber, s_huber, _ = batched_levenberg_marquardt(
+        p_rob, s_rob, _ = batched_levenberg_marquardt(
             x=x, Y_data=Y_spikes, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
-            p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss="huber", f_scale=1.0,
+            p0=p0, lower_bounds=bounds[0], upper_bounds=bounds[1], loss=loss_name, f_scale=1.0,
         )
 
         err_lin = np.linalg.norm(p_lin[0] - true_p[0])
-        err_huber = np.linalg.norm(p_huber[0] - true_p[0])
+        err_rob = np.linalg.norm(p_rob[0] - true_p[0])
 
-        assert s_huber[0]
-        assert err_huber < err_lin / 3.0
+        assert s_rob[0]
+        # robust loss should be substantially closer to true parameters than linear
+        assert err_rob < err_lin / 3.0
 
     def test_clean_data_inliers_converge_accurately(self):
         x, evaluate_fn, jacobian_fn = _linear_problem()
@@ -464,3 +438,61 @@ class TestPriority1Optimizations:
         np.testing.assert_allclose(out[0], b_mix[0])
         np.testing.assert_array_equal(out[1], np.zeros(4))
         np.testing.assert_allclose(out[2], b_mix[2])
+
+    def test_large_batch_chunking_matches_unchunked_and_supports_progress_and_cancel(self):
+        from spectroview.fit_engine.optimizer import _lm_batch_core
+
+        rng = np.random.default_rng(77)
+        N, M, K = 2200, 300, 2  # N >= 2048 and N * M * K = 1,320,000 > 1,048,576 triggers chunking
+        x = np.linspace(0.0, 10.0, M)
+
+        def evaluate_fn(x_in, p, out=None):
+            res = p[:, 0:1] * x_in[None, :] + p[:, 1:2]
+            if out is not None:
+                out[:] = res
+                return out
+            return res
+
+        def jacobian_fn(x_in, p, out=None):
+            n_r = p.shape[0]
+            J = np.empty((n_r, len(x_in), 2)) if out is None else out
+            J[:, :, 0] = x_in[None, :]
+            J[:, :, 1] = 1.0
+            return J
+
+        true_p = np.column_stack([rng.uniform(1.0, 5.0, N), rng.uniform(-3.0, 3.0, N)])
+        Y = evaluate_fn(x, true_p)
+        p0 = np.tile([0.5, 0.0], (N, 1))
+        lo = np.array([-50.0, -50.0])
+        hi = np.array([50.0, 50.0])
+
+        progress = []
+        p_chunked, s_chunked, c_chunked = batched_levenberg_marquardt(
+            x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+            p0=p0, lower_bounds=lo, upper_bounds=hi,
+            progress_callback=lambda cur, tot: progress.append((cur, tot)),
+        )
+        assert s_chunked.all()
+        assert progress[-1] == (N, N)
+
+        # Compare against direct unchunked _lm_batch_core
+        p_unchunked, s_unchunked, c_unchunked, _ = _lm_batch_core(
+            x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+            p=p0.copy(), lo=lo, hi=hi, weights=None, weights_is_ones=True,
+            max_iter=200, xtol=1e-4, ftol=1e-4, loss="linear", f_scale=1.0,
+            eval_buf=np.empty((N, M)), J_buf_base=np.empty((K, N, M)),
+        )
+        np.testing.assert_allclose(p_chunked, p_unchunked, rtol=1e-12, atol=1e-12)
+        np.testing.assert_array_equal(s_chunked, s_unchunked)
+        np.testing.assert_allclose(c_chunked, c_unchunked, rtol=1e-12, atol=1e-12)
+
+        # Verify early cancellation across chunk boundaries populates remaining costs finitely
+        calls = {"n": 0}
+        p_canc, s_canc, c_canc = batched_levenberg_marquardt(
+            x=x, Y_data=Y, evaluate_fn=evaluate_fn, jacobian_fn=jacobian_fn,
+            p0=p0, lower_bounds=lo, upper_bounds=hi,
+            cancel_check=lambda: (calls.__setitem__("n", calls["n"] + 1) or calls["n"] > 1),
+        )
+        assert np.isfinite(p_canc).all()
+        assert np.isfinite(c_canc).all()
+

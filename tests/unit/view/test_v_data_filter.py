@@ -3,7 +3,6 @@
 import pytest
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication
 
 from spectroview.view.components.v_data_filter import VDataFilter
 

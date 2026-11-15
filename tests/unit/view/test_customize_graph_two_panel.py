@@ -1,9 +1,7 @@
 # tests/unit/view/test_customize_graph_two_panel.py
 """Unit tests for the redesigned two-panel CustomizeGraphDialog with search and 7 modular tabs."""
 
-import pandas as pd
 import pytest
-from PySide6.QtCore import Qt
 
 from spectroview.model.m_graph import MGraph
 from spectroview.view.components.customize_graph.customize_graph_dialog import (
@@ -26,13 +24,6 @@ def _cleanup_test_widgets():
             w.deleteLater()
         except Exception:
             pass
-
-
-@pytest.fixture(scope="module")
-def excel_df(dataframe_excel_file):
-    if not dataframe_excel_file.exists():
-        pytest.skip("dataset_Excel.xlsx not present")
-    return pd.read_excel(dataframe_excel_file, sheet_name="sheet1")
 
 
 def _make_graph(qapp, excel_df, plot_style="scatter"):

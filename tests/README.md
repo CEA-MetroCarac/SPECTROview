@@ -1,21 +1,18 @@
 # SPECTROview Test Suite
 
 Automated tests for the **Tensor Fit Engine** (`spectroview/fit_engine/`), the
-**Spectra/Maps workspaces**, and the **Graphs workspace** (`spectroview/model/`,
-`spectroview/viewmodel/`, and — for Graphs only — the plotting parts of
-`spectroview/view/`), using pytest. See
-[`GRAPHS_WORKSPACE_TESTING.md`](GRAPHS_WORKSPACE_TESTING.md) for a narrative
-recap of how the Graphs workspace suite specifically was built against real
-data, including the bugs it found. AI chat agent tests live under
-`tests/unit/ai_agent/`; the update-checker and plot-template-store tests are
-the remaining flat/adjacent files — both are out of scope for this document.
+**Spectra/Maps workspaces**, the **Graphs workspace** (`spectroview/model/`,
+`spectroview/viewmodel/`, `spectroview/view/`), the **Public API** (`spectroview/api/`),
+**Application services**, **Settings/Credentials**, and the **AI Chat Agent** / **MCP Server**,
+using pytest.
 
 ## Test Organization
 
 ```
 tests/
 ├── conftest.py                        # Shared fixtures: QSettings isolation, qapp,
-│                                       # example-data paths, synthetic data builders
+│                                      # example-data paths, synthetic data builders
+├── test_update_banner_preview.py      # Standalone preview harness for update banner states
 ├── unit/
 │   ├── fit_engine/                    # Pure-numpy, no Qt: models, optimizer,
 │   │   ├── test_models.py             #   evaluator, baseline, noise, engine
@@ -25,33 +22,39 @@ tests/
 │   │   ├── test_baseline.py
 │   │   ├── test_noise.py
 │   │   └── test_vbf_engine.py
-│   ├── model/                         # SpectraStore, file I/O, settings, peak_model,
-│   │   ├── test_spectra_store.py      #   MGraph, plot templates
-│   │   ├── test_m_io.py
-│   │   ├── test_peak_model.py
-│   │   ├── test_m_settings.py
-│   │   ├── test_workspace_io.py
-│   │   ├── test_m_graph.py            #   Graphs workspace's plot-config model
-│   │   └── test_m_plot_template.py
-│   ├── viewmodel/                     # VMWorkspaceSpectra / VMWorkspaceMaps / VMWorkspaceGraphs
-│   │   ├── test_vm_workspace_spectra.py
-│   │   ├── test_vm_workspace_maps.py
-│   │   └── test_vm_workspace_graphs.py
-│   ├── view/                          # Deliberate, scoped exception to "View layer:
-│   │   ├── test_v_graph_plotting.py   #   not tested" -- real headless matplotlib
-│   │   └── test_customize_graph_dialog.py  # rendering for the Graphs workspace only
-│   └── ai_agent/                      # AI chat agent (moved here from flat tests/*.py;
-│       └── test_ai_agent_*.py         #   5 of 7 files require the optional `mcp` package)
+│   ├── model/                         # SpectraStore, file I/O (TXT/CSV/WDF/SPC/L6S/L6M/NGS/NGC),
+│   │   └── test_*.py                  #   MGraph, spectral_parameters, update/TLS, plot recipes/templates
+│   ├── settings/                      # Credential obfuscation (`SecretStore`)
+│   │   └── test_secrets.py
+│   ├── application/                   # Application facade and main-thread Qt dispatch
+│   │   ├── test_application_service.py
+│   │   └── test_qt_dispatch.py
+│   ├── api/                           # Public programmatic Python API suites
+│   │   └── test_*.py
+│   ├── viewmodel/                     # VMWorkspaceSpectra / VMWorkspaceMaps / VMWorkspaceGraphs /
+│   │   └── test_vm_*.py               #   VMFitModelBuilder / VMMVA / VMLiveMaps
+│   ├── view/                          # Headless Qt widget, rendering, Live Maps,
+│   │   └── test_*.py                  #   CustomizeGraphDialog, export, theme & markdown checks
+│   ├── ai_agent/                      # AI chat agent & desktop MCP server suites
+│   │   ├── test_ai_agent_*.py
+│   │   ├── test_desktop_mcp_server.py
+│   │   └── test_v_chat_panel.py
+│   └── test_*.py                      # App identity, markdown syntax, packaging & workflow checks
 ├── integration/                       # End-to-end workflows across layers
-│   ├── test_vbf_thread_integration.py #   VBFthread's 3 task-dict shapes + SpectraStore
-│   ├── test_spectra_workflow.py       #   load -> ROI -> baseline -> peaks -> fit -> save/reload
-│   ├── test_maps_workflow.py          #   same, for a real hyperspectral map
-│   └── test_graphs_workflow.py        #   load Excel -> filter -> plot -> customize -> save/reload
-└── performance/                       # Regression benchmarks on real datasets (@pytest.mark.slow)
+│   ├── test_api_workflow.py
+│   ├── test_graphs_workflow.py
+│   ├── test_interactive_spectral_mapping.py
+│   ├── test_maps_workflow.py
+│   ├── test_mcp_runtime.py
+│   ├── test_multiplatform_update_flow.py
+│   ├── test_spectra_workflow.py
+│   └── test_vbf_thread_integration.py
+└── performance/                       # Regression benchmarks & startup import checks
     ├── conftest.py                    #   loads+fits each benchmark map twice per module
-    ├── test_benchmark_cl_map.py       #   1_CL_map.txt/.json      (16384 spectra)
-    ├── test_benchmark_mos2_map.py     #   2_MoS2_map.txt/.json    (1520 spectra, 3 peaks)
-    └── test_memory_usage.py           #   tracemalloc peak-memory sanity checks
+    ├── test_benchmark_cl_map.py       #   1_CL_map.txt/.json      (16384 spectra, @slow)
+    ├── test_benchmark_mos2_map.py     #   2_MoS2_map.txt/.json    (1520 spectra, 3 peaks, @slow)
+    ├── test_memory_usage.py           #   tracemalloc peak-memory checks (@slow)
+    └── test_startup_imports.py        #   verifies heavy scipy/LLM/MCP imports stay deferred
 ```
 
 ## Running Tests
@@ -100,7 +103,8 @@ $env:QT_QPA_PLATFORM="offscreen" # PowerShell
   instead calls `VBFthread.run()` directly (fully synchronous, no threading at all).
 - **QSettings never touches the real user registry/plist**: `tests/conftest.py`'s
   autouse `_isolate_qsettings` fixture monkeypatches the `QSettings` name inside
-  `spectroview.model.m_settings` to route every `QSettings(org, app)` construction
+  `spectroview.model.m_settings`, `spectroview.settings.m_settings`, and
+  `spectroview.settings.secrets` to route every `QSettings(org, app)` construction
   through an explicit `QSettings(IniFormat, UserScope, org, app)` call pointed at a
   per-test temp directory. (Plain `QSettings.setDefaultFormat(IniFormat)` does **not**
   affect the 2-arg convenience constructor on this platform -- verified empirically;
@@ -125,7 +129,7 @@ $env:QT_QPA_PLATFORM="offscreen" # PowerShell
   counts, R², timing budgets, and same-process reproducibility. Everything else in
   `tests/unit/` and `tests/integration/` uses small synthetic or lightweight example
   files so the non-`slow` suite stays fast — **except the Graphs workspace tests**
-  (`tests/unit/view/`, `tests/unit/viewmodel/test_vm_workspace_graphs.py`,
+  (`tests/unit/view/test_v_graph_plotting.py`, `tests/unit/viewmodel/test_vm_workspace_graphs.py`,
   `tests/integration/test_graphs_workflow.py`), which deliberately load and plot the
   real `examples/datasets_for_plotting/dataset_Excel.xlsx` data throughout, since
   plot-style/customization correctness is best validated against real, messy,
@@ -133,9 +137,6 @@ $env:QT_QPA_PLATFORM="offscreen" # PowerShell
   rather than a hand-crafted synthetic frame. The checked-in workbook currently has
   one sheet; the session fixture creates the historical no-`Slot` second sheet from
   that real frame so multi-sheet loading and no-`Slot` guards remain deterministic.
-  See
-  [`GRAPHS_WORKSPACE_TESTING.md`](GRAPHS_WORKSPACE_TESTING.md) for the full rationale
-  and the three real bugs this approach found.
 
 ## Adding New Tests
 
@@ -154,10 +155,8 @@ $env:QT_QPA_PLATFORM="offscreen" # PowerShell
 - **New MGraph field / customize_graph_dialog.py control**: add it to `CUSTOM_VALUES`
   and `ALL_SAVE_KEYS` in `tests/unit/model/test_m_graph.py` (the round-trip test fails
   loudly if the two ever drift), then add an `_apply()`/read-back assertion to the
-  matching `TestCustomize*` class in `tests/unit/view/test_customize_graph_dialog.py`.
-  If the field is set on `VGraph.__init__` but has no `MGraph` counterpart, that's
-  the same class of bug `scatter_edgecolor`/`axis_breaks` were — see
-  [`GRAPHS_WORKSPACE_TESTING.md`](GRAPHS_WORKSPACE_TESTING.md).
+  matching `TestCustomize*` class in `tests/unit/view/test_customize_graph_dialog.py`
+  (ensuring any new `VGraph` field is wired to `MGraph` so save/load/undo stay in sync).
 - **New plot style**: add it to `spectroview.PLOT_STYLES` and the dispatch in
   `VGraph._plot_primary_axis`, then add a case to
   `TestPlotStyleCoverage` in `tests/unit/view/test_v_graph_plotting.py` — the

@@ -20,7 +20,8 @@ from spectroview.ai_agent.vm_chat import VMChat
 def vm(qapp):
     v = VMChat()
     v.set_dataframes({"fit_results": pd.DataFrame({"Slot": [1, 2], "Zone": ["A", "B"]})}, "fit_results")
-    return v
+    yield v
+    v.shutdown()
 
 
 def _full_tier_prompt(vm, monkeypatch):

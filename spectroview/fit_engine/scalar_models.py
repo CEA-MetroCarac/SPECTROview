@@ -13,19 +13,20 @@ import numpy as np
 # ═══════════════════════════════════════════════════════════════════════════
 
 _LOG2 = np.log(2.0)
+_4LOG2 = 4.0 * _LOG2
 _SQRT_2LOG2 = np.sqrt(2.0 * _LOG2)
 
 
 def gaussian(x, ampli, fwhm, x0):
-    """Gaussian: ampli * exp(-(x-x0)^2 / (2*sigma^2)), sigma = fwhm/(2*sqrt(2*ln2))"""
-    sigma = fwhm / (2.0 * _SQRT_2LOG2)
-    coef = 1.0 / (2.0 * sigma ** 2 + 1e-30)
-    return ampli * np.exp(-coef * (x - x0) ** 2)
+    """Gaussian: ampli * exp(-4*ln2*((x-x0)/fwhm)^2)"""
+    w = np.maximum(np.abs(fwhm), 1e-15)
+    return ampli * np.exp(-_4LOG2 * ((x - x0) / w) ** 2)
 
 
 def lorentzian(x, ampli, fwhm, x0):
-    """Lorentzian: ampli * fwhm^2 / (4*((x-x0)^2 + fwhm^2/4))"""
-    return ampli * fwhm ** 2 / (4.0 * ((x - x0) ** 2 + fwhm ** 2 / 4.0) + 1e-6)
+    """Lorentzian: ampli / (1 + 4*((x-x0)/fwhm)^2)"""
+    w = np.maximum(np.abs(fwhm), 1e-15)
+    return ampli / (1.0 + 4.0 * ((x - x0) / w) ** 2)
 
 
 def pseudovoigt(x, ampli, fwhm, x0, alpha=0.5):
@@ -50,19 +51,22 @@ def lorentzian_asym(x, ampli, fwhm_l, fwhm_r, x0):
 
 def fano(x, ampli, fwhm, x0, q=1.0):
     """Fano lineshape: ampli * (q + eps)^2 / (1 + eps^2)"""
-    gamma_half = fwhm / 2.0
-    epsilon = (x - x0) / (gamma_half + 1e-10)
+    w = np.maximum(np.abs(fwhm), 1e-15)
+    epsilon = 2.0 * (x - x0) / w
     return ampli * (q + epsilon) ** 2 / (1.0 + epsilon ** 2)
 
 
 def decay_single_exp(x, A, tau, B):
     """Single exponential decay: A * exp(-x/tau) + B"""
-    return A * np.exp(-x / (tau + 1e-30)) + B
+    tau_safe = np.maximum(np.abs(tau), 1e-30)
+    return A * np.exp(-x / tau_safe) + B
 
 
 def decay_bi_exp(x, A1, tau1, A2, tau2, B):
     """Bi-exponential decay: A1*exp(-x/tau1) + A2*exp(-x/tau2) + B"""
-    return A1 * np.exp(-x / (tau1 + 1e-30)) + A2 * np.exp(-x / (tau2 + 1e-30)) + B
+    tau1_safe = np.maximum(np.abs(tau1), 1e-30)
+    tau2_safe = np.maximum(np.abs(tau2), 1e-30)
+    return A1 * np.exp(-x / tau1_safe) + A2 * np.exp(-x / tau2_safe) + B
 
 
 # ═══════════════════════════════════════════════════════════════════════════

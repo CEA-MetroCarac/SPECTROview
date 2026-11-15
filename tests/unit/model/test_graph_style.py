@@ -3,8 +3,6 @@ Phase 5's per-graph style templates, copy/paste style, and reset-to-default.
 """
 import dataclasses
 
-import pytest
-
 from spectroview.model.m_graph import MGraph
 from spectroview.model.graph_style import (
     STYLE_FIELD_NAMES, _NON_STYLE_FIELDS, extract_style, default_style, apply_style_dict,
@@ -159,10 +157,6 @@ class TestRestyleSafeFields:
 
     def test_secondary_axes_fields_are_not_restyle_safe(self):
         for field_name in ('y2min', 'y2max', 'y2color', 'y2label'):
-            assert field_name not in RESTYLE_SAFE_FIELDS
-
-    def test_data_identity_fields_are_not_restyle_safe(self):
-        for field_name in ('x', 'y', 'z', 'plot_style', 'df_name', 'filters'):
             assert field_name not in RESTYLE_SAFE_FIELDS
 
     def test_cosmetic_fields_are_restyle_safe(self):

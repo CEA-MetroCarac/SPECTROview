@@ -77,7 +77,7 @@ A pure dataclass that stores everything needed to recreate a plot. `save()`/`loa
 | Style/appearance | `grid`, `tick_direction`, `tick_label_format`, font sizes, `figure_facecolor`, `figure_margins`, `spines_visible`, `figure_theme`, minor-tick toggles |
 | Legend | `legend_visible`, `legend_outside`, `legend_properties`, `legend_bbox`, `legend_ncol`, `legend_frame`, `legend_title`, `legend_fontsize`, `legend_alpha`, `legend_loc` |
 | Plot-style-specific | wafer/2Dmap colormap (`color_palette`, `colormap_norm`, `colormap_center`), trendline fit/anchor, error bars, point/scatter (`scatter_size`, `scatter_edgecolor`, `unify_marker_style`), histogram, sort order |
-| Annotations | `annotations` (list of typed dicts, see [Annotations Tab](#annotations-tab)) |
+| Annotations | `annotations` (list of typed dicts, see [Annotations (`TabAnnotations`)](#annotations-tabannotations)) |
 | Broken axis | `axis_breaks` |
 | Inset (zoom) axes | `inset_enabled`, `inset_bounds`, `inset_xmin`/`xmax`/`ymin`/`ymax`, `inset_show_zoom_indicator` |
 | Export/window geometry | `plot_width`/`height`, `dpi`, `export_width_mm`/`height_mm` |
@@ -133,11 +133,11 @@ Separated from `VGraph` for maintainability, this class encapsulates the pure Ma
 
 #### Colormap Normalization
 
-`_build_color_norm(vmin, vmax, norm_kind, center)` builds the color-scale mapping for wafer/2Dmap heatmaps from `MGraph.colormap_norm` (`"linear"`/`"log"`/`"centered"`) and `MGraph.colormap_center`, editable from the Axis tab's "Axis properties" group as the **Z axis** scale (only shown for `wafer`/`2Dmap`). `"log"` uses `LogNorm`, `"centered"` uses `CenteredNorm` (useful for diverging data like stress/strain centered at 0), and both degrade gracefully back to plain linear `vmin`/`vmax` if the requested norm is invalid for the actual data range (e.g. log norm on non-positive data).
+`_build_color_norm(vmin, vmax, norm_kind, center)` builds the color-scale mapping for wafer/2Dmap heatmaps from `MGraph.colormap_norm` (`"linear"`/`"log"`/`"centered"`) and `MGraph.colormap_center`, editable from the **Axes & Limits** tab as the **Z axis** scale (only shown for `wafer`/`2Dmap`). `"log"` uses `LogNorm`, `"centered"` uses `CenteredNorm` (useful for diverging data like stress/strain centered at 0), and both degrade gracefully back to plain linear `vmin`/`vmax` if the requested norm is invalid for the actual data range (e.g. log norm on non-positive data).
 
 Both `_plot_wafer`/`_plot_2dmap` resolve `vmin`/`vmax` through `_clear_degenerate_zlim(zmin, zmax)` first, which treats an explicit `zmin == zmax` (both set, equal) the same as unset, falling back to the data-derived range. A handful of pre-existing saved `.graphs` files carry an explicit `zmin == zmax == 0.0` (from an old, since-fixed default) — honoring that literally collapses `matplotlib.colors.Normalize(vmin=0, vmax=0)` to mapping every value to the same color, which is what actually broke color mapping when reopening those files, not the colormap-normalization feature itself.
 
-`_resolve_marker_size(style, fallback)` / `_resolve_edge_color(style, fallback)` centralize the "Unify Marker size / Edge color" behavior (see [Legend / Color Tab](#legend-color-tab)): when `VGraph.unify_marker_style` is `True`, every series uses the graph-wide `scatter_size`/`scatter_edgecolor`; when `False`, each series' `legend_properties[i]` override (if any) wins.
+`_resolve_marker_size(style, fallback)` / `_resolve_edge_color(style, fallback)` centralize the "Unify Marker size / Edge color" behavior (see [Legend & Series (`TabLegendSeries`)](#legend-series-tablegendseries)): when `VGraph.unify_marker_style` is `True`, every series uses the graph-wide `scatter_size`/`scatter_edgecolor`; when `False`, each series' `legend_properties[i]` override (if any) wins.
 
 ---
 
@@ -196,7 +196,7 @@ Each plot style maps to a `PlotRenderer._plot_*` method that draws directly with
 - **Tertiary Y** (`self.ax3`): Far-right axis, offset outward
 - **Secondary X** (`x2`): created via `ax.twiny()`
 
-Each secondary axis can use a different column and has its own label, min/max limits, log-scale toggle, color, and marker — all editable from the **Secondary axes** section at the bottom of the Customize dialog's Axis tab (previously only settable via script or hardcoded). A row is enabled only once that axis has a column assigned.
+Each secondary axis can use a different column and has its own label, min/max limits, log-scale toggle, color, and marker — all editable from the Customize dialog's **Secondary & Inset Axes** tab (`TabSecondaryInset`, previously only settable via script or hardcoded). A row is enabled only once that axis has a column assigned.
 
 ---
 
@@ -271,13 +271,13 @@ When a DataFrame contains a `Slot` column (common in semiconductor datasets):
 
 | Category | Class | Module | Scope |
 |---|---|---|---|
-| General & Typography | TabGeneral | 	ab_general.py | Figure theme (Light/Dark), Grid, X-label rotation, Font sizes (Title/Axis/Tick/Colorbar), Data sorting |
-| Axes & Limits | TabAxesLimits | 	ab_axes_limits.py | Axis limits with range sliders (on top), X/Y scales (Linear/Log/Symlog), Data types, Inverted, Z color-scale, Broken axis |
-| Ticks & Spines | TabTicksSpines | 	ab_ticks_spines.py | Tick direction, label format presets, Minor ticks (T/R/B/L), Spines/Borders (T/R/B/L) |
-| Legend & Series | TabLegendSeries | 	ab_legend_series.py | Legend box layout/font/alpha/position, Unify marker style, left-aligned per-series styling table |
-| Plot Style & Fitting | TabPlotStyles | 	ab_plot_styles.py | Style options (point/scatter/wafer), unified error bars, trendline polynomial/anchor/equations, histogram |
-| Annotations | TabAnnotations | 	ab_annotations.py | Visual annotations (V-Line, H-Line, Text, Arrow, V-Span, H-Span, Box, Callout) & modal edit dialogs |
-| Secondary & Inset Axes | TabSecondaryInset | 	ab_secondary_inset.py | Secondary twin axes (Y2/Y3/X2 with label/min/max/log/color/marker), Inset zoom axes |
+| General & Typography | `TabGeneral` | `tab_general.py` | Figure theme (Light/Dark), Grid, X-label rotation, Font sizes (Title/Axis/Tick/Colorbar), Data sorting |
+| Axes & Limits | `TabAxesLimits` | `tab_axes_limits.py` | Axis limits with range sliders (on top), X/Y scales (Linear/Log/Symlog), Data types, Inverted, Z color-scale, Broken axis |
+| Ticks & Spines | `TabTicksSpines` | `tab_ticks_spines.py` | Tick direction, label format presets, Minor ticks (T/R/B/L), Spines/Borders (T/R/B/L) |
+| Legend & Series | `TabLegendSeries` | `tab_legend_series.py` | Legend box layout/font/alpha/position, Unify marker style, left-aligned per-series styling table |
+| Plot Style & Fitting | `TabPlotStyles` | `tab_plot_styles.py` | Style options (point/scatter/wafer), unified error bars, trendline polynomial/anchor/equations, histogram |
+| Annotations | `TabAnnotations` | `tab_annotations.py` | Visual annotations (V-Line, H-Line, Text, Arrow, V-Span, H-Span, Box, Callout) & modal edit dialogs |
+| Secondary & Inset Axes | `TabSecondaryInset` | `tab_secondary_inset.py` | Secondary twin axes (Y2/Y3/X2 with label/min/max/log/color/marker), Inset zoom axes |
 
 A workspace-level singleton dialog that auto-switches context when the user activates a different MDI subwindow (`switch_graph(graph_widget, graph_id)`). Contains `_TabsCompatibilityProxy` and backward-compatible property facades (`legend_widget`, `axis_widget`, `more_options_widget`, `annotations_widget`).
 
@@ -302,7 +302,7 @@ Every control in every tab restarts a single debounced 400ms `QTimer` on change.
 
 ### **Undo/Redo**
 
-The undo/redo stack lives in `VMWorkspaceGraphs`, not the View: `_undo_stack`/`_redo_stack` hold whole-workspace snapshots (`{graph_id: MGraph.save()-dict}`), capped at 50 entries. Every `create_graph()`/`update_graph()`/`delete_graph()` call records one undo point unless it's inside a `begin_undo_batch()`/`end_undo_batch()` pair, in which case the whole batch collapses into a single step — used by the Customize dialog's Apply button (one step for all four tabs) and by Plot Recipe application (one step for the whole recipe, not one per plot). `undo_state_changed` keeps the toolbar's Undo/Redo buttons in sync via `can_undo`/`can_redo`.
+The undo/redo stack lives in `VMWorkspaceGraphs`, not the View: `_undo_stack`/`_redo_stack` hold whole-workspace snapshots (`{graph_id: MGraph.save()-dict}`), capped at 50 entries. Every `create_graph()`/`update_graph()`/`delete_graph()` call records one undo point unless it's inside a `begin_undo_batch()`/`end_undo_batch()` pair, in which case the whole batch collapses into a single step — used by the Customize dialog's Apply button (one step for all edited tabs) and by Plot Recipe application (one step for the whole recipe, not one per plot). `undo_state_changed` keeps the toolbar's Undo/Redo buttons in sync via `can_undo`/`can_redo`.
 
 ### **Keyboard Shortcuts**
 
@@ -318,26 +318,35 @@ Registered on `self.mdi_area` (not the whole workspace widget, so they don't sha
 
 Style copy/paste no longer has its own Ctrl+C shortcut (`_on_copy_style_shortcut()` was removed) — Ctrl+C copies the figure instead, since that's the far more common action. Style copy is still one click away via the Style menu's "Copy Style" action; Ctrl+V still pastes whatever style was last copied that way.
 
-### **Axis Tab**
+### **General & Typography (`TabGeneral`)**
 
-The tab wraps its content in a `QScrollArea` (like More Options) since it now covers every axis-shaped concern in one place — content is tall enough on smaller screens to need scrolling.
+- **Display & Grid**: a **Figure theme** selector (Light/Dark — re-applies `axes.facecolor`/label/tick/spine colors from `plt.rcParams` on every render so switching themes doesn't leave stale black text/spines), a **Show grid lines** checkbox (`MGraph.grid`), and an **X label rotation** spinbox (`MGraph.x_rot`).
+- **Typography & Font Sizes (pt)**: Title, Axis label, Tick label, and Colorbar spinboxes in a single row (defaults 12/12/9/10, matching the active Matplotlib style). The **Colorbar** size (`MGraph.colorbar_fontsize`) sets the tick-label size on the wafer/2Dmap colorbar — `PlotRenderer._apply_colorbar_fontsize()` applies it after each colorbar is (re)created, so a change triggers a full replot (it's deliberately kept out of `RESTYLE_SAFE_FIELDS`). The **subtitle** has no size control — it always renders 2 pt smaller than the title (`title_fontsize − 2`, in `_set_figure_style`); its *text* is edited in the workspace side panel (`VWorkspaceGraphs`). Background color and Margins controls are still respected if set programmatically via `MGraph.figure_facecolor`/`figure_margins`.
+- **Data Sorting**: intelligent categorical sorting toggle (`MGraph.intelligent_sorting`).
 
-- **Axis properties**: per-axis (X/Y) scale (Linear/Logarithmic/Symlog), data type (Auto/Category/Numerical), and Inverted toggle. For `wafer`/`2Dmap`, an extra **Z axis** scale row appears (Linear/Logarithmic/Centered, plus a Center value for Centered) — the color-scale normalization backing `MGraph.colormap_norm`/`colormap_center`; see [Colormap Normalization](#colormap-normalization).
-- **Axis Appearance**: minor ticks (independently for X-Bottom/X-Top/Y-Left/Y-Right, with smart defaults that automatically show minor ticks on numerical axes and hide them on categorical/map axes), **Show spines** (Top/Right/Bottom/Left), tick direction (Default/In/Out/In & Out), and tick label format (Auto/Integer/1-decimal/2-decimal/Scientific).
+### **Axes & Limits (`TabAxesLimits`)**
+
 - **Set Axis Limits**: one spinbox-slider row per X/Y/Z axis (X/Y hidden for `wafer`/`2Dmap`, where Z is the color-scale control instead). Each min/max spinbox is paired with a double-range slider whose drag bounds derive from the actual data range (padded 10%). When a limit is unset, the spinbox shows the plot's real current rendered value grayed out — not a generic "default" placeholder — so the displayed number is always meaningful; this same real-value-placeholder pattern applies to every optional spinbox in this dialog (inset limits, per-series legend overrides).
+- **Axis Scales & Data Types**: per-axis (X/Y) scale (Linear/Logarithmic/Symlog), data type (Auto/Category/Numerical), and Inverted toggle. For `wafer`/`2Dmap`, an extra **Z axis** scale row appears (Linear/Logarithmic/Centered, plus a Center value for Centered) — the color-scale normalization backing `MGraph.colormap_norm`/`colormap_center`; see [Colormap Normalization](#colormap-normalization).
 - **Broken axis**: X-axis break and Y-axis break are mutually exclusive (enabling one disables the other, since the renderer only supports one break axis at a time). Rendering splits the Axes into two panels via `gridspec` — side-by-side sharing the Y axis for an X-break, stacked sharing the X axis for a Y-break — each panel clipped to its half of the range with the facing spines hidden and standard diagonal "//" break marks drawn on the real spine boundaries. A broken axis always forces a full replot (`VGraph.restyle()` returns `False` while one is active) and is mutually exclusive with inset axes.
-- **Inset (zoom) axes**: a checkable group with Position (x0, y0) and Size (w, h) in axes-fraction coordinates, independent X/Y limits, and a "Show zoom indicator" toggle that draws the connector lines from the inset box back to the region it zooms into on the main plot (`ax.indicate_inset_zoom()`). The inset Axes itself is never persisted — it's rebuilt on every render from `MGraph.inset_bounds`. Mutually exclusive with a broken axis.
-- **Secondary axes** (bottom of the tab): one row per Y2/Y3/X2 axis (each disabled until that axis has a column assigned), exposing Label, Min/Max, Log toggle, Color, and Marker — see [Multi-Axis Support](#multi-axis-support).
 
-Font sizes (Title/Axis label/Tick label/Colorbar) live in the **More Options** tab, not here.
+### **Ticks & Spines (`TabTicksSpines`)**
 
-### **Legend / Color Tab**
+- **Tick Appearance**: tick direction (Default/In/Out/In & Out) and tick label format (Auto/Integer/1-decimal/2-decimal/Scientific).
+- **Minor Ticks & Spines**: minor ticks (independently for X-Bottom/X-Top/Y-Left/Y-Right, with smart defaults that automatically show minor ticks on numerical axes and hide them on categorical/map axes) and **Show Spines / Frame Borders** (Top/Right/Bottom/Left).
 
-- **Legends box**: an optional **"Unify marker size / edge color"** checkbox (checked by default). While checked, a single Marker size / Edge color row at the top of the box applies to every series, and the per-series Marker size/Edge color table columns are hidden. Unchecking it reveals those per-series columns (for `point`/`scatter`-family styles only) so each series can override marker size and edge color independently — `PlotRenderer._resolve_marker_size()`/`_resolve_edge_color()` implement the fallback. Per-series Label, Color, and Alpha are always editable individually; Marker is point-style-only, and Line width only shows for styles that actually draw a line (`line`/`trendline`, or `point` with "Join" enabled) — a bare scatter/box/bar has nothing for a line width to describe. Unset per-series linewidth/alpha spinboxes show the real value that will actually be used (e.g. "1.50"), grayed out, rather than a generic placeholder.
-- **Legend style**: columns, frame, title, font size, alpha, position.
-- **Error bars**: type (95% CI / SD / None, style-dependent options) and cap size.
+### **Legend & Series (`TabLegendSeries`)**
 
-### **Annotations Tab**
+- **Legend Box Styling**: columns, frame, title, font size, alpha, and position.
+- **Series Styling**: an optional **"Unify marker size / edge color"** checkbox (checked by default). While checked, a single Marker size / Edge color row at the top of the box applies to every series, and the per-series Marker size/Edge color table columns are hidden. Unchecking it reveals those per-series columns (for `point`/`scatter`-family styles only) so each series can override marker size and edge color independently — `PlotRenderer._resolve_marker_size()`/`_resolve_edge_color()` implement the fallback. Per-series Label, Color, and Alpha are always editable individually; Marker is point-style-only, and Line width only shows for styles that actually draw a line (`line`/`trendline`, or `point` with "Join" enabled) — a bare scatter/box/bar has nothing for a line width to describe. Unset per-series linewidth/alpha spinboxes show the real value that will actually be used (e.g. "1.50"), grayed out, rather than a generic placeholder.
+
+### **Plot Style & Fitting (`TabPlotStyles`)**
+
+- **Plot Style Options**: style-dependent checkboxes (`Join data points (point plot)`, `Dodge overlapping points (point plot)`, `Dodge overlapping points (scatter plot)`, `Show statistics summary (wafer plot)`).
+- **Error Bars (Unified)**: error bar visibility, type (`95% CI` / `Std. Dev.` / `Std. Error` / `None`, style-dependent options), and cap size across `point`, `line`, and `bar` plots.
+- **Trendline & Histogram Controls**: polynomial order, intercept anchor ($x_0, y_0$), fitted equations + $R^2$ read-only table with copy button, and histogram bin count, display mode (`Filled` / `Step`), and KDE overlay toggles.
+
+### **Annotations (`TabAnnotations`)**
 
 Eight annotation types, each an "Add" button plus a dedicated edit dialog in `customize_annotation_dialogs.py`:
 
@@ -352,13 +361,10 @@ Eight annotation types, each an "Add" button plus a dedicated edit dialog in `cu
 
 All stored as typed dicts in `MGraph.annotations`. Every type supports **drag interaction** — clicking and dragging updates position in real time and emits `annotation_position_changed` — implemented by `VGraph._on_annotation_click()`/`_on_annotation_drag()`/`_on_annotation_release()` in `v_graph.py`. Hit-testing is done manually (`self.ax.findobj()` + `artist.contains(event)`) rather than via matplotlib's `pick_event`: `Figure.pick()` only delivers a pick event to an artist when `event.inaxes` equals that artist's own Axes, which silently never happens for an annotation on the primary Axes whenever a secondary Y-axis is also present (it fully overlaps the primary Axes and has higher z-order, so `event.inaxes` resolves to it instead) — this used to make every annotation on a graph with `y2`/`y3` configured completely undraggable. `VGraph._ax_data_coords(event)` resolves the drag position from the event's own pixel coordinates through `self.ax.transData` directly, sidestepping the same `event.inaxes` ambiguity for the position itself.
 
-### **More Options Tab**
+### **Secondary & Inset Axes (`TabSecondaryInset`)**
 
-**Plot options**: style-dependent checkboxes (join/dodge points, error bars, wafer stats), plus one row shared by three global controls: a **Theme** selector (Light/Dark — re-applies `axes.facecolor`/label/tick/spine colors from `plt.rcParams` on every render so switching themes doesn't leave stale black text/spines), an **X label rotation** spinbox (`MGraph.x_rot`), and a **Grid** checkbox (`MGraph.grid`) — the latter two migrated here from the workspace's bottom toolbar.
-
-**Font sizes (pt)**: Title, Axis label, Tick label, and Colorbar spinboxes in a single row (defaults 12/12/9/10, matching the active Matplotlib style). The **Colorbar** size (`MGraph.colorbar_fontsize`) sets the tick-label size on the wafer/2Dmap colorbar — `PlotRenderer._apply_colorbar_fontsize()` applies it after each colorbar is (re)created, so a change triggers a full replot (it's deliberately kept out of `RESTYLE_SAFE_FIELDS`). The **subtitle** has no size control — it always renders 2 pt smaller than the title (`title_fontsize − 2`, in `_set_figure_style`); its *text* is edited in the workspace side panel (`VWorkspaceGraphs`). Background color, Show-spines, and Margins controls that used to live in "Figure style" are still respected if set programmatically via `MGraph.figure_facecolor`/`figure_margins`, just without a dedicated picker (Show-spines moved to the Axis tab).
-
-The wafer/2Dmap colormap-scale control (Linear/Log/Centered) is *not* here — it lives in the **Axis** tab's Axis-properties group as the Z-axis scale; see [Colormap Normalization](#colormap-normalization).
+- **Secondary Twin Axes**: one row per Y2/Y3/X2 axis (each disabled until that axis has a column assigned), exposing Label, Min/Max, Log toggle, Color, and Marker — see [Multi-Axis Support](#multi-axis-support).
+- **Inset (Zoom) Axes**: a checkable group with Position (x0, y0) and Size (w, h) in axes-fraction coordinates, independent X/Y limits, and a "Show zoom indicator" toggle that draws the connector lines from the inset box back to the region it zooms into on the main plot (`ax.indicate_inset_zoom()`). The inset Axes itself is never persisted — it's rebuilt on every render from `MGraph.inset_bounds`. Mutually exclusive with a broken axis.
 
 ---
 
@@ -409,7 +415,7 @@ graph LR
 ```
 
 - Each plot is wrapped in a `QMdiSubWindow` for independent sizing, minimizing, and arranging. Fusion's native subwindow frame is fairly thick and heavily beveled; `self.mdi_area.setStyleSheet(...)` adds a `QMdiSubWindow { border: 1px solid ... }` rule to flatten it to a thin 1px line (setting any border property via QSS switches a widget from native to CSS-based border rendering).
-- The bottom toolbar provides global controls: minimize/delete-all, Undo/Redo, Compose Figure (icon-only buttons, moved here from the side panel since they're workspace-global and used more often than the recipe buttons that stayed there), and one shared **graph toolbar slot** (`self.graph_toolbar_slot` / `self._graph_toolbar_slot_layout`, given stretch factor 1 so it fills the remaining width). Every `VGraph` builds its own matplotlib nav toolbar (Home/Pan/Zoom/Subplots) + a `QFrame.VLine` separator + action-button row (Replicate/Customize/Copy/Export/Style menu, pushed flush against the right edge via a `QHBoxLayout.addStretch()` between the separator and the buttons) in `create_plot_widget()`, but keeps it parentless and hidden (`self.toolbar_container`) instead of showing it inside its own MDI window — each MDI window shows only its plot canvas. The Export button does double duty (`VGraph._on_export_clicked()`, mirroring `VSpectraViewer`'s Copy button): a plain click emits `export_requested(graph_id)` (single-graph export dialog); Ctrl+Click (checked via `QApplication.keyboardModifiers() & Qt.ControlModifier` inside the click handler) emits `export_all_requested` instead, wired to the same `VWorkspaceGraphs._on_export_all_clicked()` the old side-panel "Export All" button used to call — that button was removed outright once this made it redundant. Every action-button icon is a fixed colorful icon set once at creation; `VGraph.update_icon_colors()` and `VWorkspaceGraphs`'s per-theme retinting of it were removed since nothing on a graph needs to track the app theme anymore. `VWorkspaceGraphs._sync_active_graph_toolbar()` reparents whichever graph's `toolbar_container` belongs to the currently active MDI subwindow into the shared slot (detaching the previous one first), so every graph visually shares one toolbar instead of each carrying an identical copy. It's called from every place the active graph can change or a graph's toolbar gets rebuilt: `_on_subwindow_activated` (covers subwindow clicks, the graph-list combobox, and the "no subwindows left" `None` case), `_build_graph_widget` (new graph), `_on_update_plot`/the AI-agent's graph-update path in `main.py` (`create_plot_widget()` rebuilds `toolbar_container` from scratch, so the slot must re-sync to the new instance), and `_on_graph_closed`/`_on_delete_all`/`clear_workspace`/`_rebuild_all_graph_widgets` (teardown/rebuild paths, so the slot never dangles a reference to a deleted widget). X-label rotation and the grid toggle used to live in this toolbar too — moved into the Customize dialog's More Options tab (same row as Theme) since they're per-graph style, not workspace-global, and the toolbar versions only ever applied as one-off new-plot defaults with no live-preview. (A DPI spinbox used to live here too — removed: it only ever set the *default* DPI for the next newly-created plot, silently doing nothing when changed with an existing graph selected despite visually syncing to show that graph's DPI, which read as a live edit control but wasn't one. `MGraph.dpi` still defaults to 100 and can be set via script/AI-agent; on-screen rendering resolution isn't something users need to hand-tune day to day, and export resolution has its own explicit control in `VExportDialog`.)
+- The bottom toolbar provides global controls: minimize/delete-all, Undo/Redo, Compose Figure (icon-only buttons, moved here from the side panel since they're workspace-global and used more often than the recipe buttons that stayed there), and one shared **graph toolbar slot** (`self.graph_toolbar_slot` / `self._graph_toolbar_slot_layout`, given stretch factor 1 so it fills the remaining width). Every `VGraph` builds its own matplotlib nav toolbar (Home/Pan/Zoom/Subplots) + a `QFrame.VLine` separator + action-button row (Replicate/Customize/Copy/Export/Style menu, pushed flush against the right edge via a `QHBoxLayout.addStretch()` between the separator and the buttons) in `create_plot_widget()`, but keeps it parentless and hidden (`self.toolbar_container`) instead of showing it inside its own MDI window — each MDI window shows only its plot canvas. The Export button does double duty (`VGraph._on_export_clicked()`, mirroring `VSpectraViewer`'s Copy button): a plain click emits `export_requested(graph_id)` (single-graph export dialog); Ctrl+Click (checked via `QApplication.keyboardModifiers() & Qt.ControlModifier` inside the click handler) emits `export_all_requested` instead, wired to the same `VWorkspaceGraphs._on_export_all_clicked()` the old side-panel "Export All" button used to call — that button was removed outright once this made it redundant. Every action-button icon is a fixed colorful icon set once at creation; `VGraph.update_icon_colors()` and `VWorkspaceGraphs`'s per-theme retinting of it were removed since nothing on a graph needs to track the app theme anymore. `VWorkspaceGraphs._sync_active_graph_toolbar()` reparents whichever graph's `toolbar_container` belongs to the currently active MDI subwindow into the shared slot (detaching the previous one first), so every graph visually shares one toolbar instead of each carrying an identical copy. It's called from every place the active graph can change or a graph's toolbar gets rebuilt: `_on_subwindow_activated` (covers subwindow clicks, the graph-list combobox, and the "no subwindows left" `None` case), `_build_graph_widget` (new graph), `_on_update_plot`/the AI-agent's graph-update path in `main.py` (`create_plot_widget()` rebuilds `toolbar_container` from scratch, so the slot must re-sync to the new instance), and `_on_graph_closed`/`_on_delete_all`/`clear_workspace`/`_rebuild_all_graph_widgets` (teardown/rebuild paths, so the slot never dangles a reference to a deleted widget). X-label rotation and the grid toggle used to live in this toolbar too — moved into the Customize dialog's **General & Typography** tab (`TabGeneral`, alongside Figure theme) since they're per-graph style, not workspace-global, and the toolbar versions only ever applied as one-off new-plot defaults with no live-preview. (A DPI spinbox used to live here too — removed: it only ever set the *default* DPI for the next newly-created plot, silently doing nothing when changed with an existing graph selected despite visually syncing to show that graph's DPI, which read as a live edit control but wasn't one. `MGraph.dpi` still defaults to 100 and can be set via script/AI-agent; on-screen rendering resolution isn't something users need to hand-tune day to day, and export resolution has its own explicit control in `VExportDialog`.)
 - The graph selector combobox ("Active plot:") and the live plot-size label both moved out of the bottom toolbar: the selector now lives in the side panel, right above Add/Update Plot (`VWorkspaceGraphs._setup_action_buttons()`), and the plot-size label was removed entirely (along with `MdiSubWindow`'s `figsize_label` param and its now-pointless `resizeEvent` override).
 - "Minimize All" collapses all windows for a clean workspace.
 - Graph selection in the combobox activates the corresponding subwindow and syncs the right panel controls.
@@ -435,7 +441,7 @@ When a graph is selected via the combobox or by clicking its subwindow:
 
 ### **SPECTROview Working Folder**
 
-A single universal user-configured root folder (Settings panel) with four subfolders and a portable configuration file auto-created under it (`os.makedirs(..., exist_ok=True)`) on first configuration:
+A single universal user-configured root folder (Settings panel) with five subfolders and a portable configuration file auto-created under it (`os.makedirs(..., exist_ok=True)`) on first configuration:
 
 | Subfolder / File | Purpose | `MSettings` getter |
 |---|---|---|
@@ -443,6 +449,7 @@ A single universal user-configured root folder (Settings panel) with four subfol
 | `plot_recipe/` | Plot Recipes | `get_plot_recipe_folder()` |
 | `plot_style/` | Style Templates | `get_plot_style_folder()` |
 | `ai_chat_history/` | AI chat conversation history | `get_history_folder()` / `get_ai_history_folder()` |
+| `template/` | User templates and custom presets | `get_template_folder()` |
 | `config.json` | Portable configuration backup | `export_config()` / `import_config()` |
 
 `get_working_folder()` one-time-migrates from the older, separate "Fit model folder"/"Plot template folder" settings if either was previously configured, so existing setups aren't orphaned. A separate setting, `get_default_graph_style()`/`set_default_graph_style()`, stores the "Set as Default Style" baseline (see [Style Templates & Plot Recipes](#style-templates-plot-recipes)) — unrelated to the working folder, but persisted the same way (`QSettings`, disk-backed, survives restarts).

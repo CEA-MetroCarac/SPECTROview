@@ -2,7 +2,7 @@
 import json
 
 import pytest
-from PySide6.QtCore import Qt, QUrl, QMimeData, QPoint
+from PySide6.QtCore import Qt, QUrl, QMimeData, QPoint, QEvent
 from PySide6.QtGui import QDragEnterEvent, QDropEvent
 
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
@@ -36,13 +36,18 @@ def sample_fit_model_file(tmp_path):
     return model_path
 
 
-class TestSpectraWorkspaceDragDrop:
-    def test_accept_drops_enabled(self, qapp):
-        ws = VWorkspaceSpectra()
+class TestWorkspaceDragDrop:
+    @pytest.fixture(params=[VWorkspaceSpectra, VWorkspaceMaps], ids=["spectra", "maps"])
+    def ws(self, request, qapp):
+        widget = request.param()
+        yield widget
+        widget.close()
+        widget.deleteLater()
+
+    def test_accept_drops_enabled(self, ws):
         assert ws.acceptDrops() is True
 
-    def test_load_fit_model_file(self, qapp, sample_fit_model_file):
-        ws = VWorkspaceSpectra()
+    def test_load_fit_model_file(self, ws, sample_fit_model_file):
         # Switch tab away first
         ws.bottom_tabs.setCurrentWidget(ws.v_fit_results)
         assert ws.bottom_tabs.currentWidget() == ws.v_fit_results
@@ -54,8 +59,7 @@ class TestSpectraWorkspaceDragDrop:
         # Verify combobox updated to model
         assert ws.v_fit_model_builder.cbb_model.currentText() == "dragged_fit_model.json"
 
-    def test_drag_and_drop_json_on_workspace(self, qapp, sample_fit_model_file):
-        ws = VWorkspaceSpectra()
+    def test_drag_and_drop_json_on_workspace(self, ws, sample_fit_model_file):
         mime = QMimeData()
         mime.setUrls([QUrl.fromLocalFile(str(sample_fit_model_file))])
 
@@ -70,8 +74,7 @@ class TestSpectraWorkspaceDragDrop:
         assert ws.bottom_tabs.currentWidget() == ws.v_fit_model_builder
         assert ws.v_fit_model_builder.cbb_model.currentText() == "dragged_fit_model.json"
 
-    def test_drag_non_json_is_ignored(self, qapp, tmp_path):
-        ws = VWorkspaceSpectra()
+    def test_drag_non_json_is_ignored(self, ws, tmp_path):
         txt_file = tmp_path / "data.txt"
         txt_file.write_text("1 2")
 
@@ -86,48 +89,7 @@ class TestSpectraWorkspaceDragDrop:
         ws.dropEvent(drop_event)
         assert not drop_event.isAccepted()
 
-    def test_fit_model_builder_signal_connected(self, qapp, sample_fit_model_file):
-        ws = VWorkspaceSpectra()
-        ws.bottom_tabs.setCurrentWidget(ws.v_fit_results)
-
-        ws.v_fit_model_builder.fit_model_dropped.emit(str(sample_fit_model_file))
-        assert ws.bottom_tabs.currentWidget() == ws.v_fit_model_builder
-        assert ws.v_fit_model_builder.cbb_model.currentText() == "dragged_fit_model.json"
-
-
-class TestMapsWorkspaceDragDrop:
-    def test_accept_drops_enabled(self, qapp):
-        ws = VWorkspaceMaps()
-        assert ws.acceptDrops() is True
-
-    def test_load_fit_model_file(self, qapp, sample_fit_model_file):
-        ws = VWorkspaceMaps()
-        ws.bottom_tabs.setCurrentWidget(ws.v_fit_results)
-        assert ws.bottom_tabs.currentWidget() == ws.v_fit_results
-
-        success = ws.load_fit_model_file(str(sample_fit_model_file))
-        assert success is True
-        assert ws.bottom_tabs.currentWidget() == ws.v_fit_model_builder
-        assert ws.v_fit_model_builder.cbb_model.currentText() == "dragged_fit_model.json"
-
-    def test_drag_and_drop_json_on_maps_workspace(self, qapp, sample_fit_model_file):
-        ws = VWorkspaceMaps()
-        mime = QMimeData()
-        mime.setUrls([QUrl.fromLocalFile(str(sample_fit_model_file))])
-
-        enter_event = QDragEnterEvent(QPoint(50, 50), Qt.CopyAction, mime, Qt.LeftButton, Qt.NoModifier)
-        ws.dragEnterEvent(enter_event)
-        assert enter_event.isAccepted()
-
-        drop_event = QDropEvent(QPoint(50, 50), Qt.CopyAction, mime, Qt.LeftButton, Qt.NoModifier)
-        ws.dropEvent(drop_event)
-        assert drop_event.isAccepted()
-
-        assert ws.bottom_tabs.currentWidget() == ws.v_fit_model_builder
-        assert ws.v_fit_model_builder.cbb_model.currentText() == "dragged_fit_model.json"
-
-    def test_fit_model_builder_signal_connected_maps(self, qapp, sample_fit_model_file):
-        ws = VWorkspaceMaps()
+    def test_fit_model_builder_signal_connected(self, ws, sample_fit_model_file):
         ws.bottom_tabs.setCurrentWidget(ws.v_fit_results)
 
         ws.v_fit_model_builder.fit_model_dropped.emit(str(sample_fit_model_file))
@@ -136,31 +98,27 @@ class TestMapsWorkspaceDragDrop:
 
 
 class TestMainDragDropJson:
-    def test_main_load_json_into_active_spectra_workspace(self, qapp, monkeypatch, sample_fit_model_file):
-        from spectroview.main import Main
-        monkeypatch.setattr(Main, "_prewarm_ai_chat", lambda self: None)
-        win = Main()
-        try:
-            win.tabWidget.setCurrentWidget(win.v_spectra_workspace)
-            win._load_files_by_paths([str(sample_fit_model_file)])
+    @pytest.fixture(scope="module")
+    def main_win(self, qapp):
+        import spectroview.main as main_mod
+        original_prewarm = getattr(main_mod.Main, "_prewarm_ai_chat", None)
+        main_mod.Main._prewarm_ai_chat = lambda self: None
+        win = main_mod.Main()
+        yield win
+        win.close()
+        win.deleteLater()
+        qapp.sendPostedEvents(None, QEvent.DeferredDelete)
+        qapp.processEvents()
+        if original_prewarm is not None:
+            main_mod.Main._prewarm_ai_chat = original_prewarm
 
-            assert win.tabWidget.currentWidget() == win.v_spectra_workspace
-            assert win.v_spectra_workspace.bottom_tabs.currentWidget() == win.v_spectra_workspace.v_fit_model_builder
-            assert win.v_spectra_workspace.v_fit_model_builder.cbb_model.currentText() == "dragged_fit_model.json"
-        finally:
-            win.close()
+    @pytest.mark.parametrize("ws_attr", ["v_spectra_workspace", "v_maps_workspace"])
+    def test_main_load_json_into_active_workspace(self, main_win, sample_fit_model_file, ws_attr):
+        ws = getattr(main_win, ws_attr)
+        main_win.tabWidget.setCurrentWidget(ws)
+        main_win._load_files_by_paths([str(sample_fit_model_file)])
 
-    def test_main_load_json_into_active_maps_workspace(self, qapp, monkeypatch, sample_fit_model_file):
-        from spectroview.main import Main
-        monkeypatch.setattr(Main, "_prewarm_ai_chat", lambda self: None)
-        win = Main()
-        try:
-            win.tabWidget.setCurrentWidget(win.v_maps_workspace)
-            win._load_files_by_paths([str(sample_fit_model_file)])
-
-            assert win.tabWidget.currentWidget() == win.v_maps_workspace
-            assert win.v_maps_workspace.bottom_tabs.currentWidget() == win.v_maps_workspace.v_fit_model_builder
-            assert win.v_maps_workspace.v_fit_model_builder.cbb_model.currentText() == "dragged_fit_model.json"
-        finally:
-            win.close()
+        assert main_win.tabWidget.currentWidget() == ws
+        assert ws.bottom_tabs.currentWidget() == ws.v_fit_model_builder
+        assert ws.v_fit_model_builder.cbb_model.currentText() == "dragged_fit_model.json"
 

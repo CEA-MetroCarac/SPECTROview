@@ -5,7 +5,6 @@ Mirrors the existing MConversationStore test patterns (save/load/list/
 rename/duplicate/delete) since MPlotRecipeStore is deliberately modeled
 on that class.
 """
-import json
 import os
 
 import pytest

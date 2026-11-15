@@ -8,7 +8,7 @@ The MVA feature follows the MVVM (Model-View-ViewModel) architectural pattern:
 
 - **Model** (`spectroview/model/m_mva.py`): Contains the core mathematics for MVA techniques, specifically Principal Component Analysis (PCA) and Non-negative Matrix Factorization (NMF). Uses standard numerical libraries (`numpy`, `scipy`) without requiring extra dependencies like `scikit-learn`.
 - **ViewModel** (`spectroview/viewmodel/vm_mva.py`): Orchestrates the data flow. It extracts preprocessed data from active spectra, invokes the Model to perform calculations, caches results, and computes per-spectrum reconstruction errors.
-- **View** (`spectroview/view/components/v_mva.py`): Provides the user interface with a tabbed plot panel (Scree Plot, Loadings, Scores, Residuals), interactive parameter controls, and `matplotlib` navigation toolbars for each plot.
+- **View** (`spectroview/view/components/v_mva.py`): Provides the user interface with a tabbed plot panel (Summary, Scree Plot, Loadings, Heatmap, Scores, Residuals), interactive parameter controls, and `matplotlib` navigation toolbars for each plot.
 
 ## **Algorithm Implementation**
 
@@ -18,8 +18,10 @@ The PCA implementation in `SPECTROview` uses Singular Value Decomposition (SVD) 
 
 `SPECTROview` features a comprehensive tabbed plot interface for visualizing results:
 
-- **Scree Plot**: Bar chart of individual variance + cumulative line
+- **Summary**: 2×2 dashboard showing Scree Plot (PCA only), first 3 Loadings, and primary Score scatter projections
+- **Scree Plot** (PCA only): Bar chart of individual variance + cumulative line
 - **Loadings**: Spectral loading overlays with fill-between for visual clarity
+- **Heatmap**: 2D spatial map of selected component scores when spectrum names carry `(x, y)` coordinates
 - **Scores**: 2D scatter with interactive axis selection
 - **Residuals**: Per-spectrum reconstruction error for model quality assessment
 
@@ -33,8 +35,10 @@ PCA is a dimensionality reduction technique that transforms spectra into a new c
   - *Components*: Number of principal components to retain (2–50).
   - *Mean centering*: Whether to subtract the mean spectrum before SVD (default: on). This is standard practice for spectral PCA.
 - **Visualizations**:
+  - *Summary*: 2×2 overview dashboard combining top Scree, Loadings, and Score pairs.
   - *Scree Plot*: Displays the percentage of variance explained by each principal component and the cumulative variance.
   - *Loadings*: Visualizes the spectral contribution to each principal component, with percentage of explained variance in the legend.
+  - *Heatmap*: 2D spatial score plot for a selectable component when `(x, y)` coordinates are encoded in spectrum names.
   - *Scores*: Provides a 2D scatter plot of the spectra projected onto the principal components, with interactive axis selection.
   - *Residuals*: Per-spectrum L2 reconstruction error for model quality assessment.
 
@@ -48,7 +52,9 @@ NMF factors the data matrix into two non-negative matrices (typically W and H). 
   - *Tolerance*: The convergence threshold. The algorithm stops early if the relative change in the reconstruction error between successive iterations falls below this value.
   - *Random Seed*: A seed value for the random number generator used to initialize the matrices. Setting a fixed seed ensures that the NMF results are reproducible across runs (default: 42).
 - **Visualizations**:
+  - *Summary*: Overview dashboard of Loadings and primary NMF score projections.
   - *Loadings*: Displays the non-negative spectral components (endmembers).
+  - *Heatmap*: 2D spatial abundance map for a selectable NMF component when `(x, y)` coordinates are present in spectrum names.
   - *Scores*: Provides a 2D scatter plot of the concentration/abundances of these components across the dataset.
   - *Residuals*: Per-spectrum L2 reconstruction error.
 
@@ -68,8 +74,10 @@ The MVA view uses a split-panel layout:
 ### **Right Panel (Tabbed Plots)**
 Each plot type occupies its own tab in a `QTabWidget`:
 
+- **Summary**: Combined overview grid (Scree Plot [PCA], first 3 Loadings, and primary Score scatter projections).
 - **Scree Plot** (PCA only): Variance explained per component.
 - **Loadings**: Spectral loading profiles.
+- **Heatmap**: 2D spatial map of selected component scores (requires `(x, y)` coordinates in spectrum names).
 - **Scores**: Interactive 2D scatter with axis selection.
 - **Residuals**: Per-spectrum reconstruction quality.
 
@@ -78,7 +86,7 @@ Each tab includes a `matplotlib` `NavigationToolbar` for zoom, pan, and save ope
 ## **Data Pipeline**
 
 1. **Selection**: MVA operates exclusively on the *active* (checked) spectra in the `SPECTROview` workspace.
-2. **Preprocessing**: The analysis uses the `spectrum.y` attribute, meaning it operates on data that has already undergone preprocessing steps (`baseline` subtraction, normalization, cropping) configured by the user.
+2. **Preprocessing**: `VMMVA` pulls data directly from `SpectraStore` (`md.Y` when preprocessed, falling back to `md.Y0` when raw), meaning it operates on data that has already undergone user-configured preprocessing steps (`baseline` subtraction, cropping, X-correction).
 3. **Interpolation**: If the selected spectra have varying wavenumber axes, they are automatically interpolated onto a common grid (the grid of the first active spectrum) to build a consistent data matrix.
 4. **Export**: The results (scores for PCA, W matrix for NMF) can be exported directly to the `Graphs` workspace for further visualization and comparison.
 

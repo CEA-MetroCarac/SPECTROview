@@ -32,7 +32,7 @@ class VWorkspaceSpectra(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.m_settings = MSettings()
-        self.vm = VMWorkspaceSpectra(self.m_settings) # To bind View to ViewModel
+        self.vm = None if getattr(self, "_skip_parent_setup", False) else VMWorkspaceSpectra(self.m_settings) # To bind View to ViewModel
         
         self.init_ui()
         self.setup_connections()
@@ -77,7 +77,8 @@ class VWorkspaceSpectra(QWidget):
         self.vm_live_maps = VMLiveMaps(self.m_settings, parent=self, mode="spectra")
         self._live_maps_dirty = False
         self.vm_mva = VMMVA(self.m_settings)
-        self.vm.set_fit_model_builder(self.vm_fit_model_builder) # 🔑 inject dependency
+        if self.vm is not None:
+            self.vm.set_fit_model_builder(self.vm_fit_model_builder) # 🔑 inject dependency
         
         self.bottom_tabs.addTab(self.v_fit_model_builder, "Fit Model Builder")
         self.bottom_tabs.addTab(self.v_fit_results, "Fit Results")

@@ -5,20 +5,11 @@ mirroring test_customize_graph_dialog.py's pattern. QFileDialog.getSaveFileName
 is monkeypatched (it would otherwise block forever under offscreen mode).
 """
 import os
-import tempfile
 
-import pandas as pd
 import pytest
 
 from spectroview.view.components.v_graph import VGraph
 from spectroview.view.components.v_export_dialog import VExportDialog, VBatchExportDialog
-
-
-@pytest.fixture(scope="module")
-def excel_df(dataframe_excel_file):
-    if not dataframe_excel_file.exists():
-        pytest.skip("dataset_Excel.xlsx not present")
-    return pd.read_excel(dataframe_excel_file, sheet_name="sheet1")
 
 
 def _plotted_graph(qapp, excel_df, plot_style="scatter", x="x0_Si", y=None, z=None):
@@ -49,20 +40,6 @@ class TestVExportDialogDefaults:
 
 
 class TestVExportDialogExport:
-    def test_export_png_creates_a_file(self, qapp, excel_df, monkeypatch, tmp_path):
-        vg = _plotted_graph(qapp, excel_df)
-        dialog = VExportDialog(vg)
-        target = str(tmp_path / "graph1.png")
-        monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getSaveFileName",
-            lambda *a, **k: (target, "PNG Image (*.png)"),
-        )
-
-        dialog._on_export_clicked()
-
-        assert os.path.exists(target)
-        assert os.path.getsize(target) > 0
-
     @pytest.mark.parametrize("fmt_display,ext", [
         ("PNG", "png"), ("TIFF", "tiff"), ("SVG", "svg"), ("PDF", "pdf"), ("EPS", "eps"),
     ])

@@ -17,6 +17,134 @@ from spectroview.fit_engine.noise import mad_noise, moving_average_5
 from spectroview.fit_engine.scalar_models import PEAK_MODEL_REGISTRY
 
 
+_EXPR_GLOBALS = {
+    "__builtins__": None,
+    "np": np,
+    "pi": np.pi,
+    "sqrt": np.sqrt,
+    "exp": np.exp,
+    "log": np.log,
+    "sin": np.sin,
+    "cos": np.cos,
+}
+
+
+class _DualVar:
+    """Vectorized forward-mode dual number for analytical expression Jacobians."""
+
+    __slots__ = ("val", "grad")
+
+    def __init__(self, val: np.ndarray, grad: np.ndarray):
+        self.val = val
+        self.grad = grad
+
+    @staticmethod
+    def _broadcast_scalar_or_1d(arr):
+        return arr[:, None] if isinstance(arr, np.ndarray) and arr.ndim == 1 else arr
+
+    def __add__(self, other):
+        if isinstance(other, _DualVar):
+            return _DualVar(self.val + other.val, self.grad + other.grad)
+        return _DualVar(self.val + other, self.grad.copy())
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __sub__(self, other):
+        if isinstance(other, _DualVar):
+            return _DualVar(self.val - other.val, self.grad - other.grad)
+        return _DualVar(self.val - other, self.grad.copy())
+
+    def __rsub__(self, other):
+        if isinstance(other, _DualVar):
+            return _DualVar(other.val - self.val, other.grad - self.grad)
+        return _DualVar(other - self.val, -self.grad)
+
+    def __neg__(self):
+        return _DualVar(-self.val, -self.grad)
+
+    def __pos__(self):
+        return self
+
+    def __mul__(self, other):
+        if isinstance(other, _DualVar):
+            return _DualVar(
+                self.val * other.val,
+                self.grad * other.val[:, None] + other.grad * self.val[:, None],
+            )
+        ob = self._broadcast_scalar_or_1d(other)
+        return _DualVar(self.val * other, self.grad * ob)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __truediv__(self, other):
+        if isinstance(other, _DualVar):
+            denom = other.val * other.val
+            return _DualVar(
+                self.val / other.val,
+                (self.grad * other.val[:, None] - other.grad * self.val[:, None]) / denom[:, None],
+            )
+        ob = self._broadcast_scalar_or_1d(other)
+        return _DualVar(self.val / other, self.grad / ob)
+
+    def __rtruediv__(self, other):
+        if isinstance(other, _DualVar):
+            return other.__truediv__(self)
+        ob = self._broadcast_scalar_or_1d(other)
+        denom = self.val * self.val
+        return _DualVar(other / self.val, (-ob * self.grad) / denom[:, None])
+
+    def __pow__(self, power):
+        if isinstance(power, _DualVar):
+            v = self.val ** power.val
+            safe_val = np.maximum(self.val, 1e-300)
+            d_base = power.val * (self.val ** (power.val - 1.0))
+            d_exp = v * np.log(safe_val)
+            return _DualVar(v, self.grad * d_base[:, None] + power.grad * d_exp[:, None])
+        v = self.val ** power
+        dv = power * (self.val ** (power - 1.0))
+        return _DualVar(v, self.grad * self._broadcast_scalar_or_1d(dv))
+
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        if method != "__call__" or kwargs:
+            return NotImplemented
+        if ufunc is np.add:
+            a, b = inputs
+            return a.__add__(b) if isinstance(a, _DualVar) else b.__radd__(a)
+        if ufunc is np.subtract:
+            a, b = inputs
+            return a.__sub__(b) if isinstance(a, _DualVar) else b.__rsub__(a)
+        if ufunc is np.multiply:
+            a, b = inputs
+            return a.__mul__(b) if isinstance(a, _DualVar) else b.__rmul__(a)
+        if ufunc is np.true_divide:
+            a, b = inputs
+            return a.__truediv__(b) if isinstance(a, _DualVar) else b.__rtruediv__(a)
+        if ufunc is np.power:
+            a, b = inputs
+            return a.__pow__(b) if isinstance(a, _DualVar) else NotImplemented
+        if ufunc is np.negative:
+            return -inputs[0]
+        if ufunc is np.positive:
+            return +inputs[0]
+        if len(inputs) == 1 and isinstance(inputs[0], _DualVar):
+            x = inputs[0]
+            if ufunc is np.sqrt:
+                v = np.sqrt(x.val)
+                return _DualVar(v, x.grad * (0.5 / np.maximum(v, 1e-300))[:, None])
+            if ufunc is np.exp:
+                v = np.exp(x.val)
+                return _DualVar(v, x.grad * v[:, None])
+            if ufunc is np.log:
+                return _DualVar(np.log(x.val), x.grad / np.maximum(x.val, 1e-300)[:, None])
+            if ufunc is np.sin:
+                return _DualVar(np.sin(x.val), x.grad * np.cos(x.val)[:, None])
+            if ufunc is np.cos:
+                return _DualVar(np.cos(x.val), x.grad * (-np.sin(x.val))[:, None])
+        return NotImplemented
+
+
 class VBFevaluator:
     """Manages the mapping between a fit_model dict and tensor parameter matrices.
 
@@ -36,6 +164,8 @@ class VBFevaluator:
         self._param_upper = []      # upper bounds
         self._param_vary = []       # bool: free or fixed
         self._exprs = []            # list of (idx, expr_str) for parameters with expressions
+        self._compiled_exprs = []   # topologically sorted list of (idx, expr_str, code_obj)
+        self._eval_scratch = None   # reusable (N_cap, M) scratch buffer for multi-peak evaluate()
 
         self._n_total = 0           # total number of params (free + fixed)
         self._free_idx = None       # indices of free params in the full vector
@@ -118,8 +248,41 @@ class VBFevaluator:
             and not ev._exprs
             and np.array_equal(ev._free_idx, np.arange(ev._n_total))
         )
+        if ev._exprs:
+            ev._compile_exprs()
 
         return ev
+
+    def _compile_exprs(self):
+        """Topologically sort and bytecode-compile parameter expressions."""
+        expr_indices = {idx for idx, _ in self._exprs}
+        resolved = {
+            name for i, name in enumerate(self._param_names) if i not in expr_indices
+        } | set(_EXPR_GLOBALS.keys())
+        pending = []
+        for idx, expr in self._exprs:
+            try:
+                code_obj = compile(expr, "<expr>", "eval")
+            except SyntaxError:
+                code_obj = None
+            pending.append((idx, expr, code_obj))
+
+        ordered = []
+        for _ in range(len(pending)):
+            if not pending:
+                break
+            next_pending = []
+            for idx, expr, code_obj in pending:
+                if code_obj is not None and all(name in resolved for name in code_obj.co_names):
+                    ordered.append((idx, expr, code_obj))
+                    resolved.add(self._param_names[idx])
+                else:
+                    next_pending.append((idx, expr, code_obj))
+            if len(next_pending) == len(pending):
+                ordered.extend(next_pending)
+                break
+            pending = next_pending
+        self._compiled_exprs = ordered
 
     # ── Public properties ────────────────────────────────────────────────
 
@@ -159,37 +322,59 @@ class VBFevaluator:
             p_full[:, self._fixed_idx] = self._fixed_values
             
         if self._exprs:
+            if len(getattr(self, "_compiled_exprs", ())) != len(self._exprs):
+                self._compile_exprs()
             loc = {name: p_full[..., i] for i, name in enumerate(self._param_names)}
-            loc["np"] = np
-            loc["pi"] = np.pi
-            loc["sqrt"] = np.sqrt
-            loc["exp"] = np.exp
-            loc["log"] = np.log
-            loc["sin"] = np.sin
-            loc["cos"] = np.cos
-            
-            pending = list(self._exprs)
-            for _ in range(len(pending)):
-                if not pending:
-                    break
-                next_pending = []
-                for idx, expr in pending:
-                    try:
-                        val = eval(expr, {"__builtins__": None}, loc)
-                        if p_full.ndim == 1:
-                            p_full[idx] = val
-                        else:
-                            p_full[:, idx] = val
-                        loc[self._param_names[idx]] = p_full[..., idx]
-                    except NameError:
-                        next_pending.append((idx, expr))
-                    except Exception:
-                        next_pending.append((idx, expr))
-                if len(next_pending) == len(pending):
-                    break
-                pending = next_pending
-                
+            for idx, expr, code_obj in self._compiled_exprs:
+                try:
+                    val = eval(code_obj if code_obj is not None else expr, _EXPR_GLOBALS, loc)
+                    if p_full.ndim == 1:
+                        p_full[idx] = val
+                    else:
+                        p_full[:, idx] = val
+                    loc[self._param_names[idx]] = p_full[..., idx]
+                except Exception:
+                    pass
+
         return p_full
+
+    def _compute_expr_jacobian(self, p_free_2d: np.ndarray, p_full_2d: np.ndarray) -> np.ndarray:
+        """Compute d(p_full)/d(p_free) of shape (N, K_total, K_free) via forward dual numbers."""
+        N_batch, K_free = p_free_2d.shape
+        J_expr = np.zeros((N_batch, self._n_total, K_free), dtype=np.float64)
+        for f, k_idx in enumerate(self._free_idx):
+            J_expr[:, k_idx, f] = 1.0
+
+        if len(getattr(self, "_compiled_exprs", ())) != len(self._exprs):
+            self._compile_exprs()
+
+        try:
+            loc = {name: p_full_2d[:, i] for i, name in enumerate(self._param_names)}
+            for f, k_idx in enumerate(self._free_idx):
+                loc[self._param_names[k_idx]] = _DualVar(p_free_2d[:, f], J_expr[:, k_idx, :])
+
+            for idx, expr, code_obj in self._compiled_exprs:
+                if code_obj is None:
+                    raise ValueError("Uncompiled expression")
+                res = eval(code_obj, _EXPR_GLOBALS, loc)
+                if isinstance(res, _DualVar):
+                    J_expr[:, idx, :] = res.grad
+                    loc[self._param_names[idx]] = res
+                else:
+                    val_arr = np.broadcast_to(np.asarray(res, dtype=np.float64), (N_batch,))
+                    loc[self._param_names[idx]] = val_arr
+            return J_expr
+        except Exception:
+            # Fallback to finite differences if an expression uses a non-dual construct
+            J_expr.fill(0.0)
+            eps = 1e-8
+            for f in range(K_free):
+                p_free_plus = p_free_2d.copy()
+                step = np.maximum(np.abs(p_free_2d[:, f]) * 1e-6, eps)
+                p_free_plus[:, f] += step
+                p_full_plus = self._to_full(p_free_plus)
+                J_expr[:, :, f] = (p_full_plus - p_full_2d) / step[:, None]
+            return J_expr
 
     # ── Model evaluation ─────────────────────────────────────────────────
 
@@ -250,7 +435,11 @@ class VBFevaluator:
             p_slice = p_full[:, slc]
             if eval_out:
                 if scratch is None:
-                    scratch = np.empty((N, M), dtype=np.float64)
+                    buf = getattr(self, "_eval_scratch", None)
+                    if buf is None or buf.shape[0] < N or buf.shape[1] != M:
+                        buf = np.empty((N, M), dtype=np.float64)
+                        self._eval_scratch = buf
+                    scratch = buf[:N]
                 Y += eval_fn(x, p_slice, out=scratch)
             else:
                 Y += eval_fn(x, p_slice)
@@ -266,7 +455,11 @@ class VBFevaluator:
 
         if self._all_free_identity and p_free.ndim == 2:
             N = p_free.shape[0]
-            J = np.empty((N, M, self._n_total), dtype=np.float64) if out is None else out
+            J = (
+                np.empty((self._n_total, N, M), dtype=np.float64).transpose(1, 2, 0)
+                if out is None
+                else out
+            )
             for (_, slc, eval_fn, jac_fn, has_jac), (_, jac_out) in zip(self._peaks, self._peak_out_flags):
                 p_peak = p_free[:, slc]
                 if has_jac and jac_fn is not None:
@@ -280,7 +473,7 @@ class VBFevaluator:
 
         p_full = self._to_full(p_free)
         N = p_full.shape[0]
-        J_full = np.empty((N, M, self._n_total), dtype=np.float64)
+        J_full = np.empty((self._n_total, N, M), dtype=np.float64).transpose(1, 2, 0)
 
         for (_, slc, eval_fn, jac_fn, has_jac), (_, jac_out) in zip(self._peaks, self._peak_out_flags):
             p_peak = p_full[:, slc]
@@ -296,33 +489,24 @@ class VBFevaluator:
             # Return only columns for free parameters
             if out is not None:
                 if self._free_idx.size > 0:
-                    np.take(J_full, self._free_idx, axis=2, out=out)
+                    out[:] = J_full[:, :, self._free_idx]
                 return out
             return J_full[:, :, self._free_idx]
 
         # Chain rule via J_expr: J_true = J_full @ J_expr
-        K_free = p_free.shape[1] if p_free.ndim == 2 else len(p_free)
         is_1d = p_free.ndim == 1
         p_free_2d = p_free[None, :] if is_1d else p_free
-        N_batch = p_free_2d.shape[0]
-        
-        J_expr = np.zeros((N_batch, self._n_total, K_free))
-        eps = 1e-8
-        
         p_full_2d = p_full[None, :] if is_1d else p_full
-        
-        for f in range(K_free):
-            p_free_plus = p_free_2d.copy()
-            step = np.maximum(np.abs(p_free_2d[:, f]) * 1e-6, eps)
-            p_free_plus[:, f] += step
-            p_full_plus = self._to_full(p_free_plus)
-            J_expr[:, :, f] = (p_full_plus - p_full_2d) / step[:, None]
-            
-        if is_1d:
-            J_true = np.einsum('nmk,nkf->nmf', J_full[None, :, :], J_expr)[0]
-        else:
-            J_true = np.einsum('nmk,nkf->nmf', J_full, J_expr)
+        J_expr = self._compute_expr_jacobian(p_free_2d, p_full_2d)
 
+        if is_1d:
+            J_true = (J_full[None, :, :] @ J_expr)[0]
+            if out is not None:
+                out[:] = J_true
+                return out
+            return J_true
+
+        J_true = J_full @ J_expr
         if out is not None:
             out[:] = J_true
             return out
@@ -357,26 +541,39 @@ class VBFevaluator:
         #    pass over every peak that a separate evaluate() call would cost) ──
         M = x.shape[-1] if hasattr(x, "shape") else len(x)
         Y_peaks = [eval_fn(x, p_full[:, slc]) for _, slc, eval_fn, _, _ in self._peaks]
-        best_fits = np.zeros((N, M))
-        for Y_p in Y_peaks:
-            best_fits += Y_p
+        if not Y_peaks:
+            best_fits = np.zeros((N, M), dtype=np.float64)
+        elif len(Y_peaks) == 1:
+            best_fits = Y_peaks[0].copy()
+        else:
+            best_fits = Y_peaks[0].copy()
+            for Y_p in Y_peaks[1:]:
+                best_fits += Y_p
 
-        # ── Vectorized R² ──
-        if weights is not None:
-            residuals = weights * (Y_data - best_fits)
-            ss_res = np.sum(residuals * residuals, axis=1)  # (N,)
+        # ── Vectorized R² (single scratch buffer) ──
+        diff = Y_data - best_fits
+        if weights is not None and not np.all(weights == 1.0):
+            diff *= weights
+            diff *= diff
+            ss_res = np.sum(diff, axis=1)  # (N,)
             w_sum = weights.sum(axis=1)
-            # Weighted mean
+            np.multiply(weights, Y_data, out=diff)
             y_mean = np.where(
                 w_sum > 0,
-                np.sum(weights * Y_data, axis=1) / np.maximum(w_sum, 1e-30),
-                0.0
+                np.sum(diff, axis=1) / np.maximum(w_sum, 1e-30),
+                0.0,
             )
-            ss_tot = np.sum(weights * (Y_data - y_mean[:, None])**2, axis=1)
+            np.subtract(Y_data, y_mean[:, None], out=diff)
+            diff *= diff
+            diff *= weights
+            ss_tot = np.sum(diff, axis=1)
         else:
-            ss_res = np.sum((Y_data - best_fits)**2, axis=1)
+            diff *= diff
+            ss_res = np.sum(diff, axis=1)
             y_mean = Y_data.mean(axis=1)
-            ss_tot = np.sum((Y_data - y_mean[:, None])**2, axis=1)
+            np.subtract(Y_data, y_mean[:, None], out=diff)
+            diff *= diff
+            ss_tot = np.sum(diff, axis=1)
 
         rsquared = np.where(ss_tot > 0, 1.0 - ss_res / np.maximum(ss_tot, 1e-30), 0.0)
 

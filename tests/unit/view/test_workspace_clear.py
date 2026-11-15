@@ -7,12 +7,16 @@ import pytest
 
 @pytest.fixture(scope="module")
 def _shared_clear_window(qapp):
+    from PySide6.QtCore import QEvent
     import spectroview.main as main_mod
     original_prewarm = getattr(main_mod.Main, "_prewarm_ai_chat", None)
     main_mod.Main._prewarm_ai_chat = lambda self: None
     window = main_mod.Main()
     yield window
     window.close()
+    window.deleteLater()
+    qapp.sendPostedEvents(None, QEvent.DeferredDelete)
+    qapp.processEvents()
     if original_prewarm:
         main_mod.Main._prewarm_ai_chat = original_prewarm
 

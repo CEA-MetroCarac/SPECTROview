@@ -1,13 +1,11 @@
 """Unit tests for metadata tooltip feature."""
-import pytest
 from PySide6.QtCore import Qt, QPoint, QEvent
 from PySide6.QtGui import QMouseEvent, QKeyEvent
-from PySide6.QtWidgets import QApplication, QListWidgetItem, QToolTip
+from PySide6.QtWidgets import QApplication
 
 from spectroview.viewmodel.utils import (
     extract_primary_metadata,
     format_metadata_tooltip,
-    MetadataTooltipManager,
 )
 from spectroview.view.components.v_spectra_list import VSpectraList
 from spectroview.view.components.v_map_list import VMapsList

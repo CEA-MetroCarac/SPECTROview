@@ -197,7 +197,7 @@ spectroview/ai_agent/
 │   └── config.py            # servers.yaml -> validated ServerSpec list
 ├── m_prompt_manager.py      # Prompt caching and assembly: loads and merges the Markdown fragments
 ├── vm_chat.py               # ViewModel: prompt-tier selection, small-model detection, request tuning, agentic loop
-├── v_chat_panel.py          # View: embedded chat panel (QWidget) beside workspace tabs, incl. Auto/Full/Simplified selector
+├── v_chat_panel.py          # View: embedded chat panel (QWidget) beside workspace tabs
 └── v_history_dialog.py      # View: history browser dialog (QDialog) with timestamps, pinning, search, and batch delete
 ```
 
@@ -218,7 +218,7 @@ spectroview/ai_agent/
 | `utils/df_summary.py` | **Model** | `compact_dataframe_schema()` builds the always-pushed names+dtypes block; `summarize_dataframe_columns()` builds the detailed listing served by the `dataframes/detail` resource, compacting by prefix past `column_detail_threshold` columns without ever hiding a column name. |
 | `utils/plot_utils.py` | **Model** | `normalize_plot_config()`/`expand_comma_styles()` — post-processes accumulated plot configs (type coercion, comma-separated multi-style expansion) before they reach the Graphs workspace. |
 | `vm_chat.py` | **ViewModel** | Detects small-vs-full model tier, builds the tier-appropriate system prompt, assembles Ollama/timeout/max-token request options, manages conversation history, and runs the tool-calling agentic loop (up to 5 turns). |
-| `v_chat_panel.py` | **View** | Floating `QDialog` with chat bubbles, provider/model selector, the prompt-tier selector, timestamp display, status bar, and input field. Emits `plot_requested(dict)` when the AI creates/updates/deletes a graph. The model selector is an **editable** `QComboBox` (a model name can be typed directly); for the **Custom** provider its list is seeded from the comma-separated `custom_models` setting (Settings ▸ AI) via `_custom_model_names()`, so endpoints without a model-listing API are still usable. |
+| `v_chat_panel.py` | **View** | Embedded `QWidget` panel with chat bubbles, provider/model selector, timestamp display, compact 42px header bar, and multi-line composer card. Emits `plot_requested(dict)` when the AI creates/updates/deletes a graph. The model selector is an **editable** `QComboBox` (a model name can be typed directly); for the **Custom** provider its list is seeded from the comma-separated `custom_models` setting (Settings ▸ AI) via `_custom_model_names()`, so endpoints without a model-listing API are still usable. |
 | `v_history_dialog.py` | **View** | Browsable list of saved conversations sorted by most-recent-first. Supports open, rename, duplicate, and delete. |
 
 ---
@@ -232,13 +232,16 @@ Small local models (roughly, anything under ~10B parameters) get a measurably di
 `VMChat._auto_detect_small_model()` resolves in this order:
 
 1. **Manual override** — `VMChat.set_small_model_mode(True | False | None)`. `None` (the default) means "keep auto-detecting," persisted via `MSettings`.
-2. **Provider Testing** — Settings dialog (`VSettingsDialog` / `VMSettings`) includes an asynchronous "Test Connection" button calling `test_provider_connection` (`m_llm_client.py`) to validate credentials, endpoints, and model reachability on a background thread.
-3. **Streamlined Header** — `v_chat_panel.py` features a compact 42px single-row header bar hosting the conversation title and action buttons (**Chat History**, **New Chat**, **Clear Chat**).
+2. **Parameter-count check** (Ollama only) — `get_ollama_model_info(model)` calls `ollama show <model>`, parses `details.parameter_size` (e.g. `"8.2B"`) via `_parse_param_size_to_billions()`, and compares it against `config/model.yaml`'s `small_model_param_threshold_b` (default **10.0**). Cached per model name for the life of the `VMChat` instance.
+3. **Name-pattern fallback** — if the parameter count can't be determined (cloud model, or `ollama show` fails), the model name is matched against `VMChat._SMALL_MODEL_PATTERNS`, a list of known small model tags (`qwen3:8b`, `gemma3:4b`, `phi3:mini`, `deepseek-r1:8b`, etc.).
+4. **Default: full tier.** If nothing resolves, the model is treated as large. An unrecognized model getting the full prompt is the safer failure mode than an unrecognized *large* model being needlessly handicapped.
+
+Detection is hard-gated to `provider == "Ollama"` for steps 2–3 — cloud providers always resolve to the full tier unless a manual override forces otherwise. Detection re-runs on `set_model()`/`set_provider()`, never during `__init__` (an `ollama show` network call shouldn't race object construction).
 
 ### **Persisted settings**
 
 Everything the agent stores — provider, selected model per provider, prompt
-tier, API keys, chat-history folder — lives under the `ai_chat/` prefix of the
+tier, and chat-history folder — lives under the `ai_chat/` prefix of the
 single application store, reached through `MSettings.get_ai_value()` /
 `set_ai_value()`. The AI module imports no `QSettings` of its own.
 
@@ -250,16 +253,7 @@ history folder. `MSettings._migrate_legacy_ai_settings()` copies the old values
 across once (guarded by a marker key, never overwriting a newer value) and
 leaves the legacy store in place so an older build still runs.
 
-> **Secrets**: API keys are written to the per-user OS settings store (Windows
-> registry / macOS defaults) — never to a file inside the project, so they
-> cannot be committed. `config/servers.yaml` *is* committed: never put a token
-> in it, use `${VAR}` (expanded by `mcp/config.py`) instead.
-
-2. **Parameter-count check** (Ollama only) — `get_ollama_model_info(model)` calls `ollama show <model>`, parses `details.parameter_size` (e.g. `"8.2B"`) via `_parse_param_size_to_billions()`, and compares it against `config/model.yaml`'s `small_model_param_threshold_b` (default **10.0**). Cached per model name for the life of the `VMChat` instance.
-3. **Name-pattern fallback** — if the parameter count can't be determined (cloud model, or `ollama show` fails), the model name is matched against `VMChat._SMALL_MODEL_PATTERNS`, a list of known small model tags (`qwen3:8b`, `gemma3:4b`, `phi3:mini`, `deepseek-r1:8b`, etc.).
-4. **Default: full tier.** If nothing resolves, the model is treated as large. An unrecognized model getting the full prompt is the safer failure mode than an unrecognized *large* model being needlessly handicapped.
-
-Detection is hard-gated to `provider == "Ollama"` for steps 2–3 — cloud providers always resolve to the full tier unless a manual override forces otherwise. Detection re-runs on `set_model()`/`set_provider()`, never during `__init__` (an `ollama show` network call shouldn't race object construction).
+> **Secrets (`spectroview/settings/secrets.py`)**: API keys (`OpenAI`, `Anthropic`, `Mistral`, `Gemini`, `DeepSeek`, `Custom`) are stored in the per-user OS configuration store via `SecretStore` (`QSettings("CEA-Leti", "SPECTROview")` under the obfuscated `_credentials/` namespace) and are strictly excluded from exported `config.json` files so credentials cannot be leaked or committed. `config/servers.yaml` *is* committed: never put a token in it, use `${VAR}` (expanded by `mcp/config.py`) instead.
 
 ### What changes in Simplified mode
 
@@ -410,7 +404,7 @@ It runs on **every** terminating path, including the turn cap and a tool-executi
 
 #### **Conversation History & Persistence**
 
-Conversations are saved automatically as JSON files in the user-configured history folder (**Settings → AI tab**). `MConversation`:
+Conversations are saved automatically as JSON files in the user-configured history folder (**Settings → AI Settings tab**). `MConversation`:
 
 - Accumulates messages (including `tool_calls`/`tool_call_id` for tool-calling turns) with ISO timestamps.
 - Auto-titles itself from the first user message (up to 60 chars).
@@ -437,20 +431,20 @@ class ChatResult:
 | `text_summary` | `str` | The LLM's final natural-language text |
 | `plot_config` | `list[dict]` \| `None` | Accumulated plot/update/delete configs for the Graphs workspace |
 
-### **`VChatPanel` — View Dialog**
+### **`VChatPanel` — Embedded Chat Panel**
 
 **File**: `spectroview/ai_agent/v_chat_panel.py`
 
-A floating `QDialog` styled with a modern, clean card aesthetic inspired by modern AI composers.
+An embedded `QWidget` panel positioned on the far right of `Main.workspace_splitter`, styled with a modern card aesthetic inspired by AI composers.
 
-**Header**: Streamlined 2-row layout (height 74px):
+**Header (`chatHeader`)**: Compact single-row layout (fixed height 42px):
 
-- **Row 1**: Connection status label `lbl_status` (appends `· Simplified prompts` when small-model mode is active), `lbl_no_data` notice, stretch, and 30×30 action buttons: Conversation History (`btn_history`), New Chat (`btn_new_chat`), and Clear Conversation (`btn_clear`).
-- **Row 2**: Editable conversation title (`edit_title`).
+- **Conversation Title (`edit_title`)**: Editable `QLineEdit` stretching across available header width.
+- **Action Buttons**: 30×30 icon buttons for Chat History (`btn_history`), New Chat (`btn_new_chat`), Clear Chat (`btn_clear`), and Close Panel (`btn_close`). (Internal `lbl_status` and `lbl_no_data` attributes are retained for signal compatibility without cluttering the header UI.)
 
 **Composer (`chatComposerFrame`)**:
 
-- Enclosed card with rounded corners (8px) and subtle border at the bottom of the dialog.
+- Enclosed card with rounded corners (8px) and subtle border at the bottom of the panel.
 - **Top**: Auto-resizing multi-line text input (`_ChatLineEdit`), borderless with transparent background.
 - **Embedded Toolbar**: Located inside the bottom of the composer card:
   - AI Provider selector dropdown (`cbb_provider`)
@@ -692,13 +686,13 @@ With **MCP Tool Calling**, response parsing has no free-text JSON to parse at al
 | **Graph modification** | Update existing graph properties (axis limits, title, style, filters, palette) by graph ID |
 | **Graph deletion** | Delete specific graphs or all graphs by natural language instruction |
 | **Multi-DataFrame support** | Switch between multiple loaded DataFrames; the AI knows which is active |
-| **Small-model adaptation** | Auto-detects small local models (by parameter count or name) and switches to a shorter prompt, capped history, and tuned Ollama request options — manually overridable via the Auto/Full/Simplified selector. See [Small-Model Support](#small-model-support). |
+| **Small-model adaptation** | Auto-detects small local models (by parameter count or name) and switches to a shorter prompt, capped history, and tuned Ollama request options (`VMChat.set_small_model_mode()`). See [Small-Model Support](#small-model-support). |
 | **Self-correcting tool calls** | Invalid filters or plot styles are rejected with an actionable error *before* being applied, giving the model a chance to retry within the same turn/loop |
 | **Conversation memory** | Multi-turn conversations; full history for large/cloud models, last 6 messages for detected small models |
 | **Conversation persistence** | Conversations survive file loads and tab switches. Only **+ New Chat** resets the history |
 | **Conversation history browser** | Browse, search, open, rename, duplicate, and delete past conversations via the History dialog |
 | **Streaming responses** | Token-by-token display with live typing animation, on every provider including Anthropic with tools |
-| **Model & prompt-tier selection** | Switch between locally downloaded Ollama models or cloud providers; independently force the prompt tier |
+| **Model & provider selection** | Switch between locally downloaded Ollama models or cloud providers directly from the composer toolbar |
 | **Context-aware prompts** | System prompt carries DataFrame names, shapes, and every column with its dtype; sample values, row previews, and full graph configs are fetched on demand via `get_context` |
 | **External MCP servers** | Any `stdio` or `http` MCP server listed in `config/servers.yaml` is connected at startup and its tools offered to the model, with an optional per-server allowlist |
 

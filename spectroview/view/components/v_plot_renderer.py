@@ -289,6 +289,22 @@ class PlotRenderer:
             self.vg.ax.set_xticks(list(x_positions.values()))
             self.vg.ax.set_xticklabels([str(v) for v in x_unique])
 
+    def _draw_styled_boxplot(self, data_groups, positions, width, color):
+        """Draw and style a boxplot series if ``data_groups`` is non-empty."""
+        if not data_groups:
+            return
+        bp = self.vg.ax.boxplot(
+            data_groups, positions=positions, widths=width,
+            patch_artist=True, manage_ticks=False
+        )
+        for patch in bp['boxes']:
+            patch.set_facecolor(color)
+            patch.set_edgecolor('black')
+            patch.set_linewidth(0.8)
+        for element in ('whiskers', 'caps', 'medians', 'fliers'):
+            for line in bp.get(element, []):
+                line.set_color('black')
+
     def _plot_box(self, df, y, colors, c):
         plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
         
@@ -321,18 +337,7 @@ class PlotRenderer:
                         data_groups.append(vals)
                         positions.append(x_positions[xv] + offsets[h_idx])
                 
-                if data_groups:
-                    bp = self.vg.ax.boxplot(
-                        data_groups, positions=positions, widths=sub_width * 0.9,
-                        patch_artist=True, manage_ticks=False
-                    )
-                    for patch in bp['boxes']:
-                        patch.set_facecolor(color)
-                        patch.set_edgecolor('black')
-                        patch.set_linewidth(0.8)
-                    for element in ['whiskers', 'caps', 'medians', 'fliers']:
-                        for line in bp.get(element, []):
-                            line.set_color('black')
+                self._draw_styled_boxplot(data_groups, positions, sub_width * 0.9, color)
                 
                 p = patches.Rectangle((0,0), 0, 0, facecolor=color, edgecolor='black', label=str(cat))
                 self.vg.ax.add_patch(p)
@@ -345,25 +350,10 @@ class PlotRenderer:
                     data_groups.append(vals)
                     positions.append(x_positions[xv])
             
-            if data_groups:
-                bp = self.vg.ax.boxplot(
-                    data_groups, positions=positions, widths=box_width,
-                    patch_artist=True, manage_ticks=False
-                )
-                for patch in bp['boxes']:
-                    patch.set_facecolor(c)
-                    patch.set_edgecolor('black')
-                    patch.set_linewidth(0.8)
-                for element in ['whiskers', 'caps', 'medians', 'fliers']:
-                    for line in bp.get(element, []):
-                        line.set_color('black')
+            self._draw_styled_boxplot(data_groups, positions, box_width, c)
 
-        if is_numeric:
-            self.vg.ax.set_xticks([x_positions[xv] for xv in x_unique])
-            self.vg.ax.set_xticklabels([str(xv) for xv in x_unique])
-        else:
-            self.vg.ax.set_xticks(list(x_positions.values()))
-            self.vg.ax.set_xticklabels([str(v) for v in x_unique])
+        self.vg.ax.set_xticks([x_positions[xv] for xv in x_unique])
+        self.vg.ax.set_xticklabels([str(xv) for xv in x_unique])
 
     def _plot_line(self, df, y, colors, c):
         plot_df, x_unique, x_positions, is_numeric = self._prepare_plot_data(df, y)
@@ -475,87 +465,71 @@ class PlotRenderer:
                 yerr=yerr, capsize=capsize, ecolor='black', **extra
             )
 
-        if is_numeric:
-            self.vg.ax.set_xticks([x_positions[xv] for xv in x_unique])
-            self.vg.ax.set_xticklabels([str(xv) for xv in x_unique])
-        else:
-            self.vg.ax.set_xticks(list(x_positions.values()))
-            self.vg.ax.set_xticklabels([str(v) for v in x_unique])
+        self.vg.ax.set_xticks([x_positions[xv] for xv in x_unique])
+        self.vg.ax.set_xticklabels([str(xv) for xv in x_unique])
+
+    def _draw_trendline_series(self, subset, y, color, label, idx, anchor):
+        """Render scatter points, fitted trendline, optional 95% CI, and record equation."""
+        x_data, y_data = self._extract_xy_numeric(subset, y)
+        x_fit, y_fit, coeffs = self._fit_trendline(subset, y, _xy=(x_data, y_data))
+
+        style = self._series_style(idx)
+        series_s = self._resolve_marker_size(style, self.vg.scatter_size)
+        series_edge = self._resolve_edge_color(style, self.vg.scatter_edgecolor)
+        self.vg.ax.scatter(
+            subset[self.vg.x], subset[y],
+            color=color, s=series_s,
+            edgecolors=series_edge, linewidths=0.5,
+            label=label, zorder=3
+        )
+        self.vg.ax.plot(x_fit, y_fit, color=color, linewidth=2)
+
+        if not anchor and len(x_data) > 2:
+            p = np.poly1d(coeffs)
+            y_model = p(x_data)
+            t_targ = 1.96
+            se = np.sqrt(np.sum((y_data - y_model)**2) / (len(y_data) - 2))
+            denom = np.sum((x_data - x_data.mean())**2)
+            if denom > 0:
+                ci = t_targ * se * np.sqrt(1 / len(x_data) + (x_fit - x_data.mean())**2 / denom)
+                self.vg.ax.fill_between(x_fit, y_fit - ci, y_fit + ci, color=color, alpha=0.2)
+
+        eq_str, r2 = self._build_equation_str(coeffs, subset, y, _xy=(x_data, y_data))
+        self.vg.trendline_equations.append({
+            'label': label, 'equation': eq_str, 'r2': f"{r2:.4f}"
+        })
 
     def _plot_trendline(self, df, y, colors, c):
         self.vg.trendline_equations = []  # reset before recomputing
         anchor = getattr(self.vg, 'trendline_anchor_enabled', False)
-        
+
         if self.vg.z and self.vg.z in df.columns:
             categories = self._get_sorted_categories(df[self.vg.z], df=df)
             for idx, cat in enumerate(categories):
                 subset = df[df[self.vg.z] == cat]
-                color = colors[idx % len(colors)]
-
                 try:
-                    x_fit, y_fit, coeffs = self._fit_trendline(subset)
+                    self._draw_trendline_series(
+                        subset, y, colors[idx % len(colors)], str(cat), idx, anchor
+                    )
                 except Exception:
                     continue
-
-                style = self._series_style(idx)
-                series_s = self._resolve_marker_size(style, self.vg.scatter_size)
-                series_edge = self._resolve_edge_color(style, self.vg.scatter_edgecolor)
-                self.vg.ax.scatter(
-                    subset[self.vg.x], subset[y],
-                    color=color, s=series_s,
-                    edgecolors=series_edge, linewidths=0.5,
-                    label=str(cat), zorder=3
-                )
-                
-                if anchor:
-                    self.vg.ax.plot(x_fit, y_fit, color=color, linewidth=2)
-                else:
-                    self.vg.ax.plot(x_fit, y_fit, color=color, linewidth=2)
-                    x_data = subset[self.vg.x].dropna().values.astype(float)
-                    y_data = subset[y].dropna().values.astype(float)
-                    if len(x_data) > 2:
-                        p = np.poly1d(coeffs)
-                        y_model = p(x_data)
-                        t_targ = 1.96
-                        se = np.sqrt(np.sum((y_data - y_model)**2) / (len(y_data) - 2))
-                        ci = t_targ * se * np.sqrt(1/len(x_data) + (x_fit - x_data.mean())**2 / np.sum((x_data - x_data.mean())**2))
-                        self.vg.ax.fill_between(x_fit, y_fit - ci, y_fit + ci, color=color, alpha=0.2)
-                    
-                eq_str, r2 = self._build_equation_str(coeffs, subset)
-                self.vg.trendline_equations.append({
-                    'label': str(cat), 'equation': eq_str, 'r2': f"{r2:.4f}"
-                })
         else:
-            x_fit, y_fit, coeffs = self._fit_trendline(df)
+            self._draw_trendline_series(df, y, c, 'All data', 0, anchor)
 
-            style = self._series_style(0)
-            series_s = self._resolve_marker_size(style, self.vg.scatter_size)
-            series_edge = self._resolve_edge_color(style, self.vg.scatter_edgecolor)
-            self.vg.ax.scatter(
-                df[self.vg.x], df[y],
-                color=c, s=series_s,
-                edgecolors=series_edge, linewidths=0.5,
-                label='All data', zorder=3
-            )
-            
-            if anchor:
-                self.vg.ax.plot(x_fit, y_fit, color=c, linewidth=2)
-            else:
-                self.vg.ax.plot(x_fit, y_fit, color=c, linewidth=2)
-                x_data = df[self.vg.x].dropna().values.astype(float)
-                y_data = df[y].dropna().values.astype(float)
-                if len(x_data) > 2:
-                    p = np.poly1d(coeffs)
-                    y_model = p(x_data)
-                    t_targ = 1.96
-                    se = np.sqrt(np.sum((y_data - y_model)**2) / (len(y_data) - 2))
-                    ci = t_targ * se * np.sqrt(1/len(x_data) + (x_fit - x_data.mean())**2 / np.sum((x_data - x_data.mean())**2))
-                    self.vg.ax.fill_between(x_fit, y_fit - ci, y_fit + ci, color=c, alpha=0.2)
-                
-            eq_str, r2 = self._build_equation_str(coeffs, df)
-            self.vg.trendline_equations.append({
-                'label': 'All data', 'equation': eq_str, 'r2': f"{r2:.4f}"
-            })
+    def _draw_kde_overlay(self, stats_mod, data, x_grid, x_min, x_max, bins, color):
+        """Plot a scaled Gaussian KDE curve over histogram bars when data has positive variance."""
+        if len(data) <= 1:
+            return
+        try:
+            num_data = pd.to_numeric(data, errors='coerce')
+            num_data = num_data[~np.isnan(num_data)]
+            if len(num_data) > 1 and np.var(num_data) > 0:
+                density = stats_mod.gaussian_kde(num_data)
+                bin_width = (x_max - x_min) / bins
+                y_grid = density(x_grid) * len(num_data) * bin_width
+                self.vg.ax.plot(x_grid, y_grid, color=color, linewidth=2)
+        except Exception:
+            pass
 
     def _plot_histogram(self, df, colors):
         from scipy import stats
@@ -591,17 +565,7 @@ class PlotRenderer:
                     x_min, x_max = self.vg.ax.get_xlim()
                     x_grid = np.linspace(x_min, x_max, 200)
                     for i, data in enumerate(data_list):
-                        if len(data) > 1:
-                            try:
-                                num_data = pd.to_numeric(data, errors='coerce')
-                                num_data = num_data[~np.isnan(num_data)]
-                                if len(num_data) > 1 and np.var(num_data) > 0:
-                                    density = stats.gaussian_kde(num_data)
-                                    bin_width = (x_max - x_min) / bins
-                                    y_grid = density(x_grid) * len(num_data) * bin_width
-                                    self.vg.ax.plot(x_grid, y_grid, color=c_list[i], linewidth=2)
-                            except Exception:
-                                pass
+                        self._draw_kde_overlay(stats, data, x_grid, x_min, x_max, bins, c_list[i])
         else:
             data = plot_df[self.vg.x].values
             if len(data) > 0:
@@ -609,18 +573,9 @@ class PlotRenderer:
                 self.vg.ax.hist(data, color=color, label='All data', **hist_kwargs)
                 
                 if kde and len(data) > 1:
-                    try:
-                        num_data = pd.to_numeric(data, errors='coerce')
-                        num_data = num_data[~np.isnan(num_data)]
-                        if len(num_data) > 1 and np.var(num_data) > 0:
-                            x_min, x_max = self.vg.ax.get_xlim()
-                            x_grid = np.linspace(x_min, x_max, 200)
-                            density = stats.gaussian_kde(num_data)
-                            bin_width = (x_max - x_min) / bins
-                            y_grid = density(x_grid) * len(num_data) * bin_width
-                            self.vg.ax.plot(x_grid, y_grid, color=color, linewidth=2)
-                    except Exception:
-                        pass
+                    x_min, x_max = self.vg.ax.get_xlim()
+                    x_grid = np.linspace(x_min, x_max, 200)
+                    self._draw_kde_overlay(stats, data, x_grid, x_min, x_max, bins, color)
 
     def _apply_colorbar_fontsize(self, cbar):
         """Apply the configured tick-label size to a wafer/2Dmap colorbar."""
@@ -674,31 +629,34 @@ class PlotRenderer:
         )
         self._apply_colorbar_fontsize(self.vg.ax._2dmap_colorbar)
 
-    def _fit_trendline(self, df):
-        """Fit polynomial trendline with optional anchor constraint.
-        
-        Returns (x_fit, y_fit, coefficients).
-        """
+    def _extract_xy_numeric(self, df, y=None):
+        """Extract paired finite float arrays ``(x_data, y_data)`` from ``df``."""
+        y_col = y if y is not None else self.vg.y[0]
         try:
-            x_data = df[self.vg.x].dropna().values.astype(float)
+            x_raw = df[self.vg.x].to_numpy(dtype=float)
         except (ValueError, TypeError) as e:
             raise ValueError(
                 f"Could not convert values in X column '{self.vg.x}' to numeric values. "
                 "Trendline fitting requires numeric columns."
             ) from e
-        
+
         try:
-            y_data = df[self.vg.y[0]].dropna().values.astype(float)
+            y_raw = df[y_col].to_numpy(dtype=float)
         except (ValueError, TypeError) as e:
             raise ValueError(
-                f"Could not convert values in Y column '{self.vg.y[0]}' to numeric values. "
+                f"Could not convert values in Y column '{y_col}' to numeric values. "
                 "Trendline fitting requires numeric columns."
             ) from e
-        
-        # Align lengths after dropna
-        mask = ~(np.isnan(x_data) | np.isnan(y_data))
-        x_data = x_data[mask]
-        y_data = y_data[mask]
+
+        mask = ~(np.isnan(x_raw) | np.isnan(y_raw))
+        return x_raw[mask], y_raw[mask]
+
+    def _fit_trendline(self, df, y=None, *, _xy=None):
+        """Fit polynomial trendline with optional anchor constraint.
+
+        Returns (x_fit, y_fit, coefficients).
+        """
+        x_data, y_data = _xy if _xy is not None else self._extract_xy_numeric(df, y)
         
         if self.vg.trendline_anchor_enabled:
             # Determine anchor coordinates
@@ -739,13 +697,9 @@ class PlotRenderer:
         
         return x_fit, y_fit, coeffs
 
-    def _build_equation_str(self, coeffs, df):
+    def _build_equation_str(self, coeffs, df, y=None, *, _xy=None):
         """Build human-readable equation string and compute R²."""
-        x_data = df[self.vg.x].dropna().values.astype(float)
-        y_data = df[self.vg.y[0]].dropna().values.astype(float)
-        mask = ~(np.isnan(x_data) | np.isnan(y_data))
-        x_data = x_data[mask]
-        y_data = y_data[mask]
+        x_data, y_data = _xy if _xy is not None else self._extract_xy_numeric(df, y)
         
         order = self.vg.trendline_order
         

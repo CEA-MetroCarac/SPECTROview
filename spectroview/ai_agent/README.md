@@ -187,9 +187,8 @@ the relevant `build_prompt(...)` call.
 ### Small-model tier
 
 Local models below `small_model_param_threshold_b` (from `config/model.yaml`,
-detected via `ollama show`) get a much shorter prompt, a smaller `num_ctx`, and a
-capped conversation window. The user can force a tier from the panel's
-Prompt-tier combo. See `docs/developer/ai_agent.md` for the rationale.
+detected via `ollama show` or model-name patterns) automatically get a much shorter prompt, a smaller `num_ctx`, and a
+capped conversation window (overridable programmatically via `VMChat.set_small_model_mode()`). See `docs/developer/ai_agent.md` for the rationale.
 
 ### Auto-reload during development
 

@@ -93,7 +93,6 @@ class LivePreviewAnnotationDialog(QDialog):
         gw = self.graph_widget
         if gw is None or getattr(gw, 'df', None) is None:
             return
-        gw.ax.clear()
         gw.plot(gw.df)
 
     def reject(self):

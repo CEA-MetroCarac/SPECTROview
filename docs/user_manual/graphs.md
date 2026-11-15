@@ -97,28 +97,28 @@ All changes across tabs are applied together via the unified **Apply** button at
 
 ---
 
-#### 4.1 Axis Tab
+#### 4.1 Axes & Limits, Ticks & Spines, and Secondary & Inset Axes
 
 <div align="center">
-  <img src="../user_manual_images/Graphs/Customize_Axis.png" alt="Axis Tab" width="600"><br>
-  <i>The Axis tab of the Customize Graph Dialog.</i>
+  <img src="../user_manual_images/Graphs/Customize_Axis.png" alt="Axis Categories" width="600"><br>
+  <i>Axis configuration in the Customize Graph Dialog.</i>
 </div>
 
-The **Axis** tab controls axis scaling, data types, limits, appearance, axis breaks, inset (zoom) axes, and secondary axes. Font sizes for titles/labels/ticks live in the **More Options** tab instead.
+The **Axes & Limits**, **Ticks & Spines**, and **Secondary & Inset Axes** categories control axis scaling, data types, limits, tick/spine appearance, axis breaks, inset (zoom) axes, and secondary twin axes. Font sizes for titles/labels/ticks live in the **General & Typography** category.
 
-##### Axis Properties
+##### Axis Properties (`Axes & Limits`)
 
 Configure the **scale** and **data type** for each axis independently using dropdown menus:
 
 | Setting | Options | Description |
 |---|---|---|
-| **X / Y axis Scale** | `Linear`, `Logarithmic` | Switches the axis between linear and logarithmic scale. Logarithmic scale is only applied when the underlying data is numeric. |
+| **X / Y axis Scale** | `Linear`, `Logarithmic`, `Symlog` | Switches the axis between linear, logarithmic, and symmetric logarithmic scale. Logarithmic scale is only applied when the underlying data is numeric. |
 | **X / Y axis Data type** | `Auto`, `Category`, `Numerical` | Controls how axis values are interpreted. **Auto** (default): the application auto-detects the best type — numerical if 100% of the data is numeric, otherwise categorical. **Category**: forces categorical indexing. **Numerical**: forces a continuous numeric scale. |
 | **Z axis Scale** *(wafer / 2Dmap only)* | `Linear`, `Logarithmic`, `Centered` | Sets the **color-scale** normalization of the heatmap. **Logarithmic** compresses a wide range of values (falls back to linear if the data isn't strictly positive). **Centered** pins the colormap midpoint to a **Center value** you enter — ideal for diverging data such as stress/strain around 0. |
 
 > **Note**: When using `Numerical` data type, the axis adopts a true mathematical scale where spacing reflects actual data values. When using `Category`, each unique value is evenly spaced regardless of its numeric magnitude.
 
-##### Set Axis Limits
+##### Set Axis Limits (`Axes & Limits`)
 
 Manually constrain the visible range of each axis (X, Y, Z) by specifying **min** and **max** values:
 
@@ -133,7 +133,7 @@ Manually constrain the visible range of each axis (X, Y, Z) by specifying **min*
   <i>Adjusting the axis limits of the selected plot.</i>
 </div>
 
-##### Axis Appearance
+##### Axis Appearance (`Ticks & Spines`)
 
 | Control | Description |
 |---|---|
@@ -142,7 +142,7 @@ Manually constrain the visible range of each axis (X, Y, Z) by specifying **min*
 | **Tick direction** | `Default`, `In`, `Out`, or `In & Out`. |
 | **Tick label format** | `Auto`, `Integer`, `1-decimal`, `2-decimal`, or `Scientific`. |
 
-##### Broken Axis (Beta)
+##### Broken Axis (`Axes & Limits` — Beta)
 
 Create a visual break in an axis to omit an uninteresting range and focus on relevant data regions:
 
@@ -153,7 +153,7 @@ Create a visual break in an axis to omit an uninteresting range and focus on rel
 
 > **Note**: This feature is in beta. Axis breaks work best with linear scales.
 
-##### Inset (Zoom) Axes
+##### Inset (Zoom) Axes (`Secondary & Inset Axes`)
 
 Draw a small zoomed-in view of a region of the plot inside the main plot area:
 
@@ -166,22 +166,22 @@ Draw a small zoomed-in view of a region of the plot inside the main plot area:
 
 > **Note**: Inset axes and a broken axis are mutually exclusive — enabling one disables the other.
 
-##### Secondary Axes
+##### Secondary Axes (`Secondary & Inset Axes`)
 
 Plot additional Y-columns (or a second X-column) against independent scales, one row per axis (**Y2**, **Y3**, **X2**). Each row is enabled once a column is assigned to that axis and lets you set a **Label**, **Min/Max** limits, a **Log scale** toggle, a **Color**, and a **Marker**.
 
 ---
 
-#### 4.2 Legend / Color Tab
+#### 4.2 Legend & Series
 
 <div align="center">
-  <img src="../user_manual_images/Graphs/Customize_LegendBox.png" alt="Legend / Color Tab" width="650"><br>
-  <i>The Legend / Color tab of the Customize Graph Dialog.</i>
+  <img src="../user_manual_images/Graphs/Customize_LegendBox.png" alt="Legend & Series" width="650"><br>
+  <i>The Legend & Series category of the Customize Graph Dialog.</i>
 </div>
 
-The **Legend / Color** tab lets you customize the appearance and placement of the plot legend, per-series colors/markers, and error bar style.
+The **Legend & Series** category lets you customize the appearance and placement of the plot legend as well as per-series colors, markers, alpha, and line widths.
 
-##### Legend Box
+##### Legend Box & Series Styling
 
 | Control | Description |
 |---|---|
@@ -199,24 +199,22 @@ The **Legend / Color** tab lets you customize the appearance and placement of th
   <i>Adjusting legends and colors of the selected plot.</i>
 </div>
 
-##### Legend Style & Error Bars
+##### Legend Style
 
 | Control | Description |
 |---|---|
 | **Columns / Frame / Title / Font size / Alpha / Position** | Layout and appearance of the legend box itself. |
-| **Error bar type** | `95% CI`, `Standard Deviation`, or `None` (options depend on plot style). |
-| **Cap size** | Width of the error bar end caps. |
 
 ---
 
-#### 4.3 Annotations Tab
+#### 4.3 Annotations
 
 <div align="center">
-  <img src="../user_manual_images/Graphs/Customize_Annotation.png" alt="Annotations Tab" width="650"><br>
-  <i>The Annotations tab of the Customize Graph Dialog.</i>
+  <img src="../user_manual_images/Graphs/Customize_Annotation.png" alt="Annotations" width="650"><br>
+  <i>The Annotations category of the Customize Graph Dialog.</i>
 </div>
 
-The **Annotations** tab allows you to overlay reference lines and text labels on top of your plot.
+The **Annotations** category allows you to overlay reference lines, shapes, and text labels on top of your plot.
 
 ##### Adding Annotations
 
@@ -244,35 +242,40 @@ All current annotations are listed below the buttons. Select an annotation to **
 
 ---
 
-#### 4.4 More Options Tab
+#### 4.4 General & Typography and Plot Style & Fitting
 
 <div align="center">
-  <img src="../user_manual_images/Graphs/Customize_MoreOptions.png" alt="More Options Tab" width="450"><br>
-  <i>The More Options tab of the Customize Graph Dialog.</i>
+  <img src="../user_manual_images/Graphs/Customize_MoreOptions.png" alt="General and Plot Style Options" width="450"><br>
+  <i>Typography, sorting, and style-specific options in the Customize Graph Dialog.</i>
 </div>
 
-The **More Options** tab adapts dynamically to the active plot style, showing only the controls relevant to the current graph.
+The **General & Typography** and **Plot Style & Fitting** categories group global typography, theme, and sorting settings alongside style-specific controls (error bars, trendlines, and histograms).
 
-##### Plot Options (General)
+##### Plot Style Options & Error Bars (`Plot Style & Fitting`)
 
-These checkboxes are always visible, but only enabled when the corresponding plot style is active:
+These controls adapt to the active plot style:
 
 | Option | Applicable style | Description |
 |---|---|---|
 | **Join data points** | `point` | Connects the mean values with lines between categories. |
 | **Dodge overlapping points** | `point` | Offsets overlapping hue groups horizontally to prevent overlap. |
 | **Dodge overlapping points** | `scatter` | Offsets overlapping hue groups horizontally for scatter plots. |
-| **Show error bar** | `bar` | Displays standard deviation error bars on top of each bar. |
-| **Show statistics** | `wafer` | Overlays statistical summary (mean, std, etc.) on the wafer map. |
-| **Theme** | all styles | Figure color scheme: `Light` or `Dark`. |
+| **Show statistics summary** | `wafer` | Overlays statistical summary (mean, std, min, max, uniformity) on the wafer map. |
+| **Show error bars** | `bar` | Displays error bars on top of each bar. |
+| **Error bar type** | `point`, `line`, `bar` | `Std. Dev.`, `Std. Error`, `95% CI`, or `None` (options depend on plot style). |
+| **Cap size** | `point`, `line`, `bar` | Width of the error bar end caps. |
+
+##### Display, Grid & Font Sizes (`General & Typography`)
+
+| Option | Applicable style | Description |
+|---|---|---|
+| **Figure theme** | all styles | Figure color scheme: `Light` or `Dark`. |
 | **X label rotation** | all styles | Rotates the X-axis tick labels (0–90°). |
-| **Grid** | all styles | Toggles the plot's background grid lines. |
+| **Show grid lines** | all styles | Toggles the plot's background grid lines. |
 
-##### Font Sizes (pt)
+Set the point size of the **Title**, **Axis label**, **Tick label**, and **Colorbar** independently (defaults: 12/12/9/10). The **Colorbar** size controls the tick-label text on wafer/2Dmap colorbars. The subtitle has no size control — it always renders 2 pt smaller than the title; its *text* is edited in the side panel, not here.
 
-Set the point size of the Title, Axis label, Tick label, and Colorbar independently (defaults: 12/12/9/10). The **Colorbar** size controls the tick-label text on wafer/2Dmap colorbars. The subtitle has no size control — it always renders 2 pt smaller than the title; its *text* is edited in the side panel, not here.
-
-##### Data Sorting
+##### Data Sorting (`General & Typography`)
 
 Controls how categories and legend items are ordered:
 
@@ -283,7 +286,7 @@ Controls how categories and legend items are ordered:
 
 > **Note**: Disabling intelligent data sorting is useful if your dataset is already pre-sorted and you wish to explicitly maintain that sequence. When you change sorting settings, the legend colors are automatically reset to the default palette sequence to ensure a clean positional color scheme.
 
-##### Trendline Settings
+##### Trendline Settings (`Plot Style & Fitting`)
 
 Visible only when the plot style is `trendline`:
 
@@ -293,7 +296,7 @@ Visible only when the plot style is `trendline`:
 | **Anchor point** | Constrain the fit to pass through a specific point. Choose **Origin (0, 0)** or enter a **custom (X₀, Y₀)**. |
 | **Fit equation(s)** | Displays the computed equation and R² value for each hue group in a table. Click **Copy** to export as tab-separated text (paste directly into Excel). |
 
-##### Histogram Settings
+##### Histogram Settings (`Plot Style & Fitting`)
 
 Visible only when the plot style is `histogram`:
 
@@ -303,7 +306,7 @@ Visible only when the plot style is `histogram`:
 | **Overlay KDE curve** | Superimposes a smooth Kernel Density Estimate curve on the histogram. |
 | **Fill style** | Choose **Filled** bars (default) or **Step** (outline only). |
 
-> **Colormap scale (wafer / 2Dmap)**: the color-scale normalization (`Linear` / `Logarithmic` / `Centered`) lives in the **Axis** tab as the **Z axis Scale** — see [Axis Properties](#axis-properties).
+> **Colormap scale (wafer / 2Dmap)**: the color-scale normalization (`Linear` / `Logarithmic` / `Centered`) lives in **Axes & Limits** as the **Z axis Scale**.
 
 <br>
 

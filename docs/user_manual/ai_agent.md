@@ -42,15 +42,15 @@ The AI Agent supports multiple LLM backends out of the box — no extra packages
 
 ### **3. Configuring a Provider and Model**
 
-1. Inside the **Chat Composer** at the bottom of the panel, select an **AI Provider** from the dropdown (`Ollama (local)`, `OpenAI`, `Anthropic`, `Mistral`, `Gemini`, `DeepSeek`, `Groq`, or `Custom`).
-2. For cloud providers, configure your **API key** in the **Settings** dialog (`Ctrl + Shift + S` → **AI** tab):
-   - The **Custom** provider's **Custom API Key**, **Base URL**, and **Model Name** fields are shown by default.
+1. Inside the **Chat Composer** at the bottom of the panel, select an **AI Provider** from the dropdown (`Ollama (local)`, `OpenAI`, `Anthropic`, `Mistral`, `Gemini`, `DeepSeek`, or `Custom`).
+2. For cloud providers, configure your **API key** in the **Settings** dialog (`Ctrl + Shift + S` → **AI Settings** tab):
+   - The **Custom** provider's **Custom API Key**, **Base URL**, and **Model Name(s)** fields are shown by default.
    - Other cloud provider keys are organized under the collapsed **▸ Other cloud providers** section.
-   - Use the **Test Connection** button directly in the **AI** tab to verify authentication, host connectivity, and model availability with immediate visual feedback (`✓ Connection successful` or detailed error messages).
+   - Use the **Test Connection** button directly in the **AI Settings** tab to verify authentication, host connectivity, and model availability with immediate visual feedback (`✓ Connection successful` or detailed error messages).
 3. Choose a **Model** from the editable model dropdown right next to the provider in the composer toolbar. If your model is not listed, you can type its identifier directly.
 4. Click the **⟳ refresh** button next to the model dropdown to refresh available models.
 
-> **Model Name & Label:** Some endpoints (custom ones especially) do not expose a model-listing API. Enter the model names you use in **Settings** → **AI** tab → **Model Name** as a comma-separated list (e.g. `model-a, model-b`). You can also specify a custom display **Label** (e.g. `ABC` or `Lab Model`) so that your endpoint appears by name in the composer's provider dropdown instead of generic `Custom`. Settings changes are applied immediately to any open chat dialog.
+> **Model Name & Label:** Some endpoints (custom ones especially) do not expose a model-listing API. Enter the model names you use in **Settings** → **AI Settings** tab → **Model Name(s)** as a comma-separated list (e.g. `model-a, model-b`). You can also specify a custom **Display Label** (e.g. `ABC` or `Lab Model`) so that your endpoint appears by name in the composer's provider dropdown instead of generic `Custom`. Settings changes are applied immediately to any open chat panel.
 
 ---
 

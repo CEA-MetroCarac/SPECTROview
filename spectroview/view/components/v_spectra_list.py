@@ -6,26 +6,10 @@ from PySide6.QtCore import Qt, Signal, QRectF
 from PySide6.QtGui import QFont, QPainter, QColor
 
 from spectroview.viewmodel.utils import set_spectrum_item_color, MetadataTooltipManager
-from spectroview.view.components.v_range_selector import (
-    VRangeSelectorPanel,
-    RangeSelectorManager,
-    RangeSelectorState,
-    SELECTOR_RED,
-    SELECTOR_BLUE,
-    SELECTOR_GREEN,
-    SELECTOR_KEYS,
-)
 
 __all__ = [
     "VSpectraList",
     "SpectrumItemDelegate",
-    "VRangeSelectorPanel",
-    "RangeSelectorManager",
-    "RangeSelectorState",
-    "SELECTOR_RED",
-    "SELECTOR_BLUE",
-    "SELECTOR_GREEN",
-    "SELECTOR_KEYS",
 ]
 
 

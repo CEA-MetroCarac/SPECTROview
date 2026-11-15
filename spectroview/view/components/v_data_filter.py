@@ -5,9 +5,9 @@ from spectroview.view.theme import Icons
 
 from PySide6.QtWidgets import (
     QGroupBox, QVBoxLayout, QHBoxLayout, QPushButton,
-    QListWidget, QListWidgetItem, QCheckBox, QMenu, QApplication, QCompleter
+    QListWidget, QListWidgetItem, QMenu, QApplication, QCompleter
 )
-from PySide6.QtCore import Qt, Signal, QStringListModel, QSize, QEvent, QItemSelectionModel
+from PySide6.QtCore import Qt, Signal, QStringListModel, QEvent, QItemSelectionModel
 
 from spectroview.view.components.customized_widgets import ExpressionLineEdit
 
@@ -73,11 +73,11 @@ class VDataFilter(QGroupBox):
         
         # Filter list widget
         self.filter_listbox = QListWidget()
-        self.filter_listbox.setSpacing(2)
         self.filter_listbox.setContextMenuPolicy(Qt.CustomContextMenu)
         self.filter_listbox.customContextMenuRequested.connect(self._show_context_menu)
         self.filter_listbox.itemPressed.connect(self._on_filter_item_clicked)
         self.filter_listbox.itemClicked.connect(self._on_filter_item_clicked)
+        self.filter_listbox.itemChanged.connect(self._on_filter_item_changed)
         self.filter_listbox.installEventFilter(self)
         layout_main.addWidget(self.filter_listbox)
 
@@ -88,24 +88,16 @@ class VDataFilter(QGroupBox):
         self.filter_listbox.setCurrentItem(item, QItemSelectionModel.ClearAndSelect)
         item.setSelected(True)
         if update_query:
-            checkbox = self.filter_listbox.itemWidget(item)
-            if checkbox:
-                self.filter_query.setText(checkbox.text())
+            self.filter_query.setText(item.text())
+
+    def _on_filter_item_changed(self, item: QListWidgetItem):
+        """Sync selection/query and emit filters_changed when a checkbox state changes."""
+        self._select_filter_item(item, update_query=True)
+        self.filters_changed.emit(self.get_filters())
 
     def eventFilter(self, watched, event):
-        """Intercept mouse click on checkboxes and keyboard navigation in listbox."""
-        if (
-            isinstance(watched, QCheckBox)
-            and event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonDblClick)
-            and event.button() == Qt.LeftButton
-        ):
-            for i in range(self.filter_listbox.count()):
-                item = self.filter_listbox.item(i)
-                if self.filter_listbox.itemWidget(item) is watched:
-                    self._select_filter_item(item, update_query=True)
-                    self.filter_listbox.setFocus()
-                    break
-        elif watched == self.filter_listbox and event.type() == QEvent.KeyRelease:
+        """Intercept keyboard navigation in listbox to sync selection and query text."""
+        if watched == self.filter_listbox and event.type() == QEvent.KeyRelease:
             if event.key() in (Qt.Key_Up, Qt.Key_Down, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Home, Qt.Key_End):
                 current_item = self.filter_listbox.currentItem()
                 if current_item:
@@ -113,38 +105,22 @@ class VDataFilter(QGroupBox):
         return super().eventFilter(watched, event)
     
     def _add_filter_item(self, expression: str, state: bool = True) -> QListWidgetItem:
-        """Create and add a filter item with embedded checkbox to listbox."""
-        item = QListWidgetItem()
-        checkbox = QCheckBox(expression)
-        checkbox.setChecked(state)
-        checkbox.setFocusPolicy(Qt.NoFocus)
-        checkbox.installEventFilter(self)
-        checkbox.stateChanged.connect(lambda: self.filters_changed.emit(self.get_filters()))
-        checkbox.setContextMenuPolicy(Qt.CustomContextMenu)
-        checkbox.customContextMenuRequested.connect(
-            lambda pos, cb=checkbox: self._show_context_menu_for_checkbox(pos, cb)
-        )
-        size = checkbox.sizeHint()
-        item.setSizeHint(QSize(size.width(), max(size.height(), 24)))
-        self.filter_listbox.addItem(item)
-        self.filter_listbox.setItemWidget(item, checkbox)
+        """Create and add a checkable filter item to listbox."""
+        item = QListWidgetItem(expression)
+        item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+        item.setCheckState(Qt.Checked if state else Qt.Unchecked)
+        was_blocked = self.filter_listbox.blockSignals(True)
+        try:
+            self.filter_listbox.addItem(item)
+        finally:
+            self.filter_listbox.blockSignals(was_blocked)
         return item
-
-    def _show_context_menu_for_checkbox(self, pos, checkbox: QCheckBox):
-        """Show right-click menu to copy filter text when right-clicking on checkbox."""
-        menu = QMenu(self)
-        copy_action = menu.addAction(Icons.copy(), "Copy filter text")
-        action = menu.exec(checkbox.mapToGlobal(pos))
-        if action == copy_action:
-            QApplication.clipboard().setText(checkbox.text())
     
     def has_filter(self, expression: str) -> bool:
         """Check if a filter expression already exists in the list."""
         expression = expression.strip()
         for i in range(self.filter_listbox.count()):
-            item = self.filter_listbox.item(i)
-            cb = self.filter_listbox.itemWidget(item)
-            if cb and cb.text() == expression:
+            if self.filter_listbox.item(i).text() == expression:
                 return True
         return False
 
@@ -162,9 +138,12 @@ class VDataFilter(QGroupBox):
             return
         for i in range(self.filter_listbox.count()):
             item = self.filter_listbox.item(i)
-            cb = self.filter_listbox.itemWidget(item)
-            if cb and cb.text() == expression:
-                cb.setChecked(state)
+            if item.text() == expression:
+                was_blocked = self.filter_listbox.blockSignals(True)
+                try:
+                    item.setCheckState(Qt.Checked if state else Qt.Unchecked)
+                finally:
+                    self.filter_listbox.blockSignals(was_blocked)
                 self._select_filter_item(item, update_query=False)
                 return
         item = self._add_filter_item(expression, state=state)
@@ -186,11 +165,6 @@ class VDataFilter(QGroupBox):
             selected_items = [self.filter_listbox.currentItem()]
 
         for item in selected_items:
-            cb = self.filter_listbox.itemWidget(item)
-            if cb:
-                cb.removeEventFilter(self)
-                cb.setParent(None)
-                cb.deleteLater()
             row = self.filter_listbox.row(item)
             self.filter_listbox.takeItem(row)
         
@@ -211,28 +185,22 @@ class VDataFilter(QGroupBox):
         if not item:
             return
         
-        checkbox = self.filter_listbox.itemWidget(item)
-        if not checkbox:
-            return
-        
         menu = QMenu(self)
         copy_action = menu.addAction(Icons.copy(), "Copy filter text")
         
         action = menu.exec(self.filter_listbox.mapToGlobal(pos))
         if action == copy_action:
-            QApplication.clipboard().setText(checkbox.text())
+            QApplication.clipboard().setText(item.text())
     
     def get_filters(self) -> list:
         """Get all filter expressions and states."""
         filters = []
         for i in range(self.filter_listbox.count()):
             item = self.filter_listbox.item(i)
-            checkbox = self.filter_listbox.itemWidget(item)
-            if checkbox:
-                filters.append({
-                    "expression": checkbox.text(),
-                    "state": checkbox.isChecked()
-                })
+            filters.append({
+                "expression": item.text(),
+                "state": item.checkState() == Qt.Checked,
+            })
         return filters
 
     def get_active_filters(self) -> list:
@@ -256,22 +224,22 @@ class VDataFilter(QGroupBox):
                     active_map[expr] = bool(state)
 
         existing_expressions = set()
-        for i in range(self.filter_listbox.count()):
-            item = self.filter_listbox.item(i)
-            cb = self.filter_listbox.itemWidget(item)
-            if cb:
-                expr = cb.text()
+        was_blocked = self.filter_listbox.blockSignals(True)
+        try:
+            for i in range(self.filter_listbox.count()):
+                item = self.filter_listbox.item(i)
+                expr = item.text()
                 existing_expressions.add(expr)
                 is_active = active_map.get(expr, False)
-                cb.blockSignals(True)
-                cb.setChecked(is_active)
-                cb.blockSignals(False)
+                item.setCheckState(Qt.Checked if is_active else Qt.Unchecked)
 
-        # Add any new filter expressions from the graph that were not already in the list
-        for expr, is_active in active_map.items():
-            if expr not in existing_expressions:
-                self._add_filter_item(expr, state=is_active)
-                existing_expressions.add(expr)
+            # Add any new filter expressions from the graph that were not already in the list
+            for expr, is_active in active_map.items():
+                if expr not in existing_expressions:
+                    self._add_filter_item(expr, state=is_active)
+                    existing_expressions.add(expr)
+        finally:
+            self.filter_listbox.blockSignals(was_blocked)
 
     def set_filters(self, filters: list):
         """Set filter states for current graph, preserving all available session filters."""
@@ -284,11 +252,6 @@ class VDataFilter(QGroupBox):
     
     def clear_filters(self):
         """Clear all filters."""
-        # Clean up existing checkboxes to prevent visual overlap (orphaned widgets)
-        for cb in self.filter_listbox.findChildren(QCheckBox):
-            cb.removeEventFilter(self)
-            cb.setParent(None)
-            cb.deleteLater()
         self.filter_listbox.clear()
         self.filter_query.clear()
         self.filters_changed.emit([])

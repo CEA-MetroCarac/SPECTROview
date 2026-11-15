@@ -58,42 +58,57 @@ class TestVDataFilterAdd:
 
 
 class TestVDataFilterSelectionAndHover:
+    def test_items_use_native_checkable_list_items_without_embedded_widgets(self, filter_widget):
+        """Filter items use native Qt checkable list items (like VSpectraList), not embedded QCheckBox widgets."""
+        filter_widget.add_filter("Intensity > 100", state=True)
+        filter_widget.add_filter("FWHM < 5", state=False)
+
+        item0 = filter_widget.filter_listbox.item(0)
+        item1 = filter_widget.filter_listbox.item(1)
+        assert filter_widget.filter_listbox.itemWidget(item0) is None
+        assert filter_widget.filter_listbox.itemWidget(item1) is None
+        assert bool(item0.flags() & Qt.ItemIsUserCheckable)
+        assert item0.checkState() == Qt.Checked
+        assert item1.checkState() == Qt.Unchecked
+
     def test_hover_does_not_populate_query(self, filter_widget):
-        """Requirement 4: Hovering over filter item or checkbox does NOT populate QLineEdit."""
+        """Requirement 4: Hovering over filter item does NOT populate QLineEdit."""
         filter_widget.add_filter("Intensity > 100")
         filter_widget.add_filter("FWHM < 5")
         filter_widget.filter_query.clear()
 
         item0 = filter_widget.filter_listbox.item(0)
-        cb0 = filter_widget.filter_listbox.itemWidget(item0)
         item1 = filter_widget.filter_listbox.item(1)
-        cb1 = filter_widget.filter_listbox.itemWidget(item1)
 
-        # Mouse move / hover over item 0
-        QTest.mouseMove(cb0)
+        QTest.mouseMove(
+            filter_widget.filter_listbox.viewport(),
+            filter_widget.filter_listbox.visualItemRect(item0).center(),
+        )
         assert filter_widget.filter_query.text() == ""
 
-        # Mouse move / hover over item 1
-        QTest.mouseMove(cb1)
-        assert filter_widget.filter_query.text() == ""
-
-        # Mouse move on viewport
-        QTest.mouseMove(filter_widget.filter_listbox.viewport(), filter_widget.filter_listbox.visualItemRect(item0).center())
+        QTest.mouseMove(
+            filter_widget.filter_listbox.viewport(),
+            filter_widget.filter_listbox.visualItemRect(item1).center(),
+        )
         assert filter_widget.filter_query.text() == ""
 
     def test_click_checkbox_populates_query_and_toggles(self, filter_widget, qtbot):
-        """Requirement 4: Clicking checkbox explicitly loads expression into QLineEdit and registers selection."""
+        """Clicking item checkbox toggles state, loads expression into QLineEdit, and registers selection."""
         filter_widget.add_filter("Intensity > 100", state=False)
         filter_widget.filter_query.clear()
 
         item = filter_widget.filter_listbox.item(0)
-        cb = filter_widget.filter_listbox.itemWidget(item)
-        assert cb.isChecked() is False
+        assert item.checkState() == Qt.Unchecked
 
-        # Click the checkbox indicator
-        qtbot.mouseClick(cb, Qt.LeftButton, pos=QPoint(10, 10))
+        # Click the native check indicator on the left side of the list item
+        rect = filter_widget.filter_listbox.visualItemRect(item)
+        qtbot.mouseClick(
+            filter_widget.filter_listbox.viewport(),
+            Qt.LeftButton,
+            pos=QPoint(rect.left() + 10, rect.center().y()),
+        )
         assert filter_widget.filter_query.text() == "Intensity > 100"
-        assert cb.isChecked() is True
+        assert item.checkState() == Qt.Checked
         assert filter_widget.filter_listbox.currentItem() is item
         assert filter_widget.filter_listbox.selectedItems() == [item]
 
@@ -105,15 +120,15 @@ class TestVDataFilterSelectionAndHover:
 
         item0 = filter_widget.filter_listbox.item(0)
         item1 = filter_widget.filter_listbox.item(1)
-        cb0 = filter_widget.filter_listbox.itemWidget(item0)
-        cb1 = filter_widget.filter_listbox.itemWidget(item1)
 
-        qtbot.mouseClick(cb0, Qt.LeftButton, pos=QPoint(40, 8))
+        rect0 = filter_widget.filter_listbox.visualItemRect(item0)
+        qtbot.mouseClick(filter_widget.filter_listbox.viewport(), Qt.LeftButton, pos=rect0.center())
         assert filter_widget.filter_query.text() == 'Sample == "S13"'
         assert filter_widget.filter_listbox.selectedItems() == [item0]
         assert filter_widget.filter_listbox.currentItem() is item0
 
-        qtbot.mouseClick(cb1, Qt.LeftButton, pos=QPoint(40, 8))
+        rect1 = filter_widget.filter_listbox.visualItemRect(item1)
+        qtbot.mouseClick(filter_widget.filter_listbox.viewport(), Qt.LeftButton, pos=rect1.center())
         assert filter_widget.filter_query.text() == 'Sample == "S9"'
         assert filter_widget.filter_listbox.selectedItems() == [item1]
         assert filter_widget.filter_listbox.currentItem() is item1
@@ -133,14 +148,14 @@ class TestVDataFilterSelectionAndHover:
         assert filter_widget.filter_listbox.selectedItems() == [item]
         assert filter_widget.filter_listbox.currentItem() is item
 
-    def test_keyboard_navigation_works_after_clicking_checkbox(self, filter_widget, qtbot):
-        """Clicking a checkbox keeps keyboard navigation focus on the listbox."""
+    def test_keyboard_navigation_works_after_clicking_item(self, filter_widget, qtbot):
+        """Clicking an item keeps keyboard navigation working on the listbox."""
         filter_widget.add_filter("Filter 1")
         filter_widget.add_filter("Filter 2")
 
         item0 = filter_widget.filter_listbox.item(0)
-        cb0 = filter_widget.filter_listbox.itemWidget(item0)
-        qtbot.mouseClick(cb0, Qt.LeftButton, pos=QPoint(40, 8))
+        rect0 = filter_widget.filter_listbox.visualItemRect(item0)
+        qtbot.mouseClick(filter_widget.filter_listbox.viewport(), Qt.LeftButton, pos=rect0.center())
 
         QTest.keyClick(filter_widget.filter_listbox, Qt.Key_Down)
         assert filter_widget.filter_query.text() == "Filter 2"
@@ -251,8 +266,8 @@ class TestVDataFilterRemovalAndClear:
         filter_widget.add_filter('Temperature == 300')
 
         item1 = filter_widget.filter_listbox.item(1)
-        cb1 = filter_widget.filter_listbox.itemWidget(item1)
-        qtbot.mouseClick(cb1, Qt.LeftButton, pos=QPoint(40, 8))
+        rect1 = filter_widget.filter_listbox.visualItemRect(item1)
+        qtbot.mouseClick(filter_widget.filter_listbox.viewport(), Qt.LeftButton, pos=rect1.center())
 
         assert filter_widget.filter_listbox.selectedItems() == [item1]
         qtbot.mouseClick(filter_widget.btn_remove, Qt.LeftButton)

@@ -33,6 +33,16 @@ from spectroview.view.components.graph_commit import snapshot, diff
 
 class VWorkspaceGraphs(QWidget):
     """View for Graphs Workspace."""
+
+    _SIDE_PANEL_SHARED_FIELDS = frozenset({
+        'plot_title', 'plot_subtitle', 'xlabel', 'ylabel', 'zlabel',
+        'color_palette', 'y2label', 'y3label', 'x2label',
+        'y2logscale', 'y3logscale', 'x2logscale',
+    })
+    _SECONDARY_SHARED_FIELDS = (
+        'y2label', 'y3label', 'x2label',
+        'y2logscale', 'y3logscale', 'x2logscale',
+    )
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1378,6 +1388,35 @@ class VWorkspaceGraphs(QWidget):
     def _on_graph_properties_changed(self, graph_id: int, properties: dict):
         """Update graph model when properties change directly from graph widget."""
         self.vm.update_graph(graph_id, properties)
+        active_subwindow = self.mdi_area.activeSubWindow()
+        if active_subwindow and self._graph_id_for_subwindow(active_subwindow) == graph_id:
+            shared_keys = self._SIDE_PANEL_SHARED_FIELDS.intersection(properties)
+            if shared_keys:
+                graph_model = self.vm.get_graph(graph_id)
+                if graph_model:
+                    self._sync_side_panel_shared_fields(graph_model, keys=shared_keys)
+
+    def _refresh_open_customize_dialog(self, graph_widget: VGraph):
+        """Reload open CustomizeGraphDialog tabs and baseline snapshot after plot update."""
+        dialog = self._customize_dialog
+        if hasattr(dialog, '_update_graph_info'):
+            dialog._update_graph_info()
+        for tab_attr in (
+            'tab_general',
+            'tab_axes_limits',
+            'tab_ticks_spines',
+            'tab_secondary_inset',
+            'tab_legend',
+            'tab_plot_styles',
+            'tab_annotations',
+        ):
+            tab = getattr(dialog, tab_attr, None)
+            if tab is not None and hasattr(tab, 'load_settings'):
+                tab.load_settings()
+        if hasattr(dialog, '_original_snapshot'):
+            dialog._original_snapshot = snapshot(graph_widget)
+        if hasattr(dialog, '_preview_timer'):
+            dialog._preview_timer.stop()
     
     def _show_or_switch_customize_dialog(self, graph_id: int):
         """Show, create, or switch the singleton CustomizeGraphDialog."""
@@ -1426,22 +1465,42 @@ class VWorkspaceGraphs(QWidget):
                 return
             graph_widget = self.graph_widgets[gid][0]
 
-            # Collect updated plot properties from GUI
-            plot_config = self._collect_plot_config()
+            customize_open_for_graph = (
+                self._customize_dialog is not None
+                and self._customize_dialog.isVisible()
+                and self._customize_dialog.graph_id == gid
+            )
+            if customize_open_for_graph:
+                if self._customize_dialog._preview_timer.isActive():
+                    self._customize_dialog._preview_timer.stop()
+                    self._customize_dialog._preview_apply()
+                changed_secondary = {
+                    key for key in self._SECONDARY_SHARED_FIELDS
+                    if getattr(graph_widget, key, None) != getattr(graph_model, key, None)
+                }
+                if changed_secondary:
+                    self._sync_side_panel_shared_fields(graph_widget, keys=changed_secondary)
+
+            # Preserve all CustomizeGraphDialog and widget-level options, overlaying
+            # only the controls actively managed by the right-side panel.
+            plot_config = snapshot(graph_widget)
+            panel_config = self._collect_plot_config()
+            panel_config.pop('xlogscale', None)
+            panel_config.pop('ylogscale', None)
+            panel_config.pop('legend_visible', None)
+            use_palette = (
+                panel_config['plot_style'] in ['wafer', '2Dmap']
+                or panel_config['z'] is not None
+            )
+            if not use_palette:
+                panel_config.pop('color_palette', None)
+
+            plot_config.update(panel_config)
 
             # Preserve the graph's own df_name -- the side panel's selected
             # DataFrame can drift from it (browsed without reactivating this
             # plot's window), and "Update plot" must never silently rebind.
             plot_config['df_name'] = graph_model.df_name
-
-            # Preserve limits and annotations that are managed outside main GUI
-            plot_config['xmin'] = graph_widget.xmin
-            plot_config['xmax'] = graph_widget.xmax
-            plot_config['ymin'] = graph_widget.ymin
-            plot_config['ymax'] = graph_widget.ymax
-            plot_config['zmax'] = graph_widget.zmax
-            plot_config['annotations'] = getattr(graph_widget, 'annotations', [])
-            plot_config['axis_breaks'] = getattr(graph_widget, 'axis_breaks', {'x': None, 'y': None})
 
             # Check if plot style changed to/from wafer
             if plot_config['plot_style'] != graph_model.plot_style:
@@ -1495,10 +1554,9 @@ class VWorkspaceGraphs(QWidget):
                 'legend_bbox': graph_widget.legend_bbox,
             })
 
-            # If Z changed and CustomizeGraphDialog is open, reload its content
-            if z_changed and self._customize_dialog is not None and self._customize_dialog.isVisible():
-                if self._customize_dialog.graph_id == graph_model.graph_id:
-                    self._customize_dialog.legend_widget.load_legend_properties()
+            # Refresh open CustomizeGraphDialog tabs and snapshot to reflect updated data
+            if customize_open_for_graph:
+                self._refresh_open_customize_dialog(graph_widget)
 
             active_subwindow.setWindowTitle(self._graph_window_title(graph_model))
 
@@ -1873,19 +1931,6 @@ class VWorkspaceGraphs(QWidget):
                 if idx >= 0:
                     self.cbb_y.setCurrentIndex(idx)
             
-            # Color palette
-            if model.color_palette:
-                idx = self.cbb_colormap.findText(model.color_palette)
-                if idx >= 0:
-                    self.cbb_colormap.setCurrentIndex(idx)
-            
-            # Text inputs
-            self.edit_plot_title.setText(model.plot_title or "")
-            self.edit_plot_subtitle.setText(getattr(model, 'plot_subtitle', None) or "")
-            self.edit_xlabel.setText(model.xlabel or "")
-            self.edit_ylabel.setText(model.ylabel or "")
-            self.edit_zlabel.setText(model.zlabel or "")
-            
             # Filters
             self.v_data_filter.set_filters(model.filters)
             
@@ -1904,20 +1949,47 @@ class VWorkspaceGraphs(QWidget):
             idx = self.cbb_x2.findText(x2_val)
             if idx >= 0:
                 self.cbb_x2.setCurrentIndex(idx)
-            
-            self.edit_y2label.setText(model.y2label or "")
-            self.edit_y3label.setText(model.y3label or "")
-            self.edit_x2label.setText(getattr(model, 'x2label', '') or "")
-            
-            self.cb_y2log.setChecked(getattr(model, 'y2logscale', False))
-            self.cb_y3log.setChecked(getattr(model, 'y3logscale', False))
-            self.cb_x2log.setChecked(getattr(model, 'x2logscale', False))
+
+            self._sync_side_panel_shared_fields(model)
         finally:
             self.cbb_plot_style.blockSignals(False)
             self.cbb_x.blockSignals(False)
             self.cbb_y.blockSignals(False)
             self.cbb_z.blockSignals(False)
             self.df_listbox.blockSignals(False)
+
+    def _sync_side_panel_shared_fields(self, source, keys=None):
+        """Sync side-panel controls whose MGraph fields are also editable via CustomizeGraphDialog."""
+        fields = self._SIDE_PANEL_SHARED_FIELDS if keys is None else set(keys)
+        if 'color_palette' in fields:
+            palette = getattr(source, 'color_palette', None)
+            if palette:
+                idx = self.cbb_colormap.findText(palette)
+                if idx >= 0:
+                    self.cbb_colormap.setCurrentIndex(idx)
+
+        text_controls = (
+            ('plot_title', self.edit_plot_title),
+            ('plot_subtitle', self.edit_plot_subtitle),
+            ('xlabel', self.edit_xlabel),
+            ('ylabel', self.edit_ylabel),
+            ('zlabel', self.edit_zlabel),
+            ('y2label', self.edit_y2label),
+            ('y3label', self.edit_y3label),
+            ('x2label', self.edit_x2label),
+        )
+        for field_name, line_edit in text_controls:
+            if field_name in fields:
+                line_edit.setText(getattr(source, field_name, None) or "")
+
+        checkbox_controls = (
+            ('y2logscale', self.cb_y2log),
+            ('y3logscale', self.cb_y3log),
+            ('x2logscale', self.cb_x2log),
+        )
+        for field_name, checkbox in checkbox_controls:
+            if field_name in fields:
+                checkbox.setChecked(bool(getattr(source, field_name, False)))
     
     # ═════════════════════════════════════════════════════════════════════
     # Plotting Helper Methods

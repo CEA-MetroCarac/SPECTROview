@@ -1200,3 +1200,150 @@ class TestMdiSubWindowRubberBand:
             assert sub.testOption(QMdiSubWindow.SubWindowOption.RubberBandMove)
         finally:
             sub.deleteLater()
+
+
+class TestUpdatePlotPreservesCustomizeGraphOptions:
+    """Clicking 'Update plot' after changing X/Y/Z parameters must update only the
+    data/side-panel controls and preserve options customized via CustomizeGraphDialog."""
+
+    @staticmethod
+    def _sample_df():
+        import pandas as pd
+
+        return pd.DataFrame({
+            'col_x1': [1.0, 10.0, 100.0, 1000.0],
+            'col_x2': [2.0, 20.0, 200.0, 2000.0],
+            'col_y1': [5.0, 50.0, 500.0, 5000.0],
+            'col_y2': [8.0, 80.0, 800.0, 8000.0],
+            'col_z': ['A', 'A', 'B', 'B'],
+            'col_y2_sec': [10.0, 100.0, 1000.0, 10000.0],
+        })
+
+    def _create_active_graph(self, ws, df, **overrides):
+        ws.vm.add_dataframe('sheet1', df)
+        ws.vm.select_dataframe('sheet1')
+        cfg = {
+            'df_name': 'sheet1',
+            'plot_style': 'scatter',
+            'x': 'col_x1',
+            'y': ['col_y1'],
+        }
+        cfg.update(overrides)
+        graph_model = ws.vm.create_graph(cfg)
+        widget = ws._build_graph_widget(graph_model, df, lambda e: None)
+        sub_window = ws.graph_widgets[graph_model.graph_id][2]
+        ws.mdi_area.setActiveSubWindow(sub_window)
+        ws._on_subwindow_activated(sub_window)
+        return graph_model, widget
+
+    def test_update_plot_preserves_applied_customize_options_when_switching_xyz(self, ws):
+        df = self._sample_df()
+        graph_model, widget = self._create_active_graph(ws, df)
+        gid = graph_model.graph_id
+
+        # Hide legend via widget/model property and apply scales, inversions, zmin/zmax, and grid via CustomizeGraphDialog
+        widget.legend_visible = False
+        ws.vm.update_graph(gid, {'legend_visible': False})
+
+        ws._show_or_switch_customize_dialog(gid)
+        dlg = ws._customize_dialog
+        dlg.tab_axes_limits.combo_x_scale.setCurrentText("Logarithmic")
+        dlg.tab_axes_limits.combo_y_scale.setCurrentText("Symlog")
+        dlg.tab_axes_limits.cb_invert_x.setChecked(True)
+        dlg.tab_axes_limits.cb_invert_y.setChecked(True)
+        dlg.tab_axes_limits.spin_zmin.setValue(1.5)
+        dlg.tab_axes_limits.spin_zmax.setValue(9.5)
+        dlg.tab_general._cb_grid.setChecked(True)
+        dlg.apply_all()
+
+        # Switch X, Y, Z in the right-side Plot tab and click Update plot
+        ws.cbb_x.setCurrentText('col_x2')
+        ws.cbb_y.setCurrentText('col_y2')
+        ws.cbb_z.setCurrentText('col_z')
+        ws._on_update_plot()
+
+        updated = ws.vm.get_graph(gid)
+        assert updated.x == 'col_x2'
+        assert updated.y == ['col_y2']
+        assert updated.z == 'col_z'
+        assert updated.xlogscale is True
+        assert updated.xscale_mode == 'log'
+        assert updated.ylogscale is True
+        assert updated.yscale_mode == 'symlog'
+        assert updated.x_inverted is True
+        assert updated.y_inverted is True
+        assert updated.zmin == 1.5
+        assert updated.zmax == 9.5
+        assert updated.legend_visible is False
+        assert updated.grid is True
+
+        assert widget.xlogscale is True
+        assert widget.xscale_mode == 'log'
+        assert widget.ylogscale is True
+        assert widget.yscale_mode == 'symlog'
+        assert widget.ax.get_xscale() == 'log'
+        assert widget.ax.get_yscale() == 'symlog'
+        # Open dialog snapshot and tabs reflect updated X/Y/Z while preserving scale
+        assert dlg.tab_axes_limits.combo_x_scale.currentText() == "Logarithmic"
+        assert dlg.tab_axes_limits.combo_y_scale.currentText() == "Symlog"
+        assert dlg._original_snapshot['x'] == 'col_x2'
+        assert dlg._original_snapshot['xlogscale'] is True
+
+    def test_update_plot_preserves_live_preview_customize_options_before_apply(self, ws):
+        df = self._sample_df()
+        graph_model, widget = self._create_active_graph(ws, df)
+        gid = graph_model.graph_id
+
+        ws._show_or_switch_customize_dialog(gid)
+        dlg = ws._customize_dialog
+        dlg.tab_axes_limits.combo_x_scale.setCurrentText("Logarithmic")
+        dlg.tab_axes_limits.combo_y_scale.setCurrentText("Symlog")
+        dlg.tab_axes_limits.cb_invert_x.setChecked(True)
+        dlg.tab_general._cb_grid.setChecked(True)
+        # Keep _preview_timer pending without calling apply_all()
+
+        ws.cbb_x.setCurrentText('col_x2')
+        ws.cbb_y.setCurrentText('col_y2')
+        ws._on_update_plot()
+
+        updated = ws.vm.get_graph(gid)
+        assert updated.x == 'col_x2'
+        assert updated.y == ['col_y2']
+        assert updated.xlogscale is True
+        assert updated.xscale_mode == 'log'
+        assert updated.ylogscale is True
+        assert updated.yscale_mode == 'symlog'
+        assert updated.x_inverted is True
+        assert updated.grid is True
+        assert widget.ax.get_xscale() == 'log'
+        assert widget.ax.get_yscale() == 'symlog'
+
+    def test_update_plot_preserves_secondary_axis_customizations(self, ws):
+        df = self._sample_df()
+        graph_model, widget = self._create_active_graph(ws, df, y2='col_y2_sec')
+        gid = graph_model.graph_id
+
+        ws._show_or_switch_customize_dialog(gid)
+        dlg = ws._customize_dialog
+        row_y2 = dlg.tab_secondary_inset._secondary_axis_rows['y2']
+        row_y2['label'].setText('Custom Y2 Label')
+        row_y2['log'].setChecked(True)
+        dlg.apply_all()
+
+        # Verify applied changes synced back to side-panel controls
+        assert ws.edit_y2label.text() == 'Custom Y2 Label'
+        assert ws.cb_y2log.isChecked() is True
+
+        # Switch X and Y in right-side panel and update plot
+        ws.cbb_x.setCurrentText('col_x2')
+        ws.cbb_y.setCurrentText('col_y2')
+        ws._on_update_plot()
+
+        updated = ws.vm.get_graph(gid)
+        assert updated.x == 'col_x2'
+        assert updated.y == ['col_y2']
+        assert updated.y2 == 'col_y2_sec'
+        assert updated.y2label == 'Custom Y2 Label'
+        assert updated.y2logscale is True
+        assert widget.y2label == 'Custom Y2 Label'
+        assert widget.y2logscale is True

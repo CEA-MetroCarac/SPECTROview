@@ -169,6 +169,9 @@ class TestViewOptions:
         assert data["theme"] == "Light Mode"
         assert data["legend"] is False
         assert data["legend_outside"] is False
+        assert data["legend_colorbar"] is False
+        assert data["colorbar_param"] == "Index"
+        assert data["colorbar_label"] == ""
         assert data["bestfit"] is True
         assert data["color_palette"] == "DEFAULT_COLORS"
         assert data["max_legend_items"] == 15
@@ -178,6 +181,9 @@ class TestViewOptions:
             "theme": "Light Mode",
             "grid": True,
             "legend_outside": True,
+            "legend_colorbar": True,
+            "colorbar_param": "25°C",
+            "colorbar_label": "Temperature (°C)",
             "lw": 2.5,
             "color_palette": "plasma",
             "max_legend_items": 27,
@@ -186,6 +192,9 @@ class TestViewOptions:
         assert reloaded["theme"] == "Light Mode"
         assert reloaded["grid"] is True
         assert reloaded["legend_outside"] is True
+        assert reloaded["legend_colorbar"] is True
+        assert reloaded["colorbar_param"] == "25°C"
+        assert reloaded["colorbar_label"] == "Temperature (°C)"
         assert reloaded["lw"] == 2.5
         assert reloaded["color_palette"] == "plasma"
         assert reloaded["max_legend_items"] == 27

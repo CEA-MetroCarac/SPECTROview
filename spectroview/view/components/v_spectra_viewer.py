@@ -40,8 +40,9 @@ def get_cached_style_dict(style_path: str) -> dict:
     """Cache parsed mplstyle files to prevent disk re-reading on every plot/theme switch."""
     return dict(mpl.rc_params_from_file(style_path))
 
-# Precompiled regex for numeric tokens in filenames
+# Precompiled regex for numeric tokens and file extensions in filenames
 _RE_NUMBERS = re.compile(r"\d+\.?\d*")
+_RE_FILE_EXT = re.compile(r"\.[A-Za-z][A-Za-z0-9]*$")
 from spectroview.view.components.customized_widgets import (
     CustomizedPalette,
     NoDoubleClickZoomToolbar,
@@ -583,6 +584,34 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         self.act_legend_outside.setChecked(False)
         self.act_legend_outside.toggled.connect(self._emit_view_options)
 
+        # Show colorbar instead of discrete legend box
+        self.act_legend_colorbar = menu.addAction("Show colorbar instead of legend")
+        self.act_legend_colorbar.setCheckable(True)
+        self.act_legend_colorbar.setChecked(False)
+        self.act_legend_colorbar.toggled.connect(self._on_legend_colorbar_toggled)
+
+        # Colorbar parameter selector (populated from filename numeric tokens)
+        self.cbb_colorbar_param = QComboBox()
+        self.cbb_colorbar_param.addItem("Index")
+        self.cbb_colorbar_param.setToolTip(
+            "Colorbar parameter: choose parameter for the colorbar.\n"
+            "Index = spectrum order, or select a token parsed from filenames."
+        )
+        self.cbb_colorbar_param.currentIndexChanged.connect(self._emit_view_options)
+        menu.addAction(self._wrap("Colorbar parameter:", self.cbb_colorbar_param))
+
+        # Colorbar custom label
+        self.le_colorbar_label = QLineEdit()
+        self.le_colorbar_label.setFixedWidth(100)
+        self.le_colorbar_label.setPlaceholderText("Colorbar label")
+        self.le_colorbar_label.setToolTip(
+            "Custom label for the spectrum colorbar.\n"
+            "Leave empty for the automatic token name.\n"
+            "Example: Temperature (°C)"
+        )
+        self.le_colorbar_label.textChanged.connect(self._on_heatmap_ylabel_changed)
+        menu.addAction(self._wrap("Colorbar label:", self.le_colorbar_label))
+
         # Backwards-compatible alias for internal/external code that used the
         # old name when this control was first introduced.
         self.spin_max_overlays = self.spin_max_legend_items
@@ -651,7 +680,8 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
             self._tensor_data = None
             self._current_spectra = []
             
-        # Keep heatmap Y-axis choices up-to-date with the current selection
+        # Keep parameter token choices up-to-date with the current selection
+        self._refresh_colorbar_param_choices()
         if getattr(self, "_heatmap_mode", False):
             self._refresh_heatmap_yaxis_choices()
             
@@ -769,6 +799,7 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         fg_color = plt.rcParams.get('axes.labelcolor', 'black')
 
         self.ax.clear()
+        self._remove_heatmap_colorbar()
         self._fitted_lines.clear()
 
         self._update_r2_display()
@@ -780,7 +811,13 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         plot_style = self.cbb_plotstyle.currentText()
         lw = self.spin_lw.value()
         dot_size = self.spin_dotsize.value()
-        colors_cycle = self._get_colors_cycle(len(Y))
+        if self._is_legend_colorbar_active():
+            param_values, _cbar_label = self._get_colorbar_values()
+            _cmap, _norm, colors_cycle = self._resolve_colorbar_cmap_and_norm(
+                len(Y), param_values
+            )
+        else:
+            colors_cycle = self._get_colors_cycle(len(Y))
 
         # ── Step 1: Build bulk segment data (main spectra + raw overlay) ──
         segments = self._build_tensor_segments(
@@ -958,23 +995,25 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
 
         # ── Proxy legend lines ──
         # Capped by spin_max_overlays to avoid an unmanageable legend for large maps.
-        t_labels = self._tensor_data.get("labels", [])
-        t_fnames = self._tensor_data.get("fnames", [])
-        proxies = self._tensor_data.get("proxies", [])  # Spectrum objects for interactive tooltip
-        for spec_idx in range(min(N, self.spin_max_legend_items.value())):
-            spec_color = main_colors[spec_idx]
-            # Priority: custom label > filename > generic fallback
-            label_str = (
-                t_labels[spec_idx]
-                if spec_idx < len(t_labels) and t_labels[spec_idx]
-                else (t_fnames[spec_idx] if spec_idx < len(t_fnames)
-                      else f"Spectrum {spec_idx+1}")
-            )
-            proxy_line = mlines.Line2D([], [], color=spec_color,
-                                        label=label_str, lw=lw)  # Zero-length: invisible on plot
-            if spec_idx < len(proxies):
-                proxy_line._spectrum_ref = proxies[spec_idx]  # Used by hover tooltip handler
-            self.ax.add_line(proxy_line)
+        # Skipped when colorbar mode replaces the discrete legend box.
+        if not self._is_legend_colorbar_active():
+            t_labels = self._tensor_data.get("labels", [])
+            t_fnames = self._tensor_data.get("fnames", [])
+            proxies = self._tensor_data.get("proxies", [])  # Spectrum objects for interactive tooltip
+            for spec_idx in range(min(N, self.spin_max_legend_items.value())):
+                spec_color = main_colors[spec_idx]
+                # Priority: custom label > filename > generic fallback
+                label_str = (
+                    t_labels[spec_idx]
+                    if spec_idx < len(t_labels) and t_labels[spec_idx]
+                    else (t_fnames[spec_idx] if spec_idx < len(t_fnames)
+                          else f"Spectrum {spec_idx+1}")
+                )
+                proxy_line = mlines.Line2D([], [], color=spec_color,
+                                            label=label_str, lw=lw)  # Zero-length: invisible on plot
+                if spec_idx < len(proxies):
+                    proxy_line._spectrum_ref = proxies[spec_idx]  # Used by hover tooltip handler
+                self.ax.add_line(proxy_line)
 
         # Return all collected data; _finalize_plot will render it
         return {
@@ -1293,19 +1332,31 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         self._legend_obj = None
         self._legend_bbox = None
         if self.btn_legend.isChecked():
-            handles, labels = self.ax.get_legend_handles_labels()
-            max_items = self.spin_max_legend_items.value()
-            if getattr(self, "act_legend_outside", None) and self.act_legend_outside.isChecked():
-                legend = self.ax.legend(
-                    handles[:max_items],
-                    labels[:max_items],
-                    loc="center left",
-                    bbox_to_anchor=(1.02, 0.5),
+            if self._is_legend_colorbar_active():
+                param_values, cbar_label = self._get_colorbar_values()
+                cmap, norm, _ = self._resolve_colorbar_cmap_and_norm(
+                    len(self._tensor_data.get("y", [])), param_values
                 )
+                sm = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
+                sm.set_array([])
+                cbar = self.figure.colorbar(sm, ax=self.ax)
+                cbar.set_label(cbar_label, color=fg_color)
+                cbar.ax.tick_params(colors=fg_color)
+                self._heatmap_colorbar = cbar
             else:
-                legend = self.ax.legend(
-                    handles[:max_items], labels[:max_items], loc="upper right")
-            self._make_legend_pickable(legend)
+                handles, labels = self.ax.get_legend_handles_labels()
+                max_items = self.spin_max_legend_items.value()
+                if getattr(self, "act_legend_outside", None) and self.act_legend_outside.isChecked():
+                    legend = self.ax.legend(
+                        handles[:max_items],
+                        labels[:max_items],
+                        loc="center left",
+                        bbox_to_anchor=(1.02, 0.5),
+                    )
+                else:
+                    legend = self.ax.legend(
+                        handles[:max_items], labels[:max_items], loc="upper right")
+                self._make_legend_pickable(legend)
 
         if self.act_grid.isChecked():
             self.ax.grid(True, linestyle='--', linewidth=0.5, color='gray')
@@ -1338,7 +1389,66 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
                 pass
             self._heatmap_colorbar = None
 
-    # ── Filename-based numeric token extraction for heatmap Y-axis ──
+    # ── Filename-based numeric token extraction for heatmap Y-axis & colorbar ──
+
+    def _is_legend_colorbar_active(self) -> bool:
+        """Return whether the 1D spectra plot should show a colorbar instead of a legend."""
+        return bool(
+            not getattr(self, "_heatmap_mode", False)
+            and hasattr(self, "btn_legend")
+            and self.btn_legend.isChecked()
+            and hasattr(self, "act_legend_colorbar")
+            and self.act_legend_colorbar.isChecked()
+        )
+
+    def _on_legend_colorbar_toggled(self, checked: bool):
+        """Auto-enable legend toggle when colorbar mode is turned on, then redraw."""
+        if checked and not getattr(self, "_is_setting_options", False):
+            if hasattr(self, "btn_legend") and not self.btn_legend.isChecked():
+                self.btn_legend.blockSignals(True)
+                self.btn_legend.setChecked(True)
+                self.btn_legend.blockSignals(False)
+        self._emit_view_options()
+
+    def _resolve_colorbar_cmap_and_norm(self, count: int, param_values: np.ndarray):
+        """Build colormap, normalization, and per-spectrum colors for colorbar mode."""
+        palette_name = (
+            self.cbb_color_palette.currentText()
+            if hasattr(self, "cbb_color_palette") else "DEFAULT_COLORS"
+        )
+        if palette_name in SPECTRA_DISCRETE_PALETTES:
+            disc_colors = self._get_colors_for_palette(palette_name, max(count, 1))
+            cmap = mpl.colors.ListedColormap(disc_colors)
+        else:
+            try:
+                cmap = mpl.colormaps[palette_name]
+            except (KeyError, AttributeError):
+                cmap = mpl.colormaps["viridis"]
+
+        valid = ~np.isnan(param_values) if len(param_values) > 0 else np.array([], dtype=bool)
+        if count > 0 and np.any(valid):
+            vmin = float(np.nanmin(param_values))
+            vmax = float(np.nanmax(param_values))
+        else:
+            vmin, vmax = 0.0, float(max(count - 1, 1))
+
+        if vmin == vmax:
+            norm = mpl.colors.Normalize(vmin=vmin - 0.5, vmax=vmax + 0.5)
+        else:
+            norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+
+        if palette_name not in SPECTRA_DISCRETE_PALETTES and count > 0 and np.any(valid) and vmin < vmax:
+            fallback = self._get_colors_for_palette(palette_name, count)
+            mapped_colors = [
+                mpl.colors.to_hex(cmap(norm(param_values[i])))
+                if i < len(param_values) and not np.isnan(param_values[i])
+                else fallback[i]
+                for i in range(count)
+            ]
+        else:
+            mapped_colors = self._get_colors_for_palette(palette_name, count)
+
+        return cmap, norm, mapped_colors
 
     @staticmethod
     def _extract_filename_tokens(fname):
@@ -1348,7 +1458,7 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         *position* is the 0-based index inside the underscore-split list so
         the same slot can be looked up across different filenames.
         """
-        stem = fname.rsplit(".", 1)[0] if "." in fname else fname
+        stem = _RE_FILE_EXT.sub("", fname)
         tokens = stem.split("_")
         result = []
         for pos, tok in enumerate(tokens):
@@ -1358,7 +1468,7 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         return result
 
     def _collect_heatmap_yaxis_tokens(self):
-        """Return filename tokens suitable as heatmap Y-axis choices.
+        """Return filename tokens suitable as heatmap Y-axis or colorbar choices.
 
         Parse the *first* selected spectrum's filename, find every
         underscore-delimited token that contains a numeric value, and
@@ -1371,53 +1481,59 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         return [(pos, tok)
                 for pos, tok, _val in self._extract_filename_tokens(fnames[0])]
 
-    def _refresh_heatmap_yaxis_choices(self):
-        """Rebuild the Y-axis combobox items from the selected filenames."""
-        prev = self.cbb_heatmap_yaxis.currentText()
-        self.cbb_heatmap_yaxis.blockSignals(True)
-        self.cbb_heatmap_yaxis.clear()
-        self.cbb_heatmap_yaxis.addItem("Index")
+    def _refresh_token_combobox(self, combo: QComboBox):
+        """Rebuild a parameter combobox from the selected filenames."""
+        prev = combo.currentText()
+        combo.blockSignals(True)
+        combo.clear()
+        combo.addItem("Index")
         for _pos, token_text in self._collect_heatmap_yaxis_tokens():
-            self.cbb_heatmap_yaxis.addItem(token_text)
+            combo.addItem(token_text)
         # Restore previous selection if still available
-        idx = self.cbb_heatmap_yaxis.findText(prev)
+        idx = combo.findText(prev)
         if idx >= 0:
-            self.cbb_heatmap_yaxis.setCurrentIndex(idx)
-        self.cbb_heatmap_yaxis.blockSignals(False)
+            combo.setCurrentIndex(idx)
+        combo.blockSignals(False)
 
-    def _get_heatmap_y_values(self):
-        """Return ``(y_values, y_label)`` for the heatmap Y-axis.
+    def _refresh_heatmap_yaxis_choices(self):
+        """Rebuild the heatmap Y-axis combobox items from the selected filenames."""
+        self._refresh_token_combobox(self.cbb_heatmap_yaxis)
+
+    def _refresh_colorbar_param_choices(self):
+        """Rebuild the colorbar parameter combobox items from the selected filenames."""
+        if hasattr(self, "cbb_colorbar_param"):
+            self._refresh_token_combobox(self.cbb_colorbar_param)
+
+    def _extract_series_parameter_values(self, selected_token: str, custom_label: str) -> tuple[np.ndarray, str]:
+        """Return ``(values, label)`` parsed from filenames or spectrum order.
 
         * **Index** → simple 0 … N-1.
-        * Otherwise the selected token text is matched to a token position
-          from the *first* filename, and the numeric part of that same
-          position is extracted from every filename.
+        * Otherwise *selected_token* is matched to a token position from the
+          *first* filename, and the numeric part of that same position is
+          extracted from every filename.
         """
         fnames = self._tensor_data.get("fnames", []) if self._tensor_data else []
-        selected = self.cbb_heatmap_yaxis.currentText()
-        N = len(self._tensor_data.get("y", []))
+        N = len(self._tensor_data.get("y", [])) if self._tensor_data else 0
+        custom = custom_label.strip() if custom_label else ""
 
-        if selected == "Index" or not fnames:
-            label = self.le_heatmap_ylabel.text().strip() or "Spectrum index"
-            return np.arange(N, dtype=float), label
+        if selected_token == "Index" or not fnames:
+            return np.arange(N, dtype=float), (custom or "Spectrum index")
 
-        # ── Filename token ──
         # Identify the token position from the first filename
         ref_tokens = self._extract_filename_tokens(fnames[0])
         token_pos = None
         for pos, tok, _val in ref_tokens:
-            if tok == selected:
+            if tok == selected_token:
                 token_pos = pos
                 break
 
         if token_pos is None:
-            label = self.le_heatmap_ylabel.text().strip() or selected
-            return np.arange(N, dtype=float), label
+            return np.arange(N, dtype=float), (custom or selected_token)
 
         # Extract the numeric value at *token_pos* from every filename
         values = []
         for fname in fnames:
-            stem = fname.rsplit(".", 1)[0] if "." in fname else fname
+            stem = _RE_FILE_EXT.sub("", fname)
             parts = stem.split("_")
             if token_pos < len(parts):
                 nums = _RE_NUMBERS.findall(parts[token_pos])
@@ -1425,9 +1541,21 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
             else:
                 values.append(float("nan"))
 
-        auto_label = selected
-        label = self.le_heatmap_ylabel.text().strip() or auto_label
-        return np.array(values, dtype=float), label
+        return np.array(values, dtype=float), (custom or selected_token)
+
+    def _get_heatmap_y_values(self):
+        """Return ``(y_values, y_label)`` for the heatmap Y-axis."""
+        return self._extract_series_parameter_values(
+            self.cbb_heatmap_yaxis.currentText(),
+            self.le_heatmap_ylabel.text(),
+        )
+
+    def _get_colorbar_values(self):
+        """Return ``(values, label)`` for the 1D spectrum colorbar."""
+        return self._extract_series_parameter_values(
+            self.cbb_colorbar_param.currentText(),
+            self.le_colorbar_label.text(),
+        )
 
     def _plot_heatmap(self):
         """Render the selected spectra as a 2D pcolormesh heatmap."""
@@ -1912,6 +2040,9 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
             "height": self.height_entry.text() if hasattr(self, "height_entry") else "4.0",
             "legend": self.btn_legend.isChecked() if hasattr(self, "btn_legend") else False,
             "legend_outside": self.act_legend_outside.isChecked() if hasattr(self, "act_legend_outside") else False,
+            "legend_colorbar": self.act_legend_colorbar.isChecked() if hasattr(self, "act_legend_colorbar") else False,
+            "colorbar_param": self.cbb_colorbar_param.currentText() if hasattr(self, "cbb_colorbar_param") else "Index",
+            "colorbar_label": self.le_colorbar_label.text() if hasattr(self, "le_colorbar_label") else "",
             "bestfit": self.btn_bestfit.isChecked() if hasattr(self, "btn_bestfit") else True,
             "max_legend_items": self.spin_max_legend_items.value() if hasattr(self, "spin_max_legend_items") else 15,
             "copy_fig_theme": self.cbb_copy_theme.currentText() if hasattr(self, "cbb_copy_theme") else "Light Mode",
@@ -1963,6 +2094,18 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         _update(self.btn_legend, self.btn_legend.setChecked, state.get("legend"))
         if hasattr(self, "act_legend_outside"):
             _update(self.act_legend_outside, self.act_legend_outside.setChecked, state.get("legend_outside", False))
+        if hasattr(self, "act_legend_colorbar"):
+            _update(self.act_legend_colorbar, self.act_legend_colorbar.setChecked, state.get("legend_colorbar", False))
+        if hasattr(self, "cbb_colorbar_param"):
+            cb_param = state.get("colorbar_param", "Index")
+            if cb_param:
+                if self.cbb_colorbar_param.findText(cb_param) < 0:
+                    self.cbb_colorbar_param.blockSignals(True)
+                    self.cbb_colorbar_param.addItem(cb_param)
+                    self.cbb_colorbar_param.blockSignals(False)
+                _update(self.cbb_colorbar_param, self.cbb_colorbar_param.setCurrentText, cb_param)
+        if hasattr(self, "le_colorbar_label"):
+            _update(self.le_colorbar_label, self.le_colorbar_label.setText, state.get("colorbar_label", ""))
         _update(self.btn_bestfit, self.btn_bestfit.setChecked, state.get("bestfit"))
         if hasattr(self, "spin_max_legend_items"):
             _update(self.spin_max_legend_items,
@@ -1973,7 +2116,13 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         if hasattr(self, "btn_heatmap"):
             _update(self.btn_heatmap, self.btn_heatmap.setChecked, state.get("heatmap", False))
         if hasattr(self, "cbb_heatmap_yaxis"):
-            _update(self.cbb_heatmap_yaxis, self.cbb_heatmap_yaxis.setCurrentText, state.get("heatmap_yaxis", "Index"))
+            hm_yaxis = state.get("heatmap_yaxis", "Index")
+            if hm_yaxis:
+                if self.cbb_heatmap_yaxis.findText(hm_yaxis) < 0:
+                    self.cbb_heatmap_yaxis.blockSignals(True)
+                    self.cbb_heatmap_yaxis.addItem(hm_yaxis)
+                    self.cbb_heatmap_yaxis.blockSignals(False)
+                _update(self.cbb_heatmap_yaxis, self.cbb_heatmap_yaxis.setCurrentText, hm_yaxis)
         if hasattr(self, "le_heatmap_ylabel"):
             _update(self.le_heatmap_ylabel, self.le_heatmap_ylabel.setText, state.get("heatmap_ylabel", ""))
         if hasattr(self, "spin_heatmap_interp"):

@@ -652,6 +652,138 @@ def test_spectra_viewer_range_drag_blitting_clamping_and_release(viewer):
     assert finished_signals == ["red"]
 
 
+def _series_data_from_fnames(fnames, colors=None):
+    count = len(fnames)
+    x = np.linspace(100.0, 500.0, 10)
+    y = np.vstack([np.sin(x / 100.0) + i for i in range(count)])
+    return {
+        "type": "tensor",
+        "x": x,
+        "y": y,
+        "x0": x,
+        "y0": y,
+        "colors": [None] * count if colors is None else list(colors),
+        "labels": list(fnames),
+        "fnames": list(fnames),
+        "proxies": [],
+    }
+
+
+def test_legend_colorbar_option_replaces_discrete_legend_with_colorbar(viewer):
+    """Test colorbar legend mode extracts token bounds, sets label, and toggles back cleanly."""
+    fnames = [
+        "LNO550_25°C_down",
+        "LNO550_100°C_down",
+        "LNO550_300°C_down",
+        "LNO550_500°C_down",
+    ]
+    viewer.set_plot_data(_series_data_from_fnames(fnames))
+
+    cb_items = [
+        viewer.cbb_colorbar_param.itemText(i)
+        for i in range(viewer.cbb_colorbar_param.count())
+    ]
+    assert "Index" in cb_items
+    assert "25°C" in cb_items
+
+    viewer.cbb_color_palette.setCurrentText("jet")
+    viewer.cbb_colorbar_param.setCurrentText("25°C")
+    viewer.le_colorbar_label.setText("Temperature (°C)")
+    viewer.act_legend_colorbar.setChecked(True)
+
+    assert viewer.btn_legend.isChecked() is True
+    assert viewer.ax.get_legend() is None
+    assert viewer._heatmap_colorbar is not None
+    assert viewer._heatmap_colorbar.norm.vmin == pytest.approx(25.0)
+    assert viewer._heatmap_colorbar.norm.vmax == pytest.approx(500.0)
+    assert viewer._heatmap_colorbar.ax.get_ylabel() == "Temperature (°C)"
+
+    # Toggling colorbar off removes colorbar and restores discrete legend
+    viewer.act_legend_colorbar.setChecked(False)
+    assert viewer._heatmap_colorbar is None
+    assert viewer.ax.get_legend() is not None
+
+
+def test_legend_colorbar_maps_non_uniform_and_reversed_token_values_to_colors(viewer):
+    """Verify spectrum colors follow extracted token values on gradient palettes while keeping overrides."""
+    fnames = [
+        "LNO550_500°C_down",
+        "LNO550_100°C_down",
+        "LNO550_25°C_down",
+    ]
+    viewer.cbb_color_palette.setCurrentText("jet")
+    viewer.set_plot_data(_series_data_from_fnames(fnames))
+    viewer.cbb_colorbar_param.setCurrentText("500°C")
+    viewer.act_legend_colorbar.setChecked(True)
+
+    cmap = mpl.colormaps["jet"]
+    norm = mpl.colors.Normalize(vmin=25.0, vmax=500.0)
+    expected_colors = [
+        mpl.colors.to_hex(cmap(norm(500.0))),
+        mpl.colors.to_hex(cmap(norm(100.0))),
+        mpl.colors.to_hex(cmap(norm(25.0))),
+    ]
+    plotted_colors = [
+        mpl.colors.to_hex(c) for c in viewer.ax.collections[0].get_colors()
+    ]
+    assert plotted_colors == expected_colors
+
+    # Custom per-spectrum override continues to take priority
+    viewer.set_plot_data(
+        _series_data_from_fnames(fnames, colors=[None, "#abcdef", None])
+    )
+    plotted_with_override = [
+        mpl.colors.to_hex(c) for c in viewer.ax.collections[0].get_colors()
+    ]
+    assert plotted_with_override == [
+        expected_colors[0],
+        "#abcdef",
+        expected_colors[2],
+    ]
+
+
+def test_legend_colorbar_options_round_trip_and_settings_persistence(viewer, settings):
+    """Verify legend_colorbar, colorbar_param, and colorbar_label round-trip in options and QSettings."""
+    from spectroview.model.m_settings import MSettings
+
+    viewer.act_legend_colorbar.setChecked(True)
+    viewer.cbb_colorbar_param.addItem("25°C")
+    viewer.cbb_colorbar_param.setCurrentText("25°C")
+    viewer.le_colorbar_label.setText("Temperature (°C)")
+
+    state = viewer.get_options_state()
+    assert state["legend_colorbar"] is True
+    assert state["colorbar_param"] == "25°C"
+    assert state["colorbar_label"] == "Temperature (°C)"
+
+    settings.save_view_options(state)
+    loaded = MSettings().load_view_options()
+    assert loaded["legend_colorbar"] is True
+    assert loaded["colorbar_param"] == "25°C"
+    assert loaded["colorbar_label"] == "Temperature (°C)"
+
+    viewer.act_legend_colorbar.setChecked(False)
+    viewer.cbb_colorbar_param.clear()
+    viewer.cbb_colorbar_param.addItem("Index")
+    viewer.le_colorbar_label.setText("")
+
+    viewer.set_options_state(loaded)
+    assert viewer.act_legend_colorbar.isChecked() is True
+    assert viewer.cbb_colorbar_param.currentText() == "25°C"
+    assert viewer.le_colorbar_label.text() == "Temperature (°C)"
+
+
+def test_filename_token_extraction_without_extension_preserves_decimals(viewer):
+    """Verify _extract_filename_tokens preserves decimal points when filenames have no extension."""
+    fname = "sample_test_300K_4.5mW_01"
+    tokens = viewer._extract_filename_tokens(fname)
+    token_dict = {t[1]: t[2] for t in tokens}
+    assert token_dict.get("300K") == 300.0
+    assert token_dict.get("4.5mW") == 4.5
+    assert token_dict.get("01") == 1.0
+
+
+
 
 
 

@@ -98,6 +98,12 @@ class MSettings:
             "legend": self.settings.value("view_options/legend", False, bool),
             "legend_outside": self.settings.value(
                 "view_options/legend_outside", False, bool),
+            "legend_colorbar": self.settings.value(
+                "view_options/legend_colorbar", False, bool),
+            "colorbar_param": self.settings.value(
+                "view_options/colorbar_param", "Index", str),
+            "colorbar_label": self.settings.value(
+                "view_options/colorbar_label", "", str),
             "bestfit": self.settings.value("view_options/bestfit", True, bool),
             "max_legend_items": self.settings.value(
                 "view_options/max_legend_items", 15, int),

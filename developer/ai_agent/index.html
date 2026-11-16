@@ -1568,10 +1568,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#vchatpanel-view-dialog" class="md-nav__link">
+  <a href="#vchatpanel-embedded-chat-panel" class="md-nav__link">
     <span class="md-ellipsis">
       
-        VChatPanel — View Dialog
+        VChatPanel — Embedded Chat Panel
       
     </span>
   </a>
@@ -2297,7 +2297,7 @@ real URI. Resources added by any server appear there with no client change.</p>
 <a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>│   └── config.py            # servers.yaml -&gt; validated ServerSpec list
 <a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>├── m_prompt_manager.py      # Prompt caching and assembly: loads and merges the Markdown fragments
 <a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>├── vm_chat.py               # ViewModel: prompt-tier selection, small-model detection, request tuning, agentic loop
-<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>├── v_chat_panel.py          # View: embedded chat panel (QWidget) beside workspace tabs, incl. Auto/Full/Simplified selector
+<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>├── v_chat_panel.py          # View: embedded chat panel (QWidget) beside workspace tabs
 <a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>└── v_history_dialog.py      # View: history browser dialog (QDialog) with timestamps, pinning, search, and batch delete
 </code></pre></div>
 <h3 id="file-roles"><strong>File Roles</strong><a class="headerlink" href="#file-roles" title="Permanent link">&para;</a></h3>
@@ -2378,7 +2378,7 @@ real URI. Resources added by any server appear there with no client change.</p>
 <tr>
 <td><code>v_chat_panel.py</code></td>
 <td><strong>View</strong></td>
-<td>Floating <code>QDialog</code> with chat bubbles, provider/model selector, the prompt-tier selector, timestamp display, status bar, and input field. Emits <code>plot_requested(dict)</code> when the AI creates/updates/deletes a graph. The model selector is an <strong>editable</strong> <code>QComboBox</code> (a model name can be typed directly); for the <strong>Custom</strong> provider its list is seeded from the comma-separated <code>custom_models</code> setting (Settings ▸ AI) via <code>_custom_model_names()</code>, so endpoints without a model-listing API are still usable.</td>
+<td>Embedded <code>QWidget</code> panel with chat bubbles, provider/model selector, timestamp display, compact 42px header bar, and multi-line composer card. Emits <code>plot_requested(dict)</code> when the AI creates/updates/deletes a graph. The model selector is an <strong>editable</strong> <code>QComboBox</code> (a model name can be typed directly); for the <strong>Custom</strong> provider its list is seeded from the comma-separated <code>custom_models</code> setting (Settings ▸ AI) via <code>_custom_model_names()</code>, so endpoints without a model-listing API are still usable.</td>
 </tr>
 <tr>
 <td><code>v_history_dialog.py</code></td>
@@ -2394,12 +2394,14 @@ real URI. Resources added by any server appear there with no client change.</p>
 <p><code>VMChat._auto_detect_small_model()</code> resolves in this order:</p>
 <ol>
 <li><strong>Manual override</strong> — <code>VMChat.set_small_model_mode(True | False | None)</code>. <code>None</code> (the default) means "keep auto-detecting," persisted via <code>MSettings</code>.</li>
-<li><strong>Provider Testing</strong> — Settings dialog (<code>VSettingsDialog</code> / <code>VMSettings</code>) includes an asynchronous "Test Connection" button calling <code>test_provider_connection</code> (<code>m_llm_client.py</code>) to validate credentials, endpoints, and model reachability on a background thread.</li>
-<li><strong>Streamlined Header</strong> — <code>v_chat_panel.py</code> features a compact 42px single-row header bar hosting the conversation title and action buttons (<strong>Chat History</strong>, <strong>New Chat</strong>, <strong>Clear Chat</strong>).</li>
+<li><strong>Parameter-count check</strong> (Ollama only) — <code>get_ollama_model_info(model)</code> calls <code>ollama show &lt;model&gt;</code>, parses <code>details.parameter_size</code> (e.g. <code>"8.2B"</code>) via <code>_parse_param_size_to_billions()</code>, and compares it against <code>config/model.yaml</code>'s <code>small_model_param_threshold_b</code> (default <strong>10.0</strong>). Cached per model name for the life of the <code>VMChat</code> instance.</li>
+<li><strong>Name-pattern fallback</strong> — if the parameter count can't be determined (cloud model, or <code>ollama show</code> fails), the model name is matched against <code>VMChat._SMALL_MODEL_PATTERNS</code>, a list of known small model tags (<code>qwen3:8b</code>, <code>gemma3:4b</code>, <code>phi3:mini</code>, <code>deepseek-r1:8b</code>, etc.).</li>
+<li><strong>Default: full tier.</strong> If nothing resolves, the model is treated as large. An unrecognized model getting the full prompt is the safer failure mode than an unrecognized <em>large</em> model being needlessly handicapped.</li>
 </ol>
+<p>Detection is hard-gated to <code>provider == "Ollama"</code> for steps 2–3 — cloud providers always resolve to the full tier unless a manual override forces otherwise. Detection re-runs on <code>set_model()</code>/<code>set_provider()</code>, never during <code>__init__</code> (an <code>ollama show</code> network call shouldn't race object construction).</p>
 <h3 id="persisted-settings"><strong>Persisted settings</strong><a class="headerlink" href="#persisted-settings" title="Permanent link">&para;</a></h3>
 <p>Everything the agent stores — provider, selected model per provider, prompt
-tier, API keys, chat-history folder — lives under the <code>ai_chat/</code> prefix of the
+tier, and chat-history folder — lives under the <code>ai_chat/</code> prefix of the
 single application store, reached through <code>MSettings.get_ai_value()</code> /
 <code>set_ai_value()</code>. The AI module imports no <code>QSettings</code> of its own.</p>
 <p>It used to keep a second <code>QSettings("SPECTROview", "AIChat")</code> pair. That made
@@ -2410,17 +2412,8 @@ history folder. <code>MSettings._migrate_legacy_ai_settings()</code> copies the 
 across once (guarded by a marker key, never overwriting a newer value) and
 leaves the legacy store in place so an older build still runs.</p>
 <blockquote>
-<p><strong>Secrets</strong>: API keys are written to the per-user OS settings store (Windows
-registry / macOS defaults) — never to a file inside the project, so they
-cannot be committed. <code>config/servers.yaml</code> <em>is</em> committed: never put a token
-in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.</p>
+<p><strong>Secrets (<code>spectroview/settings/secrets.py</code>)</strong>: API keys (<code>OpenAI</code>, <code>Anthropic</code>, <code>Mistral</code>, <code>Gemini</code>, <code>DeepSeek</code>, <code>Custom</code>) are stored in the per-user OS configuration store via <code>SecretStore</code> (<code>QSettings("CEA-Leti", "SPECTROview")</code> under the obfuscated <code>_credentials/</code> namespace) and are strictly excluded from exported <code>config.json</code> files so credentials cannot be leaked or committed. <code>config/servers.yaml</code> <em>is</em> committed: never put a token in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.</p>
 </blockquote>
-<ol>
-<li><strong>Parameter-count check</strong> (Ollama only) — <code>get_ollama_model_info(model)</code> calls <code>ollama show &lt;model&gt;</code>, parses <code>details.parameter_size</code> (e.g. <code>"8.2B"</code>) via <code>_parse_param_size_to_billions()</code>, and compares it against <code>config/model.yaml</code>'s <code>small_model_param_threshold_b</code> (default <strong>10.0</strong>). Cached per model name for the life of the <code>VMChat</code> instance.</li>
-<li><strong>Name-pattern fallback</strong> — if the parameter count can't be determined (cloud model, or <code>ollama show</code> fails), the model name is matched against <code>VMChat._SMALL_MODEL_PATTERNS</code>, a list of known small model tags (<code>qwen3:8b</code>, <code>gemma3:4b</code>, <code>phi3:mini</code>, <code>deepseek-r1:8b</code>, etc.).</li>
-<li><strong>Default: full tier.</strong> If nothing resolves, the model is treated as large. An unrecognized model getting the full prompt is the safer failure mode than an unrecognized <em>large</em> model being needlessly handicapped.</li>
-</ol>
-<p>Detection is hard-gated to <code>provider == "Ollama"</code> for steps 2–3 — cloud providers always resolve to the full tier unless a manual override forces otherwise. Detection re-runs on <code>set_model()</code>/<code>set_provider()</code>, never during <code>__init__</code> (an <code>ollama show</code> network call shouldn't race object construction).</p>
 <h3 id="what-changes-in-simplified-mode">What changes in Simplified mode<a class="headerlink" href="#what-changes-in-simplified-mode" title="Permanent link">&para;</a></h3>
 <p>All four of the following are computed in <code>vm_chat.py</code> and read from <code>config/model.yaml</code>:</p>
 <table>
@@ -2723,7 +2716,7 @@ in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
 <h4 id="request-options"><strong>Request Options</strong><a class="headerlink" href="#request-options" title="Permanent link">&para;</a></h4>
 <p><code>_build_request_options()</code> reads <code>config/model.yaml</code> and returns the <code>num_ctx</code>/<code>think</code>/<code>timeout</code>/<code>max_tokens</code> dict passed as <code>request_options=</code> to every <code>LLMClient.chat()</code> call — see <a href="#small-model-support">Small-Model Support</a> for the full table of full-vs-simplified values.</p>
 <h4 id="conversation-history-persistence"><strong>Conversation History &amp; Persistence</strong><a class="headerlink" href="#conversation-history-persistence" title="Permanent link">&para;</a></h4>
-<p>Conversations are saved automatically as JSON files in the user-configured history folder (<strong>Settings → AI tab</strong>). <code>MConversation</code>:</p>
+<p>Conversations are saved automatically as JSON files in the user-configured history folder (<strong>Settings → AI Settings tab</strong>). <code>MConversation</code>:</p>
 <ul>
 <li>Accumulates messages (including <code>tool_calls</code>/<code>tool_call_id</code> for tool-calling turns) with ISO timestamps.</li>
 <li>Auto-titles itself from the first user message (up to 60 chars).</li>
@@ -2768,17 +2761,17 @@ in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
 </tr>
 </tbody>
 </table>
-<h3 id="vchatpanel-view-dialog"><strong><code>VChatPanel</code> — View Dialog</strong><a class="headerlink" href="#vchatpanel-view-dialog" title="Permanent link">&para;</a></h3>
+<h3 id="vchatpanel-embedded-chat-panel"><strong><code>VChatPanel</code> — Embedded Chat Panel</strong><a class="headerlink" href="#vchatpanel-embedded-chat-panel" title="Permanent link">&para;</a></h3>
 <p><strong>File</strong>: <code>spectroview/ai_agent/v_chat_panel.py</code></p>
-<p>A floating <code>QDialog</code> styled with a modern, clean card aesthetic inspired by modern AI composers.</p>
-<p><strong>Header</strong>: Streamlined 2-row layout (height 74px):</p>
+<p>An embedded <code>QWidget</code> panel positioned on the far right of <code>Main.workspace_splitter</code>, styled with a modern card aesthetic inspired by AI composers.</p>
+<p><strong>Header (<code>chatHeader</code>)</strong>: Compact single-row layout (fixed height 42px):</p>
 <ul>
-<li><strong>Row 1</strong>: Connection status label <code>lbl_status</code> (appends <code>· Simplified prompts</code> when small-model mode is active), <code>lbl_no_data</code> notice, stretch, and 30×30 action buttons: Conversation History (<code>btn_history</code>), New Chat (<code>btn_new_chat</code>), and Clear Conversation (<code>btn_clear</code>).</li>
-<li><strong>Row 2</strong>: Editable conversation title (<code>edit_title</code>).</li>
+<li><strong>Conversation Title (<code>edit_title</code>)</strong>: Editable <code>QLineEdit</code> stretching across available header width.</li>
+<li><strong>Action Buttons</strong>: 30×30 icon buttons for Chat History (<code>btn_history</code>), New Chat (<code>btn_new_chat</code>), Clear Chat (<code>btn_clear</code>), and Close Panel (<code>btn_close</code>). (Internal <code>lbl_status</code> and <code>lbl_no_data</code> attributes are retained for signal compatibility without cluttering the header UI.)</li>
 </ul>
 <p><strong>Composer (<code>chatComposerFrame</code>)</strong>:</p>
 <ul>
-<li>Enclosed card with rounded corners (8px) and subtle border at the bottom of the dialog.</li>
+<li>Enclosed card with rounded corners (8px) and subtle border at the bottom of the panel.</li>
 <li><strong>Top</strong>: Auto-resizing multi-line text input (<code>_ChatLineEdit</code>), borderless with transparent background.</li>
 <li><strong>Embedded Toolbar</strong>: Located inside the bottom of the composer card:</li>
 <li>AI Provider selector dropdown (<code>cbb_provider</code>)</li>
@@ -3044,7 +3037,7 @@ in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
 </tr>
 <tr>
 <td><strong>Small-model adaptation</strong></td>
-<td>Auto-detects small local models (by parameter count or name) and switches to a shorter prompt, capped history, and tuned Ollama request options — manually overridable via the Auto/Full/Simplified selector. See <a href="#small-model-support">Small-Model Support</a>.</td>
+<td>Auto-detects small local models (by parameter count or name) and switches to a shorter prompt, capped history, and tuned Ollama request options (<code>VMChat.set_small_model_mode()</code>). See <a href="#small-model-support">Small-Model Support</a>.</td>
 </tr>
 <tr>
 <td><strong>Self-correcting tool calls</strong></td>
@@ -3067,8 +3060,8 @@ in it, use <code>${VAR}</code> (expanded by <code>mcp/config.py</code>) instead.
 <td>Token-by-token display with live typing animation, on every provider including Anthropic with tools</td>
 </tr>
 <tr>
-<td><strong>Model &amp; prompt-tier selection</strong></td>
-<td>Switch between locally downloaded Ollama models or cloud providers; independently force the prompt tier</td>
+<td><strong>Model &amp; provider selection</strong></td>
+<td>Switch between locally downloaded Ollama models or cloud providers directly from the composer toolbar</td>
 </tr>
 <tr>
 <td><strong>Context-aware prompts</strong></td>

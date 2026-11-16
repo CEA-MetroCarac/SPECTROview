@@ -813,10 +813,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#41-axis-tab" class="md-nav__link">
+  <a href="#41-axes-limits-ticks-spines-and-secondary-inset-axes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.1 Axis Tab
+        4.1 Axes &amp; Limits, Ticks &amp; Spines, and Secondary &amp; Inset Axes
       
     </span>
   </a>
@@ -824,10 +824,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#42-legend-color-tab" class="md-nav__link">
+  <a href="#42-legend-series" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.2 Legend / Color Tab
+        4.2 Legend &amp; Series
       
     </span>
   </a>
@@ -835,10 +835,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#43-annotations-tab" class="md-nav__link">
+  <a href="#43-annotations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.3 Annotations Tab
+        4.3 Annotations
       
     </span>
   </a>
@@ -846,10 +846,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#44-more-options-tab" class="md-nav__link">
+  <a href="#44-general-typography-and-plot-style-fitting" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.4 More Options Tab
+        4.4 General &amp; Typography and Plot Style &amp; Fitting
       
     </span>
   </a>
@@ -1913,14 +1913,14 @@ The four available utility buttons allow you to:</p>
 </ul>
 <p>All changes across tabs are applied together via the unified <strong>Apply</strong> button at the bottom of the dialog, or discarded via <strong>Cancel</strong>.</p>
 <hr />
-<h4 id="41-axis-tab">4.1 Axis Tab<a class="headerlink" href="#41-axis-tab" title="Permanent link">&para;</a></h4>
+<h4 id="41-axes-limits-ticks-spines-and-secondary-inset-axes">4.1 Axes &amp; Limits, Ticks &amp; Spines, and Secondary &amp; Inset Axes<a class="headerlink" href="#41-axes-limits-ticks-spines-and-secondary-inset-axes" title="Permanent link">&para;</a></h4>
 <div align="center">
-  <img src="../../user_manual_images/Graphs/Customize_Axis.png" alt="Axis Tab" width="600"><br>
-  <i>The Axis tab of the Customize Graph Dialog.</i>
+  <img src="../../user_manual_images/Graphs/Customize_Axis.png" alt="Axis Categories" width="600"><br>
+  <i>Axis configuration in the Customize Graph Dialog.</i>
 </div>
 
-<p>The <strong>Axis</strong> tab controls axis scaling, data types, limits, appearance, axis breaks, inset (zoom) axes, and secondary axes. Font sizes for titles/labels/ticks live in the <strong>More Options</strong> tab instead.</p>
-<h5 id="axis-properties">Axis Properties<a class="headerlink" href="#axis-properties" title="Permanent link">&para;</a></h5>
+<p>The <strong>Axes &amp; Limits</strong>, <strong>Ticks &amp; Spines</strong>, and <strong>Secondary &amp; Inset Axes</strong> categories control axis scaling, data types, limits, tick/spine appearance, axis breaks, inset (zoom) axes, and secondary twin axes. Font sizes for titles/labels/ticks live in the <strong>General &amp; Typography</strong> category.</p>
+<h5 id="axis-properties-axes-limits">Axis Properties (<code>Axes &amp; Limits</code>)<a class="headerlink" href="#axis-properties-axes-limits" title="Permanent link">&para;</a></h5>
 <p>Configure the <strong>scale</strong> and <strong>data type</strong> for each axis independently using dropdown menus:</p>
 <table>
 <thead>
@@ -1933,8 +1933,8 @@ The four available utility buttons allow you to:</p>
 <tbody>
 <tr>
 <td><strong>X / Y axis Scale</strong></td>
-<td><code>Linear</code>, <code>Logarithmic</code></td>
-<td>Switches the axis between linear and logarithmic scale. Logarithmic scale is only applied when the underlying data is numeric.</td>
+<td><code>Linear</code>, <code>Logarithmic</code>, <code>Symlog</code></td>
+<td>Switches the axis between linear, logarithmic, and symmetric logarithmic scale. Logarithmic scale is only applied when the underlying data is numeric.</td>
 </tr>
 <tr>
 <td><strong>X / Y axis Data type</strong></td>
@@ -1951,7 +1951,7 @@ The four available utility buttons allow you to:</p>
 <blockquote>
 <p><strong>Note</strong>: When using <code>Numerical</code> data type, the axis adopts a true mathematical scale where spacing reflects actual data values. When using <code>Category</code>, each unique value is evenly spaced regardless of its numeric magnitude.</p>
 </blockquote>
-<h5 id="set-axis-limits">Set Axis Limits<a class="headerlink" href="#set-axis-limits" title="Permanent link">&para;</a></h5>
+<h5 id="set-axis-limits-axes-limits">Set Axis Limits (<code>Axes &amp; Limits</code>)<a class="headerlink" href="#set-axis-limits-axes-limits" title="Permanent link">&para;</a></h5>
 <p>Manually constrain the visible range of each axis (X, Y, Z) by specifying <strong>min</strong> and <strong>max</strong> values:</p>
 <table>
 <thead>
@@ -1980,7 +1980,7 @@ The four available utility buttons allow you to:</p>
   <i>Adjusting the axis limits of the selected plot.</i>
 </div>
 
-<h5 id="axis-appearance">Axis Appearance<a class="headerlink" href="#axis-appearance" title="Permanent link">&para;</a></h5>
+<h5 id="axis-appearance-ticks-spines">Axis Appearance (<code>Ticks &amp; Spines</code>)<a class="headerlink" href="#axis-appearance-ticks-spines" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -2007,7 +2007,7 @@ The four available utility buttons allow you to:</p>
 </tr>
 </tbody>
 </table>
-<h5 id="broken-axis-beta">Broken Axis (Beta)<a class="headerlink" href="#broken-axis-beta" title="Permanent link">&para;</a></h5>
+<h5 id="broken-axis-axes-limits-beta">Broken Axis (<code>Axes &amp; Limits</code> — Beta)<a class="headerlink" href="#broken-axis-axes-limits-beta" title="Permanent link">&para;</a></h5>
 <p>Create a visual break in an axis to omit an uninteresting range and focus on relevant data regions:</p>
 <table>
 <thead>
@@ -2030,7 +2030,7 @@ The four available utility buttons allow you to:</p>
 <blockquote>
 <p><strong>Note</strong>: This feature is in beta. Axis breaks work best with linear scales.</p>
 </blockquote>
-<h5 id="inset-zoom-axes">Inset (Zoom) Axes<a class="headerlink" href="#inset-zoom-axes" title="Permanent link">&para;</a></h5>
+<h5 id="inset-zoom-axes-secondary-inset-axes">Inset (Zoom) Axes (<code>Secondary &amp; Inset Axes</code>)<a class="headerlink" href="#inset-zoom-axes-secondary-inset-axes" title="Permanent link">&para;</a></h5>
 <p>Draw a small zoomed-in view of a region of the plot inside the main plot area:</p>
 <table>
 <thead>
@@ -2061,17 +2061,17 @@ The four available utility buttons allow you to:</p>
 <blockquote>
 <p><strong>Note</strong>: Inset axes and a broken axis are mutually exclusive — enabling one disables the other.</p>
 </blockquote>
-<h5 id="secondary-axes">Secondary Axes<a class="headerlink" href="#secondary-axes" title="Permanent link">&para;</a></h5>
+<h5 id="secondary-axes-secondary-inset-axes">Secondary Axes (<code>Secondary &amp; Inset Axes</code>)<a class="headerlink" href="#secondary-axes-secondary-inset-axes" title="Permanent link">&para;</a></h5>
 <p>Plot additional Y-columns (or a second X-column) against independent scales, one row per axis (<strong>Y2</strong>, <strong>Y3</strong>, <strong>X2</strong>). Each row is enabled once a column is assigned to that axis and lets you set a <strong>Label</strong>, <strong>Min/Max</strong> limits, a <strong>Log scale</strong> toggle, a <strong>Color</strong>, and a <strong>Marker</strong>.</p>
 <hr />
-<h4 id="42-legend-color-tab">4.2 Legend / Color Tab<a class="headerlink" href="#42-legend-color-tab" title="Permanent link">&para;</a></h4>
+<h4 id="42-legend-series">4.2 Legend &amp; Series<a class="headerlink" href="#42-legend-series" title="Permanent link">&para;</a></h4>
 <div align="center">
-  <img src="../../user_manual_images/Graphs/Customize_LegendBox.png" alt="Legend / Color Tab" width="650"><br>
-  <i>The Legend / Color tab of the Customize Graph Dialog.</i>
+  <img src="../../user_manual_images/Graphs/Customize_LegendBox.png" alt="Legend & Series" width="650"><br>
+  <i>The Legend & Series category of the Customize Graph Dialog.</i>
 </div>
 
-<p>The <strong>Legend / Color</strong> tab lets you customize the appearance and placement of the plot legend, per-series colors/markers, and error bar style.</p>
-<h5 id="legend-box">Legend Box<a class="headerlink" href="#legend-box" title="Permanent link">&para;</a></h5>
+<p>The <strong>Legend &amp; Series</strong> category lets you customize the appearance and placement of the plot legend as well as per-series colors, markers, alpha, and line widths.</p>
+<h5 id="legend-box-series-styling">Legend Box &amp; Series Styling<a class="headerlink" href="#legend-box-series-styling" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -2114,7 +2114,7 @@ The four available utility buttons allow you to:</p>
   <i>Adjusting legends and colors of the selected plot.</i>
 </div>
 
-<h5 id="legend-style-error-bars">Legend Style &amp; Error Bars<a class="headerlink" href="#legend-style-error-bars" title="Permanent link">&para;</a></h5>
+<h5 id="legend-style">Legend Style<a class="headerlink" href="#legend-style" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -2127,24 +2127,16 @@ The four available utility buttons allow you to:</p>
 <td><strong>Columns / Frame / Title / Font size / Alpha / Position</strong></td>
 <td>Layout and appearance of the legend box itself.</td>
 </tr>
-<tr>
-<td><strong>Error bar type</strong></td>
-<td><code>95% CI</code>, <code>Standard Deviation</code>, or <code>None</code> (options depend on plot style).</td>
-</tr>
-<tr>
-<td><strong>Cap size</strong></td>
-<td>Width of the error bar end caps.</td>
-</tr>
 </tbody>
 </table>
 <hr />
-<h4 id="43-annotations-tab">4.3 Annotations Tab<a class="headerlink" href="#43-annotations-tab" title="Permanent link">&para;</a></h4>
+<h4 id="43-annotations">4.3 Annotations<a class="headerlink" href="#43-annotations" title="Permanent link">&para;</a></h4>
 <div align="center">
-  <img src="../../user_manual_images/Graphs/Customize_Annotation.png" alt="Annotations Tab" width="650"><br>
-  <i>The Annotations tab of the Customize Graph Dialog.</i>
+  <img src="../../user_manual_images/Graphs/Customize_Annotation.png" alt="Annotations" width="650"><br>
+  <i>The Annotations category of the Customize Graph Dialog.</i>
 </div>
 
-<p>The <strong>Annotations</strong> tab allows you to overlay reference lines and text labels on top of your plot.</p>
+<p>The <strong>Annotations</strong> category allows you to overlay reference lines, shapes, and text labels on top of your plot.</p>
 <h5 id="adding-annotations">Adding Annotations<a class="headerlink" href="#adding-annotations" title="Permanent link">&para;</a></h5>
 <p>Click one of the buttons at the top to add an annotation at the center of the current plot view:</p>
 <table>
@@ -2192,15 +2184,15 @@ The four available utility buttons allow you to:</p>
 </div>
 
 <hr />
-<h4 id="44-more-options-tab">4.4 More Options Tab<a class="headerlink" href="#44-more-options-tab" title="Permanent link">&para;</a></h4>
+<h4 id="44-general-typography-and-plot-style-fitting">4.4 General &amp; Typography and Plot Style &amp; Fitting<a class="headerlink" href="#44-general-typography-and-plot-style-fitting" title="Permanent link">&para;</a></h4>
 <div align="center">
-  <img src="../../user_manual_images/Graphs/Customize_MoreOptions.png" alt="More Options Tab" width="450"><br>
-  <i>The More Options tab of the Customize Graph Dialog.</i>
+  <img src="../../user_manual_images/Graphs/Customize_MoreOptions.png" alt="General and Plot Style Options" width="450"><br>
+  <i>Typography, sorting, and style-specific options in the Customize Graph Dialog.</i>
 </div>
 
-<p>The <strong>More Options</strong> tab adapts dynamically to the active plot style, showing only the controls relevant to the current graph.</p>
-<h5 id="plot-options-general">Plot Options (General)<a class="headerlink" href="#plot-options-general" title="Permanent link">&para;</a></h5>
-<p>These checkboxes are always visible, but only enabled when the corresponding plot style is active:</p>
+<p>The <strong>General &amp; Typography</strong> and <strong>Plot Style &amp; Fitting</strong> categories group global typography, theme, and sorting settings alongside style-specific controls (error bars, trendlines, and histograms).</p>
+<h5 id="plot-style-options-error-bars-plot-style-fitting">Plot Style Options &amp; Error Bars (<code>Plot Style &amp; Fitting</code>)<a class="headerlink" href="#plot-style-options-error-bars-plot-style-fitting" title="Permanent link">&para;</a></h5>
+<p>These controls adapt to the active plot style:</p>
 <table>
 <thead>
 <tr>
@@ -2226,17 +2218,39 @@ The four available utility buttons allow you to:</p>
 <td>Offsets overlapping hue groups horizontally for scatter plots.</td>
 </tr>
 <tr>
-<td><strong>Show error bar</strong></td>
-<td><code>bar</code></td>
-<td>Displays standard deviation error bars on top of each bar.</td>
-</tr>
-<tr>
-<td><strong>Show statistics</strong></td>
+<td><strong>Show statistics summary</strong></td>
 <td><code>wafer</code></td>
-<td>Overlays statistical summary (mean, std, etc.) on the wafer map.</td>
+<td>Overlays statistical summary (mean, std, min, max, uniformity) on the wafer map.</td>
 </tr>
 <tr>
-<td><strong>Theme</strong></td>
+<td><strong>Show error bars</strong></td>
+<td><code>bar</code></td>
+<td>Displays error bars on top of each bar.</td>
+</tr>
+<tr>
+<td><strong>Error bar type</strong></td>
+<td><code>point</code>, <code>line</code>, <code>bar</code></td>
+<td><code>Std. Dev.</code>, <code>Std. Error</code>, <code>95% CI</code>, or <code>None</code> (options depend on plot style).</td>
+</tr>
+<tr>
+<td><strong>Cap size</strong></td>
+<td><code>point</code>, <code>line</code>, <code>bar</code></td>
+<td>Width of the error bar end caps.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="display-grid-font-sizes-general-typography">Display, Grid &amp; Font Sizes (<code>General &amp; Typography</code>)<a class="headerlink" href="#display-grid-font-sizes-general-typography" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Applicable style</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Figure theme</strong></td>
 <td>all styles</td>
 <td>Figure color scheme: <code>Light</code> or <code>Dark</code>.</td>
 </tr>
@@ -2246,15 +2260,14 @@ The four available utility buttons allow you to:</p>
 <td>Rotates the X-axis tick labels (0–90°).</td>
 </tr>
 <tr>
-<td><strong>Grid</strong></td>
+<td><strong>Show grid lines</strong></td>
 <td>all styles</td>
 <td>Toggles the plot's background grid lines.</td>
 </tr>
 </tbody>
 </table>
-<h5 id="font-sizes-pt">Font Sizes (pt)<a class="headerlink" href="#font-sizes-pt" title="Permanent link">&para;</a></h5>
-<p>Set the point size of the Title, Axis label, Tick label, and Colorbar independently (defaults: 12/12/9/10). The <strong>Colorbar</strong> size controls the tick-label text on wafer/2Dmap colorbars. The subtitle has no size control — it always renders 2 pt smaller than the title; its <em>text</em> is edited in the side panel, not here.</p>
-<h5 id="data-sorting">Data Sorting<a class="headerlink" href="#data-sorting" title="Permanent link">&para;</a></h5>
+<p>Set the point size of the <strong>Title</strong>, <strong>Axis label</strong>, <strong>Tick label</strong>, and <strong>Colorbar</strong> independently (defaults: 12/12/9/10). The <strong>Colorbar</strong> size controls the tick-label text on wafer/2Dmap colorbars. The subtitle has no size control — it always renders 2 pt smaller than the title; its <em>text</em> is edited in the side panel, not here.</p>
+<h5 id="data-sorting-general-typography">Data Sorting (<code>General &amp; Typography</code>)<a class="headerlink" href="#data-sorting-general-typography" title="Permanent link">&para;</a></h5>
 <p>Controls how categories and legend items are ordered:</p>
 <table>
 <thead>
@@ -2277,7 +2290,7 @@ The four available utility buttons allow you to:</p>
 <blockquote>
 <p><strong>Note</strong>: Disabling intelligent data sorting is useful if your dataset is already pre-sorted and you wish to explicitly maintain that sequence. When you change sorting settings, the legend colors are automatically reset to the default palette sequence to ensure a clean positional color scheme.</p>
 </blockquote>
-<h5 id="trendline-settings">Trendline Settings<a class="headerlink" href="#trendline-settings" title="Permanent link">&para;</a></h5>
+<h5 id="trendline-settings-plot-style-fitting">Trendline Settings (<code>Plot Style &amp; Fitting</code>)<a class="headerlink" href="#trendline-settings-plot-style-fitting" title="Permanent link">&para;</a></h5>
 <p>Visible only when the plot style is <code>trendline</code>:</p>
 <table>
 <thead>
@@ -2301,7 +2314,7 @@ The four available utility buttons allow you to:</p>
 </tr>
 </tbody>
 </table>
-<h5 id="histogram-settings">Histogram Settings<a class="headerlink" href="#histogram-settings" title="Permanent link">&para;</a></h5>
+<h5 id="histogram-settings-plot-style-fitting">Histogram Settings (<code>Plot Style &amp; Fitting</code>)<a class="headerlink" href="#histogram-settings-plot-style-fitting" title="Permanent link">&para;</a></h5>
 <p>Visible only when the plot style is <code>histogram</code>:</p>
 <table>
 <thead>
@@ -2326,7 +2339,7 @@ The four available utility buttons allow you to:</p>
 </tbody>
 </table>
 <blockquote>
-<p><strong>Colormap scale (wafer / 2Dmap)</strong>: the color-scale normalization (<code>Linear</code> / <code>Logarithmic</code> / <code>Centered</code>) lives in the <strong>Axis</strong> tab as the <strong>Z axis Scale</strong> — see <a href="#axis-properties">Axis Properties</a>.</p>
+<p><strong>Colormap scale (wafer / 2Dmap)</strong>: the color-scale normalization (<code>Linear</code> / <code>Logarithmic</code> / <code>Centered</code>) lives in <strong>Axes &amp; Limits</strong> as the <strong>Z axis Scale</strong>.</p>
 </blockquote>
 <p><br></p>
 <hr />

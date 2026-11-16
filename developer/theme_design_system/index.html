@@ -1509,7 +1509,7 @@
 
 
 <h1 id="spectroview-theme-design-system-architecture"><strong>SPECTROview Theme &amp; Design System Architecture</strong><a class="headerlink" href="#spectroview-theme-design-system-architecture" title="Permanent link">&para;</a></h1>
-<p>This specification defines the design system, color tokens, typography, component geometry, native OS integration, and vector SVG icon engine for <strong>SPECTROview</strong>. The architecture is adapted directly from the production-proven design system in <strong>PLUME</strong> (<code>C:\Users\VL251876\Documents\Python\PLUME_perso</code>), specifically auditing commits <code>4af3dbb</code> and <code>8242faf</code>.</p>
+<p>This specification defines the design system, color tokens, typography, component geometry, native OS integration, and vector SVG icon engine for <strong>SPECTROview</strong>. The architecture is adapted from the production-proven design system in <strong>PLUME</strong> (commits <code>4af3dbb</code> and <code>8242faf</code>).</p>
 <hr />
 <h2 id="1-overview-design-philosophy">1. Overview &amp; Design Philosophy<a class="headerlink" href="#1-overview-design-philosophy" title="Permanent link">&para;</a></h2>
 <p>The SPECTROview UI/UX redesign upgrades the application from legacy rasterized icons, disconnected palettes, and ad-hoc QSS overrides into a unified, token-driven scientific design system.</p>
@@ -1534,11 +1534,11 @@
 <p><strong><code>8242faf</code> — Refined Contrast, 3-Tier Hierarchy &amp; Compact Control Geometry</strong>:</p>
 </li>
 <li><strong>3-Tier Surface Depth</strong>:<ul>
-<li><em>Tier 0 (Rail / Root Navigation)</em>: <code>rail_bg</code> (<code>#0E0F14</code> Dark / <code>#E2E5EE</code> Light)</li>
-<li><em>Tier 1 (Sidebars / File Trees)</em>: <code>sidebar_bg</code> (<code>#13151B</code> Dark / <code>#EBEEF4</code> Light)</li>
-<li><em>Tier 2 (Main Workspace Canvas)</em>: <code>background</code> (<code>#181A20</code> Dark / <code>#F3F4F8</code> Light)</li>
-<li><em>Tier 3 (Cards / Floating Panels / Toolboxes)</em>: <code>surface</code> (<code>#20232C</code> Dark / <code>#FFFFFF</code> Light), <code>surface_elevated</code> (<code>#282C37</code> Dark / <code>#FFFFFF</code> Light)</li>
-<li><em>Sunken (Terminals / Data Tables / Logs)</em>: <code>surface_sunken</code> (<code>#12141A</code> Dark / <code>#E8EBF2</code> Light)</li>
+<li><em>Tier 0 (Rail / Root Navigation)</em>: <code>rail_bg</code> (<code>#111111</code> Dark / <code>#E2E5EE</code> Light)</li>
+<li><em>Tier 1 (Sidebars / File Trees)</em>: <code>sidebar_bg</code> (<code>#161616</code> Dark / <code>#EBEEF4</code> Light)</li>
+<li><em>Tier 2 (Main Workspace Canvas)</em>: <code>background</code> (<code>#1B1B1B</code> Dark / <code>#F3F4F8</code> Light)</li>
+<li><em>Tier 3 (Cards / Floating Panels / Toolboxes)</em>: <code>surface</code> (<code>#232323</code> Dark / <code>#FFFFFF</code> Light), <code>surface_elevated</code> (<code>#2C2C2C</code> Dark / <code>#FFFFFF</code> Light)</li>
+<li><em>Sunken (Terminals / Data Tables / Logs)</em>: <code>surface_sunken</code> (<code>#141414</code> Dark / <code>#E8EBF2</code> Light)</li>
 </ul>
 </li>
 <li><strong>Strengthened Input &amp; Panel Borders</strong>: Introduced dedicated <code>input_bg</code>, <code>input_border</code>, and <code>border_strong</code> tokens to guarantee readable contrast between active fields and surrounding containers.</li>
@@ -1561,7 +1561,7 @@
     Migrate --&gt; ModernLight</code></pre>
 <h3 id="1-modern-dark-dark-default-flagship">1. Modern Dark (<code>"dark"</code>) — Default Flagship<a class="headerlink" href="#1-modern-dark-dark-default-flagship" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Surfaces</strong>: High-contrast layered slate/charcoal tones (<code>#181A20</code> canvas, <code>#13151B</code> sidebars, <code>#20232C</code> cards).</li>
+<li><strong>Surfaces</strong>: Neutral layered charcoal tones (<code>#1B1B1B</code> canvas, <code>#161616</code> sidebars, <code>#232323</code> cards).</li>
 <li><strong>Accents</strong>: Electric cobalt (<code>#5B8CFF</code>), subtle selection tint (<code>rgba(91, 140, 255, 68)</code>).</li>
 <li><strong>Styling</strong>: Complete global QSS, 6px control radius, 8px container radius, visible 5px splitters with grip SVGs.</li>
 <li><strong>OS Integration</strong>: Native Windows 11 immersive dark title bar (<code>DWMWA_USE_IMMERSIVE_DARK_MODE = True</code>).</li>
@@ -1604,85 +1604,85 @@
 <tbody>
 <tr>
 <td style="text-align: left;"><code>background</code></td>
-<td style="text-align: center;"><code>#181A20</code></td>
+<td style="text-align: center;"><code>#1B1B1B</code></td>
 <td style="text-align: center;"><code>#F3F4F8</code></td>
 <td style="text-align: left;">Main window background and canvas base</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>rail_bg</code></td>
-<td style="text-align: center;"><code>#0E0F14</code></td>
+<td style="text-align: center;"><code>#111111</code></td>
 <td style="text-align: center;"><code>#E2E5EE</code></td>
 <td style="text-align: left;">Deepest root activity rail / sidebar edge</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>sidebar_bg</code></td>
-<td style="text-align: center;"><code>#13151B</code></td>
+<td style="text-align: center;"><code>#161616</code></td>
 <td style="text-align: center;"><code>#EBEEF4</code></td>
 <td style="text-align: left;">File list sidebar, tree views, and left navigation</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>surface</code></td>
-<td style="text-align: center;"><code>#20232C</code></td>
+<td style="text-align: center;"><code>#232323</code></td>
 <td style="text-align: center;"><code>#FFFFFF</code></td>
 <td style="text-align: left;">Primary cards, group boxes, dialog containers</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>surface_sunken</code></td>
-<td style="text-align: center;"><code>#12141A</code></td>
+<td style="text-align: center;"><code>#141414</code></td>
 <td style="text-align: center;"><code>#E8EBF2</code></td>
 <td style="text-align: left;">Sunken log viewers, data tables, console outputs</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>surface_elevated</code></td>
-<td style="text-align: center;"><code>#282C37</code></td>
+<td style="text-align: center;"><code>#2C2C2C</code></td>
 <td style="text-align: center;"><code>#FFFFFF</code></td>
 <td style="text-align: left;">Dropdown menus, tooltips, hover popups</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>surface_hover</code></td>
-<td style="text-align: center;"><code>#323746</code></td>
+<td style="text-align: center;"><code>#363636</code></td>
 <td style="text-align: center;"><code>#E4E8F0</code></td>
 <td style="text-align: left;">Hover state on list items, tabs, and buttons</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>surface_pressed</code></td>
-<td style="text-align: center;"><code>#3B4152</code></td>
+<td style="text-align: center;"><code>#404040</code></td>
 <td style="text-align: center;"><code>#D8DDE8</code></td>
 <td style="text-align: left;">Pressed / active state on buttons and controls</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>input_bg</code></td>
-<td style="text-align: center;"><code>#262A35</code></td>
+<td style="text-align: center;"><code>#292929</code></td>
 <td style="text-align: center;"><code>#F7F8FB</code></td>
 <td style="text-align: left;">Resting background for text inputs, combos, spinboxes</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>input_border</code></td>
-<td style="text-align: center;"><code>#404659</code></td>
+<td style="text-align: center;"><code>#474747</code></td>
 <td style="text-align: center;"><code>#BEC5D4</code></td>
 <td style="text-align: left;">Resting border for text inputs, combos, spinboxes</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>border</code></td>
-<td style="text-align: center;"><code>#353A4A</code></td>
+<td style="text-align: center;"><code>#3A3A3A</code></td>
 <td style="text-align: center;"><code>#CBD1DF</code></td>
 <td style="text-align: left;">Standard container, group box, and card borders</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>border_subtle</code></td>
-<td style="text-align: center;"><code>#2C303D</code></td>
+<td style="text-align: center;"><code>#303030</code></td>
 <td style="text-align: center;"><code>#D8DDE8</code></td>
 <td style="text-align: left;">Internal dividers, inactive tab borders</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>border_strong</code></td>
-<td style="text-align: center;"><code>#4D5468</code></td>
+<td style="text-align: center;"><code>#545454</code></td>
 <td style="text-align: center;"><code>#A6AEBF</code></td>
 <td style="text-align: left;">High-contrast borders, focused control borders</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>card_user_bg</code></td>
-<td style="text-align: center;"><code>#1D283B</code></td>
+<td style="text-align: center;"><code>#1F293D</code></td>
 <td style="text-align: center;"><code>#EBF1FF</code></td>
 <td style="text-align: left;">Embedded AI chat user query message card background</td>
 </tr>
@@ -1694,13 +1694,13 @@
 </tr>
 <tr>
 <td style="text-align: left;"><code>card_assistant_bg</code></td>
-<td style="text-align: center;"><code>#232732</code></td>
+<td style="text-align: center;"><code>#262626</code></td>
 <td style="text-align: center;"><code>#FFFFFF</code></td>
 <td style="text-align: left;">Embedded AI chat assistant response card background</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>card_assistant_border</code></td>
-<td style="text-align: center;"><code>#3C4254</code></td>
+<td style="text-align: center;"><code>#424242</code></td>
 <td style="text-align: center;"><code>#C7CEDE</code></td>
 <td style="text-align: left;">Embedded AI chat assistant response card border</td>
 </tr>
@@ -1712,13 +1712,13 @@
 </tr>
 <tr>
 <td style="text-align: left;"><code>text_secondary</code></td>
-<td style="text-align: center;"><code>#B0B4C0</code></td>
+<td style="text-align: center;"><code>#B5B5B5</code></td>
 <td style="text-align: center;"><code>#525663</code></td>
 <td style="text-align: left;">Subdued labels, axis units, descriptive text</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>text_muted</code></td>
-<td style="text-align: center;"><code>#8A8F9E</code></td>
+<td style="text-align: center;"><code>#909090</code></td>
 <td style="text-align: center;"><code>#7B808F</code></td>
 <td style="text-align: left;">Disabled text, placeholders, footnote metadata</td>
 </tr>
@@ -1730,19 +1730,19 @@
 </tr>
 <tr>
 <td style="text-align: left;"><code>solid_hover</code></td>
-<td style="text-align: center;"><code>#D8D8DE</code></td>
+<td style="text-align: center;"><code>#D9D9D9</code></td>
 <td style="text-align: center;"><code>#2A2C34</code></td>
 <td style="text-align: left;">Primary CTA button hover</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>solid_pressed</code></td>
-<td style="text-align: center;"><code>#C4C4CC</code></td>
+<td style="text-align: center;"><code>#C4C4C4</code></td>
 <td style="text-align: center;"><code>#3A3D47</code></td>
 <td style="text-align: left;">Primary CTA button pressed</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>on_solid</code></td>
-<td style="text-align: center;"><code>#0E0F14</code></td>
+<td style="text-align: center;"><code>#141414</code></td>
 <td style="text-align: center;"><code>#FFFFFF</code></td>
 <td style="text-align: left;">Text/icon color drawn over <code>solid</code> CTA background</td>
 </tr>

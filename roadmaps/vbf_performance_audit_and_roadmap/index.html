@@ -1,0 +1,2591 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A Tool for Spectroscopic Data Processing and Visualization">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/roadmaps/vbf_performance_audit_and_roadmap/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Performance Audit & Optimization Roadmap: SPECTROview VBF Fitting Engine - SPECTROview Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#performance-audit-optimization-roadmap-spectroview-vbf-fitting-engine" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SPECTROview Documentation" class="md-header__button md-logo" aria-label="SPECTROview Documentation" data-md-component="logo">
+      
+  <img src="../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SPECTROview Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Performance Audit &amp; Optimization Roadmap: SPECTROview VBF Fitting Engine
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  User Manual
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI Agent
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../developer/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Developer Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+  
+  
+  
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SPECTROview Documentation" class="md-nav__button md-logo" aria-label="SPECTROview Documentation" data-md-component="logo">
+      
+  <img src="../../assets/icon.png" alt="logo">
+
+    </a>
+    SPECTROview Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Manual
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Manual
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Menu Bar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Spectra & Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multivariate Analysis (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Calculators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Save & Load
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shortcuts & Tips
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Guide
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File Loading Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Architecture SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Spectra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vectorized Batch Fit Engine (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multivariate Analysis (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local MCP Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spectra Workspace (load, preprocess, fit)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maps Workspace (hyperspectral, heatmaps)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Visualization (Graphs)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Calculators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extending SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="performance-audit-optimization-roadmap-spectroview-vbf-fitting-engine">Performance Audit &amp; Optimization Roadmap: SPECTROview VBF Fitting Engine<a class="headerlink" href="#performance-audit-optimization-roadmap-spectroview-vbf-fitting-engine" title="Permanent link">&para;</a></h1>
+<p><strong>Document Status</strong>: Audited, Empirically Benchmarked &amp; Phased Roadmap<br />
+<strong>Primary Modules Covered</strong>:</p>
+<ul>
+<li><code>spectroview/fit_engine/optimizer.py</code>, <code>spectroview/fit_engine/evaluator.py</code>, <code>spectroview/fit_engine/models.py</code></li>
+<li><code>spectroview/fit_engine/vbf_engine.py</code>, <code>spectroview/fit_engine/vbf_thread.py</code>, <code>spectroview/fit_engine/baseline.py</code></li>
+<li><code>spectroview/main.py</code> (background prewarming)</li>
+</ul>
+<p><strong>Benchmark Datasets &amp; Configs Audited</strong>:</p>
+<ul>
+<li><code>examples/fit_benchmarking_data/3_3721map.wdf</code> (<code>N=3,721</code>, <code>M=575</code>, <code>[55.94..958.82 cm⁻¹]</code>, <code>float32</code>)</li>
+<li><code>examples/fit_benchmarking_data/1_CL_map.txt</code> (<code>N=16,384</code>, <code>M=1,024</code>, <code>[179.49..720.14]</code>, <code>float32</code>)</li>
+<li>Supplementary cross-validation: <code>examples/spectroscopic_data/2dmap_spc.spc</code> (<code>N=1,681</code>, <code>M=1,024</code>) and <code>examples/spectroscopic_data/mapls6.l6m</code> (<code>N=1,368</code>, <code>M=1,024</code>)</li>
+<li>Fitting configs in <code>examples/fit_benchmarking_data/</code>: <code>1_CL_map*.json</code> (Group A) and <code>3_3721map*.json</code> (Group B)</li>
+</ul>
+<hr />
+<h2 id="1-executive-summary">1. Executive Summary<a class="headerlink" href="#1-executive-summary" title="Permanent link">&para;</a></h2>
+<p>An empirical audit and profiling study of SPECTROview's <strong>Vectorized Batch Fit (<code>VBF</code>) Engine</strong> was conducted across real Raman (<code>3_3721map.wdf</code>) and cathodoluminescence (<code>1_CL_map.txt</code>) hyperspectral datasets. The investigation explains why runtime escalates sharply when switching from Lorentzian to Pseudo-Voigt profiles or adding multiple overlapping peaks, and separates <strong>per-iteration computational cost</strong> from <strong>convergence-count inflation</strong>.</p>
+<h3 id="key-findings">Key Findings<a class="headerlink" href="#key-findings" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Benchmark Group A and Group B Test Different Spectra and Solver Tolerances</strong>:</p>
+</li>
+<li>
+<p><strong>Group A (<code>1_CL_map*.json</code>)</strong> crops <code>[319.70..480.79]</code> (<code>M=102</code> on <code>3_3721map.wdf</code>, <code>M=304</code> on <code>1_CL_map.txt</code>). On <code>3_3721map.wdf</code>, <code>[319.70..480.79]</code> is a signal-free region (<code>med_peak = 6.81</code>, <code>frac_neg = 62.2%</code>), causing unguided fitting into baseline noise (<code>R²_med &lt;= 0.00</code>). On the intended dataset <code>1_CL_map.txt</code>, real CL peaks sit near <code>387.7–394.8</code> (<code>R²_med = 0.9841–0.9906</code>).</p>
+</li>
+<li><strong>Group B (<code>3_3721map*.json</code>)</strong> crops <code>[460.23..570.28]</code> (<code>M=71</code>) or <code>[460.23..579.64]</code> (<code>M=77</code>), centered on the strong silicon Raman peak at <code>521.73 cm⁻¹</code> (<code>med_peak = 6,695.98</code>, <code>R²_med = 0.9988–0.9996</code>).</li>
+<li>
+<p>Furthermore, <code>1_CL_map.json</code> and <code>3_3721map.json</code> use <code>coef_noise = 1</code> (which zeroes all weights on signal-free spectra, skipping 3,477/3,721 fits on <code>3_3721map.wdf</code>), whereas the multi-peak and Pseudo-Voigt configs set <code>coef_noise = 0.0</code> (fitting every spectrum, including noise).</p>
+</li>
+<li>
+<p><strong>Convergence Cost Dominates Multi-Peak Slowdowns (25× Iteration Multiplier), Amplified by Bound-Clipping</strong>:</p>
+</li>
+<li>
+<p>A single well-conditioned Lorentzian (<code>3_3721map.json</code>) or Pseudo-Voigt (<code>3_3721map_1pseudo.json</code>) converges in <strong>4 iterations</strong>.</p>
+</li>
+<li>Adding two weak satellite peaks alongside the Si peak (<code>3_3721map_3Lorent.json</code>, starting with Peak 1 at <code>x0=497.15, a=0.0, w=0.10</code>) stalls convergence: only <strong>44/3,721 (1.2%)</strong> converge within <code>max_ite = 100</code>, forcing <strong>99.3% mean active rows</strong> across all <strong>100 iterations</strong> (a <strong>25× iteration multiplier</strong> over the 1-peak case: <code>0.315 s -&gt; 7.419 s</code>).</li>
+<li>
+<p><strong>Verified Root Cause (<code>P1.1</code>)</strong>: In <code>optimizer.py</code>, the convergence check measures <code>np.abs(dp)</code> <strong>before</strong> box-bound projection (<code>np.clip(p_active + dp, lo, hi)</code>). When any peak amplitude or <code>PseudoVoigt</code> <code>alpha</code> hits <code>0.0</code> (verified directly: <code>1,494</code> rows pinned at <code>P1_alpha=0.0</code> on <code>1_CL_map_1pseudovoigt.json</code>), <code>|p_trial - p| == 0</code> and cost improvement is <code>0</code>, yet the unconstrained Newton step <code>dp</code> remains nonzero, blocking convergence until <code>max_ite</code>. Fixing this single line yields a <strong><code>4.14×</code> speedup</strong> on <code>3_3721map_3Lorent.json</code> (<code>8.620 s -&gt; 2.082 s</code>, convergence rising from <code>44/3,721</code> to <code>3,486/3,721</code>) and <strong><code>1.84×</code></strong> on <code>1_CL_map_1pseudovoigt.json</code>.</p>
+</li>
+<li>
+<p><strong>Per-Iteration Cost Drivers (Fixed-10-Iteration Controlled Measurements)</strong>:</p>
+</li>
+<li>
+<p><strong>Why <code>1 Pseudo-Voigt</code> is <code>3.18×–4.23×</code> slower per iteration than <code>1 Lorentzian</code></strong>: <code>batched_pseudovoigt()</code> and <code>batched_pseudovoigt_jac()</code> recompute <code>batched_gaussian()</code>, <code>batched_lorentzian()</code>, <code>batched_gaussian_jac()</code>, and <code>batched_lorentzian_jac()</code> independently — recalculating <code>dx</code>, <code>dx²</code>, <code>1/w²</code>, and normalized offset <code>t²</code> <strong>four times per Jacobian call</strong> and allocating temporary <code>(N, M)</code> and <code>(N, M, 3)</code> buffers before copying into <code>(N, M, 4)</code>. Fixed-10-iteration cost grows <code>46.54 ms -&gt; 148.13 ms</code> (<code>3.18×</code>) on <code>3,721×77</code> and <code>576.95 ms -&gt; 2,438.98 ms</code> (<code>4.23×</code>) on <code>16,384×304</code>.</p>
+</li>
+<li><strong>Why <code>VBFevaluator.jacobian()</code> accounts for ~50–60% of self+cumulative time</strong>: In <code>cProfile</code>, <code>jacobian()</code> spends more self time copying slices (<code>_to_full()</code>, <code>np.zeros()</code>, <code>J_full[:, :, slc] = jac_fn(...)</code>, and fancy-index extraction <code>J_full[:, :, self._free_idx]</code>) than <code>models.py</code> spends computing derivatives. At <code>N=16,384, M=304, 6_Lor (K=18)</code> over 10 fixed iterations, <code>JacCopy = 2,685.81 ms</code> actually exceeds <code>JacMath = 2,114.60 ms</code>.</li>
+<li><strong><code>_batched_solve()</code> Cholesky Crossover Cliff (<code>Na &lt;= 500, K &gt;= 10</code>)</strong>: As tail spectra stay active and drop below <code>501</code> rows while <code>K &gt;= 10</code>, <code>_batched_solve()</code> switches from C batched <code>np.linalg.solve</code> to a Python loop calling <code>scipy.linalg.cho_factor</code> / <code>cho_solve</code>, creating a measured <strong><code>5.7×–33.8×</code> per-call regression</strong> (<code>Na=450, K=12</code>: <code>89.883 ms</code> vs <code>2.661 ms</code>).</li>
+<li><strong>Working-Set Growth &amp; Cache Spilling (<code>O(N * M * K)</code>)</strong>: Holding full active tensors in DRAM instead of L2/L3 cache-sized batches forces repeated DRAM round-trips for residuals, Jacobians, and normal equations; additionally, full-axis dense evaluation wastes compute far outside localized Raman peaks.</li>
+<li><strong>Cold Linear Baseline Import</strong>: First-ever invocation of Linear baseline fitting triggers a cold <code>from scipy.interpolate import interp1d</code> costing <strong><code>1,508.64 ms</code></strong> (<code>0.75 ms</code> warm).</li>
+</ol>
+<h3 id="roadmap-overview-across-three-phases">Roadmap Overview Across Three Phases<a class="headerlink" href="#roadmap-overview-across-three-phases" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Phase</th>
+<th style="text-align: left;">Scope</th>
+<th style="text-align: left;">Expected Cumulative Gains</th>
+<th style="text-align: left;">Platform Risk</th>
+<th style="text-align: left;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Phase 1 (<code>P1.1</code>–<code>P1.5</code>)</strong></td>
+<td style="text-align: left;">Post-clip <code>dp</code> convergence fix, uniform <code>np.linalg.solve</code> primary path, fused <code>PseudoVoigt</code>, zero-copy free-param <code>VBFevaluator</code>, pure-NumPy linear baseline &amp; O(N) threshold index</td>
+<td style="text-align: left;"><strong>1.53×–4.58×</strong> real map fits; <strong>1.60×–4.36×</strong> per-iter kernels; <strong>854×</strong> cold 2-pt baseline (<code>scipy</code>-free)</td>
+<td style="text-align: left;">Minimal (Pure NumPy/Python, verified <code>R²</code> parity)</td>
+<td style="text-align: left;"><strong>Implemented &amp; Verified</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 2 (<code>P2.1</code>–<code>P2.4</code>)</strong></td>
+<td style="text-align: left;">L3-cache batch chunking + <code>active_idx</code> compaction, inactive/bound-pinned peak convergence handling, safe support-window slicing, BLAS thread caps &amp; warm worker pool</td>
+<td style="text-align: left;"><strong>1.7×–2.0×</strong> additional pure-Python cache/parallel gain + up to <strong>3×–10×</strong> on localized multi-peak bands</td>
+<td style="text-align: left;">Low–Moderate (cross-platform Python/NumPy)</td>
+<td style="text-align: left;">Planned Future Milestone</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 3 (<code>P3.1</code>–<code>P3.3</code>)</strong></td>
+<td style="text-align: left;">Optional C++/OpenMP L1-resident single-spectrum LM kernel (prebuilt wheels + NumPy fallback), Variable Projection (VarPro) / spatial warm-start, vectorized dual-number AD for <code>_exprs</code></td>
+<td style="text-align: left;"><strong>10×–30×+</strong> approach toward LabSpec-class interactive sub-second 20k-spectrum fitting</td>
+<td style="text-align: left;">Higher build/packaging complexity (native wheels)</td>
+<td style="text-align: left;">Planned Long-Term Architecture</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-empirical-audit-findings">2. Empirical Audit Findings<a class="headerlink" href="#2-empirical-audit-findings" title="Permanent link">&para;</a></h2>
+<h3 id="21-configuration-comparison-benchmark-group-a-vs-group-b">2.1 Configuration Comparison: Benchmark Group A vs. Group B<a class="headerlink" href="#21-configuration-comparison-benchmark-group-a-vs-group-b" title="Permanent link">&para;</a></h3>
+<p>Inspecting all 7 configuration JSONs in <code>examples/fit_benchmarking_data/</code> reveals critical structural differences:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Config</th>
+<th style="text-align: left;">Peak Model(s)</th>
+<th style="text-align: left;">Initial Peak Centers</th>
+<th style="text-align: left;">ROI / Points on WDF</th>
+<th style="text-align: left;">ROI / Points on <code>1_CL_map.txt</code></th>
+<th style="text-align: left;">Baseline</th>
+<th style="text-align: left;">Fit Params (<code>max_ite</code>, <code>xtol</code>, <code>ftol</code>, <code>coef_noise</code>, <code>loss</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>1_CL_map.json</code></td>
+<td style="text-align: left;">1 Lorentzian (<code>K=3</code>)</td>
+<td style="text-align: left;"><code>390.15</code> (<code>a=136.8, w=8.04</code>)</td>
+<td style="text-align: left;"><code>[319.70..480.79]</code>, <code>M=102</code></td>
+<td style="text-align: left;"><code>M=304</code></td>
+<td style="text-align: left;">Linear (<code>sub=True</code>)</td>
+<td style="text-align: left;"><code>200</code>, <code>1e-4</code>, <code>None</code>, <code>coef_noise=1</code>, <code>None</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1_CL_map_1pseudovoigt.json</code></td>
+<td style="text-align: left;">1 PseudoVoigt (<code>K=4</code>)</td>
+<td style="text-align: left;"><code>390.16</code> (<code>a=132.6, w=8.52</code>)</td>
+<td style="text-align: left;"><code>[319.70..480.79]</code>, <code>M=102</code></td>
+<td style="text-align: left;"><code>M=304</code></td>
+<td style="text-align: left;">Linear (<code>sub=True</code>)</td>
+<td style="text-align: left;"><code>100</code>, <code>1e-3</code>, <code>1e-3</code>, <code>coef_noise=0.0</code>, <code>linear</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1_CL_map_2lorentzian.json</code></td>
+<td style="text-align: left;">2 Lorentzians (<code>K=6</code>)</td>
+<td style="text-align: left;"><code>394.45</code> (<code>a=16.9</code>), <code>389.49</code> (<code>a=102.8</code>)</td>
+<td style="text-align: left;"><code>[319.70..480.79]</code>, <code>M=102</code></td>
+<td style="text-align: left;"><code>M=304</code></td>
+<td style="text-align: left;">Linear (<code>sub=True</code>)</td>
+<td style="text-align: left;"><code>100</code>, <code>1e-3</code>, <code>1e-3</code>, <code>coef_noise=0.0</code>, <code>linear</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1_CL_map_3lorentzian.json</code></td>
+<td style="text-align: left;">3 Lorentzians (<code>K=9</code>)</td>
+<td style="text-align: left;"><code>394.75</code>, <code>390.33</code>, <code>387.69</code></td>
+<td style="text-align: left;"><code>[319.70..480.79]</code>, <code>M=102</code></td>
+<td style="text-align: left;"><code>M=304</code></td>
+<td style="text-align: left;">Linear (<code>sub=True</code>)</td>
+<td style="text-align: left;"><code>100</code>, <code>1e-3</code>, <code>1e-3</code>, <code>coef_noise=0.0</code>, <code>linear</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>3_3721map.json</code></td>
+<td style="text-align: left;">1 Lorentzian (<code>K=3</code>)</td>
+<td style="text-align: left;"><code>521.29</code> (<code>a=9146.3, w=4.84</code>)</td>
+<td style="text-align: left;"><code>[460.23..570.28]</code>, <code>M=71</code></td>
+<td style="text-align: left;">N/A</td>
+<td style="text-align: left;">Linear (<code>sub=True</code>)</td>
+<td style="text-align: left;"><code>500</code>, <code>1e-4</code>, <code>None</code>, <code>coef_noise=1</code>, <code>None</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>3_3721map_1pseudo.json</code></td>
+<td style="text-align: left;">1 PseudoVoigt (<code>K=4</code>)</td>
+<td style="text-align: left;"><code>521.32</code> (<code>a=5873.1, w=5.06</code>)</td>
+<td style="text-align: left;"><code>[460.23..579.64]</code>, <code>M=77</code></td>
+<td style="text-align: left;">N/A</td>
+<td style="text-align: left;">Linear (<code>sub=True</code>)</td>
+<td style="text-align: left;"><code>100</code>, <code>1e-3</code>, <code>1e-3</code>, <code>coef_noise=0.0</code>, <code>linear</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>3_3721map_3Lorent.json</code></td>
+<td style="text-align: left;">3 Lorentzians (<code>K=9</code>)</td>
+<td style="text-align: left;"><code>497.15</code> (<code>a=0</code>), <code>519.85</code>, <code>521.59</code></td>
+<td style="text-align: left;"><code>[460.23..579.64]</code>, <code>M=77</code></td>
+<td style="text-align: left;">N/A</td>
+<td style="text-align: left;">Linear (<code>sub=True</code>)</td>
+<td style="text-align: left;"><code>100</code>, <code>1e-3</code>, <code>1e-3</code>, <code>coef_noise=0.0</code>, <code>linear</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-reproduced-baseline-benchmark-results-untouched-engine">2.2 Reproduced Baseline Benchmark Results (Untouched Engine)<a class="headerlink" href="#22-reproduced-baseline-benchmark-results-untouched-engine" title="Permanent link">&para;</a></h3>
+<p><strong>A. Measured on <code>3_3721map.wdf</code> (<code>N=3,721</code> spectra, <code>M=575</code> raw, load time <code>26.69 ms</code>)</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Group &amp; Config</th>
+<th style="text-align: left;">Shape <code>(N, M, K)</code></th>
+<th style="text-align: right;">Fit Time</th>
+<th style="text-align: right;">ms / spec</th>
+<th style="text-align: right;">Iters Used</th>
+<th style="text-align: right;">Mean Active</th>
+<th style="text-align: right;">Converged</th>
+<th style="text-align: right;">Median <span class="arithmatex">\(R^2\)</span></th>
+<th style="text-align: left;"><code>eval</code> / <code>jac</code> / <code>solve</code> / <code>other</code></th>
+<th style="text-align: right;">Peak Heap (<code>tracemalloc</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">A: <code>1_CL_map</code></td>
+<td style="text-align: left;"><code>(3721, 102, 3)</code></td>
+<td style="text-align: right;"><code>0.2968 s</code></td>
+<td style="text-align: right;"><code>0.080</code></td>
+<td style="text-align: right;"><code>200 / 200</code></td>
+<td style="text-align: right;"><code>4.2%</code></td>
+<td style="text-align: right;"><code>3,641 (97.9%)</code></td>
+<td style="text-align: right;"><code>0.0000</code></td>
+<td style="text-align: left;"><code>11.3%</code> / <code>19.7%</code> / <code>6.5%</code> / <code>59.5%</code></td>
+<td style="text-align: right;"><code>16.34 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">A: <code>1_CL_map_1pseudovoigt</code></td>
+<td style="text-align: left;"><code>(3721, 102, 4)</code></td>
+<td style="text-align: right;"><code>8.3554 s</code></td>
+<td style="text-align: right;"><code>2.245</code></td>
+<td style="text-align: right;"><code>100 / 100</code></td>
+<td style="text-align: right;"><code>90.8%</code></td>
+<td style="text-align: right;"><code>776 (20.9%)</code></td>
+<td style="text-align: right;"><code>-0.0455</code></td>
+<td style="text-align: left;"><code>23.6%</code> / <code>50.5%</code> / <code>2.9%</code> / <code>21.0%</code></td>
+<td style="text-align: right;"><code>62.28 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">A: <code>1_CL_map_2lorentzian</code></td>
+<td style="text-align: left;"><code>(3721, 102, 6)</code></td>
+<td style="text-align: right;"><code>6.1183 s</code></td>
+<td style="text-align: right;"><code>1.644</code></td>
+<td style="text-align: right;"><code>100 / 100</code></td>
+<td style="text-align: right;"><code>98.2%</code></td>
+<td style="text-align: right;"><code>152 (4.1%)</code></td>
+<td style="text-align: right;"><code>-0.0260</code></td>
+<td style="text-align: left;"><code>18.4%</code> / <code>42.0%</code> / <code>5.6%</code> / <code>31.5%</code></td>
+<td style="text-align: right;"><code>61.23 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">A: <code>1_CL_map_3lorentzian</code></td>
+<td style="text-align: left;"><code>(3721, 102, 9)</code></td>
+<td style="text-align: right;"><code>8.0891 s</code></td>
+<td style="text-align: right;"><code>2.174</code></td>
+<td style="text-align: right;"><code>100 / 100</code></td>
+<td style="text-align: right;"><code>98.9%</code></td>
+<td style="text-align: right;"><code>83 (2.2%)</code></td>
+<td style="text-align: right;"><code>-0.0197</code></td>
+<td style="text-align: left;"><code>18.6%</code> / <code>44.9%</code> / <code>7.1%</code> / <code>27.6%</code></td>
+<td style="text-align: right;"><code>81.36 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">B: <code>3_3721map</code></td>
+<td style="text-align: left;"><code>(3721, 71, 3)</code></td>
+<td style="text-align: right;"><code>0.1612 s</code></td>
+<td style="text-align: right;"><code>0.043</code></td>
+<td style="text-align: right;"><code>4 / 500</code></td>
+<td style="text-align: right;"><code>75.9%</code></td>
+<td style="text-align: right;"><code>3,721 (100%)</code></td>
+<td style="text-align: right;"><code>0.9988</code></td>
+<td style="text-align: left;"><code>10.7%</code> / <code>30.5%</code> / <code>3.1%</code> / <code>52.7%</code></td>
+<td style="text-align: right;"><code>45.67 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">B: <code>3_3721map_1pseudo</code></td>
+<td style="text-align: left;"><code>(3721, 77, 4)</code></td>
+<td style="text-align: right;"><code>0.3149 s</code></td>
+<td style="text-align: right;"><code>0.085</code></td>
+<td style="text-align: right;"><code>4 / 100</code></td>
+<td style="text-align: right;"><code>66.7%</code></td>
+<td style="text-align: right;"><code>3,721 (100%)</code></td>
+<td style="text-align: right;"><code>0.9993</code></td>
+<td style="text-align: left;"><code>16.5%</code> / <code>55.0%</code> / <code>2.4%</code> / <code>24.6%</code></td>
+<td style="text-align: right;"><code>64.45 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">B: <code>3_3721map_3Lorent</code></td>
+<td style="text-align: left;"><code>(3721, 77, 9)</code></td>
+<td style="text-align: right;"><code>7.4189 s</code></td>
+<td style="text-align: right;"><code>1.994</code></td>
+<td style="text-align: right;"><code>100 / 100</code></td>
+<td style="text-align: right;"><code>99.3%</code></td>
+<td style="text-align: right;"><code>44 (1.2%)</code></td>
+<td style="text-align: right;"><code>0.9996</code></td>
+<td style="text-align: left;"><code>18.0%</code> / <code>43.0%</code> / <code>8.6%</code> / <code>28.6%</code></td>
+<td style="text-align: right;"><code>82.62 MiB</code></td>
+</tr>
+</tbody>
+</table>
+<p><em>Note on <code>3_3721map_3Lorent</code> via full <code>VBFthread</code></em>: Total wall time was <code>9.469 s</code>; <code>SpectraStore.set_fit_results + Y</code> write-back took <code>0.55 ms</code>, and <code>build_fit_results_df((3721, 14))</code> took <code>4.10 ms</code> — proving PySide6/store write-back is negligible compared to the LM loop.</p>
+<p><strong>B. Group A Measured on <code>1_CL_map.txt</code> (<code>N=16,384</code> spectra, <code>M=1,024</code> raw, <code>M=304</code> cropped, load <code>0.92 s</code>)</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Config</th>
+<th style="text-align: right;">Fit Time</th>
+<th style="text-align: right;">ms / spec</th>
+<th style="text-align: right;">Iters Used</th>
+<th style="text-align: right;">Mean Active</th>
+<th style="text-align: right;">Converged</th>
+<th style="text-align: right;">Median <span class="arithmatex">\(R^2\)</span></th>
+<th style="text-align: left;"><code>eval</code> / <code>jac</code> / <code>solve</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>1_CL_map</code> (<code>K=3</code>)</td>
+<td style="text-align: right;"><code>3.9432 s</code></td>
+<td style="text-align: right;"><code>0.241</code></td>
+<td style="text-align: right;"><code>34 / 200</code></td>
+<td style="text-align: right;"><code>12.1%</code></td>
+<td style="text-align: right;"><code>16,384 (100%)</code></td>
+<td style="text-align: right;"><code>0.9841</code></td>
+<td style="text-align: left;"><code>0.442 s</code> / <code>1.539 s</code> / <code>0.036 s</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1_CL_map_1pseudovoigt</code> (<code>K=4</code>)</td>
+<td style="text-align: right;"><code>13.5854 s</code></td>
+<td style="text-align: right;"><code>0.829</code></td>
+<td style="text-align: right;"><code>100 / 100</code></td>
+<td style="text-align: right;"><code>10.2%</code></td>
+<td style="text-align: right;"><code>15,782 (96.3%)</code></td>
+<td style="text-align: right;"><code>0.9859</code></td>
+<td style="text-align: left;"><code>2.612 s</code> / <code>7.656 s</code> / <code>0.118 s</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1_CL_map_2lorentzian</code> (<code>K=6</code>)</td>
+<td style="text-align: right;"><code>35.9672 s</code></td>
+<td style="text-align: right;"><code>2.195</code></td>
+<td style="text-align: right;"><code>100 / 100</code></td>
+<td style="text-align: right;"><code>47.6%</code></td>
+<td style="text-align: right;"><code>14,424 (88.0%)</code></td>
+<td style="text-align: right;"><code>0.9889</code></td>
+<td style="text-align: left;"><code>6.396 s</code> / <code>17.214 s</code> / <code>0.729 s</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1_CL_map_2lorentzian</code> (<code>max_ite=200, tol=1e-4</code>)</td>
+<td style="text-align: right;"><code>51.96 s</code></td>
+<td style="text-align: right;"><code>3.171</code></td>
+<td style="text-align: right;"><code>200 / 200</code></td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;"><code>15,358 (93.7%)</code></td>
+<td style="text-align: right;"><code>0.9889</code></td>
+<td style="text-align: left;">Extended tol sensitivity check</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1_CL_map_3lorentzian</code> (<code>K=9</code>)</td>
+<td style="text-align: right;"><code>75.7279 s</code></td>
+<td style="text-align: right;"><code>4.622</code></td>
+<td style="text-align: right;"><code>100 / 100</code></td>
+<td style="text-align: right;"><code>61.2%</code></td>
+<td style="text-align: right;"><code>12,674 (77.4%)</code></td>
+<td style="text-align: right;"><code>0.9906</code></td>
+<td style="text-align: left;"><code>13.993 s</code> / <code>39.577 s</code> / <code>2.035 s</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>C. Supplementary Maps Cross-Validation (<code>2dmap_spc.spc</code> &amp; <code>mapls6.l6m</code>, <code>M=1,024</code>)</strong></p>
+<ul>
+<li><code>2dmap_spc.spc</code> (<code>N=1,681, M=1,024</code>): <code>1p_lor</code> finished in <code>2.405 s</code> (<code>76 iters</code>), whereas <code>3p_lor</code> (<code>K=9</code>) hit all <code>200 iters</code> (<code>79.348 s</code>, <code>47.203 ms/spec</code>), <code>3p_pv</code> (<code>K=12</code>) took <code>228.776 s</code> (<code>jac = 57.9%, eval = 32.6%</code>), and <code>6p_lor</code> (<code>K=18</code>) took <code>152.585 s</code> (<code>peak = 788.57 MiB</code> over 25 iters). Applying a tight ROI (<code>M=116</code>) reduced <code>3p_lor</code> (<code>200 iters</code>) from <code>73.622 s</code> to <code>10.872 s</code> (<code>6.77×</code>), confirming linear <code>O(M)</code> scaling.</li>
+<li><code>mapls6.l6m</code> (<code>N=1,368, M=1,024</code>, <code>3p_lor</code>): <code>cProfile</code> (<code>41.455 s</code> total) confirmed <code>evaluator.jacobian</code> (<code>tottime = 11.228 s</code>, <code>cumtime = 20.911 s</code>) consumed <strong>more self-time</strong> than <code>batched_lorentzian_jac</code> (<code>tottime = 9.613 s</code>), followed by <code>batched_levenberg_marquardt</code> (<code>tottime = 9.166 s</code>) and <code>batched_lorentzian</code> (<code>6.609 s</code>).</li>
+</ul>
+<h3 id="23-fixed-10-iteration-computational-cost-scaling">2.3 Fixed-10-Iteration Computational Cost Scaling<a class="headerlink" href="#23-fixed-10-iteration-computational-cost-scaling" title="Permanent link">&para;</a></h3>
+<p>Holding iteration count fixed at <strong>10 iterations</strong> eliminates convergence differences and isolates pure per-iteration compute cost:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Model (<code>K</code> params)</th>
+<th style="text-align: right;"><code>3_3721map.wdf</code> (<code>N=3,721, M=77</code>)</th>
+<th style="text-align: right;">Ratio vs <code>1_Lor</code></th>
+<th style="text-align: right;"><code>1_CL_map.txt</code> (<code>N=16,384, M=304</code>)</th>
+<th style="text-align: right;">Ratio vs <code>1_Lor</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>1_Lor</code> (<code>K=3</code>)</td>
+<td style="text-align: right;"><code>46.54 ms</code></td>
+<td style="text-align: right;"><code>1.00×</code></td>
+<td style="text-align: right;"><code>576.95 ms</code></td>
+<td style="text-align: right;"><code>1.00×</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1_Gauss</code> (<code>K=3</code>)</td>
+<td style="text-align: right;"><code>73.67 ms</code></td>
+<td style="text-align: right;"><code>1.58×</code></td>
+<td style="text-align: right;"><code>1,031.39 ms</code></td>
+<td style="text-align: right;"><code>1.79×</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1_PV</code> (<code>K=4</code>)</td>
+<td style="text-align: right;"><code>148.13 ms</code></td>
+<td style="text-align: right;"><code>3.18×</code></td>
+<td style="text-align: right;"><code>2,438.98 ms</code></td>
+<td style="text-align: right;"><code>4.23×</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>2_Lor</code> (<code>K=6</code>)</td>
+<td style="text-align: right;"><code>92.88 ms</code></td>
+<td style="text-align: right;"><code>2.00×</code></td>
+<td style="text-align: right;"><code>1,410.73 ms</code></td>
+<td style="text-align: right;"><code>2.45×</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>3_Lor</code> (<code>K=9</code>)</td>
+<td style="text-align: right;"><code>139.48 ms</code></td>
+<td style="text-align: right;"><code>3.00×</code></td>
+<td style="text-align: right;"><code>2,617.44 ms</code></td>
+<td style="text-align: right;"><code>4.54×</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>4_Lor</code> (<code>K=12</code>)</td>
+<td style="text-align: right;"><code>217.41 ms</code></td>
+<td style="text-align: right;"><code>4.67×</code></td>
+<td style="text-align: right;"><code>2,706.76 ms</code></td>
+<td style="text-align: right;"><code>4.69×</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>6_Lor</code> (<code>K=18</code>)</td>
+<td style="text-align: right;"><code>281.59 ms</code></td>
+<td style="text-align: right;"><code>6.05×</code></td>
+<td style="text-align: right;"><code>6,803.68 ms</code></td>
+<td style="text-align: right;"><code>11.79×</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>3_PV</code> (<code>K=12</code>)</td>
+<td style="text-align: right;"><code>295.45 ms</code></td>
+<td style="text-align: right;"><code>6.35×</code></td>
+<td style="text-align: right;"><code>6,504.68 ms</code></td>
+<td style="text-align: right;"><code>11.27×</code></td>
+</tr>
+</tbody>
+</table>
+<p>Look closely at the <strong>super-linear jump</strong> on <code>1_CL_map.txt</code> (<code>N=16,384, M=304</code>):</p>
+<ul>
+<li>Working-set tensor size (<code>J</code> alone is <code>(16384, 304, K) * 8 bytes</code>): <code>K=3</code> is <code>~114 MiB</code>, <code>K=9</code> is <code>~342 MiB</code>, <code>K=18</code> is <strong><code>~684 MiB</code></strong> — far exceeding L3 cache on an 8-core desktop CPU.</li>
+<li>At <code>6_Lor (K=18)</code>, <code>evaluator.jacobian</code> non-math array copy/slicing overhead (<code>JacCopy = 2,685.81 ms</code>) exceeded the peak derivative math itself (<code>JacMath = 2,114.60 ms</code>).</li>
+<li>Meanwhile on <code>1_CL_map_3lorentzian.json</code> (<code>cProfile = 94.581 s</code>), <code>evaluator.jacobian</code> self-time (<code>26.801 s</code>) exceeded <code>batched_lorentzian_jac</code> (<code>20.640 s</code>) and <code>batched_levenberg_marquardt</code> self-time (<code>22.036 s</code>).</li>
+</ul>
+<h3 id="24-summary-of-verified-bottlenecks">2.4 Summary of Verified Bottlenecks<a class="headerlink" href="#24-summary-of-verified-bottlenecks" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">ID</th>
+<th style="text-align: left;">File &amp; Location</th>
+<th style="text-align: left;">Verified Bottleneck Mechanism</th>
+<th style="text-align: left;">Empirical Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>B1</strong></td>
+<td style="text-align: left;"><code>optimizer.py:339</code></td>
+<td style="text-align: left;">Pre-clip <code>dp</code> checked for <code>dp_rel</code> convergence instead of post-clip step <code>p_trial - p</code>; bound-pinned rows stay active until <code>max_ite</code></td>
+<td style="text-align: left;"><code>1,494</code> rows pinned at <code>alpha=0.0</code> on <code>CL/1_PV</code>; <code>44 -&gt; 3,486/3,721</code> conv on <code>3_3721map_3Lorent</code> once fixed (<code>4.14×</code> speedup)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>B2</strong></td>
+<td style="text-align: left;"><code>evaluator.py:136–234</code></td>
+<td style="text-align: left;"><code>np.zeros((N, M, K))</code> + <code>_to_full()</code> + per-peak <code>jac_fn()</code> alloc + <code>J_full[:, :, slc] = ...</code> + <code>J_full[:, :, _free_idx]</code> copy</td>
+<td style="text-align: left;"><code>JacCopy = 2,685.81 ms &gt; JacMath = 2,114.60 ms</code> (<code>16,384×304</code>, <code>6_Lor</code>); <code>evaluator.jacobian</code> #1 in <code>cProfile</code> (<code>26.801 s</code> self)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>B3</strong></td>
+<td style="text-align: left;"><code>models.py:117–148</code></td>
+<td style="text-align: left;"><code>batched_pseudovoigt_jac</code> calls <code>batched_gaussian</code>, <code>batched_lorentzian</code>, <code>batched_gaussian_jac</code>, <code>batched_lorentzian_jac</code>, recomputing <code>dx</code>, <code>dx²</code>, <code>inv_w²</code>, <code>t²</code> four times + extra <code>(N, M, 3)</code> buffers</td>
+<td style="text-align: left;"><code>1_PV</code> costs <code>3.18×–4.23×</code> of <code>1_Lor</code> per iter; fused kernel tested <code>1.71×–1.85×</code> faster (<code>max_abs_diff = 3.47e-12</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>B4</strong></td>
+<td style="text-align: left;"><code>optimizer.py:49–69</code></td>
+<td style="text-align: left;"><code>_batched_solve</code> switches to Python <code>for i in range(Na): cho_factor/cho_solve</code> loop whenever <code>Na &lt;= 500 and K &gt;= 10</code></td>
+<td style="text-align: left;"><code>Na=450, K=12</code>: <code>cho_loop = 89.883 ms</code> vs <code>np.linalg.solve = 2.661 ms</code> (<strong><code>33.8×</code> slower</strong>); <code>Na=50, K=12</code>: <strong><code>21.0×</code> slower</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>B5</strong></td>
+<td style="text-align: left;"><code>baseline.py:74,185</code></td>
+<td style="text-align: left;">Cold <code>from scipy.interpolate import interp1d</code> for 2-point Linear baseline</td>
+<td style="text-align: left;">Cold call costs <strong><code>1,508.64 ms</code></strong> vs <strong><code>0.75 ms</code></strong> warm</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>B6</strong></td>
+<td style="text-align: left;"><code>evaluator.py:416–417</code></td>
+<td style="text-align: left;"><code>apply_noise_threshold</code> materializes <code>(N, M)</code> <code>dists = np.abs(x[None, :] - x0_vals[:, None])</code> just to pick <code>argmin</code></td>
+<td style="text-align: left;">Allocates transient <code>(N, M)</code> <code>float64</code> matrix (<code>16,384×304 ≈ 40 MB</code>) needlessly</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>B7</strong></td>
+<td style="text-align: left;"><code>optimizer.py</code> (whole-N batching)</td>
+<td style="text-align: left;">Operating on full <code>(N, M, K)</code> tensors (<code>~100–700 MiB</code>) overflows CPU L3 cache and keeps <code>JTJ_cache</code> (<code>active_idx</code> re-sliced each iter) non-compacted</td>
+<td style="text-align: left;">Chunking (<code>chunk=512</code>) alone yields <strong><code>1.67×</code></strong> speedup (<code>8.254 s -&gt; 4.942 s</code>) on <code>WDF/3_3721map_3Lorent</code> (<code>max|dR2|=2.22e-16</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>B8</strong></td>
+<td style="text-align: left;"><code>models.py</code> / <code>evaluator.py</code></td>
+<td style="text-align: left;">Full-axis evaluation across all <code>M</code> channels even for narrow peaks (<code>fwhm ≪ span</code>)</td>
+<td style="text-align: left;">On <code>N=1681, M=1024, 6p_lor</code>: dense <code>float64 = 966.43 ms/iter</code> vs <code>+-4*fwhm</code> support-windowed block-diag <strong><code>82.72 ms/iter</code> (<code>11.68×</code>)</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>B9</strong></td>
+<td style="text-align: left;">BLAS / Multiprocessing</td>
+<td style="text-align: left;">Windows <code>ProcessPoolExecutor</code> spawn cost hurts &lt;10 s fits (<code>0.65×–0.80×</code> cold vs <code>1.83×–1.95×</code> warm); default multi-thread OpenBLAS (8 threads) thrashes small/medium batched ops</td>
+<td style="text-align: left;"><code>OMP/OPENBLAS=2</code> beats <code>8</code> threads (<code>9.49 s vs 14.65 s</code> on <code>2dmap_spc_bl 3p</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-priority-1-action-plan-immediate-target-high-impact-low-complexity">3. Priority 1 Action Plan (Immediate Target — High Impact, Low Complexity)<a class="headerlink" href="#3-priority-1-action-plan-immediate-target-high-impact-low-complexity" title="Permanent link">&para;</a></h2>
+<p>These five pure-NumPy/Python changes preserve existing public contracts, exact numerical precision (<code>float64</code>), and startup import deferral:</p>
+<ul>
+<li>
+<p><strong><code>P1.1</code> (<code>optimizer.py</code>) — Post-Clip Projected-Step Convergence + Uniform-Weight Fast Path</strong>:</p>
+</li>
+<li>
+<p>Compute <code>dp_actual = p_trial_active[improved_active] - p_active[improved_active]</code> (after <code>np.clip</code> box-bound projection) inside <code>dp_rel</code> rather than raw unconstrained <code>dp</code>. Note that <code>p_active = p[active_idx]</code> via integer array indexing is already a separate copy before <code>p[improved_idx]</code> is updated.</p>
+</li>
+<li>
+<p>Detect once up front when <code>weights</code> is <code>None</code> or <code>(weights == 1.0).all()</code> to bypass <code>weights * residuals</code> and <code>J_r *= weights[:, :, None]</code> array passes.</p>
+</li>
+<li>
+<p><strong><code>P1.2</code> (<code>optimizer.py</code>) — Unify <code>_batched_solve</code> on Vectorized <code>np.linalg.solve</code></strong>:</p>
+</li>
+<li>
+<p>Always try <code>np.linalg.solve(A, b[..., None])[..., 0]</code> across all <code>(Na, K, K)</code> systems regardless of <code>Na</code> or <code>K</code>, eliminating the <code>5.7×–33.8×</code> per-matrix Cholesky loop cliff at <code>Na &lt;= 500, K &gt;= 10</code>. Retain per-matrix <code>cho_factor</code>/<code>np.linalg.solve</code>/<code>0.0</code> strictly inside the <code>except np.linalg.LinAlgError</code> fallback for singular edge cases.</p>
+</li>
+<li>
+<p><strong><code>P1.3</code> (<code>models.py</code>) — Fuse <code>batched_pseudovoigt</code> &amp; <code>batched_pseudovoigt_jac</code> + Optional <code>out=</code> Buffer</strong>:</p>
+</li>
+<li>
+<p>Share <code>dx</code>, <code>inv_w</code>, <code>inv_w2</code>, <code>dx2</code>, <code>t2 = dx2 * inv_w2</code>, <code>g_unit = exp(-4*ln2*t2)</code>, and <code>invD = 1 / (4*t2 + 1)</code> inside single-pass fused <code>batched_pseudovoigt</code> and <code>batched_pseudovoigt_jac</code>.</p>
+</li>
+<li>
+<p>Add optional <code>out=None</code> slice support to batched peak/Jacobian evaluators so <code>VBFevaluator</code> writes directly into preallocated buffers without per-peak allocations. Measured speedup: <strong><code>1.71×–1.85×</code></strong>, numerical deviation <code>max_abs_diff = 3.47e-12</code>.</p>
+</li>
+<li>
+<p><strong><code>P1.4</code> (<code>evaluator.py</code>) — Zero-Copy <code>VBFevaluator.jacobian()</code> &amp; <code>evaluate()</code> Free-Param Fast Path</strong>:</p>
+</li>
+<li>
+<p>Precompute <code>self._all_free_identity</code> when no parameters are fixed (<code>_fixed_idx</code> is empty) and no parameter expressions (<code>_exprs</code>) exist.</p>
+</li>
+<li>
+<p>Skip <code>_to_full()</code>, skip <code>np.zeros()</code> zero-initialization (every column <code>0..K-1</code> is partitioned cleanly by peak slices), pass <code>out=J[:, :, slc]</code> directly to peak evaluators, and return <code>J</code> without <code>J_full[:, :, _free_idx]</code> fancy-index copying. Support an optional caller-supplied <code>out=</code> buffer in <code>evaluate()</code> and <code>jacobian()</code> when <code>not self._exprs</code>.</p>
+</li>
+<li>
+<p><strong><code>P1.5</code> (<code>evaluator.py</code>, <code>baseline.py</code>) — O(N) Noise-Threshold Lookup &amp; Pure-NumPy Linear Baseline</strong>:</p>
+</li>
+<li>
+<p>Replace <code>dists = np.abs(x[None, :] - x0_vals[:, None])</code> in <code>VBFevaluator.apply_noise_threshold()</code> with uniform fast-path (when <code>x0</code> is identical across <code>N</code>) or <code>np.searchsorted</code> + neighbor compare on monotonic 1D <code>x</code>, cutting <code>(N, M)</code> memory down to <code>O(N)</code>.</p>
+</li>
+<li>Implement closed-form vectorized linear interpolation/extrapolation (<code>_interp_linear_extrap</code>) in pure NumPy in <code>baseline.py</code> (<code>eval_baseline()</code> and <code>eval_baseline_batch()</code>), eliminating the <strong><code>1,508.64 ms</code></strong> cold <code>scipy.interpolate</code> import overhead.</li>
+</ul>
+<h3 id="verified-phase-1-beforeafter-benchmarks">Verified Phase 1 Before/After Benchmarks<a class="headerlink" href="#verified-phase-1-beforeafter-benchmarks" title="Permanent link">&para;</a></h3>
+<p>Measured cleanly after <code>P1.1</code>–<code>P1.5</code> implementation (<code>213 passed</code> in <code>tests/unit/fit_engine</code> + <code>test_startup_imports.py</code>; <code>1,937 passed, 22 deselected</code> in <code>tests/ -m "not slow"</code>):</p>
+<ul>
+<li><strong>Cold 2-point Linear Baseline Subprocess Check (<code>N=3,721, M=304</code>)</strong>: <code>1.766 ms</code> wall time with <code>scipy</code> / <code>scipy.interpolate</code> <strong>unloaded</strong> (<code>scipy_loaded=False</code>, vs <code>1,508.64 ms</code> baseline cold SciPy import).</li>
+</ul>
+<p><strong>A. Real-Dataset End-to-End Fits</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Dataset &amp; Config</th>
+<th style="text-align: right;">Baseline Time</th>
+<th style="text-align: right;">Phase 1 Time</th>
+<th style="text-align: right;">Speedup</th>
+<th style="text-align: left;">Converged (Before → P1)</th>
+<th style="text-align: right;">Median <span class="arithmatex">\(R^2\)</span> (P1)</th>
+<th style="text-align: left;">Peak Heap (Before → P1)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">WDF (<code>3721×102</code>): <code>1_CL_map</code></td>
+<td style="text-align: right;"><code>0.2968 s</code></td>
+<td style="text-align: right;"><code>0.3085 s</code> (<code>min 0.2696 s</code>)</td>
+<td style="text-align: right;"><code>0.96×</code></td>
+<td style="text-align: left;"><code>97.9% -&gt; 99.1%</code></td>
+<td style="text-align: right;"><code>0.0000</code></td>
+<td style="text-align: left;"><code>16.34 -&gt; 19.05 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">WDF (<code>3721×102</code>): <code>1_CL_map_1pseudovoigt</code></td>
+<td style="text-align: right;"><code>8.3554 s</code></td>
+<td style="text-align: right;"><code>2.7010 s</code></td>
+<td style="text-align: right;"><strong><code>3.09×</code></strong></td>
+<td style="text-align: left;"><code>20.9% -&gt; 87.8%</code></td>
+<td style="text-align: right;"><code>-0.0663</code></td>
+<td style="text-align: left;"><code>62.28 -&gt; 41.87 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">WDF (<code>3721×102</code>): <code>1_CL_map_2lorentzian</code></td>
+<td style="text-align: right;"><code>6.1183 s</code></td>
+<td style="text-align: right;"><code>1.5141 s</code></td>
+<td style="text-align: right;"><strong><code>4.04×</code></strong></td>
+<td style="text-align: left;"><code>4.1% -&gt; 93.7%</code></td>
+<td style="text-align: right;"><code>-0.0331</code></td>
+<td style="text-align: left;"><code>61.23 -&gt; 37.45 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">WDF (<code>3721×102</code>): <code>1_CL_map_3lorentzian</code></td>
+<td style="text-align: right;"><code>8.0891 s</code></td>
+<td style="text-align: right;"><code>2.9501 s</code></td>
+<td style="text-align: right;"><strong><code>2.74×</code></strong></td>
+<td style="text-align: left;"><code>2.2% -&gt; 90.3%</code></td>
+<td style="text-align: right;"><code>-0.0259</code></td>
+<td style="text-align: left;"><code>81.36 -&gt; 51.41 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">WDF (<code>3721×71</code>): <code>3_3721map</code></td>
+<td style="text-align: right;"><code>0.1612 s</code></td>
+<td style="text-align: right;"><code>0.1576 s</code></td>
+<td style="text-align: right;"><code>1.02×</code></td>
+<td style="text-align: left;"><code>100.0% -&gt; 100.0%</code></td>
+<td style="text-align: right;"><code>0.9988</code></td>
+<td style="text-align: left;"><code>45.67 -&gt; 23.59 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">WDF (<code>3721×77</code>): <code>3_3721map_1pseudo</code></td>
+<td style="text-align: right;"><code>0.3149 s</code></td>
+<td style="text-align: right;"><code>0.1880 s</code></td>
+<td style="text-align: right;"><strong><code>1.68×</code></strong></td>
+<td style="text-align: left;"><code>100.0% -&gt; 100.0%</code></td>
+<td style="text-align: right;"><code>0.9993</code></td>
+<td style="text-align: left;"><code>64.45 -&gt; 36.12 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">WDF (<code>3721×77</code>): <code>3_3721map_3Lorent</code></td>
+<td style="text-align: right;"><code>7.4189 s</code></td>
+<td style="text-align: right;"><code>1.6203 s</code></td>
+<td style="text-align: right;"><strong><code>4.58×</code></strong></td>
+<td style="text-align: left;"><code>1.2% -&gt; 93.7%</code></td>
+<td style="text-align: right;"><code>0.9996</code></td>
+<td style="text-align: left;"><code>82.62 -&gt; 45.72 MiB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">CL (<code>16384×304</code>): <code>1_CL_map</code></td>
+<td style="text-align: right;"><code>3.9432 s</code></td>
+<td style="text-align: right;"><code>3.8021 s</code></td>
+<td style="text-align: right;"><code>1.04×</code></td>
+<td style="text-align: left;"><code>100.0% -&gt; 100.0%</code></td>
+<td style="text-align: right;"><code>0.9841</code></td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr>
+<td style="text-align: left;">CL (<code>16384×304</code>): <code>1_CL_map_1pseudovoigt</code></td>
+<td style="text-align: right;"><code>13.5854 s</code></td>
+<td style="text-align: right;"><code>5.0866 s</code></td>
+<td style="text-align: right;"><strong><code>2.67×</code></strong></td>
+<td style="text-align: left;"><code>96.3% -&gt; 100.0%</code></td>
+<td style="text-align: right;"><code>0.9859</code></td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr>
+<td style="text-align: left;">CL (<code>16384×304</code>): <code>1_CL_map_2lorentzian</code></td>
+<td style="text-align: right;"><code>35.9672 s</code></td>
+<td style="text-align: right;"><code>23.5715 s</code></td>
+<td style="text-align: right;"><strong><code>1.53×</code></strong></td>
+<td style="text-align: left;"><code>88.0% -&gt; 92.5%</code></td>
+<td style="text-align: right;"><code>0.9889</code></td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr>
+<td style="text-align: left;">CL (<code>16384×304</code>): <code>1_CL_map_3lorentzian</code></td>
+<td style="text-align: right;"><code>75.7279 s</code></td>
+<td style="text-align: right;"><code>44.3647 s</code></td>
+<td style="text-align: right;"><strong><code>1.71×</code></strong></td>
+<td style="text-align: left;"><code>77.4% -&gt; 86.1%</code></td>
+<td style="text-align: right;"><code>0.9906</code></td>
+<td style="text-align: left;">—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>B. Controlled Per-Iteration Scaling (<code>ms/iter</code> over 10 Fixed Iterations)</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Model (<code>K</code>)</th>
+<th style="text-align: right;">WDF Base</th>
+<th style="text-align: right;">WDF Phase 1</th>
+<th style="text-align: right;">WDF Speedup</th>
+<th style="text-align: right;">CL Base</th>
+<th style="text-align: right;">CL Phase 1</th>
+<th style="text-align: right;">CL Speedup</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>1_Lor</code> (<code>3</code>)</td>
+<td style="text-align: right;"><code>46.54 ms</code></td>
+<td style="text-align: right;"><code>18.00 ms</code></td>
+<td style="text-align: right;"><strong><code>2.59×</code></strong></td>
+<td style="text-align: right;"><code>576.95 ms</code></td>
+<td style="text-align: right;"><code>352.32 ms</code></td>
+<td style="text-align: right;"><strong><code>1.64×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1_Gauss</code> (<code>3</code>)</td>
+<td style="text-align: right;"><code>73.67 ms</code></td>
+<td style="text-align: right;"><code>28.93 ms</code></td>
+<td style="text-align: right;"><strong><code>2.55×</code></strong></td>
+<td style="text-align: right;"><code>1,031.39 ms</code></td>
+<td style="text-align: right;"><code>485.45 ms</code></td>
+<td style="text-align: right;"><strong><code>2.12×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>1_PV</code> (<code>4</code>)</td>
+<td style="text-align: right;"><code>148.13 ms</code></td>
+<td style="text-align: right;"><code>33.98 ms</code></td>
+<td style="text-align: right;"><strong><code>4.36×</code></strong></td>
+<td style="text-align: right;"><code>2,438.98 ms</code></td>
+<td style="text-align: right;"><code>571.52 ms</code></td>
+<td style="text-align: right;"><strong><code>4.27×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>2_Lor</code> (<code>6</code>)</td>
+<td style="text-align: right;"><code>92.88 ms</code></td>
+<td style="text-align: right;"><code>50.99 ms</code></td>
+<td style="text-align: right;"><strong><code>1.82×</code></strong></td>
+<td style="text-align: right;"><code>1,410.73 ms</code></td>
+<td style="text-align: right;"><code>594.71 ms</code></td>
+<td style="text-align: right;"><strong><code>2.37×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>3_Lor</code> (<code>9</code>)</td>
+<td style="text-align: right;"><code>139.48 ms</code></td>
+<td style="text-align: right;"><code>76.14 ms</code></td>
+<td style="text-align: right;"><strong><code>1.83×</code></strong></td>
+<td style="text-align: right;"><code>2,617.44 ms</code></td>
+<td style="text-align: right;"><code>970.52 ms</code></td>
+<td style="text-align: right;"><strong><code>2.70×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>4_Lor</code> (<code>12</code>)</td>
+<td style="text-align: right;"><code>217.41 ms</code></td>
+<td style="text-align: right;"><code>105.49 ms</code></td>
+<td style="text-align: right;"><strong><code>2.06×</code></strong></td>
+<td style="text-align: right;"><code>2,706.76 ms</code></td>
+<td style="text-align: right;"><code>1,411.56 ms</code></td>
+<td style="text-align: right;"><strong><code>1.92×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>6_Lor</code> (<code>18</code>)</td>
+<td style="text-align: right;"><code>281.59 ms</code></td>
+<td style="text-align: right;"><code>176.23 ms</code></td>
+<td style="text-align: right;"><strong><code>1.60×</code></strong></td>
+<td style="text-align: right;"><code>6,803.68 ms</code></td>
+<td style="text-align: right;"><code>2,745.22 ms</code></td>
+<td style="text-align: right;"><strong><code>2.48×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>3_PV</code> (<code>12</code>)</td>
+<td style="text-align: right;"><code>295.45 ms</code></td>
+<td style="text-align: right;"><code>164.95 ms</code></td>
+<td style="text-align: right;"><strong><code>1.79×</code></strong></td>
+<td style="text-align: right;"><code>6,504.68 ms</code></td>
+<td style="text-align: right;"><code>2,517.64 ms</code></td>
+<td style="text-align: right;"><strong><code>2.58×</code></strong></td>
+</tr>
+</tbody>
+</table>
+<p>Notice that on <code>1_CL_map.txt / 1_CL_map_3lorentzian</code>, <code>14.1k/16.4k</code> (<code>86.1%</code>) converge after Phase 1 while the remaining <code>13.9%</code> tail still drives <code>56.3%</code> mean active rows across <code>(16384, 304, 9)</code> tensors — confirming <strong>Phase 2 (<code>P2.1</code> L3 chunking + compaction and <code>P2.2</code> dead-peak/stagnation early exit)</strong> as the highest-leverage next step.</p>
+<hr />
+<h2 id="4-phase-2-implementation-plan-high-impact-moderate-complexity">4. Phase 2 Implementation Plan (High Impact, Moderate Complexity)<a class="headerlink" href="#4-phase-2-implementation-plan-high-impact-moderate-complexity" title="Permanent link">&para;</a></h2>
+<p>Phase 2 targets memory hierarchy efficiency, stalled-peak termination, localized spatial sparsity, and multi-core CPU scaling — all purely in Python/NumPy without native compiler toolchains.</p>
+<h3 id="p21-l3-cache-sized-batch-chunking-active-row-compaction"><code>P2.1</code> — L3-Cache-Sized Batch Chunking &amp; Active-Row Compaction<a class="headerlink" href="#p21-l3-cache-sized-batch-chunking-active-row-compaction" title="Permanent link">&para;</a></h3>
+<h4 id="problem-evidence">Problem &amp; Evidence<a class="headerlink" href="#problem-evidence" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Currently, <code>batched_levenberg_marquardt()</code> keeps global <code>(N, M, K)</code> Jacobian tensors (<code>~114–684 MiB</code> on <code>N=16,384, M=304</code>) and <code>(N, K, K)</code> caches for all <code>N</code> spectra simultaneously, even after 75–90% have converged or while active rows span fragmented memory indices.</li>
+<li>Every iteration on non-contiguous <code>active_idx</code> pays cache misses across the full <code>N</code>-row allocation.</li>
+<li>Empirically verified on <code>3_3721map.wdf / 3_3721map_3Lorent.json</code>: splitting <code>N=3,721</code> into <code>chunk=512</code> reduced runtime from <strong><code>8.254 s -&gt; 4.942 s</code> (<code>1.67×</code>)</strong> with <strong><code>max |ΔR²| = 2.22e-16</code></strong>.</li>
+</ul>
+<h4 id="design-touchpoints-optimizerpy-vbf_enginepy">Design &amp; Touchpoints (<code>optimizer.py</code>, <code>vbf_engine.py</code>)<a class="headerlink" href="#design-touchpoints-optimizerpy-vbf_enginepy" title="Permanent link">&para;</a></h4>
+<ol>
+<li>
+<p><strong>Deterministic Adaptive Chunk Sizing (<code>_choose_chunk_size(N, M, K)</code>)</strong>:</p>
+</li>
+<li>
+<p>Target a working set <code>(chunk_size, M, K) * 8 bytes &lt;= ~8–16 MiB</code> (fitting comfortably inside L3 cache on typical 8–32 MiB CPU caches while staying big enough for BLAS <code>matmul</code> batch amortization).</p>
+</li>
+<li>
+<p>Clamp <code>chunk_size</code> in <code>[256, 1024]</code> (e.g., <code>chunk_size = max(256, min(1024, (12 * 1024 * 1024) // max(M * max(K, 1) * 8, 1)))</code>). If <code>N &lt;= chunk_size</code>, run zero-split direct path to avoid overhead on small calls.</p>
+</li>
+<li>
+<p><strong>Chunk Execution &amp; Contiguous Active-Row Compaction</strong>:</p>
+</li>
+<li>
+<p>Slice <code>(x_chunk, y_chunk, p0_chunk, w_chunk)</code> into contiguous chunks <code>[s:e]</code>, call <code>_batched_lm_core(...)</code>, and write back into preallocated <code>(N, K)</code> <code>p_out</code>, <code>(N,)</code> <code>converged</code>, and <code>(N,)</code> <code>n_iter</code> arrays.</p>
+</li>
+<li>Inside each chunk <code>Nc &lt;= 1024</code>, compute noise/zero-weight masks locally. Once active count drops cleanly (or when active density <code>&lt; 0.5</code>), optionally pack <code>(p_c, residuals_c, JTJ_c, JTr_c, lam_c)</code> into dense contiguous sub-arrays, avoiding scattered <code>active_idx</code> / <code>dirty[active_idx]</code> gather/scatter penalties.</li>
+<li>
+<p>Note: Each spectrum in LM is mathematically 100% independent, so chunking preserves bit-exact parity (<code>max |ΔR²| ~ 1e-16</code>).</p>
+</li>
+<li>
+<p><strong>Progress Reporting Integration (<code>progress_callback</code>)</strong>:</p>
+</li>
+<li>
+<p>Maintain weighted completed-spectrum counts (<code>completed_in_finished_chunks + converged_in_current_chunk</code>) so UI progress bars inside <code>VBFthread</code> remain smooth and monotonic (<code>0 -&gt; 100%</code>) instead of resetting per chunk.</p>
+</li>
+</ol>
+<h4 id="risks-validation">Risks &amp; Validation<a class="headerlink" href="#risks-validation" title="Permanent link">&para;</a></h4>
+<ul>
+<li><em>Shared <code>x</code> vs 2D <code>(N, M)</code> <code>x</code></em>: Always slice <code>x[s:e]</code> when <code>x.ndim == 2</code>, pass <code>x</code> unmodified when <code>x.ndim == 1</code>.</li>
+<li><em>Test</em>: Assert chunked (<code>chunk=256, 512</code>) vs unchunked output parity (<code>np.allclose</code> on <code>p</code>, <code>R²</code>, <code>converged</code>, <code>n_iter</code>) across 1D and 2D <code>x</code>, <code>weights</code>, and <code>_exprs</code>.</li>
+</ul>
+<hr />
+<h3 id="p22-inactive-bound-pinned-peak-convergence-stagnation-early-exit"><code>P2.2</code> — Inactive / Bound-Pinned Peak Convergence &amp; Stagnation Early Exit<a class="headerlink" href="#p22-inactive-bound-pinned-peak-convergence-stagnation-early-exit" title="Permanent link">&para;</a></h3>
+<h4 id="problem-evidence_1">Problem &amp; Evidence<a class="headerlink" href="#problem-evidence_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Even after <code>P1.1</code> fixes bound clipping for pixels pinned right at iteration <code>t</code>, multi-peak configurations with an absent/vanishing component (like Peak 1 <code>x0=497.15, a=0.0</code> in <code>3_3721map_3Lorent</code> or 2nd/3rd peak on background CL pixels) still suffer from ill-conditioned <code>(J^T J)</code> blocks: when <code>ampli ≈ 0</code>, derivatives <span class="arithmatex">\(\partial/\partial x_0 = 0\)</span> and <span class="arithmatex">\(\partial/\partial w = 0\)</span>, leaving zero columns in <code>J</code> (<code>rank &lt; K</code>) so LM spends dozens of iterations shrinking/growing damping <span class="arithmatex">\(\lambda\)</span> before <code>xtol</code>/<code>ftol</code> triggers.</li>
+<li>On <code>1_CL_map.txt / 1_CL_map_3lorentzian</code>, ~22.6% of spectra still hit <code>max_ite=100</code> (<code>61.4 s</code> even after <code>P1.1 + P1.4</code>).</li>
+</ul>
+<h4 id="design-touchpoints-optimizerpy-fit_engine">Design &amp; Touchpoints (<code>optimizer.py</code>, <code>fit_engine/</code>)<a class="headerlink" href="#design-touchpoints-optimizerpy-fit_engine" title="Permanent link">&para;</a></h4>
+<ol>
+<li>
+<p><strong>Diagonal Tikhonov Floor / Zero-Column Safeguarding</strong>:</p>
+</li>
+<li>
+<p>In <code>(JTJ + lam * diag(JTJ))</code>, a dead peak with <code>ampli == 0</code> yields <code>diag(JTJ)[idx] == 0</code>. Current <code>lam * np.maximum(diag_JTJ, 1e-6)</code> helps invertibility, but when a peak amplitude collapses to <code>0</code> (<code>ampli &lt;= lo_ampli + eps</code> and gradient w.r.t. <code>ampli</code> points negative/outward), zeroing the trial steps of its coupled <code>(x0, fwhm, alpha)</code> parameters prevents spurious width/position drift and triggers immediate step acceptance or convergence (<code>dp_actual == 0</code>).</p>
+</li>
+<li>
+<p><strong>Stagnation / Consecutive Rejected-Step Early Exit</strong>:</p>
+</li>
+<li>
+<p>Currently, a spectrum stops early only when <code>lam &gt;= 1e7</code> (<code>optimizer.py:310</code>) or when <code>rel_cost_change &lt; ftol &amp; dp_rel &lt; effective_xtol</code>.</p>
+</li>
+<li>Under floating-point precision plateaus near <code>1e-7..1e-12</code>, tiny <code>1e-8</code> cost improvements can keep a row spinning at <code>lam = 1e2..1e6</code> for 80+ iterations with zero physically meaningful movement.</li>
+<li>
+<p>Add two safe early exits (configurable / preserving strict precision tests):</p>
+<ul>
+<li><strong>Plateau Exit</strong>: Track consecutive tiny-cost-and-tiny-step accepted iterations (e.g., <code>rel_cost_change &lt; ftol * 0.1</code> for 3 consecutive accepted steps -&gt; converge).</li>
+<li><strong>Dead-Step Rejection Cap</strong>: Keep <code>(worsened_active &amp; lam_trial &gt;= 1e7)</code> while additionally terminating rows whose unconstrained <code>np.linalg.norm(dp)</code> would move <code>&lt; 1e-12</code> or which spend <code>&gt; 12</code> consecutive rejections without improvement.</li>
+</ul>
+</li>
+<li>
+<p><strong>Optional Exact Backtracking / Nielsen LM Damping Update</strong>:</p>
+</li>
+<li>
+<p>Replace heuristic factor <code>10.0 / 3.0</code> (<code>optimizer.py</code>) with <strong>Nielsen's gain-ratio (<code>rho</code>) update</strong> (<code>mu *= max(1/3, 1 - (2*rho - 1)**3)</code>, <code>nu = 2</code> vs <code>mu *= nu, nu *= 2</code>), which reduces rejected step ratios on coupled multi-peak landscapes by avoiding premature damping spikes and overshoot restarts.</p>
+</li>
+</ol>
+<h4 id="risks-validation_1">Risks &amp; Validation<a class="headerlink" href="#risks-validation_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li><em>Tight-tolerance unit tests</em>: Any test expecting <code>max_ite</code> or exact tight <code>xtol=1e-10</code> on synthetic noise-free problems must still pass — gate Nielsen / stagnation exits cleanly so <code>xtol</code>/<code>ftol</code> contracts are respected when tight tolerances are explicitly requested.</li>
+</ul>
+<hr />
+<h3 id="p23-safe-support-windowed-peak-evaluation-x-x0-c-fwhm"><code>P2.3</code> — Safe Support-Windowed Peak Evaluation (<code>|x - x0| &lt;= c * fwhm</code>)<a class="headerlink" href="#p23-safe-support-windowed-peak-evaluation-x-x0-c-fwhm" title="Permanent link">&para;</a></h3>
+<h4 id="problem-evidence_2">Problem &amp; Evidence<a class="headerlink" href="#problem-evidence_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Raman and sharp luminescence spectra often span wide wave-number ranges (<code>M = 500–2,000</code>) where individual peaks have <code>fwhm = 4–12 cm⁻¹</code>. Away from <code>|x - x0| &gt; 6 * fwhm</code>, Gaussian weights decay below <code>2^-144</code> (exact zero in <code>float64</code>), whereas Lorentzian tails decay slowly (<span class="arithmatex">\(1 / (1 + 4 (dx/w)^2)\)</span>: <code>1/65 ≈ 1.54%</code> at <code>4*w</code> and <code>1/10,001 ≈ 10⁻⁴</code> only at <code>50*w</code>).</li>
+<li>Benchmark from <code>vbf_bench_part2.txt</code> (6 Lorentzians, <code>N=1681, M=1024, fwhm=6</code>): dense <code>float64 = 966.43 ms/iter</code> vs <code>+-4*w</code> block-diagonal windowed <code>82.72 ms/iter</code> (<strong><code>11.68×</code></strong>) when localized!</li>
+</ul>
+<h4 id="critical-mathematical-guardrail-why-support-windowing-requires-care">Critical Mathematical Guardrail (Why Support Windowing Requires Care)<a class="headerlink" href="#critical-mathematical-guardrail-why-support-windowing-requires-care" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>Lorentzian / Asymmetric Lorentzian / PseudoVoigt have heavy algebraic tails (<span class="arithmatex">\(O((w/dx)^2)\)</span>)</strong>:</p>
+</li>
+<li>
+<p>Cutting Lorentzian strictly at <code>4 * fwhm</code> leaves a <code>1.54%</code> truncation discontinuity if used directly on <code>evaluate()</code> / <code>residuals</code>. Even at <code>15 * fwhm</code>, <code>1 / (1 + 4*225) = 0.0011</code> (<code>0.11%</code>).</p>
+</li>
+<li>Therefore, a naive hard cutoff on <code>models.py</code> for Lorentzian/PseudoVoigt without tail correction would distort broadband fits (<code>R²</code> drift on wide peaks).</li>
+<li>
+<p><strong>Safe Design Strategy</strong>:</p>
+</li>
+<li>
+<p><strong>Exponential Models (<code>Gaussian</code>, <code>GaussianAsym</code>)</strong>: Exact machine-epsilon cutoff exists at <code>|dx / w| &gt; 4.5</code> (<code>exp(-4 * ln(2) * 4.5^2) = 3.1e-25 &lt; eps_float64</code>). A slice/index window around <code>[min(x0) - 5*max(w), max(x0) + 5*max(w)]</code> for each chunk/peak group is <strong>mathematically exact to machine precision (<code>&lt; 1e-16</code>)</strong>.</p>
+</li>
+<li><strong>All-Peak ROI Tight-Mask Prefilter (<code>vbf_engine.py</code> / <code>VBFevaluator</code>)</strong>: Within any chunk, compute <code>[lo_chunk, hi_chunk]</code> across active centers ± tail tolerance; when peaks all occupy a narrow active sub-band inside an uncropped spectrum (or when <code>DecaySingleExp</code>/<code>DecayBiExp</code> only operate post-<code>t0</code>), restrict evaluation slice <code>[i0:i1]</code> for Jacobian &amp; residual assembly.</li>
+<li><strong>Opt-In Fast Preview vs Exact Final Polish</strong>: Optionally use narrower fast support (<code>8 * fwhm</code>) during coarse early iterations if exposed as a precision mode, followed by full-band exact LM polish (<code>1–2</code> iterations) to eliminate tail bias completely (<code>ΔR² == 0.0</code>).</li>
+</ul>
+<hr />
+<h3 id="p24-blas-thread-control-persistent-warm-worker-pool"><code>P2.4</code> — BLAS Thread Control &amp; Persistent Warm Worker Pool<a class="headerlink" href="#p24-blas-thread-control-persistent-warm-worker-pool" title="Permanent link">&para;</a></h3>
+<h4 id="problem-evidence_3">Problem &amp; Evidence<a class="headerlink" href="#problem-evidence_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>BLAS Oversubscription (<code>vbf_bench_part2.txt</code>, Section G)</strong>: Running <code>2dmap_spc_bl 3p(25it)</code> across OpenBLAS/OMP thread counts showed:</p>
+</li>
+<li>
+<p><code>1 thread</code>: <code>10,874.9 ms</code></p>
+</li>
+<li><code>2 threads</code>: <strong><code>9,493.7 ms</code></strong> (optimal)</li>
+<li><code>4 threads</code>: <code>10,306.8 ms</code></li>
+<li><code>8 threads</code>: <strong><code>14,646.2 ms</code></strong> (<code>54%</code> slower due to thread barrier spin on small <code>(chunk, M, K)</code> GEMMs!)</li>
+<li><strong>Multiprocessing (<code>audit_wdf_part3.txt</code>)</strong>: Spawning cold <code>ProcessPoolExecutor</code> on Windows took <strong><code>10.39 s</code> (<code>w=4</code>) and <code>12.79 s</code> (<code>w=8</code>)</strong> vs <strong><code>8.33 s</code></strong> single-process (<code>0.80×</code> / <code>0.65×</code> <em>regression</em>) on <code>3_3721map_3Lorent</code> due to Python interpreter startup &amp; DLL load (~2–4 s per worker!). Conversely, a <strong>pre-warmed pool (<code>w=4</code>)</strong> achieved <strong><code>1.95×</code> (<code>4.27 s</code>)</strong> on <code>3_3721map</code> and <strong><code>1.83×</code> (<code>7.56 s</code>)</strong> on <code>1_CL_map_1pseudovoigt</code>.</li>
+</ul>
+<h4 id="design-touchpoints-fit_engine-application-requirements-optional-threadpoolctl">Design &amp; Touchpoints (<code>fit_engine/</code>, <code>application/</code>, <code>requirements</code> optional <code>threadpoolctl</code>)<a class="headerlink" href="#design-touchpoints-fit_engine-application-requirements-optional-threadpoolctl" title="Permanent link">&para;</a></h4>
+<ol>
+<li>
+<p><strong>Scoped Single/2-Thread BLAS Guard (via <code>threadpoolctl</code> if installed, no hard dependency)</strong>:</p>
+</li>
+<li>
+<p>Inside <code>batched_levenberg_marquardt()</code> (when chunked or inside worker processes), wrap execution with <code>threadpoolctl.threadpool_limits(limits=2)</code> (or <code>limits=1</code> inside multi-process workers) using <code>try ... except ImportError:</code> so it fails gracefully when <code>threadpoolctl</code> is absent. Never call at startup (<code>test_startup_imports.py</code>).</p>
+</li>
+<li>
+<p><strong>Lazy Persistent Worker Pool (<code>VBFProcessPool</code>, Optional Thresholded <code>N * M * K</code>)</strong>:</p>
+</li>
+<li>
+<p>Spawn workers lazily on first large map fit (or warm asynchronously after UI load) rather than per-fit cold teardown, keeping <code>w = min(4, max(1, cpu_count // 2))</code> workers capped to avoid RAM duplication.</p>
+</li>
+<li>Only dispatch across IPC when total problem cost (<code>N * M * K</code>) exceeds a calibrated threshold (e.g., <code>estimated_flops &gt; threshold</code>, skipping IPC entirely for fast <code>&lt; 1 s</code> fits where chunked single-process finishes before IPC overhead completes).</li>
+<li>Keep every worker single-threaded (<code>limits=1</code>) in BLAS/OMP so <code>4 workers × 1 thread</code> never oversubscribes physical cores.</li>
+<li>Guard carefully for PyInstaller frozen executables on Windows/macOS (<code>multiprocessing.freeze_support()</code>, picklable pure-NumPy inputs/functions without Qt objects — note <code>VBFevaluator</code> expressions <code>_exprs</code> must either serialize cleanly as raw config dicts rebuilt per worker or stay in-process if custom lambdas exist).</li>
+</ol>
+<hr />
+<h2 id="5-phase-3-implementation-plan-advanced-architectural-algorithmic-improvements">5. Phase 3 Implementation Plan (Advanced Architectural &amp; Algorithmic Improvements)<a class="headerlink" href="#5-phase-3-implementation-plan-advanced-architectural-algorithmic-improvements" title="Permanent link">&para;</a></h2>
+<p>Phase 3 narrows the remaining architectural gap between Python/NumPy tensor batching and compiled L1-resident single-spectrum C++ loops (such as HORIBA LabSpec 6's <code>OlMainer.dll</code>).</p>
+<h3 id="p31-optional-compiled-native-copenmp-l1-resident-kernel-cross-platform"><code>P3.1</code> — Optional Compiled Native C++/OpenMP L1-Resident Kernel (Cross-Platform)<a class="headerlink" href="#p31-optional-compiled-native-copenmp-l1-resident-kernel-cross-platform" title="Permanent link">&para;</a></h3>
+<h4 id="architectural-rationale">Architectural Rationale<a class="headerlink" href="#architectural-rationale" title="Permanent link">&para;</a></h4>
+<p>Why can a compiled C++ loop (<code>OpenMP parallel for</code> per spectrum) beat whole-map Python tensor ops even when NumPy calls BLAS/C?</p>
+<ul>
+<li><strong>Cache Residency</strong>: For one spectrum of size <code>M = 100..500, K = 3..18</code>, the working set (<code>x</code>, <code>y</code>, <code>r</code>, <code>J</code>, <code>JTJ</code>, <code>JTr</code>) is <code>~10–80 KiB</code> — fitting <strong>100% inside per-core L1/L2 CPU cache</strong>, never hitting DRAM inside the LM loop.</li>
+<li><strong>Loop Fusion</strong>: Evaluating <code>f(x)</code>, <code>r</code>, <code>J</code>, AND accumulating symmetric upper triangle of <code>JᵀJ</code> (<code>0.5 * K * (K+1)</code> entries) and <code>Jᵀr</code> inside a <strong>single streaming pass over <code>i = 0..M-1</code></strong> eliminates <code>(N, M, K)</code> memory materialization completely (from <code>~684 MiB</code> peak DRAM down to <code>&lt; 1 MiB</code>!) and fuses transcendental <code>exp()</code> SIMD instructions with normal-equation GEMM.</li>
+<li><strong>Zero Per-Iteration Barrier</strong>: Each CPU thread iterates its own subset of spectra cleanly to convergence with <strong>zero inter-iteration synchronization</strong> and <strong>zero active-mask compaction</strong>.</li>
+</ul>
+<h4 id="implementation-blueprint">Implementation Blueprint<a class="headerlink" href="#implementation-blueprint" title="Permanent link">&para;</a></h4>
+<ol>
+<li>
+<p><strong>Backend Design</strong>: Write a clean, portable <strong>C++17 + OpenMP</strong> (using <strong>PyBind11</strong> or <strong>Cython</strong>) module <code>_vbf_native</code> covering:</p>
+</li>
+<li>
+<p>Built-in peak kernels (<code>Gaussian</code>, <code>Lorentzian</code>, <code>PseudoVoigt</code>, <code>GaussianAsym</code>, <code>LorentzianAsym</code>, <code>Fano</code>, <code>DecaySingleExp</code>, <code>DecayBiExp</code>) — no arbitrary Python string callbacks inside the hot C++ loop.</p>
+</li>
+<li>Direct Cholesky (<code>LL^T</code>) / LDL^T symmetric positive-definite linear solver on stack-allocated <code>&lt;= 64×64</code> buffers (matching <code>VBF</code>'s <code>setStackSize</code> lesson — fixed small stack buffers or per-thread heap scratch reused across all spectra).</li>
+<li>
+<p>Identical parameterization, bounds clipping, <code>linear</code>/<code>soft_l1</code>/<code>huber</code> robust weights, and <code>ftol</code>/<code>xtol</code>/<code>max_ite</code> convergence semantics matching <code>optimizer.py</code>.</p>
+</li>
+<li>
+<p><strong>Hybrid Dispatch &amp; Automatic Fallback</strong>:</p>
+</li>
+<li>
+<p>In <code>VBFengine.fit_spectra()</code>: check <code>not evaluator._exprs</code> and all peak models supported by native kernel + <code>_vbf_native</code> importable (<code>try: import spectroview.fit_engine._vbf_native</code>).</p>
+</li>
+<li>
+<p>Otherwise seamlessly fall back to Phase 1/2 NumPy/Python <code>optimizer.py</code> (which continues supporting arbitrary user <code>_exprs</code>, dynamic/custom scalar models, and pure-Python environments without a C compiler).</p>
+</li>
+<li>
+<p><strong>Packaging &amp; Cross-Platform Distribution</strong>:</p>
+</li>
+<li>
+<p>Distribute prebuilt Python wheels (<code>cibuildwheel</code> in CI) for Windows <code>x64</code>, macOS <code>arm64</code>/<code>x64</code> (<code>libomp</code>), and Linux <code>x64</code> so end-users never require build tools locally; keep <code>SPECTROview</code> 100% runnable in pure Python if the compiled extension isn't built in dev mode.</p>
+</li>
+</ol>
+<hr />
+<h3 id="p32-variable-projection-varpro-separable-nonlinear-least-squares-optional-spatial-warm-start"><code>P3.2</code> — Variable Projection (VarPro / Separable Nonlinear Least Squares) &amp; Optional Spatial Warm-Start<a class="headerlink" href="#p32-variable-projection-varpro-separable-nonlinear-least-squares-optional-spatial-warm-start" title="Permanent link">&para;</a></h3>
+<h4 id="mathematical-algorithmic-concept">Mathematical &amp; Algorithmic Concept<a class="headerlink" href="#mathematical-algorithmic-concept" title="Permanent link">&para;</a></h4>
+<p>Every spectroscopic multi-peak sum is <strong>linear in peak amplitudes</strong> <span class="arithmatex">\(a_1, \dots, a_P\)</span> given nonlinear shape parameters <span class="arithmatex">\(\theta = \{(x_{0,p}, w_p, \alpha_p)\}_{p=1}^P\)</span>:</p>
+<div class="arithmatex">\[\mathbf{y} \approx \sum_{p=1}^{P} a_p \phi_p(\mathbf{x}; \theta_p) = \Phi(\theta) \mathbf{a}\]</div>
+<ol>
+<li>
+<p><strong>Variable Projection (VarPro)</strong>:</p>
+</li>
+<li>
+<p>Instead of optimizing <span class="arithmatex">\(K = 3P\)</span> (or <span class="arithmatex">\(4P\)</span>) parameters jointly (where strongly correlated overlapping peak amplitudes oscillate with widths/centers and produce poorly conditioned <code>JᵀJ</code>), reduce LM unknowns to nonlinear shape parameters only (<span class="arithmatex">\(2P\)</span> or <span class="arithmatex">\(3P\)</span>, e.g. <code>6</code> instead of <code>9</code> for 3 Lorentzians, <code>9</code> instead of <code>12</code> for 3 Pseudo-Voigts — reducing <span class="arithmatex">\(K^3\)</span> solve cost by ~3× and conditioning dramatically).</p>
+</li>
+<li>For each spectrum trial <span class="arithmatex">\(\theta\)</span>, solve the small non-negative / unconstrained <span class="arithmatex">\((P \times P)\)</span> system <span class="arithmatex">\(\Phi^T \Phi \mathbf{a} = \Phi^T \mathbf{y}\)</span> (or Kaufman's approximated VarPro Jacobian for <span class="arithmatex">\(\theta\)</span>).</li>
+<li>
+<p>Requires careful handling of fixed/expressed amplitudes and upper/lower amplitude bounds (<code>nnls</code> or bounded active-set when <code>lo/hi</code> constrain amplitudes); therefore suited as a well-tested specialized solver path for standard unbounded/non-negative sum-of-peaks models.</p>
+</li>
+<li>
+<p><strong>Optional Spatial Warm-Start Propagation (Grid-Aware Coarse Sweep -&gt; Batched Refine)</strong>:</p>
+</li>
+<li>
+<p>On smoothly varying Raman/wafer maps (<code>x_coord</code>, <code>y_coord</code>), spectra close in space often share very similar peak centers/widths while <code>p0</code> builds a single global scalar guess across all <code>N</code> rows.</p>
+</li>
+<li>
+<p>Instead of sequential spiral fitting (which destroys parallelism), use a <strong>2-stage parallel refinement</strong>:</p>
+<ol>
+<li>Fit a coarse <strong>downsampled grid</strong> (e.g. every <span class="arithmatex">\(4 \times 4\)</span> tile or <span class="arithmatex">\(k\)</span>-means spectral cluster centroids, <code>~5%</code> of spectra) cleanly to convergence.</li>
+<li>Broadcast/bilinearly interpolate converged parameters to initialize the remaining <strong>95%</strong> of pixels, which then run in <strong>1 fully vectorized batched LM pass</strong> (typically converging in <code>2–4</code> iterations instead of <code>30–100</code>).</li>
+<li>Must stay strictly <strong>opt-in</strong> or map-only (<code>MapData</code> with uniform spatial grid / spectral clustering fallback) with careful handling of domain boundaries / discontinuities (e.g., defects or empty substrate regions via residual-gated acceptance: keep spatial seed only if <code>cost(spatial_p0) &lt; cost(default_p0)</code>!).</li>
+</ol>
+</li>
+</ol>
+<hr />
+<h3 id="p33-vectorized-forward-mode-dual-number-ad-for-linked-expressions-_exprs"><code>P3.3</code> — Vectorized Forward-Mode Dual-Number AD for Linked Expressions (<code>_exprs</code>)<a class="headerlink" href="#p33-vectorized-forward-mode-dual-number-ad-for-linked-expressions-_exprs" title="Permanent link">&para;</a></h3>
+<h4 id="problem-evidence_4">Problem &amp; Evidence<a class="headerlink" href="#problem-evidence_4" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Currently (<code>2dmap_spc.spc | 3p_expr</code>, <code>vbf_bench_report.txt</code>), linking 2 parameters via <code>_exprs</code> (<code>K_free = 7 &lt; K_total = 9</code>) caused <code>jac</code> time to balloon from <strong><code>42.37 s (53.4%)</code> to <code>75.73 s (68.9%)</code></strong> despite solving <em>smaller</em> <code>7×7</code> normal equations!</li>
+<li>Why? <code>VBFevaluator._build_chain_rule_expr_funcs()</code> numerically finite-differences every expression function per free parameter on each Jacobian evaluation (<code>evaluator.py</code>).</li>
+</ul>
+<h4 id="design-evaluatorpy">Design (<code>evaluator.py</code>)<a class="headerlink" href="#design-evaluatorpy" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Implement a lightweight vectorized <strong><code>DualTensor(val, deriv)</code></strong> class over NumPy arrays supporting arithmetic (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>**</code>) and standard math ufuncs (<code>sin</code>, <code>cos</code>, <code>exp</code>, <code>log</code>, <code>sqrt</code>, <code>abs</code>, <code>minimum</code>, <code>maximum</code>) restricted to safe AST-evaluated math namespaces.</li>
+<li>Evaluate each compiled parameter expression once on <code>(p_free_i, eye_k)</code> <code>DualTensor</code>s to obtain <strong>exact machine-precision analytical chain-rule derivatives <span class="arithmatex">\(\partial p_{\text{dep}} / \partial p_{\text{free}}\)</span></strong> across all <code>N</code> spectra in one vectorized pass — completely eliminating nested finite-difference sweeps and improving Jacobian accuracy for tightly constrained crystallographic/phonon doublet ratios.</li>
+</ul>
+<hr />
+<h2 id="6-verification-gates-for-future-phase-2-phase-3-work">6. Verification Gates for Future Phase 2 &amp; Phase 3 Work<a class="headerlink" href="#6-verification-gates-for-future-phase-2-phase-3-work" title="Permanent link">&para;</a></h2>
+<p>Every optimization milestone in Phase 2 and Phase 3 must pass the following gates before merge:</p>
+<ol>
+<li><strong>Numerical Equivalence</strong>: On noiseless and real-data reference maps (<code>3_3721map.wdf</code>, <code>1_CL_map.txt</code>, <code>2dmap_spc.spc</code>, <code>mapls6.l6m</code>), verify converged parameter agreement, bounded parameter constraints, and median/p10 <span class="arithmatex">\(R^2\)</span> fidelity (<span class="arithmatex">\(\Delta R^2 \le 10^{-6}\)</span> for exact rewrites; documented trade-offs for approximate/surrogate modes).</li>
+<li><strong>Startup Import Deferral</strong>: Pass <code>tests/performance/test_startup_imports.py</code> (<code>scipy.*</code>, optional <code>threadpoolctl</code>, or heavy modules never imported at top-level startup).</li>
+<li><strong>Full Test Suite &amp; Static Check</strong>: Pass <code>python -m pytest tests/ -q</code> and <code>python -m pyflakes</code> on all modified modules.</li>
+<li><strong>Reproducible Before/After Benchmark Table</strong>: Measure and record wall time, <code>ms/spectrum</code>, peak <code>tracemalloc</code> heap, iteration count, and convergence fraction on both <code>3_3721map.wdf</code> and <code>1_CL_map.txt</code>.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

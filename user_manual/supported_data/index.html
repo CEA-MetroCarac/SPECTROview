@@ -1745,7 +1745,7 @@
 <p><strong>SPECTROview</strong> natively supports binary spectrometer formats without requiring external vendor software:</p>
 <ul>
 <li><strong><code>.wdf</code></strong> — Data recorded using WiRE software on Renishaw instruments (discrete spectra, temporal/repeatability series, 1D line-scan profiles, and 2D hyperspectral maps).</li>
-<li><strong><code>.l6s</code> and <code>.l6m</code></strong> — Native binary spectra (<code>.l6s</code>) and 2D spectral images/maps (<code>.l6m</code>) recorded using HORIBA LabSpec 6 software.</li>
+<li><strong><code>.l6s</code> and <code>.l6m</code></strong> — Native binary spectra (<code>.l6s</code>) and 2D spectral images/maps (<code>.l6m</code>), both uncompressed and compressed, recorded using HORIBA LabSpec 6 software.</li>
 <li><strong><code>.ngs</code> and <code>.ngc</code></strong> — Native binary spectra (<code>.ngs</code>) and compressed 2D spectral images/maps (<code>.ngc</code>) recorded using HORIBA LabSpec 5 software.</li>
 <li><strong><code>.spc</code></strong> — Data recorded using LabSpec 6 / T64000 / GRAMS software on HORIBA and Thermo instruments (discrete Raman/PL spectra and 2D hyperspectral maps).</li>
 </ul>
@@ -1815,7 +1815,7 @@
 <li>The <strong>remaining columns</strong> contain the corresponding intensity values for each spectrum (I1 → In), extending from the second row to the last.</li>
 </ul>
 <blockquote>
-<p><strong>Note</strong>: Text-exported 2D map formats from Renishaw tools often use a different structure and must be converted before they can be loaded into <strong>SPECTROview</strong>. An integrated conversion tool is provided within the application for this exact purpose (see the <code>Hyperspectral Data Converter Tool</code> section).</p>
+<p><strong>Note</strong>: Native Renishaw <code>.wdf</code> map files can be loaded directly into <strong>SPECTROview</strong> without conversion. Long-format text-exported 2D maps from Renishaw WiRE (<code>#X</code>, <code>#Y</code>, <code>#Wave</code>, <code>#Intensity</code> columns) can be converted into wide-matrix <code>.txt</code> format using <code>spectroview.api.io.convert_renishaw_map(input_path, output_path)</code>.</p>
 </blockquote>
 <h3 id="4-datasheet-excel-or-csv"><strong>4. Datasheet (Excel or CSV)</strong><a class="headerlink" href="#4-datasheet-excel-or-csv" title="Permanent link">&para;</a></h3>
 <p>Excel files (<code>.xlsx</code>, <code>.xls</code>) containing one or multiple sheets, as well as CSV files, can be directly imported into the <strong><code>Graphs</code></strong> workspace for immediate visualization and plotting.</p>

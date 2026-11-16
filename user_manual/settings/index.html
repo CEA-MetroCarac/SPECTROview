@@ -1835,29 +1835,29 @@
 <td><strong>Maximum Iterations</strong></td>
 <td><code>max_ite</code></td>
 <td>200</td>
-<td>1 – 10,000</td>
+<td>10 – 10,000</td>
 <td>The maximum number of Levenberg-Marquardt iterations per spectrum. <br>• <strong>Lower (50–100)</strong>: Faster fitting for previews.<br>• <strong>Higher (200+)</strong>: Better convergence for complex spectra.</td>
 </tr>
 <tr>
 <td><strong>x-tolerance</strong></td>
 <td><code>xtol</code></td>
 <td>1×10⁻⁴</td>
-<td>1×10⁻⁶ – 1×10⁻¹</td>
+<td>1×10⁻¹⁰ – 1.0</td>
 <td>Relative tolerance for the parameter step size. Convergence requires: <br> mean(</td>
 </tr>
 <tr>
 <td><strong>f-tolerance</strong></td>
 <td><code>ftol</code></td>
 <td>1×10⁻⁴</td>
-<td>1×10⁻⁶ – 1×10⁻¹</td>
+<td>1×10⁻¹⁰ – 1.0</td>
 <td>Relative tolerance for the cost function. Convergence requires: <br></td>
 </tr>
 <tr>
 <td><strong>Noise Threshold Coefficient</strong></td>
 <td><code>coef_noise</code></td>
-<td>1.0</td>
-<td>0 – 100</td>
-<td>Multiplier for the auto-estimated noise level (<code>coef_noise</code> × estimated noise amplitude). Masks noisy data and suppresses ghost peaks.<br>• <strong>0</strong>: Disabled<br>• <strong>0.5–1.0</strong>: Conservative<br>• <strong>1.0–2.0</strong>: Moderate (Default)<br>• <strong>3.0+</strong>: Aggressive<br><br><em>Note: You can refer to the noise level displayed in the toolbar or activate the "Show noise level" checkbox within the <code>View Options</code> of the <code>SpectraViewer</code> to see the noise level directly on the spectra plot.</em></td>
+<td>0.0</td>
+<td>0.0 – 10.0</td>
+<td>Multiplier for the auto-estimated noise level (<code>coef_noise</code> × estimated noise amplitude). Masks noisy data and suppresses ghost peaks.<br>• <strong>0.0</strong>: Disabled (Default)<br>• <strong>0.5–1.0</strong>: Conservative<br>• <strong>1.0–2.0</strong>: Moderate<br>• <strong>3.0+</strong>: Aggressive<br><br><em>Note: You can refer to the noise level displayed in the toolbar or activate the "Show noise level" checkbox within the <code>View Options</code> of the <code>SpectraViewer</code> to see the noise level directly on the spectra plot.</em></td>
 </tr>
 <tr>
 <td><strong>Loss Function</strong></td>
@@ -1870,12 +1870,12 @@
 <td><strong>Loss Scale</strong></td>
 <td><code>f_scale</code></td>
 <td>1.0</td>
-<td>1×10⁻⁴ – 10,000</td>
+<td>0.01 – 100.0</td>
 <td>Margin scale between inliers and outliers for robust loss functions. Residuals are scaled as <span class="arithmatex">\((r / f\_scale)\)</span> before evaluating <span class="arithmatex">\(\rho'(z)\)</span>.</td>
 </tr>
 <tr>
 <td><strong>Fit Negative Values</strong></td>
-<td>-</td>
+<td><code>fit_negative</code></td>
 <td>Unchecked</td>
 <td>-</td>
 <td>When checked, negative intensity values (absorption or inverted peaks) are included in the fit. When unchecked, they are assigned zero weight.</td>
@@ -1920,12 +1920,6 @@
 <td>1 – 1,000</td>
 <td>Maximum allowed <code>FWHM</code>. Prevents peaks from broadening into flat baselines.</td>
 </tr>
-<tr>
-<td><strong>Max Peak Intensity</strong></td>
-<td>100,000</td>
-<td>1 – 1×10⁹</td>
-<td>Upper bound for peak amplitude. Prevents unrealistically high intensity values.</td>
-</tr>
 </tbody>
 </table>
 <hr />
@@ -1965,15 +1959,17 @@
 </ul>
 <blockquote>
 <p><strong>Where your keys are stored</strong>: API keys go into your operating system's
-per-user settings store — the registry (<code>HKEY_CURRENT_USER\Software\CEA-Leti\SPECTROview</code>)
-on Windows, <code>~/Library/Preferences</code> on macOS. They are <strong>never</strong> written to a
-file inside the SPECTROview project folder, are not included in an exported
-workspace, and cannot be committed to a Git repository by accident.</p>
+per-user settings store (obfuscated under <code>_credentials/</code>) — the registry
+(<code>HKEY_CURRENT_USER\Software\CEA-Leti\SPECTROview</code>) on Windows,
+<code>~/Library/Preferences</code> on macOS, or <code>~/.config/CEA-Leti/SPECTROview.conf</code> on Linux.
+They are <strong>never</strong> written to a file inside the SPECTROview project folder,
+are not included in an exported workspace or settings backup, and cannot be
+committed to a Git repository by accident.</p>
 </blockquote>
 <h4 id="local-mcp-server"><strong>Local MCP Server</strong><a class="headerlink" href="#local-mcp-server" title="Permanent link">&para;</a></h4>
 <p>Enable this only when a trusted MCP client on the same computer needs access
 to the currently running SPECTROview session. The default endpoint is
-<code>http://127.0.0.1:8765/mcp</code> and starts as soon as you select <strong>OK</strong>.</p>
+<code>http://127.0.0.1:8765/mcp</code> and starts as soon as you select <strong>Save</strong>.</p>
 <table>
 <thead>
 <tr>

@@ -1868,7 +1868,7 @@
 <h3 id="1-maplist-and-mapviewer"><strong>1. <code>MapList</code> and <code>MapViewer</code></strong><a class="headerlink" href="#1-maplist-and-mapviewer" title="Permanent link">&para;</a></h3>
 <p><code>MapList</code> and <code>MapViewer</code> are widgets designed for the efficient navigation and management of your hyperspectral datasets. The <code>MapList</code> displays all loaded map files, including wafer maps and standard 2D maps.</p>
 <p>The action buttons located beside the <code>MapList</code> allow you to: (1) view the selected map data, (2) delete the selected map from the workspace, or (3) export the selected map directly to an Excel file.</p>
-<p>You can easily navigate between loaded 2D maps using the <code>MapList</code>. The selected map is rendered in the <code>MapViewer</code>. When opening or selecting a map, <strong>the first spectrum in the map is automatically selected</strong> and highlighted on the heatmap plot, immediately rendering its curve in <code>SpectraViewer</code> and synchronizing the baseline, peak table, and metadata. By default, the <code>MapViewer</code> displays a heatmap of signal "Intensity" or "Area". If the map has been fitted, you can select and visualize the heatmap of any fitted parameter.</p>
+<p>You can easily navigate between loaded 2D maps using the <code>MapList</code>, select multiple maps with <code>Ctrl+Click</code> or <code>Shift+Click</code>, and <strong>drag and drop</strong> one or more selected maps within the list to reorder them (updating Live Maps comparison order while keeping your active Primary map unchanged). The Primary selected map is rendered in the <code>MapViewer</code>. When opening or selecting a map, <strong>the first spectrum in the map is automatically selected</strong> and highlighted on the heatmap plot, immediately rendering its curve in <code>SpectraViewer</code> and synchronizing the baseline, peak table, and metadata. By default, the <code>MapViewer</code> displays a heatmap of signal "Intensity" or "Area". If the map has been fitted, you can select and visualize the heatmap of any fitted parameter.</p>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/maps_switching.gif" alt="Switching Maps" width="350"><br>
 </div>
@@ -1961,7 +1961,7 @@
 </tr>
 <tr>
 <td><img alt="Legend" src="../../user_manual_images/Spectra_Maps/show_legend.png" /></td>
-<td><strong>Legend</strong>: Toggles the display of the legend box. When displayed inside the canvas, the legend box is pinned to the top right corner (<code>upper right</code>) to prevent obstructing lower-intensity spectra (or can be positioned outside adjacent to the canvas via <em>Move legend box outside</em> in More Options). Double-click anywhere inside the legend to edit the palette, maximum number of displayed entries, and spectrum colors and labels in one dialog. Changes are applied with <strong>OK</strong> or discarded with <strong>Cancel</strong>. For responsiveness, Spectra and Maps workspace selections are edited in batches of up to 100 spectra; narrow the selection to edit spectra outside the current batch.</td>
+<td><strong>Legend</strong>: Toggles the display of the legend box (or colorbar when <em>Show colorbar instead of legend</em> is enabled). When displayed inside the canvas, the legend box is pinned to the top right corner (<code>upper right</code>) to prevent obstructing lower-intensity spectra (or can be positioned outside adjacent to the canvas via <em>Move legend box outside</em> in More Options). Double-click anywhere inside the legend to edit the palette, maximum number of displayed entries, and spectrum colors and labels in one dialog. Changes are applied with <strong>OK</strong> or discarded with <strong>Cancel</strong>. For responsiveness, Spectra and Maps workspace selections are edited in batches of up to 100 spectra; narrow the selection to edit spectra outside the current batch.</td>
 </tr>
 <tr>
 <td><img alt="Heatmap" src="../../user_manual_images/Spectra_Maps/heatmap_button.png" /></td>
@@ -1969,7 +1969,7 @@
 </tr>
 <tr>
 <td><img alt="More View Options" src="../../user_manual_images/Spectra_Maps/view_options.png" /></td>
-<td><strong>More Options</strong>: Positioned on the right side of the toolbar (preceding Copy), opens a comprehensive configuration panel allowing you to adjust X/Y units, toggle log scales, change plot styles, choose discrete or gradient spectrum color palettes from visual color-strip previews, set the maximum number of legend items (15 by default), toggle "Move legend box outside" to place the legend box adjacent to the canvas instead of overlapping spectra, toggle Raw/Residual visibility, enable grids, adjust line widths, and define precise figure dimensions.<br><img alt="More Options Panel" src="../../user_manual_images/Spectra_Maps/menu_view_options.png" /></td>
+<td><strong>More Options</strong>: Positioned on the right side of the toolbar (preceding Copy), opens a compact 2-column configuration panel allowing you to adjust X/Y units, toggle log scales, change plot styles, choose discrete or gradient spectrum color palettes from visual color-strip previews, set the maximum number of legend items (15 by default), toggle <strong>Move legend box outside</strong> to place the legend box adjacent to the canvas instead of overlapping spectra, toggle <strong>Show colorbar instead of legend</strong> (dynamically revealing <strong>Colorbar parameter</strong> for spectrum <code>Index</code> or numerical filename tokens and <strong>Colorbar label</strong> when checked) to display a right-side colorbar for ordered spectrum series, toggle Raw/Residual visibility, enable grids, adjust line widths, and define precise figure dimensions.<br><img alt="More Options Panel" src="../../user_manual_images/Spectra_Maps/menu_view_options.png" /></td>
 </tr>
 <tr>
 <td><img alt="Copy" src="../../user_manual_images/Spectra_Maps/copy.png" /></td>
@@ -2032,7 +2032,9 @@
 </div>
 
 <ul>
-<li><strong>Maps Workspace</strong>: Displays up to three real-time <strong>2D spatial heatmaps</strong> across the active hyperspectral map.</li>
+<li><strong>Maps Workspace</strong>: Automatically adapts to the spatial dimensionality of the selected map:</li>
+<li><strong>2D maps</strong>: Displays up to three real-time <strong>2D spatial heatmaps</strong> across the active hyperspectral grid.</li>
+<li><strong>1D maps (profiles / line scans)</strong>: Automatically detects collinear measurement coordinates and displays the Red, Blue, and Green channels as <strong>1D line plots</strong> along the spatial axis (<code>X (mm)</code>, <code>Y (mm)</code>, or <code>Distance (mm)</code>), seamlessly switching between heatmaps and line plots when you select different maps.</li>
 </ul>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/rgb_live_map.png" alt="RGB Live Maps" width="800"><br>
@@ -2051,7 +2053,11 @@
 <li><strong>Multiple Simultaneous Ranges</strong>: Any combination of the three selectors can be activated at once. Each maintains its own color, interval, and visibility independently.</li>
 <li><strong>Rescale Integrity</strong>: Range selector markers do not expand or pollute the spectrum autoscale boundaries, ensuring the <strong>Rescale</strong> button (<code>Ctrl+R</code>) always zooms perfectly to the loaded spectral data.</li>
 <li><strong>Auto-Clamping</strong>: When cropping or loading new spectral data, range selectors automatically clamp and reposition within the visible spectrum domain.</li>
-<li><strong>Real-Time Updating</strong>: Moving any selector or changing the selected spectra in the <code>SpectraList</code> immediately recalculates and updates the corresponding graph (in the <strong>Spectra Workspace</strong>) or 2D spatial heatmap (in the <strong>Maps Workspace</strong>) in the <strong>Live Maps</strong> tab (with a smooth 60 ms debounce to prevent lagging).</li>
+<li><strong>Real-Time Updating</strong>: Moving any selector or changing the selected spectra/maps immediately recalculates and updates the corresponding 1D variation graph (in the <strong>Spectra Workspace</strong>) or 2D spatial heatmap / 1D profile plot (in the <strong>Maps Workspace</strong>) whenever the <strong>Live Maps</strong> tab is open (with an adaptive 60–250 ms debounce to keep dragging smooth on large datasets). Unchecked spectra in the active map or spectrum list are automatically masked out so masked outliers never bias colorscales or profiles.</li>
+<li><strong>Multi-Map Selection &amp; Comparison (Maps Workspace)</strong>: Use <code>Ctrl+Click</code> or <code>Shift+Click</code> in the <strong>Maps</strong> list to select multiple maps simultaneously while keeping your <strong>Primary Map</strong> active for preprocessing, fitting, and the <code>MapViewer</code>:</li>
+<li><strong>Comparing Multiple 1D Profiles</strong>: When the Primary map is a 1D line scan, all selected 1D profiles are overlaid together inside each channel subpanel with uniform line thickness (toggle the <strong>Legend</strong> button to identify individual curves on the canvas).</li>
+<li><strong>Switching Between Selected 2D Maps</strong>: When the Primary map is a 2D map, a compact <code>◀ [2D Map Selector] ▶</code> switcher appears in the Live Maps header so you can cycle through selected 2D heatmaps without losing your selection.</li>
+<li><strong>Batch Deletion</strong>: Pressing <strong>Delete</strong> while multiple maps are selected prompts for confirmation before removing all selected maps together.</li>
 </ul>
 <h5 id="live-maps-tab-visualization-subpanels"><strong>Live Maps Tab Visualization &amp; Subpanels</strong><a class="headerlink" href="#live-maps-tab-visualization-subpanels" title="Permanent link">&para;</a></h5>
 <p>The <strong>Live Maps</strong> tab is located on the bottom tab bar between <strong>Fit Results</strong> and <strong>MVA</strong> (with the <strong>More</strong> tab positioned at the end of the tabs list).</p>
@@ -2108,15 +2114,42 @@
 <td>Fit-based</td>
 <td>Analytical integrated area of the fitted peak (requires prior fitting).</td>
 </tr>
+<tr>
+<td><strong>R/B ratio</strong> <em>(Green channel only)</em></td>
+<td>Derived</td>
+<td>Pixel-by-pixel (2D map) or point-by-point (1D profile / spectra series) integrated intensity ratio <span class="arithmatex">\(I_{\mathrm{Red}} / I_{\mathrm{Blue}}\)</span>. Updates automatically when Red or Blue brackets are moved or resized; zero or near-zero Blue intensities are safely masked as <code>NaN</code>. While <strong>R/B ratio</strong> is selected, the Green bracket is automatically hidden on the spectrum plot so only the Red and Blue brackets driving the ratio are displayed (switching back to any other parameter immediately restores the Green bracket).</td>
+</tr>
 </tbody>
 </table>
 <p><em>Note</em>: If a fit-based parameter is selected but fit results are not yet available, the panel gracefully displays a notification banner rather than misleading or corrupted values.</p>
+<h5 id="interactive-spectrum-selection-from-rgb-live-maps-maps-workspace"><strong>Interactive Spectrum Selection from RGB Live Maps <em>(Maps Workspace)</em></strong><a class="headerlink" href="#interactive-spectrum-selection-from-rgb-live-maps-maps-workspace" title="Permanent link">&para;</a></h5>
+<p>When working with 2D maps or 1D profile maps in the <strong>Maps</strong> workspace (whenever the <strong>Pan</strong> and <strong>Zoom</strong> tools are unchecked), you can select spectra directly from any Red, Blue, or Green subpanel without leaving the Live Maps tab:</p>
+<ul>
+<li><strong>Single Click</strong>: Selects the spectrum nearest the clicked coordinate and immediately displays it in <code>SpectraViewer</code>.</li>
+<li><strong><code>Ctrl</code> + Click</strong>: Adds another spectrum to the current selection (or toggles an already-selected site off).</li>
+<li><strong>Click &amp; Drag</strong>: Draws a dashed selection box to select all spectra inside the region (<code>Ctrl</code> + drag adds the boxed spectra to your existing selection).</li>
+<li><strong>Synchronized Highlights &amp; Multi-Map Switching</strong>: Selected sites are outlined in red across all active RGB subpanels and kept in sync with the main <code>MapViewer</code> and floating <code>VMapViewerDialog</code> windows. If you switched to another 2D map via the <code>◀ [2D Map] ▶</code> header control, clicking a site on it automatically makes that map your Primary map and loads its spectra. Clicks inside an open legend box remain dedicated to dragging or double-click label editing.</li>
+</ul>
 <h5 id="individual-subpanel-controls"><strong>Individual Subpanel Controls</strong><a class="headerlink" href="#individual-subpanel-controls" title="Permanent link">&para;</a></h5>
 <p>Each subpanel provides dedicated controls:</p>
 <ul>
-<li><strong>Palette</strong> <em>(Maps Workspace only)</em>: Choose any standard colormap (e.g., <code>viridis</code>, <code>plasma</code>, <code>inferno</code>, <code>jet</code>, <code>turbo</code>, <code>coolwarm</code>, <code>cividis</code>, <code>magma</code>, <code>Reds</code>, <code>Blues</code>, <code>Greens</code>). In the <strong>Spectra Workspace</strong>, each 1D variation curve is automatically styled in its matching selector color (Red, Blue, or Green).</li>
-<li><strong>Copy</strong>: Quickly copy the rendered graph or heatmap figure to the clipboard as an image.</li>
+<li><strong>Rescale / Pan / Zoom</strong>: Independent navigation buttons in each subpanel header allow you to zoom into regions of interest, pan across the curve or heatmap, and reset back to the full plot range without affecting adjacent channels. Double-clicking on a legend still opens the legend editor rather than resetting zoom.</li>
+<li><strong>1D Curve Normalization</strong> <em>(1D maps &amp; 1D line plots)</em>: Toggle the normalization button beside the parameter dropdown (with optional <code>Xmin</code> and <code>Xmax</code> bounds) in each RGB subpanel to visually normalize each displayed 1D curve independently to <code>1.0</code> at its global maximum or within <code>[Xmin, Xmax]</code> without modifying underlying data—ideal for comparing profile shapes across maps with different signal amplitudes.</li>
+<li><strong>Palette</strong> <em>(2D heatmaps in Maps Workspace)</em>: Choose any standard colormap (e.g., <code>viridis</code>, <code>plasma</code>, <code>inferno</code>, <code>jet</code>, <code>turbo</code>, <code>coolwarm</code>, <code>cividis</code>, <code>magma</code>, <code>Reds</code>, <code>Blues</code>, <code>Greens</code>). In the <strong>Spectra Workspace</strong>, each 1D variation curve is automatically styled in its matching selector color (Red, Blue, or Green).</li>
+<li><strong>Copy</strong>: Copy the subpanel figure to the clipboard at the configured <strong>Copied figure size</strong> and <strong>Copied figure theme</strong> (independent of the current SPECTROview window size). Hold <strong><code>Ctrl</code> + Click</strong> (or <strong><code>Cmd</code> + Click</strong> on macOS) to copy the underlying numerical dataset of that plot as tab-separated columns (<code>1D</code> variation series, single/multi-<code>1D</code> profile tables, or <code>2D</code> <code>(X, Y, Value)</code> map points) to the clipboard instead.</li>
 <li><strong>Range / Status Badge</strong>: Displays the current interval range <span class="arithmatex">\([x_{min}, x_{max}]\)</span> or fitting status.</li>
+</ul>
+<h5 id="live-maps-view-options-legend-customization"><strong>Live Maps View Options &amp; Legend Customization</strong><a class="headerlink" href="#live-maps-view-options-legend-customization" title="Permanent link">&para;</a></h5>
+<p>Whenever one or more selectors are active, two quick controls appear in the top-right corner of the <strong>Live Maps</strong> tab:</p>
+<ul>
+<li><strong>Show / Hide Legend (<code>btn_legend</code>)</strong>: Toggles interactive canvas legends across 1D subpanels. You can drag inside legends directly with the mouse, or double-click a canvas legend box to customize its labels and colors.</li>
+<li><strong>More View Options (<code>⋯</code>)</strong>: Opens a compact 2-column menu matching <code>SpectraViewer</code> spacing (all choices are synchronized between Spectra and Maps workspaces and automatically saved for future startups):</li>
+<li><strong>Plot Theme</strong>: Switch Live Maps figures between <strong>Light Mode</strong> (white canvas, default) and <strong>Dark Mode</strong> independently of the global application UI theme.</li>
+<li><strong>Axis &amp; Color Scales</strong>: Toggle <strong>X-scale</strong>, <strong>Y-scale</strong>, and <strong>Color (Z) scale</strong> between <strong>Linear</strong> and <strong>Log</strong> (non-positive domains automatically fall back safely).</li>
+<li><strong>Plot Style &amp; Sizing</strong>: Switch 1D curves between <strong>Line</strong> (default), <strong>Line + Dots</strong>, and <strong>Dot</strong>, and tune <strong>Line width</strong> (default <code>1.5</code>), <strong>Dot size</strong> (default <code>1.5</code>), and graph <strong>Text size</strong> (<code>6–24 pt</code>, scaling axis titles, labels, ticks, and colorbar labels).</li>
+<li><strong>Copied Figure Size &amp; Theme</strong>: Set fixed clipboard figure dimensions in inches (<strong>Copied figure size</strong>, default <code>5.5</code> × <code>4.0</code>) and choose <strong>Copied figure theme</strong> (<strong>Light Mode</strong> default or <strong>Dark Mode</strong>) so copied figures retain constant proportions and readable text sizes regardless of window resizing.</li>
+<li><strong>Legend Box Settings</strong>: Toggle legend visibility, change <strong>Legend location</strong> (<code>best</code>, corners, <code>outside right</code>, <code>outside top</code>), <strong>Legend columns</strong>, <strong>Legend font size</strong>, or open <strong>Edit legend labels...</strong> to rename series labels and pick custom colors directly on the canvas legend box.</li>
+<li><strong>Display &amp; Comparison Aids</strong>: Show or hide the <strong>Show figure label</strong> title above each RGB canvas (default Off), toggle <strong>Show grid</strong> (default Off), synchronize Y-limits across panels with <strong>Share Y-axis (1D)</strong>, enable bilinear <strong>Heatmap smoothing</strong>, show/hide <strong>Colorbars</strong>, or <strong>Reset view options</strong>.</li>
 </ul>
 <hr />
 <h3 id="4-fitmodelbuilder"><strong>4. <code>FitModelBuilder</code></strong><a class="headerlink" href="#4-fitmodelbuilder" title="Permanent link">&para;</a></h3>

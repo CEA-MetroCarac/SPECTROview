@@ -1738,7 +1738,7 @@
 <li><em>Mean centering</em> (on/off): Whether to subtract the mean spectrum before analysis. Default: on.</li>
 </ul>
 </li>
-<li><strong>Available Visualizations</strong>: Scree plots (variance explained), Principal Component Loadings, Score plots, and Residual reconstruction error plots.</li>
+<li><strong>Available Visualizations</strong>: Summary dashboard, Scree plots (variance explained), Principal Component Loadings, 2D spatial component Heatmap, Score plots, and Residual reconstruction error plots.</li>
 </ul>
 <h4 id="12-non-negative-matrix-factorization-nmf"><strong>1.2. Non-negative Matrix Factorization (NMF)</strong><a class="headerlink" href="#12-non-negative-matrix-factorization-nmf" title="Permanent link">&para;</a></h4>
 <p>A powerful decomposition algorithm that factors the spectral data into distinct, additive, non-negative components, often representing pure chemical endmembers.</p>
@@ -1750,7 +1750,7 @@
 <li><em>Random Seed</em>: For reproducible results.</li>
 </ul>
 </li>
-<li><strong>Available Visualizations</strong>: Component Loadings, Score plots, and Residual reconstruction error plots.</li>
+<li><strong>Available Visualizations</strong>: Summary dashboard, Component Loadings, 2D spatial component Heatmap, Score plots, and Residual reconstruction error plots.</li>
 </ul>
 <blockquote>
 <p><strong>Why doesn't NMF have a Scree Plot?</strong><br />
@@ -1797,6 +1797,12 @@ Unlike PCA, which strictly orders orthogonal components by the maximum variance 
 <td>Spectral loading profiles overlaid on the wavenumber axis</td>
 </tr>
 <tr>
+<td><strong>Heatmap</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>2D spatial score map for a selectable component <em>(when spatial <code>(x, y)</code> coordinates exist in spectrum names)</em></td>
+</tr>
+<tr>
 <td><strong>Scores</strong></td>
 <td>✅</td>
 <td>✅</td>
@@ -1814,6 +1820,7 @@ Unlike PCA, which strictly orders orthogonal components by the maximum variance 
 <ul>
 <li>Use the <strong>Scree Plot</strong> to determine the optimal number of components (look for the "elbow" in the cumulative variance curve).</li>
 <li>The <strong>Loadings</strong> plot shows which spectral features contribute most to each component.</li>
+<li>The <strong>Heatmap</strong> tab visualizes where a chosen component score concentrates across spatial <code>(x, y)</code> map coordinates.</li>
 <li>The <strong>Scores</strong> plot reveals groupings and outliers in your dataset.</li>
 <li>The <strong>Residuals</strong> tab helps identify spectra that are poorly reconstructed by the model.</li>
 <li>Each plot tab includes a <strong><code>matplotlib</code> toolbar</strong> for zooming, panning, and saving figures.</li>

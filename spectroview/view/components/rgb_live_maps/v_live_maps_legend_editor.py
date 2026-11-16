@@ -166,3 +166,4 @@ class LiveMapsLegendEditorDialog(QDialog):
             "legend_ncol": int(self.spb_ncol.value()),
             "legend_fontsize": int(self.spb_fontsize.value()),
         }
+

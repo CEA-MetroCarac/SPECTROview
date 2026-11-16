@@ -17,7 +17,7 @@ from spectroview.view.components.v_notification import show_notification
 from spectroview.view.theme import Icons, current_tokens
 from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
 from spectroview.view.components.v_fit_results import VFitResults
-from spectroview.view.components.v_live_maps import VLiveMaps
+from spectroview.view.components.rgb_live_maps import VLiveMaps
 from spectroview.view.components.v_moretab  import VMoreTab
 from spectroview.view.components.v_mva import VMVA
 from spectroview.view.components.v_spectra_list import VSpectraList
@@ -282,7 +282,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_spectra_viewer.range_toggled.connect(self._on_range_selector_toggled)
         self.v_spectra_viewer.range_changed.connect(self._on_range_selector_changed)
         self.v_spectra_viewer.range_drag_finished.connect(self._on_range_drag_finished)
-        self.v_live_maps.parameter_change_requested.connect(self.vm_live_maps.set_selector_parameter)
+        self.v_live_maps.parameter_change_requested.connect(self._on_range_selector_parameter_changed)
         self.v_live_maps.set_2d_data_provider(self.vm_live_maps.get_2d_copy_points)
         self.vm_live_maps.map_data_ready.connect(self.v_live_maps.update_map_data)
         self.vm_live_maps.series_data_ready.connect(self.v_live_maps.update_series_data)
@@ -451,6 +451,21 @@ class VWorkspaceSpectra(QWidget):
         """Flush queued Live Maps calculations immediately when bracket drag ends."""
         if hasattr(self, "vm_live_maps") and self._is_live_maps_tab_active():
             self.vm_live_maps.flush_pending()
+
+    def _on_range_selector_parameter_changed(self, color_id: str, parameter: str):
+        """Sync bracket visibility on VSpectraViewer and forward parameter change to VMLiveMaps."""
+        if hasattr(self, "v_live_maps"):
+            panel = self.v_live_maps.panels.get(color_id)
+            if panel is not None and panel.get_selected_parameter() != parameter:
+                panel.cbb_param.blockSignals(True)
+                try:
+                    panel.set_selected_parameter(parameter)
+                    panel._refresh_range_label()
+                finally:
+                    panel.cbb_param.blockSignals(False)
+        if hasattr(self, "v_spectra_viewer"):
+            self.v_spectra_viewer.set_range_selector_parameter(color_id, parameter)
+        self.vm_live_maps.set_selector_parameter(color_id, parameter)
 
     def _on_selection_changed_for_live_maps(self, selected_data):
         """Update Live Maps with the currently selected spectra (deferred when tab hidden)."""

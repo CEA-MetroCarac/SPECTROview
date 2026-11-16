@@ -228,11 +228,26 @@ def test_maps_workspace_live_maps_adapt_to_map_dimensionality_and_rb_ratio(qapp,
     assert np.all(np.diff(panels[SELECTOR_RED]._series_values) > 0)
 
     # 3. Green → R/B ratio from the panel combo, rendered as a profile line
+    # and Green bracket is hidden on VSpectraViewer while R and B stay visible
+    assert len(viewer.range_manager._artists[SELECTOR_GREEN]) == 7
     panels[SELECTOR_GREEN].set_selected_parameter(PARAM_RB_RATIO)
+    assert viewer.btn_range_green.isChecked() is True
+    assert panels[SELECTOR_GREEN].isVisible() is True
+    assert len(viewer.range_manager._artists[SELECTOR_GREEN]) == 0
+    assert len(viewer.range_manager._artists[SELECTOR_RED]) == 7
+    assert len(viewer.range_manager._artists[SELECTOR_BLUE]) == 7
+
     ratio = panels[SELECTOR_GREEN]._series_values
     red_vals = panels[SELECTOR_RED]._series_values
     blue_vals = panels[SELECTOR_BLUE]._series_values
     np.testing.assert_allclose(ratio, red_vals / blue_vals, rtol=1e-9)
+
+    # Replot & toggle off/on while R/B ratio is selected must keep Green bracket hidden
+    viewer._plot()
+    assert len(viewer.range_manager._artists[SELECTOR_GREEN]) == 0
+    viewer.btn_range_green.setChecked(False)
+    viewer.btn_range_green.setChecked(True)
+    assert len(viewer.range_manager._artists[SELECTOR_GREEN]) == 0
 
     # 4. Moving the Red bracket updates the ratio (debounced path flushed)
     viewer.range_manager.set_range(SELECTOR_RED, 600.0, 800.0)
@@ -240,11 +255,81 @@ def test_maps_workspace_live_maps_adapt_to_map_dimensionality_and_rb_ratio(qapp,
     ws.vm_live_maps._recalculate_pending()
     assert not np.allclose(panels[SELECTOR_GREEN]._series_values, ratio)
 
-    # 5. Back to the 2D map → heatmaps again, Green ratio as heatmap
+    # 5. Back to the 2D map → heatmaps again, Green ratio as heatmap (bracket still hidden)
     ws.vm_live_maps.set_map_data(test_map_data)
     for cid in (SELECTOR_RED, SELECTOR_BLUE, SELECTOR_GREEN):
         assert panels[cid].img is not None and panels[cid].line is None
     assert panels[SELECTOR_GREEN]._grid.shape == (4, 5)
+    assert len(viewer.range_manager._artists[SELECTOR_GREEN]) == 0
+
+    # 6. Switching Green back to a standard parameter restores the Green bracket
+    from spectroview.model.spectral_parameters import PARAM_INTEGRATED_INTENSITY
+    panels[SELECTOR_GREEN].set_selected_parameter(PARAM_INTEGRATED_INTENSITY)
+    assert len(viewer.range_manager._artists[SELECTOR_GREEN]) == 7
+
+
+def test_spectra_workspace_green_bracket_hidden_on_rb_ratio(qapp):
+    """In Spectra workspace, activating R/G/B and picking R/B ratio hides only the Green bracket."""
+    from spectroview.model.spectral_parameters import (
+        PARAM_INTEGRATED_INTENSITY,
+        PARAM_RB_RATIO,
+        SELECTOR_BLUE,
+        SELECTOR_GREEN,
+    )
+
+    ws = VWorkspaceSpectra()
+    ws.show()
+    try:
+        x = np.linspace(500.0, 1500.0, 101)
+        fnames = []
+        for i in range(4):
+            fname = f"rb_spec_{i}"
+            fnames.append(fname)
+            y = (
+                (10.0 + 2.0 * i) * np.exp(-((x - 700.0) ** 2) / (2 * 25.0 ** 2))
+                + 5.0 * np.exp(-((x - 1100.0) ** 2) / (2 * 25.0 ** 2))
+                + 1.0
+            ).reshape(1, -1)
+            ws.vm.store.add_map(
+                name=fname,
+                x0=x.copy(),
+                Y0=y.astype(np.float32),
+                coords=np.array([[0.0, 0.0]], dtype=np.float64),
+                fnames=[fname],
+                is_active=np.array([True], dtype=bool),
+            )
+        ws.vm._emit_list_update()
+        ws.v_spectra_list.select_all()
+        ws.bottom_tabs.setCurrentWidget(ws.v_live_maps)
+
+        viewer = ws.v_spectra_viewer
+        viewer.btn_range_red.setChecked(True)
+        viewer.btn_range_blue.setChecked(True)
+        viewer.btn_range_green.setChecked(True)
+        viewer.range_manager.set_range(SELECTOR_RED, 650.0, 750.0)
+        viewer.range_manager.set_range(SELECTOR_BLUE, 1050.0, 1150.0)
+
+        green_panel = ws.v_live_maps.panels[SELECTOR_GREEN]
+        assert len(viewer.range_manager._artists[SELECTOR_GREEN]) == 7
+
+        # Select R/B ratio -> Green panel remains visible, Green bracket disappears on spectra plot
+        green_panel.set_selected_parameter(PARAM_RB_RATIO)
+        assert green_panel.isVisible() is True
+        assert viewer.btn_range_green.isChecked() is True
+        assert len(viewer.range_manager._artists[SELECTOR_GREEN]) == 0
+        assert len(viewer.range_manager._artists[SELECTOR_RED]) == 7
+        assert len(viewer.range_manager._artists[SELECTOR_BLUE]) == 7
+
+        # Replot keeps Green bracket hidden
+        viewer._plot()
+        assert len(viewer.range_manager._artists[SELECTOR_GREEN]) == 0
+
+        # Restore regular parameter -> Green bracket reappears
+        green_panel.set_selected_parameter(PARAM_INTEGRATED_INTENSITY)
+        assert len(viewer.range_manager._artists[SELECTOR_GREEN]) == 7
+    finally:
+        ws.close()
+        ws.deleteLater()
 
 
 def test_maps_workspace_multi_selection_gating_and_batch_delete(qapp, test_map_data, monkeypatch):

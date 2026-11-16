@@ -140,9 +140,13 @@ spectroview/
 │       ├── v_map_viewer.py            # Heatmap / wafer canvas
 │       ├── v_map_viewer_dialog.py     # Detachable map viewer window
 │       ├── v_map_list.py              # Loaded maps list panel (Two-Tier Selection)
-│       ├── v_live_maps.py             # Live Maps multi-panel dock widget
-│       ├── v_live_maps_legend_editor.py # Live Maps display names & order editor
-│       ├── v_range_selector.py        # Drag-to-zoom range selector for Live Maps
+│       ├── rgb_live_maps/             # RGB range bracketing & Live Maps package
+│       │   ├── __init__.py            # Package exports for RGB range selectors & Live Maps
+│       │   ├── common.py              # Shared palettes, themes, view options & 1D norm helpers
+│       │   ├── v_live_maps.py         # VLiveMaps multi-panel tab view & options menu
+│       │   ├── v_live_map_subpanel.py # LiveMapSubpanel (2D heatmap / 1D line plot canvas)
+│       │   ├── v_live_maps_legend_editor.py # LiveMapsLegendEditorDialog labels & colors editor
+│       │   └── v_range_selector.py    # VRangeSelectorPanel, RangeSelectorManager & SpectraRangeBracketMixin
 │       ├── map_selection.py           # Shared spatial/heatmap selection engine (MapSelectionController)
 │       ├── v_graph.py                 # Single graph widget (matplotlib)
 │       ├── v_plot_renderer.py         # Stateless Matplotlib plot rendering engine (PlotRenderer)

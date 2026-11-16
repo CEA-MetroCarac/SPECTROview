@@ -208,7 +208,7 @@ The **Live Maps** tab is located on the bottom tab bar between **Fit Results** a
 | **Peak position (fit)** | Fit-based | Center wavenumber ($x_0$) of a fitted peak within the interval (requires prior fitting). |
 | **Peak height (fit)** | Fit-based | Fitted amplitude ($A$) of the peak within the interval (requires prior fitting). |
 | **Peak area (fit)** | Fit-based | Analytical integrated area of the fitted peak (requires prior fitting). |
-| **R/B ratio** *(Green channel only)* | Derived | Pixel-by-pixel (2D map) or point-by-point (1D profile / spectra series) integrated intensity ratio $I_{\mathrm{Red}} / I_{\mathrm{Blue}}$. Updates automatically when Red or Blue brackets are moved or resized; zero or near-zero Blue intensities are safely masked as `NaN`. |
+| **R/B ratio** *(Green channel only)* | Derived | Pixel-by-pixel (2D map) or point-by-point (1D profile / spectra series) integrated intensity ratio $I_{\mathrm{Red}} / I_{\mathrm{Blue}}$. Updates automatically when Red or Blue brackets are moved or resized; zero or near-zero Blue intensities are safely masked as `NaN`. While **R/B ratio** is selected, the Green bracket is automatically hidden on the spectrum plot so only the Red and Blue brackets driving the ratio are displayed (switching back to any other parameter immediately restores the Green bracket). |
 
 *Note*: If a fit-based parameter is selected but fit results are not yet available, the panel gracefully displays a notification banner rather than misleading or corrupted values.
 

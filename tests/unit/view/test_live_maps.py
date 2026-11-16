@@ -12,12 +12,10 @@ from spectroview.model.spectral_parameters import (
     SELECTOR_BLUE,
     SELECTOR_GREEN,
 )
-from spectroview.view.components.v_live_maps import (
-    VLiveMaps,
-    LiveMapSubpanel,
-)
-from spectroview.view.components.v_live_maps_legend_editor import (
+from spectroview.view.components.rgb_live_maps import (
     LiveMapsLegendEditorDialog,
+    LiveMapSubpanel,
+    VLiveMaps,
 )
 
 

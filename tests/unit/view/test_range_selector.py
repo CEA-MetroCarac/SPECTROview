@@ -4,12 +4,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from spectroview.model.spectral_parameters import (
+    PARAM_INTEGRATED_INTENSITY,
+    PARAM_RB_RATIO,
     SELECTOR_RED,
     SELECTOR_BLUE,
     SELECTOR_GREEN,
     SELECTOR_KEYS,
 )
-from spectroview.view.components.v_range_selector import (
+from spectroview.view.components.rgb_live_maps import (
     VRangeSelectorPanel,
     RangeSelectorManager,
 )
@@ -237,5 +239,66 @@ def test_range_selector_render_reuses_artists_in_place_and_supports_animated(qap
         assert all(not a.get_animated() for a in mgr.active_artists())
     finally:
         plt.close(fig)
+
+
+def test_green_bracket_hidden_when_rb_ratio_selected(qapp):
+    """Selecting R/B ratio on the Green selector hides its bracket on the axes while staying active."""
+    mgr = RangeSelectorManager()
+    fig, ax = plt.subplots()
+    try:
+        ax.set_xlim(0.0, 1200.0)
+        ax.set_ylim(0.0, 100.0)
+        ax.plot([0.0, 1200.0], [10.0, 20.0])
+
+        for cid, rng in (
+            (SELECTOR_RED, (200.0, 350.0)),
+            (SELECTOR_BLUE, (500.0, 650.0)),
+            (SELECTOR_GREEN, (800.0, 950.0)),
+        ):
+            mgr.set_active(cid, True)
+            mgr.set_range(cid, *rng)
+        mgr.render(ax)
+        fig.canvas.draw()
+
+        assert len(mgr._artists[SELECTOR_GREEN]) == 7
+        assert len(mgr.active_artists()) == 21
+
+        class FakeEvent:
+            def __init__(self, x_data, y_val=50.0):
+                self.inaxes = ax
+                self.xdata = x_data
+                self.ydata = y_val
+                px, py = ax.transData.transform((x_data, y_val))
+                self.x = px
+                self.y = py
+                self.button = 1
+
+        assert mgr.hit_test(ax, FakeEvent(800.0), zoom_active=False) == (SELECTOR_GREEN, "min")
+        assert mgr.hit_test(ax, FakeEvent(875.0), zoom_active=False) == (SELECTOR_GREEN, "body")
+
+        # Switching Green to R/B ratio removes only the Green bracket while keeping it active
+        mgr.set_parameter(SELECTOR_GREEN, PARAM_RB_RATIO)
+        mgr.render(ax)
+        assert mgr.is_active(SELECTOR_GREEN) is True
+        assert mgr.is_bracket_visible(SELECTOR_GREEN) is False
+        assert mgr.has_visible_brackets() is True
+        assert len(mgr._artists[SELECTOR_GREEN]) == 0
+        assert len(mgr.active_artists()) == 14
+        assert mgr.hit_test(ax, FakeEvent(800.0), zoom_active=False) is None
+        assert mgr.hit_test(ax, FakeEvent(875.0), zoom_active=False) is None
+        # Red and Blue brackets remain visible and interactive
+        assert mgr.hit_test(ax, FakeEvent(200.0), zoom_active=False) == (SELECTOR_RED, "min")
+        assert mgr.hit_test(ax, FakeEvent(500.0), zoom_active=False) == (SELECTOR_BLUE, "min")
+
+        # Switching back to a spectral parameter restores the Green bracket
+        mgr.set_parameter(SELECTOR_GREEN, PARAM_INTEGRATED_INTENSITY)
+        mgr.render(ax)
+        assert mgr.is_bracket_visible(SELECTOR_GREEN) is True
+        assert len(mgr._artists[SELECTOR_GREEN]) == 7
+        assert len(mgr.active_artists()) == 21
+        assert mgr.hit_test(ax, FakeEvent(800.0), zoom_active=False) == (SELECTOR_GREEN, "min")
+    finally:
+        plt.close(fig)
+
 
 

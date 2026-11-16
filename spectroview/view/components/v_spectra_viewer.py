@@ -11,13 +11,13 @@ warnings.filterwarnings("ignore", message=".*constrained_layout not applied beca
 from PySide6.QtWidgets import (
     QFrame, QGroupBox,
     QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QToolButton, QLabel,
+    QPushButton, QToolButton, QLabel, QCheckBox,
     QComboBox, QDialog, QMenu, QWidgetAction,
     QLineEdit, QDoubleSpinBox, QSpinBox,
     QSlider, QApplication, QButtonGroup
 )
 from PySide6.QtCore import Qt, Signal, QSize, QPoint, QTimer
-from PySide6.QtGui import QCursor
+from PySide6.QtGui import QAction, QCursor
 from spectroview.view.components.v_notification import show_notification
 
 import matplotlib.pyplot as plt
@@ -477,38 +477,111 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
             self._set_zoom_tool_active(False)
 
     # Options menu
-    def _create_options_menu(self):
-        menu = QMenu(self)
+    def _wrap_menu_row(self, parent_widget: QWidget, label: str, widget: QWidget) -> QWidget:
+        """Build a compact label + control row for the 2-column options menu."""
+        row_widget = QWidget(parent_widget)
+        row_layout = QHBoxLayout(row_widget)
+        row_layout.setContentsMargins(2, 1, 2, 1)
+        row_layout.setSpacing(6)
+        row_layout.addWidget(QLabel(label, row_widget))
+        row_layout.addWidget(widget, stretch=1)
+        return row_widget
 
-        # Plot Theme
-        self.cbb_theme = QComboBox()
+    @staticmethod
+    def _menu_h_separator(parent_widget: QWidget) -> QFrame:
+        """Return a hairline horizontal separator for the 2-column options menu."""
+        line = QFrame(parent_widget)
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        line.setFixedHeight(1)
+        return line
+
+    def _bind_menu_checkbox(
+        self,
+        parent_widget: QWidget,
+        menu: QMenu,
+        text: str,
+        checked: bool,
+        on_toggled,
+    ):
+        """Create a compact QCheckBox synchronized with a programmatic QAction."""
+        act = QAction(text, menu)
+        act.setCheckable(True)
+        act.setChecked(bool(checked))
+
+        chk = QCheckBox(text, parent_widget)
+        chk.setChecked(bool(checked))
+
+        def _on_act_toggled(val: bool):
+            val = bool(val)
+            if chk.isChecked() != val:
+                chk.blockSignals(True)
+                chk.setChecked(val)
+                chk.blockSignals(False)
+            on_toggled(val)
+
+        def _on_chk_toggled(val: bool):
+            val = bool(val)
+            if act.isChecked() != val:
+                act.setChecked(val)
+
+        act.toggled.connect(_on_act_toggled)
+        chk.toggled.connect(_on_chk_toggled)
+        return act, chk
+
+    def _create_options_menu(self):
+        """Build a compact 2-column 'More view options' menu matching VLiveMaps spacing."""
+        menu = QMenu(self)
+        panel = QWidget(menu)
+        self._options_panel = panel
+
+        outer_layout = QVBoxLayout(panel)
+        outer_layout.setContentsMargins(6, 4, 6, 4)
+        outer_layout.setSpacing(2)
+
+        cols_layout = QHBoxLayout()
+        cols_layout.setContentsMargins(0, 0, 0, 0)
+        cols_layout.setSpacing(8)
+
+        left_col = QWidget(panel)
+        left_layout = QVBoxLayout(left_col)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(2)
+
+        right_col = QWidget(panel)
+        right_layout = QVBoxLayout(right_col)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(2)
+
+        # ── Left Column: Theme, Axes, Plot Style, Palette, Line/Dot Sizes & Copy Options ──
+        self.cbb_theme = QComboBox(left_col)
         self.cbb_theme.addItems(["Light Mode", "Dark Mode"])
         self.cbb_theme.currentIndexChanged.connect(self._apply_plot_style)
-        menu.addAction(self._wrap("Plot Theme:", self.cbb_theme))
+        left_layout.addWidget(self._wrap_menu_row(left_col, "Plot Theme:", self.cbb_theme))
 
-        # X-axis
-        self.cbb_xaxis = QComboBox()
+        self.cbb_xaxis = QComboBox(left_col)
         self.cbb_xaxis.addItems(X_AXIS_UNIT)
         self.cbb_xaxis.currentIndexChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap("X-axis:", self.cbb_xaxis))
+        left_layout.addWidget(self._wrap_menu_row(left_col, "X-axis:", self.cbb_xaxis))
 
-        # Y-axis unit
-        self.cbb_yaxis = QComboBox()
+        self.cbb_yaxis = QComboBox(left_col)
         self.cbb_yaxis.addItems(Y_AXIS_UNIT)
         self.cbb_yaxis.currentIndexChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap("Y-axis:", self.cbb_yaxis))
+        left_layout.addWidget(self._wrap_menu_row(left_col, "Y-axis:", self.cbb_yaxis))
 
-        # Y-scale
-        self.cbb_yscale = QComboBox()
+        self.cbb_yscale = QComboBox(left_col)
         self.cbb_yscale.addItems(["Linear", "Log"])
         self.cbb_yscale.currentIndexChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap("Y-scale:", self.cbb_yscale))   
+        left_layout.addWidget(self._wrap_menu_row(left_col, "Y-scale:", self.cbb_yscale))
 
-        # Main spectrum plot style
-        self.cbb_plotstyle = QComboBox()
+        left_layout.addWidget(self._menu_h_separator(left_col))
+
+        self.cbb_plotstyle = QComboBox(left_col)
         self.cbb_plotstyle.addItems(["line", "dot"])
         self.cbb_plotstyle.currentIndexChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap("Spectrum plot style:", self.cbb_plotstyle))
+        left_layout.addWidget(
+            self._wrap_menu_row(left_col, "Spectrum plot style:", self.cbb_plotstyle)
+        )
 
         # Spectrum color palette. Qualitative palettes cycle through distinct
         # colors; sequential/rainbow palettes are sampled across all selected
@@ -516,93 +589,130 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         self.cbb_color_palette = CustomizedPalette(
             palette_list=SPECTRA_COLOR_PALETTES,
             custom_palettes=SPECTRA_CUSTOM_PALETTES,
+            parent=left_col,
         )
         self.cbb_color_palette.setCurrentText("DEFAULT_COLORS")
         self.cbb_color_palette.setToolTip(
             "Choose colors for the selected spectrum series. Custom colors "
             "set from the legend continue to take priority."
         )
-        self.cbb_color_palette.currentIndexChanged.connect(
-            self._emit_view_options)
-        menu.addAction(self._wrap("Color palette:", self.cbb_color_palette))
+        self.cbb_color_palette.currentIndexChanged.connect(self._emit_view_options)
+        left_layout.addWidget(
+            self._wrap_menu_row(left_col, "Color palette:", self.cbb_color_palette)
+        )
 
-        # Line width
-        self.spin_lw = QDoubleSpinBox()
+        self.spin_lw = QDoubleSpinBox(left_col)
         self.spin_lw.setRange(0.1, 5)
         self.spin_lw.setSingleStep(0.5)
         self.spin_lw.setValue(1.5)
         self.spin_lw.valueChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap("Line width:", self.spin_lw))
-        # Dot size
-        self.spin_dotsize = QDoubleSpinBox()
+        left_layout.addWidget(self._wrap_menu_row(left_col, "Line width:", self.spin_lw))
+
+        self.spin_dotsize = QDoubleSpinBox(left_col)
         self.spin_dotsize.setRange(0.5, 10)
         self.spin_dotsize.setSingleStep(0.5)
         self.spin_dotsize.setValue(3)
         self.spin_dotsize.valueChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap("Dot size:", self.spin_dotsize))
+        left_layout.addWidget(self._wrap_menu_row(left_col, "Dot size:", self.spin_dotsize))
 
-        menu.addSeparator()
+        left_layout.addWidget(self._menu_h_separator(left_col))
 
-        # Toggles
-        self._add_checkbox(menu, "Raw")
-        # Bestfit is now controlled by btn_bestfit button in toolbar
-        
-        # Bestfit colorful
-        self.act_bestfit_colorful = menu.addAction("Bestfit curve colorful")
-        self.act_bestfit_colorful.setCheckable(True)
-        self.act_bestfit_colorful.setChecked(True)
-        self.act_bestfit_colorful.toggled.connect(self._emit_view_options)
+        ratio_widget = QWidget(left_col)
+        ratio_layout = QHBoxLayout(ratio_widget)
+        ratio_layout.setContentsMargins(2, 1, 2, 1)
+        ratio_layout.setSpacing(4)
+        ratio_layout.addWidget(QLabel("Copied figure size:", ratio_widget))
+        ratio_layout.addStretch(1)
 
-        # Show peak label
-        self.act_show_peak_label = menu.addAction("Show peak label")
-        self.act_show_peak_label.setCheckable(True)
-        self.act_show_peak_label.setChecked(False)
-        self.act_show_peak_label.toggled.connect(self._emit_view_options)
+        self.width_entry = QLineEdit(ratio_widget)
+        self.width_entry.setFixedWidth(40)
+        self.width_entry.setText("5.5")
+        self.width_entry.editingFinished.connect(self._emit_view_options)
+        ratio_layout.addWidget(self.width_entry)
 
-        self._add_checkbox(menu, "Residual")
-        self._add_checkbox(menu, "Grid")
+        self.height_entry = QLineEdit(ratio_widget)
+        self.height_entry.setFixedWidth(40)
+        self.height_entry.setText("4.0")
+        self.height_entry.editingFinished.connect(self._emit_view_options)
+        ratio_layout.addWidget(self.height_entry)
+        left_layout.addWidget(ratio_widget)
 
-        # Show noise level
-        self.act_noise_level = menu.addAction("Show noise level")
-        self.act_noise_level.setCheckable(True)
-        self.act_noise_level.setChecked(False)
-        self.act_noise_level.toggled.connect(self._emit_view_options)
+        self.cbb_copy_theme = QComboBox(left_col)
+        self.cbb_copy_theme.addItems(["Light Mode", "Dark Mode"])
+        self.cbb_copy_theme.currentIndexChanged.connect(self._emit_view_options)
+        left_layout.addWidget(
+            self._wrap_menu_row(left_col, "Copied figure theme:", self.cbb_copy_theme)
+        )
+        left_layout.addStretch(1)
 
-        menu.addSeparator()
+        # ── Right Column: Display Toggles & Legend / Colorbar Settings ──
+        self.act_raw, self.chk_raw = self._bind_menu_checkbox(
+            right_col, menu, "Raw", False, lambda _v: self._emit_view_options()
+        )
+        right_layout.addWidget(self.chk_raw)
 
-        # Max legend items / heavy overlays
-        self.spin_max_legend_items = QSpinBox()
+        self.act_bestfit_colorful, self.chk_bestfit_colorful = self._bind_menu_checkbox(
+            right_col, menu, "Bestfit curve colorful", True, lambda _v: self._emit_view_options()
+        )
+        right_layout.addWidget(self.chk_bestfit_colorful)
+
+        self.act_show_peak_label, self.chk_show_peak_label = self._bind_menu_checkbox(
+            right_col, menu, "Show peak label", False, lambda _v: self._emit_view_options()
+        )
+        right_layout.addWidget(self.chk_show_peak_label)
+
+        self.act_residual, self.chk_residual = self._bind_menu_checkbox(
+            right_col, menu, "Residual", False, lambda _v: self._emit_view_options()
+        )
+        right_layout.addWidget(self.chk_residual)
+
+        self.act_grid, self.chk_grid = self._bind_menu_checkbox(
+            right_col, menu, "Grid", False, lambda _v: self._emit_view_options()
+        )
+        right_layout.addWidget(self.chk_grid)
+
+        self.act_noise_level, self.chk_noise_level = self._bind_menu_checkbox(
+            right_col, menu, "Show noise level", False, lambda _v: self._emit_view_options()
+        )
+        right_layout.addWidget(self.chk_noise_level)
+
+        right_layout.addWidget(self._menu_h_separator(right_col))
+
+        self.spin_max_legend_items = QSpinBox(right_col)
         self.spin_max_legend_items.setRange(1, 1000)
         self.spin_max_legend_items.setValue(15)
         self.spin_max_legend_items.valueChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap(
-            "Max legend items:", self.spin_max_legend_items))
+        right_layout.addWidget(
+            self._wrap_menu_row(right_col, "Max legend items:", self.spin_max_legend_items)
+        )
+        # Backwards-compatible alias for internal/external code that used the
+        # old name when this control was first introduced.
+        self.spin_max_overlays = self.spin_max_legend_items
 
-        # Move legend box outside
-        self.act_legend_outside = menu.addAction("Move legend box outside")
-        self.act_legend_outside.setCheckable(True)
-        self.act_legend_outside.setChecked(False)
-        self.act_legend_outside.toggled.connect(self._emit_view_options)
+        self.act_legend_outside, self.chk_legend_outside = self._bind_menu_checkbox(
+            right_col, menu, "Move legend box outside", False, lambda _v: self._emit_view_options()
+        )
+        right_layout.addWidget(self.chk_legend_outside)
 
-        # Show colorbar instead of discrete legend box
-        self.act_legend_colorbar = menu.addAction("Show colorbar instead of legend")
-        self.act_legend_colorbar.setCheckable(True)
-        self.act_legend_colorbar.setChecked(False)
-        self.act_legend_colorbar.toggled.connect(self._on_legend_colorbar_toggled)
+        self.act_legend_colorbar, self.chk_legend_colorbar = self._bind_menu_checkbox(
+            right_col, menu, "Show colorbar instead of legend", False, self._on_legend_colorbar_toggled
+        )
+        right_layout.addWidget(self.chk_legend_colorbar)
 
-        # Colorbar parameter selector (populated from filename numeric tokens)
-        self.cbb_colorbar_param = QComboBox()
+        # Colorbar sub-options (shown only when "Show colorbar instead of legend" is checked)
+        self.cbb_colorbar_param = QComboBox(right_col)
         self.cbb_colorbar_param.addItem("Index")
         self.cbb_colorbar_param.setToolTip(
             "Colorbar parameter: choose parameter for the colorbar.\n"
             "Index = spectrum order, or select a token parsed from filenames."
         )
         self.cbb_colorbar_param.currentIndexChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap("Colorbar parameter:", self.cbb_colorbar_param))
+        self.row_colorbar_param = self._wrap_menu_row(
+            right_col, "Colorbar parameter:", self.cbb_colorbar_param
+        )
+        right_layout.addWidget(self.row_colorbar_param)
 
-        # Colorbar custom label
-        self.le_colorbar_label = QLineEdit()
-        self.le_colorbar_label.setFixedWidth(100)
+        self.le_colorbar_label = QLineEdit(right_col)
         self.le_colorbar_label.setPlaceholderText("Colorbar label")
         self.le_colorbar_label.setToolTip(
             "Custom label for the spectrum colorbar.\n"
@@ -610,63 +720,29 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
             "Example: Temperature (°C)"
         )
         self.le_colorbar_label.textChanged.connect(self._on_heatmap_ylabel_changed)
-        menu.addAction(self._wrap("Colorbar label:", self.le_colorbar_label))
+        self.row_colorbar_label = self._wrap_menu_row(
+            right_col, "Colorbar label:", self.le_colorbar_label
+        )
+        right_layout.addWidget(self.row_colorbar_label)
+        right_layout.addStretch(1)
 
-        # Backwards-compatible alias for internal/external code that used the
-        # old name when this control was first introduced.
-        self.spin_max_overlays = self.spin_max_legend_items
+        v_sep = QFrame(panel)
+        v_sep.setFrameShape(QFrame.VLine)
+        v_sep.setFrameShadow(QFrame.Sunken)
 
-        menu.addSeparator()
-        
-        # ─── Copied figure size (NEW) ───
-        ratio_widget = QWidget()
-        ratio_layout = QHBoxLayout(ratio_widget)
-        ratio_layout.setContentsMargins(2, 2, 2, 2)
+        cols_layout.addWidget(left_col, stretch=1)
+        cols_layout.addWidget(v_sep)
+        cols_layout.addWidget(right_col, stretch=1)
+        outer_layout.addLayout(cols_layout)
 
-        ratio_layout.addWidget(QLabel("Copied figure size:"))
+        container_action = QWidgetAction(menu)
+        container_action.setDefaultWidget(panel)
+        menu.addAction(container_action)
 
-        self.width_entry = QLineEdit()
-        self.width_entry.setFixedWidth(40)
-        self.width_entry.setText("5.5")
-        self.width_entry.editingFinished.connect(self._emit_view_options)
-        ratio_layout.addWidget(self.width_entry)
-
-        self.height_entry = QLineEdit()
-        self.height_entry.setFixedWidth(40)
-        self.height_entry.setText("4.0")
-        self.height_entry.editingFinished.connect(self._emit_view_options)
-        ratio_layout.addWidget(self.height_entry)
-
-        ratio_action = QWidgetAction(self)
-        ratio_action.setDefaultWidget(ratio_widget)
-        menu.addAction(ratio_action)
-
-        # Copied figure theme
-        self.cbb_copy_theme = QComboBox()
-        self.cbb_copy_theme.addItems(["Light Mode", "Dark Mode"])
-        self.cbb_copy_theme.currentIndexChanged.connect(self._emit_view_options)
-        menu.addAction(self._wrap("Copied figure theme:", self.cbb_copy_theme))
+        # Hide colorbar parameter & label rows until colorbar mode is checked
+        self._update_colorbar_options_visibility(False)
 
         return menu
-
-    def _add_checkbox(self, menu, name, checked=False):
-        """Helper to add a checkable action to the options menu."""
-        act = menu.addAction(name)
-        act.setCheckable(True)
-        act.setChecked(checked)
-        act.toggled.connect(self._emit_view_options)
-        setattr(self, f"act_{name.lower()}", act)
-
-    def _wrap(self, label, widget):
-        """Helper to wrap a widget with a label into a QWidgetAction."""
-        w = QWidget()
-        l = QHBoxLayout(w)
-        l.setContentsMargins(2, 2, 2, 2)
-        l.addWidget(QLabel(label))
-        l.addWidget(widget)
-        act = QWidgetAction(self)
-        act.setDefaultWidget(w)
-        return act
 
     # ─────────────────────────────────────────
     # Public API
@@ -1401,8 +1477,25 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
             and self.act_legend_colorbar.isChecked()
         )
 
+    def _update_colorbar_options_visibility(self, visible: bool):
+        """Show colorbar parameter and label controls only when colorbar mode is checked."""
+        vis = bool(visible)
+        for w in (
+            getattr(self, "row_colorbar_param", None),
+            getattr(self, "row_colorbar_label", None),
+            getattr(self, "cbb_colorbar_param", None),
+            getattr(self, "le_colorbar_label", None),
+        ):
+            if w is not None:
+                w.setVisible(vis)
+        if hasattr(self, "_options_panel") and self._options_panel is not None:
+            self._options_panel.adjustSize()
+        if hasattr(self, "options_menu") and self.options_menu is not None:
+            self.options_menu.adjustSize()
+
     def _on_legend_colorbar_toggled(self, checked: bool):
-        """Auto-enable legend toggle when colorbar mode is turned on, then redraw."""
+        """Auto-enable legend toggle when colorbar mode is turned on, update sub-option visibility, then redraw."""
+        self._update_colorbar_options_visibility(checked)
         if checked and not getattr(self, "_is_setting_options", False):
             if hasattr(self, "btn_legend") and not self.btn_legend.isChecked():
                 self.btn_legend.blockSignals(True)
@@ -2128,9 +2221,32 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         if hasattr(self, "spin_heatmap_interp"):
             _update(self.spin_heatmap_interp, self.spin_heatmap_interp.setValue, state.get("heatmap_interp", 300))
 
+        self._sync_menu_checkboxes()
         self._apply_plot_style()
         self._plot()
         self._is_setting_options = False
+
+    def _sync_menu_checkboxes(self):
+        """Synchronize 2-column menu QCheckBox widgets and conditional rows with QAction states."""
+        pairs = (
+            ("act_raw", "chk_raw"),
+            ("act_bestfit_colorful", "chk_bestfit_colorful"),
+            ("act_show_peak_label", "chk_show_peak_label"),
+            ("act_residual", "chk_residual"),
+            ("act_grid", "chk_grid"),
+            ("act_noise_level", "chk_noise_level"),
+            ("act_legend_outside", "chk_legend_outside"),
+            ("act_legend_colorbar", "chk_legend_colorbar"),
+        )
+        for act_attr, chk_attr in pairs:
+            act = getattr(self, act_attr, None)
+            chk = getattr(self, chk_attr, None)
+            if act is not None and chk is not None and chk.isChecked() != act.isChecked():
+                chk.blockSignals(True)
+                chk.setChecked(act.isChecked())
+                chk.blockSignals(False)
+        if hasattr(self, "act_legend_colorbar"):
+            self._update_colorbar_options_visibility(self.act_legend_colorbar.isChecked())
         
     def _apply_plot_style(self):
         self._has_applied_plot_style = True

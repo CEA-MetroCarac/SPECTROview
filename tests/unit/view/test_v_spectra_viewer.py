@@ -783,6 +783,64 @@ def test_filename_token_extraction_without_extension_preserves_decimals(viewer):
     assert token_dict.get("01") == 1.0
 
 
+def test_options_menu_two_column_layout_and_colorbar_controls_visibility(viewer):
+    """Verify More view options uses a compact 2-column layout and toggles colorbar sub-options."""
+    from PySide6.QtWidgets import QFrame
+
+    menu = viewer.options_menu
+    assert len(menu.actions()) == 1
+    container = menu.actions()[0].defaultWidget()
+    v_lines = [
+        f for f in container.findChildren(QFrame)
+        if f.frameShape() == QFrame.VLine
+    ]
+    assert len(v_lines) == 1
+    assert container.sizeHint().height() < 360
+
+    # Colorbar parameter and label rows are hidden when colorbar mode is unchecked
+    assert viewer.chk_legend_colorbar.isChecked() is False
+    assert viewer.row_colorbar_param.isHidden() is True
+    assert viewer.cbb_colorbar_param.isHidden() is True
+    assert viewer.row_colorbar_label.isHidden() is True
+    assert viewer.le_colorbar_label.isHidden() is True
+
+    # Show menu to verify real isVisible() transitions when checkbox toggles
+    menu.show()
+    viewer.chk_legend_colorbar.setChecked(True)
+    assert viewer.act_legend_colorbar.isChecked() is True
+    assert viewer.row_colorbar_param.isHidden() is False
+    assert viewer.cbb_colorbar_param.isVisible() is True
+    assert viewer.row_colorbar_label.isHidden() is False
+    assert viewer.le_colorbar_label.isVisible() is True
+
+    viewer.chk_legend_colorbar.setChecked(False)
+    assert viewer.act_legend_colorbar.isChecked() is False
+    assert viewer.row_colorbar_param.isHidden() is True
+    assert viewer.cbb_colorbar_param.isVisible() is False
+    assert viewer.row_colorbar_label.isHidden() is True
+    assert viewer.le_colorbar_label.isVisible() is False
+
+    # set_options_state syncs menu checkboxes and conditional colorbar rows
+    state_on = viewer.get_options_state()
+    state_on["legend_colorbar"] = True
+    state_on["grid"] = True
+    viewer.set_options_state(state_on)
+    assert viewer.chk_legend_colorbar.isChecked() is True
+    assert viewer.chk_grid.isChecked() is True
+    assert viewer.row_colorbar_param.isHidden() is False
+    assert viewer.row_colorbar_label.isHidden() is False
+
+    state_off = viewer.get_options_state()
+    state_off["legend_colorbar"] = False
+    state_off["grid"] = False
+    viewer.set_options_state(state_off)
+    assert viewer.chk_legend_colorbar.isChecked() is False
+    assert viewer.chk_grid.isChecked() is False
+    assert viewer.row_colorbar_param.isHidden() is True
+    assert viewer.row_colorbar_label.isHidden() is True
+    menu.close()
+
+
 
 
 

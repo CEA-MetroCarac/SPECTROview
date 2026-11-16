@@ -107,6 +107,16 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._colorbar_param_selection = {
+            "text": "Index",
+            "pos": None,
+            "pattern": "Index",
+        }
+        self._heatmap_yaxis_selection = {
+            "text": "Index",
+            "pos": None,
+            "pattern": "Index",
+        }
         self._init_ui()
         self._current_spectra = []
         self._tensor_data = None
@@ -372,11 +382,11 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         # Heatmap controls (placed on toolbar next to btn_heatmap, hidden until heatmap mode is active)
         self.cbb_heatmap_yaxis = QComboBox()
         self.cbb_heatmap_yaxis.setFixedHeight(30)
-        self.cbb_heatmap_yaxis.addItem("Index")
+        self.cbb_heatmap_yaxis.addItem("Index", None)
         self.cbb_heatmap_yaxis.setToolTip(
             "Heatmap Y-axis: choose parameter for vertical axis.\n"
             "Index = spectrum order, or select a token parsed from filenames.")
-        self.cbb_heatmap_yaxis.currentIndexChanged.connect(self._emit_view_options)
+        self.cbb_heatmap_yaxis.currentIndexChanged.connect(self._on_heatmap_yaxis_changed)
         self.cbb_heatmap_yaxis.setVisible(False)
         layout.addWidget(self.cbb_heatmap_yaxis)
 
@@ -701,12 +711,12 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
 
         # Colorbar sub-options (shown only when "Show colorbar instead of legend" is checked)
         self.cbb_colorbar_param = QComboBox(right_col)
-        self.cbb_colorbar_param.addItem("Index")
+        self.cbb_colorbar_param.addItem("Index", None)
         self.cbb_colorbar_param.setToolTip(
             "Colorbar parameter: choose parameter for the colorbar.\n"
             "Index = spectrum order, or select a token parsed from filenames."
         )
-        self.cbb_colorbar_param.currentIndexChanged.connect(self._emit_view_options)
+        self.cbb_colorbar_param.currentIndexChanged.connect(self._on_colorbar_param_changed)
         self.row_colorbar_param = self._wrap_menu_row(
             right_col, "Colorbar parameter:", self.cbb_colorbar_param
         )
@@ -1574,36 +1584,116 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         return [(pos, tok)
                 for pos, tok, _val in self._extract_filename_tokens(fnames[0])]
 
-    def _refresh_token_combobox(self, combo: QComboBox):
-        """Rebuild a parameter combobox from the selected filenames."""
-        prev = combo.currentText()
+    @staticmethod
+    def _token_pattern(token_text: str) -> str:
+        """Normalize numeric parts of a filename token to '#' (e.g. '25°C' -> '#°C')."""
+        if not token_text or token_text == "Index":
+            return "Index"
+        return _RE_NUMBERS.sub("#", token_text)
+
+    def _record_token_selection(self, combo: QComboBox, state_dict: dict):
+        """Record the active parameter selection (text, token slot position, unit pattern)."""
+        text = combo.currentText()
+        pos = combo.currentData()
+        if not text or text == "Index":
+            state_dict.update({"text": "Index", "pos": None, "pattern": "Index"})
+        else:
+            state_dict.update({
+                "text": text,
+                "pos": pos if isinstance(pos, int) else state_dict.get("pos"),
+                "pattern": self._token_pattern(text),
+            })
+
+    def _on_colorbar_param_changed(self):
+        """Track user-chosen colorbar parameter for the session and redraw."""
+        self._record_token_selection(
+            self.cbb_colorbar_param, self._colorbar_param_selection
+        )
+        self._emit_view_options()
+
+    def _on_heatmap_yaxis_changed(self):
+        """Track user-chosen heatmap Y-axis parameter for the session and redraw."""
+        self._record_token_selection(
+            self.cbb_heatmap_yaxis, self._heatmap_yaxis_selection
+        )
+        self._emit_view_options()
+
+    def _refresh_token_combobox(self, combo: QComboBox, state_dict: dict):
+        """Rebuild a parameter combobox from filenames while preserving session choice."""
+        tokens = self._collect_heatmap_yaxis_tokens()
+        target_text = state_dict.get("text", "Index")
+        target_pos = state_dict.get("pos")
+        target_pattern = state_dict.get("pattern", "Index")
+
         combo.blockSignals(True)
         combo.clear()
-        combo.addItem("Index")
-        for _pos, token_text in self._collect_heatmap_yaxis_tokens():
-            combo.addItem(token_text)
-        # Restore previous selection if still available
-        idx = combo.findText(prev)
-        if idx >= 0:
-            combo.setCurrentIndex(idx)
+        combo.addItem("Index", None)
+        for pos, token_text in tokens:
+            combo.addItem(token_text, pos)
+
+        match_idx = None
+        if target_text and target_text != "Index" and tokens:
+            # 1. Exact text & position match
+            for i, (pos, token_text) in enumerate(tokens, start=1):
+                if token_text == target_text and (target_pos is None or pos == target_pos):
+                    match_idx = i
+                    break
+            # 2. Same underscore position & same unit pattern (e.g. '500°C' -> '25°C')
+            if match_idx is None and target_pos is not None:
+                for i, (pos, token_text) in enumerate(tokens, start=1):
+                    if pos == target_pos and self._token_pattern(token_text) == target_pattern:
+                        match_idx = i
+                        break
+            # 3. Exact text match anywhere
+            if match_idx is None:
+                for i, (_pos, token_text) in enumerate(tokens, start=1):
+                    if token_text == target_text:
+                        match_idx = i
+                        break
+            # 4. Same underscore position
+            if match_idx is None and target_pos is not None:
+                for i, (pos, _token_text) in enumerate(tokens, start=1):
+                    if pos == target_pos:
+                        match_idx = i
+                        break
+            # 5. Same non-generic unit pattern
+            if match_idx is None and target_pattern not in ("Index", "#"):
+                for i, (_pos, token_text) in enumerate(tokens, start=1):
+                    if self._token_pattern(token_text) == target_pattern:
+                        match_idx = i
+                        break
+
+        if match_idx is not None:
+            combo.setCurrentIndex(match_idx)
+            state_dict["pos"] = combo.itemData(match_idx)
+            state_dict["text"] = combo.currentText()
         combo.blockSignals(False)
 
     def _refresh_heatmap_yaxis_choices(self):
         """Rebuild the heatmap Y-axis combobox items from the selected filenames."""
-        self._refresh_token_combobox(self.cbb_heatmap_yaxis)
+        self._refresh_token_combobox(
+            self.cbb_heatmap_yaxis, self._heatmap_yaxis_selection
+        )
 
     def _refresh_colorbar_param_choices(self):
         """Rebuild the colorbar parameter combobox items from the selected filenames."""
         if hasattr(self, "cbb_colorbar_param"):
-            self._refresh_token_combobox(self.cbb_colorbar_param)
+            self._refresh_token_combobox(
+                self.cbb_colorbar_param, self._colorbar_param_selection
+            )
 
-    def _extract_series_parameter_values(self, selected_token: str, custom_label: str) -> tuple[np.ndarray, str]:
+    def _extract_series_parameter_values(
+        self,
+        selected_token: str,
+        custom_label: str,
+        token_pos: int | None = None,
+    ) -> tuple[np.ndarray, str]:
         """Return ``(values, label)`` parsed from filenames or spectrum order.
 
         * **Index** → simple 0 … N-1.
-        * Otherwise *selected_token* is matched to a token position from the
-          *first* filename, and the numeric part of that same position is
-          extracted from every filename.
+        * Otherwise *selected_token* is matched to a token position (via
+          *token_pos* or from the *first* filename), and the numeric part of
+          that same position is extracted from every filename.
         """
         fnames = self._tensor_data.get("fnames", []) if self._tensor_data else []
         N = len(self._tensor_data.get("y", [])) if self._tensor_data else 0
@@ -1612,24 +1702,32 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         if selected_token == "Index" or not fnames:
             return np.arange(N, dtype=float), (custom or "Spectrum index")
 
-        # Identify the token position from the first filename
-        ref_tokens = self._extract_filename_tokens(fnames[0])
-        token_pos = None
-        for pos, tok, _val in ref_tokens:
-            if tok == selected_token:
-                token_pos = pos
-                break
+        # Identify the token position from itemData or the first filename
+        resolved_pos = token_pos if isinstance(token_pos, int) else None
+        if resolved_pos is None:
+            ref_tokens = self._extract_filename_tokens(fnames[0])
+            for pos, tok, _val in ref_tokens:
+                if tok == selected_token:
+                    resolved_pos = pos
+                    break
+            if resolved_pos is None:
+                target_pattern = self._token_pattern(selected_token)
+                if target_pattern not in ("Index", "#"):
+                    for pos, tok, _val in ref_tokens:
+                        if self._token_pattern(tok) == target_pattern:
+                            resolved_pos = pos
+                            break
 
-        if token_pos is None:
+        if resolved_pos is None:
             return np.arange(N, dtype=float), (custom or selected_token)
 
-        # Extract the numeric value at *token_pos* from every filename
+        # Extract the numeric value at *resolved_pos* from every filename
         values = []
         for fname in fnames:
             stem = _RE_FILE_EXT.sub("", fname)
             parts = stem.split("_")
-            if token_pos < len(parts):
-                nums = _RE_NUMBERS.findall(parts[token_pos])
+            if resolved_pos < len(parts):
+                nums = _RE_NUMBERS.findall(parts[resolved_pos])
                 values.append(float(nums[0]) if nums else float("nan"))
             else:
                 values.append(float("nan"))
@@ -1641,6 +1739,7 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         return self._extract_series_parameter_values(
             self.cbb_heatmap_yaxis.currentText(),
             self.le_heatmap_ylabel.text(),
+            token_pos=self.cbb_heatmap_yaxis.currentData(),
         )
 
     def _get_colorbar_values(self):
@@ -1648,6 +1747,7 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         return self._extract_series_parameter_values(
             self.cbb_colorbar_param.currentText(),
             self.le_colorbar_label.text(),
+            token_pos=self.cbb_colorbar_param.currentData(),
         )
 
     def _plot_heatmap(self):
@@ -2194,9 +2294,14 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
             if cb_param:
                 if self.cbb_colorbar_param.findText(cb_param) < 0:
                     self.cbb_colorbar_param.blockSignals(True)
-                    self.cbb_colorbar_param.addItem(cb_param)
+                    self.cbb_colorbar_param.addItem(cb_param, None)
                     self.cbb_colorbar_param.blockSignals(False)
                 _update(self.cbb_colorbar_param, self.cbb_colorbar_param.setCurrentText, cb_param)
+            self._record_token_selection(
+                self.cbb_colorbar_param, self._colorbar_param_selection
+            )
+            if self._tensor_data:
+                self._refresh_colorbar_param_choices()
         if hasattr(self, "le_colorbar_label"):
             _update(self.le_colorbar_label, self.le_colorbar_label.setText, state.get("colorbar_label", ""))
         _update(self.btn_bestfit, self.btn_bestfit.setChecked, state.get("bestfit"))
@@ -2213,9 +2318,14 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
             if hm_yaxis:
                 if self.cbb_heatmap_yaxis.findText(hm_yaxis) < 0:
                     self.cbb_heatmap_yaxis.blockSignals(True)
-                    self.cbb_heatmap_yaxis.addItem(hm_yaxis)
+                    self.cbb_heatmap_yaxis.addItem(hm_yaxis, None)
                     self.cbb_heatmap_yaxis.blockSignals(False)
                 _update(self.cbb_heatmap_yaxis, self.cbb_heatmap_yaxis.setCurrentText, hm_yaxis)
+            self._record_token_selection(
+                self.cbb_heatmap_yaxis, self._heatmap_yaxis_selection
+            )
+            if self._tensor_data and getattr(self, "_heatmap_mode", False):
+                self._refresh_heatmap_yaxis_choices()
         if hasattr(self, "le_heatmap_ylabel"):
             _update(self.le_heatmap_ylabel, self.le_heatmap_ylabel.setText, state.get("heatmap_ylabel", ""))
         if hasattr(self, "spin_heatmap_interp"):

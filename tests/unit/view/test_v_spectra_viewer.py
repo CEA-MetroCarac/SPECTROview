@@ -841,6 +841,51 @@ def test_options_menu_two_column_layout_and_colorbar_controls_visibility(viewer)
     menu.close()
 
 
+def test_colorbar_parameter_persists_across_dynamic_spectra_list_selections(viewer):
+    """Verify selected colorbar parameter token slot/pattern persists across dynamic selection changes."""
+    first_batch = [
+        "LNO550_206R_incell_0deg_30sx4_500°C_down",
+        "LNO550_206R_incell_0deg_30sx4_450°C_down",
+        "LNO550_206R_incell_0deg_30sx4_400°C_down",
+    ]
+    viewer.set_plot_data(_series_data_from_fnames(first_batch))
+    viewer.cbb_color_palette.setCurrentText("jet")
+    viewer.act_legend_colorbar.setChecked(True)
+    viewer.cbb_colorbar_param.setCurrentText("500°C")
+
+    assert viewer._heatmap_colorbar is not None
+    assert viewer._heatmap_colorbar.norm.vmin == pytest.approx(400.0)
+    assert viewer._heatmap_colorbar.norm.vmax == pytest.approx(500.0)
+
+    # Select a different subset where the first spectrum has 25°C instead of 500°C
+    second_batch = [
+        "LNO550_206R_incell_0deg_30sx4_25°C_down",
+        "LNO550_206R_incell_0deg_30sx4_100°C_down",
+        "LNO550_206R_incell_0deg_30sx4_300°C_down",
+    ]
+    viewer.set_plot_data(_series_data_from_fnames(second_batch))
+
+    assert viewer.cbb_colorbar_param.currentText() == "25°C"
+    assert viewer.cbb_colorbar_param.currentData() == 5
+    assert viewer._heatmap_colorbar is not None
+    assert viewer._heatmap_colorbar.norm.vmin == pytest.approx(25.0)
+    assert viewer._heatmap_colorbar.norm.vmax == pytest.approx(300.0)
+
+    # Simulate momentary empty selection before selecting another batch
+    viewer.set_plot_data(None)
+    third_batch = [
+        "LNO550_206R_incell_0deg_30sx4_150°C_down",
+        "LNO550_206R_incell_0deg_30sx4_250°C_down",
+    ]
+    viewer.set_plot_data(_series_data_from_fnames(third_batch))
+
+    assert viewer.cbb_colorbar_param.currentText() == "150°C"
+    assert viewer.cbb_colorbar_param.currentData() == 5
+    assert viewer._heatmap_colorbar is not None
+    assert viewer._heatmap_colorbar.norm.vmin == pytest.approx(150.0)
+    assert viewer._heatmap_colorbar.norm.vmax == pytest.approx(250.0)
+
+
 
 
 

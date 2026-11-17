@@ -429,6 +429,8 @@ class VWorkspaceSpectra(QWidget):
 
     def _on_range_selector_toggled(self, color_id: str, is_active: bool):
         """Handle activation / deactivation of a spectral range selector."""
+        if is_active and hasattr(self, "bottom_tabs") and self.bottom_tabs.currentWidget() is not self.v_live_maps:
+            self.bottom_tabs.setCurrentWidget(self.v_live_maps)
         tab_active = self._is_live_maps_tab_active()
         if is_active and hasattr(self, "v_spectra_viewer"):
             x_min, x_max = self.v_spectra_viewer.range_manager.get_range(color_id)

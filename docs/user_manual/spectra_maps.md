@@ -180,7 +180,7 @@ A vertical toolbar panel located on the right edge of the `SpectraViewer` provid
 - **Blue** (`B`)
 - **Green** (`G`)
 
-Each button activates a corresponding pair of draggable vertical markers (brackets and shaded interval) directly on the spectrum plot:
+Each button activates a corresponding pair of draggable vertical markers (brackets and shaded interval) directly on the spectrum plot and automatically switches the bottom tab bar to the **Live Maps** tab:
 
 - **Interactive Dragging**: Click and drag either vertical boundary line to adjust the minimum or maximum wavenumber. Click and drag the shaded middle area to shift the entire interval without altering its width.
 - **Multiple Simultaneous Ranges**: Any combination of the three selectors can be activated at once. Each maintains its own color, interval, and visibility independently.

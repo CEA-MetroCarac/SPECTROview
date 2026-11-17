@@ -524,3 +524,90 @@ def test_maps_workspace_interactive_live_maps_selection_updates_spectra_viewer(q
     finally:
         ws.close()
         ws.deleteLater()
+
+
+@pytest.mark.parametrize(
+    "color_id,btn_attr",
+    [
+        ("red", "btn_range_red"),
+        ("blue", "btn_range_blue"),
+        ("green", "btn_range_green"),
+    ],
+)
+def test_spectra_workspace_rgb_toggle_switches_to_live_maps_and_shows_bracket(qapp, color_id, btn_attr):
+    """Activating R/B/G on VSpectraViewer draws its bracket, switches bottom_tabs to Live Maps, and renders."""
+    ws = VWorkspaceSpectra()
+    ws.show()
+    try:
+        x = np.linspace(500.0, 1500.0, 101)
+        fnames = []
+        for i in range(3):
+            fname = f"auto_switch_spec_{i}"
+            fnames.append(fname)
+            y = ((10.0 + i * 3.0) * np.exp(-((x - 900.0) ** 2) / (2 * 25.0 ** 2)) + 2.0).reshape(1, -1)
+            ws.vm.store.add_map(
+                name=fname,
+                x0=x.copy(),
+                Y0=y.astype(np.float32),
+                coords=np.array([[0.0, 0.0]], dtype=np.float64),
+                fnames=[fname],
+                is_active=np.array([True], dtype=bool),
+            )
+        ws.vm._emit_list_update()
+        ws.bottom_tabs.setCurrentWidget(ws.v_fit_model_builder)
+        ws.v_spectra_list.select_all()
+        assert ws.bottom_tabs.currentWidget() is ws.v_fit_model_builder
+
+        btn = getattr(ws.v_spectra_viewer, btn_attr)
+        btn.setChecked(True)
+        qapp.processEvents()
+
+        assert ws.bottom_tabs.currentWidget() is ws.v_live_maps
+        assert len(ws.v_spectra_viewer.range_manager._artists[color_id]) == 7
+        assert ws.v_live_maps.panels[color_id].isVisible() is True
+        assert ws.v_live_maps.panels[color_id].line is not None
+        assert len(ws.v_live_maps.panels[color_id]._series_values) == 3
+
+        # Unchecking while another tab is active keeps the user on that tab
+        ws.bottom_tabs.setCurrentWidget(ws.v_fit_results)
+        btn.setChecked(False)
+        qapp.processEvents()
+        assert ws.bottom_tabs.currentWidget() is ws.v_fit_results
+        assert len(ws.v_spectra_viewer.range_manager._artists[color_id]) == 0
+    finally:
+        ws.close()
+        ws.deleteLater()
+
+
+def test_maps_workspace_rgb_toggle_switches_to_live_maps_and_renders(qapp, test_map_data):
+    """In Maps workspace, activating R/B/G from another tab switches to Live Maps and computes immediately."""
+    from spectroview.model.spectral_parameters import SELECTOR_BLUE, SELECTOR_GREEN
+
+    ws = VWorkspaceMaps()
+    ws.show()
+    try:
+        ws.vm.store._maps[test_map_data.name] = test_map_data
+        ws.vm.maps[test_map_data.name] = None
+        ws.vm.maps_metadata[test_map_data.name] = {}
+        ws.v_maps_list.set_maps_names([test_map_data.name])
+        ws.bottom_tabs.setCurrentWidget(ws.v_fit_results)
+        ws.vm.select_maps([test_map_data.name], primary_name=test_map_data.name)
+        assert ws.bottom_tabs.currentWidget() is ws.v_fit_results
+        assert ws._live_maps_dirty is True
+
+        for color_id, btn_attr in (
+            (SELECTOR_RED, "btn_range_red"),
+            (SELECTOR_BLUE, "btn_range_blue"),
+            (SELECTOR_GREEN, "btn_range_green"),
+        ):
+            ws.bottom_tabs.setCurrentWidget(ws.v_fit_results)
+            getattr(ws.v_spectra_viewer, btn_attr).setChecked(True)
+            qapp.processEvents()
+            assert ws.bottom_tabs.currentWidget() is ws.v_live_maps
+            assert ws._live_maps_dirty is False
+            assert len(ws.v_spectra_viewer.range_manager._artists[color_id]) == 7
+            assert ws.v_live_maps.panels[color_id].img is not None
+    finally:
+        ws.close()
+        ws.deleteLater()
+

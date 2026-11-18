@@ -27,7 +27,7 @@ graph LR
 
 | Layer | Prefix | Example |
 |-------|--------|---------|
-| View | `v_` | `v_workspace_spectra.py` |
+| View | `v_` | `workspaces/v_workspace_spectra.py` |
 | ViewModel | `vm_` | `vm_workspace_spectra.py` |
 | Model | `m_` | `spectra_store.py` |
 
@@ -149,63 +149,90 @@ spectroview/
 │   ├── vm_chat.py               # Chat ViewModel (prompt-tier selection, agentic loop)
 │   └── v_chat_panel.py          # Embedded chat panel (+ v_history_dialog.py)
 │
-├── view/                   # Qt widgets and UI layout
-│   ├── v_workspace_spectra.py    # Spectra workspace View
-│   ├── v_workspace_maps.py       # Maps workspace View (extends Spectra)
-│   ├── v_workspace_graphs.py     # Graphs workspace View
-│   └── components/               # Shared / reusable widgets
-│       ├── spectra_viewer/            # Spectra viewer package (1D, Heatmap, 3D, interactions)
-│       │   ├── __init__.py            # Package exports (VSpectraViewer, FastLine3DCollection, etc.)
-│       │   ├── common.py              # Palettes, style cache, filename tokens & 1D normalization
-│       │   ├── v_spectra_viewer.py    # VSpectraViewer main widget, toolbar, options menu & theme
-│       │   ├── v_plot_1d.py           # SpectraPlot1DMixin (1D segments, shifts, fit overlays)
-│       │   ├── v_plot_heatmap.py      # SpectraHeatmapMixin (2D series heatmap & Y-axis tokens)
-│       │   ├── v_plot_3d.py           # FastLine3DCollection & SpectraPlot3DMixin
-│       │   ├── v_interactions.py      # SpectraInteractionMixin (zoom, hover, peak drag, eraser)
-│       │   └── v_spectra_legend_editor.py  # Batch legend editor dialog, color combo & mixin
-│       ├── lower_tabs/                # Lower workspace tab panels package
-│       │   ├── __init__.py            # Package exports (VFitModelBuilder, VPeakTable, VFitResults, VMVA, VMoreTab)
-│       │   ├── v_fit_model_builder.py # Baseline + Peak + Fit controls
-│       │   ├── v_peak_table.py        # Interactive peak parameter table
-│       │   ├── v_fit_results.py       # Fit results DataFrame table
-│       │   ├── v_mva.py               # PCA/NMF controls and tab coordinator
-│       │   ├── v_mva_plots.py         # MVA _PlotTab widget & Matplotlib plotting mixin
-│       │   └── v_moretab.py           # Metadata & normalization tab panel
-│       ├── map_viewer/                # Map viewer package (2D/wafer heatmap, interactions, dialog)
-│       │   ├── __init__.py            # Package exports (VMapViewer, VMapViewerDialog, selection helpers)
-│       │   ├── map_selection.py       # Shared spatial geometry, selection resolution & overlay helper
-│       │   ├── v_map_data.py          # MapDataProcessingMixin (griddata cache, mask, outlier, profile)
-│       │   ├── v_map_plot.py          # MapPlotMixin (2D/wafer heatmap rendering, stats, profile overlay)
-│       │   ├── v_map_interactions.py  # MapInteractionMixin (mouse selection, coordinates, copy)
-│       │   ├── v_map_viewer.py        # VMapViewer main widget, toolbar, sliders & options menu
-│       │   └── v_map_viewer_dialog.py # VMapViewerDialog detachable map viewer window
-│       ├── v_map_list.py              # Loaded maps list panel (Two-Tier Selection)
-│       ├── rgb_live_maps/             # RGB range bracketing & Live Maps package
-│       │   ├── __init__.py            # Package exports for RGB range selectors & Live Maps
-│       │   ├── common.py              # Shared palettes, themes, view options & 1D norm helpers
-│       │   ├── v_live_maps.py         # VLiveMaps multi-panel tab view & options menu
-│       │   ├── v_live_map_subpanel.py # LiveMapSubpanel (2D heatmap / 1D line plot canvas)
-│       │   ├── v_live_maps_legend_editor.py # LiveMapsLegendEditorDialog labels & colors editor
-│       │   └── v_range_selector.py    # VRangeSelectorPanel, RangeSelectorManager & SpectraRangeBracketMixin
-│       ├── v_graph.py                 # Single graph widget (matplotlib)
-│       ├── v_plot_renderer.py         # Stateless Matplotlib plot rendering engine (PlotRenderer)
-│       ├── graph_commit.py            # Graph state snapshot & undo/redo diff engine
-│       ├── v_export_dialog.py         # Single-graph figure export dialog
-│       ├── v_multipanel_dialog.py     # Multi-panel publication figure composer
-│       ├── v_plot_recipe_dialog.py    # Plot Recipe manager dialog
-│       ├── v_style_template_dialog.py # Graph Style Template manager dialog
-│       ├── v_data_filter.py           # Dynamic query filter panel
-│       ├── v_dataframe_table.py       # Generic DataFrame viewer
-│       ├── v_quick_calculators.py     # Scientific calculators GUI
-│       ├── v_notification.py          # Native floating notification badges & manager
-│       ├── v_spectra_list.py          # Spectrum list with checkboxes
-│       ├── v_settings.py              # Fit/view settings dialog
-│       ├── v_menubar.py               # Main menu bar
-│       ├── v_about.py                 # About dialog
-│       ├── v_update_banner.py         # Update notification banner widget
-│       ├── markdown_utils.py          # Markdown spacing normalizer for Python-Markdown
-│       ├── customized_widgets.py      # Palette combobox, custom toolbar
-│       └── customize_graph/           # Graph customization dialog (two-panel Settings-like package)
+├── view/                   # Qt widgets and UI layout (PEP 562 lazy facade)
+│   ├── __init__.py               # Lazy exports for workspaces, components & theme
+│   ├── workspaces/               # Top-level workspace View packages
+│   │   ├── __init__.py                # Lazy workspace exports
+│   │   ├── v_workspace_spectra.py     # Spectra workspace View
+│   │   ├── v_workspace_maps.py        # Maps workspace View (extends Spectra)
+│   │   └── graphs/                    # Graphs workspace View package
+│   │       ├── __init__.py            # Package exports (VWorkspaceGraphs, MdiSubWindow)
+│   │       ├── v_workspace_graphs.py  # VWorkspaceGraphs orchestrator
+│   │       ├── v_mdi_subwindow.py     # MdiSubWindow (rubber-band resize/move)
+│   │       ├── v_graphs_ui.py         # GraphsUIMixin (panels, toolbars, shortcuts)
+│   │       ├── v_graphs_dataframes.py # GraphsDataFramesMixin (DF selection & sync)
+│   │       ├── v_graphs_mdi.py        # GraphsMdiMixin (MDI creation & layout)
+│   │       └── v_graphs_actions.py    # GraphsActionsMixin (plot create/update/export/undo)
+│   ├── components/               # Shared / reusable widgets (PEP 562 lazy facade)
+│   │   ├── __init__.py                # Lazy subpackage exports + settings alias
+│   │   ├── v_settings.py              # Fit/view settings dialog (compat shim)
+│   │   ├── common/                    # Shell, notifications, calculators & shared widgets
+│   │   │   ├── __init__.py
+│   │   │   ├── v_menubar.py           # Main menu bar
+│   │   │   ├── v_about.py             # About dialog
+│   │   │   ├── v_update_banner.py     # Update notification banner widget
+│   │   │   ├── v_notification.py      # Native floating notification badges & manager
+│   │   │   ├── v_quick_calculators.py # Scientific calculators GUI
+│   │   │   ├── customized_widgets.py  # Palette combobox, custom toolbar
+│   │   │   └── markdown_utils.py      # Markdown spacing normalizer for Python-Markdown
+│   │   ├── lists/                     # Spectral/map list, DataFrame table & tooltips
+│   │   │   ├── __init__.py
+│   │   │   ├── v_spectra_list.py      # Spectrum list with checkboxes
+│   │   │   ├── v_map_list.py          # Loaded maps list panel (Two-Tier Selection)
+│   │   │   ├── v_dataframe_table.py   # Generic DataFrame viewer
+│   │   │   └── v_metadata_tooltip.py  # Metadata tooltip popup builder
+│   │   ├── spectra_viewer/            # Spectra viewer package (1D, Heatmap, 3D, interactions)
+│   │   │   ├── __init__.py            # Package exports (VSpectraViewer, FastLine3DCollection, etc.)
+│   │   │   ├── common.py              # Palettes, style cache, filename tokens & 1D normalization
+│   │   │   ├── v_spectra_viewer.py    # VSpectraViewer main widget, toolbar, options menu & theme
+│   │   │   ├── v_plot_1d.py           # SpectraPlot1DMixin (1D segments, shifts, fit overlays)
+│   │   │   ├── v_plot_heatmap.py      # SpectraHeatmapMixin (2D series heatmap & Y-axis tokens)
+│   │   │   ├── v_plot_3d.py           # FastLine3DCollection & SpectraPlot3DMixin
+│   │   │   ├── v_interactions.py      # SpectraInteractionMixin (zoom, hover, peak drag, eraser)
+│   │   │   └── v_spectra_legend_editor.py  # Batch legend editor dialog, color combo & mixin
+│   │   ├── lower_tabs/                # Lower workspace tab panels package
+│   │   │   ├── __init__.py            # Package exports (VFitModelBuilder, VPeakTable, VFitResults, VMVA, VMoreTab)
+│   │   │   ├── v_fit_model_builder.py # Baseline + Peak + Fit controls
+│   │   │   ├── v_peak_table.py        # Interactive peak parameter table
+│   │   │   ├── v_fit_results.py       # Fit results DataFrame table
+│   │   │   ├── v_mva.py               # PCA/NMF controls and tab coordinator
+│   │   │   ├── v_mva_plots.py         # MVA _PlotTab widget & Matplotlib plotting mixin
+│   │   │   └── v_moretab.py           # Metadata & normalization tab panel
+│   │   ├── map_viewer/                # Map viewer package (2D/wafer heatmap, interactions, dialog)
+│   │   │   ├── __init__.py            # Package exports (VMapViewer, VMapViewerDialog, selection helpers)
+│   │   │   ├── map_selection.py       # Shared spatial geometry, selection resolution & overlay helper
+│   │   │   ├── v_map_data.py          # MapDataProcessingMixin (griddata cache, mask, outlier, profile)
+│   │   │   ├── v_map_plot.py          # MapPlotMixin (2D/wafer heatmap rendering, stats, profile overlay)
+│   │   │   ├── v_map_interactions.py  # MapInteractionMixin (mouse selection, coordinates, copy)
+│   │   │   ├── v_map_viewer.py        # VMapViewer main widget, toolbar, sliders & options menu
+│   │   │   └── v_map_viewer_dialog.py # VMapViewerDialog detachable map viewer window
+│   │   ├── rgb_live_maps/             # RGB range bracketing & Live Maps package
+│   │   │   ├── __init__.py            # Package exports for RGB range selectors & Live Maps
+│   │   │   ├── common.py              # Shared palettes, themes, view options & 1D norm helpers
+│   │   │   ├── v_live_maps.py         # VLiveMaps multi-panel tab view & options menu
+│   │   │   ├── v_live_maps_options.py # LiveMapsOptionsMenuMixin (legend & view options menu)
+│   │   │   ├── v_live_map_subpanel.py # LiveMapSubpanel container widget
+│   │   │   ├── v_live_map_1d.py       # LiveMap1DMixin (1D series & profile rendering)
+│   │   │   ├── v_live_map_2d.py       # LiveMap2DMixin (2D heatmap rendering)
+│   │   │   ├── v_live_map_selection.py # LiveMapSelectionMixin (point/marquee/legend selection)
+│   │   │   ├── v_live_maps_legend_editor.py # LiveMapsLegendEditorDialog labels & colors editor
+│   │   │   ├── v_range_selector.py    # VRangeSelectorPanel & RangeSelectorManager
+│   │   │   └── v_range_bracket_mixin.py # SpectraRangeBracketMixin for VSpectraViewer
+│   │   ├── graphs/                    # Graphs plotting, rendering, filtering & export package
+│   │   │   ├── __init__.py
+│   │   │   ├── v_graph.py             # VGraph widget orchestrator (restyle/replot/actions)
+│   │   │   ├── v_graph_canvas.py      # _DebouncedFigureCanvas & _FastNavigationToolbar
+│   │   │   ├── v_graph_breaks.py      # GraphBreakInsetMixin (broken & inset axes)
+│   │   │   ├── v_graph_axes.py        # GraphAxesStyleMixin (limits, scales, ticks, theme)
+│   │   │   ├── v_graph_annotations.py # GraphAnnotationMixin (8 annotation types & canvas drag)
+│   │   │   ├── v_plot_renderer.py     # Stateless Matplotlib plot rendering engine (PlotRenderer)
+│   │   │   ├── graph_commit.py        # Graph state snapshot & undo/redo diff engine
+│   │   │   ├── v_export_dialog.py     # Single- & batch-graph figure export dialogs
+│   │   │   ├── v_multipanel_dialog.py # Multi-panel publication figure composer
+│   │   │   ├── v_plot_recipe_dialog.py    # Plot Recipe manager dialog
+│   │   │   ├── v_style_template_dialog.py # Graph Style Template manager dialog
+│   │   │   └── v_data_filter.py       # Dynamic query filter panel
+│   │   └── customize_graph/           # Graph customization dialog (two-panel Settings-like package)
 │           ├── customize_graph_dialog.py     # CustomizeGraphDialog (two-panel host with search & live preview)
 │           ├── common.py                     # NavItemDelegate and highlight styling helpers
 │           ├── tab_general.py                # General & Typography tab (theme, grid, rotation, fonts, sorting)
@@ -499,7 +526,7 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 | `model/system/m_macos_font_patch.py` | macOS font cache discovery patch intercepting `system_profiler SPFontsDataType` to prevent upstream `matplotlib` `KeyError: '_items'` crash and 10s freeze |
 | `model/system/m_update_manager.py` | `GitHubReleaseClient` (`ETag` + TTL cache), `UpdateManager` facade, `UnifiedUpdateCheckWorker`, `UnifiedUpdateDownloadWorker`, and platform updaters |
 | `model/system/m_update_checker.py` | Legacy pip/wheel workers preserved cleanly plus hardened pip upgrade runner (`--use-feature=truststore` / `--cert`) |
-| `view/components/v_update_banner.py` | Slim banner displaying version transition (`current → latest`) and dynamic platform action label |
+| `view/components/common/v_update_banner.py` | Slim banner displaying version transition (`current → latest`) and dynamic platform action label |
 | `main.py` | Executes early `_run_velopack_bootstrap()` hook before `QApplication` only when Velopack is active; wires unified update banner & guided dialogs |
 | `main.spec` & `packaging/` | Single-source PyInstaller config and platform builders for Windows (`Setup.exe` + `Portable.zip`), macOS (Apple Silicon `arm64` `.dmg`), and Linux (`.AppImage` + `.deb`) |
 

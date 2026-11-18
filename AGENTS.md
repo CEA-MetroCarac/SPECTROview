@@ -20,7 +20,7 @@ The application strictly enforces Model-View-ViewModel separation across all wor
 - **`spectroview/viewmodel/`**: Business logic orchestrator organized into subpackages (`spectra/`, `maps/`, `graphs/`, `analysis/`, `common/`, plus `vm_settings.py` and `utils.py` compatibility facades).
   - Reads and mutates Models; communicates with Views **strictly via Qt signals/slots**.
   - **Never imports View classes.**
-- **`spectroview/view/`**: PySide6/Qt widget layer (`v_workspace_spectra.py`, `v_workspace_maps.py`, `v_workspace_graphs.py`, `components/`, `theme/`).
+- **`spectroview/view/`**: PySide6/Qt widget layer organized into subpackages (`workspaces/` with `v_workspace_spectra.py`, `v_workspace_maps.py`, and `graphs/`; `components/` with `common/`, `customize_graph/`, `graphs/`, `lists/`, `lower_tabs/`, `map_viewer/`, `rgb_live_maps/`, `spectra_viewer/`, plus `v_settings.py` compat shim; and `theme/`).
   - Views connect to ViewModel signals and trigger ViewModel methods on user events.
 - **`spectroview/fit_engine/`**: Tensor-based batched Levenberg-Marquardt optimizer (`vbf_engine.py`, `optimizer.py`, `models.py`, `vbf_thread.py`). Fits $N$ spectra simultaneously as `(N, M[, K])` tensors without per-spectrum Python loops.
 - **`spectroview/api/`**: Public programmatic API (`spectra.py`, `2dmap.py`, `graphs.py`, `fitting.py`, `preprocessing.py`, `io.py`, `settings.py`). Backward compatibility is strictly maintained.

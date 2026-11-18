@@ -30,7 +30,7 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 ## 3. Add a Plot Style (Graphs)
 
 1. Register the plot style name in `PLOT_STYLES` in `spectroview/__init__.py`.
-2. Implement rendering logic in `spectroview/view/components/v_plot_renderer.py` (`PlotRenderer`).
+2. Implement rendering logic in `spectroview/view/components/graphs/v_plot_renderer.py` (`PlotRenderer`).
 3. Add any necessary backing configuration fields to `MGraph` (`model/m_graph.py`).
 4. Update `ALL_SAVE_KEYS` and `CUSTOM_VALUES` in `tests/unit/model/test_m_graph.py`, and add test coverage to `TestPlotStyleCoverage` in `tests/unit/view/test_v_graph_plotting.py`.
 5. If UI controls are required, extend `spectroview/view/components/customize_graph/`.

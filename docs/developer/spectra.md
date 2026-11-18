@@ -74,7 +74,7 @@ In the Spectra workspace, each loaded spectrum is stored as an independent `MapD
 
 ### `VWorkspaceSpectra` — The View Coordinator
 
-**File**: [`v_workspace_spectra.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/v_workspace_spectra.py)
+**File**: [`v_workspace_spectra.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/workspaces/v_workspace_spectra.py)
 
 `VWorkspaceSpectra` is a pure UI assembly class. It:
 

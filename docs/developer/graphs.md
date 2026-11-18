@@ -108,7 +108,7 @@ geometry, and refresh of an open Customize dialog.
 
 ### **`VGraph` — The Rendering Widget**
 
-**File**: `spectroview/view/components/v_graph.py`
+**Package**: `spectroview/view/components/graphs/` (`v_graph.py` with `v_graph_canvas.py`, `v_graph_breaks.py`, `v_graph_axes.py`, `v_graph_annotations.py`)
 
 Each plot in the MDI area is a `VGraph` instance. It holds a Matplotlib `Figure` + `FigureCanvas` and acts as the UI wrapper. It manages interactions, context menus, and toolbar actions (Style menu, Export, Replicate), but delegates the actual drawing algorithms to `PlotRenderer`. `create_plot_widget()` still builds each `VGraph`'s own matplotlib nav toolbar + action-button row (`self.toolbar_container`), but never adds it to the graph's own layout — see [the bottom toolbar](#mdi-area-management) for where it's actually shown.
 
@@ -127,7 +127,7 @@ Two rendering paths:
 
 ### **`PlotRenderer` — The Plotting Engine**
 
-**File**: `spectroview/view/components/v_plot_renderer.py`
+**File**: `spectroview/view/components/graphs/v_plot_renderer.py`
 
 Separated from `VGraph` for maintainability, this class encapsulates the pure Matplotlib rendering logic for all plot styles (e.g., `_plot_scatter`, `_plot_histogram`, and the `WaferPlot` class). It receives a reference to the `VGraph` instance (`self.vg`) to access configuration state (`self.vg.x`, `self.vg.plot_style`, etc.) and draws directly onto the Matplotlib `Axes`.
 
@@ -296,7 +296,7 @@ Every control in every tab restarts a single debounced 400ms `QTimer` on change.
 
 ### **`graph_commit.py` — change tracking**
 
-**File**: `spectroview/view/components/graph_commit.py`
+**File**: `spectroview/view/components/graphs/graph_commit.py`
 
 `snapshot(gw)` deep-copies every `MGraph` field (except `graph_id`) off a live `VGraph` widget; `diff(gw, before)` returns a patch dict of only the fields that differ from a prior snapshot. Used both by the Customize dialog's live-preview tick (deciding restyle vs. replot) and by toolbar-level edits (e.g. syncing a dragged legend position / resized subwindow into the model before `save_workspace()`) — in both cases the resulting patch flows through `properties_changed.emit()` → `vm.update_graph()`, which is what actually records the undo step.
 
@@ -359,7 +359,7 @@ Eight annotation types, each an "Add" button plus a dedicated edit dialog in `cu
 | `box` | Filled/outlined rectangle | `EditBoxDialog` |
 | `callout` | Text label with a pointer arrow to a data point | `EditCalloutDialog` |
 
-All stored as typed dicts in `MGraph.annotations`. Every type supports **drag interaction** — clicking and dragging updates position in real time and emits `annotation_position_changed` — implemented by `VGraph._on_annotation_click()`/`_on_annotation_drag()`/`_on_annotation_release()` in `v_graph.py`. Hit-testing is done manually (`self.ax.findobj()` + `artist.contains(event)`) rather than via matplotlib's `pick_event`: `Figure.pick()` only delivers a pick event to an artist when `event.inaxes` equals that artist's own Axes, which silently never happens for an annotation on the primary Axes whenever a secondary Y-axis is also present (it fully overlaps the primary Axes and has higher z-order, so `event.inaxes` resolves to it instead) — this used to make every annotation on a graph with `y2`/`y3` configured completely undraggable. `VGraph._ax_data_coords(event)` resolves the drag position from the event's own pixel coordinates through `self.ax.transData` directly, sidestepping the same `event.inaxes` ambiguity for the position itself.
+All stored as typed dicts in `MGraph.annotations`. Every type supports **drag interaction** — clicking and dragging updates position in real time and emits `annotation_position_changed` — implemented by `GraphAnnotationMixin._on_annotation_click()`/`_on_annotation_drag()`/`_on_annotation_release()` in `graphs/v_graph_annotations.py`. Hit-testing is done manually (`self.ax.findobj()` + `artist.contains(event)`) rather than via matplotlib's `pick_event`: `Figure.pick()` only delivers a pick event to an artist when `event.inaxes` equals that artist's own Axes, which silently never happens for an annotation on the primary Axes whenever a secondary Y-axis is also present (it fully overlaps the primary Axes and has higher z-order, so `event.inaxes` resolves to it instead) — this used to make every annotation on a graph with `y2`/`y3` configured completely undraggable. `VGraph._ax_data_coords(event)` resolves the drag position from the event's own pixel coordinates through `self.ax.transData` directly, sidestepping the same `event.inaxes` ambiguity for the position itself.
 
 ### **Secondary & Inset Axes (`TabSecondaryInset`)**
 
@@ -383,12 +383,12 @@ Each `VGraph`'s toolbar **Style menu** ties these together: **Save Style…** / 
 
 ## **Export & Multi-Panel Composer**
 
-**File**: `spectroview/view/components/v_export_dialog.py`
+**File**: `spectroview/view/components/graphs/v_export_dialog.py`
 
 - **`VExportDialog(graph_widget, parent=None)`** — exports a single graph to PNG/TIFF/SVG/PDF/EPS with format/DPI/transparency/export-time-theme-override controls, plus a physical-size section (journal presets, mm/inch toggle, blank = current on-screen size) that persists back onto the graph's `export_width_mm`/`export_height_mm` fields.
 - **`VBatchExportDialog(graph_widgets: dict, parent=None)`** — exports every currently-open graph to a chosen folder in one pass, each at its own already-persisted physical size, reporting per-graph failures in a summary dialog.
 
-**File**: `spectroview/view/components/v_multipanel_dialog.py`
+**File**: `spectroview/view/components/graphs/v_multipanel_dialog.py`
 
 - **`VMultiPanelDialog(graph_widgets: dict, parent=None)`** — composes several checked/reordered open graphs into one throwaway `matplotlib.figure.Figure` grid (auto-suggested rows/cols, constrained layout, shared-axis-label collapsing on interior panels, lettered/numbered panel labels). Each panel is rendered by temporarily repointing the source `VGraph`'s `.ax`/`.figure` onto the composed figure's subplot and calling its normal render path, then restoring the source widget so the live workspace is never mutated. Graphs with an active broken axis render via a simplified single-panel path in the composed figure (a documented scope limit).
 

@@ -14,14 +14,14 @@ Full narratives are in `docs/developer/graphs.md` and `docs/developer/graph_work
 
 - **Canonical Schema**: `spectroview.model.graphs.m_graph.MGraph` is a dataclass defining the plot configuration model.
 - **Seeded Defaults**: `VGraph.__init__` seeds every model field from `vars(MGraph())`. **Never hardcode default values or hand-copied field lists**. Adding a field to `MGraph` flows automatically through the widget layer.
-- **Commit & Diff**: `spectroview/view/components/graph_commit.py` derives `COMMIT_FIELDS` programmatically from `MGraph`'s dataclass fields. Its `snapshot()` and `diff()` methods synchronize widget state to the model for persistence and undo/redo history.
+- **Commit & Diff**: `spectroview/view/components/graphs/graph_commit.py` derives `COMMIT_FIELDS` programmatically from `MGraph`'s dataclass fields. Its `snapshot()` and `diff()` methods synchronize widget state to the model for persistence and undo/redo history.
 - **Schema Lock**: `tests/unit/model/test_m_graph.py::TestModelSchemaSync` enforces that `VGraph` seeded defaults match `MGraph` fields exactly. Keep this test green.
 
 ---
 
 ## 2. Plot Rendering & Restyle Fast Path
 
-- **Rendering Dispatch**: `view/components/v_plot_renderer.py::PlotRenderer` draws each plot style registered in `spectroview.PLOT_STYLES`. `VGraph` (`view/components/v_graph.py`) owns the matplotlib Figure, Canvas, navigation toolbar, annotations, and user interaction.
+- **Rendering Dispatch**: `view/components/graphs/v_plot_renderer.py::PlotRenderer` draws each plot style registered in `spectroview.PLOT_STYLES`. `VGraph` (`view/components/graphs/v_graph.py`) owns the matplotlib Figure, Canvas, navigation toolbar, annotations, and user interaction.
 - **Restyle Fast Path**: `model/graphs/graph_style.py::RESTYLE_SAFE_FIELDS` contains properties whose modification only alters visual attributes (colors, line widths, alpha) without reshaping data or rebuilding artists. These changes take the fast path and avoid an expensive full replot. Fields modifying data shapes, axes bounds, or adding artists must **not** be included in `RESTYLE_SAFE_FIELDS`.
 
 ---
@@ -37,7 +37,7 @@ Full narratives are in `docs/developer/graphs.md` and `docs/developer/graph_work
 
 ## 4. MDI Subwindows & UI Constraints
 
-- `MdiSubWindow` (in `v_workspace_graphs.py`) wraps each `VGraph`.
+- `MdiSubWindow` (in `view/workspaces/graphs/v_mdi_subwindow.py`) wraps each `VGraph`.
 - It configures a transparent window icon (a null icon falls back to Fusion's default window logo) and neutralizes the native Fusion title-bar shadow. Preserve both configurations.
 
 ---

@@ -130,7 +130,7 @@ switch_to_graphs_tab    = Signal()        # request tab switch after profile ext
 
 ### `VWorkspaceMaps` — The View
 
-**File**: [`v_workspace_maps.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/v_workspace_maps.py)
+**File**: [`v_workspace_maps.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/workspaces/v_workspace_maps.py)
 
 Overrides `_add_maps_panel()` to replace the inherited spectra sidebar with:
 
@@ -175,7 +175,7 @@ The most complex View component (~1 300 lines). It renders both 2D rectangular m
 
 ### `VMapsList` — The Maps List & Actions Panel
 
-**File**: [`v_map_list.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_map_list.py)
+**File**: [`v_map_list.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/lists/v_map_list.py)
 
 Displays loaded map names in an internal `_ReorderableMapsList(QListWidget)` (`ExtendedSelection` for `Shift+Click` / `Ctrl+Click` multi-selection with Primary focus tracking via `maps_selection_changed(selected_names, primary_name)`, plus `InternalMove` drag-and-drop reordering emitting `maps_order_changed(new_order)` while ignoring external URL MIME drops so file drops propagate to parent windows). On internal drop, selection and Primary focus are preserved without transient selection churn and forwarded to `VMWorkspaceMaps.reorder_maps()`, which reorders `self.maps`, `SpectraStore.reorder_maps()`, and `selected_map_names` and refreshes both `VMapsList` and Live Maps without resetting `VMapViewer`. Paired with quick management buttons (View, Delete — prompting confirmation when deleting multiple selected maps, Export CSV) and unified spectra action buttons (Select All, Reinitialize, Fitting Statistics, Send to Spectra Workspace) targeting the Primary map and its spatially selected spectra.
 

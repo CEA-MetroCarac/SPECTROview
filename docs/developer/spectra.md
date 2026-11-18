@@ -100,9 +100,9 @@ All bulk actions (baseline subtract, peak paste, reinit, fit) follow this patter
 
 ### `VSpectraViewer` — 2D Heatmap Mode
 
-**File**: [`v_spectra_viewer.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_spectra_viewer.py)
+**Package**: [`spectra_viewer/`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/spectra_viewer/__init__.py) (`v_plot_heatmap.py`)
 
-`VSpectraViewer` is the core spectral canvas widget. In addition to multi-line 1D spectrum visualization, it provides a native **2D Heatmap Mode** for visualizing series data (e.g., temperature variations, kinetics, line scans):
+`VSpectraViewer` is the core spectral canvas widget. In addition to multi-line 1D spectrum visualization, it provides a native **2D Heatmap Mode** (`btn_heatmap`, located alongside `btn_3d` on the right side of the toolbar directly to the left of `btn_options` / `btn_copy`) for visualizing series data (e.g., temperature variations, kinetics, line scans):
 
 - **Data Alignment & Ragged Matrix Interpolation**: When selected spectra possess differing or ragged wavenumber grids, `_plot_heatmap()` aligns all rows onto a common spectral range via `scipy.interpolate.interp1d`.
 - **Y-Axis Token Extraction**: Automatically parses numeric parameters embedded in filenames (e.g. `_100C_`, `_250K_`) using regex tokenization, or defaults to index-based ordering (`0..N-1`).
@@ -222,7 +222,9 @@ def _post_bulk_action(self, apply_all: bool, action: str):
 
 ### `VSpectraViewer` — The Plot Canvas
 
-**File**: [`v_spectra_viewer.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_spectra_viewer.py)
+**Package**: [`spectra_viewer/`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/spectra_viewer/__init__.py) (`v_spectra_viewer.py`, `v_plot_1d.py`, `v_plot_heatmap.py`, `v_plot_3d.py`, `v_interactions.py`, `v_spectra_legend_editor.py`, `common.py`)
+
+`VSpectraViewer` composes dedicated mixins over `QWidget` (`SpectraPlot1DMixin`, `SpectraHeatmapMixin`, `SpectraPlot3DMixin`, `SpectraLegendMixin`, `SpectraInteractionMixin`, and `SpectraRangeBracketMixin`), separating 1D/heatmap/3D rendering, mouse/peak/eraser interactions, and legend/colorbar management while keeping shared helpers in `common.py`.
 
 The Matplotlib canvas renders everything visible in the spectrum plot. It receives a data dictionary from `VMWorkspaceSpectra.spectra_selection_changed` and redraws accordingly.
 
@@ -251,7 +253,7 @@ Peaks can also be dragged. The viewer emits `peak_dragged(x, y)` during drag and
 
 #### Batch Legend Editing
 
-`VSpectraViewer` caches the complete legend bounding box after rendering. A double-click anywhere within that box opens `SpectraLegendEditorDialog` from `v_spectra_legend_editor.py`; individual legend handles and text objects no longer launch separate editors.
+`VSpectraViewer` caches the complete legend bounding box after rendering. A double-click anywhere within that box opens `SpectraLegendEditorDialog` from `spectra_viewer/v_spectra_legend_editor.py`; individual legend handles and text objects no longer launch separate editors.
 
 The dialog is transactional: its palette selector, legend-limit spinbox, label fields, and color comboboxes hold temporary values until the user accepts it. **Cancel** therefore causes no mutation. On **OK**, `VSpectraViewer._apply_legend_editor_values()`:
 

@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QDialog, QGroupBox, QLabel
 
 from spectroview import DEFAULT_COLORS
 from spectroview.view.components.customized_widgets import CustomizedPalette
-from spectroview.view.components.v_spectra_viewer import (
+from spectroview.view.components.spectra_viewer import (
     FastLine3DCollection,
     LEGEND_EDITOR_MAX_ROWS,
     SPECTRA_COLOR_PALETTES,
@@ -481,7 +481,7 @@ def test_filename_token_extraction_with_precompiled_regex(viewer):
 
 
 def test_control_bar_layout_options_and_copy_on_far_right(viewer):
-    """Verify that 'More view options' and 'Copy' buttons are at the very right end of the control bar, preceded by a separator."""
+    """Verify that 'Plot Heatmap', '3D View', 'More view options', and 'Copy' sit on the far right of the control bar, preceded by a separator."""
     from PySide6.QtWidgets import QFrame
 
     assert viewer.btn_options.width() == 30 and viewer.btn_options.height() == 30
@@ -508,12 +508,14 @@ def test_control_bar_layout_options_and_copy_on_far_right(viewer):
             if toolbar_index == -1:
                 has_stretch_before_toolbar = True
 
-    # Check right-end placement
+    # Check right-end placement: Heatmap, 3D View, Gear (Options), Copy
     assert widgets[-1] is viewer.btn_copy
     assert widgets[-2] is viewer.btn_options
+    assert widgets[-3] is viewer.btn_3d
+    assert widgets[-4] is viewer.btn_heatmap
     # Preceded by vertical separator
-    assert isinstance(widgets[-3], QFrame)
-    assert widgets[-3].frameShape() == QFrame.VLine
+    assert isinstance(widgets[-5], QFrame)
+    assert widgets[-5].frameShape() == QFrame.VLine
     # Stretch is present to push items across the bar
     assert has_stretch_before_toolbar
 
@@ -1087,7 +1089,237 @@ def test_3d_view_rendering_modes_and_interactive_rotation(viewer):
     assert viewer.ax.name == "3d"
 
 
+def test_spectra_viewer_package_exports_and_submodules():
+    """Verify spectra_viewer package public exports and submodule availability."""
+    from spectroview.view.components import spectra_viewer
+    from spectroview.view.components.spectra_viewer import (
+        common,
+        v_interactions,
+        v_plot_1d,
+        v_plot_3d,
+        v_plot_heatmap,
+        v_spectra_legend_editor,
+        v_spectra_viewer,
+    )
+
+    for name in spectra_viewer.__all__:
+        assert hasattr(spectra_viewer, name)
+
+    assert hasattr(common, "get_colors_for_palette")
+    assert hasattr(v_plot_1d, "SpectraPlot1DMixin")
+    assert hasattr(v_plot_heatmap, "SpectraHeatmapMixin")
+    assert hasattr(v_plot_3d, "SpectraPlot3DMixin")
+    assert hasattr(v_plot_3d, "FastLine3DCollection")
+    assert hasattr(v_spectra_legend_editor, "SpectraLegendEditorDialog")
+    assert hasattr(v_spectra_legend_editor, "SpectrumColorComboBox")
+    assert hasattr(v_spectra_legend_editor, "SpectraLegendMixin")
+    assert hasattr(v_interactions, "SpectraInteractionMixin")
+    assert hasattr(v_spectra_viewer, "VSpectraViewer")
 
 
+def test_peak_toolbar_icon_has_plus_sign(viewer):
+    """Verify Peak icon SVG template renders a peak curve with a top-right '+' sign."""
+    from spectroview.view.theme.icons_svg import _SVG_TEMPLATES
+
+    peak_svg = _SVG_TEMPLATES["peak"]
+    assert '<line x1="19" x2="19" y1="3" y2="9"/>' in peak_svg
+    assert '<line x1="16" x2="22" y1="6" y2="6"/>' in peak_svg
+    assert not viewer.btn_peak.icon().isNull()
+    assert not viewer.btn_peak.icon().pixmap(22, 22).isNull()
+
+
+def test_cosmic_ray_eraser_flow_erase_undo_and_validate(viewer):
+    """Verify cosmic-ray eraser toggles, erases a spike, supports undo, and emits validation signal."""
+    import matplotlib.backend_bases as mbb
+
+    x = np.linspace(100.0, 200.0, 21)
+    y = np.ones_like(x) * 10.0
+    y[10] = 500.0  # Cosmic-ray spike at x = 150.0
+    data = {
+        "type": "tensor",
+        "x": x,
+        "y": y[None, :].copy(),
+        "x0": x,
+        "y0": y[None, :].copy(),
+        "colors": [None],
+        "labels": ["spec_0"],
+        "fnames": ["spec_0.txt"],
+        "proxies": [],
+    }
+    viewer.set_plot_data(data)
+
+    erased_events = []
+    validated_events = []
+    viewer.cosmicRayErased.connect(lambda idx, arr: erased_events.append((idx, arr.copy())))
+    viewer.cosmicRayValidated.connect(lambda: validated_events.append(True))
+
+    viewer.show()
+    viewer.btn_eraser.setChecked(True)
+    assert viewer._erase_mode is True
+    assert viewer.zoom_pan_active is False
+    assert viewer.btn_erase_undo.isVisible() is True
+    assert viewer.btn_erase_validate.isVisible() is True
+
+    press = mbb.MouseEvent("button_press_event", viewer.canvas, 100, 100, button=1)
+    press.inaxes = viewer.ax
+    press.xdata = 145.0
+    press.ydata = 10.0
+    viewer._erase_on_press(press)
+    assert viewer._erase_drag_start_x == 145.0
+
+    motion = mbb.MouseEvent("motion_notify_event", viewer.canvas, 120, 100, button=1)
+    motion.inaxes = viewer.ax
+    motion.xdata = 155.0
+    motion.ydata = 10.0
+    viewer._erase_on_motion(motion)
+    assert viewer._erase_highlight is not None
+
+    release = mbb.MouseEvent("button_release_event", viewer.canvas, 120, 100, button=1)
+    release.inaxes = viewer.ax
+    release.xdata = 155.0
+    release.ydata = 10.0
+    viewer._erase_on_release(release)
+
+    assert viewer._erase_highlight is None
+    assert len(erased_events) == 1
+    assert erased_events[0][0] == 0
+    assert viewer._tensor_data["y"][0][10] < 50.0
+
+    # Undo restores the spike
+    viewer._erase_undo()
+    assert viewer._tensor_data["y"][0][10] == pytest.approx(500.0)
+
+    # Validate clears history, emits cosmicRayValidated, and exits eraser mode
+    viewer._erase_validate()
+    assert len(validated_events) == 1
+    assert viewer._erase_mode is False
+    assert viewer.btn_eraser.isChecked() is False
+    assert viewer.zoom_pan_active is True
+
+
+def test_interactive_peak_finding_and_dragging(viewer):
+    """Verify _find_peak_at_position, _on_drag_peak, and _on_release_drag emit expected signals."""
+    import matplotlib.backend_bases as mbb
+
+    x = np.linspace(400.0, 600.0, 21)
+    y = np.exp(-((x - 500.0) ** 2) / (2.0 * 10.0 ** 2)) * 100.0
+    data = {
+        "type": "tensor",
+        "x": x,
+        "y": y[None, :],
+        "x0": x,
+        "y0": y[None, :],
+        "colors": [None],
+        "labels": ["spec_0"],
+        "fnames": ["spec_0.txt"],
+        "proxies": [],
+        "fit_models": [
+            {
+                "peak_models": {
+                    "0": {
+                        "Gaussian": {
+                            "x0": {"value": 500.0, "vary": True},
+                            "ampli": {"value": 100.0, "vary": True},
+                            "fwhm": {"value": 20.0, "vary": True},
+                        }
+                    }
+                },
+                "peak_labels": ["Peak1"],
+            }
+        ],
+    }
+    viewer.resize(640, 400)
+    viewer.show()
+    viewer.set_plot_data(data)
+    viewer.canvas.draw()
+
+    found = viewer._find_peak_at_position(500.0, 50.0)
+    assert found is not None
+    assert found[1]["peak_label"] == "Peak1"
+
+    dragged = []
+    finished = []
+    viewer.peak_dragged.connect(lambda nx, ny: dragged.append((nx, ny)))
+    viewer.peak_drag_finished.connect(lambda: finished.append(True))
+
+    viewer.btn_peak.click()
+    assert viewer.btn_peak.isChecked() is True
+    assert viewer.zoom_pan_active is False
+
+    px, py = viewer.ax.transData.transform((500.0, 80.0))
+    press = mbb.MouseEvent("button_press_event", viewer.canvas, px, py, button=1)
+    press.inaxes = viewer.ax
+    press.xdata = 500.0
+    press.ydata = 80.0
+    viewer._on_mouse_click(press)
+    assert viewer._dragging_peak is not None
+
+    drag = mbb.MouseEvent("motion_notify_event", viewer.canvas, px + 10, py + 5, button=1)
+    drag.inaxes = viewer.ax
+    drag.xdata = 520.0
+    drag.ydata = 120.0
+    viewer._on_drag_peak(drag)
+
+    assert dragged == [(520.0, 120.0)]
+    pdict = viewer._tensor_data["fit_models"][0]["peak_models"]["0"]["Gaussian"]
+    assert pdict["x0"]["value"] == 520.0
+    assert pdict["ampli"]["value"] == 120.0
+
+    release = mbb.MouseEvent("button_release_event", viewer.canvas, px + 10, py + 5, button=1)
+    viewer._on_release_drag(release)
+    assert finished == [True]
+    assert viewer._dragging_peak is None
+
+
+def test_3d_and_1d_log_scale_emit_no_nonpositive_limit_warnings(viewer, recwarn):
+    """Verify switching to Log scale in 1D and 3D modes with <=0 data emits no Matplotlib limit UserWarnings."""
+    x = np.linspace(100.0, 200.0, 10)
+    y = np.vstack([
+        np.linspace(-2.0, 10.0, 10),
+        np.linspace(0.0, 20.0, 10),
+    ])
+    data = {
+        "type": "tensor",
+        "x": x,
+        "y": y,
+        "x0": x,
+        "y0": y,
+        "colors": [None, None],
+        "labels": ["s1", "s2"],
+        "fnames": ["s1.txt", "s2.txt"],
+        "proxies": [],
+    }
+
+    viewer.resize(640, 420)
+    viewer.show()
+    viewer.set_plot_data(data)
+    viewer.canvas.draw()
+
+    recwarn.clear()
+    # 1D Log scale with existing non-positive ylim from Linear mode
+    viewer.cbb_yscale.setCurrentText("Log")
+    viewer.canvas.draw()
+    assert viewer.ax.get_yscale() == "log"
+
+    # Switch to 3D mode while Log scale is active
+    viewer.btn_3d.setChecked(True)
+    viewer.canvas.draw()
+    assert viewer.ax.name == "3d"
+    assert viewer.ax.get_zscale() == "log"
+
+    # Toggle Linear -> Log while already in 3D mode
+    viewer.cbb_yscale.setCurrentText("Linear")
+    viewer.canvas.draw()
+    viewer.cbb_yscale.setCurrentText("Log")
+    viewer.canvas.draw()
+    assert viewer.ax.get_zscale() == "log"
+
+    nonpos_warnings = [
+        str(w.message)
+        for w in recwarn
+        if issubclass(w.category, UserWarning)
+        and "Attempt to set non-positive" in str(w.message)
+    ]
+    assert nonpos_warnings == []
 
 

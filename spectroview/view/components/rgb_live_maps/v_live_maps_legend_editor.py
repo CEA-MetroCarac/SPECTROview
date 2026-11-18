@@ -21,7 +21,9 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview import DEFAULT_COLORS
-from spectroview.view.components.v_spectra_legend_editor import SpectrumColorComboBox
+from spectroview.view.components.spectra_viewer.v_spectra_legend_editor import (
+    SpectrumColorComboBox,
+)
 
 LEGEND_LOCATIONS = [
     "best",

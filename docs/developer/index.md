@@ -133,8 +133,15 @@ spectroview/
 │   ├── v_workspace_maps.py       # Maps workspace View (extends Spectra)
 │   ├── v_workspace_graphs.py     # Graphs workspace View
 │   └── components/               # Shared / reusable widgets
-│       ├── v_spectra_viewer.py        # Matplotlib spectra & 2D heatmap canvas
-│       ├── v_spectra_legend_editor.py  # Batch spectrum label/color editor
+│       ├── spectra_viewer/            # Spectra viewer package (1D, Heatmap, 3D, interactions)
+│       │   ├── __init__.py            # Package exports (VSpectraViewer, FastLine3DCollection, etc.)
+│       │   ├── common.py              # Palettes, style cache, filename tokens & 1D normalization
+│       │   ├── v_spectra_viewer.py    # VSpectraViewer main widget, toolbar, options menu & theme
+│       │   ├── v_plot_1d.py           # SpectraPlot1DMixin (1D segments, shifts, fit overlays)
+│       │   ├── v_plot_heatmap.py      # SpectraHeatmapMixin (2D series heatmap & Y-axis tokens)
+│       │   ├── v_plot_3d.py           # FastLine3DCollection & SpectraPlot3DMixin
+│       │   ├── v_interactions.py      # SpectraInteractionMixin (zoom, hover, peak drag, eraser)
+│       │   └── v_spectra_legend_editor.py  # Batch legend editor dialog, color combo & mixin
 │       ├── v_fit_model_builder.py     # Baseline + Peak + Fit controls
 │       ├── v_peak_table.py            # Interactive peak parameter table
 │       ├── v_map_viewer.py            # Heatmap / wafer canvas
@@ -324,8 +331,8 @@ Workspaces are composed from **shared components** that follow the same signal-b
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| `VSpectraViewer` | `v_spectra_viewer.py` | Matplotlib canvas for spectrum display, zoom/pan, peak/baseline interaction |
-| `SpectraLegendEditorDialog` | `v_spectra_legend_editor.py` | Transactional palette, legend-limit, label, and color editor (100-row batches) |
+| `VSpectraViewer` | `spectra_viewer/v_spectra_viewer.py` | Matplotlib canvas package for 1D/Heatmap/3D spectrum display, zoom/pan, peak/baseline/eraser interaction |
+| `SpectraLegendEditorDialog` | `spectra_viewer/v_spectra_legend_editor.py` | Transactional palette, legend-limit, label, and color editor (100-row batches) |
 | `VFitModelBuilder` | `v_fit_model_builder.py` | X-correction, spectral range, baseline, peaks, fit controls |
 | `VPeakTable` | `v_peak_table.py` | Editable table of peak parameters (center, FWHM, amplitude, bounds) |
 | `VMapViewer` | `v_map_viewer.py` | Heatmap/wafer canvas with Z/X range sliders, mask, profile extraction |

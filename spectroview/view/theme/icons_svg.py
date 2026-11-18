@@ -329,8 +329,10 @@ _SVG_TEMPLATES: dict[str, str] = {
         '<line x1="2" x2="22" y1="20" y2="20" stroke-dasharray="2.5 2.5"/>'
     ),
     "peak": (
-        '<path d="M2 20c4 0 6-17 10-17s6 17 10 17"/>'
-        '<line x1="12" x2="12" y1="3" y2="20" stroke-dasharray="2 2"/>'
+        '<path d="M2 20c3.2 0 4.8-16 8-16s4.8 16 8 16"/>'
+        '<line x1="10" x2="10" y1="4" y2="20" stroke-dasharray="2 2"/>'
+        '<line x1="19" x2="19" y1="3" y2="9"/>'
+        '<line x1="16" x2="22" y1="6" y2="6"/>'
     ),
     "fit_curve": (
         '<path d="M2 19 C5 19 8 5 12 5 C16 5 19 19 22 19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'

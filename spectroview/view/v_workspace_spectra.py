@@ -21,7 +21,7 @@ from spectroview.view.components.rgb_live_maps import VLiveMaps
 from spectroview.view.components.v_moretab  import VMoreTab
 from spectroview.view.components.v_mva import VMVA
 from spectroview.view.components.v_spectra_list import VSpectraList
-from spectroview.view.components.v_spectra_viewer import VSpectraViewer
+from spectroview.view.components.spectra_viewer import VSpectraViewer
 from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
 from spectroview.viewmodel.vm_live_maps import VMLiveMaps
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra

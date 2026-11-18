@@ -425,7 +425,11 @@ def _canvas_click_and_release(panel, x0: float, y0: float, x1: float = None, y1:
 
 def test_maps_workspace_interactive_live_maps_selection_updates_spectra_viewer(qapp, test_map_data, monkeypatch):
     """Clicking, Ctrl+Clicking, and dragging in Live Maps updates VSpectraViewer and VMapViewer cleanly."""
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QApplication
     from spectroview.model.spectral_parameters import SELECTOR_BLUE
+
+    monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.NoModifier))
 
     ws = VWorkspaceMaps()
     ws.resize(1100, 760)

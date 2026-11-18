@@ -50,7 +50,7 @@ All bulk operation buttons follow `_apply_with_ctrl(fn)`:
 
 ## 3. Selection Payloads
 
-`_emit_selected_spectra()` emits a dictionary consumed by `v_spectra_viewer.py`:
+`_emit_selected_spectra()` emits a dictionary consumed by `spectra_viewer/` (`VSpectraViewer`):
 
 - **Spectra Workspace**: emits `type: 'tensor_list'` (independent spectra, potentially with differing x-axes).
 - **Maps Workspace**: overrides to emit `type: 'tensor'` (one shared x-axis matrix).

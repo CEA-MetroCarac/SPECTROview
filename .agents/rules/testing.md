@@ -14,9 +14,9 @@ trigger: model_decision
 
 | Layer / Feature | Target Location | Mandatory Test Scenarios |
 |---|---|---|
-| **View / Widget / Dialog** | `tests/unit/view/` | • Widget instantiation without segfaults.<br>• Interaction triggers expected signals or ViewModel methods.<br>• Reacts correctly to incoming ViewModel signals.<br>• Mock modal dialogs (`QMessageBox`, `QFileDialog`, `QColorDialog`) with `monkeypatch`.<br>• Clean teardown without unparented timers or leaked event filters. |
-| **ViewModel** | `tests/unit/viewmodel/` | • Method state transitions and data transformations.<br>• Signal emissions verified via `qtbot.waitSignal` or callback lists.<br>• Robust handling of edge cases (empty stores, NaNs, missing columns). |
-| **Model & Schema** | `tests/unit/model/` | • Invariant and schema validation.<br>• Serialization & deserialization round-trip.<br>• If modifying `MGraph`, update `ALL_SAVE_KEYS` and `CUSTOM_VALUES` in `tests/unit/model/test_m_graph.py` (`TestModelSchemaSync`). |
+| **View / Widget / Dialog** | `tests/unit/view/` | • Widget instantiation without segfaults.<br>• Interaction triggers expected signals or ViewModel methods.<br>• Reacts correctly to incoming ViewModel signals.<br>• Mock modal dialogs (`QMessageBox`, `QFileDialog`, `QColorDialog`) with `monkeypatch`.<br>• Clean teardown without unparented timers or leaked event filters.<br>• Package boundaries/lazy exports locked by `test_view_package_organization.py`. |
+| **ViewModel** | `tests/unit/viewmodel/` | • Method state transitions and data transformations.<br>• Signal emissions verified via `qtbot.waitSignal` or callback lists.<br>• Robust handling of edge cases (empty stores, NaNs, missing columns).<br>• Package boundaries/lazy exports locked by `test_viewmodel_package_organization.py`. |
+| **Model & Schema** | `tests/unit/model/` | • Invariant and schema validation.<br>• Serialization & deserialization round-trip.<br>• Package boundaries/lazy exports locked by `test_model_package_organization.py`.<br>• If modifying `MGraph`, update `ALL_SAVE_KEYS` and `CUSTOM_VALUES` in `tests/unit/model/test_m_graph.py` (`TestModelSchemaSync`). |
 | **Fit Engine** | `tests/unit/fit_engine/` | • Analytical Jacobians vs numerical finite differences.<br>• Batched `(N, M, K)` tensor evaluation vs scalar implementation parity.<br>• Any new peak model MUST be registered in `_SAMPLE_PARAMS` in `tests/unit/fit_engine/test_models.py`. |
 | **File Loaders (`m_io`)** | `tests/unit/model/test_m_io.py` | • Correct extraction of spectral arrays, coordinates, and metadata.<br>• Graceful failure and error messages on corrupt or empty files. |
 | **Public API** | `tests/unit/api/` | • Exact positional and keyword argument compatibility.<br>• Return types match API contracts. |
@@ -88,6 +88,6 @@ Configuration is defined in `pyproject.toml` (`[tool.pytest.ini_options]`): `tes
 - **Visual Checks**:
   - For visual rendering correctness, capture offscreen rendering via `QWidget.grab().save("temp.png")` and inspect the output.
 - **Schema & Round-Trip Invariants**:
-  - If adding fields to `MGraph` (`model/m_graph.py`), update `ALL_SAVE_KEYS` and `CUSTOM_VALUES` in `tests/unit/model/test_m_graph.py`. The `TestModelSchemaSync` test locks this invariant.
+  - If adding fields to `MGraph` (`model/graphs/m_graph.py`), update `ALL_SAVE_KEYS` and `CUSTOM_VALUES` in `tests/unit/model/test_m_graph.py`. The `TestModelSchemaSync` test locks this invariant.
 - **Fit Engine Math**:
   - Any new peak model in `spectroview/fit_engine/models.py` must be added to `_SAMPLE_PARAMS` in `tests/unit/fit_engine/test_models.py` (scalar parity, Jacobians, and degenerate widths are tested automatically).

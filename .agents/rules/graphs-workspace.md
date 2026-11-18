@@ -21,8 +21,8 @@ Full narratives are in `docs/developer/graphs.md` and `docs/developer/graph_work
 
 ## 2. Plot Rendering & Restyle Fast Path
 
-- **Rendering Dispatch**: `view/components/graphs/v_plot_renderer.py::PlotRenderer` draws each plot style registered in `spectroview.PLOT_STYLES`. `VGraph` (`view/components/graphs/v_graph.py`) owns the matplotlib Figure, Canvas, navigation toolbar, annotations, and user interaction.
-- **Restyle Fast Path**: `model/graphs/graph_style.py::RESTYLE_SAFE_FIELDS` contains properties whose modification only alters visual attributes (colors, line widths, alpha) without reshaping data or rebuilding artists. These changes take the fast path and avoid an expensive full replot. Fields modifying data shapes, axes bounds, or adding artists must **not** be included in `RESTYLE_SAFE_FIELDS`.
+- **Rendering Dispatch**: `view/components/graphs/v_plot_renderer.py::PlotRenderer` draws each plot style registered in `spectroview.PLOT_STYLES`. `VGraph` (`view/components/graphs/v_graph.py`, composed with `v_graph_canvas.py`, `v_graph_breaks.py`, `v_graph_axes.py`, and `v_graph_annotations.py`) owns the matplotlib Figure, Canvas, navigation toolbar, annotations, and user interaction.
+- **Restyle Fast Path**: `model/graphs/graph_style.py::RESTYLE_SAFE_FIELDS` contains properties whose modification only alters visual attributes (colors, line widths, alpha) without reshaping data or rebuilding artists. These changes take the fast path and avoid an expensive full replot (`GraphAxesStyleMixin.restyle()` in `v_graph_axes.py` also sanitizes stale non-positive linear auto-limits via `_sanitize_log_axis_limits()` before switching an axis to `"log"` scale). Fields modifying data shapes, axes bounds, or adding artists must **not** be included in `RESTYLE_SAFE_FIELDS`.
 
 ---
 
@@ -54,14 +54,14 @@ Full narratives are in `docs/developer/graphs.md` and `docs/developer/graph_work
 
 Do not confuse these distinct persistence models:
 
-- **Plot Recipe**: Complete plot configuration (data columns, axes, style, annotations): `model/graphs/m_plot_recipe.py`, `v_plot_recipe_dialog.py`.
-- **Style Template**: Visual presentation settings only (fonts, spines, colors, markers): `model/graphs/m_style_template_store.py`, `v_style_template_dialog.py`.
+- **Plot Recipe**: Complete plot configuration (data columns, axes, style, annotations): `model/graphs/m_plot_recipe.py`, `view/components/graphs/v_plot_recipe_dialog.py`.
+- **Style Template**: Visual presentation settings only (fonts, spines, colors, markers): `model/graphs/m_style_template_store.py`, `view/components/graphs/v_style_template_dialog.py`.
 
 ---
 
 ## 7. Annotations & Pixel Transforms
 
-- Annotations are rendered via `VGraph._render_*` and carry `_annotation_data`.
+- Annotations are rendered via `GraphAnnotationMixin._render_*` (`view/components/graphs/v_graph_annotations.py`) and carry `_annotation_data`.
 - Hit-testing and dragging must be calculated using pixel-based transforms:
   ```python
   self.ax.transData.inverted().transform((event.x, event.y))

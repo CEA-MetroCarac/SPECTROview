@@ -21,7 +21,7 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 
 ## 2. Replace or Add a Matplotlib Nav-Toolbar Icon (Graphs)
 
-1. Custom navigation icons are mapped in `v_graph.py::_CUSTOM_TOOLBAR_ICONS` (action text $\rightarrow$ colorful PNG in `spectroview/resources/icons/`).
+1. Custom navigation icons are mapped in `view/components/graphs/v_graph.py::_CUSTOM_TOOLBAR_ICONS` (action text $\rightarrow$ colorful PNG in `spectroview/resources/icons/`).
 2. Custom icons are theme-independent and maintained across palette changes by the toolbar's `ToolbarEventFilter`.
 3. Add the PNG to `spectroview/resources/icons/` and map the action text. Do not add tinting.
 
@@ -31,7 +31,7 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 
 1. Register the plot style name in `PLOT_STYLES` in `spectroview/__init__.py`.
 2. Implement rendering logic in `spectroview/view/components/graphs/v_plot_renderer.py` (`PlotRenderer`).
-3. Add any necessary backing configuration fields to `MGraph` (`model/m_graph.py`).
+3. Add any necessary backing configuration fields to `MGraph` (`model/graphs/m_graph.py`).
 4. Update `ALL_SAVE_KEYS` and `CUSTOM_VALUES` in `tests/unit/model/test_m_graph.py`, and add test coverage to `TestPlotStyleCoverage` in `tests/unit/view/test_v_graph_plotting.py`.
 5. If UI controls are required, extend `spectroview/view/components/customize_graph/`.
 6. Update documentation: `docs/developer/graphs.md`, `docs/user_manual/graphs.md`, `docs/api/graphs.md`.
@@ -40,9 +40,9 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 
 ## 4. Add a Customization Option (Customize Graph Dialog)
 
-1. Add the backing field and default value to `MGraph` in `spectroview/model/m_graph.py`.
-2. Add the UI control to the appropriate tab in `spectroview/view/components/customize_graph/` (`customize_axis`, `customize_legend`, `customize_more_options`, `customize_annotations`), wiring data load and apply handlers.
-3. Read and apply the field in `v_plot_renderer.py`. If the modification only restyles existing artists without data reshaping, consider adding it to `graph_style.RESTYLE_SAFE_FIELDS` for the fast path.
+1. Add the backing field and default value to `MGraph` in `spectroview/model/graphs/m_graph.py`.
+2. Add the UI control to the appropriate tab page in `spectroview/view/components/customize_graph/` (`tab_general`, `tab_axes_limits`, `tab_ticks_spines`, `tab_legend_series`, `tab_plot_styles`, `tab_annotations`, `tab_secondary_inset`, or legacy `customize_*` modules), wiring data load and apply handlers.
+3. Read and apply the field in `spectroview/view/components/graphs/v_plot_renderer.py`. If the modification only restyles existing artists without data reshaping, consider adding it to `model/graphs/graph_style.py::RESTYLE_SAFE_FIELDS` for the fast path.
 4. Cover the option in `tests/unit/view/test_customize_graph_dialog.py` and `test_m_graph.py`.
 5. Update `docs/user_manual/graphs.md`.
 
@@ -50,7 +50,7 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 
 ## 5. Add a File Loader (Spectra / Maps)
 
-1. Implement format parsing in `spectroview/model/m_io.py` (or a dedicated format module such as `m_spc.py`).
+1. Implement format parsing in `spectroview/model/io/m_io.py` (or a dedicated format module in `spectroview/model/io/` such as `m_spc.py`).
 2. Connect loader in the loading pipeline in `viewmodel/spectra/vm_workspace_spectra.py` and `viewmodel/maps/vm_workspace_maps.py`.
 3. Add sample data files in `examples/` if appropriate.
 4. Write unit tests in `tests/unit/model/test_m_io.py`.

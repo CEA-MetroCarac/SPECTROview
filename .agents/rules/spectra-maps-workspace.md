@@ -29,7 +29,7 @@ Deep architectural narrative is in `docs/developer/spectra.md`, `docs/developer/
 
 ## 2. Base $\leftrightarrow$ Subclass Inheritance (Template-Method Pattern)
 
-`VMWorkspaceSpectra` is the base ViewModel; `VMWorkspaceMaps` **subclasses** it (matching the relationship between `VWorkspaceSpectra` and `VWorkspaceMaps`).
+`VMWorkspaceSpectra` (`viewmodel/spectra/vm_workspace_spectra.py` + `vm_spectra_{preprocessing,fitting,results,persistence}.py`) is the base ViewModel; `VMWorkspaceMaps` (`viewmodel/maps/vm_workspace_maps.py` + `vm_maps_{fitting,persistence}.py`) **subclasses** it, matching the inheritance between `VWorkspaceSpectra` (`view/workspaces/v_workspace_spectra.py`) and `VWorkspaceMaps` (`view/workspaces/v_workspace_maps.py`).
 
 Always inspect the parent method before modifying an override. Bulk operations must be customized **only** via the three established template hooks:
 
@@ -50,7 +50,7 @@ All bulk operation buttons follow `_apply_with_ctrl(fn)`:
 
 ## 3. Selection Payloads
 
-`_emit_selected_spectra()` emits a dictionary consumed by `spectra_viewer/` (`VSpectraViewer`):
+`_emit_selected_spectra()` emits a dictionary consumed by `view/components/spectra_viewer/` (`VSpectraViewer`):
 
 - **Spectra Workspace**: emits `type: 'tensor_list'` (independent spectra, potentially with differing x-axes).
 - **Maps Workspace**: overrides to emit `type: 'tensor'` (one shared x-axis matrix).
@@ -68,7 +68,7 @@ Always maintain established payload keys (`spectra_names`, `x`, `Y`, `peaks_para
   - Spectrum naming follows `f"{map_name}_({float(x)}, {float(y)})"`.
   - When changing coordinate parsing, update both `_extract_coords_from_fname` (View) and `_extract_coords_for_spectra` (ViewModel) to keep formatting consistent.
 - **Heatmap Grid Cache**:
-  - `VMapViewer._griddata_cache` caches interpolated grids keyed by `(map, parameter, x_range, map_type, mask, outliers)`.
+  - `VMapViewer._griddata_cache` (in `view/components/map_viewer/`) caches interpolated grids keyed by `(map, parameter, x_range, map_type, mask, outliers)`.
   - Invalidate the cache by emitting `clear_map_cache_requested` after any operation that modifies fit parameters or data.
 - **Detachable Map Viewers**:
   - Multiple `VMapViewerDialog` instances share map data.

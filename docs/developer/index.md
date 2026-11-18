@@ -28,8 +28,8 @@ graph LR
 | Layer | Prefix | Example |
 |-------|--------|---------|
 | View | `v_` | `workspaces/v_workspace_spectra.py` |
-| ViewModel | `vm_` | `vm_workspace_spectra.py` |
-| Model | `m_` | `spectra_store.py` |
+| ViewModel | `vm_` | `spectra/vm_workspace_spectra.py` |
+| Model | `m_` | `spectra/spectra_store.py` |
 
 ### **Import Rules**
 
@@ -393,8 +393,8 @@ Workspaces are composed from **shared components** that follow the same signal-b
 | `VPeakTable` | `lower_tabs/v_peak_table.py` | Editable table of peak parameters (center, FWHM, amplitude, bounds) |
 | `VMapViewer` | `map_viewer/v_map_viewer.py` | Heatmap/wafer canvas with Z/X range sliders, mask, profile extraction |
 | `VMapViewerDialog` | `map_viewer/v_map_viewer_dialog.py` | Detachable always-on-top window wrapping `VMapViewer` |
-| `VGraph` | `v_graph.py` | Matplotlib graph widget supporting 10+ plot styles |
-| `VDataFilter` | `v_data_filter.py` | Dynamic `pandas` `.query()` filter builder |
+| `VGraph` | `graphs/v_graph.py` | Matplotlib graph widget supporting 10+ plot styles |
+| `VDataFilter` | `graphs/v_data_filter.py` | Dynamic `pandas` `.query()` filter builder |
 | `VFitResults` | `lower_tabs/v_fit_results.py` | Color-coded fit results table |
 | `VMVA` | `lower_tabs/v_mva.py` | PCA/NMF controls and embedded plotting |
 | `VMoreTab` | `lower_tabs/v_moretab.py` | Spectrum metadata display and Y-normalization controls |
@@ -418,7 +418,7 @@ SPECTROview uses a centralised theme and typography architecture (`spectroview/v
 
 ## **Persistence & Serialization**
 
-`SPECTROview` delegates all loading and saving operations to the unified `WorkspaceIO` class (`workspace_io.py`), which isolates IO logic from the ViewModels. Each workspace uses its own save/load format via `WorkspaceIO`:
+`SPECTROview` delegates all loading and saving operations to the unified `WorkspaceIO` class (`model/io/workspace_io.py`), which isolates IO logic from the ViewModels. Each workspace uses its own save/load format via `WorkspaceIO`:
 
 | Workspace | File Extension | Key Strategy |
 |-----------|---------------|-------------|

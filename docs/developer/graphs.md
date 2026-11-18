@@ -106,6 +106,12 @@ This contract is intentionally renderer-independent. The View still owns
 Matplotlib figure/canvas creation, filtered-data lookup, re-rendering, window
 geometry, and refresh of an open Customize dialog.
 
+### **`VWorkspaceGraphs` — The View Orchestrator**
+
+**Package**: `spectroview/view/workspaces/graphs/` (`v_workspace_graphs.py`, `v_mdi_subwindow.py`, `v_graphs_ui.py`, `v_graphs_dataframes.py`, `v_graphs_mdi.py`, `v_graphs_actions.py`)
+
+`VWorkspaceGraphs` composes the Graphs workspace UI (`GraphsUIMixin`), DataFrame selection/filtering panel (`GraphsDataFramesMixin`), MDI window layout/tile/cascade & active-toolbar sync (`GraphsMdiMixin`), and plot create/update/export/undo/template actions (`GraphsActionsMixin`), wrapping each `VGraph` widget inside `MdiSubWindow`.
+
 ### **`VGraph` — The Rendering Widget**
 
 **Package**: `spectroview/view/components/graphs/` (`v_graph.py` with `v_graph_canvas.py`, `v_graph_breaks.py`, `v_graph_axes.py`, `v_graph_annotations.py`)
@@ -121,7 +127,7 @@ Each plot in the MDI area is a `VGraph` instance. It holds a Matplotlib `Figure`
 Two rendering paths:
 
 - **`plot(df)`** — full replot: clears and rebuilds the Axes from scratch. Required whenever artists themselves change (series data, colors/markers per point, colormap, secondary/twin axes, annotations, insets) or a broken axis is active/toggled.
-- **`restyle()`** — fast path that repaints an already-rendered Axes in place (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling) without touching plotted data. Returns `False` (forcing a full replot instead) whenever a broken axis is active. See [Live Preview & Restyle Fast Path](#live-preview-restyle-fast-path) for how the Customize dialog decides which path to use.
+- **`restyle()`** — fast path that repaints an already-rendered Axes in place (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling) without touching plotted data. Before setting an axis to `"log"` scale, `GraphAxesStyleMixin` (`v_graph_axes.py`) sanitizes stale non-positive linear auto-limits via `_sanitize_log_axis_limits()` so Matplotlib does not emit non-positive log-limit warnings. Returns `False` (forcing a full replot instead) whenever a broken axis is active. See [Live Preview & Restyle Fast Path](#live-preview-restyle-fast-path) for how the Customize dialog decides which path to use.
 
 `_set_figure_style()` re-applies `axes.facecolor`/`figure.facecolor`/`axes.labelcolor`/`text.color`/`xtick.color`/`ytick.color`/`axes.edgecolor` from `plt.rcParams` on every render — necessary because `ax.clear()` does not retroactively repaint an Axes built under a different Matplotlib style/theme context, which previously left tick/label/spine colors stuck black after switching to a dark theme.
 

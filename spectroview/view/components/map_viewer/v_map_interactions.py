@@ -10,7 +10,7 @@ from spectroview.view.components.map_viewer.map_selection import (
     resolve_xy_selection,
 )
 from spectroview.view.theme import Icons
-from spectroview.viewmodel.utils import copy_fig_to_clb
+from spectroview.viewmodel.common.export_utils import copy_fig_to_clb
 
 
 class MapInteractionMixin:

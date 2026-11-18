@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from spectroview import PLOT_POLICY_LIGHT
 from spectroview.view.theme import current_tokens
-from spectroview.viewmodel.utils import parse_coords_from_fname
+from spectroview.viewmodel.common.spectral_utils import parse_coords_from_fname
 
 
 class _PlotTab(QWidget):

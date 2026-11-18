@@ -36,7 +36,8 @@ from spectroview.view.components.customize_graph.customize_graph_dialog import (
     EditBoxDialog, EditCalloutDialog,
 )
 from spectroview.model.graphs.m_graph import MGraph
-from spectroview.viewmodel.utils import show_alert, copy_fig_to_clb
+from spectroview.viewmodel.common.export_utils import copy_fig_to_clb
+from spectroview.viewmodel.common.ui_utils import show_alert
 from spectroview.view.components.v_plot_renderer import PlotRenderer
 
 

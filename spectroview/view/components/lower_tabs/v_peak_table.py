@@ -10,7 +10,7 @@ from PySide6.QtGui import QPalette, QColor
 
 from spectroview import PEAK_MODELS
 from spectroview.view.theme import Icons
-from spectroview.viewmodel.utils import fano_display_amplitude, fano_internal_amplitude
+from spectroview.viewmodel.common.spectral_utils import fano_display_amplitude, fano_internal_amplitude
 
 ROW_HEIGHT = 28
 

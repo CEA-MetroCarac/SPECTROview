@@ -45,7 +45,7 @@ from spectroview.model.io.m_wdf import (
     WdfScanType,
     WdfUnitType,
 )
-from spectroview.viewmodel.utils import parse_coords_from_fname
+from spectroview.viewmodel.common.spectral_utils import parse_coords_from_fname
 
 
 class TestLoadSpectrumFile:

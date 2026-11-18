@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview.model.m_settings import MSettings
-from spectroview.viewmodel.utils import export_figure_to_file
+from spectroview.viewmodel.common.export_utils import export_figure_to_file
 from spectroview.view.components.v_notification import show_notification
 
 # Display text -> (file extension, QFileDialog filter string)

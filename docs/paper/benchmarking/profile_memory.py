@@ -14,7 +14,7 @@ from spectroview.model.io.m_io import load_map_file, load_wdf_map
 from spectroview.model.io.workspace_io import WorkspaceIO
 from spectroview.model.spectra.spectra_store import SpectraStore
 from spectroview.fit_engine.vbf_engine import VBFengine
-from spectroview.viewmodel.utils import closest_index
+from spectroview.viewmodel.common.spectral_utils import closest_index
 from spectroview.fit_engine.baseline import eval_baseline_batch
 
 def get_xy_from_map(df: pd.DataFrame):

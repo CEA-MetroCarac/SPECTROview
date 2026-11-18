@@ -60,7 +60,7 @@ from spectroview.view.components.spectra_viewer.v_spectra_legend_editor import (
     SpectraLegendMixin,
 )
 from spectroview.view.theme import Icons, current_tokens
-from spectroview.viewmodel.utils import copy_fig_to_clb
+from spectroview.viewmodel.common.export_utils import copy_fig_to_clb
 
 # Suppress harmless Matplotlib constrained_layout and log-limit transition warnings
 warnings.filterwarnings(

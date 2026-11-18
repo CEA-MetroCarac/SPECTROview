@@ -10,7 +10,7 @@ from spectroview.view.theme import (
     svg_pixmap,
     clear_icon_caches,
 )
-from spectroview.viewmodel.utils import get_tinted_icon
+from spectroview.viewmodel.common.ui_utils import get_tinted_icon
 
 
 def test_svg_icon_creation(qapp):

@@ -12,7 +12,7 @@ from spectroview.view.components.v_notification import (
     NotificationManager,
     show_notification,
 )
-from spectroview.viewmodel.utils import show_toast_notification
+from spectroview.viewmodel.common.ui_utils import show_toast_notification
 
 
 # ---------------------------------------------------------------------------

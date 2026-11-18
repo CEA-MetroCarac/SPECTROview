@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QItemSelectionModel
 from PySide6.QtGui import QFont
 
-from spectroview.viewmodel.utils import MetadataTooltipManager
+from spectroview.view.components.v_metadata_tooltip import MetadataTooltipManager
 from spectroview.view.theme import Icons, current_tokens
 
 

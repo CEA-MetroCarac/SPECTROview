@@ -8,7 +8,7 @@ from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QLabel
 
 from spectroview.view.components.v_notification import show_notification
-from spectroview.viewmodel.utils import fano_display_amplitude
+from spectroview.viewmodel.common.spectral_utils import fano_display_amplitude
 
 
 class SpectraInteractionMixin:

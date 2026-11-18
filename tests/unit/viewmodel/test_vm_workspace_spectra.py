@@ -460,7 +460,7 @@ class TestFitModelSerialization:
         assert "0" in md.fit_model["peak_models"]
 
     def test_build_clean_fit_model_round_trips_through_save_apply(self, vm, tmp_path):
-        from spectroview.viewmodel.utils import build_clean_fit_model
+        from spectroview.viewmodel.common.spectral_utils import build_clean_fit_model
         x, y = _synthetic_lorentzian()
         md = _add_spectrum(vm, "s1", x, y)
         vm.set_selected_fnames(["s1"])
@@ -681,7 +681,7 @@ class TestResultsExtraction:
 
     def test_save_df_to_excel(self, tmp_path):
         import openpyxl
-        from spectroview.viewmodel.utils import save_df_to_excel
+        from spectroview.viewmodel.common.export_utils import save_df_to_excel
 
         df = pd.DataFrame({
             "Filename": ["map1_10.5_zoneA", "map1_20.3_zoneB", "map1_30.1_zoneC"],
@@ -702,7 +702,7 @@ class TestResultsExtraction:
         wb.close()
 
     def test_save_df_to_excel_empty(self, tmp_path):
-        from spectroview.viewmodel.utils import save_df_to_excel
+        from spectroview.viewmodel.common.export_utils import save_df_to_excel
 
         out_file = tmp_path / "empty.xlsx"
         ok, _ = save_df_to_excel(str(out_file), pd.DataFrame())

@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox, QFileDialog,
 )
 
-from spectroview.viewmodel.utils import export_figure_to_file
+from spectroview.viewmodel.common.export_utils import export_figure_to_file
 from spectroview.view.components.v_notification import show_notification
 from spectroview.view.components.v_export_dialog import (
     _ExportSettingsPanel, _MM_PER_INCH, gw_display_name,

@@ -55,7 +55,7 @@ from spectroview.view.components.rgb_live_maps.v_live_maps_legend_editor import 
     LEGEND_LOCATIONS,
 )
 from spectroview.view.theme import Icons, current_tokens
-from spectroview.viewmodel.utils import copy_df_to_clb, copy_fig_to_clb
+from spectroview.viewmodel.common.export_utils import copy_df_to_clb, copy_fig_to_clb
 
 
 class LiveMapSubpanel(QFrame):

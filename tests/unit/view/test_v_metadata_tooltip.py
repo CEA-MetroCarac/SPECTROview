@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QPoint, QEvent
 from PySide6.QtGui import QMouseEvent, QKeyEvent
 from PySide6.QtWidgets import QApplication
 
-from spectroview.viewmodel.utils import (
+from spectroview.viewmodel.common.spectral_utils import (
     extract_primary_metadata,
     format_metadata_tooltip,
 )

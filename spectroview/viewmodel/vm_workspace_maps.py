@@ -21,7 +21,7 @@ from spectroview.model.io.m_io import (
 )
 from spectroview.model.spectra.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
-from spectroview.viewmodel.utils import parse_coords_from_fname
+from spectroview.viewmodel.common.spectral_utils import parse_coords_from_fname
 
 
 

@@ -29,10 +29,10 @@ from spectroview.model.spectra.peak_model import initialize_peak_params
 from spectroview.fit_engine.vbf_thread import VBFthread
 from spectroview.fit_engine.baseline import eval_baseline_batch
 from spectroview.fit_engine.evaluator import eval_peak_initial
-from spectroview.viewmodel.utils import (
-    closest_index,
-    save_df_to_excel,
+from spectroview.viewmodel.common.export_utils import save_df_to_excel
+from spectroview.viewmodel.common.spectral_utils import (
     build_clean_fit_model,
+    closest_index,
 )
 
 

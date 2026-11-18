@@ -11,7 +11,7 @@ from spectroview.view.components.v_map_list import VMapsList
 from spectroview.view.components.map_viewer import VMapViewer, VMapViewerDialog
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
-from spectroview.viewmodel.utils import parse_coords_from_fname
+from spectroview.viewmodel.common.spectral_utils import parse_coords_from_fname
 
 
 class VWorkspaceMaps(VWorkspaceSpectra):

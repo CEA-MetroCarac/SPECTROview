@@ -14,256 +14,45 @@ ratio (``PARAM_RB_RATIO``), recomputed whenever the Red or Blue range changes.
 """
 
 from __future__ import annotations
+
 from collections import OrderedDict
 import time
-from typing import Optional, Dict, Set, Iterable, Tuple, List
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import numpy as np
-
-from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal, QTimer
+from PySide6.QtCore import QObject, QThreadPool, QTimer, Signal
 
 from spectroview.model.m_settings import MSettings
-from spectroview.model.spectra.spectra_store import MapData
 from spectroview.model.spectra.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
     PARAM_RB_RATIO,
-    SELECTOR_RED,
     SELECTOR_BLUE,
     SELECTOR_GREEN,
     SELECTOR_KEYS,
+    SELECTOR_RED,
     MapGeometry,
     MapGridder,
     analyze_map_geometry,
     build_map_gridder,
     compute_intensity_ratio,
-    compute_spectral_parameter,
-    compute_series_spectral_parameter,
     compute_map_grid,
+    compute_series_spectral_parameter,
+    compute_spectral_parameter,
+)
+from spectroview.model.spectra.spectra_store import MapData
+from spectroview.viewmodel.maps.live_maps_worker import (
+    _EMPTY_EXTENT,
+    _VERSIONED_CACHE_MAX,
+    ASYNC_SPECTRUM_THRESHOLD,
+    MSG_RATIO_NEEDS_RB,
+    LiveMapsAsyncMixin,
+    _LiveMapWorker,
+    _LiveMapWorkerBridge,
+    _Result,
 )
 
-_EMPTY_EXTENT = [0.0, 1.0, 0.0, 1.0]
-_VERSIONED_CACHE_MAX = 64
-ASYNC_SPECTRUM_THRESHOLD = 25_000
-MSG_RATIO_NEEDS_RB = "Activate the Red and Blue range selectors to display the R/B ratio"
 
-# (values, labels, is_valid, message)
-_Result = Tuple[np.ndarray, list, bool, str]
-
-
-class _LiveMapWorkerBridge(QObject):
-    """Main-thread Qt signal bridge for background Live Maps QRunnable workers."""
-
-    finished = Signal(int, object)
-
-
-class _LiveMapWorker(QRunnable):
-    """Pure-NumPy background worker that evaluates heavy Live Maps batches off the GUI thread."""
-
-    def __init__(self, generation_id: int, snapshot: dict, bridge: _LiveMapWorkerBridge):
-        super().__init__()
-        self.setAutoDelete(True)
-        self._gen_id = generation_id
-        self._snap = snapshot
-        self._bridge = bridge
-
-    def run(self):
-        t0 = time.perf_counter()
-        snap = self._snap
-        pre_cached = snap["pre_cached"]
-        states = snap["states"]
-        selector_order = snap["selector_order"]
-        excluded_status = snap["excluded_status"]
-        display_mode = snap["display_mode"]
-
-        pass_intensity: Dict[tuple, Tuple[Tuple[float, float], _Result]] = {}
-        new_cache_entries: Dict[tuple, _Result] = {}
-
-        def eval_param(md_snap: dict, x_range: Tuple[float, float], param: str) -> _Result:
-            cache_key = (
-                md_snap["id"],
-                md_snap["name"],
-                md_snap["data_version"],
-                param,
-                x_range,
-            )
-            hit = pre_cached.get(cache_key)
-            if hit is not None:
-                return hit
-            hit = new_cache_entries.get(cache_key)
-            if hit is not None:
-                return hit
-            vals, ok, msg = compute_spectral_parameter(
-                x_axis=md_snap["x_axis"],
-                Y=md_snap["y_matrix"],
-                x_range=x_range,
-                parameter=param,
-                baseline_subtracted=md_snap["is_baseline_subtracted"],
-                peak_params=md_snap["peak_params"],
-                param_names=md_snap["param_names"],
-                fit_model=md_snap["fit_model"],
-                active_mask=md_snap["is_active"],
-            )
-            res: _Result = (vals, [], ok, msg)
-            new_cache_entries[cache_key] = res
-            return res
-
-        def integrated_for(md_snap: dict, color_id: str) -> _Result:
-            rng = states[color_id]["range"]
-            ikey = (md_snap["id"], md_snap["data_version"], color_id)
-            cached = pass_intensity.get(ikey)
-            if cached is not None and cached[0] == rng:
-                return cached[1]
-            res = eval_param(md_snap, rng, PARAM_INTEGRATED_INTENSITY)
-            pass_intensity[ikey] = (rng, res)
-            return res
-
-        def ratio_for(md_snap: dict) -> _Result:
-            if not (states[SELECTOR_RED]["active"] and states[SELECTOR_BLUE]["active"]):
-                return np.array([], dtype=np.float64), [], False, MSG_RATIO_NEEDS_RB
-            r_vals, labels, r_ok, r_msg = integrated_for(md_snap, SELECTOR_RED)
-            if not r_ok:
-                return r_vals, labels, False, f"Red range: {r_msg}"
-            b_vals, _, b_ok, b_msg = integrated_for(md_snap, SELECTOR_BLUE)
-            if not b_ok:
-                return b_vals, labels, False, f"Blue range: {b_msg}"
-            if len(r_vals) != len(b_vals):
-                return np.array([], dtype=np.float64), labels, False, "Red/Blue size mismatch"
-            ratio, n_masked = compute_intensity_ratio(r_vals, b_vals)
-            if n_masked == ratio.size:
-                return ratio, labels, False, "R/B ratio undefined: Blue intensity is zero"
-            msg = f"{n_masked} point(s) with ~zero Blue intensity masked" if n_masked else "OK"
-            return ratio, labels, True, msg
-
-        def eval_selector(md_snap: dict, color_id: str) -> _Result:
-            st = states[color_id]
-            if color_id == SELECTOR_GREEN and st["param"] == PARAM_RB_RATIO:
-                return ratio_for(md_snap)
-            if st["param"] == PARAM_INTEGRATED_INTENSITY:
-                return integrated_for(md_snap, color_id)
-            return eval_param(md_snap, st["range"], st["param"])
-
-        outputs: list = []
-        try:
-            if display_mode == "multi_profile":
-                profile_snaps = snap["profile_mds"]
-                primary_name = snap["primary_map_name"]
-                for cid in selector_order:
-                    entries = []
-                    out_of_range_names = []
-                    primary_msg = ""
-                    for md_snap in profile_snaps:
-                        is_primary = md_snap["name"] == primary_name
-                        if not md_snap["has_coords"]:
-                            out_of_range_names.append(md_snap["name"])
-                            entries.append({
-                                "name": md_snap["name"],
-                                "positions": np.array([], dtype=np.float64),
-                                "values": np.array([], dtype=np.float64),
-                                "is_primary": is_primary,
-                                "axis_label": "Position",
-                                "out_of_range": True,
-                                "msg": "No coordinates",
-                            })
-                            continue
-                        geom = md_snap["geom"]
-                        vals, _, ok, msg = eval_selector(md_snap, cid)
-                        order = geom.order
-                        pos_sorted = np.asarray(geom.positions[order], dtype=np.float64)
-                        if ok and len(vals) == len(geom.positions):
-                            val_sorted = np.asarray(vals, dtype=np.float64)[order]
-                            out_of_range = False
-                            if np.all(np.isnan(val_sorted)):
-                                out_of_range = True
-                                msg = "All spectra unchecked or undefined"
-                        else:
-                            val_sorted = np.full(len(pos_sorted), np.nan, dtype=np.float64)
-                            out_of_range = True
-                            out_of_range_names.append(md_snap["name"])
-                        if is_primary:
-                            primary_msg = msg
-                        entries.append({
-                            "name": md_snap["name"],
-                            "positions": pos_sorted,
-                            "values": val_sorted,
-                            "is_primary": is_primary,
-                            "axis_label": geom.axis_label,
-                            "out_of_range": out_of_range,
-                            "msg": msg,
-                        })
-                    axis_labels = {e["axis_label"] for e in entries if e["positions"].size > 0}
-                    shared_x_label = (
-                        next(iter(axis_labels)) if len(axis_labels) == 1 else "Spatial Position"
-                    )
-                    notes = []
-                    if excluded_status:
-                        notes.append(excluded_status)
-                    if out_of_range_names:
-                        notes.append(f"Out of range / undefined: {', '.join(out_of_range_names[:3])}")
-                    elif primary_msg and primary_msg != "OK":
-                        notes.append(primary_msg)
-                    combined_msg = " · ".join(notes) if notes else "OK"
-                    outputs.append(("multi_profile", cid, entries, shared_x_label, combined_msg))
-            else:
-                md_snap = snap["current_md"]
-                geom = md_snap["geom"]
-                for cid in selector_order:
-                    vals, _, ok, msg = eval_selector(md_snap, cid)
-                    if geom.is_profile:
-                        if not ok or len(vals) != len(geom.positions):
-                            outputs.append((
-                                "profile", cid, np.array([]), np.array([]),
-                                geom.axis_label, msg or "Unable to calculate parameter",
-                            ))
-                        else:
-                            vals_arr = np.asarray(vals, dtype=np.float64)
-                            if np.all(np.isnan(vals_arr)):
-                                outputs.append((
-                                    "profile", cid, np.array([]), np.array([]),
-                                    geom.axis_label, "All spectra unchecked or undefined",
-                                ))
-                            else:
-                                order = geom.order
-                                outputs.append((
-                                    "profile", cid, geom.positions[order], vals_arr[order],
-                                    geom.axis_label, msg,
-                                ))
-                    else:
-                        if not ok:
-                            outputs.append((
-                                "map_2d", cid, None, list(_EMPTY_EXTENT),
-                                0.0, 1.0, msg or "Unable to calculate parameter",
-                            ))
-                        else:
-                            grid, extent, vmin, vmax = compute_map_grid(
-                                md_snap["coords"], vals, gridder=md_snap["gridder"]
-                            )
-                            if grid is None:
-                                outputs.append((
-                                    "map_2d", cid, None, list(_EMPTY_EXTENT),
-                                    0.0, 1.0, "All spectra unchecked or undefined",
-                                ))
-                            else:
-                                outputs.append(("map_2d", cid, grid, extent, vmin, vmax, msg))
-            error_msg = None
-        except Exception as exc:
-            outputs = []
-            error_msg = str(exc)
-
-        elapsed_ms = (time.perf_counter() - t0) * 1000.0
-        payload = {
-            "elapsed_ms": elapsed_ms,
-            "outputs": outputs,
-            "cache_entries": new_cache_entries,
-            "md_versions": snap["md_versions"],
-            "error": error_msg,
-        }
-        try:
-            self._bridge.finished.emit(self._gen_id, payload)
-        except RuntimeError:
-            pass
-
-
-class VMLiveMaps(QObject):
+class VMLiveMaps(QObject, LiveMapsAsyncMixin):
     """ViewModel orchestrating Live Maps (2D heatmaps / 1D profiles) and Live Series (1D trend graphs)."""
 
     # (color_id, grid_2d, extent, vmin, vmax, status_msg)
@@ -335,9 +124,7 @@ class VMLiveMaps(QObject):
         self._gridder_cache: Dict[int, Tuple[np.ndarray, Optional[bytes], MapGridder]] = {}
         self._versioned_cache: OrderedDict = OrderedDict()
 
-        # Integrated intensities computed during the current recalculation pass,
-        # keyed by (id(md), color_id) → (range, result). Pass-scoped (cleared before
-        # and after each batch) so in-place data edits can never be served stale.
+        # Pass-scoped integrated intensities memoized during the current recalculation pass
         self._intensity_cache: Dict[tuple, Tuple[Tuple[float, float], _Result]] = {}
 
         # Debounced calculation during interactive dragging (adapts to heavy maps)
@@ -345,10 +132,10 @@ class VMLiveMaps(QObject):
         self._last_calc_ms: float = 0.0
         self._timer = QTimer(self)
         self._timer.setSingleShot(True)
-        self._timer.setInterval(60)  # 60 ms debounce baseline; scales smoothly on heavy maps
+        self._timer.setInterval(60)
         self._timer.timeout.connect(self._recalculate_pending)
 
-        # Phase 5: QThreadPool async offload for very large maps (>= async_threshold)
+        # QThreadPool async offload for very large maps (>= async_threshold)
         self._generation_id: int = 0
         self._shutting_down: bool = False
         self._async_busy: bool = False
@@ -380,7 +167,10 @@ class VMLiveMaps(QObject):
 
     def _is_ratio_display(self, color_id: str = SELECTOR_GREEN) -> bool:
         """True if *color_id* (only Green supports it) currently displays the R/B ratio."""
-        return color_id == SELECTOR_GREEN and self._states[SELECTOR_GREEN]["param"] == PARAM_RB_RATIO
+        return (
+            color_id == SELECTOR_GREEN
+            and self._states[SELECTOR_GREEN]["param"] == PARAM_RB_RATIO
+        )
 
     def _dependents(self, color_id: str) -> Set[str]:
         """Selectors whose display depends on *color_id*'s range/state (besides itself)."""
@@ -429,16 +219,17 @@ class VMLiveMaps(QObject):
         if not self._excluded_names:
             return ""
         shown = ", ".join(self._excluded_names[:3])
-        extra = f" (+{len(self._excluded_names) - 3})" if len(self._excluded_names) > 3 else ""
+        extra = (
+            f" (+{len(self._excluded_names) - 3})"
+            if len(self._excluded_names) > 3
+            else ""
+        )
         if self._display_mode == "multi_profile":
             return f"Excluded 2D map(s): {shown}{extra}"
         return f"Excluded 1D profile(s): {shown}{extra}"
 
     def _sync_or_init_ranges_from_axis(self, x_axis: np.ndarray):
-        """Initialize or clamp selector intervals against a spectral axis.
-
-        Preserves user-adjusted intervals if they fall within the axis domain.
-        """
+        """Initialize or clamp selector intervals against a spectral axis."""
         if x_axis is None or len(x_axis) < 2:
             return
         x_min = float(np.min(x_axis))
@@ -455,7 +246,12 @@ class VMLiveMaps(QObject):
         for cid, (p0, p1) in proportions.items():
             state = self._states[cid]
             r0, r1 = state["range"]
-            if not state.get("user_set", False) or r1 <= x_min or r0 >= x_max or r0 >= r1:
+            if (
+                not state.get("user_set", False)
+                or r1 <= x_min
+                or r0 >= x_max
+                or r0 >= r1
+            ):
                 new_rng = (x_min + p0 * span, x_min + p1 * span)
             else:
                 c0 = max(x_min, r0)
@@ -466,7 +262,9 @@ class VMLiveMaps(QObject):
                     new_rng = (x_min + p0 * span, x_min + p1 * span)
             if new_rng != (r0, r1):
                 state["range"] = new_rng
-                self.selector_state_changed.emit(cid, state["active"], new_rng[0], new_rng[1])
+                self.selector_state_changed.emit(
+                    cid, state["active"], new_rng[0], new_rng[1]
+                )
 
     # ── Public inputs ─────────────────────────────────────────────────
 
@@ -483,12 +281,7 @@ class VMLiveMaps(QObject):
         primary_name: Optional[str] = None,
         active_2d_name: Optional[str] = None,
     ):
-        """Update selected maps using Primary-precedence dimensionality rules.
-
-        - If Primary is a 1D profile, overlay all selected 1D profiles and exclude 2D maps.
-        - If Primary is a 2D map, populate 2D candidates and evaluate only the active 2D map.
-        - Identical data+selection signatures short-circuit without recomputation.
-        """
+        """Update selected maps using Primary-precedence dimensionality rules."""
         clean_mds = [md for md in (mds or []) if md is not None]
         if not clean_mds:
             empty_sig = ("empty",)
@@ -524,7 +317,6 @@ class VMLiveMaps(QObject):
         resolved_primary = primary_md.name
         primary_changed = resolved_primary != self._primary_map_name
 
-        # Prune per-map caches for deselected/deleted maps
         valid_ids = {id(m) for m in clean_mds}
         for mid in list(self._geom_cache.keys()):
             if mid not in valid_ids:
@@ -535,11 +327,17 @@ class VMLiveMaps(QObject):
 
         primary_geom = self._get_geometry_for(primary_md)
         if primary_geom.is_profile:
-            profile_mds = [m for m in clean_mds if self._get_geometry_for(m).is_profile]
-            excluded = [m.name for m in clean_mds if not self._get_geometry_for(m).is_profile]
+            profile_mds = [
+                m for m in clean_mds if self._get_geometry_for(m).is_profile
+            ]
+            excluded = [
+                m.name for m in clean_mds if not self._get_geometry_for(m).is_profile
+            ]
             sig = (
                 "multi_profile",
-                tuple((id(m), m.name, getattr(m, "data_version", 0)) for m in profile_mds),
+                tuple(
+                    (id(m), m.name, getattr(m, "data_version", 0)) for m in profile_mds
+                ),
                 resolved_primary,
                 tuple(excluded),
             )
@@ -556,19 +354,31 @@ class VMLiveMaps(QObject):
             self._excluded_names = excluded
             self._last_data_sig = sig
         else:
-            candidates_2d = [m for m in clean_mds if not self._get_geometry_for(m).is_profile]
+            candidates_2d = [
+                m for m in clean_mds if not self._get_geometry_for(m).is_profile
+            ]
             candidate_names = [m.name for m in candidates_2d]
-            excluded = [m.name for m in clean_mds if self._get_geometry_for(m).is_profile]
+            excluded = [
+                m.name for m in clean_mds if self._get_geometry_for(m).is_profile
+            ]
             if active_2d_name and active_2d_name in candidate_names:
                 target_2d = active_2d_name
             elif primary_changed or self._active_2d_map_name not in candidate_names:
-                target_2d = resolved_primary if resolved_primary in candidate_names else candidate_names[0]
+                target_2d = (
+                    resolved_primary
+                    if resolved_primary in candidate_names
+                    else candidate_names[0]
+                )
             else:
                 target_2d = self._active_2d_map_name
             target_md = next(m for m in candidates_2d if m.name == target_2d)
             sig = (
                 "map_2d",
-                (id(target_md), target_md.name, getattr(target_md, "data_version", 0)),
+                (
+                    id(target_md),
+                    target_md.name,
+                    getattr(target_md, "data_version", 0),
+                ),
                 tuple(candidate_names),
                 target_2d,
                 tuple(excluded),
@@ -593,10 +403,16 @@ class VMLiveMaps(QObject):
             else None
         )
         self.map_2d_candidates_changed.emit(
-            list(self._2d_candidates), self._active_2d_map_name, self._format_excluded_status()
+            list(self._2d_candidates),
+            self._active_2d_map_name,
+            self._format_excluded_status(),
         )
         self.spatial_sites_changed.emit(self._build_spatial_sites_payload())
-        if self._current_md is not None and self._current_md.x_axis is not None and len(self._current_md.x_axis) >= 2:
+        if (
+            self._current_md is not None
+            and self._current_md.x_axis is not None
+            and len(self._current_md.x_axis) >= 2
+        ):
             self._sync_or_init_ranges_from_axis(self._current_md.x_axis)
         self._recalculate_batch(cid for cid, s in self._states.items() if s["active"])
         return True
@@ -619,7 +435,11 @@ class VMLiveMaps(QObject):
 
     def _build_spatial_sites_payload(self) -> Optional[dict]:
         """Build ordered spatial site metadata for interactive Live Maps selection."""
-        if self.mode != "map" or self._current_md is None or self._current_md.coords is None:
+        if (
+            self.mode != "map"
+            or self._current_md is None
+            or self._current_md.coords is None
+        ):
             return None
         raw_coords = np.asarray(self._current_md.coords, dtype=np.float64)
         if raw_coords.ndim != 2 or len(raw_coords) == 0 or raw_coords.shape[1] < 2:
@@ -658,7 +478,9 @@ class VMLiveMaps(QObject):
                 self._sync_or_init_ranges_from_axis(first_md.x_axis)
         self._recalculate_batch(cid for cid, s in self._states.items() if s["active"])
 
-    def set_selector_active(self, color_id: str, is_active: bool, calculate: bool = True):
+    def set_selector_active(
+        self, color_id: str, is_active: bool, calculate: bool = True
+    ):
         """Toggle active state of a selector."""
         if color_id not in self._states:
             return
@@ -686,9 +508,14 @@ class VMLiveMaps(QObject):
         if color_id not in self._states:
             return
         state = self._states[color_id]
-        state["range"] = (min(float(x_min), float(x_max)), max(float(x_min), float(x_max)))
+        state["range"] = (
+            min(float(x_min), float(x_max)),
+            max(float(x_min), float(x_max)),
+        )
         state["user_set"] = True
-        self.selector_state_changed.emit(color_id, state["active"], state["range"][0], state["range"][1])
+        self.selector_state_changed.emit(
+            color_id, state["active"], state["range"][0], state["range"][1]
+        )
 
         if not calculate or not state["active"]:
             return
@@ -732,152 +559,8 @@ class VMLiveMaps(QObject):
             return
         self._recalculate_batch([color_id])
 
-    def _total_active_spectra(self) -> int:
-        """Return total number of spectra evaluated in the current map view."""
-        if self.mode != "map":
-            return 0
-        if self._display_mode == "multi_profile" and len(self._profile_mds) >= 2:
-            return sum(
-                m.n_spectra for m in self._profile_mds if m is not None and m.y_matrix is not None
-            )
-        md = self._current_md
-        if md is None or md.y_matrix is None or md.coords is None or len(md.coords) == 0:
-            return 0
-        return md.n_spectra
-
-    def _should_run_async(self, ordered_cids: List[str]) -> bool:
-        """Return True when the batch exceeds the spectrum threshold and has valid work."""
-        if self._shutting_down or not ordered_cids or self.mode != "map":
-            return False
-        if self._display_mode != "multi_profile":
-            md = self._current_md
-            if md is None or md.x_axis is None or md.y_matrix is None or md.coords is None or len(md.coords) == 0:
-                return False
-        return self._total_active_spectra() >= self._async_threshold
-
-    @staticmethod
-    def _snapshot_md(md: MapData, geom: MapGeometry, gridder: Optional[MapGridder]) -> dict:
-        """Build an immutable-metadata snapshot of *md* on the main thread before async work."""
-        has_fit = md.has_fit_results()
-        has_coords = md.x_axis is not None and md.y_matrix is not None and md.coords is not None and len(md.coords) > 0
-        return {
-            "id": id(md),
-            "name": md.name,
-            "data_version": getattr(md, "data_version", 0),
-            "has_coords": has_coords,
-            "x_axis": md.x_axis,
-            "y_matrix": md.y_matrix,
-            "coords": md.coords,
-            "is_active": getattr(md, "is_active", None),
-            "is_baseline_subtracted": getattr(md, "is_baseline_subtracted", False),
-            "peak_params": md.peak_params if has_fit else None,
-            "param_names": md.param_names if has_fit else None,
-            "fit_model": md.fit_model,
-            "geom": geom,
-            "gridder": gridder,
-        }
-
-    def _build_worker_snapshot(self, ordered_cids: List[str]) -> dict:
-        """Capture pure-NumPy inputs, pre-cached results, and version checks for _LiveMapWorker."""
-        states_copy = {
-            cid: {
-                "active": st["active"],
-                "range": tuple(st["range"]),
-                "param": st["param"],
-            }
-            for cid, st in self._states.items()
-        }
-        pre_cached: Dict[tuple, _Result] = {}
-        md_versions: Dict[int, Tuple[str, int]] = {}
-
-        if self._display_mode == "multi_profile" and len(self._profile_mds) >= 2:
-            profile_snaps = []
-            for md in self._profile_mds:
-                geom = self._get_geometry_for(md)
-                profile_snaps.append(self._snapshot_md(md, geom, None))
-                md_versions[id(md)] = (md.name, getattr(md, "data_version", 0))
-            mds_for_cache = self._profile_mds
-            current_snap = None
-        else:
-            md = self._current_md
-            geom = self._get_geometry_for(md)
-            gridder = None if geom.is_profile else self._get_gridder_for(md)
-            current_snap = self._snapshot_md(md, geom, gridder)
-            md_versions[id(md)] = (md.name, getattr(md, "data_version", 0))
-            profile_snaps = []
-            mds_for_cache = [md]
-
-        # Seed worker with already-cached entries from _versioned_cache
-        for md in mds_for_cache:
-            ver = getattr(md, "data_version", 0)
-            for cid in SELECTOR_KEYS:
-                st = states_copy[cid]
-                for param in (st["param"], PARAM_INTEGRATED_INTENSITY):
-                    ck = (id(md), md.name, ver, param, st["range"])
-                    hit = self._versioned_cache.get(ck)
-                    if hit is not None:
-                        pre_cached[ck] = hit
-
-        return {
-            "display_mode": self._display_mode if (self._display_mode == "multi_profile" and len(self._profile_mds) >= 2) else "single",
-            "selector_order": ordered_cids,
-            "states": states_copy,
-            "pre_cached": pre_cached,
-            "profile_mds": profile_snaps,
-            "current_md": current_snap,
-            "primary_map_name": self._primary_map_name,
-            "excluded_status": self._format_excluded_status(),
-            "md_versions": md_versions,
-        }
-
-    def _on_async_batch_finished(self, gen_id: int, payload: dict):
-        """Deliver background calculation results on the main Qt thread if still current."""
-        if self._shutting_down or gen_id != self._generation_id:
-            return
-        self._async_busy = False
-
-        # Verify MapData instances & versions still match the active workspace state
-        expected_versions = payload.get("md_versions", {})
-        if self._display_mode == "multi_profile":
-            current_map = {id(m): (m.name, getattr(m, "data_version", 0)) for m in self._profile_mds}
-        elif self._current_md is not None:
-            current_map = {id(self._current_md): (self._current_md.name, getattr(self._current_md, "data_version", 0))}
-        else:
-            current_map = {}
-
-        for mid, ver_info in expected_versions.items():
-            if current_map.get(mid) != ver_info:
-                return
-
-        for ck, res in payload.get("cache_entries", {}).items():
-            self._versioned_cache[ck] = res
-            while len(self._versioned_cache) > _VERSIONED_CACHE_MAX:
-                self._versioned_cache.popitem(last=False)
-
-        elapsed_ms = float(payload.get("elapsed_ms", 0.0))
-        self._last_calc_ms = elapsed_ms
-        self._timer.setInterval(max(60, min(250, int(elapsed_ms * 1.1))))
-
-        for item in payload.get("outputs", []):
-            kind = item[0]
-            if kind == "multi_profile":
-                _, cid, entries, shared_x_label, combined_msg = item
-                self.multi_profile_data_ready.emit(cid, entries, shared_x_label, combined_msg)
-            elif kind == "profile":
-                _, cid, pos, vals, axis_label, msg = item
-                self.profile_data_ready.emit(cid, pos, vals, axis_label, msg)
-            elif kind == "map_2d":
-                _, cid, grid, extent, vmin, vmax, msg = item
-                self.map_data_ready.emit(cid, grid, extent, vmin, vmax, msg)
-
     def _recalculate_batch(self, color_ids: Iterable[str]):
-        """Recalculate several selectors in one pass, sharing integrated intensities.
-
-        Selectors are processed in Red → Blue → Green order so that an R/B
-        ratio displayed in Green reuses the Red/Blue intensities just computed.
-        Batches with >= ``async_threshold`` spectra execute in a background
-        ``QRunnable`` with monotonic generation cancellation.
-        """
+        """Recalculate several selectors in one pass, sharing integrated intensities."""
         if self._shutting_down:
             return
         wanted = set(color_ids)
@@ -890,7 +573,9 @@ class VMLiveMaps(QObject):
             gen_id = self._generation_id
             snapshot = self._build_worker_snapshot(ordered)
             self._async_busy = True
-            self._thread_pool.start(_LiveMapWorker(gen_id, snapshot, self._worker_bridge))
+            self._thread_pool.start(
+                _LiveMapWorker(gen_id, snapshot, self._worker_bridge)
+            )
             return
 
         self._async_busy = False
@@ -911,7 +596,9 @@ class VMLiveMaps(QObject):
 
         if self.mode == "spectra":
             if not self._current_series_mds:
-                self.series_data_ready.emit(color_id, np.array([]), [], "No spectra selected")
+                self.series_data_ready.emit(
+                    color_id, np.array([]), [], "No spectra selected"
+                )
                 return
             if self._is_ratio_display(color_id):
                 result = self._compute_rb_ratio()
@@ -929,13 +616,27 @@ class VMLiveMaps(QObject):
         md = self._current_md
         if md is None:
             self.map_data_ready.emit(
-                color_id, None, list(_EMPTY_EXTENT), 0.0, 1.0, "No hyperspectral map loaded"
+                color_id,
+                None,
+                list(_EMPTY_EXTENT),
+                0.0,
+                1.0,
+                "No hyperspectral map loaded",
             )
             return
-        if md.x_axis is None or md.y_matrix is None or md.coords is None or len(md.coords) == 0:
+        if (
+            md.x_axis is None
+            or md.y_matrix is None
+            or md.coords is None
+            or len(md.coords) == 0
+        ):
             self.map_data_ready.emit(
-                color_id, None, list(_EMPTY_EXTENT), 0.0, 1.0,
-                "Dataset does not contain spatial (X, Y) coordinates"
+                color_id,
+                None,
+                list(_EMPTY_EXTENT),
+                0.0,
+                1.0,
+                "Dataset does not contain spatial (X, Y) coordinates",
             )
             return
 
@@ -951,9 +652,15 @@ class VMLiveMaps(QObject):
             return self._integrated_intensity_for_md(md, color_id)
         return self._compute_values_for_md(md, state["range"], state["param"])
 
-    def get_2d_copy_points(self, color_id: str) -> Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+    def get_2d_copy_points(
+        self, color_id: str
+    ) -> Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
         """Return un-gridded ``(x, y, values)`` arrays for *color_id* in 2D map mode, or ``None``."""
-        if self.mode != "map" or self._display_mode != "map_2d" or color_id not in self._states:
+        if (
+            self.mode != "map"
+            or self._display_mode != "map_2d"
+            or color_id not in self._states
+        ):
             return None
         md = self._current_md
         if md is None or md.coords is None or len(md.coords) == 0:
@@ -975,7 +682,12 @@ class VMLiveMaps(QObject):
 
         for md in self._profile_mds:
             is_primary = md.name == self._primary_map_name
-            if md.x_axis is None or md.y_matrix is None or md.coords is None or len(md.coords) == 0:
+            if (
+                md.x_axis is None
+                or md.y_matrix is None
+                or md.coords is None
+                or len(md.coords) == 0
+            ):
                 out_of_range_names.append(md.name)
                 entries.append({
                     "name": md.name,
@@ -1016,28 +728,36 @@ class VMLiveMaps(QObject):
             })
 
         axis_labels = {e["axis_label"] for e in entries if e["positions"].size > 0}
-        shared_x_label = next(iter(axis_labels)) if len(axis_labels) == 1 else "Spatial Position"
+        shared_x_label = (
+            next(iter(axis_labels)) if len(axis_labels) == 1 else "Spatial Position"
+        )
         notes = []
         excl = self._format_excluded_status()
         if excl:
             notes.append(excl)
         if out_of_range_names:
-            notes.append(f"Out of range / undefined: {', '.join(out_of_range_names[:3])}")
+            notes.append(
+                f"Out of range / undefined: {', '.join(out_of_range_names[:3])}"
+            )
         elif primary_msg and primary_msg != "OK":
             notes.append(primary_msg)
         combined_msg = " · ".join(notes) if notes else "OK"
-        self.multi_profile_data_ready.emit(color_id, entries, shared_x_label, combined_msg)
+        self.multi_profile_data_ready.emit(
+            color_id, entries, shared_x_label, combined_msg
+        )
 
     def _compute_values(self, x_range: Tuple[float, float], param: str) -> _Result:
         """Evaluate *param* over *x_range* on the current primary data (both modes)."""
         if self.mode == "spectra":
             vals, labels, ok, msg = compute_series_spectral_parameter(
-                mds=self._current_series_mds, x_range=x_range, parameter=param,
+                mds=self._current_series_mds, x_range=x_range, parameter=param
             )
             return vals, labels, ok, msg
         return self._compute_raw_for_md(self._current_md, x_range, param)
 
-    def _compute_values_for_md(self, md: MapData, x_range: Tuple[float, float], param: str) -> _Result:
+    def _compute_values_for_md(
+        self, md: MapData, x_range: Tuple[float, float], param: str
+    ) -> _Result:
         """Evaluate *param* on *md* with LRU versioned caching keyed by MapData.data_version."""
         if md is None:
             return np.array([], dtype=np.float64), [], False, "No hyperspectral map loaded"
@@ -1057,7 +777,9 @@ class VMLiveMaps(QObject):
             self._versioned_cache.popitem(last=False)
         return result
 
-    def _compute_raw_for_md(self, md: Optional[MapData], x_range: Tuple[float, float], param: str) -> _Result:
+    def _compute_raw_for_md(
+        self, md: Optional[MapData], x_range: Tuple[float, float], param: str
+    ) -> _Result:
         """Direct spectral parameter computation for a single MapData (no cache)."""
         if md is None:
             return np.array([], dtype=np.float64), [], False, "No hyperspectral map loaded"
@@ -1099,52 +821,61 @@ class VMLiveMaps(QObject):
         self._intensity_cache[cache_key] = (rng, result)
         return result
 
-    def _compute_rb_ratio(self) -> _Result:
-        """Point-wise ratio I_Red / I_Blue on current primary data (Spectra or single Map)."""
-        if self.mode == "spectra":
-            if not (self._states[SELECTOR_RED]["active"] and self._states[SELECTOR_BLUE]["active"]):
-                return np.array([], dtype=np.float64), [], False, MSG_RATIO_NEEDS_RB
-            r_vals, labels, r_ok, r_msg = self._integrated_intensity(SELECTOR_RED)
-            if not r_ok:
-                return r_vals, labels, False, f"Red range: {r_msg}"
-            b_vals, _, b_ok, b_msg = self._integrated_intensity(SELECTOR_BLUE)
-            if not b_ok:
-                return b_vals, labels, False, f"Blue range: {b_msg}"
-            if len(r_vals) != len(b_vals):
-                return np.array([], dtype=np.float64), labels, False, "Red/Blue size mismatch"
-            ratio, n_masked = compute_intensity_ratio(r_vals, b_vals)
-            if n_masked == ratio.size:
-                return ratio, labels, False, "R/B ratio undefined: Blue intensity is zero"
-            msg = f"{n_masked} point(s) with ~zero Blue intensity masked" if n_masked else "OK"
-            return ratio, labels, True, msg
-        return self._compute_rb_ratio_for_md(self._current_md)
-
-    def _compute_rb_ratio_for_md(self, md: MapData) -> _Result:
-        """Point-wise ratio I_Red / I_Blue of integrated intensities for *md*."""
-        if not (self._states[SELECTOR_RED]["active"] and self._states[SELECTOR_BLUE]["active"]):
+    def _compute_rb_ratio_with(self, intensity_fn) -> _Result:
+        """Shared Red/Blue integrated-intensity ratio helper."""
+        if not (
+            self._states[SELECTOR_RED]["active"]
+            and self._states[SELECTOR_BLUE]["active"]
+        ):
             return np.array([], dtype=np.float64), [], False, MSG_RATIO_NEEDS_RB
 
-        r_vals, labels, r_ok, r_msg = self._integrated_intensity_for_md(md, SELECTOR_RED)
+        r_vals, labels, r_ok, r_msg = intensity_fn(SELECTOR_RED)
         if not r_ok:
             return r_vals, labels, False, f"Red range: {r_msg}"
-        b_vals, _, b_ok, b_msg = self._integrated_intensity_for_md(md, SELECTOR_BLUE)
+        b_vals, _, b_ok, b_msg = intensity_fn(SELECTOR_BLUE)
         if not b_ok:
             return b_vals, labels, False, f"Blue range: {b_msg}"
         if len(r_vals) != len(b_vals):
-            return np.array([], dtype=np.float64), labels, False, "Red/Blue size mismatch"
+            return (
+                np.array([], dtype=np.float64),
+                labels,
+                False,
+                "Red/Blue size mismatch",
+            )
 
         ratio, n_masked = compute_intensity_ratio(r_vals, b_vals)
         if n_masked == ratio.size:
             return ratio, labels, False, "R/B ratio undefined: Blue intensity is zero"
-        msg = f"{n_masked} point(s) with ~zero Blue intensity masked" if n_masked else "OK"
+        msg = (
+            f"{n_masked} point(s) with ~zero Blue intensity masked"
+            if n_masked
+            else "OK"
+        )
         return ratio, labels, True, msg
 
-    def _emit_result(self, color_id: str, vals: np.ndarray, labels: list, ok: bool, msg: str):
+    def _compute_rb_ratio(self) -> _Result:
+        """Point-wise ratio I_Red / I_Blue on current primary data (Spectra or single Map)."""
+        if self.mode == "spectra":
+            return self._compute_rb_ratio_with(self._integrated_intensity)
+        return self._compute_rb_ratio_for_md(self._current_md)
+
+    def _compute_rb_ratio_for_md(self, md: MapData) -> _Result:
+        """Point-wise ratio I_Red / I_Blue of integrated intensities for *md*."""
+        return self._compute_rb_ratio_with(
+            lambda cid: self._integrated_intensity_for_md(md, cid)
+        )
+
+    def _emit_result(
+        self, color_id: str, vals: np.ndarray, labels: list, ok: bool, msg: str
+    ):
         """Route computed values to the signal matching the data dimensionality."""
         if self.mode == "spectra":
             if not ok:
                 self.series_data_ready.emit(
-                    color_id, np.array([]), labels, msg or "Unable to calculate parameter"
+                    color_id,
+                    np.array([]),
+                    labels,
+                    msg or "Unable to calculate parameter",
                 )
             else:
                 self.series_data_ready.emit(color_id, vals, labels, msg)
@@ -1154,14 +885,20 @@ class VMLiveMaps(QObject):
         if geom.is_profile:
             if not ok or len(vals) != len(geom.positions):
                 self.profile_data_ready.emit(
-                    color_id, np.array([]), np.array([]), geom.axis_label,
+                    color_id,
+                    np.array([]),
+                    np.array([]),
+                    geom.axis_label,
                     msg or "Unable to calculate parameter",
                 )
                 return
             vals_arr = np.asarray(vals, dtype=np.float64)
             if np.all(np.isnan(vals_arr)):
                 self.profile_data_ready.emit(
-                    color_id, np.array([]), np.array([]), geom.axis_label,
+                    color_id,
+                    np.array([]),
+                    np.array([]),
+                    geom.axis_label,
                     "All spectra unchecked or undefined",
                 )
                 return
@@ -1173,7 +910,12 @@ class VMLiveMaps(QObject):
 
         if not ok:
             self.map_data_ready.emit(
-                color_id, None, list(_EMPTY_EXTENT), 0.0, 1.0, msg or "Unable to calculate parameter"
+                color_id,
+                None,
+                list(_EMPTY_EXTENT),
+                0.0,
+                1.0,
+                msg or "Unable to calculate parameter",
             )
             return
         gridder = self._get_gridder_for(self._current_md)
@@ -1182,7 +924,11 @@ class VMLiveMaps(QObject):
         )
         if grid is None:
             self.map_data_ready.emit(
-                color_id, None, list(_EMPTY_EXTENT), 0.0, 1.0,
+                color_id,
+                None,
+                list(_EMPTY_EXTENT),
+                0.0,
+                1.0,
                 "All spectra unchecked or undefined",
             )
             return

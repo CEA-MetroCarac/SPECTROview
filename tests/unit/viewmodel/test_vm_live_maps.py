@@ -11,7 +11,7 @@ from spectroview.model.spectra.spectral_parameters import (
     SELECTOR_BLUE,
     SELECTOR_GREEN,
 )
-from spectroview.viewmodel.vm_live_maps import VMLiveMaps, MSG_RATIO_NEEDS_RB
+from spectroview.viewmodel.maps.vm_live_maps import VMLiveMaps, MSG_RATIO_NEEDS_RB
 from spectroview.model.spectra.spectral_parameters import PARAM_RB_RATIO
 
 
@@ -253,7 +253,7 @@ def test_vm_switching_between_2d_and_profile_maps(qapp, sample_map_data):
 
 
 def test_vm_geometry_cached_per_coords_array(qapp, monkeypatch):
-    import spectroview.viewmodel.vm_live_maps as mod
+    import spectroview.viewmodel.maps.vm_live_maps as mod
 
     calls = []
     real = mod.analyze_map_geometry

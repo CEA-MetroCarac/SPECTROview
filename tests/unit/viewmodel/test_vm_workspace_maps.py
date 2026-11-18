@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
+from spectroview.viewmodel.maps.vm_workspace_maps import VMWorkspaceMaps
 
 
 @pytest.fixture

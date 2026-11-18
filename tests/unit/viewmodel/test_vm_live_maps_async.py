@@ -12,7 +12,7 @@ from spectroview.model.spectra.spectral_parameters import (
     SELECTOR_BLUE,
     SELECTOR_GREEN,
 )
-from spectroview.viewmodel.vm_live_maps import (
+from spectroview.viewmodel.maps.vm_live_maps import (
     ASYNC_SPECTRUM_THRESHOLD,
     VMLiveMaps,
 )

@@ -12,7 +12,7 @@ from spectroview.application.dispatch import DirectDispatcher
 from spectroview.application.errors import ApplicationAPIError
 from spectroview.application.service import SpectroviewApplicationAPI
 from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
-from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
+from spectroview.viewmodel.maps.vm_workspace_maps import VMWorkspaceMaps
 from spectroview.viewmodel.spectra.vm_workspace_spectra import VMWorkspaceSpectra
 
 

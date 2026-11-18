@@ -1323,3 +1323,11 @@ def test_3d_and_1d_log_scale_emit_no_nonpositive_limit_warnings(viewer, recwarn)
     assert nonpos_warnings == []
 
 
+def test_line_width_default_and_step(viewer):
+    """Verify Line width spinbox defaults to 0.75 with a 0.25 step size."""
+    assert viewer.spin_lw.value() == pytest.approx(0.75)
+    assert viewer.spin_lw.singleStep() == pytest.approx(0.25)
+    assert viewer.get_options_state()["lw"] == pytest.approx(0.75)
+
+
+

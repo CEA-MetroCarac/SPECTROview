@@ -175,6 +175,7 @@ class TestViewOptions:
         assert data["bestfit"] is True
         assert data["color_palette"] == "DEFAULT_COLORS"
         assert data["max_legend_items"] == 15
+        assert data["lw"] == 0.75
 
     def test_round_trip(self, settings):
         settings.save_view_options({

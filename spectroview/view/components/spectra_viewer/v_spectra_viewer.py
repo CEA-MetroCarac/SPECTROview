@@ -634,8 +634,8 @@ class VSpectraViewer(
 
         self.spin_lw = QDoubleSpinBox(left_col)
         self.spin_lw.setRange(0.1, 5)
-        self.spin_lw.setSingleStep(0.5)
-        self.spin_lw.setValue(1.5)
+        self.spin_lw.setSingleStep(0.25)
+        self.spin_lw.setValue(0.75)
         self.spin_lw.valueChanged.connect(self._emit_view_options)
         left_layout.addWidget(
             self._wrap_menu_row(left_col, "Line width:", self.spin_lw)
@@ -971,7 +971,7 @@ class VSpectraViewer(
             "yscale": self.cbb_yscale.currentText() if hasattr(self, "cbb_yscale") else "Linear",
             "plotstyle": self.cbb_plotstyle.currentText() if hasattr(self, "cbb_plotstyle") else "line",
             "color_palette": self.cbb_color_palette.currentText() if hasattr(self, "cbb_color_palette") else "DEFAULT_COLORS",
-            "lw": self.spin_lw.value() if hasattr(self, "spin_lw") else 1.5,
+            "lw": self.spin_lw.value() if hasattr(self, "spin_lw") else 0.75,
             "dotsize": self.spin_dotsize.value() if hasattr(self, "spin_dotsize") else 3.0,
             "raw": self.act_raw.isChecked() if hasattr(self, "act_raw") else False,
             "bestfit_colorful": self.act_bestfit_colorful.isChecked() if hasattr(self, "act_bestfit_colorful") else True,

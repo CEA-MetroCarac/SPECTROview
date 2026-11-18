@@ -85,7 +85,7 @@ class MSettings:
             "plotstyle": self.settings.value("view_options/plotstyle", "line", str),
             "color_palette": self.settings.value(
                 "view_options/color_palette", "DEFAULT_COLORS", str),
-            "lw": self.settings.value("view_options/lw", 1.5, float),
+            "lw": self.settings.value("view_options/lw", 0.75, float),
             "dotsize": self.settings.value("view_options/dotsize", 3.0, float),
             "raw": self.settings.value("view_options/raw", False, bool),
             "bestfit_colorful": self.settings.value("view_options/bestfit_colorful", True, bool),

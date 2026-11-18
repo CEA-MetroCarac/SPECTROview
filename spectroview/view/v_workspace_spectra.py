@@ -27,7 +27,7 @@ from spectroview.view.components.spectra_viewer import VSpectraViewer
 from spectroview.viewmodel.spectra.vm_fit_model_builder import VMFitModelBuilder
 from spectroview.viewmodel.maps.vm_live_maps import VMLiveMaps
 from spectroview.viewmodel.spectra.vm_workspace_spectra import VMWorkspaceSpectra
-from spectroview.viewmodel.vm_mva import VMMVA
+from spectroview.viewmodel.analysis.vm_mva import VMMVA
 
 
 class VWorkspaceSpectra(QWidget):

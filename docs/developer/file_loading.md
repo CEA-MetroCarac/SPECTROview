@@ -149,7 +149,7 @@ The raw `m_io` output is intentionally a simple Python structure (dict / DataFra
 ### Spectra Workspace: `VMWorkspaceSpectra.load_files()`
 
 ```python
-# In vm_workspace_spectra.py — simplified for clarity
+# In viewmodel/spectra/vm_workspace_spectra.py — simplified for clarity
 
 data_dict = load_wdf_spectrum(path)   # -> {"type": "spectra", "items": [...]}
 
@@ -177,7 +177,7 @@ for item in data_dict["items"]:
 ### Maps Workspace: `VMWorkspaceMaps.load_map_files()` & `extract_map_arrays()`
 
 ```python
-# In vm_workspace_maps.py (and spectroview/api/workspace.py)
+# In viewmodel/maps/vm_workspace_maps.py (and spectroview/api/workspace.py)
 
 df, metadata = load_wdf_map(path)                    # -> (DataFrame, dict)
 x0, Y0, coords, fnames = extract_map_arrays(path.stem, df)
@@ -200,7 +200,7 @@ self.store.add_map(
 Datasheets bypass `SpectraStore` entirely — they go directly from `m_io` to the Graphs workspace ViewModel:
 
 ```python
-# In vm_workspace_graphs.py
+# In viewmodel/graphs/vm_workspace_graphs.py
 
 dataframes = load_dataframe_file(path)   # -> dict[str, DataFrame]
 

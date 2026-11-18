@@ -17,7 +17,7 @@ The application strictly enforces Model-View-ViewModel separation across all wor
   - `graphs/m_graph.py`: `MGraph` dataclass — the canonical schema for plot configurations.
   - `m_settings.py`: `MSettings` wrapping `QSettings("CEA-Leti", "SPECTROview")`.
   - `io/m_io.py`: Multiformat loaders (TXT, CSV, WDF, SPC, L6S, NGS, TRPL, DAT).
-- **`spectroview/viewmodel/`**: Business logic orchestrator (`vm_workspace_spectra.py`, `vm_workspace_maps.py`, `vm_workspace_graphs.py`, `vm_fit_model_builder.py`, `vm_mva.py`, `vm_settings.py`).
+- **`spectroview/viewmodel/`**: Business logic orchestrator organized into subpackages (`spectra/`, `maps/`, `graphs/`, `analysis/`, `common/`, plus `vm_settings.py` and `utils.py` compatibility facades).
   - Reads and mutates Models; communicates with Views **strictly via Qt signals/slots**.
   - **Never imports View classes.**
 - **`spectroview/view/`**: PySide6/Qt widget layer (`v_workspace_spectra.py`, `v_workspace_maps.py`, `v_workspace_graphs.py`, `components/`, `theme/`).

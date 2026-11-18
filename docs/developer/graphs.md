@@ -36,7 +36,7 @@ graph TD
 
 ### **`VMWorkspaceGraphs` — The ViewModel**
 
-**File**: `spectroview/viewmodel/vm_workspace_graphs.py`
+**File**: `spectroview/viewmodel/graphs/vm_workspace_graphs.py` (with undo/redo in `spectroview/viewmodel/graphs/graph_undo.py`)
 
 Manages DataFrames, graph models, and the workspace's undo/redo history. Unlike the `Spectra`/`Maps` ViewModels, this ViewModel is relatively lightweight — the heavy rendering logic lives in the `VGraph` widget.
 

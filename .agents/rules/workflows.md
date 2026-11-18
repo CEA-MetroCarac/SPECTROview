@@ -51,7 +51,7 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 ## 5. Add a File Loader (Spectra / Maps)
 
 1. Implement format parsing in `spectroview/model/m_io.py` (or a dedicated format module such as `m_spc.py`).
-2. Connect loader in the loading pipeline in `vm_workspace_spectra.py` and `vm_workspace_maps.py`.
+2. Connect loader in the loading pipeline in `viewmodel/spectra/vm_workspace_spectra.py` and `viewmodel/maps/vm_workspace_maps.py`.
 3. Add sample data files in `examples/` if appropriate.
 4. Write unit tests in `tests/unit/model/test_m_io.py`.
 5. Update `docs/developer/file_loading.md` and `docs/user_manual/supported_data.md`.

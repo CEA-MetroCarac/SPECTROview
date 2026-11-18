@@ -316,6 +316,6 @@ The vector SVG catalog provides 100% vector coverage across application navigati
    - Ensure all `rgba(...)` declarations use integer alpha values (`0..255`).
 3. **Vector SVG Infrastructure (`icons_svg.py` & `icons.py`)**:
    - Introduce `icons_svg.py` hosting `_SvgIconEngine`, `_SVG_TEMPLATES`, `svg_icon()`, and `svg_pixmap()`.
-   - Wrap legacy calls (`get_tinted_icon(path, color)`) in `spectroview/viewmodel/utils.py` and workspace view classes so existing code works transparently without breakage.
+   - Wrap legacy calls (`get_tinted_icon(path, color)`) in `spectroview/viewmodel/common/ui_utils.py` (re-exported in `viewmodel/utils.py`) and workspace view classes so existing code works transparently without breakage.
 4. **Native Windows DWM Synchronization (`winapi/` or `ThemeManager`)**:
    - Wire native caption/border theming for top-level windows on Windows 11.

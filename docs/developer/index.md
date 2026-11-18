@@ -112,15 +112,31 @@ spectroview/
 │       ├── m_update_checker.py   # Legacy pip/wheel QThread workers & detached upgrade helper
 │       └── m_macos_font_patch.py # macOS font rendering compatibility patch
 │
-├── viewmodel/              # Business logic and data orchestration
-│   ├── vm_workspace_spectra.py   # Spectra workspace logic (base class)
-│   ├── vm_workspace_maps.py      # Maps workspace (extends Spectra VM)
-│   ├── vm_workspace_graphs.py    # Graphs workspace logic
-│   ├── vm_live_maps.py           # Live Maps ViewModel & async _LiveMapWorker
-│   ├── vm_fit_model_builder.py   # Fit model file management orchestration
-│   ├── vm_mva.py                 # MVA orchestration
-│   ├── vm_settings.py            # Settings persistence
-│   └── utils.py                  # Helpers, notification adapter
+├── viewmodel/              # Business logic and data orchestration (PEP 562 lazy facade)
+│   ├── spectra/            # Spectra workspace ViewModel & mixins
+│   │   ├── vm_workspace_spectra.py     # Core workspace state, selection & I/O coordination
+│   │   ├── vm_spectra_preprocessing.py # X/Y corrections, ROI crop, baseline & cosmic-ray removal
+│   │   ├── vm_spectra_fitting.py       # Peak editing, fit-model clipboard/JSON & VBFthread launch
+│   │   ├── vm_spectra_results.py       # Fit results collection, computed columns & Excel/clipboard export
+│   │   ├── vm_spectra_persistence.py   # ZIP/NPZ workspace save/load & legacy v1 .spectra loader
+│   │   └── vm_fit_model_builder.py     # Fit model file management orchestration
+│   ├── maps/               # Maps workspace & Live Maps ViewModels
+│   │   ├── vm_workspace_maps.py        # Maps workspace (extends VMWorkspaceSpectra)
+│   │   ├── vm_maps_fitting.py          # Batch map fitting & wafer Zone/Quadrant post-processing
+│   │   ├── vm_maps_persistence.py      # Legacy v1 .maps JSON loader
+│   │   ├── vm_live_maps.py             # Live Maps state, debounce & synchronous evaluation
+│   │   └── live_maps_worker.py         # Asynchronous _LiveMapWorker (QRunnable) & snapshot offload
+│   ├── graphs/             # Graphs workspace ViewModel
+│   │   ├── vm_workspace_graphs.py      # DataFrames, filtering, graph CRUD & persistence
+│   │   └── graph_undo.py               # Whole-workspace snapshot undo/redo & batching mixin
+│   ├── analysis/           # Numerical analysis orchestration
+│   │   └── vm_mva.py                   # Multivariate analysis (PCA/NMF) orchestration
+│   ├── common/             # Shared ViewModel utilities
+│   │   ├── spectral_utils.py           # closest_index, parse_coords_from_fname, Fano & metadata helpers
+│   │   ├── export_utils.py             # Excel, clipboard & figure file export
+│   │   └── ui_utils.py                 # Notification, alert, icon & status-color adapters
+│   ├── vm_settings.py      # Compatibility facade -> spectroview.settings.vm_settings
+│   └── utils.py            # Backward-compatible re-export facade -> viewmodel.common & v_metadata_tooltip
 │
 ├── ai_agent/               # AI Data Chat module (multi-provider; runtime-optional)
 │   ├── __init__.py              # Module docstring, keeps import guarded
@@ -414,7 +430,7 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 | Thread Class | Location | Purpose |
 |-------------|----------|---------|
 | `VBFthread` | `fit_engine/vbf_thread.py` | Batched fitting (primary engine) |
-| `_LiveMapWorker` | `viewmodel/vm_live_maps.py` | Asynchronous `QRunnable` (`QThreadPool`) for Live Maps computation on large datasets ($\ge 25,000$ spectra) |
+| `_LiveMapWorker` | `viewmodel/maps/live_maps_worker.py` | Asynchronous `QRunnable` (`QThreadPool`) for Live Maps computation on large datasets ($\ge 25,000$ spectra) |
 | `UnifiedUpdateCheckWorker` / `UnifiedUpdateDownloadWorker` | `model/system/m_update_manager.py` | Multi-platform release checks (ETag cached) and SHA-256 verified downloads |
 | `UpdateCheckerWorker` | `model/system/m_update_checker.py` | Legacy pip/wheel background checker & updater (backward compatibility) |
 | `LLMWorker` / `APIWorker` / `AnthropicWorker` | `ai_agent/m_llm_client.py` | Streaming chat requests for AI Data Chat — one worker per backend (Ollama / OpenAI-compatible / Anthropic) |

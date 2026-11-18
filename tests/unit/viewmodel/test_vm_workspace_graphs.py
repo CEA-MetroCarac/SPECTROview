@@ -12,7 +12,7 @@ import pandas as pd
 import pytest
 
 from spectroview.model.graphs.m_graph import MGraph
-from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
+from spectroview.viewmodel.graphs.vm_workspace_graphs import VMWorkspaceGraphs
 from spectroview.model.graphs.graph_control import GraphValidationError
 
 

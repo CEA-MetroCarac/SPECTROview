@@ -40,7 +40,8 @@ spectroview/
 ├── application/       # Domain services and main-thread dispatch boundaries
 ├── model/             # io/, spectra/, graphs/, analysis/, system/, m_settings
 │                      #   (m_io, spectra_store, m_graph, m_mva, m_update_manager…)
-├── viewmodel/         # vm_workspace_{spectra,maps,graphs}, vm_fit_model_builder, vm_mva, vm_settings, utils
+├── viewmodel/         # spectra/, maps/, graphs/, analysis/, common/, vm_settings, utils
+│                      #   (vm_workspace_{spectra,maps,graphs}, vm_live_maps, vm_fit_model_builder, vm_mva…)
 ├── view/
 │   ├── v_workspace_{spectra,maps,graphs}.py
 │   ├── components/    # Shared widgets & packages: spectra_viewer/, map_viewer/,
@@ -59,9 +60,9 @@ spectroview/
 
 ## 3. Workspaces & Inheritance
 
-- **Spectra Workspace** (`v_/vm_workspace_spectra`): Base workspace for discrete 1D spectra.
-- **Maps Workspace** (`v_/vm_workspace_maps`): Subclasses both `VWorkspaceSpectra` and `VMWorkspaceSpectra` using the template-method pattern. Always inspect parent implementation before overriding methods.
-- **Graphs Workspace** (`v_/vm_workspace_graphs`): Standalone plotting workspace based on MDI subwindows hosting `VGraph` widgets. See [.agents/rules/graphs-workspace.md](graphs-workspace.md).
+- **Spectra Workspace** (`view/v_workspace_spectra`, `viewmodel/spectra/vm_workspace_spectra`): Base workspace for discrete 1D spectra.
+- **Maps Workspace** (`view/v_workspace_maps`, `viewmodel/maps/vm_workspace_maps`): Subclasses both `VWorkspaceSpectra` and `VMWorkspaceSpectra` using the template-method pattern. Always inspect parent implementation before overriding methods.
+- **Graphs Workspace** (`view/v_workspace_graphs`, `viewmodel/graphs/vm_workspace_graphs`): Standalone plotting workspace based on MDI subwindows hosting `VGraph` widgets. See [.agents/rules/graphs-workspace.md](graphs-workspace.md).
 - **Cross-Workspace Wiring**: Centralized in `main.py::setup_connections()` (e.g. Maps $\rightarrow$ Graphs reference injection, `send_spectra_to_workspace`, `fit_results_updated` $\rightarrow$ Graphs). Wire workspaces here, never by reaching across widget hierarchies.
 
 ---

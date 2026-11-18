@@ -46,7 +46,7 @@ Full narratives are in `docs/developer/graphs.md` and `docs/developer/graph_work
 
 - **Live Dialog Previews**: Customize dialogs (`CustomizeGraphDialog`, annotation dialogs) update the plot preview live with debounce. These previews are strictly visual and **must not commit to the ViewModel's undo stack** during interaction. If the user clicks **Cancel**, the snapshot baseline is restored; changes commit to the undo stack only on **OK**.
 - **Annotation Edit Dialogs**: Subclass `LivePreviewAnnotationDialog` and register in the `_EDIT_DIALOGS` map in `customize_annotation_dialogs.py`. Maintain dictionary dispatch rather than long `if/elif` chains.
-- **Atomic Undo/Redo**: Batch multi-step operations (e.g. deleting multiple graphs or annotations) into a single reversible command in `vm_workspace_graphs.py`.
+- **Atomic Undo/Redo**: Batch multi-step operations (e.g. deleting multiple graphs or annotations) into a single reversible command via `GraphUndoMixin` (`viewmodel/graphs/graph_undo.py`) in `VMWorkspaceGraphs`.
 
 ---
 

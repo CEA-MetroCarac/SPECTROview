@@ -23,7 +23,7 @@ from spectroview.view.components.v_plot_recipe_dialog import VPlotRecipeDialog
 from spectroview.view.components.v_style_template_dialog import VStyleTemplateDialog
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.view.components.v_graph import VGraph
-from spectroview.viewmodel.vm_workspace_graphs import VMWorkspaceGraphs
+from spectroview.viewmodel.graphs.vm_workspace_graphs import VMWorkspaceGraphs
 from spectroview.view.components.v_notification import show_notification
 from spectroview.view.components.customized_widgets import CustomizedPalette
 from spectroview.view.components.customize_graph.customize_graph_dialog import CustomizeGraphDialog

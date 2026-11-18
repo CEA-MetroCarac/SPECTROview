@@ -93,7 +93,7 @@ The same pattern applies at the View level: `VWorkspaceMaps` extends `VWorkspace
 
 ### `VMWorkspaceMaps` — The ViewModel
 
-**File**: [`vm_workspace_maps.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/viewmodel/vm_workspace_maps.py)
+**File**: [`vm_workspace_maps.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/viewmodel/maps/vm_workspace_maps.py) (with fitting/persistence mixins in `spectroview/viewmodel/maps/`)
 
 Additional state beyond the inherited [VMWorkspaceSpectra](spectra.md#vmworkspacespectra-the-viewmodel):
 
@@ -214,7 +214,7 @@ This convention is used throughout the codebase to:
 - Extract coordinates from fnames: parse between `(` and `)`.
 - Match `SpectraStore` entries back to `DataFrame` rows for heatmap rendering.
 
-Coordinate parsing is centralized in `parse_coords_from_fname()` (`viewmodel/utils.py`); `VWorkspaceMaps._extract_coords_from_fname()` and `VMWorkspaceMaps._extract_coords_for_spectra()` both delegate to it. If you change the fname convention, update that single helper (and keep the `float()` formatting identical on the write side in `_extract_spectra_from_map()`).
+Coordinate parsing is centralized in `parse_coords_from_fname()` (`viewmodel/common/spectral_utils.py`, re-exported in `viewmodel/utils.py`); `VWorkspaceMaps._extract_coords_from_fname()` and `VMWorkspaceMaps._extract_coords_for_spectra()` both delegate to it. If you change the fname convention, update that single helper (and keep the `float()` formatting identical on the write side in `_extract_spectra_from_map()`).
 
 ---
 

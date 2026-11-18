@@ -164,7 +164,7 @@ graph TD
 
 ### `VMWorkspaceSpectra` — The ViewModel
 
-**File**: [`vm_workspace_spectra.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/viewmodel/vm_workspace_spectra.py)
+**File**: [`vm_workspace_spectra.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/viewmodel/spectra/vm_workspace_spectra.py) (composed with `vm_spectra_preprocessing.py`, `vm_spectra_fitting.py`, `vm_spectra_results.py`, and `vm_spectra_persistence.py`)
 
 This is the largest and most critical class in the application. It owns the `SpectraStore` and orchestrates every operation.
 

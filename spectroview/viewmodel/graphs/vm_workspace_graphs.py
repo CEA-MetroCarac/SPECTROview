@@ -1,35 +1,37 @@
 """ViewModel for Graphs Workspace - handles business logic and data management."""
-import json
-import pandas as pd
-import gzip
+
+from __future__ import annotations
+
 import copy
+import gzip
 from io import StringIO
+import json
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import pandas as pd
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog
 
-from spectroview.model.graphs.m_graph import MGraph
 from spectroview.model.graphs.graph_control import (
     GRAPH_PROPERTY_SET,
     normalize_graph_patch,
 )
-from spectroview.model.m_settings import MSettings
+from spectroview.model.graphs.m_graph import MGraph
 from spectroview.model.io.m_io import load_dataframe_file
 from spectroview.model.io.workspace_io import WorkspaceIO
+from spectroview.model.m_settings import MSettings
+from spectroview.viewmodel.graphs.graph_undo import GraphUndoMixin
 
 
-class VMWorkspaceGraphs(QObject):
+class VMWorkspaceGraphs(QObject, GraphUndoMixin):
     """ViewModel for managing graphs, DataFrames, and plotting logic."""
-    
+
     # ───── ViewModel → View signals ─────
     dataframes_changed = Signal(list)
     dataframe_columns_changed = Signal(list)
     graphs_changed = Signal(list)
-    # Emitted for *property* changes as well as graph-list changes.  The AI
-    # context listens to this signal; graphs_changed alone only represented
-    # create/delete and left GUI customizations invisible to the next turn.
+    # Emitted for *property* changes as well as graph-list changes so AI context stays synced.
     graph_state_changed = Signal()
     notify = Signal(str)
     undo_state_changed = Signal()
@@ -40,7 +42,7 @@ class VMWorkspaceGraphs(QObject):
 
         # Data storage
         self.dataframes: Dict[str, pd.DataFrame] = {}
-        self.dataframe_sources: Dict[str, str] = {}  # Track source file paths for refresh
+        self.dataframe_sources: Dict[str, str] = {}
         self.graphs: Dict[int, MGraph] = {}
 
         # Current selection
@@ -49,56 +51,8 @@ class VMWorkspaceGraphs(QObject):
         # Graph ID counter
         self._next_graph_id = 1
 
-        # ───── Undo/redo: a stack of whole-workspace graph snapshots ─────
-        self._undo_stack: List[Dict[int, dict]] = []
-        self._redo_stack: List[Dict[int, dict]] = []
-        self._max_undo_depth = 50
-        # begin/end_undo_batch() collapse several graph calls from one user
-        # action into a single undo step; depth-counted so nested batches compose.
-        self._undo_batch_depth = 0
-        self._undo_batch_pending = False
-
-    # ------------------------------------------------------------------------
-    # Undo / redo
-    # ------------------------------------------------------------------------
-    def begin_undo_batch(self) -> None:
-        """Mark the start of a sequence of mutations that represent ONE
-        logical user action. Call `end_undo_batch()` (via try/finally) when
-        done. Only the first actual mutation inside the outermost
-        begin/end pair records an undo snapshot; further mutations before
-        the matching end_undo_batch() collapse into that same step."""
-        self._undo_batch_depth += 1
-        if self._undo_batch_depth == 1:
-            self._undo_batch_pending = True
-
-    def end_undo_batch(self) -> None:
-        self._undo_batch_depth = max(0, self._undo_batch_depth - 1)
-        if self._undo_batch_depth == 0:
-            self._undo_batch_pending = False
-
-    def _record_undo_point_if_needed(self) -> None:
-        """Called at the start of every graph-set mutation
-        (create_graph/update_graph/delete_graph/create_multi_wafer_graphs).
-        Outside any begin/end_undo_batch() pair, every call is its own undo
-        step (correct for the common case: one Apply = one update_graph()
-        call). Inside a batch, only the first call captures a snapshot."""
-        if self._undo_batch_depth == 0:
-            self._push_undo_snapshot()
-        elif self._undo_batch_pending:
-            self._push_undo_snapshot()
-            self._undo_batch_pending = False
-
-    def _capture_snapshot(self) -> Dict[int, dict]:
-        """Deep-copied snapshot of every graph's current saved state
-        (MGraph.save() already deep-copies its mutable fields)."""
-        return {graph_id: graph.save() for graph_id, graph in self.graphs.items()}
-
-    def _push_undo_snapshot(self) -> None:
-        self._undo_stack.append(self._capture_snapshot())
-        if len(self._undo_stack) > self._max_undo_depth:
-            self._undo_stack.pop(0)
-        self._redo_stack.clear()  # a new action invalidates prior redo history
-        self.undo_state_changed.emit()
+        # Undo/redo snapshot stack
+        self._init_undo_state(max_undo_depth=50)
 
     def _populate_graphs_from_dict(
         self, plots_dict: dict, *, legacy_x_as_numeric_false: Optional[bool] = None
@@ -111,7 +65,9 @@ class VMWorkspaceGraphs(QObject):
             if legacy_x_as_numeric_false is None:
                 graph.load(graph_data)
             else:
-                graph.load(graph_data, legacy_x_as_numeric_false=legacy_x_as_numeric_false)
+                graph.load(
+                    graph_data, legacy_x_as_numeric_false=legacy_x_as_numeric_false
+                )
             self.graphs[graph_id] = graph
         self._next_graph_id = max(self.graphs.keys()) + 1 if self.graphs else 1
 
@@ -119,56 +75,8 @@ class VMWorkspaceGraphs(QObject):
     def _filter_creation_config(plot_config: Dict) -> Dict:
         """Return a deep-copied creation patch containing only valid mutable MGraph fields."""
         patch = copy.deepcopy(plot_config)
-        patch.pop('graph_id', None)
+        patch.pop("graph_id", None)
         return {key: value for key, value in patch.items() if key in GRAPH_PROPERTY_SET}
-
-    def _restore_snapshot(self, snapshot: Dict[int, dict]) -> None:
-        """Replace self.graphs wholesale with `snapshot`'s contents (mirrors
-        load_workspace()'s graph-restoration loop). The View is responsible
-        for reconciling its own VGraph widgets/MDI subwindows against the
-        new self.graphs afterward -- this only updates ViewModel state."""
-        self._populate_graphs_from_dict(snapshot)
-        self._emit_graphs_list()
-
-    def _reset_undo_history(self) -> None:
-        """Clear undo/redo history -- called whenever the workspace's graph
-        set is replaced wholesale (load/clear), since "undo" should never
-        reach back into a *previous*, now-discarded workspace's state."""
-        self._undo_stack.clear()
-        self._redo_stack.clear()
-        self._undo_batch_depth = 0
-        self._undo_batch_pending = False
-        self.undo_state_changed.emit()
-
-    @property
-    def can_undo(self) -> bool:
-        return bool(self._undo_stack)
-
-    @property
-    def can_redo(self) -> bool:
-        return bool(self._redo_stack)
-
-    def undo(self) -> bool:
-        """Revert to the workspace state before the last undo-tracked
-        action. Returns False (no-op) if there's nothing to undo."""
-        if not self._undo_stack:
-            return False
-        self._redo_stack.append(self._capture_snapshot())
-        snapshot = self._undo_stack.pop()
-        self._restore_snapshot(snapshot)
-        self.undo_state_changed.emit()
-        return True
-
-    def redo(self) -> bool:
-        """Re-apply the last undone action. Returns False (no-op) if
-        there's nothing to redo."""
-        if not self._redo_stack:
-            return False
-        self._undo_stack.append(self._capture_snapshot())
-        snapshot = self._redo_stack.pop()
-        self._restore_snapshot(snapshot)
-        self.undo_state_changed.emit()
-        return True
 
     # ------------------------------------------------------------------------
     # Dataframe management
@@ -180,171 +88,154 @@ class VMWorkspaceGraphs(QObject):
                 None,
                 "Open DataFrame Files",
                 "",
-                "Excel/CSV Files (*.xlsx *.xls *.csv)"
+                "Excel/CSV Files (*.xlsx *.xls *.csv)",
             )
-        
+
         if not file_paths:
             return
-        
+
         skipped = []
         last_valid_path = None
-        
+
         for file_path in file_paths:
             try:
                 path = Path(file_path)
                 dfs_dict = load_dataframe_file(path)
-                
-                # Add each DataFrame to workspace
+
                 for df_name, df in dfs_dict.items():
-                    # Check if already loaded
                     if df_name in self.dataframes:
                         skipped.append(df_name)
                         continue
-                    
+
                     self.dataframes[df_name] = df
-                    # Store source file path for refresh functionality
                     self.dataframe_sources[df_name] = str(path)
-                    last_valid_path = path  # Track last successfully loaded file
-                
+                    last_valid_path = path
+
             except Exception as e:
                 self.notify.emit(f"Error loading {Path(file_path).name}: {e}")
-        
+
         if skipped:
             self.notify.emit("Already loaded and skipped:\n" + "\n".join(skipped))
-        
+
         self._emit_dataframes_list()
-        
-        # Update last_directory setting
+
         if last_valid_path:
             self.settings.set_last_directory(str(last_valid_path.parent))
-    
-    def add_dataframe(self, df_name: str, df: pd.DataFrame, force_replace: bool = False):
+
+    def add_dataframe(
+        self, df_name: str, df: pd.DataFrame, force_replace: bool = False
+    ):
         """Add a DataFrame to workspace."""
         is_replace = df_name in self.dataframes
         if is_replace and not force_replace:
             self.notify.emit(f"DataFrame '{df_name}' already exists.")
             return
-        
+
         self.dataframes[df_name] = df
         self._emit_dataframes_list()
-        
+
         if is_replace and force_replace:
             self.notify.emit(f"DataFrame '{df_name}' successfully replaced.")
         else:
-            self.notify.emit(f"DataFrame '{df_name}' sent successfully to Graphs workspace.")
-    
+            self.notify.emit(
+                f"DataFrame '{df_name}' sent successfully to Graphs workspace."
+            )
+
     def remove_dataframe(self, df_name: str):
         """Remove a DataFrame."""
         if df_name in self.dataframes:
             del self.dataframes[df_name]
-            # Also remove source file reference
             if df_name in self.dataframe_sources:
                 del self.dataframe_sources[df_name]
-            
+
             self._emit_dataframes_list()
-            
-            # Clear selection if this was selected
+
             if self.selected_df_name == df_name:
                 self.selected_df_name = None
                 self.dataframe_columns_changed.emit([])
-    
+
     def select_dataframe(self, df_name: str):
         """Select a DataFrame."""
         if df_name not in self.dataframes:
             return
-        
+
         self.selected_df_name = df_name
-        
-        # Emit column names
+
         df = self.dataframes[df_name]
         self.dataframe_columns_changed.emit(list(df.columns))
-    
+
     def get_dataframe(self, df_name: str) -> Optional[pd.DataFrame]:
         """Get a DataFrame by name."""
         return self.dataframes.get(df_name)
-    
+
     def refresh_dataframe(self, df_name: str) -> bool:
-        """Refresh DataFrame from source file"""
-        # Check if DataFrame exists and has source file
+        """Refresh DataFrame from source file."""
         if df_name not in self.dataframes:
             return False
-        
+
         if df_name not in self.dataframe_sources:
             return False
-        
+
         source_path = Path(self.dataframe_sources[df_name])
-        
-        # Check if source file still exists
+
         if not source_path.exists():
             return False
-        
+
         try:
-            # Reload DataFrame from source file
             dfs_dict = load_dataframe_file(source_path)
-            
-            # Find the matching DataFrame (should have same name)
+
             if df_name in dfs_dict:
-                # Update the DataFrame in place
                 self.dataframes[df_name] = dfs_dict[df_name]
-                
-                # If this is the selected DataFrame, re-emit columns
+
                 if self.selected_df_name == df_name:
-                    self.dataframe_columns_changed.emit(list(self.dataframes[df_name].columns))
-                
+                    self.dataframe_columns_changed.emit(
+                        list(self.dataframes[df_name].columns)
+                    )
+
                 return True
-            else:
-                return False
-                
+            return False
+
         except Exception as e:
             self.notify.emit(f"Error refreshing DataFrame: {e}")
             return False
-    
+
     def save_dataframe(self, df_name: str):
         """Save DataFrame to Excel or CSV file."""
         if df_name not in self.dataframes:
             return
-        
+
         last_dir = self.settings.get_last_directory()
         file_path, selected_filter = QFileDialog.getSaveFileName(
             None,
             "Save DataFrame",
             str(Path(last_dir) / f"{df_name}.xlsx"),
-            "Excel Files (*.xlsx);;CSV Files (*.csv)"
+            "Excel Files (*.xlsx);;CSV Files (*.csv)",
         )
-        
+
         if file_path:
             try:
-                # Determine format from file extension
                 ext = Path(file_path).suffix.lower()
-                
-                if ext == '.csv' or 'CSV' in selected_filter:
-                    # Save as CSV with semicolon delimiter
-                    self.dataframes[df_name].to_csv(file_path, index=False, sep=';')
+
+                if ext == ".csv" or "CSV" in selected_filter:
+                    self.dataframes[df_name].to_csv(file_path, index=False, sep=";")
                 else:
-                    # Save as Excel (default)
                     if not ext:
-                        file_path += '.xlsx'
+                        file_path += ".xlsx"
                     self.dataframes[df_name].to_excel(file_path, index=False)
-                
+
                 self.notify.emit(f"DataFrame saved: {Path(file_path).name}")
-                # Update last_directory setting
                 self.settings.set_last_directory(str(Path(file_path).parent))
             except Exception as e:
                 self.notify.emit(f"Error saving DataFrame: {e}")
-    
+
     # ═════════════════════════════════════════════════════════════════════
     # Filter Management
     # ═════════════════════════════════════════════════════════════════════
-    
-    def apply_filters(self, df_name: str, filters: List[Dict]) -> Optional[pd.DataFrame]:
-        """Apply filters to a DataFrame.
 
-        Always returns a frame independent of internal storage (never a live
-        reference callers could use to mutate the stored DataFrame). When at
-        least one filter is checked, `.query()` already produces a fresh
-        frame, so no extra defensive `.copy()` is taken beforehand — avoids
-        copying the full (potentially large) DataFrame twice.
-        """
+    def apply_filters(
+        self, df_name: str, filters: List[Dict]
+    ) -> Optional[pd.DataFrame]:
+        """Apply filters to a DataFrame, returning an independent frame."""
         if df_name not in self.dataframes:
             return None
 
@@ -363,23 +254,28 @@ class VMWorkspaceGraphs(QObject):
                 return None
 
         return df
-    
+
     def has_slot_column(self, df_name: str) -> bool:
         """Check if DataFrame has 'Slot' column."""
         if df_name not in self.dataframes:
             return False
-        return 'Slot' in self.dataframes[df_name].columns
-    
+        return "Slot" in self.dataframes[df_name].columns
+
     def get_unique_slots(self, df_name: str) -> List:
         """Get unique slot values."""
         if not self.has_slot_column(df_name):
             return []
-        
+
         df = self.dataframes[df_name]
-        return sorted(df['Slot'].dropna().unique())
-    
-    def create_multi_wafer_graphs(self, df_name: str, slot_numbers: List,
-                                   plot_config: Dict, base_filters: List[Dict]) -> List[MGraph]:
+        return sorted(df["Slot"].dropna().unique())
+
+    def create_multi_wafer_graphs(
+        self,
+        df_name: str,
+        slot_numbers: List,
+        plot_config: Dict,
+        base_filters: List[Dict],
+    ) -> List[MGraph]:
         """Create multiple validated wafer graphs for each slot."""
         pending = []
         dataframe = self.dataframes.get(df_name)
@@ -387,15 +283,15 @@ class VMWorkspaceGraphs(QObject):
             slot_filters = self._merge_filters_with_slot(base_filters, slot_num)
             graph = MGraph(graph_id=self._next_graph_id + offset)
             patch = self._filter_creation_config(plot_config)
-            patch['df_name'] = df_name
-            patch['filters'] = slot_filters
-            normalized = normalize_graph_patch(patch, current=graph, dataframe=dataframe)
+            patch["df_name"] = df_name
+            patch["filters"] = slot_filters
+            normalized = normalize_graph_patch(
+                patch, current=graph, dataframe=dataframe
+            )
             for name, value in normalized.items():
                 setattr(graph, name, value)
             pending.append(graph)
 
-        # The batch is validated before the first mutation, so one bad config
-        # cannot leave a half-created set of wafer windows.
         self._record_undo_point_if_needed()
         created_graphs = []
         for graph in pending:
@@ -405,77 +301,62 @@ class VMWorkspaceGraphs(QObject):
 
         self._emit_graphs_list()
         return created_graphs
-    
-    def _merge_filters_with_slot(self, base_filters: List[Dict], slot_num: int) -> List[Dict]:
+
+    def _merge_filters_with_slot(
+        self, base_filters: List[Dict], slot_num: int
+    ) -> List[Dict]:
         """Merge base filters with slot filter."""
-        
-        # Deep copy to avoid modifying original filter dictionaries
         merged = copy.deepcopy(base_filters)
         slot_expr = f"Slot == {slot_num}"
-        
-        # Check if a Slot filter already exists
+
         slot_found = False
         for f in merged:
             expr = f.get("expression", "")
             if "Slot ==" in expr:
-                # Replace with current slot and activate
                 f["expression"] = slot_expr
                 f["state"] = True
                 slot_found = True
                 break
-        
-        # If no Slot filter exists, add one
+
         if not slot_found:
-            merged.append({
-                "expression": slot_expr,
-                "state": True
-            })
-        
+            merged.append({"expression": slot_expr, "state": True})
+
         return merged
-    
+
     # ═════════════════════════════════════════════════════════════════════
     # Graph Management
     # ═════════════════════════════════════════════════════════════════════
-    
+
     def create_graph(self, plot_config: Dict = None) -> MGraph:
         """Create a graph through the shared validated graph-command layer."""
         graph = MGraph(graph_id=self._next_graph_id)
 
-        # A saved recipe/config may carry the source graph's ID.  Identity is
-        # owned by this ViewModel and must never be copied into a new graph.
         if plot_config:
-            # Recipes/workspace-adjacent callers may contain obsolete fields
-            # from older releases.  Creation remains backward compatible by
-            # ignoring them; runtime updates and MCP GraphPatch are strict.
             patch = self._filter_creation_config(plot_config)
-            target_df = self.dataframes.get(patch.get('df_name'))
-            normalized = normalize_graph_patch(patch, current=graph, dataframe=target_df)
+            target_df = self.dataframes.get(patch.get("df_name"))
+            normalized = normalize_graph_patch(
+                patch, current=graph, dataframe=target_df
+            )
             for name, value in normalized.items():
                 setattr(graph, name, value)
 
-        # Validate before taking an undo snapshot: a rejected command is not
-        # a mutation and therefore must not create a phantom undo step.
         self._record_undo_point_if_needed()
         self.graphs[self._next_graph_id] = graph
         self._next_graph_id += 1
 
         self._emit_graphs_list()
         return graph
-    
+
     def get_graph_ids(self) -> List[int]:
         """Get all graph IDs."""
         return list(self.graphs.keys())
-    
+
     def get_graph(self, graph_id: int) -> Optional[MGraph]:
         """Get a graph by ID."""
         return self.graphs.get(graph_id)
-    
-    def update_graph(self, graph_id: int, properties: Dict) -> Dict:
-        """Validate and atomically update graph properties.
 
-        Returns the normalized patch that was applied, or an empty dict when
-        the graph does not exist / no properties were supplied.
-        """
+    def update_graph(self, graph_id: int, properties: Dict) -> Dict:
+        """Validate and atomically update graph properties."""
         if graph_id not in self.graphs:
             return {}
 
@@ -483,7 +364,7 @@ class VMWorkspaceGraphs(QObject):
             return {}
 
         graph = self.graphs[graph_id]
-        prospective_df_name = properties.get('df_name', graph.df_name)
+        prospective_df_name = properties.get("df_name", graph.df_name)
         dataframe = self.dataframes.get(prospective_df_name)
         patch = normalize_graph_patch(properties, current=graph, dataframe=dataframe)
         self._record_undo_point_if_needed()
@@ -510,56 +391,54 @@ class VMWorkspaceGraphs(QObject):
             if hasattr(graph, key):
                 setattr(graph, key, copy.deepcopy(value))
         self.graph_state_changed.emit()
-    
+
     def delete_graph(self, graph_id: int):
         """Delete a graph."""
         if graph_id in self.graphs:
             self._record_undo_point_if_needed()
             del self.graphs[graph_id]
             self._emit_graphs_list()
-    
+
     # ═════════════════════════════════════════════════════════════════════
     # Save/Load Workspace
     # ═════════════════════════════════════════════════════════════════════
-    
+
     def save_workspace(self):
         """Save workspace to file using high-performance ZIP + Pickle architecture."""
         file_path, _ = QFileDialog.getSaveFileName(
             None,
             "Save Graphs Workspace",
             "",
-            "Graphs Files (*.graphs)"
+            "Graphs Files (*.graphs)",
         )
-        
+
         if not file_path:
             return
-        
+
         try:
-            # Serialize graphs
-            plots_data = {graph_id: graph.save() for graph_id, graph in self.graphs.items()}
-            
-            # Prepare metadata (light config)
-            metadata = {
-                # v4 distinguishes x_as_numeric=False (explicit Category)
-                # from the pre-tristate legacy meaning (Auto).
-                'format_version': 4,
-                'plots': plots_data,
-                'dataframe_sources': self.dataframe_sources,
+            plots_data = {
+                graph_id: graph.save() for graph_id, graph in self.graphs.items()
             }
-            
-            # Save using WorkspaceIO
-            WorkspaceIO.save_workspace(file_path, metadata, dataframes=self.dataframes)
-            
+
+            metadata = {
+                "format_version": 4,
+                "plots": plots_data,
+                "dataframe_sources": self.dataframe_sources,
+            }
+
+            WorkspaceIO.save_workspace(
+                file_path, metadata, dataframes=self.dataframes
+            )
+
             self.notify.emit(f"Workspace saved: {Path(file_path).name}")
         except Exception as e:
             self.notify.emit(f"Error saving workspace: {e}")
-    
+
     def load_workspace(self, file_path: str):
         """Load workspace supporting both legacy JSON and new ZIP formats."""
         try:
-            # Attempt to load ZIP workspace
             metadata, _, dataframes, is_legacy = WorkspaceIO.load_workspace(file_path)
-            
+
             if is_legacy:
                 self.load_workspace_legacy(file_path)
                 return
@@ -569,30 +448,25 @@ class VMWorkspaceGraphs(QObject):
             self.dataframes.clear()
             self.dataframe_sources.clear()
 
-            # Restore DataFrames
             if dataframes:
                 self.dataframes = dataframes
-            
-            # Load source file paths
-            self.dataframe_sources = metadata.get('dataframe_sources', {})
-            
-            # Load graphs.  Before format 4, x_as_numeric=False meant Auto;
-            # current files use it for the explicit Category selection.
-            legacy_axis_type = int(metadata.get('format_version', 0) or 0) < 4
+
+            self.dataframe_sources = metadata.get("dataframe_sources", {})
+
+            legacy_axis_type = int(metadata.get("format_version", 0) or 0) < 4
             self._populate_graphs_from_dict(
-                metadata.get('plots', {}), legacy_x_as_numeric_false=legacy_axis_type
+                metadata.get("plots", {}), legacy_x_as_numeric_false=legacy_axis_type
             )
-            
-            # Emit updates
+
             self._emit_dataframes_list()
             self._emit_graphs_list()
         except Exception as e:
             self.notify.emit(f"Error loading workspace: {e}")
-            
+
     def load_workspace_legacy(self, file_path: str):
         """Legacy JSON loader for backward compatibility with old .graphs files."""
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 data = json.load(f)
 
             self._reset_undo_history()
@@ -600,49 +474,45 @@ class VMWorkspaceGraphs(QObject):
             self.dataframes.clear()
             self.dataframe_sources.clear()
 
-            # Load DataFrames
-            for k, v in data.get('original_dfs', {}).items():
+            for k, v in data.get("original_dfs", {}).items():
                 compressed_data = bytes.fromhex(v)
-                csv_data = gzip.decompress(compressed_data).decode('utf-8')
+                csv_data = gzip.decompress(compressed_data).decode("utf-8")
                 self.dataframes[k] = pd.read_csv(StringIO(csv_data))
-            
-            # Load source file paths
-            if 'dataframe_sources' in data:
-                self.dataframe_sources = data['dataframe_sources']
-            
-            # Load graphs
+
+            if "dataframe_sources" in data:
+                self.dataframe_sources = data["dataframe_sources"]
+
             self._populate_graphs_from_dict(
-                data.get('plots', {}), legacy_x_as_numeric_false=True
+                data.get("plots", {}), legacy_x_as_numeric_false=True
             )
-            
-            # Emit updates
+
             self._emit_dataframes_list()
             self._emit_graphs_list()
-            
+
         except Exception as e:
             self.notify.emit(f"Error loading legacy workspace: {e}")
-    
+
     def clear_workspace(self):
         """Clear workspace."""
         self._reset_undo_history()
         self.graphs.clear()
         self.dataframes.clear()
-        self.dataframe_sources.clear()  # Clear source file references
+        self.dataframe_sources.clear()
         self.selected_df_name = None
         self._next_graph_id = 1
-        
+
         self._emit_dataframes_list()
         self._emit_graphs_list()
         self.dataframe_columns_changed.emit([])
-    
+
     # ═════════════════════════════════════════════════════════════════════
     # Internal Helpers
     # ═════════════════════════════════════════════════════════════════════
-    
+
     def _emit_dataframes_list(self):
         """Emit list of DataFrame names."""
         self.dataframes_changed.emit(list(self.dataframes.keys()))
-    
+
     def _emit_graphs_list(self):
         """Emit list of graph IDs."""
         self.graphs_changed.emit(list(self.graphs.keys()))

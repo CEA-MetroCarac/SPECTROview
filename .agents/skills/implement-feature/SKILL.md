@@ -15,7 +15,7 @@ Follow this procedure to implement new features in SPECTROview while preserving 
 1. **Review Architecture**: Consult [.agents/rules/architecture.md](../../rules/architecture.md) and [.agents/rules/coding-standards.md](../../rules/coding-standards.md).
 2. **Check Git Status**: Run `git status` to verify a clean working tree and identify any uncommitted user work.
 3. **Analyze Affected Modules**:
-   - For Spectra/Maps: Inspect `spectroview/viewmodel/vm_workspace_spectra.py`, `spectroview/model/spectra_store.py`, and `spectroview/view/components/`.
+   - For Spectra/Maps: Inspect `spectroview/viewmodel/spectra/`, `spectroview/viewmodel/maps/`, `spectroview/model/spectra/spectra_store.py`, and `spectroview/view/components/`.
    - For Graphs: Inspect `spectroview/model/m_graph.py`, `spectroview/view/components/v_plot_renderer.py`, and `spectroview/view/components/customize_graph/`.
    - For Fitting: Inspect `spectroview/fit_engine/models.py`, `evaluator.py`, and `optimizer.py`.
    - For File Loaders: Inspect `spectroview/model/m_io.py`.

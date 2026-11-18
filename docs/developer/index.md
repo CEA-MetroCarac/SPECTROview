@@ -184,7 +184,8 @@ spectroview/
 │   │   ├── spectra_viewer/            # Spectra viewer package (1D, Heatmap, 3D, interactions)
 │   │   │   ├── __init__.py            # Package exports (VSpectraViewer, FastLine3DCollection, etc.)
 │   │   │   ├── common.py              # Palettes, style cache, filename tokens & 1D normalization
-│   │   │   ├── v_spectra_viewer.py    # VSpectraViewer main widget, toolbar, options menu & theme
+│   │   │   ├── v_spectra_viewer.py    # VSpectraViewer main widget, toolbar & theme
+│   │   │   ├── v_spectra_options.py   # SpectraOptionsMenuMixin (options menu, sync & plot style)
 │   │   │   ├── v_plot_1d.py           # SpectraPlot1DMixin (1D segments, shifts, fit overlays)
 │   │   │   ├── v_plot_heatmap.py      # SpectraHeatmapMixin (2D series heatmap & Y-axis tokens)
 │   │   │   ├── v_plot_3d.py           # FastLine3DCollection & SpectraPlot3DMixin
@@ -226,6 +227,7 @@ spectroview/
 │   │   │   ├── v_graph_axes.py        # GraphAxesStyleMixin (limits, scales, ticks, theme)
 │   │   │   ├── v_graph_annotations.py # GraphAnnotationMixin (8 annotation types & canvas drag)
 │   │   │   ├── v_plot_renderer.py     # Stateless Matplotlib plot rendering engine (PlotRenderer)
+│   │   │   ├── v_plot_spatial.py      # SpatialPlotMixin & WaferPlot (2Dmap / wafer rendering)
 │   │   │   ├── graph_commit.py        # Graph state snapshot & undo/redo diff engine
 │   │   │   ├── v_export_dialog.py     # Single- & batch-graph figure export dialogs
 │   │   │   ├── v_multipanel_dialog.py # Multi-panel publication figure composer

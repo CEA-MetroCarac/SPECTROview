@@ -23,6 +23,7 @@ from spectroview.view.components.graphs.v_multipanel_dialog import (
 )
 from spectroview.view.components.graphs.v_plot_recipe_dialog import VPlotRecipeDialog
 from spectroview.view.components.graphs.v_plot_renderer import PlotRenderer, WaferPlot
+from spectroview.view.components.graphs.v_plot_spatial import SpatialPlotMixin
 from spectroview.view.components.graphs.v_style_template_dialog import (
     VStyleTemplateDialog,
 )
@@ -32,6 +33,7 @@ __all__ = [
     "GraphAxesStyleMixin",
     "GraphBreakInsetMixin",
     "PlotRenderer",
+    "SpatialPlotMixin",
     "VBatchExportDialog",
     "VDataFilter",
     "VExportDialog",

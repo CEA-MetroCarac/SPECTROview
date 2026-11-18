@@ -105,6 +105,24 @@ class TestViewPackageOrganization:
         with pytest.raises(AttributeError):
             _ = workspaces.NonExistentWorkspace
 
+    def test_extracted_viewer_and_spatial_renderer_mixins_exported(self):
+        from spectroview.view.components.graphs import (
+            PlotRenderer,
+            SpatialPlotMixin,
+            WaferPlot,
+        )
+        from spectroview.view.components.graphs import v_plot_renderer
+        from spectroview.view.components.spectra_viewer import (
+            SpectraOptionsMenuMixin,
+            VSpectraViewer,
+        )
+
+        assert issubclass(VSpectraViewer, SpectraOptionsMenuMixin)
+        assert issubclass(PlotRenderer, SpatialPlotMixin)
+        assert v_plot_renderer.WaferPlot is WaferPlot
+        assert callable(v_plot_renderer._clear_degenerate_zlim)
+        assert callable(v_plot_renderer._build_color_norm)
+
     def test_no_top_level_scipy_imports_in_view(self):
         offenders: list[str] = []
         for path in sorted(_VIEW_ROOT.rglob("*.py")):

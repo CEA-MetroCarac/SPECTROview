@@ -133,7 +133,7 @@ Two rendering paths:
 
 ### **`PlotRenderer` — The Plotting Engine**
 
-**File**: `spectroview/view/components/graphs/v_plot_renderer.py`
+**Files**: `spectroview/view/components/graphs/v_plot_renderer.py` (composed with `SpatialPlotMixin` and `WaferPlot` in `v_plot_spatial.py`)
 
 Separated from `VGraph` for maintainability, this class encapsulates the pure Matplotlib rendering logic for all plot styles (e.g., `_plot_scatter`, `_plot_histogram`, and the `WaferPlot` class). It receives a reference to the `VGraph` instance (`self.vg`) to access configuration state (`self.vg.x`, `self.vg.plot_style`, etc.) and draws directly onto the Matplotlib `Axes`.
 

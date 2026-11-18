@@ -24,6 +24,9 @@ from spectroview.view.components.spectra_viewer.v_spectra_legend_editor import (
     SpectraLegendMixin,
     SpectrumColorComboBox,
 )
+from spectroview.view.components.spectra_viewer.v_spectra_options import (
+    SpectraOptionsMenuMixin,
+)
 from spectroview.view.components.spectra_viewer.v_spectra_viewer import VSpectraViewer
 
 __all__ = [
@@ -37,6 +40,7 @@ __all__ = [
     "SPECTRA_CUSTOM_PALETTES",
     "LEGEND_EDITOR_MAX_ROWS",
     "get_cached_style_dict",
+    "SpectraOptionsMenuMixin",
     "SpectraPlot1DMixin",
     "SpectraHeatmapMixin",
     "SpectraPlot3DMixin",

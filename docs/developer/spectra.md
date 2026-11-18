@@ -222,9 +222,9 @@ def _post_bulk_action(self, apply_all: bool, action: str):
 
 ### `VSpectraViewer` — The Plot Canvas
 
-**Package**: [`spectra_viewer/`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/spectra_viewer/__init__.py) (`v_spectra_viewer.py`, `v_plot_1d.py`, `v_plot_heatmap.py`, `v_plot_3d.py`, `v_interactions.py`, `v_spectra_legend_editor.py`, `common.py`)
+**Package**: [`spectra_viewer/`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/spectra_viewer/__init__.py) (`v_spectra_viewer.py`, `v_spectra_options.py`, `v_plot_1d.py`, `v_plot_heatmap.py`, `v_plot_3d.py`, `v_interactions.py`, `v_spectra_legend_editor.py`, `common.py`)
 
-`VSpectraViewer` composes dedicated mixins over `QWidget` (`SpectraPlot1DMixin`, `SpectraHeatmapMixin`, `SpectraPlot3DMixin`, `SpectraLegendMixin`, `SpectraInteractionMixin`, and `SpectraRangeBracketMixin`), separating 1D/heatmap/3D rendering, mouse/peak/eraser interactions, and legend/colorbar management while keeping shared helpers in `common.py`.
+`VSpectraViewer` composes dedicated mixins over `QWidget` (`SpectraOptionsMenuMixin`, `SpectraPlot1DMixin`, `SpectraHeatmapMixin`, `SpectraPlot3DMixin`, `SpectraLegendMixin`, `SpectraInteractionMixin`, and `SpectraRangeBracketMixin`), separating the 2-column options menu and state sync, 1D/heatmap/3D rendering, mouse/peak/eraser interactions, and legend/colorbar management while keeping shared helpers in `common.py`.
 
 The Matplotlib canvas renders everything visible in the spectrum plot. It receives a data dictionary from `VMWorkspaceSpectra.spectra_selection_changed` and redraws accordingly.
 

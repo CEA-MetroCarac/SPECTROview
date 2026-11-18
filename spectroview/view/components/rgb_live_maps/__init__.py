@@ -12,6 +12,12 @@ from spectroview.view.components.rgb_live_maps.v_live_maps_legend_editor import 
     LEGEND_LOCATIONS,
     LiveMapsLegendEditorDialog,
 )
+from spectroview.view.components.rgb_live_maps.v_live_maps_options import (
+    LiveMapsOptionsMenuMixin,
+)
+from spectroview.view.components.rgb_live_maps.v_range_bracket_mixin import (
+    SpectraRangeBracketMixin,
+)
 from spectroview.view.components.rgb_live_maps.v_range_selector import (
     SELECTOR_BLUE,
     SELECTOR_COLORS,
@@ -21,7 +27,6 @@ from spectroview.view.components.rgb_live_maps.v_range_selector import (
     SELECTOR_RED,
     RangeSelectorManager,
     RangeSelectorState,
-    SpectraRangeBracketMixin,
     VRangeSelectorPanel,
     create_color_icon,
 )
@@ -32,6 +37,7 @@ __all__ = [
     "LEGEND_LOCATIONS",
     "LiveMapSubpanel",
     "LiveMapsLegendEditorDialog",
+    "LiveMapsOptionsMenuMixin",
     "RangeSelectorManager",
     "RangeSelectorState",
     "SELECTOR_BLUE",

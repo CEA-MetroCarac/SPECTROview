@@ -40,7 +40,7 @@ from spectroview.view.components.customized_widgets import (
     CustomizedPalette,
     NoDoubleClickZoomToolbar,
 )
-from spectroview.view.components.rgb_live_maps.v_range_selector import (
+from spectroview.view.components.rgb_live_maps.v_range_bracket_mixin import (
     SpectraRangeBracketMixin,
 )
 from spectroview.view.components.spectra_viewer.common import (

@@ -487,8 +487,8 @@ class VGraph(QWidget):
             return False
 
         with plt.style.context(_THEME_STYLE_MAP.get(self.figure_theme, PLOT_POLICY_LIGHT)):
+            self._set_axis_scale(self.df, reset_linear=True)
             self._set_limits(restore_unset=True)
-            self._set_axis_scale(self.df)
             self._set_axis_direction()
             self._set_labels()
             self._set_figure_style()
@@ -1155,6 +1155,16 @@ class VGraph(QWidget):
         -- a common, legitimate axis bound -- is not silently ignored.
         """
         auto_bounds = getattr(self, "_auto_limits", {}).get(auto_key) if auto_key else None
+        is_log = (
+            (auto_key == "x" and self.ax.get_xscale() == "log")
+            or (auto_key == "y" and self.ax.get_yscale() == "log")
+        )
+        if is_log and auto_bounds is not None and min(auto_bounds) <= 0:
+            self.ax.relim()
+            self.ax.autoscale_view(
+                scalex=(auto_key == "x"), scaley=(auto_key == "y")
+            )
+            auto_bounds = getter() if getter is not None else None
         if auto_bounds is None and getter is not None:
             auto_bounds = getter()
 
@@ -1205,7 +1215,7 @@ class VGraph(QWidget):
                 getter=self.ax_x2.get_xlim, auto_key="x2", restore_unset=restore_unset,
             )
     
-    def _set_axis_scale(self, df):
+    def _set_axis_scale(self, df, reset_linear: bool = False):
         """Apply log/symlog scale only if the corresponding axis column is numeric."""
         if df is None:
             return
@@ -1216,6 +1226,8 @@ class VGraph(QWidget):
                 self.ax.set_xscale(self.xscale_mode if self.xscale_mode == 'symlog' else 'log')
             else:
                 self.notify.emit(f"Skipping x-logscale because '{self.x}' is categorical.")
+        elif reset_linear and self.ax.get_xscale() != 'linear':
+            self.ax.set_xscale('linear')
 
         if self.ylogscale and len(self.y) > 0:
             y_data = df[self.y[0]]
@@ -1223,6 +1235,8 @@ class VGraph(QWidget):
                 self.ax.set_yscale(self.yscale_mode if self.yscale_mode == 'symlog' else 'log')
             else:
                 self.notify.emit(f"Skipping y-logscale because '{self.y[0]}' is categorical.")
+        elif reset_linear and self.ax.get_yscale() != 'linear':
+            self.ax.set_yscale('linear')
 
         if self.ax2 and self.y2 and self.y2logscale:
             y2_data = df[self.y2]

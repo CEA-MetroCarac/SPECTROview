@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QLabel, QPushButton, QHBoxLayout, QFrame
 )
 
-from spectroview.view.components.v_update_banner import VUpdateBanner
+from spectroview.view.components.common.v_update_banner import VUpdateBanner
 
 
 # ── Demo window ───────────────────────────────────────────────────────────────

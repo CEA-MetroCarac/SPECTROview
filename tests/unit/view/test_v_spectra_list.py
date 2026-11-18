@@ -1,5 +1,5 @@
 """Unit tests for VSpectraList and SpectrumItemDelegate status indicator."""
-from spectroview.view.components.v_spectra_list import VSpectraList, SpectrumItemDelegate
+from spectroview.view.components.lists.v_spectra_list import VSpectraList, SpectrumItemDelegate
 
 
 class TestSpectrumItemDelegate:

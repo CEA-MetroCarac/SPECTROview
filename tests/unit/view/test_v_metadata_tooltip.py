@@ -7,8 +7,8 @@ from spectroview.viewmodel.common.spectral_utils import (
     extract_primary_metadata,
     format_metadata_tooltip,
 )
-from spectroview.view.components.v_spectra_list import VSpectraList
-from spectroview.view.components.v_map_list import VMapsList
+from spectroview.view.components.lists.v_spectra_list import VSpectraList
+from spectroview.view.components.lists.v_map_list import VMapsList
 
 
 class TestMetadataExtraction:

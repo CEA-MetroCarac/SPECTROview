@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 
 from spectroview.model.m_settings import MSettings
 
-from spectroview.view.components.v_notification import show_notification
+from spectroview.view.components.common.v_notification import show_notification
 from spectroview.view.theme import Icons, current_tokens
 from spectroview.view.components.lower_tabs import (
     VFitModelBuilder,
@@ -22,7 +22,7 @@ from spectroview.view.components.lower_tabs import (
     VMVA,
 )
 from spectroview.view.components.rgb_live_maps import VLiveMaps
-from spectroview.view.components.v_spectra_list import VSpectraList
+from spectroview.view.components.lists.v_spectra_list import VSpectraList
 from spectroview.view.components.spectra_viewer import VSpectraViewer
 from spectroview.viewmodel.spectra.vm_fit_model_builder import VMFitModelBuilder
 from spectroview.viewmodel.maps.vm_live_maps import VMLiveMaps

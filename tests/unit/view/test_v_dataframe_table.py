@@ -3,7 +3,7 @@ import pandas as pd
 from PySide6.QtCore import Qt, QItemSelectionModel
 from PySide6.QtWidgets import QApplication
 
-from spectroview.view.components.v_dataframe_table import DataFrameTableModel, VDataframeTable
+from spectroview.view.components.lists.v_dataframe_table import DataFrameTableModel, VDataframeTable
 
 
 @pytest.fixture

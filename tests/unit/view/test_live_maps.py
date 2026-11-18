@@ -634,7 +634,7 @@ def test_v_live_maps_plot_theme_option_and_grid_warning_free(qapp):
 
 def test_v_live_maps_subpanel_rescale_pan_zoom_tools(qapp):
     """Each LiveMapSubpanel provides Rescale, Pan, and Zoom actions without breaking legend double-click."""
-    from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
+    from spectroview.view.components.common.customized_widgets import NoDoubleClickZoomToolbar
 
     live_maps = VLiveMaps(mode="map")
     live_maps.show()

@@ -62,10 +62,10 @@ from spectroview.model.system.m_update_manager import (
 )
 
 
-from spectroview.view.components.v_update_banner import VUpdateBanner
-from spectroview.view.components.v_quick_calculators import MQuickCalc
-from spectroview.view.components.v_menubar import VMenuBar
-from spectroview.view.components.v_notification import NotificationManager
+from spectroview.view.components.common.v_update_banner import VUpdateBanner
+from spectroview.view.components.common.v_quick_calculators import MQuickCalc
+from spectroview.view.components.common.v_menubar import VMenuBar
+from spectroview.view.components.common.v_notification import NotificationManager
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.v_workspace_maps import VWorkspaceMaps
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs

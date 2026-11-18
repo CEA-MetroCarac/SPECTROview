@@ -36,7 +36,7 @@ from spectroview import (
     X_AXIS_UNIT,
     Y_AXIS_UNIT,
 )
-from spectroview.view.components.customized_widgets import (
+from spectroview.view.components.common.customized_widgets import (
     CustomizedPalette,
     NoDoubleClickZoomToolbar,
 )

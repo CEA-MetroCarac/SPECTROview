@@ -21,11 +21,11 @@ from spectroview.model.graphs.graph_control import GraphValidationError, normali
 from spectroview.view.components.graphs.v_data_filter import VDataFilter
 from spectroview.view.components.graphs.v_plot_recipe_dialog import VPlotRecipeDialog
 from spectroview.view.components.graphs.v_style_template_dialog import VStyleTemplateDialog
-from spectroview.view.components.v_dataframe_table import VDataframeTable
+from spectroview.view.components.lists.v_dataframe_table import VDataframeTable
 from spectroview.view.components.graphs.v_graph import VGraph
 from spectroview.viewmodel.graphs.vm_workspace_graphs import VMWorkspaceGraphs
-from spectroview.view.components.v_notification import show_notification
-from spectroview.view.components.customized_widgets import CustomizedPalette
+from spectroview.view.components.common.v_notification import show_notification
+from spectroview.view.components.common.customized_widgets import CustomizedPalette
 from spectroview.view.components.customize_graph.customize_graph_dialog import CustomizeGraphDialog
 from spectroview.view.components.graphs.v_export_dialog import VExportDialog, VBatchExportDialog
 from spectroview.view.components.graphs.v_multipanel_dialog import VMultiPanelDialog

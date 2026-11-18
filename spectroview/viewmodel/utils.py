@@ -1,7 +1,7 @@
 """Backward-compatible facade for legacy ``spectroview.viewmodel.utils`` imports.
 
 Utilities are organized under ``spectroview.viewmodel.common`` and
-``spectroview.view.components.v_metadata_tooltip``.
+``spectroview.view.components.lists.v_metadata_tooltip``.
 """
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from spectroview.view.components.v_metadata_tooltip import (
+    from spectroview.view.components.lists.v_metadata_tooltip import (
         MetadataTooltipManager,
         MetadataTooltipPopup,
     )
@@ -63,7 +63,7 @@ __all__ = [
 
 def __getattr__(name: str):
     if name in ("MetadataTooltipManager", "MetadataTooltipPopup"):
-        from spectroview.view.components import v_metadata_tooltip
+        from spectroview.view.components.lists import v_metadata_tooltip
 
         return getattr(v_metadata_tooltip, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

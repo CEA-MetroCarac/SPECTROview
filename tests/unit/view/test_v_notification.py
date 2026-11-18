@@ -4,7 +4,7 @@
 from PySide6.QtCore import Qt, QEvent, QSize
 from PySide6.QtGui import QResizeEvent
 
-from spectroview.view.components.v_notification import (
+from spectroview.view.components.common.v_notification import (
     NotificationType,
     ToastPreset,
     VNotificationBadge,

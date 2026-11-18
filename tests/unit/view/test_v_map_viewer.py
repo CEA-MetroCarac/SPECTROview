@@ -5,7 +5,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.colors import LogNorm
 
 from spectroview import PALETTE
-from spectroview.view.components.customized_widgets import CustomizedPalette
+from spectroview.view.components.common.customized_widgets import CustomizedPalette
 from spectroview.view.components.map_viewer import VMapViewer, VMapViewerDialog
 
 

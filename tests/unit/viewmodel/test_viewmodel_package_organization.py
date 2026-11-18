@@ -30,7 +30,7 @@ class TestViewModelPackageOrganization:
             _ = vm_pkg.NonExistentSymbol
 
     def test_utils_backward_compatible_facade(self):
-        from spectroview.view.components.v_metadata_tooltip import (
+        from spectroview.view.components.lists.v_metadata_tooltip import (
             MetadataTooltipManager,
             MetadataTooltipPopup,
         )

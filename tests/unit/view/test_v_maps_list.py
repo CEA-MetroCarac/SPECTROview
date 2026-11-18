@@ -1,7 +1,7 @@
 """Unit tests for VMapsList and its integration with VWorkspaceMaps."""
 import pytest
 
-from spectroview.view.components.v_map_list import VMapsList
+from spectroview.view.components.lists.v_map_list import VMapsList
 from spectroview.view.v_workspace_maps import VWorkspaceMaps
 
 
@@ -202,7 +202,7 @@ class TestVWorkspaceMapsHeatmapSelection:
     def test_multi_selection_placeholders_and_preservation(self, qapp):
         from PySide6.QtWidgets import QAbstractItemView
         from PySide6.QtCore import Qt
-        from spectroview.view.components.v_map_list import VMapsList
+        from spectroview.view.components.lists.v_map_list import VMapsList
 
         v = VMapsList()
         assert v.maps_list.selectionMode() == QAbstractItemView.ExtendedSelection
@@ -264,7 +264,7 @@ class TestVMapsListDragDropReorder:
     def test_maps_list_drag_drop_configuration(self, qapp):
         from PySide6.QtCore import Qt
         from PySide6.QtWidgets import QAbstractItemView
-        from spectroview.view.components.v_map_list import VMapsList
+        from spectroview.view.components.lists.v_map_list import VMapsList
 
         widget = VMapsList()
         assert widget.maps_list.selectionMode() == QAbstractItemView.ExtendedSelection
@@ -274,7 +274,7 @@ class TestVMapsListDragDropReorder:
 
     def test_empty_placeholder_is_not_draggable_and_items_are_draggable(self, qapp):
         from PySide6.QtCore import Qt
-        from spectroview.view.components.v_map_list import VMapsList
+        from spectroview.view.components.lists.v_map_list import VMapsList
 
         widget = VMapsList()
         placeholder = widget.maps_list.item(0)
@@ -291,7 +291,7 @@ class TestVMapsListDragDropReorder:
     def test_external_url_drag_drop_ignored(self, qapp):
         from PySide6.QtCore import QMimeData, QPoint, QPointF, QUrl, Qt
         from PySide6.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
-        from spectroview.view.components.v_map_list import VMapsList
+        from spectroview.view.components.lists.v_map_list import VMapsList
 
         widget = VMapsList()
         widget.set_maps_names(["map_a", "map_b"])
@@ -319,7 +319,7 @@ class TestVMapsListDragDropReorder:
         from PySide6.QtCore import QMimeData, QPointF, Qt
         from PySide6.QtGui import QDropEvent
         from PySide6.QtWidgets import QAbstractItemView, QListWidget
-        from spectroview.view.components.v_map_list import VMapsList
+        from spectroview.view.components.lists.v_map_list import VMapsList
 
         widget = VMapsList()
         widget.set_maps_names(["m0", "m1", "m2"])
@@ -355,7 +355,7 @@ class TestVMapsListDragDropReorder:
         from PySide6.QtCore import QMimeData, QPointF, Qt
         from PySide6.QtGui import QDropEvent
         from PySide6.QtWidgets import QAbstractItemView, QListWidget
-        from spectroview.view.components.v_map_list import VMapsList
+        from spectroview.view.components.lists.v_map_list import VMapsList
 
         widget = VMapsList()
         widget.set_maps_names(["m0", "m1", "m2", "m3"])
@@ -385,7 +385,7 @@ class TestVMapsListDragDropReorder:
         from PySide6.QtCore import QMimeData, QPointF, Qt
         from PySide6.QtGui import QDropEvent
         from PySide6.QtWidgets import QAbstractItemView, QListWidget
-        from spectroview.view.components.v_map_list import VMapsList
+        from spectroview.view.components.lists.v_map_list import VMapsList
 
         widget = VMapsList()
         widget.set_maps_names(["m0", "m1", "m2"])

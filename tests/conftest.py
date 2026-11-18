@@ -139,7 +139,7 @@ def _release_qt_widgets_between_tests(request):
 
     # Reset NotificationManager area so it doesn't hold references across tests
     try:
-        from spectroview.view.components.v_notification import NotificationManager
+        from spectroview.view.components.common.v_notification import NotificationManager
         NotificationManager.instance().set_area(None)
     except Exception:
         pass

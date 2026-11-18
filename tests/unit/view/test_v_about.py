@@ -1,6 +1,6 @@
 """Unit tests for VAboutDialog and BUILD_NUMBER."""
 from spectroview import VERSION, BUILD_NUMBER
-from spectroview.view.components.v_about import VAboutDialog
+from spectroview.view.components.common.v_about import VAboutDialog
 from PySide6.QtWidgets import QTextBrowser
 
 

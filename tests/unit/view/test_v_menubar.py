@@ -1,6 +1,6 @@
 from PySide6.QtCore import QSize
 from spectroview.view.theme import Icons
-from spectroview.view.components.v_menubar import VMenuBar, THEME_OPTIONS
+from spectroview.view.components.common.v_menubar import VMenuBar, THEME_OPTIONS
 
 
 def test_v_menubar_actions_and_icons(qtbot):

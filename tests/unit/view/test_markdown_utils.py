@@ -1,9 +1,9 @@
 """
-Unit tests for spectroview.view.components.markdown_utils.
+Unit tests for spectroview.view.components.common.markdown_utils.
 """
 
 import markdown
-from spectroview.view.components.markdown_utils import ensure_markdown_spacing
+from spectroview.view.components.common.markdown_utils import ensure_markdown_spacing
 
 
 def test_ensure_markdown_spacing_empty():

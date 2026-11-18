@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, Signal, QStringListModel, QEvent, QItemSelectionModel
 
-from spectroview.view.components.customized_widgets import ExpressionLineEdit
+from spectroview.view.components.common.customized_widgets import ExpressionLineEdit
 
 
 class VDataFilter(QGroupBox):

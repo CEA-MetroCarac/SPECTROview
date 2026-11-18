@@ -9,7 +9,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QGroupBox, QLabel
 
 from spectroview import DEFAULT_COLORS
-from spectroview.view.components.customized_widgets import CustomizedPalette
+from spectroview.view.components.common.customized_widgets import CustomizedPalette
 from spectroview.view.components.spectra_viewer import (
     FastLine3DCollection,
     LEGEND_EDITOR_MAX_ROWS,

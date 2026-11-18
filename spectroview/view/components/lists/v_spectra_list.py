@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QRectF
 from PySide6.QtGui import QFont, QPainter, QColor
 
-from spectroview.view.components.v_metadata_tooltip import MetadataTooltipManager
+from spectroview.view.components.lists.v_metadata_tooltip import MetadataTooltipManager
 from spectroview.viewmodel.common.ui_utils import set_spectrum_item_color
 
 __all__ = [

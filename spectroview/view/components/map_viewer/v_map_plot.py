@@ -9,7 +9,7 @@ from matplotlib.colors import LogNorm
 import numpy as np
 
 from spectroview import PLOT_POLICY_DARK, PLOT_POLICY_LIGHT
-from spectroview.view.components.v_notification import show_notification
+from spectroview.view.components.common.v_notification import show_notification
 from spectroview.view.theme import current_tokens
 
 

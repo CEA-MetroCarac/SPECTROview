@@ -4,7 +4,7 @@ from PySide6.QtCore import QSize, Signal, Qt
 
 from spectroview import VERSION
 from spectroview.view.theme import Icons
-from spectroview.view.components.v_notification import VNotificationArea
+from spectroview.view.components.common.v_notification import VNotificationArea
 
 # Available themes: internal key → display label
 THEME_OPTIONS = [

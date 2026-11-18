@@ -13,7 +13,7 @@ from spectroview.model.graphs.m_graph import MGraph
 from spectroview.view.theme.manager import ThemeManager, _VIEWER_THEME_NAMES, _CLASSIC_THEMES
 from spectroview.view.theme.tokens import THEME_TOKENS
 from spectroview.view.theme.palettes import _PALETTE_BUILDERS
-from spectroview.view.components.v_menubar import VMenuBar, THEME_OPTIONS
+from spectroview.view.components.common.v_menubar import VMenuBar, THEME_OPTIONS
 from spectroview.view.components.spectra_viewer import VSpectraViewer
 from spectroview.view.components.graphs.v_graph import VGraph
 from spectroview.view.components.graphs.v_export_dialog import VExportDialog

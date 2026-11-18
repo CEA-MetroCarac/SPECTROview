@@ -29,7 +29,7 @@ from spectroview.model.spectra.spectral_parameters import (
     SELECTOR_NAMES,
     SPECTRAL_PARAMETERS,
 )
-from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
+from spectroview.view.components.common.customized_widgets import NoDoubleClickZoomToolbar
 from spectroview.view.components.map_viewer.map_selection import (
     MapCanvasSelector,
     is_ctrl_event,

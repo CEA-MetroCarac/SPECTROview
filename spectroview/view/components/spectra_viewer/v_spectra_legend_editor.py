@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from spectroview.view.components.customized_widgets import CustomizedPalette
+from spectroview.view.components.common.customized_widgets import CustomizedPalette
 from spectroview.view.components.spectra_viewer.common import (
     LEGEND_EDITOR_MAX_ROWS,
     SPECTRA_COLOR_PALETTES,

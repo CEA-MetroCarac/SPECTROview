@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit
 )
 import markdown
-from spectroview.view.components.markdown_utils import ensure_markdown_spacing
+from spectroview.view.components.common.markdown_utils import ensure_markdown_spacing
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QThread, QObject
 from PySide6.QtGui import QFont, QKeyEvent, QTextCursor
 

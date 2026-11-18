@@ -1,6 +1,6 @@
 """Behaviour tests for the automatic-update banner action."""
 
-from spectroview.view.components.v_update_banner import VUpdateBanner
+from spectroview.view.components.common.v_update_banner import VUpdateBanner
 
 
 def _banner(on_update, wheel_url="https://example.test/spectroview-26.32.2-py3-none-any.whl"):

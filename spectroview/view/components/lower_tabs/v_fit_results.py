@@ -14,8 +14,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from spectroview.view.components.customized_widgets import ExpressionLineEdit
-from spectroview.view.components.v_dataframe_table import VDataframeTable
+from spectroview.view.components.common.customized_widgets import ExpressionLineEdit
+from spectroview.view.components.lists.v_dataframe_table import VDataframeTable
 from spectroview.view.theme import Icons, current_tokens
 
 

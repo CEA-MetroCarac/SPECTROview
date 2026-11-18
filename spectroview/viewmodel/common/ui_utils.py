@@ -101,7 +101,7 @@ def show_toast_notification(
 
     Routes directly into SPECTROview's native floating notification system.
     """
-    from spectroview.view.components.v_notification import (
+    from spectroview.view.components.common.v_notification import (
         NotificationManager,
         NotificationType,
     )
@@ -127,7 +127,7 @@ def show_notification(
     parent=None,
 ):
     """Show a native floating notification in the SPECTROview application toolbar."""
-    from spectroview.view.components.v_notification import NotificationManager
+    from spectroview.view.components.common.v_notification import NotificationManager
 
     return NotificationManager.instance().show(
         message=message,

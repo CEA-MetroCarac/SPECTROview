@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
 from superqt import QLabeledDoubleRangeSlider
 
 from spectroview import PLOT_POLICY_LIGHT
-from spectroview.view.components.customized_widgets import CustomizedPalette
+from spectroview.view.components.common.customized_widgets import CustomizedPalette
 from spectroview.view.components.map_viewer.map_selection import MapCanvasSelector
 from spectroview.view.components.map_viewer.v_map_data import MapDataProcessingMixin
 from spectroview.view.components.map_viewer.v_map_interactions import (

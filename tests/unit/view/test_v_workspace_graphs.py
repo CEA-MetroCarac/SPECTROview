@@ -497,7 +497,7 @@ class TestStyleActions:
         assert target.grid is True
 
     def test_paste_without_copy_shows_message(self, ws, excel_df):
-        from spectroview.view.components.v_notification import NotificationManager
+        from spectroview.view.components.common.v_notification import NotificationManager
         mgr = NotificationManager.instance()
         mgr.clear_history()
         gw = self._graph(ws, excel_df)
@@ -812,7 +812,7 @@ class TestSubtitleSidePanelSync:
 
 class TestExportAll:
     def test_empty_workspace_shows_info_message_and_opens_no_dialog(self, ws, monkeypatch):
-        from spectroview.view.components.v_notification import NotificationManager
+        from spectroview.view.components.common.v_notification import NotificationManager
         mgr = NotificationManager.instance()
         mgr.clear_history()
         opened = []

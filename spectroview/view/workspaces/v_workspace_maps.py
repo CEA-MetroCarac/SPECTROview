@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QFrame, QDialog, QFileDialog, QMessageBox
 )
 
-from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
+from spectroview.view.workspaces.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.components.lists.v_map_list import VMapsList
 from spectroview.view.components.map_viewer import VMapViewer, VMapViewerDialog
 from spectroview.view.components.lists.v_dataframe_table import VDataframeTable

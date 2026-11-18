@@ -2,7 +2,7 @@
 import pytest
 
 from spectroview.view.components.lists.v_map_list import VMapsList
-from spectroview.view.v_workspace_maps import VWorkspaceMaps
+from spectroview.view.workspaces import VWorkspaceMaps
 
 
 @pytest.fixture
@@ -427,7 +427,7 @@ class TestVWorkspaceMapsReorderIntegration:
         self, qapp, settings, map_2d_file, tmp_path
     ):
         from PySide6.QtCore import Qt
-        from spectroview.view.v_workspace_maps import VWorkspaceMaps
+        from spectroview.view.workspaces import VWorkspaceMaps
 
         ws = VWorkspaceMaps()
         self._load_three_maps(ws, map_2d_file, tmp_path)
@@ -462,7 +462,7 @@ class TestVWorkspaceMapsReorderIntegration:
         self, qapp, settings, map_2d_file, tmp_path
     ):
         import shutil
-        from spectroview.view.v_workspace_maps import VWorkspaceMaps
+        from spectroview.view.workspaces import VWorkspaceMaps
 
         ws = VWorkspaceMaps()
         paths = []

@@ -298,7 +298,7 @@ def test_resources_icons_only_contains_active_files():
 def test_maps_deferred_delete_theme_switch(qtbot):
     """Verify VWorkspaceMaps.apply_theme survives DeferredDelete of inherited buttons."""
     from PySide6.QtCore import QCoreApplication, QEvent
-    from spectroview.view.v_workspace_maps import VWorkspaceMaps
+    from spectroview.view.workspaces import VWorkspaceMaps
 
     settings = MSettings()
     mgr = ThemeManager(settings)
@@ -329,7 +329,7 @@ def test_maps_deferred_delete_theme_switch(qtbot):
 def test_mdi_subwindow_contrast(qtbot):
     """Verify MdiSubWindow active title bar contrast in Light mode."""
     from PySide6.QtWidgets import QMdiArea, QWidget
-    from spectroview.view.v_workspace_graphs import MdiSubWindow
+    from spectroview.view.workspaces import MdiSubWindow
 
     settings = MSettings()
     mgr = ThemeManager(settings)

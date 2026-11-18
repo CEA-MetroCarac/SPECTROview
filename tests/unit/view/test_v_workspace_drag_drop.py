@@ -5,8 +5,7 @@ import pytest
 from PySide6.QtCore import Qt, QUrl, QMimeData, QPoint, QEvent
 from PySide6.QtGui import QDragEnterEvent, QDropEvent
 
-from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
-from spectroview.view.v_workspace_maps import VWorkspaceMaps
+from spectroview.view.workspaces import VWorkspaceSpectra, VWorkspaceMaps
 
 
 @pytest.fixture

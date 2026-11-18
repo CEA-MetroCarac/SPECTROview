@@ -8,8 +8,7 @@ from spectroview.model.spectra.spectral_parameters import (
     SELECTOR_RED,
     PARAM_PEAK_POSITION,
 )
-from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
-from spectroview.view.v_workspace_maps import VWorkspaceMaps
+from spectroview.view.workspaces import VWorkspaceSpectra, VWorkspaceMaps
 
 
 @pytest.fixture

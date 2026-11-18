@@ -18,7 +18,7 @@ from PySide6.QtWidgets import QMessageBox, QInputDialog
 
 from spectroview.model.graphs.graph_style import default_style
 from spectroview.view.components.graphs.v_graph import VGraph
-from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
+from spectroview.view.workspaces import VWorkspaceGraphs
 
 
 @pytest.fixture
@@ -821,7 +821,7 @@ class TestExportAll:
                 opened.append(widgets)
             def exec(self):
                 pass
-        monkeypatch.setattr("spectroview.view.v_workspace_graphs.VBatchExportDialog", _StubDialog)
+        monkeypatch.setattr("spectroview.view.workspaces.graphs.v_graphs_actions.VBatchExportDialog", _StubDialog)
 
         ws._on_export_all_clicked()
 
@@ -843,7 +843,7 @@ class TestExportAll:
                 received['widgets'] = widgets
             def exec(self):
                 received['exec_called'] = True
-        monkeypatch.setattr("spectroview.view.v_workspace_graphs.VBatchExportDialog", _StubDialog)
+        monkeypatch.setattr("spectroview.view.workspaces.graphs.v_graphs_actions.VBatchExportDialog", _StubDialog)
 
         ws._on_export_all_clicked()
 
@@ -1192,7 +1192,7 @@ class TestMdiSubWindowRubberBand:
 
     def test_subwindow_enables_rubber_band_resize_and_move(self, ws):
         from PySide6.QtWidgets import QMdiSubWindow
-        from spectroview.view.v_workspace_graphs import MdiSubWindow
+        from spectroview.view.workspaces import MdiSubWindow
 
         sub = MdiSubWindow(1, ws.mdi_area)
         try:

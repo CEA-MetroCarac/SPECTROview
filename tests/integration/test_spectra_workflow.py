@@ -8,7 +8,7 @@ everything survived the round trip.
 import numpy as np
 import pytest
 
-from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
+from spectroview.viewmodel.spectra.vm_workspace_spectra import VMWorkspaceSpectra
 
 
 @pytest.fixture

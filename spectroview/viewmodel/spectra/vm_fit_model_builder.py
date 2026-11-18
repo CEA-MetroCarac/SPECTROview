@@ -1,17 +1,22 @@
 """ViewModel for Fit Model Builder - manages fit model selection and loading."""
+
+from __future__ import annotations
+
 import json
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog
 
-from spectroview.model.spectra.m_fit_model_manager import MFitModelManager
 from spectroview.model.m_settings import MSettings
+from spectroview.model.spectra.m_fit_model_manager import MFitModelManager
 
 
 class VMFitModelBuilder(QObject):
+    """ViewModel managing fit model discovery, selection, and JSON loading."""
+
     # ───── VM → View signals ──────────────────────────────
-    models_changed = Signal(list)          # list[str]
+    models_changed = Signal(list)  # list[str]
     model_selected = Signal(str)
     notify = Signal(str)
 
@@ -43,8 +48,7 @@ class VMFitModelBuilder(QObject):
 
         # Merge default + externally loaded models
         all_models = base_models + [
-            name for name in self._extra_models
-            if name not in base_models
+            name for name in self._extra_models if name not in base_models
         ]
 
         self.models_changed.emit(all_models)
@@ -64,7 +68,9 @@ class VMFitModelBuilder(QObject):
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             if not isinstance(data, dict):
-                self.notify.emit(f"Invalid fit model format: {path.name} must be a JSON object.")
+                self.notify.emit(
+                    f"Invalid fit model format: {path.name} must be a JSON object."
+                )
                 return False
         except Exception as e:
             self.notify.emit(f"Failed to read fit model {path.name}: {e}")
@@ -78,8 +84,7 @@ class VMFitModelBuilder(QObject):
         # Update combobox WITHOUT rescanning folders
         base_models = self.model_manager.available_models
         all_models = base_models + [
-            name for name in self._extra_models
-            if name not in base_models
+            name for name in self._extra_models if name not in base_models
         ]
 
         self.models_changed.emit(all_models)
@@ -96,7 +101,7 @@ class VMFitModelBuilder(QObject):
             None,
             "Select Fit Model",
             start_dir,
-            "JSON files (*.json)"
+            "JSON files (*.json)",
         )
 
         if not file_path:

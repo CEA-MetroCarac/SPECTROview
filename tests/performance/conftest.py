@@ -24,7 +24,7 @@ import pandas as pd
 import pytest
 
 from spectroview.model.io.m_io import load_map_file
-from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
+from spectroview.viewmodel.spectra.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.fit_engine.vbf_thread import VBFthread
 
 

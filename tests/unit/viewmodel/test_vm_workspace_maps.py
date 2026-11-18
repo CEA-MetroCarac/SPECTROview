@@ -355,7 +355,7 @@ class TestLabSpec6WorkspaceAndMoreTabIntegration:
         from spectroview.model.io.m_io import _METADATA_ORDERED_KEYS
         from spectroview.model.spectra.spectra_store import SpectrumProxy
         from spectroview.view.components.lower_tabs import VMoreTab
-        from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
+        from spectroview.viewmodel.spectra.vm_workspace_spectra import VMWorkspaceSpectra
 
         l6s_path = examples_dir / "spectroscopic_data" / "spectrum_ls6.l6s"
         l6m_path = examples_dir / "spectroscopic_data" / "mapls6.l6m"
@@ -429,7 +429,7 @@ class TestLabSpec6WorkspaceAndMoreTabIntegration:
         from spectroview.model.io.m_io import _METADATA_ORDERED_KEYS
         from spectroview.model.spectra.spectra_store import SpectrumProxy
         from spectroview.view.components.lower_tabs import VMoreTab
-        from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
+        from spectroview.viewmodel.spectra.vm_workspace_spectra import VMWorkspaceSpectra
 
         ngs_path = examples_dir / "spectroscopic_data" / "spectrum.ngs"
         assert ngs_path.exists()

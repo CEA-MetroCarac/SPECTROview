@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
+from spectroview.viewmodel.spectra.vm_workspace_spectra import VMWorkspaceSpectra
 
 
 @pytest.fixture

@@ -6,7 +6,7 @@ import pytest
 from PySide6.QtWidgets import QFileDialog
 
 from spectroview.model.m_settings import MSettings
-from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder
+from spectroview.viewmodel.spectra.vm_fit_model_builder import VMFitModelBuilder
 
 
 @pytest.fixture

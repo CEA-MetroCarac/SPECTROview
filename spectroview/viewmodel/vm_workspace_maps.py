@@ -20,7 +20,7 @@ from spectroview.model.io.m_io import (
     load_ngc_map,
 )
 from spectroview.model.spectra.spectra_store import SpectraStore, SpectrumProxy
-from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
+from spectroview.viewmodel.spectra.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.viewmodel.common.spectral_utils import parse_coords_from_fname
 
 

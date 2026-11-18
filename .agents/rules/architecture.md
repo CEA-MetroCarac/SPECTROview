@@ -43,8 +43,8 @@ spectroview/
 ├── viewmodel/         # vm_workspace_{spectra,maps,graphs}, vm_fit_model_builder, vm_mva, vm_settings, utils
 ├── view/
 │   ├── v_workspace_{spectra,maps,graphs}.py
-│   ├── components/    # Shared widgets & packages: spectra_viewer/, rgb_live_maps/,
-│   │   │              #   v_graph, v_map_viewer, v_fit_model_builder, v_plot_renderer,
+│   ├── components/    # Shared widgets & packages: spectra_viewer/, map_viewer/,
+│   │   │              #   rgb_live_maps/, v_graph, v_fit_model_builder, v_plot_renderer,
 │   │   │              #   v_data_filter, v_export_dialog, v_multipanel_dialog …
 │   │   └── customize_graph/   # CustomizeGraphDialog + per-tab widgets + edit dialogs
 │   └── theme/         # ThemeManager, QSS templates, light/dark/soft-dark

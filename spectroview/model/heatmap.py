@@ -1,7 +1,7 @@
 """Pure-function 2D heatmap grid construction.
 
 Extracted so both the GUI's map viewer (spectroview/view/components/
-v_map_viewer.py) and the headless API (spectroview.api.workspace.MapsWorkspace)
+map_viewer/) and the headless API (spectroview.api.workspace.MapsWorkspace)
 can build the exact same grid from scattered (x, y, z) samples without
 depending on Qt.
 """

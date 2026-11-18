@@ -8,8 +8,7 @@ from PySide6.QtWidgets import (
 
 from spectroview.view.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.components.v_map_list import VMapsList
-from spectroview.view.components.v_map_viewer import VMapViewer
-from spectroview.view.components.v_map_viewer_dialog import VMapViewerDialog
+from spectroview.view.components.map_viewer import VMapViewer, VMapViewerDialog
 from spectroview.view.components.v_dataframe_table import VDataframeTable
 from spectroview.viewmodel.vm_workspace_maps import VMWorkspaceMaps
 from spectroview.viewmodel.utils import parse_coords_from_fname

@@ -6,7 +6,7 @@ from matplotlib.colors import LogNorm
 
 from spectroview import PALETTE
 from spectroview.view.components.customized_widgets import CustomizedPalette
-from spectroview.view.components.v_map_viewer import VMapViewer
+from spectroview.view.components.map_viewer import VMapViewer, VMapViewerDialog
 
 
 def _simple_2dmap_df():
@@ -480,6 +480,57 @@ class TestMapViewerCoordinateDrift:
         assert viewer._cached_2d_geometry['has_duplicates'] is True
 
 
+class TestMapViewerPackageExportsAndDialog:
+    """Verify map_viewer package exports and VMapViewerDialog delegation."""
 
+    def test_package_exports_and_mixin_hierarchy(self, qapp):
+        from spectroview.view.components.map_viewer import (
+            MapCanvasSelector,
+            MapDataProcessingMixin,
+            MapInteractionMixin,
+            MapPlotMixin,
+            VMapViewer as ExportedViewer,
+            VMapViewerDialog as ExportedDialog,
+            compute_2d_spatial_geometry,
+            resolve_1d_profile_selection,
+            resolve_xy_selection,
+        )
 
+        assert ExportedViewer is VMapViewer
+        assert ExportedDialog is VMapViewerDialog
+        assert issubclass(VMapViewer, MapPlotMixin)
+        assert issubclass(VMapViewer, MapDataProcessingMixin)
+        assert issubclass(VMapViewer, MapInteractionMixin)
+        assert callable(compute_2d_spatial_geometry)
+        assert callable(resolve_xy_selection)
+        assert callable(resolve_1d_profile_selection)
+        assert MapCanvasSelector is not None
+
+    def test_dialog_delegation_and_figure_cleanup(self, qapp):
+        import matplotlib.pyplot as plt
+
+        dialog = VMapViewerDialog(viewer_number=2)
+        try:
+            assert dialog.windowTitle() == "Map Viewer 2"
+            assert not dialog.map_viewer.btn_add_viewer.isEnabled()
+
+            df = _simple_2dmap_df()
+            dialog.set_map_data(df, "m1", selected_points=[(1.0, 0.0)])
+            assert dialog.map_viewer.map_df_name == "m1"
+            assert dialog.map_viewer.selected_points == [(1.0, 0.0)]
+
+            dialog.set_selected_points([(0.0, 1.0)])
+            assert dialog.map_viewer.selected_points == [(0.0, 1.0)]
+
+            old_state = dialog.blockSignals(True)
+            assert old_state is False
+            assert dialog.blockSignals(old_state) is True
+
+            dialog.map_viewer._griddata_cache[("m1", "Intensity")] = ("cached",)
+            dialog.clear_cache_for_map("m1")
+            assert ("m1", "Intensity") not in dialog.map_viewer._griddata_cache
+        finally:
+            dialog.close()
+            plt.close(dialog.map_viewer.figure)
+            dialog.deleteLater()
 

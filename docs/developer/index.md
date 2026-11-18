@@ -144,8 +144,14 @@ spectroview/
 │       │   └── v_spectra_legend_editor.py  # Batch legend editor dialog, color combo & mixin
 │       ├── v_fit_model_builder.py     # Baseline + Peak + Fit controls
 │       ├── v_peak_table.py            # Interactive peak parameter table
-│       ├── v_map_viewer.py            # Heatmap / wafer canvas
-│       ├── v_map_viewer_dialog.py     # Detachable map viewer window
+│       ├── map_viewer/                # Map viewer package (2D/wafer heatmap, interactions, dialog)
+│       │   ├── __init__.py            # Package exports (VMapViewer, VMapViewerDialog, selection helpers)
+│       │   ├── map_selection.py       # Shared spatial geometry, selection resolution & overlay helper
+│       │   ├── v_map_data.py          # MapDataProcessingMixin (griddata cache, mask, outlier, profile)
+│       │   ├── v_map_plot.py          # MapPlotMixin (2D/wafer heatmap rendering, stats, profile overlay)
+│       │   ├── v_map_interactions.py  # MapInteractionMixin (mouse selection, coordinates, copy)
+│       │   ├── v_map_viewer.py        # VMapViewer main widget, toolbar, sliders & options menu
+│       │   └── v_map_viewer_dialog.py # VMapViewerDialog detachable map viewer window
 │       ├── v_map_list.py              # Loaded maps list panel (Two-Tier Selection)
 │       ├── rgb_live_maps/             # RGB range bracketing & Live Maps package
 │       │   ├── __init__.py            # Package exports for RGB range selectors & Live Maps
@@ -154,7 +160,6 @@ spectroview/
 │       │   ├── v_live_map_subpanel.py # LiveMapSubpanel (2D heatmap / 1D line plot canvas)
 │       │   ├── v_live_maps_legend_editor.py # LiveMapsLegendEditorDialog labels & colors editor
 │       │   └── v_range_selector.py    # VRangeSelectorPanel, RangeSelectorManager & SpectraRangeBracketMixin
-│       ├── map_selection.py           # Shared spatial/heatmap selection engine (MapSelectionController)
 │       ├── v_graph.py                 # Single graph widget (matplotlib)
 │       ├── v_plot_renderer.py         # Stateless Matplotlib plot rendering engine (PlotRenderer)
 │       ├── graph_commit.py            # Graph state snapshot & undo/redo diff engine
@@ -335,8 +340,8 @@ Workspaces are composed from **shared components** that follow the same signal-b
 | `SpectraLegendEditorDialog` | `spectra_viewer/v_spectra_legend_editor.py` | Transactional palette, legend-limit, label, and color editor (100-row batches) |
 | `VFitModelBuilder` | `v_fit_model_builder.py` | X-correction, spectral range, baseline, peaks, fit controls |
 | `VPeakTable` | `v_peak_table.py` | Editable table of peak parameters (center, FWHM, amplitude, bounds) |
-| `VMapViewer` | `v_map_viewer.py` | Heatmap/wafer canvas with Z/X range sliders, mask, profile extraction |
-| `VMapViewerDialog` | `v_map_viewer_dialog.py` | Detachable always-on-top window wrapping `VMapViewer` |
+| `VMapViewer` | `map_viewer/v_map_viewer.py` | Heatmap/wafer canvas with Z/X range sliders, mask, profile extraction |
+| `VMapViewerDialog` | `map_viewer/v_map_viewer_dialog.py` | Detachable always-on-top window wrapping `VMapViewer` |
 | `VGraph` | `v_graph.py` | Matplotlib graph widget supporting 10+ plot styles |
 | `VDataFilter` | `v_data_filter.py` | Dynamic `pandas` `.query()` filter builder |
 | `VFitResults` | `v_fit_results.py` | Color-coded fit results table |

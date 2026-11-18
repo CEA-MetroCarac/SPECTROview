@@ -33,7 +33,7 @@ from spectroview.model.spectral_parameters import (
     SPECTRAL_PARAMETERS,
 )
 from spectroview.view.components.customized_widgets import NoDoubleClickZoomToolbar
-from spectroview.view.components.map_selection import (
+from spectroview.view.components.map_viewer.map_selection import (
     MapCanvasSelector,
     compute_2d_spatial_geometry,
     get_drag_box_edgecolor,

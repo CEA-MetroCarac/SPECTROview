@@ -9,8 +9,8 @@ docstring for why this codebase makes an exception to its usual
 """
 import pytest
 
-from spectroview.view.components.v_graph import VGraph
-from spectroview.view.components.v_multipanel_dialog import (
+from spectroview.view.components.graphs.v_graph import VGraph
+from spectroview.view.components.graphs.v_multipanel_dialog import (
     VMultiPanelDialog, panel_label, suggest_grid,
 )
 
@@ -224,7 +224,7 @@ class TestComposeFigure:
         dialog.spin_fig_width.setValue(100.0)
         dialog.spin_fig_height.setValue(80.0)
         composed = dialog._compose_figure()
-        from spectroview.view.components.v_multipanel_dialog import _MM_PER_INCH
+        from spectroview.view.components.graphs.v_multipanel_dialog import _MM_PER_INCH
         w_in, h_in = composed.get_size_inches()
         assert w_in == pytest.approx(100.0 / _MM_PER_INCH, abs=0.01)
         assert h_in == pytest.approx(80.0 / _MM_PER_INCH, abs=0.01)

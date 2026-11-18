@@ -21,7 +21,7 @@ import pandas as pd
 import pytest
 
 from spectroview import PLOT_STYLES
-from spectroview.view.components.v_graph import VGraph
+from spectroview.view.components.graphs.v_graph import VGraph
 
 
 @pytest.fixture
@@ -1580,7 +1580,7 @@ class TestInteractionPerformance:
         return vg
 
     def test_canvas_and_toolbar_use_fast_subclasses(self, vg):
-        from spectroview.view.components.v_graph import (
+        from spectroview.view.components.graphs.v_graph import (
             _DebouncedFigureCanvas, _FastNavigationToolbar,
         )
         assert isinstance(vg.canvas, _DebouncedFigureCanvas)

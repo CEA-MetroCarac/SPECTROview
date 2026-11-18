@@ -1,7 +1,7 @@
 """Programmatic graph plotting mimicking the Graphs workspace.
 
 Delegates to the same PlotRenderer the app's own VGraph widget uses (see
-spectroview.view.components.v_plot_renderer) so scripted/notebook plots
+spectroview.view.components.graphs.v_plot_renderer) so scripted/notebook plots
 genuinely match what the Graphs workspace draws -- same color/marker
 cycling, same 95% CI computation, same box/point/trendline/wafer/2Dmap
 styling -- rather than approximating it with a different library.
@@ -27,7 +27,7 @@ from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS
 from spectroview.api.exceptions import TemplateError
 from spectroview.model.graphs.m_graph import MGraph
 from spectroview.model.graphs.m_plot_recipe_store import MPlotRecipeStore
-from spectroview.view.components.v_plot_renderer import PlotRenderer
+from spectroview.view.components.graphs.v_plot_renderer import PlotRenderer
 
 
 def _make_renderer(df: pd.DataFrame, x: str, y: Optional[str], hue: Optional[str],

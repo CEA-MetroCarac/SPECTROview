@@ -18,7 +18,7 @@ import pytest
 
 from spectroview.model.graphs.m_graph import MGraph
 from spectroview.viewmodel.graphs.vm_workspace_graphs import VMWorkspaceGraphs
-from spectroview.view.components.v_graph import VGraph
+from spectroview.view.components.graphs.v_graph import VGraph
 from spectroview.view.components.customize_graph.customize_graph_dialog import CustomizeLegend, CustomizeAxis
 
 

@@ -44,7 +44,7 @@ from spectroview.view.components.customize_graph.tab_legend_series import TabLeg
 from spectroview.view.components.customize_graph.tab_plot_styles import TabPlotStyles
 from spectroview.view.components.customize_graph.tab_secondary_inset import TabSecondaryInset
 from spectroview.view.components.customize_graph.tab_ticks_spines import TabTicksSpines
-from spectroview.view.components.graph_commit import diff, snapshot
+from spectroview.view.components.graphs.graph_commit import diff, snapshot
 from spectroview.view.theme import Icons
 
 __all__ = [

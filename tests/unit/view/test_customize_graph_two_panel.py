@@ -7,7 +7,7 @@ from spectroview.model.graphs.m_graph import MGraph
 from spectroview.view.components.customize_graph.customize_graph_dialog import (
     CustomizeGraphDialog,
 )
-from spectroview.view.components.v_graph import VGraph
+from spectroview.view.components.graphs.v_graph import VGraph
 
 _active_test_widgets = []
 

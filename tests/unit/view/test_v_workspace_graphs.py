@@ -17,7 +17,7 @@ from PySide6.QtGui import QShortcut
 from PySide6.QtWidgets import QMessageBox, QInputDialog
 
 from spectroview.model.graphs.graph_style import default_style
-from spectroview.view.components.v_graph import VGraph
+from spectroview.view.components.graphs.v_graph import VGraph
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 
 
@@ -240,7 +240,7 @@ class TestRendererHeavyImportsArePrewarmed:
 
     def test_renderer_does_not_import_scipy_at_module_level(self):
         """The startup path stays clean: the names live in the functions."""
-        import spectroview.view.components.v_plot_renderer as renderer
+        import spectroview.view.components.graphs.v_plot_renderer as renderer
 
         assert not hasattr(renderer, 'stats')
         assert not hasattr(renderer, 'griddata')
@@ -602,7 +602,7 @@ class TestStyleActions:
         # VStyleTemplateDialog's real style_applied Signal must fire before
         # exec() blocks (a modal dialog in the real app) -- stub exec() to
         # simulate the user picking a style and clicking Apply.
-        from spectroview.view.components.v_style_template_dialog import VStyleTemplateDialog
+        from spectroview.view.components.graphs.v_style_template_dialog import VStyleTemplateDialog
 
         def _fake_exec(self):
             self.style_applied.emit({"color_palette": "Spectral", "grid": True})

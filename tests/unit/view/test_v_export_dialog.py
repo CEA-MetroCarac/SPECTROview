@@ -8,8 +8,8 @@ import os
 
 import pytest
 
-from spectroview.view.components.v_graph import VGraph
-from spectroview.view.components.v_export_dialog import VExportDialog, VBatchExportDialog
+from spectroview.view.components.graphs.v_graph import VGraph
+from spectroview.view.components.graphs.v_export_dialog import VExportDialog, VBatchExportDialog
 
 
 def _plotted_graph(qapp, excel_df, plot_style="scatter", x="x0_Si", y=None, z=None):
@@ -49,7 +49,7 @@ class TestVExportDialogExport:
         dialog.panel.combo_format.setCurrentText(fmt_display)
         target = str(tmp_path / f"graph1.{ext}")
         monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getSaveFileName",
+            "spectroview.view.components.graphs.v_export_dialog.QFileDialog.getSaveFileName",
             lambda *a, **k: (target, ""),
         )
 
@@ -63,7 +63,7 @@ class TestVExportDialogExport:
         dialog = VExportDialog(vg)
         target_no_ext = str(tmp_path / "graph1")
         monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getSaveFileName",
+            "spectroview.view.components.graphs.v_export_dialog.QFileDialog.getSaveFileName",
             lambda *a, **k: (target_no_ext, ""),
         )
 
@@ -75,7 +75,7 @@ class TestVExportDialogExport:
         vg = _plotted_graph(qapp, excel_df)
         dialog = VExportDialog(vg)
         monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getSaveFileName",
+            "spectroview.view.components.graphs.v_export_dialog.QFileDialog.getSaveFileName",
             lambda *a, **k: ("", ""),
         )
 
@@ -94,7 +94,7 @@ class TestVExportDialogExport:
         dialog.panel.combo_theme.setCurrentText("Dark Mode")
         target = str(tmp_path / "graph1.png")
         monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getSaveFileName",
+            "spectroview.view.components.graphs.v_export_dialog.QFileDialog.getSaveFileName",
             lambda *a, **k: (target, ""),
         )
 
@@ -110,7 +110,7 @@ class TestVExportDialogExport:
         dialog1.panel.cb_transparent.setChecked(True)
         target = str(tmp_path / "graph1.svg")
         monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getSaveFileName",
+            "spectroview.view.components.graphs.v_export_dialog.QFileDialog.getSaveFileName",
             lambda *a, **k: (target, ""),
         )
         dialog1._on_export_clicked()
@@ -125,7 +125,7 @@ class TestVExportDialogExport:
         dialog = VExportDialog(vg)
         target = str(tmp_path / "graph1.png")
         monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getSaveFileName",
+            "spectroview.view.components.graphs.v_export_dialog.QFileDialog.getSaveFileName",
             lambda *a, **k: (target, ""),
         )
 
@@ -173,7 +173,7 @@ class TestVExportDialogPhysicalSizing:
         dialog.spin_height.setValue(50.0)
         target = str(tmp_path / "graph1.png")
         monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getSaveFileName",
+            "spectroview.view.components.graphs.v_export_dialog.QFileDialog.getSaveFileName",
             lambda *a, **k: (target, ""),
         )
 
@@ -195,7 +195,7 @@ class TestVExportDialogPhysicalSizing:
         dialog.spin_height.setValue(65.0)
         target = str(tmp_path / "graph1.png")
         monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getSaveFileName",
+            "spectroview.view.components.graphs.v_export_dialog.QFileDialog.getSaveFileName",
             lambda *a, **k: (target, ""),
         )
 
@@ -212,7 +212,7 @@ class TestVExportDialogPhysicalSizing:
         dialog = VExportDialog(vg)
         target = str(tmp_path / "graph1.png")
         monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getSaveFileName",
+            "spectroview.view.components.graphs.v_export_dialog.QFileDialog.getSaveFileName",
             lambda *a, **k: (target, ""),
         )
         original_size = vg.figure.get_size_inches().copy()
@@ -235,7 +235,7 @@ class TestVBatchExportDialog:
         widgets = self._two_graphs(qapp, excel_df)
         dialog = VBatchExportDialog(widgets)
         monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getExistingDirectory",
+            "spectroview.view.components.graphs.v_export_dialog.QFileDialog.getExistingDirectory",
             lambda *a, **k: str(tmp_path),
         )
 
@@ -248,7 +248,7 @@ class TestVBatchExportDialog:
         widgets = self._two_graphs(qapp, excel_df)
         dialog = VBatchExportDialog(widgets)
         monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getExistingDirectory",
+            "spectroview.view.components.graphs.v_export_dialog.QFileDialog.getExistingDirectory",
             lambda *a, **k: "",
         )
 
@@ -263,7 +263,7 @@ class TestVBatchExportDialog:
         widgets[1].export_height_mm = 50.0
         dialog = VBatchExportDialog(widgets)
         monkeypatch.setattr(
-            "spectroview.view.components.v_export_dialog.QFileDialog.getExistingDirectory",
+            "spectroview.view.components.graphs.v_export_dialog.QFileDialog.getExistingDirectory",
             lambda *a, **k: str(tmp_path),
         )
 

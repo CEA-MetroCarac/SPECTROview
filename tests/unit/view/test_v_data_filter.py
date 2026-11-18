@@ -4,7 +4,7 @@ import pytest
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtTest import QTest
 
-from spectroview.view.components.v_data_filter import VDataFilter
+from spectroview.view.components.graphs.v_data_filter import VDataFilter
 
 
 @pytest.fixture

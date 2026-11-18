@@ -13,9 +13,9 @@ from urllib.error import HTTPError
 
 import pytest
 
-import spectroview.model.m_update_manager as um
-from spectroview.model.m_installation import InstallType, InstallationInfo
-from spectroview.model.m_update_manager import (
+import spectroview.model.system.m_update_manager as um
+from spectroview.model.system.m_installation import InstallType, InstallationInfo
+from spectroview.model.system.m_update_manager import (
     GitHubReleaseClient,
     LinuxAppImageUpdater,
     LinuxDebUpdater,

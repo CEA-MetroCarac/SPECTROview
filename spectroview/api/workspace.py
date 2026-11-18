@@ -25,9 +25,9 @@ from spectroview.api.exceptions import FitModelError, WorkspaceError
 from spectroview.fit_engine.baseline import eval_baseline_batch
 from spectroview.fit_engine.evaluator import eval_peak_initial
 from spectroview.model.heatmap import build_heatmap_grid
-from spectroview.model.m_io import extract_map_arrays
+from spectroview.model.io.m_io import extract_map_arrays
 from spectroview.model.spectra_store import SpectraStore
-from spectroview.model.workspace_io import WorkspaceIO
+from spectroview.model.io.workspace_io import WorkspaceIO
 
 
 def _sanitize_for_json(obj: Any) -> Any:

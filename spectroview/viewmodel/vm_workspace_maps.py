@@ -11,7 +11,7 @@ from pathlib import Path
 from PySide6.QtCore import Signal
 
 from spectroview.model.m_settings import MSettings
-from spectroview.model.m_io import (
+from spectroview.model.io.m_io import (
     extract_map_arrays,
     load_map_file,
     load_wdf_map,

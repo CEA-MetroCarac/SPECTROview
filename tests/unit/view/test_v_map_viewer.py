@@ -359,7 +359,7 @@ class TestMapViewerCoordinateDrift:
     def test_map_type_toggle_preserves_dx_and_pixel_size(self, qapp):
         """Toggling 2Dmap -> Wafer -> 2Dmap must restore correct dx and patch sizes on cache hit."""
         from pathlib import Path
-        from spectroview.model.m_io import load_map_file
+        from spectroview.model.io.m_io import load_map_file
         file_path = Path("examples/spectroscopic_data/time_resolved_wafer_maps.csv")
         if not file_path.exists():
             return
@@ -394,7 +394,7 @@ class TestMapViewerCoordinateDrift:
     def test_file_loading_order_does_not_leak_dx_or_patch_collection(self, qapp):
         """Loading a large-span map then a small-span map must cleanly reset artists and dx."""
         from pathlib import Path
-        from spectroview.model.m_io import load_map_file
+        from spectroview.model.io.m_io import load_map_file
         p_wafer = Path("examples/spectroscopic_data/wafer2_process2.csv")
         p_time = Path("examples/spectroscopic_data/time_resolved_wafer_maps.csv")
         if not p_wafer.exists() or not p_time.exists():

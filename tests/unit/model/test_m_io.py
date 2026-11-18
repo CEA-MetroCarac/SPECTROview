@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from spectroview.model.m_io import (
+from spectroview.model.io.m_io import (
     _METADATA_ORDERED_KEYS,
     convert_action,
     detect_file_type,
@@ -35,10 +35,10 @@ from spectroview.model.m_io import (
     load_wdf_spectrum,
     peek_wdf_measurement_type,
 )
-from spectroview.model.m_l6s import L6sReader
-from spectroview.model.m_ngs import NgsReader
-from spectroview.model.m_spc import SpcReader
-from spectroview.model.m_wdf import (
+from spectroview.model.io.m_l6s import L6sReader
+from spectroview.model.io.m_ngs import NgsReader
+from spectroview.model.io.m_spc import SpcReader
+from spectroview.model.io.m_wdf import (
     WdfDataType,
     WdfMeasurementType,
     WdfReader,
@@ -224,7 +224,7 @@ class TestLoadDataFrameFile:
 
 class TestMapSpcMetadata:
     def test_map_spc_metadata_t64000(self):
-        from spectroview.model.m_io import _map_spc_metadata
+        from spectroview.model.io.m_io import _map_spc_metadata
         log_meta = {
             "INSTRUMENT": "T64000",
             "TIME": "10",
@@ -253,7 +253,7 @@ class TestMapSpcMetadata:
         assert res["INSTRUMENT"] == "T64000"
 
     def test_map_spc_metadata_labspec(self):
-        from spectroview.model.m_io import _map_spc_metadata
+        from spectroview.model.io.m_io import _map_spc_metadata
         log_meta = {
             "ACQ. TIME (S)": "5",
             "ACCUMULATIONS": "3",
@@ -330,11 +330,12 @@ class TestModelLayerMvvmPurity:
     @pytest.mark.parametrize(
         "rel_path",
         [
-            "spectroview/model/m_io.py",
-            "spectroview/model/m_spc.py",
-            "spectroview/model/m_wdf.py",
-            "spectroview/model/m_l6s.py",
-            "spectroview/model/m_ngs.py",
+            "spectroview/model/io/m_io.py",
+            "spectroview/model/io/m_spc.py",
+            "spectroview/model/io/m_wdf.py",
+            "spectroview/model/io/m_l6s.py",
+            "spectroview/model/io/m_ngs.py",
+            "spectroview/model/io/workspace_io.py",
         ],
     )
     def test_no_qt_or_viewmodel_imports(self, project_root, rel_path):
@@ -894,7 +895,7 @@ class TestL6sAndL6mBinaryReader:
         assert "Laser (nm)" not in meta
 
     def test_compressed_l6s_fast_peek_for_large_archives(self, examples_dir, monkeypatch):
-        from spectroview.model import m_l6s
+        from spectroview.model.io import m_l6s
 
         l6s_path = examples_dir / "spectroscopic_data" / "spectrum_ls6_2.l6s"
         # Force the large-archive (<1 ms) fast-peek branch used for multi-MB compressed .l6m maps

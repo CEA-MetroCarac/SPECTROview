@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-import spectroview.model.m_update_checker as update_checker
-from spectroview.model.m_update_checker import (
+import spectroview.model.system.m_update_checker as update_checker
+from spectroview.model.system.m_update_checker import (
     UpdateCheckerWorker,
     _find_wheel_asset,
     _parse_version,

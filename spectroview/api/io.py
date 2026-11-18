@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from spectroview.api.exceptions import LoadError
-from spectroview.model.m_io import (
+from spectroview.model.io.m_io import (
     load_spectrum_file,
     load_map_file,
     load_wdf_spectrum,
@@ -211,7 +211,7 @@ def convert_renishaw_map(input_path: Union[str, Path], output_path: Union[str, P
         io.convert_renishaw_map("raw_export.txt", "converted_map.txt")
         df = io.load_map("converted_map.txt")
     """
-    from spectroview.model.m_io import convert_action
+    from spectroview.model.io.m_io import convert_action
 
     output_path = Path(output_path)
     try:

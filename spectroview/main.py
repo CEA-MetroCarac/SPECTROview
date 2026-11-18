@@ -11,7 +11,7 @@ set_current_process_app_id()
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── macOS Matplotlib font discovery fix ──────────────────────────────────────
-from spectroview.model.m_macos_font_patch import apply_macos_font_cache_fix
+from spectroview.model.system.m_macos_font_patch import apply_macos_font_cache_fix
 apply_macos_font_cache_fix()
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -51,9 +51,9 @@ def _configure_matplotlib_qt_backend() -> None:
 
 _configure_matplotlib_qt_backend()
 
-from spectroview.model.m_io import detect_file_type
+from spectroview.model.io.m_io import detect_file_type
 from spectroview.settings import MSettings, VMSettings, VSettingsDialog
-from spectroview.model.m_update_manager import (
+from spectroview.model.system.m_update_manager import (
     UnifiedUpdateCheckWorker,
     UnifiedUpdateDownloadWorker,
     UpdateCheckResult,
@@ -1101,7 +1101,7 @@ class Main(QMainWindow):
 def _run_velopack_bootstrap() -> None:
     """Execute Velopack install/update hooks before QApplication when frozen under Velopack."""
     try:
-        from spectroview.model.m_installation import InstallationManager
+        from spectroview.model.system.m_installation import InstallationManager
         if not InstallationManager.should_run_velopack_hook():
             return
         import velopack

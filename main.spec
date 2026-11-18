@@ -33,7 +33,7 @@ if spec_dir not in sys.path:
 # ------------------------------------------------------------
 # Security Gate: Verify CA / TLS Trust Store Before Freezing
 # ------------------------------------------------------------
-from spectroview.model.m_tls import assert_safe_build_tls
+from spectroview.model.system.m_tls import assert_safe_build_tls
 
 tls_report = assert_safe_build_tls(require_pip=False)
 print(

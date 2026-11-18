@@ -21,7 +21,7 @@ import sys
 from typing import Any, Optional
 
 from spectroview import BUILD_NUMBER, resource_path
-from spectroview.model.m_installation import InstallType, InstallationManager
+from spectroview.model.system.m_installation import InstallType, InstallationManager
 
 TRACKED_PACKAGES: tuple[str, ...] = (
     "PySide6",

@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-from spectroview.model.m_macos_font_patch import (
+from spectroview.model.system.m_macos_font_patch import (
     _is_system_profiler_font_query,
     apply_macos_font_cache_fix,
     is_macos_font_cache_fix_applied,
@@ -77,7 +77,7 @@ def test_matplotlib_rebuilds_font_cache_without_keyerror(tmp_path):
     code = (
         "import os; "
         "import sys; "
-        "from spectroview.model.m_macos_font_patch import apply_macos_font_cache_fix; "
+        "from spectroview.model.system.m_macos_font_patch import apply_macos_font_cache_fix; "
         "apply_macos_font_cache_fix(); "
         "import matplotlib.font_manager as fm; "
         "cache = fm._load_fontmanager(try_read_cache=False); "

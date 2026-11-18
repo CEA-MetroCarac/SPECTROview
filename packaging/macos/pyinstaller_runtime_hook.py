@@ -10,7 +10,7 @@ import sys
 
 if sys.platform == "darwin":
     try:
-        from spectroview.model.m_macos_font_patch import apply_macos_font_cache_fix
+        from spectroview.model.system.m_macos_font_patch import apply_macos_font_cache_fix
         apply_macos_font_cache_fix()
     except Exception:
         pass

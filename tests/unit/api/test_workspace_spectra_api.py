@@ -5,7 +5,7 @@ import pytest
 
 from spectroview.api import workspace
 from spectroview.api.exceptions import FitModelError, WorkspaceError
-from spectroview.model.workspace_io import WorkspaceIO
+from spectroview.model.io.workspace_io import WorkspaceIO
 
 
 class TestErgonomics:

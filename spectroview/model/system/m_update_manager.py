@@ -1,7 +1,7 @@
 """Unified multi-platform version checking, release resolution, and update engine.
 
 Provides a single :class:`UpdateManager` facade backed by distribution-specific
-updaters selected via :class:`~spectroview.model.m_installation.InstallationManager`:
+updaters selected via :class:`~spectroview.model.system.m_installation.InstallationManager`:
 
 - ``PIP_WHEEL``: hardens in-place wheel upgrade and relaunch via ``pip``.
 - ``WINDOWS_VELOPACK``: fetches release metadata and ``.nupkg`` full/delta
@@ -45,13 +45,13 @@ from urllib.request import Request, urlopen
 from PySide6.QtCore import QThread, Signal
 
 from spectroview import VERSION as _CURRENT_VERSION
-from spectroview.model.m_installation import (
+from spectroview.model.system.m_installation import (
     InstallType,
     InstallationInfo,
     InstallationManager,
 )
-from spectroview.model.m_tls import InsecureTrustStoreError, build_ssl_context
-from spectroview.model.m_update_checker import (
+from spectroview.model.system.m_tls import InsecureTrustStoreError, build_ssl_context
+from spectroview.model.system.m_update_checker import (
     _normalise_sha256,
     _wheel_filename_from_url,
     install_update_and_restart,

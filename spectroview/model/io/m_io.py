@@ -16,10 +16,10 @@ import struct
 import numpy as np
 import pandas as pd
 
-from spectroview.model.m_l6s import L6sReader
-from spectroview.model.m_ngs import NgsReader
-from spectroview.model.m_spc import SpcReader
-from spectroview.model.m_wdf import WdfReader
+from spectroview.model.io.m_l6s import L6sReader
+from spectroview.model.io.m_ngs import NgsReader
+from spectroview.model.io.m_spc import SpcReader
+from spectroview.model.io.m_wdf import WdfReader
 
 WDFReader = WdfReader
 WDF_AVAILABLE = True

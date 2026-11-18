@@ -29,7 +29,7 @@ from typing import Callable, List, Dict, Optional, Any
 
 from PySide6.QtCore import QThread, Signal, QObject
 
-from spectroview.model.m_tls import ensure_secure_tls, inject_truststore
+from spectroview.model.system.m_tls import ensure_secure_tls, inject_truststore
 
 # ---------------------------------------------------------------------------
 # Corporate / internal CA support

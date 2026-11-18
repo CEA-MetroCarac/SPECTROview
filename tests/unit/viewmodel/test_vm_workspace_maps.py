@@ -352,7 +352,7 @@ class TestLabSpec6WorkspaceAndMoreTabIntegration:
 
     def test_load_l6s_and_l6m_into_viewmodels_and_more_tab(self, vm, settings, examples_dir, qapp):
         from spectroview.api import io as api_io
-        from spectroview.model.m_io import _METADATA_ORDERED_KEYS
+        from spectroview.model.io.m_io import _METADATA_ORDERED_KEYS
         from spectroview.model.spectra_store import SpectrumProxy
         from spectroview.view.components.lower_tabs import VMoreTab
         from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
@@ -426,7 +426,7 @@ class TestLabSpec6WorkspaceAndMoreTabIntegration:
 
     def test_load_ngs_into_viewmodel_api_and_more_tab(self, settings, examples_dir, qapp):
         from spectroview.api import io as api_io
-        from spectroview.model.m_io import _METADATA_ORDERED_KEYS
+        from spectroview.model.io.m_io import _METADATA_ORDERED_KEYS
         from spectroview.model.spectra_store import SpectrumProxy
         from spectroview.view.components.lower_tabs import VMoreTab
         from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra

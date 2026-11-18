@@ -19,7 +19,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from spectroview.model.m_tls import assert_safe_build_tls  # noqa: E402
+from spectroview.model.system.m_tls import assert_safe_build_tls  # noqa: E402
 
 
 def read_version() -> str:

@@ -8,7 +8,7 @@ import types
 
 import pytest
 
-from spectroview.model import m_tls
+from spectroview.model.system import m_tls
 
 
 class TestCalVerAndChecks:

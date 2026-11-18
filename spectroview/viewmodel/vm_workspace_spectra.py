@@ -14,7 +14,7 @@ import pandas as pd
 from PySide6.QtCore import QObject, Signal, Qt
 from PySide6.QtWidgets import QFileDialog, QApplication
 
-from spectroview.model.m_io import (
+from spectroview.model.io.m_io import (
     load_spectrum_file,
     load_TRPL_data,
     load_wdf_spectrum,
@@ -23,7 +23,7 @@ from spectroview.model.m_io import (
     load_ngs_spectrum,
 )
 from spectroview.model.m_settings import MSettings
-from spectroview.model.workspace_io import WorkspaceIO
+from spectroview.model.io.workspace_io import WorkspaceIO
 from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.model.peak_model import initialize_peak_params
 from spectroview.fit_engine.vbf_thread import VBFthread

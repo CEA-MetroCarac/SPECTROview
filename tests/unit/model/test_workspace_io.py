@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from spectroview.model.workspace_io import WorkspaceIO
+from spectroview.model.io.workspace_io import WorkspaceIO
 
 
 class TestSaveLoadRoundTrip:

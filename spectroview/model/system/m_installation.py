@@ -290,7 +290,7 @@ class InstallationManager:
         pkg_root = (
             Path(package_root)
             if package_root is not None
-            else Path(__file__).resolve().parent.parent
+            else Path(__file__).resolve().parents[2]
         )
         # Skip live importlib.metadata inspection when caller supplied synthetic package_root
         probe_dist = (package_root is None) if check_dist_metadata is None else bool(check_dist_metadata)

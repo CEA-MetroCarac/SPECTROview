@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from spectroview.model.m_installation import InstallType, InstallationManager
+from spectroview.model.system.m_installation import InstallType, InstallationManager
 
 
 class TestUnfrozenDetection:

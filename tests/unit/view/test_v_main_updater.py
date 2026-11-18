@@ -9,8 +9,8 @@ import types
 from typing import TYPE_CHECKING
 from PySide6.QtWidgets import QMessageBox, QVBoxLayout, QWidget
 
-from spectroview.model.m_installation import InstallationManager
-from spectroview.model.m_update_manager import (
+from spectroview.model.system.m_installation import InstallationManager
+from spectroview.model.system.m_update_manager import (
     InstallResult,
     ReleaseAsset,
     ReleaseInfo,
@@ -256,7 +256,7 @@ def test_is_worker_running_handles_deleted_cpp_object(qapp):
 
 def test_repeated_manual_update_check_does_not_crash(qapp, monkeypatch):
     """Calling _manual_update_check multiple times after worker deletion must not raise RuntimeError."""
-    from spectroview.model.m_update_manager import UpdateManager
+    from spectroview.model.system.m_update_manager import UpdateManager
 
     monkeypatch.setattr(
         UpdateManager,
@@ -291,7 +291,7 @@ def test_repeated_manual_update_check_does_not_crash(qapp, monkeypatch):
 def test_manual_update_check_with_deleted_cpp_worker_does_not_crash(qapp, monkeypatch):
     """If _manual_check_worker points to a destroyed C++ object, _manual_update_check cleans it up and succeeds."""
     from PySide6.QtCore import QThread
-    from spectroview.model.m_update_manager import UpdateManager
+    from spectroview.model.system.m_update_manager import UpdateManager
 
     monkeypatch.setattr(
         UpdateManager,

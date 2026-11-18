@@ -132,7 +132,7 @@ def _run_real_check():
     Useful to verify the version comparison logic with your real tags.
     """
     from spectroview import VERSION
-    from spectroview.model.m_update_checker import UpdateCheckerWorker
+    from spectroview.model.system.m_update_checker import UpdateCheckerWorker
 
     print(f"\n[Real check] Current app version : {VERSION}")
     print("[Real check] Querying GitHub API  : https://api.github.com/repos/CEA-MetroCarac/SPECTROview/releases/latest\n")

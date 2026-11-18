@@ -22,7 +22,7 @@ from urllib.request import Request, urlopen
 
 from PySide6.QtCore import QThread, Signal
 
-from spectroview.model.m_tls import (
+from spectroview.model.system.m_tls import (
     InsecureTrustStoreError,
     build_ssl_context,
     get_safe_certifi_cafile,

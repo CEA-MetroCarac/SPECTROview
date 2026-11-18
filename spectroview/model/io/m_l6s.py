@@ -15,7 +15,7 @@ from typing import Any
 
 import numpy as np
 
-from spectroview.model.m_ngs import _decompress_ngc
+from spectroview.model.io.m_ngs import _decompress_ngc
 
 _LABSPEC6_MAGIC = b"LabSpec6\x00"
 _PREFIX_SIZE = 0x14  # 20 bytes: magic(12) + flags(4) + reserved(4)

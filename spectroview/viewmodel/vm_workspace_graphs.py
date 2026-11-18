@@ -16,8 +16,8 @@ from spectroview.model.graph_control import (
     normalize_graph_patch,
 )
 from spectroview.model.m_settings import MSettings
-from spectroview.model.m_io import load_dataframe_file
-from spectroview.model.workspace_io import WorkspaceIO
+from spectroview.model.io.m_io import load_dataframe_file
+from spectroview.model.io.workspace_io import WorkspaceIO
 
 
 class VMWorkspaceGraphs(QObject):

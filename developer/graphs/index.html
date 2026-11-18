@@ -2192,7 +2192,7 @@
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">notify</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>                        <span class="c1"># Floating notification</span>
 </code></pre></div>
 <h3 id="mgraph-the-plot-configuration-model"><strong><code>MGraph</code> — The Plot Configuration Model</strong><a class="headerlink" href="#mgraph-the-plot-configuration-model" title="Permanent link">&para;</a></h3>
-<p><strong>File</strong>: <code>spectroview/model/m_graph.py</code></p>
+<p><strong>File</strong>: <code>spectroview/model/graphs/m_graph.py</code></p>
 <p>A pure dataclass that stores everything needed to recreate a plot. <code>save()</code>/<code>load(data)</code> provide complete serialization; <code>get_display_name()</code> builds the MDI subwindow title. Rather than maintain a second field count or list here (see <code>m_graph.py</code> for the exhaustive, authoritative list), fields group into:</p>
 <table>
 <thead>
@@ -2254,7 +2254,7 @@
 </table>
 <p>Note: style templates, plot recipes, and the working-folder setting are <strong>not</strong> <code>MGraph</code> fields — they're separate systems built around subsets of these fields (see <a href="#style-templates-plot-recipes">Style Templates &amp; Plot Recipes</a>).</p>
 <h3 id="graph_controlpy-shared-graph-statecommand-contract"><strong><code>graph_control.py</code> — Shared Graph State/Command Contract</strong><a class="headerlink" href="#graph_controlpy-shared-graph-statecommand-contract" title="Permanent link">&para;</a></h3>
-<p><strong>File</strong>: <code>spectroview/model/graph_control.py</code></p>
+<p><strong>File</strong>: <code>spectroview/model/graphs/graph_control.py</code></p>
 <p>All GUI, AI, and MCP mutations converge on this Qt-free layer before they touch
 <code>MGraph</code>. <code>GraphPatch</code> is generated from the dataclass fields, so the MCP schema
 automatically exposes every mutable graph capability. Important nested values
@@ -2504,7 +2504,7 @@ geometry, and refresh of an open Customize dialog.</p>
 <h3 id="live-preview-restyle-fast-path"><strong>Live Preview &amp; Restyle Fast Path</strong><a class="headerlink" href="#live-preview-restyle-fast-path" title="Permanent link">&para;</a></h3>
 <p>Every control in every tab restarts a single debounced 400ms <code>QTimer</code> on change. On timeout, each tab's apply method runs with <code>replot=False</code> against the live widget, and <code>graph_commit.snapshot()</code>/<code>diff()</code> (see below) determine exactly which fields changed. If the changed fields are a subset of <code>graph_style.RESTYLE_SAFE_FIELDS</code>, the dialog calls <code>VGraph.restyle()</code> (fast in-place repaint); otherwise it does a full <code>VGraph.plot(df)</code>. This preview never touches the undo stack or <code>vm.update_graph()</code> — it's purely visual until the user clicks <strong>Apply</strong>, which wraps every tab's changes in one <code>vm.begin_undo_batch()</code>/<code>end_undo_batch()</code> pair (one undo step per Apply, regardless of how many tabs were edited). <strong>Cancel</strong> reverts the widget from a snapshot taken when the dialog opened, without ever having touched the ViewModel.</p>
 <h3 id="graph_stylepy-the-styledata-field-partition"><strong><code>graph_style.py</code> — the style/data field partition</strong><a class="headerlink" href="#graph_stylepy-the-styledata-field-partition" title="Permanent link">&para;</a></h3>
-<p><strong>File</strong>: <code>spectroview/model/graph_style.py</code></p>
+<p><strong>File</strong>: <code>spectroview/model/graphs/graph_style.py</code></p>
 <ul>
 <li><strong><code>STYLE_FIELD_NAMES</code></strong> — every <code>MGraph</code> field <em>except</em> identity/data columns, data-coordinate limits, annotations, and window/output geometry (computed by excluding <code>_NON_STYLE_FIELDS</code>). This is "how a graph looks," portable from one graph to another regardless of its data.</li>
 <li><strong><code>RESTYLE_SAFE_FIELDS</code></strong> — a narrower subset of <code>STYLE_FIELD_NAMES</code>: fields safe for <code>VGraph.restyle()</code>'s fast repaint path (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling). Excludes anything that requires artists to be recreated (per-series color/marker/size, colormap, secondary axes, annotations, insets).</li>

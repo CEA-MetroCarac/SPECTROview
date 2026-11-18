@@ -2216,7 +2216,7 @@ adapter; tests supply <code>RecordingContext</code>.</p>
 application) and what would let the same server run out-of-process. Tools never
 mutate the ViewModel; they submit typed commands (<code>agent/commands.py</code>:
 <code>CreatePlot</code>, <code>UpdatePlot</code>, <code>DeletePlots</code>). Plot and update inputs are validated
-before queuing through the shared <code>spectroview.model.graph_control</code> contract,
+before queuing through the shared <code>spectroview.model.graphs.graph_control</code> contract,
 and the Graph workspace applies that same contract again at the mutation
 boundary.</p>
 <p>SPECTROview also has a full external desktop MCP profile. It uses the same

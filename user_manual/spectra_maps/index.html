@@ -835,10 +835,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#35-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces" class="md-nav__link">
+  <a href="#35-interactive-3d-visualization-mode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.5. Interactive Spectral Range Selectors &amp; Live Maps (Spectra &amp; Maps Workspaces)
+        3.5. Interactive 3D Visualization Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6. Interactive Spectral Range Selectors &amp; Live Maps (Spectra &amp; Maps Workspaces)
       
     </span>
   </a>
@@ -1965,7 +1976,11 @@
 </tr>
 <tr>
 <td><img alt="Heatmap" src="../../user_manual_images/Spectra_Maps/heatmap_button.png" /></td>
-<td><strong>Plot Heatmap</strong>: Toggles the 2D intensity heatmap visualization mode for multiple selected spectra. Displays continuous spectral intensity evolution with dedicated Y-axis selection, custom labeling, and resolution controls directly on the toolbar.</td>
+<td><strong>Plot Heatmap</strong>: Positioned on the right side of the toolbar directly to the left of <strong>More Options</strong> and <strong>Copy</strong>, toggles the 2D intensity heatmap visualization mode for multiple selected spectra. Displays continuous spectral intensity evolution with dedicated Y-axis selection, custom labeling, and resolution controls directly on the toolbar.</td>
+</tr>
+<tr>
+<td><img alt="3D View" src="../../user_manual_images/Spectra_Maps/view_3d_button.png" /></td>
+<td><strong>3D View</strong>: Positioned between <strong>Plot Heatmap</strong> and <strong>More Options</strong> on the right side of the toolbar, toggles the interactive 3D visualization mode for selected spectra. Left-click and drag to rotate viewing angles, middle-drag to pan, right-drag or scroll to zoom, and click <strong>Rescale</strong> (<code>Ctrl + R</code>) to reset the camera angle and axis limits.</td>
 </tr>
 <tr>
 <td><img alt="More View Options" src="../../user_manual_images/Spectra_Maps/view_options.png" /></td>
@@ -2018,7 +2033,17 @@
 <li><strong>Y-Axis Interpolation Points (<code>Pts:</code>)</strong>: Specifies the number of interpolated vertical slices (default <code>300</code> pts) using smooth interpolation. Setting this value to <code>0</code> disables interpolation, displaying raw discrete rows.</li>
 <li><strong>Intensity Colormap</strong>: Respects the active color palette chosen under <strong>More Options</strong> (e.g. <code>jet</code>, <code>viridis</code>, <code>plasma</code>).</li>
 </ul>
-<h4 id="35-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces"><strong>3.5. Interactive Spectral Range Selectors &amp; Live Maps (Spectra &amp; Maps Workspaces)</strong><a class="headerlink" href="#35-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces" title="Permanent link">&para;</a></h4>
+<h4 id="35-interactive-3d-visualization-mode"><strong>3.5. Interactive 3D Visualization Mode</strong><a class="headerlink" href="#35-interactive-3d-visualization-mode" title="Permanent link">&para;</a></h4>
+<p>The <strong>3D View</strong> button (<img alt="3D View" src="../../user_manual_images/Spectra_Maps/view_3d_button.png" />), located on the right side of the toolbar between <strong>Plot Heatmap</strong> and <strong>More Options</strong>, displays your selected spectra in an interactive 3D space (spectral axis on <strong>X</strong>, series index or filename parameter on <strong>Y</strong>, and intensity on <strong>Z</strong>):</p>
+<ul>
+<li><strong>Interactive Camera Navigation</strong>:</li>
+<li><strong>Rotate</strong>: Left-click and drag anywhere on the 3D plot to freely rotate elevation and azimuth angles.</li>
+<li><strong>Pan / Zoom</strong>: Middle-click and drag to pan; right-click and drag (or use the mouse scroll wheel) to zoom along the intensity axis.</li>
+<li><strong>Reset View</strong>: Click <strong>Rescale</strong> (<code>Ctrl + R</code>) to restore the default camera angle and fit all data bounds.</li>
+<li><strong>Shared Series Axis Controls</strong>: Choose <code>Index</code> or any numeric parameter parsed from filenames (e.g., <code>25°C</code>, <code>100°C</code>) from the toolbar dropdown and optionally set a custom Y-axis label.</li>
+<li><strong>Compatible Options</strong>: Works seamlessly with <strong>Normalization</strong>, <strong>Show Bestfit</strong>, <strong>Legend / Colorbar</strong> modes, <strong>Line / Dot</strong> styles, <strong>Raw</strong> overlay, <strong>Grid</strong>, <strong>Linear / Log</strong> Z-scale, <strong>Light / Dark</strong> plot themes, and <strong>Copy</strong> to clipboard. Switching between Standard, <strong>Plot Heatmap</strong>, and <strong>3D View</strong> automatically restores the appropriate toolbar tools.</li>
+</ul>
+<h4 id="36-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces"><strong>3.6. Interactive Spectral Range Selectors &amp; Live Maps (Spectra &amp; Maps Workspaces)</strong><a class="headerlink" href="#36-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces" title="Permanent link">&para;</a></h4>
 <p>In both the <strong>Spectra</strong> and <strong>Maps</strong> workspaces, you can interactively bracket up to three spectral features in the <code>SpectraViewer</code> and inspect their variation in real time within the dedicated <strong>Live Maps</strong> tab:</p>
 <div align="center">
   <img src="../../user_manual_images/Spectra_Maps/rgb_spectra_bracketing.png" alt="RGB Spectral Range Selectors" width="800"><br>
@@ -2047,7 +2072,7 @@
 <li><strong>Blue</strong> (<code>B</code>)</li>
 <li><strong>Green</strong> (<code>G</code>)</li>
 </ul>
-<p>Each button activates a corresponding pair of draggable vertical markers (brackets and shaded interval) directly on the spectrum plot:</p>
+<p>Each button activates a corresponding pair of draggable vertical markers (brackets and shaded interval) directly on the spectrum plot and automatically switches the bottom tab bar to the <strong>Live Maps</strong> tab:</p>
 <ul>
 <li><strong>Interactive Dragging</strong>: Click and drag either vertical boundary line to adjust the minimum or maximum wavenumber. Click and drag the shaded middle area to shift the entire interval without altering its width.</li>
 <li><strong>Multiple Simultaneous Ranges</strong>: Any combination of the three selectors can be activated at once. Each maintains its own color, interval, and visibility independently.</li>

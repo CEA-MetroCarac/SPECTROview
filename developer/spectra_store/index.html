@@ -1927,7 +1927,7 @@
 
 <h1 id="data-architecture-spectrastore"><strong>Data Architecture: SpectraStore</strong><a class="headerlink" href="#data-architecture-spectrastore" title="Permanent link">&para;</a></h1>
 <p><code>SpectraStore</code> is the <strong>single source of truth</strong> for all numerical spectral data in SPECTROview. Both the <a href="../spectra/">Spectra</a> and <a href="../maps/">Maps</a> workspaces read from and write to the same store. Understanding this module is the most important step for any new contributor.</p>
-<p><strong>Source file</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/model/spectra_store.py"><code>spectra_store.py</code></a></p>
+<p><strong>Source file</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/model/spectra/spectra_store.py"><code>spectra_store.py</code></a></p>
 <hr />
 <h2 id="design-philosophy">Design Philosophy<a class="headerlink" href="#design-philosophy" title="Permanent link">&para;</a></h2>
 <p>Before <code>SpectraStore</code> (version before 26.24.1), SPECTROview stored each spectrum as an independent Python object. This created performance bottlenecks when working with large hyperspectral maps (thousands of spectra). The tensor-centric redesign stores all spectra for a logical "map" as contiguous NumPy arrays, enabling:</p>

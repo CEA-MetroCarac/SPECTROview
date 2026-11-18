@@ -2064,7 +2064,7 @@
 <h2 id="how-the-gui-transforms-io-output-into-spectrastore">How the GUI Transforms I/O Output into SpectraStore<a class="headerlink" href="#how-the-gui-transforms-io-output-into-spectrastore" title="Permanent link">&para;</a></h2>
 <p>The raw <code>m_io</code> output is intentionally a simple Python structure (dict / DataFrame). The conversion into the tensor-centric <code>SpectraStore</code> is handled by the ViewModel layer.</p>
 <h3 id="spectra-workspace-vmworkspacespectraload_files">Spectra Workspace: <code>VMWorkspaceSpectra.load_files()</code><a class="headerlink" href="#spectra-workspace-vmworkspacespectraload_files" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># In vm_workspace_spectra.py — simplified for clarity</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># In viewmodel/spectra/vm_workspace_spectra.py — simplified for clarity</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">data_dict</span> <span class="o">=</span> <span class="n">load_wdf_spectrum</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>   <span class="c1"># -&gt; {"type": "spectra", "items": [...]}</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
@@ -2090,7 +2090,7 @@
 <strong>Each spectrum is its own <code>MapData</code> block</strong> (N=1). This is the same structure used for map spectra (N=thousands). The unified model is what lets <code>VMWorkspaceMaps</code> extend <code>VMWorkspaceSpectra</code> without duplication.</p>
 </blockquote>
 <h3 id="maps-workspace-vmworkspacemapsload_map_files-extract_map_arrays">Maps Workspace: <code>VMWorkspaceMaps.load_map_files()</code> &amp; <code>extract_map_arrays()</code><a class="headerlink" href="#maps-workspace-vmworkspacemapsload_map_files-extract_map_arrays" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># In vm_workspace_maps.py (and spectroview/api/workspace.py)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># In viewmodel/maps/vm_workspace_maps.py (and spectroview/api/workspace.py)</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">df</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">load_wdf_map</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>                    <span class="c1"># -&gt; (DataFrame, dict)</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">x0</span><span class="p">,</span> <span class="n">Y0</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">fnames</span> <span class="o">=</span> <span class="n">extract_map_arrays</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span> <span class="n">df</span><span class="p">)</span>
@@ -2109,7 +2109,7 @@
 </code></pre></div>
 <h3 id="graphs-workspace-direct-dataframe-ingestion">Graphs Workspace: Direct DataFrame Ingestion<a class="headerlink" href="#graphs-workspace-direct-dataframe-ingestion" title="Permanent link">&para;</a></h3>
 <p>Datasheets bypass <code>SpectraStore</code> entirely — they go directly from <code>m_io</code> to the Graphs workspace ViewModel:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># In vm_workspace_graphs.py</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># In viewmodel/graphs/vm_workspace_graphs.py</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">dataframes</span> <span class="o">=</span> <span class="n">load_dataframe_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>   <span class="c1"># -&gt; dict[str, DataFrame]</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>

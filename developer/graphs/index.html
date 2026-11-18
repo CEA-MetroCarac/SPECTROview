@@ -1229,6 +1229,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#vworkspacegraphs-the-view-orchestrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VWorkspaceGraphs — The View Orchestrator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#vgraph-the-rendering-widget" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2143,7 +2154,7 @@
 <hr />
 <h2 id="key-classes"><strong>Key Classes</strong><a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
 <h3 id="vmworkspacegraphs-the-viewmodel"><strong><code>VMWorkspaceGraphs</code> — The ViewModel</strong><a class="headerlink" href="#vmworkspacegraphs-the-viewmodel" title="Permanent link">&para;</a></h3>
-<p><strong>File</strong>: <code>spectroview/viewmodel/vm_workspace_graphs.py</code></p>
+<p><strong>File</strong>: <code>spectroview/viewmodel/graphs/vm_workspace_graphs.py</code> (with undo/redo in <code>spectroview/viewmodel/graphs/graph_undo.py</code>)</p>
 <p>Manages DataFrames, graph models, and the workspace's undo/redo history. Unlike the <code>Spectra</code>/<code>Maps</code> ViewModels, this ViewModel is relatively lightweight — the heavy rendering logic lives in the <code>VGraph</code> widget.</p>
 <table>
 <thead>
@@ -2270,8 +2281,11 @@ nullable properties. Changes to data/series identity reset derived
 <p>This contract is intentionally renderer-independent. The View still owns
 Matplotlib figure/canvas creation, filtered-data lookup, re-rendering, window
 geometry, and refresh of an open Customize dialog.</p>
+<h3 id="vworkspacegraphs-the-view-orchestrator"><strong><code>VWorkspaceGraphs</code> — The View Orchestrator</strong><a class="headerlink" href="#vworkspacegraphs-the-view-orchestrator" title="Permanent link">&para;</a></h3>
+<p><strong>Package</strong>: <code>spectroview/view/workspaces/graphs/</code> (<code>v_workspace_graphs.py</code>, <code>v_mdi_subwindow.py</code>, <code>v_graphs_ui.py</code>, <code>v_graphs_dataframes.py</code>, <code>v_graphs_mdi.py</code>, <code>v_graphs_actions.py</code>)</p>
+<p><code>VWorkspaceGraphs</code> composes the Graphs workspace UI (<code>GraphsUIMixin</code>), DataFrame selection/filtering panel (<code>GraphsDataFramesMixin</code>), MDI window layout/tile/cascade &amp; active-toolbar sync (<code>GraphsMdiMixin</code>), and plot create/update/export/undo/template actions (<code>GraphsActionsMixin</code>), wrapping each <code>VGraph</code> widget inside <code>MdiSubWindow</code>.</p>
 <h3 id="vgraph-the-rendering-widget"><strong><code>VGraph</code> — The Rendering Widget</strong><a class="headerlink" href="#vgraph-the-rendering-widget" title="Permanent link">&para;</a></h3>
-<p><strong>File</strong>: <code>spectroview/view/components/v_graph.py</code></p>
+<p><strong>Package</strong>: <code>spectroview/view/components/graphs/</code> (<code>v_graph.py</code> with <code>v_graph_canvas.py</code>, <code>v_graph_breaks.py</code>, <code>v_graph_axes.py</code>, <code>v_graph_annotations.py</code>)</p>
 <p>Each plot in the MDI area is a <code>VGraph</code> instance. It holds a Matplotlib <code>Figure</code> + <code>FigureCanvas</code> and acts as the UI wrapper. It manages interactions, context menus, and toolbar actions (Style menu, Export, Replicate), but delegates the actual drawing algorithms to <code>PlotRenderer</code>. <code>create_plot_widget()</code> still builds each <code>VGraph</code>'s own matplotlib nav toolbar + action-button row (<code>self.toolbar_container</code>), but never adds it to the graph's own layout — see <a href="#mdi-area-management">the bottom toolbar</a> for where it's actually shown.</p>
 <p><strong>Interactive resize/pan performance.</strong> Every figure uses <code>layout="compressed"</code>, and each Agg redraw re-runs constrained layout, which costs hundreds of ms. Three things keep interaction responsive:</p>
 <ul>
@@ -2282,11 +2296,11 @@ geometry, and refresh of an open Customize dialog.</p>
 <p>Two rendering paths:</p>
 <ul>
 <li><strong><code>plot(df)</code></strong> — full replot: clears and rebuilds the Axes from scratch. Required whenever artists themselves change (series data, colors/markers per point, colormap, secondary/twin axes, annotations, insets) or a broken axis is active/toggled.</li>
-<li><strong><code>restyle()</code></strong> — fast path that repaints an already-rendered Axes in place (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling) without touching plotted data. Returns <code>False</code> (forcing a full replot instead) whenever a broken axis is active. See <a href="#live-preview-restyle-fast-path">Live Preview &amp; Restyle Fast Path</a> for how the Customize dialog decides which path to use.</li>
+<li><strong><code>restyle()</code></strong> — fast path that repaints an already-rendered Axes in place (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling) without touching plotted data. Before setting an axis to <code>"log"</code> scale, <code>GraphAxesStyleMixin</code> (<code>v_graph_axes.py</code>) sanitizes stale non-positive linear auto-limits via <code>_sanitize_log_axis_limits()</code> so Matplotlib does not emit non-positive log-limit warnings. Returns <code>False</code> (forcing a full replot instead) whenever a broken axis is active. See <a href="#live-preview-restyle-fast-path">Live Preview &amp; Restyle Fast Path</a> for how the Customize dialog decides which path to use.</li>
 </ul>
 <p><code>_set_figure_style()</code> re-applies <code>axes.facecolor</code>/<code>figure.facecolor</code>/<code>axes.labelcolor</code>/<code>text.color</code>/<code>xtick.color</code>/<code>ytick.color</code>/<code>axes.edgecolor</code> from <code>plt.rcParams</code> on every render — necessary because <code>ax.clear()</code> does not retroactively repaint an Axes built under a different Matplotlib style/theme context, which previously left tick/label/spine colors stuck black after switching to a dark theme.</p>
 <h3 id="plotrenderer-the-plotting-engine"><strong><code>PlotRenderer</code> — The Plotting Engine</strong><a class="headerlink" href="#plotrenderer-the-plotting-engine" title="Permanent link">&para;</a></h3>
-<p><strong>File</strong>: <code>spectroview/view/components/v_plot_renderer.py</code></p>
+<p><strong>Files</strong>: <code>spectroview/view/components/graphs/v_plot_renderer.py</code> (composed with <code>SpatialPlotMixin</code> and <code>WaferPlot</code> in <code>v_plot_spatial.py</code>)</p>
 <p>Separated from <code>VGraph</code> for maintainability, this class encapsulates the pure Matplotlib rendering logic for all plot styles (e.g., <code>_plot_scatter</code>, <code>_plot_histogram</code>, and the <code>WaferPlot</code> class). It receives a reference to the <code>VGraph</code> instance (<code>self.vg</code>) to access configuration state (<code>self.vg.x</code>, <code>self.vg.plot_style</code>, etc.) and draws directly onto the Matplotlib <code>Axes</code>.</p>
 <h4 id="colormap-normalization">Colormap Normalization<a class="headerlink" href="#colormap-normalization" title="Permanent link">&para;</a></h4>
 <p><code>_build_color_norm(vmin, vmax, norm_kind, center)</code> builds the color-scale mapping for wafer/2Dmap heatmaps from <code>MGraph.colormap_norm</code> (<code>"linear"</code>/<code>"log"</code>/<code>"centered"</code>) and <code>MGraph.colormap_center</code>, editable from the <strong>Axes &amp; Limits</strong> tab as the <strong>Z axis</strong> scale (only shown for <code>wafer</code>/<code>2Dmap</code>). <code>"log"</code> uses <code>LogNorm</code>, <code>"centered"</code> uses <code>CenteredNorm</code> (useful for diverging data like stress/strain centered at 0), and both degrade gracefully back to plain linear <code>vmin</code>/<code>vmax</code> if the requested norm is invalid for the actual data range (e.g. log norm on non-positive data).</p>
@@ -2512,7 +2526,7 @@ geometry, and refresh of an open Customize dialog.</p>
 <li><strong><code>can_restyle_without_replot(changed_fields)</code></strong> — <code>True</code> iff every changed field is in <code>RESTYLE_SAFE_FIELDS</code>.</li>
 </ul>
 <h3 id="graph_commitpy-change-tracking"><strong><code>graph_commit.py</code> — change tracking</strong><a class="headerlink" href="#graph_commitpy-change-tracking" title="Permanent link">&para;</a></h3>
-<p><strong>File</strong>: <code>spectroview/view/components/graph_commit.py</code></p>
+<p><strong>File</strong>: <code>spectroview/view/components/graphs/graph_commit.py</code></p>
 <p><code>snapshot(gw)</code> deep-copies every <code>MGraph</code> field (except <code>graph_id</code>) off a live <code>VGraph</code> widget; <code>diff(gw, before)</code> returns a patch dict of only the fields that differ from a prior snapshot. Used both by the Customize dialog's live-preview tick (deciding restyle vs. replot) and by toolbar-level edits (e.g. syncing a dragged legend position / resized subwindow into the model before <code>save_workspace()</code>) — in both cases the resulting patch flows through <code>properties_changed.emit()</code> → <code>vm.update_graph()</code>, which is what actually records the undo step.</p>
 <h3 id="undoredo"><strong>Undo/Redo</strong><a class="headerlink" href="#undoredo" title="Permanent link">&para;</a></h3>
 <p>The undo/redo stack lives in <code>VMWorkspaceGraphs</code>, not the View: <code>_undo_stack</code>/<code>_redo_stack</code> hold whole-workspace snapshots (<code>{graph_id: MGraph.save()-dict}</code>), capped at 50 entries. Every <code>create_graph()</code>/<code>update_graph()</code>/<code>delete_graph()</code> call records one undo point unless it's inside a <code>begin_undo_batch()</code>/<code>end_undo_batch()</code> pair, in which case the whole batch collapses into a single step — used by the Customize dialog's Apply button (one step for all edited tabs) and by Plot Recipe application (one step for the whole recipe, not one per plot). <code>undo_state_changed</code> keeps the toolbar's Undo/Redo buttons in sync via <code>can_undo</code>/<code>can_redo</code>.</p>
@@ -2620,7 +2634,7 @@ geometry, and refresh of an open Customize dialog.</p>
 </tr>
 </tbody>
 </table>
-<p>All stored as typed dicts in <code>MGraph.annotations</code>. Every type supports <strong>drag interaction</strong> — clicking and dragging updates position in real time and emits <code>annotation_position_changed</code> — implemented by <code>VGraph._on_annotation_click()</code>/<code>_on_annotation_drag()</code>/<code>_on_annotation_release()</code> in <code>v_graph.py</code>. Hit-testing is done manually (<code>self.ax.findobj()</code> + <code>artist.contains(event)</code>) rather than via matplotlib's <code>pick_event</code>: <code>Figure.pick()</code> only delivers a pick event to an artist when <code>event.inaxes</code> equals that artist's own Axes, which silently never happens for an annotation on the primary Axes whenever a secondary Y-axis is also present (it fully overlaps the primary Axes and has higher z-order, so <code>event.inaxes</code> resolves to it instead) — this used to make every annotation on a graph with <code>y2</code>/<code>y3</code> configured completely undraggable. <code>VGraph._ax_data_coords(event)</code> resolves the drag position from the event's own pixel coordinates through <code>self.ax.transData</code> directly, sidestepping the same <code>event.inaxes</code> ambiguity for the position itself.</p>
+<p>All stored as typed dicts in <code>MGraph.annotations</code>. Every type supports <strong>drag interaction</strong> — clicking and dragging updates position in real time and emits <code>annotation_position_changed</code> — implemented by <code>GraphAnnotationMixin._on_annotation_click()</code>/<code>_on_annotation_drag()</code>/<code>_on_annotation_release()</code> in <code>graphs/v_graph_annotations.py</code>. Hit-testing is done manually (<code>self.ax.findobj()</code> + <code>artist.contains(event)</code>) rather than via matplotlib's <code>pick_event</code>: <code>Figure.pick()</code> only delivers a pick event to an artist when <code>event.inaxes</code> equals that artist's own Axes, which silently never happens for an annotation on the primary Axes whenever a secondary Y-axis is also present (it fully overlaps the primary Axes and has higher z-order, so <code>event.inaxes</code> resolves to it instead) — this used to make every annotation on a graph with <code>y2</code>/<code>y3</code> configured completely undraggable. <code>VGraph._ax_data_coords(event)</code> resolves the drag position from the event's own pixel coordinates through <code>self.ax.transData</code> directly, sidestepping the same <code>event.inaxes</code> ambiguity for the position itself.</p>
 <h3 id="secondary-inset-axes-tabsecondaryinset"><strong>Secondary &amp; Inset Axes (<code>TabSecondaryInset</code>)</strong><a class="headerlink" href="#secondary-inset-axes-tabsecondaryinset" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Secondary Twin Axes</strong>: one row per Y2/Y3/X2 axis (each disabled until that axis has a column assigned), exposing Label, Min/Max, Log toggle, Color, and Marker — see <a href="#multi-axis-support">Multi-Axis Support</a>.</li>
@@ -2637,12 +2651,12 @@ geometry, and refresh of an open Customize dialog.</p>
 <p>Each <code>VGraph</code>'s toolbar <strong>Style menu</strong> ties these together: <strong>Save Style…</strong> / <strong>Apply Style…</strong> (open the respective dialog), <strong>Copy Style</strong> / <strong>Paste Style</strong> (in-memory, <code>Ctrl+C</code>/<code>Ctrl+V</code>), <strong>Reset to Default</strong> (always the hardcoded factory <code>graph_style.default_style()</code>), and <strong>Set as Default Style</strong> (saves the current graph's style, via <code>MSettings.set_default_graph_style()</code>, as the baseline new graphs start from — see <a href="#data-flow-creating-a-plot">Data Flow: Creating a Plot</a>). These are two independent, non-overlapping concepts: <strong>Reset to Default</strong> always restores the factory style regardless of what's been set as default; <strong>Set as Default Style</strong> only changes what <em>newly created</em> plots start with, is persisted across restarts, and never affects existing graphs or Reset-to-Default's behavior.</p>
 <hr />
 <h2 id="export-multi-panel-composer"><strong>Export &amp; Multi-Panel Composer</strong><a class="headerlink" href="#export-multi-panel-composer" title="Permanent link">&para;</a></h2>
-<p><strong>File</strong>: <code>spectroview/view/components/v_export_dialog.py</code></p>
+<p><strong>File</strong>: <code>spectroview/view/components/graphs/v_export_dialog.py</code></p>
 <ul>
 <li><strong><code>VExportDialog(graph_widget, parent=None)</code></strong> — exports a single graph to PNG/TIFF/SVG/PDF/EPS with format/DPI/transparency/export-time-theme-override controls, plus a physical-size section (journal presets, mm/inch toggle, blank = current on-screen size) that persists back onto the graph's <code>export_width_mm</code>/<code>export_height_mm</code> fields.</li>
 <li><strong><code>VBatchExportDialog(graph_widgets: dict, parent=None)</code></strong> — exports every currently-open graph to a chosen folder in one pass, each at its own already-persisted physical size, reporting per-graph failures in a summary dialog.</li>
 </ul>
-<p><strong>File</strong>: <code>spectroview/view/components/v_multipanel_dialog.py</code></p>
+<p><strong>File</strong>: <code>spectroview/view/components/graphs/v_multipanel_dialog.py</code></p>
 <ul>
 <li><strong><code>VMultiPanelDialog(graph_widgets: dict, parent=None)</code></strong> — composes several checked/reordered open graphs into one throwaway <code>matplotlib.figure.Figure</code> grid (auto-suggested rows/cols, constrained layout, shared-axis-label collapsing on interior panels, lettered/numbered panel labels). Each panel is rendered by temporarily repointing the source <code>VGraph</code>'s <code>.ax</code>/<code>.figure</code> onto the composed figure's subplot and calling its normal render path, then restoring the source widget so the live workspace is never mutated. Graphs with an active broken axis render via a simplified single-panel path in the composed figure (a documented scope limit).</li>
 </ul>

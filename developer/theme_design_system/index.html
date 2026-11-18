@@ -2010,7 +2010,7 @@
 <li>Ensure all <code>rgba(...)</code> declarations use integer alpha values (<code>0..255</code>).</li>
 <li><strong>Vector SVG Infrastructure (<code>icons_svg.py</code> &amp; <code>icons.py</code>)</strong>:</li>
 <li>Introduce <code>icons_svg.py</code> hosting <code>_SvgIconEngine</code>, <code>_SVG_TEMPLATES</code>, <code>svg_icon()</code>, and <code>svg_pixmap()</code>.</li>
-<li>Wrap legacy calls (<code>get_tinted_icon(path, color)</code>) in <code>spectroview/viewmodel/utils.py</code> and workspace view classes so existing code works transparently without breakage.</li>
+<li>Wrap legacy calls (<code>get_tinted_icon(path, color)</code>) in <code>spectroview/viewmodel/common/ui_utils.py</code> (re-exported in <code>viewmodel/utils.py</code>) and workspace view classes so existing code works transparently without breakage.</li>
 <li><strong>Native Windows DWM Synchronization (<code>winapi/</code> or <code>ThemeManager</code>)</strong>:</li>
 <li>Wire native caption/border theming for top-level windows on Windows 11.</li>
 </ol>

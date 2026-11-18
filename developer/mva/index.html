@@ -1749,7 +1749,7 @@
 <p>The MVA feature follows the MVVM (Model-View-ViewModel) architectural pattern:</p>
 <ul>
 <li><strong>Model</strong> (<code>spectroview/model/analysis/m_mva.py</code>): Contains the core mathematics for MVA techniques, specifically Principal Component Analysis (PCA) and Non-negative Matrix Factorization (NMF). Uses standard numerical libraries (<code>numpy</code>, <code>scipy</code>) without requiring extra dependencies like <code>scikit-learn</code>.</li>
-<li><strong>ViewModel</strong> (<code>spectroview/viewmodel/vm_mva.py</code>): Orchestrates the data flow. It extracts preprocessed data from active spectra, invokes the Model to perform calculations, caches results, and computes per-spectrum reconstruction errors.</li>
+<li><strong>ViewModel</strong> (<code>spectroview/viewmodel/analysis/vm_mva.py</code>): Orchestrates the data flow. It extracts preprocessed data from active spectra, invokes the Model to perform calculations, caches results, and computes per-spectrum reconstruction errors.</li>
 <li><strong>View</strong> (<code>spectroview/view/components/lower_tabs/</code>: <code>v_mva.py</code>, <code>v_mva_plots.py</code>): Provides the user interface with a tabbed plot panel (Summary, Scree Plot, Loadings, Heatmap, Scores, Residuals), interactive parameter controls, and <code>matplotlib</code> navigation toolbars for each plot.</li>
 </ul>
 <h2 id="algorithm-implementation"><strong>Algorithm Implementation</strong><a class="headerlink" href="#algorithm-implementation" title="Permanent link">&para;</a></h2>

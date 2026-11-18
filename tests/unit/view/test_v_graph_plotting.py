@@ -1429,7 +1429,7 @@ class TestModelSchemaSync:
     drifted (minor_ticks_* were missing on bare widgets)."""
 
     def test_bare_vgraph_carries_every_mgraph_field_with_model_defaults(self, qapp):
-        from spectroview.model.m_graph import MGraph
+        from spectroview.model.graphs.m_graph import MGraph
         model_defaults = {k: v for k, v in vars(MGraph()).items() if k != 'graph_id'}
         vg = VGraph(graph_id=1)
 

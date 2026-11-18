@@ -2,7 +2,7 @@
 
 `SpectraStore` is the **single source of truth** for all numerical spectral data in SPECTROview. Both the [Spectra](spectra.md) and [Maps](maps.md) workspaces read from and write to the same store. Understanding this module is the most important step for any new contributor.
 
-**Source file**: [`spectra_store.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/model/spectra_store.py)
+**Source file**: [`spectra_store.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/model/spectra/spectra_store.py)
 
 ---
 

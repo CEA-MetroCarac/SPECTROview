@@ -23,8 +23,8 @@ import numpy as np
 from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal, QTimer
 
 from spectroview.model.m_settings import MSettings
-from spectroview.model.spectra_store import MapData
-from spectroview.model.spectral_parameters import (
+from spectroview.model.spectra.spectra_store import MapData
+from spectroview.model.spectra.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
     PARAM_RB_RATIO,
     SELECTOR_RED,

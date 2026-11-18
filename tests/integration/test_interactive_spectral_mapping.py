@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
-from spectroview.model.spectra_store import MapData
-from spectroview.model.spectral_parameters import (
+from spectroview.model.spectra.spectra_store import MapData
+from spectroview.model.spectra.spectral_parameters import (
     SELECTOR_RED,
     PARAM_PEAK_POSITION,
 )
@@ -194,7 +194,7 @@ def _make_line_scan(name="line_scan", n=12):
 
 def test_maps_workspace_live_maps_adapt_to_map_dimensionality_and_rb_ratio(qapp, test_map_data):
     """2D map → heatmaps, 1D profile → line plots, switching without refresh, plus R/B ratio in Green."""
-    from spectroview.model.spectral_parameters import SELECTOR_BLUE, SELECTOR_GREEN, PARAM_RB_RATIO
+    from spectroview.model.spectra.spectral_parameters import SELECTOR_BLUE, SELECTOR_GREEN, PARAM_RB_RATIO
 
     ws = VWorkspaceMaps()
     ws.show()
@@ -263,14 +263,14 @@ def test_maps_workspace_live_maps_adapt_to_map_dimensionality_and_rb_ratio(qapp,
     assert len(viewer.range_manager._artists[SELECTOR_GREEN]) == 0
 
     # 6. Switching Green back to a standard parameter restores the Green bracket
-    from spectroview.model.spectral_parameters import PARAM_INTEGRATED_INTENSITY
+    from spectroview.model.spectra.spectral_parameters import PARAM_INTEGRATED_INTENSITY
     panels[SELECTOR_GREEN].set_selected_parameter(PARAM_INTEGRATED_INTENSITY)
     assert len(viewer.range_manager._artists[SELECTOR_GREEN]) == 7
 
 
 def test_spectra_workspace_green_bracket_hidden_on_rb_ratio(qapp):
     """In Spectra workspace, activating R/G/B and picking R/B ratio hides only the Green bracket."""
-    from spectroview.model.spectral_parameters import (
+    from spectroview.model.spectra.spectral_parameters import (
         PARAM_INTEGRATED_INTENSITY,
         PARAM_RB_RATIO,
         SELECTOR_BLUE,
@@ -427,7 +427,7 @@ def test_maps_workspace_interactive_live_maps_selection_updates_spectra_viewer(q
     """Clicking, Ctrl+Clicking, and dragging in Live Maps updates VSpectraViewer and VMapViewer cleanly."""
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication
-    from spectroview.model.spectral_parameters import SELECTOR_BLUE
+    from spectroview.model.spectra.spectral_parameters import SELECTOR_BLUE
 
     monkeypatch.setattr(QApplication, "keyboardModifiers", staticmethod(lambda: Qt.NoModifier))
 
@@ -585,7 +585,7 @@ def test_spectra_workspace_rgb_toggle_switches_to_live_maps_and_shows_bracket(qa
 
 def test_maps_workspace_rgb_toggle_switches_to_live_maps_and_renders(qapp, test_map_data):
     """In Maps workspace, activating R/B/G from another tab switches to Live Maps and computes immediately."""
-    from spectroview.model.spectral_parameters import SELECTOR_BLUE, SELECTOR_GREEN
+    from spectroview.model.spectra.spectral_parameters import SELECTOR_BLUE, SELECTOR_GREEN
 
     ws = VWorkspaceMaps()
     ws.show()

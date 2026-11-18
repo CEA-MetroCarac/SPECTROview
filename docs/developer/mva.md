@@ -6,7 +6,7 @@ This document provides a technical overview of the Multivariate Analysis (MVA) f
 
 The MVA feature follows the MVVM (Model-View-ViewModel) architectural pattern:
 
-- **Model** (`spectroview/model/m_mva.py`): Contains the core mathematics for MVA techniques, specifically Principal Component Analysis (PCA) and Non-negative Matrix Factorization (NMF). Uses standard numerical libraries (`numpy`, `scipy`) without requiring extra dependencies like `scikit-learn`.
+- **Model** (`spectroview/model/analysis/m_mva.py`): Contains the core mathematics for MVA techniques, specifically Principal Component Analysis (PCA) and Non-negative Matrix Factorization (NMF). Uses standard numerical libraries (`numpy`, `scipy`) without requiring extra dependencies like `scikit-learn`.
 - **ViewModel** (`spectroview/viewmodel/vm_mva.py`): Orchestrates the data flow. It extracts preprocessed data from active spectra, invokes the Model to perform calculations, caches results, and computes per-spectrum reconstruction errors.
 - **View** (`spectroview/view/components/lower_tabs/`: `v_mva.py`, `v_mva_plots.py`): Provides the user interface with a tabbed plot panel (Summary, Scree Plot, Loadings, Heatmap, Scores, Residuals), interactive parameter controls, and `matplotlib` navigation toolbars for each plot.
 

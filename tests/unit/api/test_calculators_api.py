@@ -1,5 +1,5 @@
 """Tests for spectroview.api.calculators. This module is the only public
-surface over spectroview.model.m_quick_calculators, so these tests carry
+surface over spectroview.model.analysis.m_quick_calculators, so these tests carry
 the real math assertions (no separate model-layer test file exists)."""
 import math
 

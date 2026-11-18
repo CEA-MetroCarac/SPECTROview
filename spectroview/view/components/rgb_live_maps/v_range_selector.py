@@ -18,7 +18,7 @@ from PySide6.QtCore import QObject, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QToolButton, QVBoxLayout, QWidget
 
-from spectroview.model.spectral_parameters import (
+from spectroview.model.spectra.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
     PARAM_RB_RATIO,
     SELECTOR_BLUE,

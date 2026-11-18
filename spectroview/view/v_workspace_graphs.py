@@ -14,10 +14,10 @@ from PySide6.QtGui import QIcon, QDesktopServices, QBrush, QFont, QShortcut, QKe
 from spectroview import PLOT_STYLES, AXIS_LABELS
 from spectroview.view.theme import Icons, current_tokens
 from spectroview.model.m_settings import MSettings
-from spectroview.model.m_plot_recipe_store import MPlotRecipeStore
-from spectroview.model.m_style_template_store import MStyleTemplateStore
-from spectroview.model.graph_style import extract_style, apply_style_dict, default_style
-from spectroview.model.graph_control import GraphValidationError, normalize_graph_patch
+from spectroview.model.graphs.m_plot_recipe_store import MPlotRecipeStore
+from spectroview.model.graphs.m_style_template_store import MStyleTemplateStore
+from spectroview.model.graphs.graph_style import extract_style, apply_style_dict, default_style
+from spectroview.model.graphs.graph_control import GraphValidationError, normalize_graph_patch
 from spectroview.view.components.v_data_filter import VDataFilter
 from spectroview.view.components.v_plot_recipe_dialog import VPlotRecipeDialog
 from spectroview.view.components.v_style_template_dialog import VStyleTemplateDialog

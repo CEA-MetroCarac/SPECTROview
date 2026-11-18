@@ -1,10 +1,10 @@
-"""Unit tests for spectroview.model.spectral_parameters."""
+"""Unit tests for spectroview.model.spectra.spectral_parameters."""
 
 import numpy as np
 import pytest
 
-from spectroview.model.spectra_store import MapData
-from spectroview.model.spectral_parameters import (
+from spectroview.model.spectra.spectra_store import MapData
+from spectroview.model.spectra.spectral_parameters import (
     compute_spectral_parameter,
     compute_series_spectral_parameter,
     compute_map_grid,
@@ -269,7 +269,7 @@ def test_compute_series_spectral_parameter_homogeneous_and_heterogeneous(synthet
 
 
 def test_compute_spectral_parameter_active_mask_and_descending_x():
-    from spectroview.model.spectral_parameters import (
+    from spectroview.model.spectra.spectral_parameters import (
         compute_spectral_parameter,
         PARAM_INTEGRATED_INTENSITY,
     )
@@ -301,7 +301,7 @@ def test_compute_spectral_parameter_active_mask_and_descending_x():
 
 
 def test_map_gridder_regular_scattered_and_qhuii_fallback():
-    from spectroview.model.spectral_parameters import build_map_gridder, compute_map_grid
+    from spectroview.model.spectra.spectral_parameters import build_map_gridder, compute_map_grid
     from scipy.interpolate import griddata
 
     # 1. Regular Cartesian grid fast path + active_mask masking

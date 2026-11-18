@@ -3,7 +3,7 @@
 
 import pytest
 
-from spectroview.model.m_graph import MGraph
+from spectroview.model.graphs.m_graph import MGraph
 from spectroview.view.components.customize_graph.customize_graph_dialog import (
     CustomizeGraphDialog,
 )

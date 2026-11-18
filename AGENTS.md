@@ -12,11 +12,11 @@ Follow these guidelines across all development sessions.
 
 ### Architectural Core: Strict MVVM
 The application strictly enforces Model-View-ViewModel separation across all workspaces:
-- **`spectroview/model/`**: Pure data models and domain logic. Holds **no Qt widget references** and is independently testable.
-  - `spectra_store.py`: Tensor-centric `SpectraStore` / `MapData` — the single source of truth for spectral arrays.
-  - `m_graph.py`: `MGraph` dataclass — the canonical schema for plot configurations.
+- **`spectroview/model/`**: Pure data models and domain logic organized into subpackages (`spectra/`, `graphs/`, `io/`, `analysis/`, `system/`). Holds **no Qt widget references** and is independently testable.
+  - `spectra/spectra_store.py`: Tensor-centric `SpectraStore` / `MapData` — the single source of truth for spectral arrays.
+  - `graphs/m_graph.py`: `MGraph` dataclass — the canonical schema for plot configurations.
   - `m_settings.py`: `MSettings` wrapping `QSettings("CEA-Leti", "SPECTROview")`.
-  - `m_io.py`: Multiformat loaders (TXT, CSV, WDF, SPC, TRPL, DAT).
+  - `io/m_io.py`: Multiformat loaders (TXT, CSV, WDF, SPC, L6S, NGS, TRPL, DAT).
 - **`spectroview/viewmodel/`**: Business logic orchestrator (`vm_workspace_spectra.py`, `vm_workspace_maps.py`, `vm_workspace_graphs.py`, `vm_fit_model_builder.py`, `vm_mva.py`, `vm_settings.py`).
   - Reads and mutates Models; communicates with Views **strictly via Qt signals/slots**.
   - **Never imports View classes.**

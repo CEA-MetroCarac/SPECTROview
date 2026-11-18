@@ -10,8 +10,8 @@ from typing import Dict, List, Optional
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog
 
-from spectroview.model.m_graph import MGraph
-from spectroview.model.graph_control import (
+from spectroview.model.graphs.m_graph import MGraph
+from spectroview.model.graphs.graph_control import (
     GRAPH_PROPERTY_SET,
     normalize_graph_patch,
 )

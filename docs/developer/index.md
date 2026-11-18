@@ -81,31 +81,36 @@ spectroview/
 │       ├── tab_ai.py          # LLM credentials, connection tests, & local MCP
 │       └── tab_about.py       # Application details, Python env, & runtime package dependencies
 │
-├── model/                  # Data models (no Qt deps)
-│   ├── spectra_store.py    # Tensor-centric SpectraStore & MapData structures
-│   ├── workspace_io.py     # Unified serialization for Workspaces
-│   ├── peak_model.py       # Helper functions for peak parameters
-│   ├── heatmap.py          # Pure-NumPy 2D heatmap grid interpolation & triangulation
-│   ├── spectral_parameters.py # Vectorized raw spectral metrics (Area, Max, Pos_Max, Barycenter, FWHM)
-│   ├── m_graph.py          # Plot configuration model (MGraph dataclass)
-│   ├── graph_control.py    # Graph control model
-│   ├── graph_style.py      # Graph styling & restyle-without-replot predicate
-│   ├── m_plot_recipe.py    # Plot recipe dataclass (+ m_plot_recipe_store.py)
-│   ├── m_style_template_store.py # Graph style template persistence
-│   ├── m_settings.py       # Persistent app settings (QSettings wrapper)
-│   ├── m_io.py             # File loaders (TXT, CSV, WDF, SPC, L6S, L6M, NGS, NGC, TRPL, DAT)
-│   ├── m_mva.py            # PCA + NMF engine
-│   ├── m_fit_model_manager.py # Saved fit model file management
-│   ├── m_quick_calculators.py     # Pure math logic for scientific calculators (Spot Size, Depth, Unit conversion)
-│   ├── m_macos_font_patch.py # macOS font rendering compatibility patch
-│   ├── m_tls.py              # Hardened TLS trust-store & certifi/pip security validation (GHSA-6q48-6c7w-9gw2)
-│   ├── m_installation.py     # Centralized runtime install detection (InstallType & InstallationManager)
-│   ├── m_update_manager.py   # Multi-platform UpdateManager facade, ETag cache, SHA256SUMS, platform backends
-│   ├── m_update_checker.py   # Legacy pip/wheel QThread workers & detached upgrade helper (preserved for compatibility)
-│   ├── m_wdf.py            # Renishaw WiRE WDF binary reader
-│   ├── m_spc.py            # Galactic SPC binary reader
-│   ├── m_l6s.py            # HORIBA LabSpec 6 (.l6s / .l6m) binary reader
-│   └── m_ngs.py            # HORIBA LabSpec 5 (.ngs / .ngc) binary reader
+├── model/                  # Data models organized by domain (no Qt widgets)
+│   ├── m_settings.py       # Persistent app settings compatibility facade (wraps spectroview.settings)
+│   ├── io/                 # File loaders & workspace serialization
+│   │   ├── m_io.py         # Universal file loader dispatch & text/CSV readers
+│   │   ├── m_wdf.py        # Renishaw WiRE WDF binary reader
+│   │   ├── m_spc.py        # Galactic SPC binary reader
+│   │   ├── m_l6s.py        # HORIBA LabSpec 6 (.l6s / .l6m) binary reader
+│   │   ├── m_ngs.py        # HORIBA LabSpec 5 (.ngs / .ngc) binary reader
+│   │   └── workspace_io.py # Unified serialization for Workspaces
+│   ├── spectra/            # Spectral tensor store, metrics, & fit model models
+│   │   ├── spectra_store.py       # Tensor-centric SpectraStore & MapData structures
+│   │   ├── spectral_parameters.py # Vectorized raw spectral metrics (Area, Max, Pos_Max, Barycenter, FWHM)
+│   │   ├── heatmap.py             # Pure-NumPy 2D heatmap grid interpolation & triangulation
+│   │   ├── peak_model.py          # Helper functions for peak parameters
+│   │   └── m_fit_model_manager.py # Saved fit model file management
+│   ├── graphs/             # Graph schemas, recipes, & style templates
+│   │   ├── m_graph.py                 # Plot configuration model (MGraph dataclass)
+│   │   ├── graph_control.py           # Graph control & validation contract
+│   │   ├── graph_style.py             # Graph styling & restyle-without-replot predicate
+│   │   ├── m_plot_recipe.py           # Plot recipe dataclass (+ m_plot_recipe_store.py)
+│   │   └── m_style_template_store.py  # Graph style template persistence
+│   ├── analysis/           # Numerical analysis & calculator engines
+│   │   ├── m_mva.py               # PCA + NMF engine
+│   │   └── m_quick_calculators.py # Pure math logic for scientific calculators
+│   └── system/             # Runtime environment, TLS, & update services
+│       ├── m_tls.py              # Hardened TLS trust-store & certifi/pip validation
+│       ├── m_installation.py     # Centralized runtime install detection (InstallType & InstallationManager)
+│       ├── m_update_manager.py   # Multi-platform UpdateManager facade, ETag cache, SHA256SUMS
+│       ├── m_update_checker.py   # Legacy pip/wheel QThread workers & detached upgrade helper
+│       └── m_macos_font_patch.py # macOS font rendering compatibility patch
 │
 ├── viewmodel/              # Business logic and data orchestration
 │   ├── vm_workspace_spectra.py   # Spectra workspace logic (base class)
@@ -410,8 +415,8 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 |-------------|----------|---------|
 | `VBFthread` | `fit_engine/vbf_thread.py` | Batched fitting (primary engine) |
 | `_LiveMapWorker` | `viewmodel/vm_live_maps.py` | Asynchronous `QRunnable` (`QThreadPool`) for Live Maps computation on large datasets ($\ge 25,000$ spectra) |
-| `UnifiedUpdateCheckWorker` / `UnifiedUpdateDownloadWorker` | `model/m_update_manager.py` | Multi-platform release checks (ETag cached) and SHA-256 verified downloads |
-| `UpdateCheckerWorker` | `model/m_update_checker.py` | Legacy pip/wheel background checker & updater (backward compatibility) |
+| `UnifiedUpdateCheckWorker` / `UnifiedUpdateDownloadWorker` | `model/system/m_update_manager.py` | Multi-platform release checks (ETag cached) and SHA-256 verified downloads |
+| `UpdateCheckerWorker` | `model/system/m_update_checker.py` | Legacy pip/wheel background checker & updater (backward compatibility) |
 | `LLMWorker` / `APIWorker` / `AnthropicWorker` | `ai_agent/m_llm_client.py` | Streaming chat requests for AI Data Chat — one worker per backend (Ollama / OpenAI-compatible / Anthropic) |
 | `_ConnectionTestWorker` | `settings/vm_settings.py` | Non-blocking background LLM provider connection verification |
 
@@ -467,17 +472,17 @@ self.v_maps_workspace.vm.switch_to_graphs_tab.connect(
 
 ### Overview
 
-`SPECTROview` exposes a unified installation-detection and update facade (`UpdateManager` in `model/m_update_manager.py`) backed by `InstallationManager` (`model/m_installation.py`) and centralized TLS hardening (`model/m_tls.py`). Users receive the same banner, ETag-cached release check, pre-release toggle, and `SHA256SUMS.txt` integrity verification workflow across every distribution target without needing to understand how SPECTROview was installed.
+`SPECTROview` exposes a unified installation-detection and update facade (`UpdateManager` in `model/system/m_update_manager.py`) backed by `InstallationManager` (`model/system/m_installation.py`) and centralized TLS hardening (`model/system/m_tls.py`). Users receive the same banner, ETag-cached release check, pre-release toggle, and `SHA256SUMS.txt` integrity verification workflow across every distribution target without needing to understand how SPECTROview was installed.
 
 ### Key Files
 
 | File | Role |
 |------|------|
-| `model/m_tls.py` | Pure-model CA trust enforcement (`GHSA-6q48-6c7w-9gw2`): `SSL_CERT_FILE`/`REQUESTS_CA_BUNDLE` → OS `truststore` → validated `certifi >= 2026.10.23` (`pip >= 26.2.2` build gate) |
-| `model/m_installation.py` | Pure-model `InstallType` classifier (`DEV_SOURCE`, `PIP_WHEEL`, `WINDOWS_VELOPACK`, `WINDOWS_PORTABLE`, `MACOS_BUNDLE`, `LINUX_APPIMAGE`, `LINUX_DEB`, `STANDALONE_UNKNOWN`) |
-| `model/m_macos_font_patch.py` | macOS font cache discovery patch intercepting `system_profiler SPFontsDataType` to prevent upstream `matplotlib` `KeyError: '_items'` crash and 10s freeze |
-| `model/m_update_manager.py` | `GitHubReleaseClient` (`ETag` + TTL cache), `UpdateManager` facade, `UnifiedUpdateCheckWorker`, `UnifiedUpdateDownloadWorker`, and platform updaters |
-| `model/m_update_checker.py` | Legacy pip/wheel workers preserved cleanly plus hardened pip upgrade runner (`--use-feature=truststore` / `--cert`) |
+| `model/system/m_tls.py` | Pure-model CA trust enforcement (`GHSA-6q48-6c7w-9gw2`): `SSL_CERT_FILE`/`REQUESTS_CA_BUNDLE` → OS `truststore` → validated `certifi >= 2026.10.23` (`pip >= 26.2.2` build gate) |
+| `model/system/m_installation.py` | Pure-model `InstallType` classifier (`DEV_SOURCE`, `PIP_WHEEL`, `WINDOWS_VELOPACK`, `WINDOWS_PORTABLE`, `MACOS_BUNDLE`, `LINUX_APPIMAGE`, `LINUX_DEB`, `STANDALONE_UNKNOWN`) |
+| `model/system/m_macos_font_patch.py` | macOS font cache discovery patch intercepting `system_profiler SPFontsDataType` to prevent upstream `matplotlib` `KeyError: '_items'` crash and 10s freeze |
+| `model/system/m_update_manager.py` | `GitHubReleaseClient` (`ETag` + TTL cache), `UpdateManager` facade, `UnifiedUpdateCheckWorker`, `UnifiedUpdateDownloadWorker`, and platform updaters |
+| `model/system/m_update_checker.py` | Legacy pip/wheel workers preserved cleanly plus hardened pip upgrade runner (`--use-feature=truststore` / `--cert`) |
 | `view/components/v_update_banner.py` | Slim banner displaying version transition (`current → latest`) and dynamic platform action label |
 | `main.py` | Executes early `_run_velopack_bootstrap()` hook before `QApplication` only when Velopack is active; wires unified update banner & guided dialogs |
 | `main.spec` & `packaging/` | Single-source PyInstaller config and platform builders for Windows (`Setup.exe` + `Portable.zip`), macOS (Apple Silicon `arm64` `.dmg`), and Linux (`.AppImage` + `.deb`) |

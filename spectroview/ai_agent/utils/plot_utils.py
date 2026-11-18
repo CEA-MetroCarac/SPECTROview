@@ -12,7 +12,7 @@ import copy
 from typing import Any
 
 from spectroview import PALETTE, PLOT_STYLES
-from spectroview.model.graph_control import normalize_graph_patch
+from spectroview.model.graphs.graph_control import normalize_graph_patch
 
 VALID_PLOT_STYLES: frozenset[str] = frozenset(PLOT_STYLES)
 VALID_PALETTES: frozenset[str] = frozenset(PALETTE) | frozenset({
@@ -51,10 +51,10 @@ def validate_palette(palette: str) -> bool:
 
 def normalize_plot_config(cfg: dict[str, Any]) -> dict[str, Any]:
     """Coerce a raw LLM plot config dictionary into the typed format
-    expected by :class:`spectroview.model.m_graph.MGraph`.
+    expected by :class:`spectroview.model.graphs.m_graph.MGraph`.
 
     Compatibility wrapper around the application-level
-    :func:`spectroview.model.graph_control.normalize_graph_patch`.  Keeping
+    :func:`spectroview.model.graphs.graph_control.normalize_graph_patch`.  Keeping
     this function avoids breaking recipe/agent callers while ensuring GUI,
     AI, and MCP no longer maintain different coercion rules.
 

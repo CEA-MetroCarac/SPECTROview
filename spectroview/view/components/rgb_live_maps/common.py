@@ -9,7 +9,7 @@ import matplotlib as mpl
 import numpy as np
 
 from spectroview import PLOT_POLICY_DARK, PLOT_POLICY_LIGHT
-from spectroview.model.spectral_parameters import (
+from spectroview.model.spectra.spectral_parameters import (
     SELECTOR_BLUE,
     SELECTOR_GREEN,
     SELECTOR_RED,

@@ -24,9 +24,9 @@ from spectroview.api import fitting as api_fitting
 from spectroview.api.exceptions import FitModelError, WorkspaceError
 from spectroview.fit_engine.baseline import eval_baseline_batch
 from spectroview.fit_engine.evaluator import eval_peak_initial
-from spectroview.model.heatmap import build_heatmap_grid
+from spectroview.model.spectra.heatmap import build_heatmap_grid
 from spectroview.model.io.m_io import extract_map_arrays
-from spectroview.model.spectra_store import SpectraStore
+from spectroview.model.spectra.spectra_store import SpectraStore
 from spectroview.model.io.workspace_io import WorkspaceIO
 
 
@@ -582,7 +582,7 @@ class MapsWorkspace(SpectraWorkspace):
             method: interpolation method for wafer maps (`self.map_type != '2Dmap'`).
 
         Returns:
-            (xi, yi, zi) — see `spectroview.model.heatmap.build_heatmap_grid`.
+            (xi, yi, zi) — see `spectroview.model.spectra.heatmap.build_heatmap_grid`.
 
         Raises:
             WorkspaceError: unknown map_name, or value_col not available.

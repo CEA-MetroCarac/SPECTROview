@@ -25,8 +25,8 @@ import pandas as pd
 
 from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS
 from spectroview.api.exceptions import TemplateError
-from spectroview.model.m_graph import MGraph
-from spectroview.model.m_plot_recipe_store import MPlotRecipeStore
+from spectroview.model.graphs.m_graph import MGraph
+from spectroview.model.graphs.m_plot_recipe_store import MPlotRecipeStore
 from spectroview.view.components.v_plot_renderer import PlotRenderer
 
 

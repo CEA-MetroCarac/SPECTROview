@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QGroupBox, QLineEdit, QLabel, QSizePolicy
 )
 from spectroview import ICON_DIR
-from spectroview.model.m_quick_calculators import calc_spot_size, calc_penetration_depth, convert_absolute_units, convert_relative_units
+from spectroview.model.analysis.m_quick_calculators import calc_spot_size, calc_penetration_depth, convert_absolute_units, convert_relative_units
 
 
 class MQuickCalc(QDialog):

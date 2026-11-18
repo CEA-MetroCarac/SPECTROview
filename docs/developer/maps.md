@@ -473,7 +473,7 @@ gzip.compress(buf.getvalue(), compresslevel=1)  # level=1: 70× faster, ~5% larg
 
 ### Adding a New Map File Format
 
-1. Create a loader function in `spectroview/model/m_io.py` (e.g., `load_xyz_map(path) → pd.DataFrame`).
+1. Create a loader function in `spectroview/model/io/m_io.py` (e.g., `load_xyz_map(path) → pd.DataFrame`).
 2. In `VMWorkspaceMaps.load_map_files()`, add an `elif path.suffix.lower() == '.xyz':` branch.
 3. The returned DataFrame must have `X` and `Y` columns followed by numeric wavenumber columns.
 4. If the format provides metadata, return a `(DataFrame, dict)` tuple and store the dict in `self.maps_metadata[map_name]`.

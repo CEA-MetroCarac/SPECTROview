@@ -4,14 +4,14 @@ import dataclasses
 import pandas as pd
 import pytest
 
-from spectroview.model.graph_control import (
+from spectroview.model.graphs.graph_control import (
     GRAPH_PROPERTY_SET,
     GraphPatch,
     GraphValidationError,
     apply_graph_patch,
     normalize_graph_patch,
 )
-from spectroview.model.m_graph import MGraph
+from spectroview.model.graphs.m_graph import MGraph
 
 
 def test_patch_schema_covers_every_mutable_mgraph_field():

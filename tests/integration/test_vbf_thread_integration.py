@@ -12,7 +12,7 @@ production VMWorkspaceSpectra/VMWorkspaceMaps use under the hood.
 import numpy as np
 import pytest
 
-from spectroview.model.spectra_store import SpectraStore
+from spectroview.model.spectra.spectra_store import SpectraStore
 from spectroview.fit_engine.vbf_thread import VBFthread
 
 

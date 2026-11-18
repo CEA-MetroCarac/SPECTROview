@@ -2,7 +2,7 @@
 
 `m_io.py` is the **universal file reader** for SPECTROview. It sits at the entry point of every data ingestion operation — raw files on disk pass through it before any other part of the application ever touches the data.
 
-**Source file**: [`m_io.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/model/m_io.py)
+**Source file**: [`m_io.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/model/io/m_io.py)
 
 ---
 
@@ -227,10 +227,10 @@ When opening or dragging files into `Main._load_files_by_paths()`, `detect_file_
 - **Single-block DataFrames**: Binary (`WDF`, `SPC`, `L6M`, `NGC`) and converted maps are assembled via `_build_map_dataframe()`, wrapping the contiguous 2D spectral matrix directly instead of constructing thousands of 1D column slices.
 - **C-engine CSV/TXT fast paths**: `load_map_file()` uses `pd.read_csv(..., engine="c")` with `usecols` (stripping trailing semicolons at parse time), `skiprows` callables for alternating-row wafer CSV exports, and positional `iloc` permutation when sorting descending wavenumbers to avoid duplicating large spectral matrices in RAM.
 - **Vectorized WDF, SPC, LabSpec 6 & LabSpec 5 binary readers**:
-  - `WdfReader` (`spectroview/model/m_wdf.py`) parses Renishaw `.wdf` blocks (`WDF1`, `DATA`, `XLST`, `YLST`, `ORGN`, `WMAP`) natively via single-read `struct.unpack_from` and `np.frombuffer` operations without third-party `renishawWiRE` or `PIL` dependencies, eliminating per-point Python `ORGN` coordinate loops and redundant `WHTL` JPEG decoding.
-  - `SpcReader` (`spectroview/model/m_spc.py`) reads uniform multi-subfile `.spc` maps in a single buffered I/O call via structured NumPy `np.frombuffer` dtypes (supporting IEEE `float32`, `TSPREC` `int16`, and `int32` fixed-point scaling), falling back to sequential parsing only for variable-length `TXYXYS` files.
-  - `L6sReader` (`spectroview/model/m_l6s.py`) decodes HORIBA LabSpec 6 `.l6s` (1D spectrum) and `.l6m` (2D spectral image `SpIm`) binary node trees (`"LabSpec6\x00"` magic, both uncompressed 76-byte headers and compressed `lzhuf` + byte-delta + 4-plane byte-shuffled containers via `_decompress_ngc()`, 24-byte DFS records, shared `0x8000` / pointer-ID deduplicated blocks, and `b'temx'` runtime subtrees), extracting spectral cubes (`float32`), spatial `(X, Y)` stage grids, calibrated laser wavelengths (`Laser.pos` or `Laser (nm).pos`), `S/N`, and all acquisition/description/history metadata tables (`_reorder_metadata()` orders canonical `_METADATA_ORDERED_KEYS` first and appends additional instrument parameters at the end).
-  - `NgsReader` (`spectroview/model/m_ngs.py`) decodes HORIBA LabSpec 5 `.ngs` (v1 uncompressed) and `.ngc` (v3 Haruhiko Okumura `lzhuf` adaptive Huffman + LZSS compressed + byte-level `np.cumsum` delta-coded) containers (`"NGSNextGen"` magic), parsing `DataMatrix` spectral/spatial tensors and `Table` blocks (`Param`, `Acq`, `Extra`, `Hist`) with canonical `_METADATA_ORDERED_KEYS` ordering and full preservation of extra instrument parameters.
+  - `WdfReader` (`spectroview/model/io/m_wdf.py`) parses Renishaw `.wdf` blocks (`WDF1`, `DATA`, `XLST`, `YLST`, `ORGN`, `WMAP`) natively via single-read `struct.unpack_from` and `np.frombuffer` operations without third-party `renishawWiRE` or `PIL` dependencies, eliminating per-point Python `ORGN` coordinate loops and redundant `WHTL` JPEG decoding.
+  - `SpcReader` (`spectroview/model/io/m_spc.py`) reads uniform multi-subfile `.spc` maps in a single buffered I/O call via structured NumPy `np.frombuffer` dtypes (supporting IEEE `float32`, `TSPREC` `int16`, and `int32` fixed-point scaling), falling back to sequential parsing only for variable-length `TXYXYS` files.
+  - `L6sReader` (`spectroview/model/io/m_l6s.py`) decodes HORIBA LabSpec 6 `.l6s` (1D spectrum) and `.l6m` (2D spectral image `SpIm`) binary node trees (`"LabSpec6\x00"` magic, both uncompressed 76-byte headers and compressed `lzhuf` + byte-delta + 4-plane byte-shuffled containers via `_decompress_ngc()`, 24-byte DFS records, shared `0x8000` / pointer-ID deduplicated blocks, and `b'temx'` runtime subtrees), extracting spectral cubes (`float32`), spatial `(X, Y)` stage grids, calibrated laser wavelengths (`Laser.pos` or `Laser (nm).pos`), `S/N`, and all acquisition/description/history metadata tables (`_reorder_metadata()` orders canonical `_METADATA_ORDERED_KEYS` first and appends additional instrument parameters at the end).
+  - `NgsReader` (`spectroview/model/io/m_ngs.py`) decodes HORIBA LabSpec 5 `.ngs` (v1 uncompressed) and `.ngc` (v3 Haruhiko Okumura `lzhuf` adaptive Huffman + LZSS compressed + byte-level `np.cumsum` delta-coded) containers (`"NGSNextGen"` magic), parsing `DataMatrix` spectral/spatial tensors and `Table` blocks (`Param`, `Acq`, `Extra`, `Hist`) with canonical `_METADATA_ORDERED_KEYS` ordering and full preservation of extra instrument parameters.
 
 ### Headerless Spectra, Ascending Axes & Duplicate Coordinates
 
@@ -240,7 +240,7 @@ When opening or dragging files into `Main._load_files_by_paths()`, `detect_file_
 
 ### Pure Model-Layer Metadata (`parse_wdf_metadata`)
 
-`parse_wdf_metadata()` lives in `spectroview/model/m_io.py` (re-exported in `viewmodel/utils.py` for backward compatibility), keeping `spectroview/model/` 100% free of Qt and ViewModel imports. It parses binary `WXIS`, `WXCS`, `WXDM`, and `WDF1` `FILETIME` blocks to extract objective, grating, laser power, slit settings, exposure time, and timestamps.
+`parse_wdf_metadata()` lives in `spectroview/model/io/m_io.py` (re-exported in `viewmodel/utils.py` for backward compatibility), keeping `spectroview/model/` 100% free of Qt and ViewModel imports. It parses binary `WXIS`, `WXCS`, `WXDM`, and `WDF1` `FILETIME` blocks to extract objective, grating, laser power, slit settings, exposure time, and timestamps.
 
 ---
 

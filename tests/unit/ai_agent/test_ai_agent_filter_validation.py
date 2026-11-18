@@ -18,7 +18,7 @@ from mcp.client._memory import InMemoryTransport
 
 from spectroview.ai_agent.agent.ports import RecordingContext
 from spectroview.ai_agent.mcp.server import create_mcp_server
-from spectroview.model.m_graph import MGraph
+from spectroview.model.graphs.m_graph import MGraph
 
 
 def _context(graphs=None) -> RecordingContext:

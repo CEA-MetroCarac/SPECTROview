@@ -5,7 +5,7 @@ style dict rather than a list of full graph configs.
 """
 import pytest
 
-from spectroview.model.m_style_template_store import MStyleTemplateStore
+from spectroview.model.graphs.m_style_template_store import MStyleTemplateStore
 
 SAMPLE_STYLE = {"color_palette": "viridis", "grid": True, "title_fontsize": 16}
 
@@ -45,7 +45,7 @@ class TestIndexAndList:
         assert store.get_summary("nope") is None
 
     def test_list_templates_sorted_newest_first(self, store, monkeypatch):
-        import spectroview.model.m_style_template_store as mod
+        import spectroview.model.graphs.m_style_template_store as mod
 
         times = iter(["2026-01-01T00:00:00", "2026-01-02T00:00:00"])
 

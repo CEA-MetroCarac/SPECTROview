@@ -47,7 +47,7 @@ from spectroview.ai_agent.m_llm_client import LLMClient, get_ollama_model_info
 from spectroview.ai_agent.m_conversation import MConversation
 from spectroview.ai_agent.m_conversation_store import MConversationStore
 from spectroview.model.m_settings import MSettings
-from spectroview.model.m_plot_recipe_store import MPlotRecipeStore
+from spectroview.model.graphs.m_plot_recipe_store import MPlotRecipeStore
 from spectroview.ai_agent.m_prompt_manager import PromptManager
 from spectroview.ai_agent.agent.commands import (
     AgentCommand, CreatePlot, DeletePlots, UpdatePlot,

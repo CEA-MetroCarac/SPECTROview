@@ -3,7 +3,7 @@ from typing import Optional
 
 import numpy as np
 
-from spectroview.model.m_mva import MMVA, PCAResult, NMFResult
+from spectroview.model.analysis.m_mva import MMVA, PCAResult, NMFResult
 
 
 def pca(X: np.ndarray, n_components: int = 5, center: bool = True) -> PCAResult:

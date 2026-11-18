@@ -12,7 +12,7 @@ Deep architectural narrative is in `docs/developer/spectra.md`, `docs/developer/
 
 ## 1. Data Backbone: `SpectraStore` & `MapData`
 
-- **Single Source of Truth**: `spectroview.model.spectra_store.SpectraStore` manages all spectral data for both workspaces.
+- **Single Source of Truth**: `spectroview.model.spectra.spectra_store.SpectraStore` manages all spectral data for both workspaces.
 - **Zero-Copy References**: `store.get_map_data(name)` returns a direct reference to the `MapData` instance. **Always re-fetch `md` at the start of an operation — never store `md` as a persistent instance attribute**.
 - **Unified Tensor Layout**:
   - Spectra Workspace: $N = 1$ spectrum per block.

@@ -12,7 +12,7 @@ Full narratives are in `docs/developer/graphs.md` and `docs/developer/graph_work
 
 ## 1. Single Source of Truth: `MGraph`
 
-- **Canonical Schema**: `spectroview.model.m_graph.MGraph` is a dataclass defining the plot configuration model.
+- **Canonical Schema**: `spectroview.model.graphs.m_graph.MGraph` is a dataclass defining the plot configuration model.
 - **Seeded Defaults**: `VGraph.__init__` seeds every model field from `vars(MGraph())`. **Never hardcode default values or hand-copied field lists**. Adding a field to `MGraph` flows automatically through the widget layer.
 - **Commit & Diff**: `spectroview/view/components/graph_commit.py` derives `COMMIT_FIELDS` programmatically from `MGraph`'s dataclass fields. Its `snapshot()` and `diff()` methods synchronize widget state to the model for persistence and undo/redo history.
 - **Schema Lock**: `tests/unit/model/test_m_graph.py::TestModelSchemaSync` enforces that `VGraph` seeded defaults match `MGraph` fields exactly. Keep this test green.
@@ -22,7 +22,7 @@ Full narratives are in `docs/developer/graphs.md` and `docs/developer/graph_work
 ## 2. Plot Rendering & Restyle Fast Path
 
 - **Rendering Dispatch**: `view/components/v_plot_renderer.py::PlotRenderer` draws each plot style registered in `spectroview.PLOT_STYLES`. `VGraph` (`view/components/v_graph.py`) owns the matplotlib Figure, Canvas, navigation toolbar, annotations, and user interaction.
-- **Restyle Fast Path**: `model/graph_style.py::RESTYLE_SAFE_FIELDS` contains properties whose modification only alters visual attributes (colors, line widths, alpha) without reshaping data or rebuilding artists. These changes take the fast path and avoid an expensive full replot. Fields modifying data shapes, axes bounds, or adding artists must **not** be included in `RESTYLE_SAFE_FIELDS`.
+- **Restyle Fast Path**: `model/graphs/graph_style.py::RESTYLE_SAFE_FIELDS` contains properties whose modification only alters visual attributes (colors, line widths, alpha) without reshaping data or rebuilding artists. These changes take the fast path and avoid an expensive full replot. Fields modifying data shapes, axes bounds, or adding artists must **not** be included in `RESTYLE_SAFE_FIELDS`.
 
 ---
 
@@ -54,8 +54,8 @@ Full narratives are in `docs/developer/graphs.md` and `docs/developer/graph_work
 
 Do not confuse these distinct persistence models:
 
-- **Plot Recipe**: Complete plot configuration (data columns, axes, style, annotations): `model/m_plot_recipe.py`, `v_plot_recipe_dialog.py`.
-- **Style Template**: Visual presentation settings only (fonts, spines, colors, markers): `model/m_style_template_store.py`, `v_style_template_dialog.py`.
+- **Plot Recipe**: Complete plot configuration (data columns, axes, style, annotations): `model/graphs/m_plot_recipe.py`, `v_plot_recipe_dialog.py`.
+- **Style Template**: Visual presentation settings only (fonts, spines, colors, markers): `model/graphs/m_style_template_store.py`, `v_style_template_dialog.py`.
 
 ---
 

@@ -1,10 +1,10 @@
 """Unit tests for map dimensionality detection and R/B intensity ratio
-(spectroview.model.spectral_parameters)."""
+(spectroview.model.spectra.spectral_parameters)."""
 
 import numpy as np
 import pytest
 
-from spectroview.model.spectral_parameters import (
+from spectroview.model.spectra.spectral_parameters import (
     analyze_map_geometry,
     compute_intensity_ratio,
 )

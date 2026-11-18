@@ -38,8 +38,8 @@ spectroview/
 ├── __init__.py        # VERSION, constants (PLOT_STYLES, MARKERS, PALETTE, ICON_DIR…), QT_API=pyside6
 ├── main.py            # QMainWindow, tab wiring, cross-workspace injection, launcher()
 ├── application/       # Domain services and main-thread dispatch boundaries
-├── model/             # m_graph, m_settings, spectra_store, m_io, m_mva, graph_style,
-│                      #   m_plot_recipe(_store), m_style_template_store, peak_model, workspace_io …
+├── model/             # io/, spectra/, graphs/, analysis/, system/, m_settings
+│                      #   (m_io, spectra_store, m_graph, m_mva, m_update_manager…)
 ├── viewmodel/         # vm_workspace_{spectra,maps,graphs}, vm_fit_model_builder, vm_mva, vm_settings, utils
 ├── view/
 │   ├── v_workspace_{spectra,maps,graphs}.py
@@ -68,8 +68,8 @@ spectroview/
 
 ## 4. Data Backbone
 
-- **`model/spectra_store.py`**: Tensor-centric `SpectraStore` and `MapData` structures. Single source of truth for all spectral arrays. See [.agents/rules/spectra-maps-workspace.md](spectra-maps-workspace.md).
-- **`model/m_graph.py`**: `MGraph` dataclass is the plot configuration model. Its fields define the schema from which graph settings, undo/redo diffs, and dialogs derive. See [.agents/rules/graphs-workspace.md](graphs-workspace.md).
+- **`model/spectra/spectra_store.py`**: Tensor-centric `SpectraStore` and `MapData` structures. Single source of truth for all spectral arrays. See [.agents/rules/spectra-maps-workspace.md](spectra-maps-workspace.md).
+- **`model/graphs/m_graph.py`**: `MGraph` dataclass is the plot configuration model. Its fields define the schema from which graph settings, undo/redo diffs, and dialogs derive. See [.agents/rules/graphs-workspace.md](graphs-workspace.md).
 - **`model/m_settings.py`**: `MSettings` wraps `QSettings("CEA-Leti", "SPECTROview")` for persistent app configuration.
 
 ---

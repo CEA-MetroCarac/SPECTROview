@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview import DEFAULT_COLORS
-from spectroview.model.spectral_parameters import (
+from spectroview.model.spectra.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
     PARAM_RB_RATIO,
     SELECTOR_COLORS,

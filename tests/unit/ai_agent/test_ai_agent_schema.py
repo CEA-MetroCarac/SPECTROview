@@ -16,7 +16,7 @@ from spectroview import PLOT_STYLES
 from spectroview.ai_agent.agent.ports import RecordingContext
 from spectroview.ai_agent.mcp.server import VALID_PLOT_STYLES, create_mcp_server
 from spectroview.ai_agent.utils.plot_utils import VALID_PLOT_STYLES as PLOT_UTILS_STYLES
-from spectroview.model.m_graph import MGraph
+from spectroview.model.graphs.m_graph import MGraph
 
 
 @functools.lru_cache(maxsize=1)

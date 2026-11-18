@@ -21,7 +21,7 @@ from spectroview.ai_agent.agent.commands import CreatePlot, DeletePlots, UpdateP
 from spectroview.api.io import export_results as export_results_file
 from spectroview.application.dispatch import DirectDispatcher, Dispatcher
 from spectroview.application.errors import ApplicationAPIError
-from spectroview.model.graph_control import GraphValidationError, normalize_graph_patch
+from spectroview.model.graphs.graph_control import GraphValidationError, normalize_graph_patch
 
 
 WORKSPACES = ("spectra", "maps", "graphs")

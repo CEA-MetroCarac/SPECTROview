@@ -123,4 +123,4 @@ for i in range(pca_result.n_components):
 df_pca.to_csv("map_with_pca_scores.csv", index=False)
 ```
 
-To visualize `df_pca` as a heatmap the same way `MapsWorkspace.get_heatmap()` does, use `spectroview.model.heatmap.build_heatmap_grid(x_coords, y_coords, scores[:, 0], map_type="2Dmap")`.
+To visualize `df_pca` as a heatmap the same way `MapsWorkspace.get_heatmap()` does, use `spectroview.model.spectra.heatmap.build_heatmap_grid(x_coords, y_coords, scores[:, 0], map_type="2Dmap")`.

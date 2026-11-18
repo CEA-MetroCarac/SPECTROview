@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from spectroview.model.spectral_parameters import (
+from spectroview.model.spectra.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
     PARAM_RB_RATIO,
     SELECTOR_RED,

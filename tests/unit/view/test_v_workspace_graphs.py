@@ -16,7 +16,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QShortcut
 from PySide6.QtWidgets import QMessageBox, QInputDialog
 
-from spectroview.model.graph_style import default_style
+from spectroview.model.graphs.graph_style import default_style
 from spectroview.view.components.v_graph import VGraph
 from spectroview.view.v_workspace_graphs import VWorkspaceGraphs
 

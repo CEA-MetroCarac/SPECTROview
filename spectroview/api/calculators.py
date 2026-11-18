@@ -1,5 +1,5 @@
 """Quick calculators for spot size, penetration depth, and spectroscopic unit conversions."""
-from spectroview.model.m_quick_calculators import (
+from spectroview.model.analysis.m_quick_calculators import (
     calc_spot_size,
     calc_penetration_depth,
     convert_absolute_units,

@@ -1,4 +1,4 @@
-"""Validated command layer for :class:`~spectroview.model.m_graph.MGraph`.
+"""Validated command layer for :class:`~spectroview.model.graphs.m_graph.MGraph`.
 
 The Graphs GUI, the embedded AI agent, and MCP clients all submit partial
 updates to the same flat ``MGraph`` state.  This module owns the rules for
@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Literal, Mapping, Optional, Union, get_args,
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, create_model
 
 from spectroview import PLOT_STYLES
-from spectroview.model.m_graph import MGraph
+from spectroview.model.graphs.m_graph import MGraph
 
 
 _UNION_ORIGINS = (Union,) + ((types.UnionType,) if hasattr(types, "UnionType") else ())

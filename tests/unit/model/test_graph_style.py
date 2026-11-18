@@ -3,8 +3,8 @@ Phase 5's per-graph style templates, copy/paste style, and reset-to-default.
 """
 import dataclasses
 
-from spectroview.model.m_graph import MGraph
-from spectroview.model.graph_style import (
+from spectroview.model.graphs.m_graph import MGraph
+from spectroview.model.graphs.graph_style import (
     STYLE_FIELD_NAMES, _NON_STYLE_FIELDS, extract_style, default_style, apply_style_dict,
     RESTYLE_SAFE_FIELDS, can_restyle_without_replot,
 )

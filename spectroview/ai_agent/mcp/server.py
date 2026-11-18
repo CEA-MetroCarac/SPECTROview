@@ -24,7 +24,7 @@ from spectroview.ai_agent.agent.ports import AppContext
 from spectroview.ai_agent.utils.df_summary import summarize_dataframe_columns
 from spectroview.ai_agent.utils.safe_eval import evaluate_pandas_expression, format_query_result
 from spectroview.application.errors import ApplicationAPIError
-from spectroview.model.graph_control import (
+from spectroview.model.graphs.graph_control import (
     GraphPatch,
     GraphValidationError,
     _normalize_filters,

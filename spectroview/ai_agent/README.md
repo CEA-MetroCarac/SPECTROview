@@ -94,7 +94,7 @@ process_query(text)
 ```
 
 Graph tools do **not** draw anything. They validate inputs through the shared,
-Qt-free `spectroview.model.graph_control` contract and submit a typed command
+Qt-free `spectroview.model.graphs.graph_control` contract and submit a typed command
 (`agent/commands.py`) to the context. `_emit_final_result()` drains the queue
 and emits a `ChatResult`; the View re-emits each config as `plot_requested`, and
 `main.py` routes it through the Graph workspace's atomic update/render path.

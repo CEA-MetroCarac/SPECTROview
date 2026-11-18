@@ -220,7 +220,7 @@ def apply_fit_model(
 
 def list_fit_model_templates(folder: Union[str, Path]) -> List[str]:
     """List available *.json fit-model template filenames in `folder`."""
-    from spectroview.model.m_fit_model_manager import MFitModelManager
+    from spectroview.model.spectra.m_fit_model_manager import MFitModelManager
 
     return MFitModelManager().scan_folder(str(folder))
 

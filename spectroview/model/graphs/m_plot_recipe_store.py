@@ -5,7 +5,7 @@ import json
 import os
 from typing import Dict, List, Optional
 
-from spectroview.model.m_plot_recipe import MPlotRecipe
+from spectroview.model.graphs.m_plot_recipe import MPlotRecipe
 
 
 class PlotRecipeSummary:

@@ -101,7 +101,7 @@ This is what makes the tool layer independently testable (no Qt, no LLM, no
 application) and what would let the same server run out-of-process. Tools never
 mutate the ViewModel; they submit typed commands (`agent/commands.py`:
 `CreatePlot`, `UpdatePlot`, `DeletePlots`). Plot and update inputs are validated
-before queuing through the shared `spectroview.model.graph_control` contract,
+before queuing through the shared `spectroview.model.graphs.graph_control` contract,
 and the Graph workspace applies that same contract again at the mutation
 boundary.
 

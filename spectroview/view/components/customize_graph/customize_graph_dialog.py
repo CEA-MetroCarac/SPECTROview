@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from spectroview.model.graph_style import can_restyle_without_replot
+from spectroview.model.graphs.graph_style import can_restyle_without_replot
 from spectroview.view.components.customize_graph.common import NavItemDelegate
 from spectroview.view.components.customize_graph.customize_annotation_dialogs import (
     ColorDelegate,

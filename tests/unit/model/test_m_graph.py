@@ -12,7 +12,7 @@ those two customizations silently didn't survive a save/reload. See
 docs/log.md and tests/README.md for details.
 """
 
-from spectroview.model.m_graph import MGraph
+from spectroview.model.graphs.m_graph import MGraph
 
 # Every field MGraph.save() is expected to serialize. Used to make sure the
 # round-trip test can never silently miss a newly-added field.

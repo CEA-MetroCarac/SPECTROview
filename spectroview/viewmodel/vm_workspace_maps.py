@@ -19,7 +19,7 @@ from spectroview.model.io.m_io import (
     load_l6m_map,
     load_ngc_map,
 )
-from spectroview.model.spectra_store import SpectraStore, SpectrumProxy
+from spectroview.model.spectra.spectra_store import SpectraStore, SpectrumProxy
 from spectroview.viewmodel.vm_workspace_spectra import VMWorkspaceSpectra
 from spectroview.viewmodel.utils import parse_coords_from_fname
 

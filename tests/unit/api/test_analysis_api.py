@@ -1,5 +1,5 @@
 """Tests for spectroview.api.analysis -- thin PCA/NMF/reconstruction_error
-wrapper contract (math itself belongs to spectroview.model.m_mva)."""
+wrapper contract (math itself belongs to spectroview.model.analysis.m_mva)."""
 import numpy as np
 
 from spectroview.api import analysis

@@ -5,7 +5,7 @@ SpectraStore is pure Python/NumPy (no Qt), so these tests need no QApplication.
 import numpy as np
 import pytest
 
-from spectroview.model.spectra_store import SpectraStore, SpectrumProxy, BaselineProxy
+from spectroview.model.spectra.spectra_store import SpectraStore, SpectrumProxy, BaselineProxy
 
 
 def _add_simple_map(store, name="map1", n=5, m=20, seed=0):
@@ -404,3 +404,32 @@ class TestSpectrumProxy:
         proxy1 = SpectrumProxy(md, idx=1, fname="map1_1")
         assert proxy0.baseline.is_subtracted is True
         assert proxy1.baseline.is_subtracted is False
+
+
+class TestModelPackageOrganization:
+    """Verify spectroview.model subpackages, exports, and lazy resolution."""
+
+    def test_subpackage_exports(self):
+        import spectroview.model as model_pkg
+        from spectroview.model import analysis, graphs, io, spectra, system
+
+        assert hasattr(io, "WorkspaceIO")
+        assert hasattr(io, "load_map_file")
+        assert hasattr(spectra, "SpectraStore")
+        assert hasattr(spectra, "MapData")
+        assert hasattr(spectra, "build_heatmap_grid")
+        assert hasattr(graphs, "MGraph")
+        assert hasattr(graphs, "GraphValidationError")
+        assert hasattr(graphs, "MPlotRecipeStore")
+        assert hasattr(analysis, "MMVA")
+        assert hasattr(analysis, "calc_spot_size")
+        assert hasattr(system, "InstallationManager")
+        assert hasattr(system, "ensure_secure_tls")
+
+        # Lazy top-level re-exports preserve convenience imports
+        assert model_pkg.SpectraStore is spectra.SpectraStore
+        assert model_pkg.MGraph is graphs.MGraph
+        assert model_pkg.WorkspaceIO is io.WorkspaceIO
+        assert model_pkg.MMVA is analysis.MMVA
+        assert model_pkg.InstallationManager is system.InstallationManager
+

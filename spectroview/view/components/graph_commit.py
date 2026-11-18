@@ -10,7 +10,7 @@ so there is nothing left to maintain by hand.
 import copy
 import dataclasses
 
-from spectroview.model.m_graph import MGraph
+from spectroview.model.graphs.m_graph import MGraph
 
 COMMIT_FIELDS = tuple(f.name for f in dataclasses.fields(MGraph) if f.name != 'graph_id')
 

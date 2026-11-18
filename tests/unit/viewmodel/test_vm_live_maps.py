@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
-from spectroview.model.spectra_store import MapData
-from spectroview.model.spectral_parameters import (
+from spectroview.model.spectra.spectra_store import MapData
+from spectroview.model.spectra.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
     PARAM_PEAK_POSITION,
     SELECTOR_RED,
@@ -12,7 +12,7 @@ from spectroview.model.spectral_parameters import (
     SELECTOR_GREEN,
 )
 from spectroview.viewmodel.vm_live_maps import VMLiveMaps, MSG_RATIO_NEEDS_RB
-from spectroview.model.spectral_parameters import PARAM_RB_RATIO
+from spectroview.model.spectra.spectral_parameters import PARAM_RB_RATIO
 
 
 @pytest.fixture
@@ -288,7 +288,7 @@ def test_vm_rb_ratio_requires_red_and_blue_active(qapp, sample_map_data):
 
 
 def test_vm_rb_ratio_2d_values_match_integrated_intensities(qapp, sample_map_data):
-    from spectroview.model.spectral_parameters import compute_spectral_parameter, compute_map_grid
+    from spectroview.model.spectra.spectral_parameters import compute_spectral_parameter, compute_map_grid
 
     vm = VMLiveMaps()
     out = _collect(vm)

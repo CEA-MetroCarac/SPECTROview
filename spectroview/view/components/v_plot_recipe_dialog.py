@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 
-from spectroview.model.m_plot_recipe_store import MPlotRecipeStore, PlotRecipeSummary
+from spectroview.model.graphs.m_plot_recipe_store import MPlotRecipeStore, PlotRecipeSummary
 from spectroview.view.theme import Icons
 
 

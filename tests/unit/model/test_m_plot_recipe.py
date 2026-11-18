@@ -9,8 +9,8 @@ import os
 
 import pytest
 
-from spectroview.model.m_plot_recipe import MPlotRecipe
-from spectroview.model.m_plot_recipe_store import MPlotRecipeStore
+from spectroview.model.graphs.m_plot_recipe import MPlotRecipe
+from spectroview.model.graphs.m_plot_recipe_store import MPlotRecipeStore
 
 
 SAMPLE_CONFIGS = [
@@ -122,7 +122,7 @@ class TestMPlotRecipeStore:
         assert store.delete_recipe("nonexistent") is False
 
     def test_list_recipes_sorted_newest_first(self, store, monkeypatch):
-        import spectroview.model.m_plot_recipe as mpr
+        import spectroview.model.graphs.m_plot_recipe as mpr
 
         times = iter(["2026-01-01T00:00:00", "2026-01-02T00:00:00", "2026-01-03T00:00:00"])
 

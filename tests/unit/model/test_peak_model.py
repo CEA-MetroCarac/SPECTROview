@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from spectroview.model.peak_model import initialize_peak_params
+from spectroview.model.spectra.peak_model import initialize_peak_params
 
 STANDARD_SHAPES = ["Lorentzian", "Gaussian", "PseudoVoigt", "GaussianAsym", "LorentzianAsym", "Fano"]
 

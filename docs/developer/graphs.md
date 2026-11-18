@@ -63,7 +63,7 @@ notify = Signal(str)                        # Floating notification
 
 ### **`MGraph` — The Plot Configuration Model**
 
-**File**: `spectroview/model/m_graph.py`
+**File**: `spectroview/model/graphs/m_graph.py`
 
 A pure dataclass that stores everything needed to recreate a plot. `save()`/`load(data)` provide complete serialization; `get_display_name()` builds the MDI subwindow title. Rather than maintain a second field count or list here (see `m_graph.py` for the exhaustive, authoritative list), fields group into:
 
@@ -86,7 +86,7 @@ Note: style templates, plot recipes, and the working-folder setting are **not** 
 
 ### **`graph_control.py` — Shared Graph State/Command Contract**
 
-**File**: `spectroview/model/graph_control.py`
+**File**: `spectroview/model/graphs/graph_control.py`
 
 All GUI, AI, and MCP mutations converge on this Qt-free layer before they touch
 `MGraph`. `GraphPatch` is generated from the dataclass fields, so the MCP schema
@@ -287,7 +287,7 @@ Every control in every tab restarts a single debounced 400ms `QTimer` on change.
 
 ### **`graph_style.py` — the style/data field partition**
 
-**File**: `spectroview/model/graph_style.py`
+**File**: `spectroview/model/graphs/graph_style.py`
 
 - **`STYLE_FIELD_NAMES`** — every `MGraph` field *except* identity/data columns, data-coordinate limits, annotations, and window/output geometry (computed by excluding `_NON_STYLE_FIELDS`). This is "how a graph looks," portable from one graph to another regardless of its data.
 - **`RESTYLE_SAFE_FIELDS`** — a narrower subset of `STYLE_FIELD_NAMES`: fields safe for `VGraph.restyle()`'s fast repaint path (titles/labels/fontsizes, grid, tick direction/format, primary axis limits, log/symlog scale, figure facecolor/spines/margins, legend box styling). Excludes anything that requires artists to be recreated (per-series color/marker/size, colormap, secondary axes, annotations, insets).

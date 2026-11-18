@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from matplotlib.colors import LogNorm
 
-from spectroview.model.spectral_parameters import (
+from spectroview.model.spectra.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
     PARAM_PEAK_POSITION,
     PARAM_RB_RATIO,

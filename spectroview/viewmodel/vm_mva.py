@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 from PySide6.QtCore import QObject, Signal
 
-from spectroview.model.m_mva import MMVA, PCAResult, NMFResult
-from spectroview.model.spectra_store import SpectraStore
+from spectroview.model.analysis.m_mva import MMVA, PCAResult, NMFResult
+from spectroview.model.spectra.spectra_store import SpectraStore
 
 
 class VMMVA(QObject):

@@ -15,7 +15,7 @@ import copy
 import dataclasses
 from typing import Any, Dict
 
-from spectroview.model.m_graph import MGraph
+from spectroview.model.graphs.m_graph import MGraph
 
 _NON_STYLE_FIELDS = frozenset({
     # Identity / which data this graph plots -- copying a "style" must

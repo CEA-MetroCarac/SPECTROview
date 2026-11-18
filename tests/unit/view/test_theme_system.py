@@ -9,7 +9,7 @@ from spectroview.view.theme.qss_template import build_stylesheet
 from spectroview.view.components.lower_tabs import VPeakTable, ROW_HEIGHT
 from PySide6.QtWidgets import QApplication
 from spectroview.model.m_settings import MSettings
-from spectroview.model.m_graph import MGraph
+from spectroview.model.graphs.m_graph import MGraph
 from spectroview.view.theme.manager import ThemeManager, _VIEWER_THEME_NAMES, _CLASSIC_THEMES
 from spectroview.view.theme.tokens import THEME_TOKENS
 from spectroview.view.theme.palettes import _PALETTE_BUILDERS

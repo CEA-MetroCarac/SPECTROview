@@ -308,6 +308,11 @@ _SVG_TEMPLATES: dict[str, str] = {
         '<line x1="9" x2="9" y1="3" y2="21"/>'
         '<line x1="15" x2="15" y1="3" y2="21"/>'
     ),
+    "view_3d": (
+        '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>'
+        '<polyline points="3.27 6.96 12 12.01 20.73 6.96"/>'
+        '<line x1="12" x2="12" y1="22.08" y2="12"/>'
+    ),
     "multipanel": (
         '<rect width="18" height="18" x="3" y="3" rx="2"/>'
         '<line x1="3" x2="21" y1="12" y2="12"/>'
@@ -535,6 +540,7 @@ _SVG_TEMPLATES["box_ann"] = _SVG_TEMPLATES["ann_box"]
 _SVG_TEMPLATES["callout"] = _SVG_TEMPLATES["ann_callout"]
 _SVG_TEMPLATES["warning"] = _SVG_TEMPLATES["alert_triangle"]
 _SVG_TEMPLATES["error"] = _SVG_TEMPLATES["alert_circle"]
+_SVG_TEMPLATES["3d"] = _SVG_TEMPLATES["view_3d"]
 
 # ---------------------------------------------------------------------------
 # Caches & Engine Lifetimes

@@ -23,10 +23,13 @@ from spectroview.view.components.v_notification import show_notification
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 import matplotlib.collections as mcoll
+import matplotlib.path as mpath
 from matplotlib.backends.backend_qtagg import (
     FigureCanvasQTAgg as FigureCanvas
 )
 import matplotlib as mpl
+from mpl_toolkits.mplot3d import proj3d
+from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 from functools import lru_cache
 import matplotlib.lines as mlines
@@ -82,6 +85,74 @@ class _MockPeakModelObj:
         self.name2 = name
 
 
+class FastLine3DCollection(Line3DCollection):
+    """Vectorized Line3DCollection projecting all 3D segments in a single pass."""
+
+    def __init__(self, segments, *args, **kwargs):
+        self._flat_3d = None
+        self._seg_slices = None
+        super().__init__(segments, *args, **kwargs)
+
+    def set_segments(self, segments):
+        if segments is None or len(segments) == 0:
+            self._segments3d = []
+            self._flat_3d = None
+            self._seg_slices = None
+            super().set_segments([])
+            return
+
+        if isinstance(segments, np.ndarray) and segments.ndim == 3:
+            self._segments3d = np.ascontiguousarray(segments, dtype=float)
+            n_segs, n_pts, _ = self._segments3d.shape
+            self._flat_3d = self._segments3d.reshape(-1, 3)
+            self._seg_slices = None
+            self._paths = [
+                mpath.Path(np.empty((n_pts, 2), dtype=float))
+                for _ in range(n_segs)
+            ]
+            self.stale = True
+        else:
+            segs_list = [
+                np.ascontiguousarray(s, dtype=float)
+                for s in segments
+                if len(s) > 0
+            ]
+            self._segments3d = segs_list
+            if segs_list:
+                lengths = [len(s) for s in segs_list]
+                self._flat_3d = np.vstack(segs_list)
+                splits = np.cumsum(lengths)
+                starts = np.concatenate(([0], splits[:-1]))
+                self._seg_slices = list(zip(starts, splits))
+                self._paths = [
+                    mpath.Path(np.empty((length, 2), dtype=float))
+                    for length in lengths
+                ]
+            else:
+                self._flat_3d = None
+                self._seg_slices = None
+                self._paths = []
+            self.stale = True
+
+    def do_3d_projection(self):
+        flat = getattr(self, "_flat_3d", None)
+        if not getattr(self, "_axlim_clip", False) and flat is not None and flat.size > 0:
+            xs, ys, zs = proj3d._proj_trans_points(flat, self.axes.M)
+            pts_2d = np.column_stack([xs, ys])
+            if self._seg_slices is None:
+                n_segs, n_pts, _ = self._segments3d.shape
+                segs_2d = pts_2d.reshape(n_segs, n_pts, 2)
+                for path, seg_2d in zip(self._paths, segs_2d):
+                    path._vertices = seg_2d
+            else:
+                for path, (start, end) in zip(self._paths, self._seg_slices):
+                    path._vertices = pts_2d[start:end]
+            self.stale = True
+            finite_zs = zs[np.isfinite(zs)]
+            return float(np.min(finite_zs)) if finite_zs.size else 1e9
+        return super().do_3d_projection()
+
+
 class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
     # ───── View → ViewModel signals ─────
     copy_data_requested = Signal()  # Request ViewModel to copy spectrum data
@@ -133,6 +204,12 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         # ── Heatmap mode state ──
         self._heatmap_mode = False
         self._heatmap_colorbar = None      # Reference to colorbar for removal
+
+        # ── 3D view mode state ──
+        self._3d_mode = False
+        self._reset_3d_view = False
+        self._default_3d_elev = 25.0
+        self._default_3d_azim = -60.0
 
         # ── Cosmic-ray eraser state ──
         self._erase_mode = False           # Whether eraser mode is active
@@ -378,6 +455,18 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         self.btn_heatmap.setFixedSize(30, 30)
         self.btn_heatmap.toggled.connect(self._toggle_heatmap_mode)
         layout.addWidget(self.btn_heatmap)
+
+        # 3D View toggle
+        self.btn_3d = QToolButton()
+        self.btn_3d.setCheckable(True)
+        self.btn_3d.setIcon(Icons.view_3d())
+        self.btn_3d.setToolTip(
+            "3D View — display selected spectra in 3D.\n"
+            "Drag with the mouse to rotate and explore viewing angles.")
+        self.btn_3d.setIconSize(QSize(22, 22))
+        self.btn_3d.setFixedSize(30, 30)
+        self.btn_3d.toggled.connect(self._toggle_3d_mode)
+        layout.addWidget(self.btn_3d)
 
         # Heatmap controls (placed on toolbar next to btn_heatmap, hidden until heatmap mode is active)
         self.cbb_heatmap_yaxis = QComboBox()
@@ -768,7 +857,7 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
             
         # Keep parameter token choices up-to-date with the current selection
         self._refresh_colorbar_param_choices()
-        if getattr(self, "_heatmap_mode", False):
+        if getattr(self, "_heatmap_mode", False) or getattr(self, "_3d_mode", False):
             self._refresh_heatmap_yaxis_choices()
             
         self._plot()
@@ -866,16 +955,29 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         if self._range_drag_bg is not None or self._suspended_range_layout is not None:
             self._end_range_drag_blit()
         if not self._tensor_data:
+            self._ensure_axes_projection(bool(getattr(self, "_3d_mode", False)))
             self.ax.clear()
             self._remove_heatmap_colorbar()
+            if getattr(self, "_3d_mode", False):
+                self._apply_3d_axes_style()
+                self.ax.set_navigate_mode(None)
             self.lbl_r2.setText("R²=0")
             self.canvas.draw_idle()
             return
 
         # ── Heatmap branch ──
         if self._heatmap_mode:
+            self._ensure_axes_projection(False)
             self._plot_heatmap()
             return
+
+        # ── 3D view branch ──
+        if getattr(self, "_3d_mode", False):
+            self._ensure_axes_projection(True)
+            self._plot_3d()
+            return
+
+        self._ensure_axes_projection(False)
 
         # Save current zoom/pan limits so they survive a full ax.clear()
         xlim = self.ax.get_xlim()
@@ -1478,7 +1580,7 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
     # ── Filename-based numeric token extraction for heatmap Y-axis & colorbar ──
 
     def _is_legend_colorbar_active(self) -> bool:
-        """Return whether the 1D spectra plot should show a colorbar instead of a legend."""
+        """Return whether the 1D/3D spectra plot should show a colorbar instead of a legend."""
         return bool(
             not getattr(self, "_heatmap_mode", False)
             and hasattr(self, "btn_legend")
@@ -1908,61 +2010,569 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
 
         self.canvas.draw_idle()
 
-    def _toggle_heatmap_mode(self, checked: bool):
-        """Activate or deactivate heatmap mode, disabling incompatible tools."""
-        self._heatmap_mode = checked
+    def _sync_mode_toolbar_state(self):
+        """Synchronize toolbar button visibility, eraser state, and zoom mode across 2D/Heatmap/3D."""
+        is_heatmap = bool(getattr(self, "_heatmap_mode", False))
+        is_3d = bool(getattr(self, "_3d_mode", False))
+        is_standard = not is_heatmap and not is_3d
 
-        if checked:
-            # Refresh Y-axis choices from current data
+        if is_heatmap or is_3d:
             self._refresh_heatmap_yaxis_choices()
-
-            # Exit eraser mode if active
             if getattr(self, "_erase_mode", False):
                 self.btn_eraser.setChecked(False)
 
-            # Force zoom mode on and hide incompatible tool buttons
+        if is_3d:
+            self.btn_zoom.blockSignals(True)
+            self.btn_zoom.setChecked(False)
+            self.btn_zoom.blockSignals(False)
+            self._set_zoom_tool_active(False)
+            for b in (self.btn_peak, self.btn_baseline):
+                if b.isChecked():
+                    b.blockSignals(True)
+                    b.setChecked(False)
+                    b.blockSignals(False)
+        else:
             self.btn_zoom.blockSignals(True)
             self.btn_zoom.setChecked(True)
             self.btn_zoom.blockSignals(False)
             self._set_zoom_tool_active(True)
+            for b in (self.btn_peak, self.btn_baseline):
+                if b.isChecked():
+                    b.blockSignals(True)
+                    b.setChecked(False)
+                    b.blockSignals(False)
 
-            self.btn_peak.setVisible(False)
-            self.btn_baseline.setVisible(False)
-            self.btn_eraser.setVisible(False)
-            self.btn_norm.setVisible(False)
-            self.norm_xmin.setVisible(False)
-            self.norm_xmax.setVisible(False)
-            self.btn_bestfit.setVisible(False)
+        self.btn_zoom.setVisible(not is_3d)
+        self.btn_peak.setVisible(is_standard)
+        self.btn_baseline.setVisible(is_standard)
+        self.btn_eraser.setVisible(is_standard)
+        self.shift_panel.setVisible(is_standard)
 
-            # Hide shift sliders
-            self.shift_panel.setVisible(False)
+        self.btn_norm.setVisible(not is_heatmap)
+        self.norm_xmin.setVisible(not is_heatmap)
+        self.norm_xmax.setVisible(not is_heatmap)
+        self.btn_bestfit.setVisible(not is_heatmap)
 
-            # Show heatmap-specific options
-            self.cbb_heatmap_yaxis.setVisible(True)
-            self.le_heatmap_ylabel.setVisible(True)
-            self.spin_heatmap_interp.setVisible(True)
-        else:
-            # Re-show tools
-            self.btn_peak.setVisible(True)
-            self.btn_baseline.setVisible(True)
-            self.btn_eraser.setVisible(True)
-            self.btn_norm.setVisible(True)
-            self.norm_xmin.setVisible(True)
-            self.norm_xmax.setVisible(True)
-            self.btn_bestfit.setVisible(True)
+        self.cbb_heatmap_yaxis.setVisible(is_heatmap or is_3d)
+        self.le_heatmap_ylabel.setVisible(is_heatmap or is_3d)
+        self.spin_heatmap_interp.setVisible(is_heatmap)
 
-            # Restore shift sliders
-            self.shift_panel.setVisible(True)
-
-            # Remove the colorbar left over from heatmap
+        if not is_heatmap:
             self._remove_heatmap_colorbar()
 
-            # Hide heatmap-specific options
-            self.cbb_heatmap_yaxis.setVisible(False)
-            self.le_heatmap_ylabel.setVisible(False)
-            self.spin_heatmap_interp.setVisible(False)
+    def _toggle_heatmap_mode(self, checked: bool):
+        """Activate or deactivate heatmap mode, disabling incompatible tools."""
+        self._heatmap_mode = bool(checked)
+        if checked:
+            if getattr(self, "_3d_mode", False) or (
+                hasattr(self, "btn_3d") and self.btn_3d.isChecked()
+            ):
+                self._3d_mode = False
+                if hasattr(self, "btn_3d"):
+                    self.btn_3d.blockSignals(True)
+                    self.btn_3d.setChecked(False)
+                    self.btn_3d.blockSignals(False)
 
+        self._sync_mode_toolbar_state()
         self._emit_view_options()
+
+    def _toggle_3d_mode(self, checked: bool):
+        """Activate or deactivate interactive 3D spectra visualization mode."""
+        self._3d_mode = bool(checked)
+        if checked:
+            self._reset_3d_view = True
+            if getattr(self, "_heatmap_mode", False) or (
+                hasattr(self, "btn_heatmap") and self.btn_heatmap.isChecked()
+            ):
+                self._heatmap_mode = False
+                if hasattr(self, "btn_heatmap"):
+                    self.btn_heatmap.blockSignals(True)
+                    self.btn_heatmap.setChecked(False)
+                    self.btn_heatmap.blockSignals(False)
+
+        self._sync_mode_toolbar_state()
+        self._emit_view_options()
+
+    # ─────────────────────────────────────────────
+    # 3D View mode
+    # ─────────────────────────────────────────────
+
+    def _apply_2d_axes_style(self, style_dict: dict):
+        """Apply light/dark style colors to 2D rectilinear spines, ticks, and labels."""
+        self.ax.set_facecolor(style_dict.get('axes.facecolor', 'white'))
+        edge_color = style_dict.get('axes.edgecolor', 'black')
+        for spine in self.ax.spines.values():
+            spine.set_color(edge_color)
+
+        tick_color = style_dict.get('xtick.color', 'black')
+        self.ax.tick_params(colors=tick_color, which='both')
+
+        label_color = style_dict.get('axes.labelcolor', 'black')
+        self.ax.xaxis.label.set_color(label_color)
+        self.ax.yaxis.label.set_color(label_color)
+        self.ax.title.set_color(label_color)
+
+    def _apply_3d_axes_style(self):
+        """Apply light/dark style colors to Axes3D panes, axis lines, ticks, and labels."""
+        if not hasattr(self.ax, "zaxis"):
+            return
+        style_name = self.cbb_theme.currentText() if hasattr(self, "cbb_theme") else "Light Mode"
+        style_path = PLOT_POLICY_DARK if style_name == "Dark Mode" else PLOT_POLICY_LIGHT
+        style_dict = get_cached_style_dict(style_path)
+
+        axes_bg = style_dict.get("axes.facecolor", "white")
+        edge_color = style_dict.get("axes.edgecolor", "black")
+        tick_color = style_dict.get("xtick.color", "black")
+        label_color = style_dict.get("axes.labelcolor", "black")
+
+        self.ax.set_facecolor(axes_bg)
+        if style_name == "Dark Mode":
+            pane_colors = (
+                (0.18, 0.18, 0.20, 0.55),
+                (0.16, 0.16, 0.18, 0.55),
+                (0.14, 0.14, 0.16, 0.55),
+            )
+            grid_color = (1.0, 1.0, 1.0, 0.18)
+        else:
+            pane_colors = (
+                (0.95, 0.95, 0.95, 0.50),
+                (0.90, 0.90, 0.90, 0.50),
+                (0.925, 0.925, 0.925, 0.50),
+            )
+            grid_color = (0.0, 0.0, 0.0, 0.15)
+
+        for axis, pane_col in zip((self.ax.xaxis, self.ax.yaxis, self.ax.zaxis), pane_colors):
+            axis.set_pane_color(pane_col)
+            axis.pane.set_edgecolor(edge_color)
+            axis.line.set_color(edge_color)
+            axis._axinfo["grid"]["color"] = grid_color
+            axis.label.set_color(label_color)
+
+        for dim in ("x", "y", "z"):
+            self.ax.tick_params(axis=dim, colors=tick_color, which="both")
+        self.ax.title.set_color(label_color)
+
+    def _ensure_axes_projection(self, is_3d: bool):
+        """Switch figure axes between 2D rectilinear and 3D projection when needed."""
+        currently_3d = getattr(self.ax, "name", None) == "3d"
+        if currently_3d == bool(is_3d):
+            return
+
+        self._remove_heatmap_colorbar()
+        if hasattr(self, "range_manager"):
+            self.range_manager.clear_artists()
+        self._fitted_lines.clear()
+        self._legend_obj = None
+        self._legend_bbox = None
+        self._highlighted_line = None
+
+        old_ax = self.ax
+        if currently_3d:
+            # Disconnect Axes3D mouse callbacks before deleting to avoid leaks
+            for _sig, cb_dict in list(self.canvas.callbacks.callbacks.items()):
+                for cid, ref in list(cb_dict.items()):
+                    func = ref() if callable(ref) else None
+                    if getattr(func, "__self__", None) is old_ax:
+                        self.canvas.mpl_disconnect(cid)
+            if hasattr(old_ax, "disable_mouse_rotation"):
+                old_ax.disable_mouse_rotation()
+
+        if old_ax in self.figure.axes:
+            self.figure.delaxes(old_ax)
+
+        style_name = self.cbb_theme.currentText() if hasattr(self, "cbb_theme") else "Light Mode"
+        style_path = PLOT_POLICY_DARK if style_name == "Dark Mode" else PLOT_POLICY_LIGHT
+        with plt.style.context(style_path):
+            if is_3d:
+                self.ax = self.figure.add_subplot(
+                    111,
+                    projection="3d",
+                    elev=self._default_3d_elev,
+                    azim=self._default_3d_azim,
+                )
+                self._apply_3d_axes_style()
+                self.ax.set_navigate_mode(None)
+            else:
+                self.ax = self.figure.add_subplot(111)
+                self._apply_2d_axes_style(get_cached_style_dict(style_path))
+
+    def _resolve_series_colors(self, count: int) -> list:
+        """Resolve per-spectrum colors honoring explicit overrides, colorbar, and palette."""
+        if self._is_legend_colorbar_active():
+            param_values, _ = self._get_colorbar_values()
+            _, _, colors_cycle = self._resolve_colorbar_cmap_and_norm(count, param_values)
+        else:
+            colors_cycle = self._get_colors_cycle(count)
+        t_colors = self._tensor_data.get("colors") if self._tensor_data else None
+        if t_colors is None:
+            t_colors = []
+        return [
+            t_colors[i] if i < len(t_colors) and t_colors[i] else colors_cycle[i]
+            for i in range(count)
+        ]
+
+    @staticmethod
+    def _non_singular_bounds(vmin: float, vmax: float, pad: float = 0.5) -> tuple[float, float]:
+        """Ensure axis bounds are finite and non-singular."""
+        if not (np.isfinite(vmin) and np.isfinite(vmax)):
+            return 0.0, 1.0
+        if vmin == vmax:
+            return vmin - pad, vmax + pad
+        return float(vmin), float(vmax)
+
+    def _draw_3d_bestfit(self, y_values: np.ndarray, lw: float, fg_color):
+        """Render bestfit curves and peak components in 3D space."""
+        n_specs = len(self._tensor_data.get("fnames", []))
+        is_tensor_list = self._tensor_data.get("type") == "tensor_list"
+        x_val = self._tensor_data.get("x")
+        y_peaks_list = self._tensor_data.get("y_peaks", [])
+        colorful = (
+            not hasattr(self, "act_bestfit_colorful")
+            or self.act_bestfit_colorful.isChecked()
+        )
+
+        peak_segs, peak_cols = [], []
+        bestfit_segs = []
+
+        for spec_idx in range(min(n_specs, self.spin_max_legend_items.value())):
+            x = np.asarray(x_val[spec_idx] if isinstance(x_val, list) else x_val, dtype=float)
+            if len(x) == 0:
+                continue
+            y_pos = float(y_values[spec_idx])
+            y_base = self._get_tensor_item("y_baseline", spec_idx, is_tensor_list)
+            fit_model = self._get_tensor_item("fit_models", spec_idx, is_tensor_list)
+
+            if fit_model and fit_model.get("peak_models") and len(x) > 1:
+                n_fine_pts = max(1000, len(x) * 3)
+                x_fine = np.linspace(x.min(), x.max(), n_fine_pts)
+                sorted_keys = sorted(fit_model["peak_models"].keys(), key=lambda k: int(k))
+                y_fit_fine = np.zeros_like(x_fine)
+                for i, k in enumerate(sorted_keys):
+                    y_peak_fine = eval_peak_initial(x_fine, fit_model["peak_models"][k])
+                    y_fit_fine += y_peak_fine
+                    peak_segs.append(np.column_stack([
+                        x_fine,
+                        np.full(n_fine_pts, y_pos, dtype=float),
+                        y_peak_fine,
+                    ]))
+                    peak_cols.append(f"C{(i + 1) % 10}" if colorful else fg_color)
+
+                if y_base is not None:
+                    y_fit_fine += np.interp(x_fine, x, y_base)
+                bestfit_segs.append(np.column_stack([
+                    x_fine,
+                    np.full(n_fine_pts, y_pos, dtype=float),
+                    y_fit_fine,
+                ]))
+                continue
+
+            if y_peaks_list:
+                y_peaks = (
+                    y_peaks_list[spec_idx]
+                    if is_tensor_list and spec_idx < len(y_peaks_list)
+                    else ([p[spec_idx] for p in y_peaks_list] if not is_tensor_list else None)
+                )
+                if y_peaks is not None:
+                    for i, y_peak in enumerate(y_peaks):
+                        peak_segs.append(np.column_stack([
+                            x,
+                            np.full(len(x), y_pos, dtype=float),
+                            np.asarray(y_peak, dtype=float),
+                        ]))
+                        peak_cols.append(f"C{(i + 1) % 10}" if colorful else fg_color)
+
+            y_bestfit = self._get_tensor_item("y_bestfit", spec_idx, is_tensor_list)
+            if y_bestfit is not None:
+                bestfit_segs.append(np.column_stack([
+                    x,
+                    np.full(len(x), y_pos, dtype=float),
+                    np.asarray(y_bestfit, dtype=float),
+                ]))
+
+        if peak_segs:
+            self.ax.add_collection3d(
+                FastLine3DCollection(peak_segs, colors=peak_cols, linewidths=(lw * 0.6)),
+                autolim=False,
+            )
+        if bestfit_segs:
+            self.ax.add_collection3d(
+                FastLine3DCollection(
+                    bestfit_segs,
+                    colors=[fg_color] * len(bestfit_segs),
+                    linewidths=(lw * 0.6),
+                ),
+                autolim=False,
+            )
+
+    def _plot_3d(self):
+        """Render the selected spectra in an interactive 3D plot."""
+        if getattr(self, "_reset_3d_view", False) or not hasattr(self.ax, "elev"):
+            elev = self._default_3d_elev
+            azim = self._default_3d_azim
+            roll = 0.0
+            self._reset_3d_view = False
+        else:
+            elev = self.ax.elev
+            azim = self.ax.azim
+            roll = getattr(self.ax, "roll", 0.0)
+
+        fg_color = plt.rcParams.get("axes.labelcolor", "black")
+        self.ax.clear()
+        self._remove_heatmap_colorbar()
+        self._fitted_lines.clear()
+        self._apply_3d_axes_style()
+        self.ax.view_init(elev=elev, azim=azim, roll=roll)
+        self.ax.set_navigate_mode(None)
+        self._update_r2_display()
+
+        Y_data = self._tensor_data.get("y", [])
+        x_data = self._tensor_data.get("x")
+        N = len(Y_data)
+        if N == 0 or x_data is None:
+            self.canvas.draw_idle()
+            return
+
+        Z_norm = self._get_normalized_y_tensor(x_data, Y_data)
+        y_values, y_label = self._get_heatmap_y_values()
+        if len(y_values) != N:
+            y_values = np.arange(N, dtype=float)
+        else:
+            y_values = np.where(np.isfinite(y_values), y_values, np.arange(N, dtype=float))
+
+        plot_style = self.cbb_plotstyle.currentText()
+        lw = self.spin_lw.value()
+        dot_size = self.spin_dotsize.value()
+        main_colors = self._resolve_series_colors(N)
+
+        is_list = isinstance(Z_norm, list) or isinstance(x_data, list)
+        x_mins, x_maxs, z_mins, z_maxs, pos_z_mins = [], [], [], [], []
+
+        if plot_style == "dot":
+            all_x, all_y, all_z, all_c = [], [], [], []
+            if not is_list:
+                x_arr = np.asarray(x_data, dtype=float)
+                Z_arr = np.asarray(Z_norm, dtype=float)
+                if Z_arr.ndim == 1:
+                    Z_arr = Z_arr[None, :]
+                if x_arr.size > 0 and Z_arr.size > 0:
+                    X_3d = np.broadcast_to(x_arr[None, :], Z_arr.shape)
+                    Y_3d = np.broadcast_to(y_values[:, None], Z_arr.shape)
+                    all_x.append(X_3d.ravel())
+                    all_y.append(Y_3d.ravel())
+                    all_z.append(Z_arr.ravel())
+                    for i in range(N):
+                        all_c.extend([main_colors[i]] * len(x_arr))
+                    x_mins.append(float(np.nanmin(x_arr)))
+                    x_maxs.append(float(np.nanmax(x_arr)))
+                    z_mins.append(float(np.nanmin(Z_arr)))
+                    z_maxs.append(float(np.nanmax(Z_arr)))
+                    pos_z = Z_arr[Z_arr > 0]
+                    if pos_z.size:
+                        pos_z_mins.append(float(np.min(pos_z)))
+            else:
+                for i in range(N):
+                    xi = np.asarray(x_data[i] if isinstance(x_data, list) else x_data, dtype=float)
+                    zi = np.asarray(Z_norm[i], dtype=float)
+                    if xi.size == 0 or zi.size == 0:
+                        continue
+                    all_x.append(xi)
+                    all_y.append(np.full(len(xi), y_values[i], dtype=float))
+                    all_z.append(zi)
+                    all_c.extend([main_colors[i]] * len(xi))
+                    x_mins.append(float(np.nanmin(xi)))
+                    x_maxs.append(float(np.nanmax(xi)))
+                    z_mins.append(float(np.nanmin(zi)))
+                    z_maxs.append(float(np.nanmax(zi)))
+                    pos_z = zi[zi > 0]
+                    if pos_z.size:
+                        pos_z_mins.append(float(np.min(pos_z)))
+            if all_x:
+                self.ax.scatter(
+                    np.concatenate(all_x),
+                    np.concatenate(all_y),
+                    np.concatenate(all_z),
+                    s=dot_size,
+                    c=all_c,
+                    marker="o",
+                    edgecolors="none",
+                    depthshade=False,
+                )
+        else:
+            if not is_list:
+                x_arr = np.asarray(x_data, dtype=float)
+                Z_arr = np.asarray(Z_norm, dtype=float)
+                if Z_arr.ndim == 1:
+                    Z_arr = Z_arr[None, :]
+                if x_arr.size > 0 and Z_arr.size > 0:
+                    X_3d = np.broadcast_to(x_arr[None, :], Z_arr.shape)
+                    Y_3d = np.broadcast_to(y_values[:, None], Z_arr.shape)
+                    segs_3d = np.stack([X_3d, Y_3d, Z_arr], axis=-1)
+                    lc = FastLine3DCollection(segs_3d, colors=main_colors, linewidths=lw)
+                    self.ax.add_collection3d(lc, autolim=False)
+                    x_mins.append(float(np.nanmin(x_arr)))
+                    x_maxs.append(float(np.nanmax(x_arr)))
+                    z_mins.append(float(np.nanmin(Z_arr)))
+                    z_maxs.append(float(np.nanmax(Z_arr)))
+                    pos_z = Z_arr[Z_arr > 0]
+                    if pos_z.size:
+                        pos_z_mins.append(float(np.min(pos_z)))
+            else:
+                segs_3d = []
+                seg_colors = []
+                for i in range(N):
+                    xi = np.asarray(x_data[i] if isinstance(x_data, list) else x_data, dtype=float)
+                    zi = np.asarray(Z_norm[i], dtype=float)
+                    if xi.size == 0 or zi.size == 0:
+                        continue
+                    segs_3d.append(np.column_stack([
+                        xi,
+                        np.full(len(xi), y_values[i], dtype=float),
+                        zi,
+                    ]))
+                    seg_colors.append(main_colors[i])
+                    x_mins.append(float(np.nanmin(xi)))
+                    x_maxs.append(float(np.nanmax(xi)))
+                    z_mins.append(float(np.nanmin(zi)))
+                    z_maxs.append(float(np.nanmax(zi)))
+                    pos_z = zi[zi > 0]
+                    if pos_z.size:
+                        pos_z_mins.append(float(np.min(pos_z)))
+                if segs_3d:
+                    lc = FastLine3DCollection(segs_3d, colors=seg_colors, linewidths=lw)
+                    self.ax.add_collection3d(lc, autolim=False)
+
+        # ── Raw overlay ──
+        if self.act_raw.isChecked():
+            x0 = self._tensor_data.get("x0")
+            Y0 = self._tensor_data.get("y0")
+            if x0 is not None and Y0 is not None:
+                if not isinstance(Y0, list) and not isinstance(x0, list):
+                    x0_arr = np.asarray(x0, dtype=float)
+                    Y0_arr = np.asarray(Y0, dtype=float)
+                    if Y0_arr.ndim == 1:
+                        Y0_arr = Y0_arr[None, :]
+                    if x0_arr.size > 0 and Y0_arr.size > 0:
+                        raw_segs = np.stack([
+                            np.broadcast_to(x0_arr[None, :], Y0_arr.shape),
+                            np.broadcast_to(y_values[:, None], Y0_arr.shape),
+                            Y0_arr,
+                        ], axis=-1)
+                        self.ax.add_collection3d(
+                            FastLine3DCollection(
+                                raw_segs,
+                                colors=[fg_color] * len(Y0_arr),
+                                linewidths=0.8,
+                                alpha=0.8,
+                            ),
+                            autolim=False,
+                        )
+                        z_mins.append(float(np.nanmin(Y0_arr)))
+                        z_maxs.append(float(np.nanmax(Y0_arr)))
+                else:
+                    raw_segs = []
+                    for i in range(N):
+                        xi = np.asarray(x0[i] if isinstance(x0, list) else x0, dtype=float)
+                        yi = np.asarray(Y0[i], dtype=float)
+                        if xi.size > 0 and yi.size > 0:
+                            raw_segs.append(np.column_stack([
+                                xi,
+                                np.full(len(xi), y_values[i], dtype=float),
+                                yi,
+                            ]))
+                            z_mins.append(float(np.nanmin(yi)))
+                            z_maxs.append(float(np.nanmax(yi)))
+                    if raw_segs:
+                        self.ax.add_collection3d(
+                            FastLine3DCollection(
+                                raw_segs,
+                                colors=[fg_color] * len(raw_segs),
+                                linewidths=0.8,
+                                alpha=0.8,
+                            ),
+                            autolim=False,
+                        )
+
+        # ── Bestfit overlay (un-normalized view) ──
+        if self.btn_bestfit.isChecked() and not self.btn_norm.isChecked():
+            self._draw_3d_bestfit(y_values, lw, fg_color)
+
+        # ── Axes limits & scale ──
+        x_lo, x_hi = self._non_singular_bounds(
+            min(x_mins) if x_mins else 0.0,
+            max(x_maxs) if x_maxs else 1.0,
+        )
+        y_lo, y_hi = self._non_singular_bounds(
+            float(np.nanmin(y_values)),
+            float(np.nanmax(y_values)),
+        )
+        z_lo, z_hi = self._non_singular_bounds(
+            min(z_mins) if z_mins else 0.0,
+            max(z_maxs) if z_maxs else 1.0,
+        )
+        self.ax.set_xlim(x_lo, x_hi)
+        self.ax.set_ylim(y_lo, y_hi)
+
+        if self.cbb_yscale.currentText() == "Log" and z_hi > 0:
+            z_pos_lo = min(pos_z_mins) if pos_z_mins else max(z_hi * 1e-4, 1e-9)
+            if z_pos_lo >= z_hi:
+                z_pos_lo = z_hi * 0.1
+            self.ax.set_zscale("log")
+            self.ax.set_zlim(z_pos_lo, z_hi)
+        else:
+            self.ax.set_zscale("linear")
+            self.ax.set_zlim(z_lo, z_hi)
+
+        # ── Legend / Colorbar ──
+        self._legend_obj = None
+        self._legend_bbox = None
+        if self.btn_legend.isChecked():
+            if self._is_legend_colorbar_active():
+                param_values, cbar_label = self._get_colorbar_values()
+                cmap, norm, _ = self._resolve_colorbar_cmap_and_norm(N, param_values)
+                sm = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
+                sm.set_array([])
+                cbar = self.figure.colorbar(sm, ax=self.ax, pad=0.1, shrink=0.75)
+                cbar.set_label(cbar_label, color=fg_color)
+                cbar.ax.tick_params(colors=fg_color)
+                self._heatmap_colorbar = cbar
+            else:
+                t_labels = self._tensor_data.get("labels", [])
+                t_fnames = self._tensor_data.get("fnames", [])
+                proxies = self._tensor_data.get("proxies", [])
+                max_items = self.spin_max_legend_items.value()
+                handles = []
+                labels = []
+                for spec_idx in range(min(N, max_items)):
+                    label_str = (
+                        t_labels[spec_idx]
+                        if spec_idx < len(t_labels) and t_labels[spec_idx]
+                        else (t_fnames[spec_idx] if spec_idx < len(t_fnames)
+                              else f"Spectrum {spec_idx + 1}")
+                    )
+                    proxy_line = mlines.Line2D(
+                        [], [], color=main_colors[spec_idx], label=label_str, lw=lw
+                    )
+                    if spec_idx < len(proxies):
+                        proxy_line._spectrum_ref = proxies[spec_idx]
+                    handles.append(proxy_line)
+                    labels.append(label_str)
+                if handles:
+                    if getattr(self, "act_legend_outside", None) and self.act_legend_outside.isChecked():
+                        legend = self.ax.legend(
+                            handles,
+                            labels,
+                            loc="center left",
+                            bbox_to_anchor=(1.02, 0.5),
+                        )
+                    else:
+                        legend = self.ax.legend(handles, labels, loc="upper right")
+                    self._make_legend_pickable(legend)
+
+        self.ax.grid(self.act_grid.isChecked())
+        self.ax.set_xlabel(self.cbb_xaxis.currentText())
+        self.ax.set_ylabel(y_label)
+        self.ax.set_zlabel(self.cbb_yaxis.currentText())
+        self.canvas.draw_idle()
 
 
     def _get_normalized_y(self, x, y, xmin=None, xmax=None):
@@ -2240,6 +2850,7 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
             "max_legend_items": self.spin_max_legend_items.value() if hasattr(self, "spin_max_legend_items") else 15,
             "copy_fig_theme": self.cbb_copy_theme.currentText() if hasattr(self, "cbb_copy_theme") else "Light Mode",
             "heatmap": self.btn_heatmap.isChecked() if hasattr(self, "btn_heatmap") else False,
+            "view_3d": self.btn_3d.isChecked() if hasattr(self, "btn_3d") else False,
             "heatmap_yaxis": self.cbb_heatmap_yaxis.currentText() if hasattr(self, "cbb_heatmap_yaxis") else "Index",
             "heatmap_ylabel": self.le_heatmap_ylabel.text() if hasattr(self, "le_heatmap_ylabel") else "",
             "heatmap_interp": self.spin_heatmap_interp.value() if hasattr(self, "spin_heatmap_interp") else 300,
@@ -2311,8 +2922,23 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
                     state.get("max_legend_items", 15))
         if hasattr(self, "cbb_copy_theme"):
             _update(self.cbb_copy_theme, self.cbb_copy_theme.setCurrentText, state.get("copy_fig_theme", "Light Mode"))
+        want_heatmap = bool(state.get("heatmap", False))
+        want_3d = bool(state.get("view_3d", False)) and not want_heatmap
         if hasattr(self, "btn_heatmap"):
-            _update(self.btn_heatmap, self.btn_heatmap.setChecked, state.get("heatmap", False))
+            _update(self.btn_heatmap, self.btn_heatmap.setChecked, want_heatmap)
+        if hasattr(self, "btn_3d"):
+            _update(self.btn_3d, self.btn_3d.setChecked, want_3d)
+        mode_changed = (
+            getattr(self, "_heatmap_mode", False) != want_heatmap
+            or getattr(self, "_3d_mode", False) != want_3d
+        )
+        self._heatmap_mode = want_heatmap
+        self._3d_mode = want_3d
+        if want_3d and mode_changed:
+            self._reset_3d_view = True
+        if mode_changed:
+            self._sync_mode_toolbar_state()
+
         if hasattr(self, "cbb_heatmap_yaxis"):
             hm_yaxis = state.get("heatmap_yaxis", "Index")
             if hm_yaxis:
@@ -2324,7 +2950,9 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
             self._record_token_selection(
                 self.cbb_heatmap_yaxis, self._heatmap_yaxis_selection
             )
-            if self._tensor_data and getattr(self, "_heatmap_mode", False):
+            if self._tensor_data and (
+                getattr(self, "_heatmap_mode", False) or getattr(self, "_3d_mode", False)
+            ):
                 self._refresh_heatmap_yaxis_choices()
         if hasattr(self, "le_heatmap_ylabel"):
             _update(self.le_heatmap_ylabel, self.le_heatmap_ylabel.setText, state.get("heatmap_ylabel", ""))
@@ -2378,19 +3006,10 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
                 f"QFrame#canvasCard {{ background-color: {fig_hex}; border: 1px solid {tok.border}; border-radius: 8px; }}"
             )
         self.figure.patch.set_edgecolor(style_dict.get('figure.edgecolor', 'white'))
-        self.ax.set_facecolor(style_dict.get('axes.facecolor', 'white'))
-        
-        edge_color = style_dict.get('axes.edgecolor', 'black')
-        for spine in self.ax.spines.values():
-            spine.set_color(edge_color)
-            
-        tick_color = style_dict.get('xtick.color', 'black')
-        self.ax.tick_params(colors=tick_color, which='both')
-        
-        label_color = style_dict.get('axes.labelcolor', 'black')
-        self.ax.xaxis.label.set_color(label_color)
-        self.ax.yaxis.label.set_color(label_color)
-        self.ax.title.set_color(label_color)
+        if getattr(self.ax, "name", None) == "3d":
+            self._apply_3d_axes_style()
+        else:
+            self._apply_2d_axes_style(style_dict)
         
         if not getattr(self, '_is_copying', False):
             self.plotStyleChanged.emit()
@@ -2471,6 +3090,10 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
         if event.inaxes != self.ax:
             return
 
+        # 3D mode: mouse interactions are handled natively by Axes3D (rotate/pan/zoom)
+        if getattr(self, "_3d_mode", False):
+            return
+
         # ── Check if clicking on a visible range selector marker or span ──
         if self._handle_range_mouse_press(event):
             return
@@ -2549,6 +3172,10 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
 
     def _rescale(self):
         """Rescale the spectra plot to fit within the axes."""
+        if getattr(self, "_3d_mode", False):
+            self._reset_3d_view = True
+            self._plot()
+            return
         self.ax.autoscale()
         self.canvas.draw_idle()
         
@@ -2578,6 +3205,17 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
 
     def _on_scroll(self, event):
         if event.inaxes != self.ax:
+            return
+
+        if getattr(self, "_3d_mode", False) and hasattr(self.ax, "get_zlim"):
+            z_min, z_max = self.ax.get_zlim()
+            dz = (z_max - z_min) * 0.1
+            if event.step < 0:      # scroll up
+                z_max += dz
+            else:                   # scroll down
+                z_max = max(z_min + 1e-9, z_max - dz)
+            self.ax.set_zlim(z_min, z_max)
+            self.canvas.draw_idle()
             return
 
         self._range_drag_bg = None
@@ -2628,6 +3266,11 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
 
     def _on_hover(self, event):
         self._update_coordinates(event)
+
+        if getattr(self, "_3d_mode", False):
+            self._hide_tooltip()
+            self._reset_highlight()
+            return
 
         # Skip heavy hover/peak hit-testing while dragging a range bracket
         if hasattr(self, "range_manager") and self.range_manager.is_dragging():
@@ -3112,6 +3755,7 @@ class VSpectraViewer(QWidget, SpectraRangeBracketMixin):
             self.btn_copy.setIcon(Icons.copy(color=icon_color))
             self.btn_options.setIcon(Icons.settings(color=icon_color))
             self.btn_heatmap.setIcon(Icons.map_2d(color=icon_color))
+            self.btn_3d.setIcon(Icons.view_3d(color=icon_color))
         
         if hasattr(self, 'lbl_coordinates'):
             self.lbl_coordinates.setStyleSheet(f"font-size: 11px; padding: 0px 4px; color: {tok.text_secondary};")

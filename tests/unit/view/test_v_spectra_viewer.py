@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QDialog, QGroupBox, QLabel
 from spectroview import DEFAULT_COLORS
 from spectroview.view.components.customized_widgets import CustomizedPalette
 from spectroview.view.components.v_spectra_viewer import (
+    FastLine3DCollection,
     LEGEND_EDITOR_MAX_ROWS,
     SPECTRA_COLOR_PALETTES,
     VSpectraViewer,
@@ -884,6 +885,206 @@ def test_colorbar_parameter_persists_across_dynamic_spectra_list_selections(view
     assert viewer._heatmap_colorbar is not None
     assert viewer._heatmap_colorbar.norm.vmin == pytest.approx(150.0)
     assert viewer._heatmap_colorbar.norm.vmax == pytest.approx(250.0)
+
+
+def test_3d_view_toggle_and_controls(viewer):
+    """Verify btn_3d sits next to btn_heatmap and cleanly switches toolbar state and Axes3D."""
+    viewer.show()
+    viewer.set_plot_data(_tensor_data(3))
+
+    layout = viewer.control_bar.layout()
+    widgets = [layout.itemAt(i).widget() for i in range(layout.count()) if layout.itemAt(i).widget() is not None]
+    idx_hm = widgets.index(viewer.btn_heatmap)
+    assert widgets[idx_hm + 1] is viewer.btn_3d
+
+    # Initially standard 2D mode
+    assert not viewer._3d_mode
+    assert viewer.ax.name == "rectilinear"
+    assert viewer.zoom_pan_active is True
+    assert viewer.btn_zoom.isVisible()
+
+    # Toggle 3D mode ON
+    viewer.btn_3d.setChecked(True)
+    assert viewer._3d_mode is True
+    assert viewer.ax.name == "3d"
+    assert viewer.zoom_pan_active is False
+    assert not viewer.btn_zoom.isChecked()
+    assert not viewer.btn_zoom.isVisible()
+    assert not viewer.btn_peak.isVisible()
+    assert not viewer.btn_baseline.isVisible()
+    assert not viewer.btn_eraser.isVisible()
+    assert not viewer.shift_panel.isVisible()
+    assert viewer.btn_norm.isVisible()
+    assert viewer.btn_bestfit.isVisible()
+    assert viewer.cbb_heatmap_yaxis.isVisible()
+    assert viewer.le_heatmap_ylabel.isVisible()
+    assert not viewer.spin_heatmap_interp.isVisible()
+
+    # Toggle 3D mode OFF -> restores Standard 2D mode
+    viewer.btn_3d.setChecked(False)
+    assert viewer._3d_mode is False
+    assert viewer.ax.name == "rectilinear"
+    assert viewer.zoom_pan_active is True
+    assert viewer.btn_zoom.isChecked()
+    assert viewer.btn_zoom.isVisible()
+    assert viewer.btn_peak.isVisible()
+    assert viewer.btn_baseline.isVisible()
+    assert viewer.btn_eraser.isVisible()
+    assert viewer.shift_panel.isVisible()
+    assert not viewer.cbb_heatmap_yaxis.isVisible()
+    assert not viewer.le_heatmap_ylabel.isVisible()
+
+
+def test_heatmap_and_3d_mode_mutual_exclusivity(viewer):
+    """Verify Standard <-> Heatmap <-> 3D transitions keep modes mutually exclusive and clean."""
+    viewer.show()
+    viewer.set_plot_data(_tensor_data(4))
+
+    # Standard -> Heatmap
+    viewer.btn_heatmap.setChecked(True)
+    assert viewer._heatmap_mode is True
+    assert viewer._3d_mode is False
+    assert viewer.btn_heatmap.isChecked()
+    assert not viewer.btn_3d.isChecked()
+    assert viewer.ax.name == "rectilinear"
+    assert viewer._heatmap_colorbar is not None
+
+    # Heatmap -> 3D
+    viewer.btn_3d.setChecked(True)
+    assert viewer._3d_mode is True
+    assert viewer._heatmap_mode is False
+    assert viewer.btn_3d.isChecked()
+    assert not viewer.btn_heatmap.isChecked()
+    assert viewer.ax.name == "3d"
+    assert viewer._heatmap_colorbar is None
+
+    # 3D -> Heatmap
+    viewer.btn_heatmap.setChecked(True)
+    assert viewer._heatmap_mode is True
+    assert viewer._3d_mode is False
+    assert viewer.btn_heatmap.isChecked()
+    assert not viewer.btn_3d.isChecked()
+    assert viewer.ax.name == "rectilinear"
+    assert viewer._heatmap_colorbar is not None
+    assert viewer.btn_zoom.isVisible()
+    assert viewer.spin_heatmap_interp.isVisible()
+
+    # Heatmap -> Standard
+    viewer.btn_heatmap.setChecked(False)
+    assert viewer._heatmap_mode is False
+    assert viewer._3d_mode is False
+    assert viewer.ax.name == "rectilinear"
+    assert viewer._heatmap_colorbar is None
+    assert viewer.shift_panel.isVisible()
+
+
+def test_3d_view_rendering_modes_and_interactive_rotation(viewer):
+    """Verify 3D rendering (uniform/ragged, line/dot, norm, tokens, themes), rotation, zoom, rescale, and options round-trip."""
+    import matplotlib.backend_bases as mbb
+
+    viewer.resize(640, 420)
+    viewer.show()
+
+    fnames = [
+        "sample_25°C_run",
+        "sample_100°C_run",
+        "sample_300°C_run",
+    ]
+    viewer.set_plot_data(_series_data_from_fnames(fnames))
+    viewer.btn_3d.setChecked(True)
+    viewer.canvas.draw()
+
+    assert viewer.ax.name == "3d"
+    assert any(isinstance(c, FastLine3DCollection) for c in viewer.ax.collections)
+
+    # Filename Y-axis token extraction
+    viewer.cbb_heatmap_yaxis.setCurrentText("25°C")
+    ylim = viewer.ax.get_ylim3d()
+    assert min(ylim) <= 25.0 + 1e-6
+    assert max(ylim) >= 300.0 - 1e-6
+
+    # Normalization scales Z max to 1.0
+    viewer.btn_norm.setChecked(True)
+    viewer.canvas.draw()
+    assert viewer.ax.get_zlim3d()[1] == pytest.approx(1.0, rel=1e-2)
+    viewer.btn_norm.setChecked(False)
+
+    # Dot plot style and Dark Mode
+    viewer.cbb_plotstyle.setCurrentText("dot")
+    viewer.cbb_theme.setCurrentText("Dark Mode")
+    viewer.canvas.draw()
+    assert len(viewer.ax.collections) >= 1
+
+    # Ragged tensor_list and single-spectrum 3D rendering
+    ragged = {
+        "type": "tensor_list",
+        "x": [np.linspace(100.0, 300.0, 10), np.linspace(150.0, 400.0, 15)],
+        "y": [np.ones(10) * 5.0, np.ones(15) * 10.0],
+        "x0": [np.linspace(100.0, 300.0, 10), np.linspace(150.0, 400.0, 15)],
+        "y0": [np.ones(10) * 5.0, np.ones(15) * 10.0],
+        "colors": [None, None],
+        "labels": ["Ragged 1", "Ragged 2"],
+        "fnames": ["ragged_1.txt", "ragged_2.txt"],
+        "proxies": [],
+    }
+    viewer.cbb_plotstyle.setCurrentText("line")
+    viewer.set_plot_data(ragged)
+    viewer.canvas.draw()
+    assert any(isinstance(c, FastLine3DCollection) for c in viewer.ax.collections)
+
+    viewer.set_plot_data(_tensor_data(1))
+    viewer.canvas.draw()
+    assert viewer.ax.name == "3d"
+
+    # Interactive mouse drag rotation changes elev / azim
+    viewer.set_plot_data(_tensor_data(4))
+    viewer.canvas.draw()
+    init_elev = viewer.ax.elev
+    init_azim = viewer.ax.azim
+
+    press = mbb.MouseEvent("button_press_event", viewer.canvas, 200, 200, button=1)
+    press.inaxes = viewer.ax
+    press.xdata, press.ydata = 0.0, 0.0
+    viewer.canvas.callbacks.process("button_press_event", press)
+
+    move = mbb.MouseEvent("motion_notify_event", viewer.canvas, 270, 240, button=1)
+    move.inaxes = viewer.ax
+    move.xdata, move.ydata = 0.25, 0.15
+    viewer.canvas.callbacks.process("motion_notify_event", move)
+
+    release = mbb.MouseEvent("button_release_event", viewer.canvas, 270, 240, button=1)
+    release.inaxes = viewer.ax
+    viewer.canvas.callbacks.process("button_release_event", release)
+
+    assert (viewer.ax.elev != init_elev) or (viewer.ax.azim != init_azim)
+
+    # Scroll wheel adjusts zlim
+    zlim_before = viewer.ax.get_zlim3d()
+    scroll = mbb.MouseEvent("scroll_event", viewer.canvas, 200, 200, step=-1)
+    scroll.inaxes = viewer.ax
+    viewer._on_scroll(scroll)
+    zlim_after = viewer.ax.get_zlim3d()
+    assert zlim_after[1] > zlim_before[1]
+
+    # Rescale restores default camera angles and limits
+    viewer._rescale()
+    assert viewer.ax.elev == pytest.approx(viewer._default_3d_elev)
+    assert viewer.ax.azim == pytest.approx(viewer._default_3d_azim)
+    assert viewer.ax.get_zlim3d()[1] < zlim_after[1]
+
+    # Options state round-trip
+    state_3d = viewer.get_options_state()
+    assert state_3d["view_3d"] is True
+    assert state_3d["heatmap"] is False
+
+    viewer.btn_3d.setChecked(False)
+    assert viewer._3d_mode is False
+    assert viewer.ax.name == "rectilinear"
+
+    viewer.set_options_state(state_3d)
+    assert viewer.btn_3d.isChecked() is True
+    assert viewer._3d_mode is True
+    assert viewer.ax.name == "3d"
 
 
 

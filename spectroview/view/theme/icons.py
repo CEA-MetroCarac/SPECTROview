@@ -139,6 +139,10 @@ LEGACY_ICON_MAP: dict[str, str] = {
     "spectrum": "spectrum_1d",
     "2dmap": "map_2d",
     "2dmap.png": "map_2d",
+    "3d": "view_3d",
+    "3d.png": "view_3d",
+    "view_3d": "view_3d",
+    "view_3d.png": "view_3d",
     "wafer": "wafer_map",
     "wafer.png": "wafer_map",
     "wafer_map": "wafer_map",
@@ -454,6 +458,10 @@ class Icons:
     @classmethod
     def map_2d(cls, color: str | None = None, size: int = 16) -> QIcon:
         return svg_icon("map_2d", size=size, color=color)
+
+    @classmethod
+    def view_3d(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("view_3d", size=size, color=color)
 
     @classmethod
     def wafer_map(cls, color: str | None = None, size: int = 16) -> QIcon:

@@ -1,5 +1,5 @@
 """Unit tests for VPeakTable widget lifecycle and rebuild behavior."""
-from spectroview.view.components.v_peak_table import VPeakTable
+from spectroview.view.components.lower_tabs import VPeakTable
 
 
 def test_peak_table_rebuild_after_clear_without_cpp_deleted_error(qapp):

@@ -1,5 +1,5 @@
 """Tests for VFitResults' fit-results decimals control (Fit Results tab)."""
-from spectroview.view.components.v_fit_results import VFitResults
+from spectroview.view.components.lower_tabs import VFitResults
 
 
 class TestFitResultsDecimals:

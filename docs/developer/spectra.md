@@ -282,7 +282,7 @@ The View Option menu and bottom toolbar provide user-configurable display settin
 
 ### `VFitModelBuilder` — The Controls Panel
 
-**File**: [`v_fit_model_builder.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_fit_model_builder.py)
+**File**: [`v_fit_model_builder.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/lower_tabs/v_fit_model_builder.py)
 
 A splitter panel containing the full preprocessing and fitting control surface:
 
@@ -292,7 +292,7 @@ A splitter panel containing the full preprocessing and fitting control surface:
 
 ### `VPeakTable` — The Parameter Table
 
-**File**: [`v_peak_table.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/v_peak_table.py)
+**File**: [`v_peak_table.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/lower_tabs/v_peak_table.py)
 
 An interactive table where each row represents one peak. Columns show label, model shape, center (x₀), FWHM, amplitude, and bound toggles. Editing any cell emits a signal to `VMWorkspaceSpectra`, which updates `md.fit_model` and immediately reconstructs the Y_peaks preview.
 

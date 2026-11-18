@@ -142,8 +142,14 @@ spectroview/
 │       │   ├── v_plot_3d.py           # FastLine3DCollection & SpectraPlot3DMixin
 │       │   ├── v_interactions.py      # SpectraInteractionMixin (zoom, hover, peak drag, eraser)
 │       │   └── v_spectra_legend_editor.py  # Batch legend editor dialog, color combo & mixin
-│       ├── v_fit_model_builder.py     # Baseline + Peak + Fit controls
-│       ├── v_peak_table.py            # Interactive peak parameter table
+│       ├── lower_tabs/                # Lower workspace tab panels package
+│       │   ├── __init__.py            # Package exports (VFitModelBuilder, VPeakTable, VFitResults, VMVA, VMoreTab)
+│       │   ├── v_fit_model_builder.py # Baseline + Peak + Fit controls
+│       │   ├── v_peak_table.py        # Interactive peak parameter table
+│       │   ├── v_fit_results.py       # Fit results DataFrame table
+│       │   ├── v_mva.py               # PCA/NMF controls and tab coordinator
+│       │   ├── v_mva_plots.py         # MVA _PlotTab widget & Matplotlib plotting mixin
+│       │   └── v_moretab.py           # Metadata & normalization tab panel
 │       ├── map_viewer/                # Map viewer package (2D/wafer heatmap, interactions, dialog)
 │       │   ├── __init__.py            # Package exports (VMapViewer, VMapViewerDialog, selection helpers)
 │       │   ├── map_selection.py       # Shared spatial geometry, selection resolution & overlay helper
@@ -167,14 +173,11 @@ spectroview/
 │       ├── v_multipanel_dialog.py     # Multi-panel publication figure composer
 │       ├── v_plot_recipe_dialog.py    # Plot Recipe manager dialog
 │       ├── v_style_template_dialog.py # Graph Style Template manager dialog
-│       ├── v_mva.py                   # PCA/NMF controls and plots
-│       ├── v_fit_results.py           # Fit results DataFrame table
 │       ├── v_data_filter.py           # Dynamic query filter panel
 │       ├── v_dataframe_table.py       # Generic DataFrame viewer
 │       ├── v_quick_calculators.py     # Scientific calculators GUI
 │       ├── v_notification.py          # Native floating notification badges & manager
 │       ├── v_spectra_list.py          # Spectrum list with checkboxes
-│       ├── v_moretab.py               # Metadata / tab panel
 │       ├── v_settings.py              # Fit/view settings dialog
 │       ├── v_menubar.py               # Main menu bar
 │       ├── v_about.py                 # About dialog
@@ -338,14 +341,15 @@ Workspaces are composed from **shared components** that follow the same signal-b
 |-----------|------|---------|
 | `VSpectraViewer` | `spectra_viewer/v_spectra_viewer.py` | Matplotlib canvas package for 1D/Heatmap/3D spectrum display, zoom/pan, peak/baseline/eraser interaction |
 | `SpectraLegendEditorDialog` | `spectra_viewer/v_spectra_legend_editor.py` | Transactional palette, legend-limit, label, and color editor (100-row batches) |
-| `VFitModelBuilder` | `v_fit_model_builder.py` | X-correction, spectral range, baseline, peaks, fit controls |
-| `VPeakTable` | `v_peak_table.py` | Editable table of peak parameters (center, FWHM, amplitude, bounds) |
+| `VFitModelBuilder` | `lower_tabs/v_fit_model_builder.py` | X-correction, spectral range, baseline, peaks, fit controls |
+| `VPeakTable` | `lower_tabs/v_peak_table.py` | Editable table of peak parameters (center, FWHM, amplitude, bounds) |
 | `VMapViewer` | `map_viewer/v_map_viewer.py` | Heatmap/wafer canvas with Z/X range sliders, mask, profile extraction |
 | `VMapViewerDialog` | `map_viewer/v_map_viewer_dialog.py` | Detachable always-on-top window wrapping `VMapViewer` |
 | `VGraph` | `v_graph.py` | Matplotlib graph widget supporting 10+ plot styles |
 | `VDataFilter` | `v_data_filter.py` | Dynamic `pandas` `.query()` filter builder |
-| `VFitResults` | `v_fit_results.py` | Color-coded fit results table |
-| `VMVA` | `v_mva.py` | PCA/NMF controls and embedded plotting |
+| `VFitResults` | `lower_tabs/v_fit_results.py` | Color-coded fit results table |
+| `VMVA` | `lower_tabs/v_mva.py` | PCA/NMF controls and embedded plotting |
+| `VMoreTab` | `lower_tabs/v_moretab.py` | Spectrum metadata display and Y-normalization controls |
 | `CustomizeGraphDialog` | `customize_graph/customize_graph_dialog.py` | Singleton dialog for graph annotation, legends, and axis customization |
 
 ---

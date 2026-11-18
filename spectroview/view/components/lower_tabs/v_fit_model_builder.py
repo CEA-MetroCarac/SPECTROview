@@ -1,22 +1,33 @@
-# spectroview/view/components/v_fit_model_builder.py
-from spectroview import PEAK_MODELS
-from spectroview.view.theme import Icons, current_tokens
+# spectroview/view/components/lower_tabs/v_fit_model_builder.py
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
-    QGroupBox, QLabel, QPushButton, QComboBox,
-    QDoubleSpinBox, QSpinBox, QScrollArea, QCheckBox, QApplication, QSlider, QSizePolicy, QFrame
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QDoubleSpinBox,
+    QFrame,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QSlider,
+    QSpinBox,
+    QSplitter,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt, Signal, QTimer
 
-from spectroview.fit_engine.baseline import (
-    get_baseline_method_meta
-)
-
-from spectroview.view.components.v_peak_table import VPeakTable
+from spectroview import PEAK_MODELS
+from spectroview.fit_engine.baseline import get_baseline_method_meta
+from spectroview.view.components.lower_tabs.v_peak_table import VPeakTable
+from spectroview.view.theme import Icons, current_tokens
 
 
 class VFitModelBuilder(QWidget):
     """View: Fit Model Builder panel."""
+
     # ───── View → ViewModel signals ─────
     peak_shape_changed = Signal(str)
     spectral_range_apply_requested = Signal(float, float, bool)
@@ -43,12 +54,11 @@ class VFitModelBuilder(QWidget):
     refresh_fit_models_requested = Signal()
     apply_loaded_fit_model_requested = Signal(bool)  # apply_all
 
-    #PeakTable signals: 
+    # PeakTable signals:
     peak_label_changed = Signal(int, str)
     peak_model_changed = Signal(int, str)
     peak_param_changed = Signal(int, str, str, object)
     peak_deleted = Signal(int)
-
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -75,11 +85,11 @@ class VFitModelBuilder(QWidget):
         # ==================================================
         left_scroll = QScrollArea()
         left_scroll.setFrameShape(QFrame.NoFrame)
-        left_scroll.setMaximumWidth(400) 
-        left_scroll.setMinimumWidth(300) 
+        left_scroll.setMaximumWidth(400)
+        left_scroll.setMinimumWidth(300)
         left_scroll.setWidgetResizable(True)
 
-        left_container = QWidget() # Set maximum width
+        left_container = QWidget()
         left_layout = QVBoxLayout(left_container)
         left_layout.setContentsMargins(4, 4, 4, 4)
         left_layout.setSpacing(8)
@@ -146,17 +156,16 @@ class VFitModelBuilder(QWidget):
         self.spin_xcorr = QDoubleSpinBox()
         self.spin_xcorr.setRange(-100000, 100000)
         self.spin_xcorr.setFixedWidth(80)
-        self.spin_xcorr.setDecimals(3)  
+        self.spin_xcorr.setDecimals(3)
         self.spin_xcorr.setValue(0)
         self.spin_xcorr.setToolTip("Type measured reference peak position")
 
         # Label showing corrected value
         self.lbl_xcorr_value = QLabel("(0)")
-        
+
         # Buttons
         self.btn_xcorrect = QPushButton("Correct")
-        self.btn_xcorrect.setToolTip("Apply X correction to current selected spectrum(s)") 
-        
+        self.btn_xcorrect.setToolTip("Apply X correction to current selected spectrum(s)")
 
         self.btn_undo_corr = QPushButton()
         self.btn_undo_corr.setFixedSize(30, 24)
@@ -173,7 +182,7 @@ class VFitModelBuilder(QWidget):
         return gb
 
     def set_xcorrection_value(self, value: float):
-        """Update label from Model state (xcorrection_value)"""
+        """Update label from Model state (xcorrection_value)."""
         if abs(value) < 1e-9:
             self.lbl_xcorr_value.setText("(0)")
         else:
@@ -187,7 +196,7 @@ class VFitModelBuilder(QWidget):
         self.spin_xmax.setValue(xmax)
 
         self.spin_xmin.blockSignals(False)
-        self.spin_xmax.blockSignals(False) 
+        self.spin_xmax.blockSignals(False)
 
     def _spectral_range_group(self):
         gb = QGroupBox("Spectral range (X axis)")
@@ -215,9 +224,9 @@ class VFitModelBuilder(QWidget):
         l.addWidget(self.spin_xmax)
         l.addStretch()
         l.addWidget(self.btn_extract)
-        
+
         return gb
-    
+
     def _on_extract_clicked(self):
         modifiers = QApplication.keyboardModifiers()
         apply_all = modifiers & Qt.ControlModifier
@@ -226,8 +235,7 @@ class VFitModelBuilder(QWidget):
             self.spin_xmin.value(),
             self.spin_xmax.value(),
             bool(apply_all)
-    )
-
+        )
 
     _BASELINE_MODE_KEYS = []  # populated at runtime
 
@@ -380,7 +388,7 @@ class VFitModelBuilder(QWidget):
     # ── Mode combobox helpers ─────────────────────────────────────────
 
     def _populate_baseline_mode_combobox(self):
-        """Build the mode combobox with manual and the three supported auto methods."""
+        """Build the mode combobox with manual and the supported auto methods."""
         cbb = self.cbb_baseline_mode
         cbb.clear()
         VFitModelBuilder._BASELINE_MODE_KEYS = []
@@ -397,8 +405,8 @@ class VFitModelBuilder(QWidget):
         # ── Auto methods: only these methods
         _AUTO_WHITELIST = {
             "airpls": "airPLS",
-            "arpls":  "arPLS",
-            "asls":   "asLS",
+            "arpls": "arPLS",
+            "asls": "asLS",
             "modpoly": "ModPoly",
         }
 
@@ -406,7 +414,7 @@ class VFitModelBuilder(QWidget):
             cbb.addItem(label)
             VFitModelBuilder._BASELINE_MODE_KEYS.append(key)
 
-        # Set default to "Linear" 
+        # Set default to "Linear"
         cbb.setCurrentIndex(0)
 
     def _current_mode_key(self):
@@ -424,7 +432,7 @@ class VFitModelBuilder(QWidget):
         Safe to call from both _on_baseline_mode_changed and update_baseline_ui.
         """
         is_manual = mode in ("Linear", "Polynomial")
-        is_auto   = not is_manual and mode is not None
+        is_auto = not is_manual and mode is not None
 
         self._row1_widget.setVisible(is_manual)
         self._row2_widget.setVisible(is_auto)
@@ -496,13 +504,13 @@ class VFitModelBuilder(QWidget):
         meta = get_baseline_method_meta(mode) if mode not in (None, "__sep__") else {}
 
         d = {
-            "mode":      mode,
-            "order_max": self.spin_poly.value()  if mode == "Polynomial" else self.spin_coef2.value(),
-            "sigma":     self.spin_noise.value() if mode in ("Linear", "Polynomial") else (
-                             self.spin_coef2.value() if meta.get("sigma_kwarg") else 0
-                         ),
-            "attached":  self.chk_attached.isChecked(),
-            "coef":      coef,
+            "mode": mode,
+            "order_max": self.spin_poly.value() if mode == "Polynomial" else self.spin_coef2.value(),
+            "sigma": self.spin_noise.value() if mode in ("Linear", "Polynomial") else (
+                self.spin_coef2.value() if meta.get("sigma_kwarg") else 0
+            ),
+            "attached": self.chk_attached.isChecked(),
+            "coef": coef,
         }
         return d
 
@@ -574,7 +582,6 @@ class VFitModelBuilder(QWidget):
         # Apply widget visibility without triggering any signals or emissions
         self._apply_mode_visibility(mode)
 
-
     def _peaks_group(self):
         gb = QGroupBox("Peaks")
         v = QVBoxLayout(gb)
@@ -613,7 +620,7 @@ class VFitModelBuilder(QWidget):
         v.addLayout(row1)
         v.addLayout(row2)
         return gb
-    
+
     def _emit_with_ctrl(self, signal):
         """Helper to emit signal with apply_all based on Ctrl key."""
         apply_all = bool(QApplication.keyboardModifiers() & Qt.ControlModifier)
@@ -729,12 +736,12 @@ class VFitModelBuilder(QWidget):
 
         self.btn_load = QPushButton("Load")
         self.btn_load.setToolTip("Load fit model from a JSON file (or drag and drop JSON file).")
-        self.btn_load.clicked.connect(self.load_fit_models_requested.emit)  
+        self.btn_load.clicked.connect(self.load_fit_models_requested.emit)
 
         self.btn_refresh = QPushButton()
         self.btn_refresh.setFixedSize(30, 24)
         self.btn_refresh.setToolTip("Refresh fit model list.")
-        self.btn_refresh.clicked.connect(self.refresh_fit_models_requested.emit)    
+        self.btn_refresh.clicked.connect(self.refresh_fit_models_requested.emit)
 
         row2.addWidget(self.cbb_model)
         row2.addWidget(self.btn_apply)
@@ -840,5 +847,3 @@ class VFitModelBuilder(QWidget):
                 event.acceptProposedAction()
                 return
         event.ignore()
-
-

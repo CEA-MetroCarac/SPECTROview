@@ -15,11 +15,13 @@ from spectroview.model.m_settings import MSettings
 
 from spectroview.view.components.v_notification import show_notification
 from spectroview.view.theme import Icons, current_tokens
-from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
-from spectroview.view.components.v_fit_results import VFitResults
+from spectroview.view.components.lower_tabs import (
+    VFitModelBuilder,
+    VFitResults,
+    VMoreTab,
+    VMVA,
+)
 from spectroview.view.components.rgb_live_maps import VLiveMaps
-from spectroview.view.components.v_moretab  import VMoreTab
-from spectroview.view.components.v_mva import VMVA
 from spectroview.view.components.v_spectra_list import VSpectraList
 from spectroview.view.components.spectra_viewer import VSpectraViewer
 from spectroview.viewmodel.vm_fit_model_builder import VMFitModelBuilder

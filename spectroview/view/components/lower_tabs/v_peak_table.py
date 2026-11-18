@@ -1,4 +1,4 @@
-# spectroview/view/components/v_peak_table.py
+# spectroview/view/components/lower_tabs/v_peak_table.py
 
 from copy import deepcopy
 from PySide6.QtWidgets import (
@@ -13,6 +13,8 @@ from spectroview.view.theme import Icons
 from spectroview.viewmodel.utils import fano_display_amplitude, fano_internal_amplitude
 
 ROW_HEIGHT = 28
+
+
 class VPeakTable(QWidget):
     # ───── View → ViewModel signals ─────
     peak_label_changed = Signal(int, str)
@@ -88,7 +90,7 @@ class VPeakTable(QWidget):
                 fit_models = self._spectrum.get("fit_models")
                 if fit_models and len(fit_models) > 0:
                     fit_model = fit_models[0]
-            
+
         if not fit_model or not fit_model.get("peak_models"):
             self._last_fit_model = None
             self._current_topology = None
@@ -130,7 +132,7 @@ class VPeakTable(QWidget):
         labels = fit_model.get("peak_labels", [])
 
         param_order = ["x0", "fwhm", "fwhm_l", "fwhm_r", "ampli", "alpha", "q", "tau", "tau1", "tau2", "A", "A1", "A2", "B"]
-        
+
         # determine which parameters are present in at least one peak
         active_params = {
             p for p in param_order
@@ -167,10 +169,9 @@ class VPeakTable(QWidget):
                 param_cols[p]["max"] = _make_col()
 
             param_cols[p]["vary"] = _make_col()
-            
+
             if self._show_expr:
                 param_cols[p]["expr"] = _make_col()
-
 
         # ── Headers
         self._add_header(cols["del"], "")
@@ -239,7 +240,7 @@ class VPeakTable(QWidget):
 
                 # value
                 display_val = hint.get('value', 0)
-                
+
                 # Fano model correction: show actual peak height for 'ampli'
                 if pm.name2 == "Fano" and p == "ampli":
                     q = pm.param_hints.get("q", {}).get("value", 50.0)
@@ -325,13 +326,13 @@ class VPeakTable(QWidget):
             row['peak_model_obj'].param_hints = pm.param_hints
             k_int = int(pm.key)
             le_text = labels[k_int] if k_int < len(labels) and labels[k_int] is not None else f"Peak{k_int+1}"
-            
+
             label_le = row.get('label_le')
             if label_le is not None:
                 label_le.blockSignals(True)
                 label_le.setText(le_text)
                 label_le.blockSignals(False)
-            
+
             for p, p_data in row.get('param_widgets', {}).items():
                 hint = pm.param_hints.get(p)
                 if hint is None:
@@ -340,19 +341,19 @@ class VPeakTable(QWidget):
                 if pm.name2 == "Fano" and p == "ampli":
                     q = pm.param_hints.get("q", {}).get("value", 50.0)
                     display_val = fano_display_amplitude(display_val, q)
-                
+
                 val_le = p_data.get('val_le')
                 if val_le is not None:
                     val_le.blockSignals(True)
                     val_le.setText(f"{display_val:.3f}")
                     val_le.blockSignals(False)
-                
+
                 vary_chk = p_data.get('vary_chk')
                 if vary_chk is not None:
                     vary_chk.blockSignals(True)
                     vary_chk.setChecked(not hint.get("vary", True))
                     vary_chk.blockSignals(False)
-                
+
                 min_le = p_data.get('min_le')
                 if min_le is not None:
                     min_val = hint.get('min', 0)
@@ -363,7 +364,7 @@ class VPeakTable(QWidget):
                     min_le.blockSignals(True)
                     min_le.setText(f"{display_min:.3f}")
                     min_le.blockSignals(False)
-                
+
                 max_le = p_data.get('max_le')
                 if max_le is not None:
                     max_val = hint.get('max', 0)
@@ -374,13 +375,13 @@ class VPeakTable(QWidget):
                     max_le.blockSignals(True)
                     max_le.setText(f"{display_max:.3f}")
                     max_le.blockSignals(False)
-                
+
                 expr_le = p_data.get('expr_le')
                 if expr_le is not None:
                     expr_le.blockSignals(True)
                     expr_le.setText(str(hint.get("expr", "")))
                     expr_le.blockSignals(False)
-        
+
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
@@ -390,15 +391,13 @@ class VPeakTable(QWidget):
 
     def _add_limit(self, layout, idx, key, field, hint, pm_name=None, peak_model=None):
         display_val = hint.get(field, 0)
-        
+
         # Fano model correction: show actual peak height for 'ampli' limits
         if pm_name == "Fano" and key == "ampli" and peak_model:
             q = peak_model.param_hints.get("q", {}).get("value", 50.0)
             display_val = fano_display_amplitude(display_val, q)
 
-
         le = QLineEdit(f"{display_val:.3f}")
-        # le.setFixedWidth(60)
         le.setFixedSize(72, ROW_HEIGHT)
         le.setAlignment(Qt.AlignRight)
 
@@ -430,12 +429,11 @@ class VPeakTable(QWidget):
         layout.addWidget(lbl)
 
     def _add_empty(self, d):
-        """Add empty labels for alignment"""
+        """Add empty labels for alignment."""
         for col in d.values():
             empty_label = QLabel()
             empty_label.setFixedHeight(ROW_HEIGHT)
             col.addWidget(empty_label)
-            
 
     def _center_checkbox(self, chk):
         c = QWidget()
@@ -447,7 +445,6 @@ class VPeakTable(QWidget):
 
         l.addWidget(chk)
         return c
-
 
     def _clear_layout(self, layout):
         if not layout:

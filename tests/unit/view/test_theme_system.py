@@ -6,7 +6,7 @@ from spectroview import ICON_DIR
 from spectroview.view.theme import svg_icon
 from spectroview.view.theme.tokens import DARK_TOKENS, LIGHT_TOKENS
 from spectroview.view.theme.qss_template import build_stylesheet
-from spectroview.view.components.v_peak_table import VPeakTable, ROW_HEIGHT
+from spectroview.view.components.lower_tabs import VPeakTable, ROW_HEIGHT
 from PySide6.QtWidgets import QApplication
 from spectroview.model.m_settings import MSettings
 from spectroview.model.m_graph import MGraph
@@ -356,8 +356,7 @@ def test_tab_pane_transparent_scroll_rounded_splitter_and_fit_results_buttons(qa
     """Tasks 6, 7, 9, 10: transparent tab pane, rounded peak scroll, symmetric splitter, Fit Results buttons."""
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication, QSplitter, QWidget
-    from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
-    from spectroview.view.components.v_fit_results import VFitResults
+    from spectroview.view.components.lower_tabs import VFitModelBuilder, VFitResults
 
     mgr = ThemeManager(MSettings())
     mgr.apply("dark")

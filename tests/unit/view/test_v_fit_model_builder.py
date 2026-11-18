@@ -4,7 +4,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QUrl, QMimeData, QPoint
 from PySide6.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
 
-from spectroview.view.components.v_fit_model_builder import VFitModelBuilder
+from spectroview.view.components.lower_tabs import VFitModelBuilder
 
 
 class TestVFitModelBuilderDragDrop:
@@ -134,3 +134,26 @@ class TestVFitModelBuilderCopyPasteFeedback:
         assert builder.btn_paste.text() == "Paste"
         builder.flash_feedback("baseline_copy")
         builder.flash_feedback("peaks_copy")
+
+
+class TestLowerTabsPackageExports:
+    def test_package_exports_and_mva_hierarchy(self, qapp):
+        from spectroview.view.components.lower_tabs import (
+            ROW_HEIGHT,
+            MVAPlotMixin,
+            VFitModelBuilder as ExportedBuilder,
+            VFitResults,
+            VMoreTab,
+            VMVA,
+            VPeakTable,
+            _PlotTab,
+        )
+
+        assert ExportedBuilder is VFitModelBuilder
+        assert ROW_HEIGHT == 28
+        assert issubclass(VMVA, MVAPlotMixin)
+        assert VFitResults is not None
+        assert VMoreTab is not None
+        assert VPeakTable is not None
+        assert _PlotTab is not None
+

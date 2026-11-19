@@ -197,3 +197,21 @@ def test_app_theme_toggle_does_not_change_plot_theme(main_window):
     assert main_window.v_maps_workspace.v_map_viewer.current_style == "Dark Mode"
 
 
+def test_runtime_theme_switch_across_dark_gray_light_preserves_plot_theme(main_window):
+    """Verify runtime switching dark -> gray -> light -> gray updates app theme without changing plot theme."""
+    main_window.v_spectra_workspace.v_spectra_viewer.cbb_theme.setCurrentText("Light Mode")
+
+    for expected in ("dark", "gray", "light", "gray"):
+        main_window.toggle_theme(expected)
+        assert main_window.theme_mgr.current_theme == expected
+        assert main_window.settings.get_theme() == expected
+        assert main_window.menu_bar._current_theme == expected
+        assert main_window.v_spectra_workspace.v_spectra_viewer.cbb_theme.currentText() == "Light Mode"
+        assert main_window.v_maps_workspace.v_spectra_viewer.cbb_theme.currentText() == "Light Mode"
+
+    # Default toggle from gray switches to light since Modern Gray is a dark-family theme
+    main_window.toggle_theme()
+    assert main_window.theme_mgr.current_theme == "light"
+    assert main_window.settings.get_theme() == "light"
+
+

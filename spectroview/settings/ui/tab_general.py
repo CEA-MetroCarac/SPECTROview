@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens, normalize_theme_key
 
 
 def _highlight_group_style() -> str:
@@ -42,8 +42,8 @@ class GeneralTabPage(QWidget):
         "general", "working", "folder", "directory", "path", "backup",
         "restore", "config", "json", "export", "import", "update",
         "updates", "check updates", "startup", "auto-update", "prerelease", "beta", "rc",
-        "theme", "appearance", "dark", "light", "modern", "classic",
-        "modern dark", "modern light", "classic dark", "classic light",
+        "theme", "appearance", "dark", "gray", "grey", "light", "modern", "classic",
+        "modern dark", "modern gray", "modern grey", "modern light", "classic dark", "classic light",
     ]
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -99,7 +99,9 @@ class GeneralTabPage(QWidget):
             "• template/ (general plot templates)\n"
             "• config.json (portable settings backup for seamless PC migration)"
         )
-        self.lbl_working_hint.setStyleSheet("color: gray; font-style: italic; font-size: 11px;")
+        self.lbl_working_hint.setStyleSheet(
+            f"color: {current_tokens().text_muted}; font-style: italic; font-size: 11px;"
+        )
         self.lbl_working_hint.setWordWrap(True)
         self.lbl_working_hint.setTextInteractionFlags(Qt.TextSelectableByMouse)
         working_layout.addWidget(self.lbl_working_hint)
@@ -137,10 +139,13 @@ class GeneralTabPage(QWidget):
 
         self.cbb_theme = QComboBox()
         self.cbb_theme.addItem("Modern Dark", "dark")
+        self.cbb_theme.addItem("Modern Gray", "gray")
         self.cbb_theme.addItem("Modern Light", "light")
         self.cbb_theme.addItem("Classic Dark", "classic_dark")
         self.cbb_theme.addItem("Classic Light", "classic_light")
-        self.cbb_theme.setToolTip("Select application theme (Modern Dark, Modern Light, Classic Dark, Classic Light)")
+        self.cbb_theme.setToolTip(
+            "Select application theme (Modern Dark, Modern Gray, Modern Light, Classic Dark, Classic Light)"
+        )
         self.cbb_theme.currentIndexChanged.connect(self._on_theme_combobox_changed)
 
         theme_row.addWidget(self.lbl_theme)
@@ -198,10 +203,7 @@ class GeneralTabPage(QWidget):
             from spectroview.view.theme import ThemeManager
             mgr = ThemeManager.instance()
             theme_key = mgr.current_theme if mgr else "dark"
-        if theme_key == "soft_dark":
-            theme_key = "dark"
-        elif theme_key in ("modern_warm", "warm"):
-            theme_key = "light"
+        theme_key = normalize_theme_key(theme_key)
 
         idx = self.cbb_theme.findData(theme_key)
         if idx >= 0:
@@ -232,7 +234,7 @@ class GeneralTabPage(QWidget):
 
         working_terms = ["working", "folder", "directory", "path", "fit_model", "plot_recipe",
                          "plot_style", "ai_chat", "template", "config", "backup", "restore", "export", "import"]
-        theme_terms = ["theme", "appearance", "dark", "light", "modern", "classic"]
+        theme_terms = ["theme", "appearance", "dark", "gray", "grey", "light", "modern", "classic"]
         update_terms = ["update", "updates", "startup", "check", "version", "prerelease", "beta", "rc"]
 
         first_match: Optional[QWidget] = None
@@ -254,3 +256,9 @@ class GeneralTabPage(QWidget):
 
         if first_match:
             self._scroll.ensureWidgetVisible(first_match, 0, 30)
+
+    def refresh_theme_styles(self) -> None:
+        """Re-apply token-based label styling after a live theme change."""
+        self.lbl_working_hint.setStyleSheet(
+            f"color: {current_tokens().text_muted}; font-style: italic; font-size: 11px;"
+        )

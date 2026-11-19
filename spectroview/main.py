@@ -674,7 +674,7 @@ class Main(QMainWindow):
 
     def toggle_theme(self, theme=None):
         if theme is None:
-            theme = "light" if self.settings.get_theme() == "dark" else "dark"
+            theme = "light" if self.theme_mgr.is_dark else "dark"
 
         # Apply palette + QSS + Fusion refresh via the manager
         self.theme_mgr.apply(theme)
@@ -703,6 +703,11 @@ class Main(QMainWindow):
         # Keep update banner in sync with the current theme
         if self._update_banner is not None:
             self._update_banner.apply_theme(theme)
+
+        # Propagate to AI chat panel if already instantiated
+        chat_panel = getattr(self, '_chat_panel', None)
+        if chat_panel is not None and hasattr(chat_panel, 'apply_theme'):
+            chat_panel.apply_theme(theme)
 
     def dragEnterEvent(self, event):
         """Accept dragging files into the application."""

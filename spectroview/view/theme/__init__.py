@@ -8,11 +8,13 @@ Public API
 - ``current_tokens``             — returns active ThemeTokens.
 - ``apply_window_title_bar_theme`` — apply native Windows 11 DWM theme to top-level window.
 - ``ThemeTokens``                — frozen colour-token dataclass.
-- ``DARK_TOKENS``, ``LIGHT_TOKENS`` — preset token instances.
+- ``DARK_TOKENS``, ``GRAY_TOKENS``, ``LIGHT_TOKENS`` — preset token instances.
 - ``CLASSIC_DARK_TOKENS``, ``CLASSIC_LIGHT_TOKENS`` — classic preset instances.
 - ``THEME_TOKENS``               — dict mapping theme key → tokens.
+- ``normalize_theme_key()``      — normalize legacy or alias theme keys.
+- ``is_dark_theme_key()``        — test whether a theme key uses dark-mode surfaces.
 - ``build_palette()``            — create a QPalette for a given theme key.
-- ``modern_dark_palette()``, ``modern_light_palette()`` — token-synchronized palettes.
+- ``modern_dark_palette()``, ``modern_gray_palette()``, ``modern_light_palette()`` — token-synchronized palettes.
 - ``classic_dark_palette()``, ``classic_light_palette()`` — legacy Fusion palettes.
 - ``build_stylesheet()``         — render the QSS template for a ThemeTokens instance.
 - ``solid_button_style()``       — PLUME solid CTA button style string.
@@ -29,16 +31,20 @@ from .manager import ThemeManager, current_tokens, apply_window_title_bar_theme
 from .tokens import (
     ThemeTokens,
     DARK_TOKENS,
+    GRAY_TOKENS,
     LIGHT_TOKENS,
     CLASSIC_DARK_TOKENS,
     CLASSIC_LIGHT_TOKENS,
     THEME_TOKENS,
+    normalize_theme_key,
+    is_dark_theme_key,
 )
 from .palettes import (
     build_palette,
     dark_palette,
     light_palette,
     modern_dark_palette,
+    modern_gray_palette,
     modern_light_palette,
     classic_dark_palette,
     classic_light_palette,
@@ -72,10 +78,13 @@ __all__ = [
     "apply_window_title_bar_theme",
     "ThemeTokens",
     "DARK_TOKENS",
+    "GRAY_TOKENS",
     "LIGHT_TOKENS",
     "CLASSIC_DARK_TOKENS",
     "CLASSIC_LIGHT_TOKENS",
     "THEME_TOKENS",
+    "normalize_theme_key",
+    "is_dark_theme_key",
     "build_palette",
     "build_stylesheet",
     "solid_button_style",
@@ -89,6 +98,7 @@ __all__ = [
     "dark_palette",
     "light_palette",
     "modern_dark_palette",
+    "modern_gray_palette",
     "modern_light_palette",
     "classic_dark_palette",
     "classic_light_palette",

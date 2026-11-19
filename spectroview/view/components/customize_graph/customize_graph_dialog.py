@@ -45,7 +45,7 @@ from spectroview.view.components.customize_graph.tab_plot_styles import TabPlotS
 from spectroview.view.components.customize_graph.tab_secondary_inset import TabSecondaryInset
 from spectroview.view.components.customize_graph.tab_ticks_spines import TabTicksSpines
 from spectroview.view.components.graphs.graph_commit import diff, snapshot
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens
 
 __all__ = [
     "CustomizeGraphDialog",
@@ -285,7 +285,7 @@ class CustomizeGraphDialog(QDialog):
         bottom_bar.setContentsMargins(16, 10, 16, 10)
 
         self._graph_info_label = QLabel()
-        self._graph_info_label.setStyleSheet("color: gray; font-size: 11px;")
+        self._graph_info_label.setStyleSheet(f"color: {current_tokens().text_muted}; font-size: 11px;")
         bottom_bar.addWidget(self._graph_info_label)
 
         bottom_bar.addStretch(1)

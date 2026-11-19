@@ -392,3 +392,28 @@ class TestLiveMapsViewOptions:
         assert restored["show_grid"] is True
         assert restored["custom_labels"] == {"blue": "Shift B"}
 
+
+class TestThemeSettings:
+    def test_modern_gray_persistence_and_alias_normalization(self, settings):
+        settings.set_theme("gray")
+        assert settings.get_theme() == "gray"
+        assert MSettings().get_theme() == "gray"
+
+        for alias in ("modern_gray", "grey", "modern_grey", "Modern_Gray"):
+            settings.set_theme(alias)
+            assert settings.get_theme() == "gray"
+
+        settings.settings.setValue("theme", "modern_gray")
+        assert settings.get_theme() == "gray"
+
+    def test_modern_gray_config_export_and_import_round_trip(self, settings, tmp_path):
+        settings.set_theme("gray")
+        backup = str(tmp_path / "theme_backup.json")
+        assert settings.export_config(backup) == backup
+
+        settings.set_theme("light")
+        assert settings.get_theme() == "light"
+
+        assert settings.import_config(backup) is True
+        assert settings.get_theme() == "gray"
+

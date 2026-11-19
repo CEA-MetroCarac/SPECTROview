@@ -32,7 +32,7 @@ from spectroview.view.components.common.markdown_utils import ensure_markdown_sp
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QThread, QObject
 from PySide6.QtGui import QFont, QKeyEvent, QTextCursor
 
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens
 from spectroview.model.m_settings import MSettings
 from spectroview.ai_agent.vm_chat import VMChat, ChatResult
 from spectroview.ai_agent.m_llm_client import (
@@ -91,29 +91,28 @@ class _MessageCard(QFrame):
         role_label.setFont(role_font)
         header_layout.addWidget(role_label)
 
+        self._ts_label: Optional[QLabel] = None
         if timestamp:
-            ts_label = QLabel(timestamp)
-            ts_label.setStyleSheet("color: gray; font-size: 10px;")
-            header_layout.addWidget(ts_label)
+            self._ts_label = QLabel(timestamp)
+            header_layout.addWidget(self._ts_label)
             
         header_layout.addStretch()
 
+        self._btn_reply: Optional[QPushButton] = None
         if role == "assistant":
-            btn_reply = QPushButton("Reply")
-            btn_reply.setIcon(Icons.reply(size=13))
-            btn_reply.setToolTip("Reply to this message")
-            btn_reply.setStyleSheet("color: #1976D2; border: none; font-size: 10px; font-weight: bold; background: transparent;")
-            btn_reply.setCursor(Qt.PointingHandCursor)
-            btn_reply.clicked.connect(lambda: self.reply_clicked.emit(self._raw_text))
-            header_layout.addWidget(btn_reply)
+            self._btn_reply = QPushButton("Reply")
+            self._btn_reply.setToolTip("Reply to this message")
+            self._btn_reply.setCursor(Qt.PointingHandCursor)
+            self._btn_reply.clicked.connect(lambda: self.reply_clicked.emit(self._raw_text))
+            header_layout.addWidget(self._btn_reply)
 
-        btn_copy = QPushButton("Copy")
-        btn_copy.setIcon(Icons.copy(size=13))
-        btn_copy.setToolTip("Copy message text")
-        btn_copy.setStyleSheet("color: gray; border: none; font-size: 10px; background: transparent;")
-        btn_copy.setCursor(Qt.PointingHandCursor)
-        btn_copy.clicked.connect(lambda: QApplication.clipboard().setText(self._raw_text))
-        header_layout.addWidget(btn_copy)
+        self._btn_copy = QPushButton("Copy")
+        self._btn_copy.setToolTip("Copy message text")
+        self._btn_copy.setCursor(Qt.PointingHandCursor)
+        self._btn_copy.clicked.connect(lambda: QApplication.clipboard().setText(self._raw_text))
+        header_layout.addWidget(self._btn_copy)
+
+        self.apply_theme()
 
         layout.addLayout(header_layout)
 
@@ -137,6 +136,22 @@ class _MessageCard(QFrame):
         self.content_view.setMinimumWidth(10)
         self.setMinimumWidth(10)
         layout.addWidget(self.content_view)
+
+    def apply_theme(self) -> None:
+        """Refresh card timestamp, action labels, and icons for the active theme."""
+        tok = current_tokens()
+        if self._ts_label is not None:
+            self._ts_label.setStyleSheet(f"color: {tok.text_muted}; font-size: 10px;")
+        if self._btn_reply is not None:
+            self._btn_reply.setIcon(Icons.reply(size=13))
+            self._btn_reply.setStyleSheet(
+                f"color: {tok.accent}; border: none; font-size: 10px; font-weight: bold; background: transparent;"
+            )
+        if self._btn_copy is not None:
+            self._btn_copy.setIcon(Icons.copy(size=13))
+            self._btn_copy.setStyleSheet(
+                f"color: {tok.text_muted}; border: none; font-size: 10px; background: transparent;"
+            )
 
     def _update_markdown(self, text: str):
         self._raw_text = text
@@ -532,28 +547,33 @@ class VChatPanel(QWidget):
         self.lbl_reply_text.setWordWrap(True)
         layout.addWidget(self.lbl_reply_text, stretch=1)
         
-        btn_close = QPushButton("")
-        btn_close.setIcon(Icons.close(size=12))
-        btn_close.setFixedSize(20, 20)
-        btn_close.setCursor(Qt.PointingHandCursor)
-        btn_close.setStyleSheet("QPushButton { background: transparent; border: none; }")
-        btn_close.clicked.connect(self._clear_reply_state)
-        layout.addWidget(btn_close)
+        self._btn_reply_close = QPushButton("")
+        self._btn_reply_close.setIcon(Icons.close(size=12))
+        self._btn_reply_close.setFixedSize(20, 20)
+        self._btn_reply_close.setCursor(Qt.PointingHandCursor)
+        self._btn_reply_close.setStyleSheet("QPushButton { background: transparent; border: none; }")
+        self._btn_reply_close.clicked.connect(self._clear_reply_state)
+        layout.addWidget(self._btn_reply_close)
         
         return frame
+
+    def _apply_composer_theme(self) -> None:
+        """Let Modern themes style #chatComposerFrame via QSS; apply fallback in Classic themes."""
+        app = QApplication.instance()
+        if app is not None and app.styleSheet():
+            self.composer_frame.setStyleSheet("")
+        else:
+            tok = current_tokens()
+            self.composer_frame.setStyleSheet(
+                f"QFrame#chatComposerFrame {{ background: {tok.surface}; border: 1px solid {tok.border_strong}; border-radius: 8px; }}"
+            )
 
     def _make_composer(self) -> QFrame:
         """Create the modern composer frame embedding the text input,
         provider & model selectors, voice dictation, and send/stop button."""
         self.composer_frame = _ComposerFrame()
         self.composer_frame.setObjectName("chatComposerFrame")
-        self.composer_frame.setStyleSheet("""
-            QFrame#chatComposerFrame {
-                background: rgba(128, 128, 128, 0.08);
-                border: 1px solid rgba(128, 128, 128, 0.28);
-                border-radius: 8px;
-            }
-        """)
+        self._apply_composer_theme()
 
         composer_layout = QVBoxLayout(self.composer_frame)
         composer_layout.setContentsMargins(10, 8, 10, 6)
@@ -1521,6 +1541,38 @@ class VChatPanel(QWidget):
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)
         self._reposition_scroll_to_bottom_button()
+
+    def apply_theme(self, theme: str = "") -> None:
+        """Refresh AI chat panel icons, composer, and existing message cards on theme switch."""
+        self._apply_composer_theme()
+        if hasattr(self, "btn_history"):
+            self.btn_history.setIcon(Icons.history(size=18))
+        if hasattr(self, "btn_new_chat"):
+            self.btn_new_chat.setIcon(Icons.plus(size=18))
+        if hasattr(self, "btn_clear"):
+            self.btn_clear.setIcon(Icons.trash(size=18))
+        if hasattr(self, "btn_close"):
+            self.btn_close.setIcon(Icons.close(size=16))
+        if hasattr(self, "btn_refresh_models"):
+            self.btn_refresh_models.setIcon(Icons.refresh(size=14))
+        if hasattr(self, "btn_mic"):
+            self.btn_mic.setIcon(Icons.mic(size=14))
+        if hasattr(self, "_btn_reply_close"):
+            self._btn_reply_close.setIcon(Icons.close(size=12))
+        if self.vm.is_busy():
+            self._apply_stop_button_style()
+        else:
+            self._apply_send_button_style()
+        if hasattr(self, "messages_layout"):
+            for i in range(self.messages_layout.count()):
+                w = self.messages_layout.itemAt(i).widget()
+                if w is None:
+                    continue
+                if isinstance(w, _MessageCard):
+                    w.apply_theme()
+                else:
+                    for card in w.findChildren(_MessageCard):
+                        card.apply_theme()
 
 
 

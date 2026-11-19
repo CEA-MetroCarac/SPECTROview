@@ -20,7 +20,7 @@ The `Settings Panel` features a modern two-panel interface with real-time search
 - **Right Content Area**: Displays all options for the selected tab. All informational text, environment details, and citations are selectable with the mouse for easy copying.
 - **Footer**: Shows application version with standard **Save** and **Cancel** buttons.
 
-> **Theme Synchronization**: The **Interface Theme** can be selected either within the **General** tab (`Modern Dark`, `Modern Light`, `Classic Dark`, or `Classic Light`) or directly via the **Theme** button in the top menu bar. Both selectors are fully synchronized in real time.
+> **Theme Synchronization**: The **Interface Theme** can be selected either within the **General** tab (`Modern Dark`, `Modern Gray`, `Modern Light`, `Classic Dark`, or `Classic Light`) or directly via the **Theme** button in the top menu bar. Both selectors are fully synchronized in real time.
 
 ---
 
@@ -47,7 +47,8 @@ Specify a single universal root folder for all of SPECTROview's templates, recip
 > You can also use the **Export Config...** and **Restore Config...** buttons at any time to export or restore settings to/from a standalone JSON file.
 
 #### **Interface Theme**
-- **Theme**: Select between **Modern Dark**, **Modern Light**, **Classic Dark**, or **Classic Light**. Selection updates the active theme immediately and keeps the top menu bar theme button in perfect synchronization. The plot canvas theme is independent of the interface theme, defaulting to **Light Mode**; you can switch it to **Dark Mode** at any time via the **Plot theme** selector in the `View Options` toolbar under the spectrum canvas (your selection persists across sessions).
+
+- **Theme**: Select between **Modern Dark**, **Modern Gray**, **Modern Light**, **Classic Dark**, or **Classic Light**. Selection updates the active theme immediately and keeps the top menu bar theme button in perfect synchronization. The plot canvas theme is independent of the interface theme, defaulting to **Light Mode**; you can switch it to **Dark Mode** at any time via the **Plot theme** selector in the `View Options` toolbar under the spectrum canvas (your selection persists across sessions).
 
 #### **Application Updates**
 

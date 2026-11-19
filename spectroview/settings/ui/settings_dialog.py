@@ -40,7 +40,7 @@ from spectroview.settings.ui.tab_ai import AISettingsTabPage
 from spectroview.settings.ui.tab_fit import FitSettingsTabPage
 from spectroview.settings.ui.tab_general import GeneralTabPage
 from spectroview.settings.vm_settings import VMSettings
-from spectroview.view.theme import Icons, ThemeManager
+from spectroview.view.theme import Icons, ThemeManager, current_tokens
 
 
 # ---------------------------------------------------------------------------
@@ -179,6 +179,7 @@ class SettingsDialog(QDialog):
     def __init__(self, vm: VMSettings, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.vm = vm
+        self._refreshing_theme = False
 
         self.setWindowTitle("Settings")
         self.resize(820, 640)
@@ -263,7 +264,7 @@ class SettingsDialog(QDialog):
         bottom_bar.setContentsMargins(16, 10, 16, 10)
 
         self._version_label = QLabel(f"v{VERSION}")
-        self._version_label.setStyleSheet("color: gray; font-size: 11px;")
+        self._version_label.setStyleSheet(f"color: {current_tokens().text_muted}; font-size: 11px;")
         bottom_bar.addWidget(self._version_label)
 
         bottom_bar.addStretch(1)
@@ -569,6 +570,26 @@ class SettingsDialog(QDialog):
         data.update(self._tab_fit.get_settings())
         data.update(self._tab_ai.get_settings())
         self.vm.save(data)
+
+    def refresh_theme_styles(self) -> None:
+        """Refresh inline label styles across the dialog and tabs on live theme switch."""
+        self._version_label.setStyleSheet(f"color: {current_tokens().text_muted}; font-size: 11px;")
+        for tab in (self._tab_general, self._tab_ai, self._tab_about):
+            if hasattr(tab, "refresh_theme_styles"):
+                tab.refresh_theme_styles()
+        if hasattr(self, "_nav_list"):
+            self._nav_list.viewport().update()
+
+    def changeEvent(self, event: QEvent) -> None:
+        """Re-apply token styles when application palette/stylesheet changes live."""
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.PaletteChange and not getattr(self, "_refreshing_theme", False):
+            self._refreshing_theme = True
+            try:
+                if hasattr(self, "_version_label"):
+                    self.refresh_theme_styles()
+            finally:
+                self._refreshing_theme = False
 
     def closeEvent(self, event) -> None:
         if hasattr(self.vm, "cancel_test_connection"):

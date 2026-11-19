@@ -9,6 +9,7 @@ import matplotlib as mpl
 import numpy as np
 
 from spectroview import PLOT_POLICY_DARK, PLOT_POLICY_LIGHT
+from spectroview.view.theme import is_dark_theme_key
 from spectroview.model.spectra.spectral_parameters import (
     SELECTOR_BLUE,
     SELECTOR_GREEN,
@@ -33,7 +34,10 @@ _DEFAULT_VIEW_OPTIONS = dict(LIVE_MAPS_VIEW_OPTION_DEFAULTS)
 
 def _normalize_plot_theme(theme: Optional[str]) -> str:
     """Normalize any theme identifier to 'Light Mode' or 'Dark Mode'."""
-    return "Dark Mode" if "dark" in str(theme or "").lower() else "Light Mode"
+    text = str(theme or "").strip()
+    if not text:
+        return "Light Mode"
+    return "Dark Mode" if is_dark_theme_key(text) else "Light Mode"
 
 
 def _resolve_style_path(theme: Optional[str]) -> Tuple[bool, str]:

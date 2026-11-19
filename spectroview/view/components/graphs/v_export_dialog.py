@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 from spectroview.model.m_settings import MSettings
 from spectroview.viewmodel.common.export_utils import export_figure_to_file
 from spectroview.view.components.common.v_notification import show_notification
+from spectroview.view.theme import current_tokens
 
 # Display text -> (file extension, QFileDialog filter string)
 _FORMAT_EXTENSIONS = {
@@ -107,7 +108,7 @@ class _ExportSettingsPanel(QWidget):
         self.spin_dpi.setSingleStep(50)
         dpi_row.addWidget(self.spin_dpi)
         note = QLabel("(export resolution -- separate from the on-screen canvas DPI)")
-        note.setStyleSheet("color: gray; font-style: italic; font-size: 10px;")
+        note.setStyleSheet(f"color: {current_tokens().text_muted}; font-style: italic; font-size: 10px;")
         dpi_row.addWidget(note)
         dpi_row.addStretch()
         layout.addLayout(dpi_row)
@@ -211,7 +212,7 @@ class VExportDialog(QDialog):
         size_row.addWidget(self.combo_unit)
 
         note = QLabel("(blank = use current on-screen size)")
-        note.setStyleSheet("color: gray; font-style: italic; font-size: 10px;")
+        note.setStyleSheet(f"color: {current_tokens().text_muted}; font-style: italic; font-size: 10px;")
         size_row.addWidget(note)
         size_row.addStretch()
         layout.addLayout(size_row)

@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtWidgets import QApplication, QWidget
 
-from .tokens import ThemeTokens, THEME_TOKENS, DARK_TOKENS
+from .tokens import ThemeTokens, THEME_TOKENS, DARK_TOKENS, normalize_theme_key
 from .palettes import build_palette
 from .qss_template import build_stylesheet
 
@@ -29,6 +29,7 @@ _CLASSIC_THEMES = {"classic_dark", "classic_light"}
 # Mapping from theme key → spectra-viewer combobox display name.
 _VIEWER_THEME_NAMES = {
     "dark":          "Dark Mode",
+    "gray":          "Dark Mode",
     "light":         "Light Mode",
     "classic_dark":  "Dark Mode",
     "classic_light": "Light Mode",
@@ -147,13 +148,10 @@ class ThemeManager:
         ThemeManager._instance = self
         self._settings = settings
         raw = settings.get_theme() or "dark"
-        if raw == "soft_dark":
-            raw = "dark"
-            settings.set_theme("dark")
-        elif raw in ("modern_warm", "warm"):
-            raw = "light"
-            settings.set_theme("light")
-        self._current: str = raw
+        canonical = normalize_theme_key(raw)
+        if canonical != raw:
+            settings.set_theme(canonical)
+        self._current: str = canonical
         self._title_bar_filter: _TitleBarThemeFilter | None = None
 
     # ── Properties ────────────────────────────────────────────
@@ -166,7 +164,7 @@ class ThemeManager:
     @property
     def is_dark(self) -> bool:
         """``True`` when the active theme has a dark background."""
-        return self._current in ("dark", "classic_dark")
+        return self.tokens.is_dark
 
     @property
     def tokens(self) -> ThemeTokens:
@@ -198,10 +196,7 @@ class ThemeManager:
 
         if theme_key is None:
             theme_key = self._settings.get_theme() or "dark"
-        if theme_key == "soft_dark":
-            theme_key = "dark"
-        elif theme_key in ("modern_warm", "warm"):
-            theme_key = "light"
+        theme_key = normalize_theme_key(theme_key)
 
         self._current = theme_key
         tokens = THEME_TOKENS.get(theme_key, THEME_TOKENS["dark"])

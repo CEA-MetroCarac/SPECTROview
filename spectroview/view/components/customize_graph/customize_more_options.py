@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView, QHeaderView,
 )
 
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens
 
 # Text <-> MGraph.figure_theme value.
 _THEME_TEXT_MAP = {"Light": "light", "Dark": "dark"}
@@ -175,7 +175,7 @@ class CustomizeMoreOptions(QWidget):
         layout.addLayout(sort_row)
 
         info = QLabel("Sorts legend and data order for consistent, deterministic plots.")
-        info.setStyleSheet("color: gray; font-style: italic; font-size: 10px;")
+        info.setStyleSheet(f"color: {current_tokens().text_muted}; font-style: italic; font-size: 10px;")
         info.setWordWrap(True)
         layout.addWidget(info)
 

@@ -3,12 +3,13 @@ from PySide6.QtWidgets import QToolBar, QSizePolicy, QLabel, QMenu
 from PySide6.QtCore import QSize, Signal, Qt
 
 from spectroview import VERSION
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens, is_dark_theme_key, normalize_theme_key
 from spectroview.view.components.common.v_notification import VNotificationArea
 
 # Available themes: internal key → display label
 THEME_OPTIONS = [
     ("dark", "Modern Dark"),
+    ("gray", "Modern Gray"),
     ("light", "Modern Light"),
     ("---", ""),  # separator
     ("classic_dark", "Classic Dark"),
@@ -81,7 +82,7 @@ class VMenuBar(QToolBar):
         
         # ----- Theme dropdown button -----
         self.actionTheme = self.addAction(Icons.theme(self._current_theme, size=22), "Select Theme")
-        self.actionTheme.setToolTip("Select Theme (Dark / Light)")
+        self.actionTheme.setToolTip("Select Theme (Modern Dark / Modern Gray / Modern Light / Classic)")
         self.actionTheme.triggered.connect(self._show_theme_menu)
 
         self.actionManual= self.addAction(Icons.manual(size=22), "Open User Manual")
@@ -96,12 +97,14 @@ class VMenuBar(QToolBar):
         self.actionAbout.triggered.connect(self.about_requested.emit)
         self.addSeparator()
 
-        version_label = QLabel(f" v{VERSION} ")
-        version_label.setToolTip("Click to view lastest release notes")
-        version_label.setStyleSheet("color: gray; font-size: 11px; padding-right: 5px;")
-        version_label.setCursor(Qt.CursorShape.PointingHandCursor)
-        version_label.mousePressEvent = lambda event: self.version_requested.emit()
-        self.addWidget(version_label)
+        self.version_label = QLabel(f" v{VERSION} ")
+        self.version_label.setToolTip("Click to view lastest release notes")
+        self.version_label.setStyleSheet(
+            f"color: {current_tokens().text_muted}; font-size: 11px; padding-right: 5px;"
+        )
+        self.version_label.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.version_label.mousePressEvent = lambda event: self.version_requested.emit()
+        self.addWidget(self.version_label)
 
         # Store baseline icons for dynamic theme switching
         self._default_icons = {
@@ -122,17 +125,14 @@ class VMenuBar(QToolBar):
     # ── Theme dropdown ────────────────────────────────────────
     def _update_theme_icon(self) -> None:
         """Update theme action icon based on active theme (moon for dark, sun for light)."""
-        is_dark = self._current_theme in ("dark", "classic_dark", "soft_dark") or "dark" in str(self._current_theme).lower()
+        is_dark = is_dark_theme_key(self._current_theme)
         icon = Icons.moon(size=22) if is_dark else Icons.sun(size=22)
         self.actionTheme.setIcon(icon)
         self._default_icons[self.actionTheme] = icon
 
     def set_current_theme(self, theme_key: str):
         """Update internal state so the checkmark appears on the right item."""
-        if theme_key == "soft_dark":
-            theme_key = "dark"
-        elif theme_key in ("modern_warm", "warm"):
-            theme_key = "light"
+        theme_key = normalize_theme_key(theme_key)
         self._current_theme = theme_key
         self._update_theme_icon()
         if hasattr(self, "notification_area") and self.notification_area is not None:
@@ -144,6 +144,10 @@ class VMenuBar(QToolBar):
         for action, icon in self._default_icons.items():
             if action is not self.actionTheme:
                 action.setIcon(icon)
+        if hasattr(self, "version_label") and self.version_label is not None:
+            self.version_label.setStyleSheet(
+                f"color: {current_tokens().text_muted}; font-size: 11px; padding-right: 5px;"
+            )
 
     def _show_theme_menu(self, checked=False):
         """Build and display a popup menu below the theme toolbar button."""

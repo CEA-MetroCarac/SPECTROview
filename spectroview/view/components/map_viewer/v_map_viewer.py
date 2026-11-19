@@ -263,6 +263,12 @@ class VMapViewer(
             self.btn_options.setIcon(Icons.settings(color=icon_color))
         if hasattr(self, 'lbl_coordinates'):
             self.lbl_coordinates.setStyleSheet(f"font-size: 11px; padding: 0px 4px; color: {tok.text_secondary};")
+        if hasattr(self, "canvas_card") and getattr(self, "figure", None) is not None:
+            from matplotlib.colors import to_hex
+            fig_hex = to_hex(self.figure.patch.get_facecolor())
+            self.canvas_card.setStyleSheet(
+                f"QFrame#canvasCard {{ background-color: {fig_hex}; border: 1px solid {tok.border}; border-radius: 8px; }}"
+            )
 
     def _create_map_type_controls(self):
         """Create map type and palette selector controls."""

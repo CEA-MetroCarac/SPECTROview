@@ -1,5 +1,6 @@
 from PySide6.QtCore import QSize
-from spectroview.view.theme import Icons
+from spectroview.view.theme import GRAY_TOKENS, Icons, ThemeManager
+from spectroview.model.m_settings import MSettings
 from spectroview.view.components.common.v_menubar import VMenuBar, THEME_OPTIONS
 
 
@@ -24,10 +25,10 @@ def test_v_menubar_actions_and_icons(qtbot):
     # Ensure vector icon exists and renders
     assert not Icons.get("llm_ai").isNull()
 
-    # Ensure theme options contains the 4 canonical themes
+    # Ensure theme options contains the 5 canonical themes
     theme_keys = {key for key, _ in THEME_OPTIONS if key != "---"}
-    assert theme_keys == {"dark", "light", "classic_dark", "classic_light"}
-    assert len(theme_keys) == 4
+    assert theme_keys == {"dark", "gray", "light", "classic_dark", "classic_light"}
+    assert len(theme_keys) == 5
 
 
 def test_v_menubar_theme_icon_switching(qtbot):
@@ -53,6 +54,14 @@ def test_v_menubar_theme_icon_switching(qtbot):
     # Switching to classic_dark -> moon icon
     menubar.set_current_theme("classic_dark")
     assert menubar.actionTheme.icon().name() == "moon"
+
+    # Switching to gray -> moon icon & updated version label color
+    mgr = ThemeManager(MSettings())
+    mgr.apply("gray")
+    menubar.apply_theme("gray")
+    assert menubar._current_theme == "gray"
+    assert menubar.actionTheme.icon().name() == "moon"
+    assert GRAY_TOKENS.text_muted in menubar.version_label.styleSheet()
 
     # apply_theme propagates and maintains proper moon/sun icon
     menubar.apply_theme("light")

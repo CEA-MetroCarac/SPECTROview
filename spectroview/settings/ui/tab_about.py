@@ -29,7 +29,7 @@ from spectroview.settings.build_info import (
     get_environment_summary,
     get_runtime_package_versions as get_runtime_package_versions,
 )
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens
 
 
 def _highlight_group_style() -> str:
@@ -66,6 +66,7 @@ class AboutTabPage(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._pkg_labels: list[tuple[str, QLabel]] = []
+        self._pkg_val_labels: list[tuple[str, QLabel]] = []
         self._init_ui()
 
     def _init_ui(self) -> None:
@@ -100,10 +101,11 @@ class AboutTabPage(QWidget):
         title_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         title_col.addWidget(title_label)
 
-        subtitle_label = QLabel("Tool for Spectroscopic Data Processing and Visualization")
-        subtitle_label.setStyleSheet("font-size: 11px; color: gray; font-style: italic;")
-        subtitle_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        title_col.addWidget(subtitle_label)
+        tok = current_tokens()
+        self._subtitle_label = QLabel("Tool for Spectroscopic Data Processing and Visualization")
+        self._subtitle_label.setStyleSheet(f"font-size: 11px; color: {tok.text_muted}; font-style: italic;")
+        self._subtitle_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        title_col.addWidget(self._subtitle_label)
 
         header_row.addLayout(title_col)
         layout.addLayout(header_row)
@@ -128,11 +130,11 @@ class AboutTabPage(QWidget):
         layout.addLayout(version_row)
 
         # Separate line for Build number (under Version and Check for Updates)
-        build_lbl = QLabel(f"Build: {get_build_number()}")
-        build_lbl.setAlignment(Qt.AlignCenter)
-        build_lbl.setStyleSheet("color: #888888; font-size: 11px;")
-        build_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        layout.addWidget(build_lbl)
+        self._build_lbl = QLabel(f"Build: {get_build_number()}")
+        self._build_lbl.setAlignment(Qt.AlignCenter)
+        self._build_lbl.setStyleSheet(f"color: {tok.text_muted}; font-size: 11px;")
+        self._build_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        layout.addWidget(self._build_lbl)
 
         # ───── Python Environment & Dependencies ─────
         self.grp_env = QGroupBox("Environment & Dependencies")
@@ -177,10 +179,10 @@ class AboutTabPage(QWidget):
         env_info_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
         env_layout.addWidget(env_info_lbl)
 
-        sep = QFrame()
-        sep.setFrameShape(QFrame.HLine)
-        sep.setStyleSheet("color: rgba(128, 128, 128, 0.25);")
-        env_layout.addWidget(sep)
+        self._env_sep = QFrame()
+        self._env_sep.setFrameShape(QFrame.HLine)
+        self._env_sep.setStyleSheet(f"color: {tok.border_subtle};")
+        env_layout.addWidget(self._env_sep)
 
         # Two-column dependency grid
         grid = QGridLayout()
@@ -198,13 +200,14 @@ class AboutTabPage(QWidget):
             lbl_val = QLabel(ver)
             lbl_val.setTextInteractionFlags(Qt.TextSelectableByMouse)
             if ver == "Not installed":
-                lbl_val.setStyleSheet("font-size: 11px; color: #888888; font-style: italic;")
+                lbl_val.setStyleSheet(f"font-size: 11px; color: {tok.text_muted}; font-style: italic;")
             else:
-                lbl_val.setStyleSheet("font-size: 11px; color: #2E7D32;" if not ver.startswith("Unk") else "font-size: 11px;")
+                lbl_val.setStyleSheet(f"font-size: 11px; color: {tok.success};" if not ver.startswith("Unk") else "font-size: 11px;")
 
             grid.addWidget(lbl_name, row, col * 2)
             grid.addWidget(lbl_val, row, col * 2 + 1)
             self._pkg_labels.append((pkg.lower(), lbl_name))
+            self._pkg_val_labels.append((ver, lbl_val))
 
             col += 1
             if col >= 2:
@@ -223,13 +226,13 @@ class AboutTabPage(QWidget):
         prompt_row = QHBoxLayout()
         prompt_row.setSpacing(6)
 
-        lbl_prompt = QLabel(
+        self._lbl_prompt = QLabel(
             "If you use SPECTROview in your research or publications, please consider citing:"
         )
-        lbl_prompt.setStyleSheet("color: gray; font-style: italic; font-size: 11px;")
-        lbl_prompt.setWordWrap(True)
-        lbl_prompt.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        prompt_row.addWidget(lbl_prompt, 1)
+        self._lbl_prompt.setStyleSheet(f"color: {tok.text_muted}; font-style: italic; font-size: 11px;")
+        self._lbl_prompt.setWordWrap(True)
+        self._lbl_prompt.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        prompt_row.addWidget(self._lbl_prompt, 1)
 
         self.btn_copy_citation = QPushButton()
         self.btn_copy_citation.setIcon(Icons.copy())
@@ -241,16 +244,12 @@ class AboutTabPage(QWidget):
 
         citation_layout.addLayout(prompt_row)
 
-        lbl_cite = QLabel(
-            'Le, Van Hoan. "SPECTROview: An Open-Source Application for Interactive Spectroscopic Data Processing, Fitting, and Visualization." '
-            '<i>SoftwareX</i> 35 (September 2026): 102862.<br>'
-            '<a href="https://doi.org/10.1016/j.softx.2026.102862" style="color: #3B82F6;">https://doi.org/10.1016/j.softx.2026.102862</a>'
-        )
-        lbl_cite.setStyleSheet("font-size: 11px;")
-        lbl_cite.setWordWrap(True)
-        lbl_cite.setOpenExternalLinks(True)
-        lbl_cite.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.LinksAccessibleByMouse)
-        citation_layout.addWidget(lbl_cite)
+        self._lbl_cite = QLabel(self._citation_html(tok.accent))
+        self._lbl_cite.setStyleSheet("font-size: 11px;")
+        self._lbl_cite.setWordWrap(True)
+        self._lbl_cite.setOpenExternalLinks(True)
+        self._lbl_cite.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.LinksAccessibleByMouse)
+        citation_layout.addWidget(self._lbl_cite)
 
         layout.addWidget(self.grp_citation)
 
@@ -319,3 +318,25 @@ class AboutTabPage(QWidget):
 
         if first_match:
             self._scroll.ensureWidgetVisible(first_match, 0, 30)
+
+    @staticmethod
+    def _citation_html(link_color: str) -> str:
+        return (
+            'Le, Van Hoan. "SPECTROview: An Open-Source Application for Interactive Spectroscopic Data Processing, Fitting, and Visualization." '
+            '<i>SoftwareX</i> 35 (September 2026): 102862.<br>'
+            f'<a href="https://doi.org/10.1016/j.softx.2026.102862" style="color: {link_color};">https://doi.org/10.1016/j.softx.2026.102862</a>'
+        )
+
+    def refresh_theme_styles(self) -> None:
+        """Re-apply token-based label styling after a live theme change."""
+        tok = current_tokens()
+        self._subtitle_label.setStyleSheet(f"font-size: 11px; color: {tok.text_muted}; font-style: italic;")
+        self._build_lbl.setStyleSheet(f"color: {tok.text_muted}; font-size: 11px;")
+        self._env_sep.setStyleSheet(f"color: {tok.border_subtle};")
+        for ver, lbl_val in self._pkg_val_labels:
+            if ver == "Not installed":
+                lbl_val.setStyleSheet(f"font-size: 11px; color: {tok.text_muted}; font-style: italic;")
+            else:
+                lbl_val.setStyleSheet(f"font-size: 11px; color: {tok.success};" if not ver.startswith("Unk") else "font-size: 11px;")
+        self._lbl_prompt.setStyleSheet(f"color: {tok.text_muted}; font-style: italic; font-size: 11px;")
+        self._lbl_cite.setText(self._citation_html(tok.accent))

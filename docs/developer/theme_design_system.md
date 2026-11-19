@@ -38,7 +38,7 @@ The SPECTROview UI/UX redesign upgrades the application from legacy rasterized i
 
 ## 2. Theme Modes in SPECTROview
 
-SPECTROview supports four persistent theme modes alongside automated migration for legacy settings:
+SPECTROview supports five persistent theme modes alongside automated migration for legacy settings:
 
 ```mermaid
 flowchart TD
@@ -46,6 +46,7 @@ flowchart TD
     TM --> Decision{"Theme Key"}
     
     Decision -->|"dark"| ModernDark["Modern Dark (PLUME DARK_TOKENS + QSS + DWM)"]
+    Decision -->|"gray"| ModernGray["Modern Gray (Office-inspired GRAY_TOKENS + QSS + DWM)"]
     Decision -->|"light"| ModernLight["Modern Light (PLUME LIGHT_TOKENS + QSS + DWM)"]
     Decision -->|"classic_dark"| ClassicDark["Classic Dark (Palette only, empty QSS)"]
     Decision -->|"classic_light"| ClassicLight["Classic Light (Palette only, empty QSS)"]
@@ -54,75 +55,87 @@ flowchart TD
 ```
 
 ### 1. Modern Dark (`"dark"`) — Default Flagship
+
 - **Surfaces**: Neutral layered charcoal tones (`#1B1B1B` canvas, `#161616` sidebars, `#232323` cards).
 - **Accents**: Electric cobalt (`#5B8CFF`), subtle selection tint (`rgba(91, 140, 255, 68)`).
 - **Styling**: Complete global QSS, 6px control radius, 8px container radius, visible 5px splitters with grip SVGs.
 - **OS Integration**: Native Windows 11 immersive dark title bar (`DWMWA_USE_IMMERSIVE_DARK_MODE = True`).
 
-### 2. Modern Light (`"light"`) — Flagship Daylight
+### 2. Modern Gray (`"gray"`) — Soft Office Dark Gray
+
+- **Surfaces**: Softer neutral medium-dark gray surfaces inspired by Microsoft Word and Outlook dark-gray mode (`#2B2B2B` rail, `#333333` chrome, `#3C3C3C` canvas, `#454545` cards, `#4E4E4E` elevated controls, `#5A5A5A` hover).
+- **Typography & Borders**: Soft off-white primary text (`#ECECEE`) and medium-gray dividers (`#5C5C5C` / `#6A6A6A`) to prevent pure-white glare during prolonged sessions while retaining WCAG contrast.
+- **Accents**: Calm Office/Fluent-inspired cobalt blue (`#5290F2`) and translucent selection tint (`rgba(82, 144, 242, 82)`).
+- **Normalization**: `normalize_theme_key()` and `is_dark_theme_key()` in `tokens.py` map aliases (`"modern_gray"`, `"grey"`, `"modern_grey"`) to `"gray"` and treat `"gray"` as part of the dark-family scheme for DWM title bars, SVG icon contrast, and notification badges.
+
+### 3. Modern Light (`"light"`) — Flagship Daylight
+
 - **Surfaces**: Crisp cool-grey and pure white surfaces (`#F3F4F8` canvas, `#EBEEF4` sidebars, `#FFFFFF` cards).
 - **Accents**: Deep royal blue (`#2F62F0`), subtle selection tint (`rgba(47, 98, 240, 48)`).
 - **Styling**: Complete global QSS mirroring Modern Dark geometry and typography.
 - **OS Integration**: Native Windows 11 light title bar with light grey caption (`#EBEEF4`) and dark text (`#141519`).
 
-### 3. Classic Dark (`"classic_dark"`) & Classic Light (`"classic_light"`) — Minimalist Legacy
+### 4. Classic Dark (`"classic_dark"`) & Classic Light (`"classic_light"`) — Minimalist Legacy
+
 - Preserves standard Qt Fusion palette styling without custom QSS stylesheets (`app.setStyleSheet("")`).
 - Ideal for users on remote desktop connections, low-power hardware, or those preferring unstyled native OS controls.
 
-### 4. Retired Theme: Modern Warm (`"modern_warm"`)
+### 5. Retired Theme: Modern Warm (`"modern_warm"`)
+
 - The experimental `"modern_warm"` theme is deprecated and removed.
 - **Automatic Migration**: When `MSettings.get_theme()` or `ThemeManager.apply()` encounters `"modern_warm"`, it automatically migrates the setting to `"light"`, updates persistent storage, and applies Modern Light.
 
-### 5. Plot Theme vs. Application UI Theme Decoupling
+### 6. Plot Theme vs. Application UI Theme Decoupling
+
 - **Matplotlib Canvas Theme**: In addition to the application-wide Qt UI theme, the plot canvas theme (`"Dark Mode"` or `"Light Mode"`) is independently configured via the **Plot theme** selector in `VSpectraViewer`.
-- **Default & Independence**: The plot canvas theme defaults to `"Light Mode"` across all viewers and operates completely independently from the global application UI theme. Toggling the UI theme between dark and light does not alter the canvas plot theme.
+- **Default & Independence**: The plot canvas theme defaults to `"Light Mode"` across all viewers and operates completely independently from the global application UI theme. Toggling the UI theme between dark, gray, and light does not alter the canvas plot theme.
 - **Persistence**: Explicit user selections in the plot theme selector persist across application sessions in `view_options/theme`.
 
 ---
 
-## 3. Design Tokens (`DARK_TOKENS` & `LIGHT_TOKENS`)
+## 3. Design Tokens (`DARK_TOKENS`, `GRAY_TOKENS` & `LIGHT_TOKENS`)
 
-The core token system defines 36 semantic variables. All translucent colors use integer alpha `0..255`.
+The core token system defines semantic design variables (`ThemeTokens` dataclass) across all modern themes. All translucent colors use integer alpha `0..255`.
 
-| Token Name | Modern Dark (`DARK_TOKENS`) | Modern Light (`LIGHT_TOKENS`) | Description / Semantic Usage |
-|:---|:---:|:---:|:---|
-| `background` | `#1B1B1B` | `#F3F4F8` | Main window background and canvas base |
-| `rail_bg` | `#111111` | `#E2E5EE` | Deepest root activity rail / sidebar edge |
-| `sidebar_bg` | `#161616` | `#EBEEF4` | File list sidebar, tree views, and left navigation |
-| `surface` | `#232323` | `#FFFFFF` | Primary cards, group boxes, dialog containers |
-| `surface_sunken` | `#141414` | `#E8EBF2` | Sunken log viewers, data tables, console outputs |
-| `surface_elevated` | `#2C2C2C` | `#FFFFFF` | Dropdown menus, tooltips, hover popups |
-| `surface_hover` | `#363636` | `#E4E8F0` | Hover state on list items, tabs, and buttons |
-| `surface_pressed` | `#404040` | `#D8DDE8` | Pressed / active state on buttons and controls |
-| `input_bg` | `#292929` | `#F7F8FB` | Resting background for text inputs, combos, spinboxes |
-| `input_border` | `#474747` | `#BEC5D4` | Resting border for text inputs, combos, spinboxes |
-| `border` | `#3A3A3A` | `#CBD1DF` | Standard container, group box, and card borders |
-| `border_subtle` | `#303030` | `#D8DDE8` | Internal dividers, inactive tab borders |
-| `border_strong` | `#545454` | `#A6AEBF` | High-contrast borders, focused control borders |
-| `card_user_bg` | `#1F293D` | `#EBF1FF` | Embedded AI chat user query message card background |
-| `card_user_border` | `#3E5C94` | `#ADC4F5` | Embedded AI chat user query message card border |
-| `card_assistant_bg` | `#262626` | `#FFFFFF` | Embedded AI chat assistant response card background |
-| `card_assistant_border` | `#424242` | `#C7CEDE` | Embedded AI chat assistant response card border |
-| `text_primary` | `#EDEDEF` | `#141519` | High-contrast primary headings, values, and labels |
-| `text_secondary` | `#B5B5B5` | `#525663` | Subdued labels, axis units, descriptive text |
-| `text_muted` | `#909090` | `#7B808F` | Disabled text, placeholders, footnote metadata |
-| `solid` | `#EDEDEF` | `#141519` | Primary CTA button background (monochrome solid) |
-| `solid_hover` | `#D9D9D9` | `#2A2C34` | Primary CTA button hover |
-| `solid_pressed` | `#C4C4C4` | `#3A3D47` | Primary CTA button pressed |
-| `on_solid` | `#141414` | `#FFFFFF` | Text/icon color drawn over `solid` CTA background |
-| `accent` | `#5B8CFF` | `#2F62F0` | Brand accent, radio/checkbox checked, link text |
-| `accent_hover` | `#749DFF` | `#2452D6` | Hover state for accent-colored actions |
-| `accent_pressed` | `#4476EB` | `#1B43B8` | Pressed state for accent-colored actions |
-| `accent_tint` | `rgba(91, 140, 255, 42)` | `rgba(47, 98, 240, 32)` | Translucent hover background for splitters & chips |
-| `selection` | `rgba(91, 140, 255, 68)` | `rgba(47, 98, 240, 48)` | Text selection and item selection background |
-| `success` | `#3DD68C` | `#0E8A55` | Success indicators, converged fit status |
-| `success_tint` | `rgba(61, 214, 140, 38)` | `rgba(14, 138, 85, 32)` | Background badge for successful operations |
-| `warning` | `#F5C27A` | `#A15C00` | Warning alerts, near-boundary fit parameters |
-| `warning_tint` | `rgba(245, 194, 122, 38)` | `rgba(161, 92, 0, 32)` | Background badge for warnings |
-| `error` | `#EF4444` | `#DC2626` | Error alerts, fit failure, invalid input ranges |
-| `error_tint` | `rgba(239, 68, 68, 38)` | `rgba(220, 38, 38, 28)` | Background badge for error notices |
-| `scrollbar_thumb` | `rgba(255, 255, 255, 56)` | `rgba(0, 0, 0, 52)` | 6px slim scrollbar resting thumb |
-| `scrollbar_thumb_hover` | `rgba(255, 255, 255, 96)` | `rgba(0, 0, 0, 92)` | 6px slim scrollbar hovered thumb |
+| Token Name | Modern Dark (`DARK_TOKENS`) | Modern Gray (`GRAY_TOKENS`) | Modern Light (`LIGHT_TOKENS`) | Description / Semantic Usage |
+|:---|:---:|:---:|:---:|:---|
+| `background` | `#1B1B1B` | `#3C3C3C` | `#F3F4F8` | Main window background and canvas base |
+| `rail_bg` | `#111111` | `#2B2B2B` | `#E2E5EE` | Deepest root activity rail / sidebar edge |
+| `sidebar_bg` | `#161616` | `#333333` | `#EBEEF4` | File list sidebar, tree views, and left navigation |
+| `surface` | `#232323` | `#454545` | `#FFFFFF` | Primary cards, group boxes, dialog containers |
+| `surface_sunken` | `#141414` | `#323232` | `#E8EBF2` | Sunken log viewers, data tables, console outputs |
+| `surface_elevated` | `#2C2C2C` | `#4E4E4E` | `#FFFFFF` | Dropdown menus, tooltips, hover popups |
+| `surface_hover` | `#363636` | `#5A5A5A` | `#E4E8F0` | Hover state on list items, tabs, and buttons |
+| `surface_pressed` | `#404040` | `#666666` | `#D8DDE8` | Pressed / active state on buttons and controls |
+| `input_bg` | `#292929` | `#393939` | `#F7F8FB` | Resting background for text inputs, combos, spinboxes |
+| `input_border` | `#474747` | `#6A6A6A` | `#BEC5D4` | Resting border for text inputs, combos, spinboxes |
+| `border` | `#3A3A3A` | `#5C5C5C` | `#CBD1DF` | Standard container, group box, and card borders |
+| `border_subtle` | `#303030` | `#505050` | `#D8DDE8` | Internal dividers, inactive tab borders |
+| `border_strong` | `#545454` | `#787878` | `#A6AEBF` | High-contrast borders, focused control borders |
+| `card_user_bg` | `#1F293D` | `#35455C` | `#EBF1FF` | Embedded AI chat user query message card background |
+| `card_user_border` | `#3E5C94` | `#5B7EB3` | `#ADC4F5` | Embedded AI chat user query message card border |
+| `card_assistant_bg` | `#262626` | `#4B4B4B` | `#FFFFFF` | Embedded AI chat assistant response card background |
+| `card_assistant_border` | `#424242` | `#636363` | `#C7CEDE` | Embedded AI chat assistant response card border |
+| `text_primary` | `#EDEDEF` | `#ECECEE` | `#141519` | High-contrast primary headings, values, and labels |
+| `text_secondary` | `#B5B5B5` | `#CACACA` | `#525663` | Subdued labels, axis units, descriptive text |
+| `text_muted` | `#909090` | `#B0B0B0` | `#7B808F` | Disabled text, placeholders, footnote metadata |
+| `solid` | `#EDEDEF` | `#E6E6E8` | `#141519` | Primary CTA button background (monochrome solid) |
+| `solid_hover` | `#D9D9D9` | `#D6D6DA` | `#2A2C34` | Primary CTA button hover |
+| `solid_pressed` | `#C4C4C4` | `#C4C4C9` | `#3A3D47` | Primary CTA button pressed |
+| `on_solid` | `#141414` | `#262626` | `#FFFFFF` | Text/icon color drawn over `solid` CTA background |
+| `accent` | `#5B8CFF` | `#5290F2` | `#2F62F0` | Brand accent, radio/checkbox checked, link text |
+| `accent_hover` | `#749DFF` | `#6BA3F7` | `#2452D6` | Hover state for accent-colored actions |
+| `accent_pressed` | `#4476EB` | `#3E7CE0` | `#1B43B8` | Pressed state for accent-colored actions |
+| `accent_tint` | `rgba(91, 140, 255, 42)` | `rgba(82, 144, 242, 48)` | `rgba(47, 98, 240, 32)` | Translucent hover background for splitters & chips |
+| `selection` | `rgba(91, 140, 255, 68)` | `rgba(82, 144, 242, 82)` | `rgba(47, 98, 240, 48)` | Text selection and item selection background |
+| `success` | `#3DD68C` | `#4AD994` | `#0E8A55` | Success indicators, converged fit status |
+| `success_tint` | `rgba(61, 214, 140, 38)` | `rgba(74, 217, 148, 42)` | `rgba(14, 138, 85, 32)` | Background badge for successful operations |
+| `warning` | `#F5C27A` | `#F6C978` | `#A15C00` | Warning alerts, near-boundary fit parameters |
+| `warning_tint` | `rgba(245, 194, 122, 38)` | `rgba(246, 201, 120, 44)` | `rgba(161, 92, 0, 32)` | Background badge for warnings |
+| `error` | `#EF4444` | `#F46363` | `#DC2626` | Error alerts, fit failure, invalid input ranges |
+| `error_tint` | `rgba(239, 68, 68, 38)` | `rgba(244, 99, 99, 44)` | `rgba(220, 38, 38, 28)` | Background badge for error notices |
+| `scrollbar_thumb` | `rgba(255, 255, 255, 56)` | `rgba(255, 255, 255, 76)` | `rgba(0, 0, 0, 52)` | 6px slim scrollbar resting thumb |
+| `scrollbar_thumb_hover` | `rgba(255, 255, 255, 96)` | `rgba(255, 255, 255, 120)` | `rgba(0, 0, 0, 92)` | 6px slim scrollbar hovered thumb |
 
 ---
 

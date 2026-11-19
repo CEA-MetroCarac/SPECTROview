@@ -12,7 +12,7 @@ A horizontal toolbar located at the top of the application provides quick access
 | ![AI Agent](../user_manual_images/menu_bar/ai_agent.png) | **SPECTROview AI Agent**: Opens the AI Chat Agent panel (`Ctrl + Shift + A`) to query, filter, and plot your data in natural language. See the "AI Chat Agent" section. |
 | ![Settings](../user_manual_images/menu_bar/settings.png) | **Settings**: Opens the `Settings Panel` (`Ctrl + Shift + S`, see below for details). |
 | ![Check for updates](../user_manual_images/menu_bar/check_update.png) | **Check for updates**: Manually checks the GitHub Releases page for a newer version. |
-| ![Theme](../user_manual_images/menu_bar/theme.png) | **Theme**: Opens a dropdown to choose the interface theme — **Modern Dark**, **Modern Light**, **Classic Dark**, or **Classic Light**. |
+| ![Theme](../user_manual_images/menu_bar/theme.png) | **Theme**: Opens a dropdown to choose the interface theme — **Modern Dark**, **Modern Gray**, **Modern Light**, **Classic Dark**, or **Classic Light**. |
 | ![User Manual](../user_manual_images/menu_bar/manual.png) | **User Manual**: Opens the online User Manual documentation in your browser (`Ctrl + Shift + M`). |
 | ![GitHub](../user_manual_images/menu_bar/github.png) | **GitHub**: Opens the SPECTROview GitHub repository in your browser. |
 | ![About](../user_manual_images/menu_bar/about.png) | **About**: Displays version information, licensing, and details about the **SPECTROview** application. |

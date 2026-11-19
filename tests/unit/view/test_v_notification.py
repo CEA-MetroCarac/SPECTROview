@@ -346,6 +346,25 @@ def test_notification_area_theme_propagation(qtbot):
     assert b2._is_dark_theme is True
 
 
+def test_notification_area_modern_gray_theme_uses_dark_pill_with_gray_surface(qtbot):
+    """Verify Modern Gray uses dark-family notification badges with soft gray background."""
+    from spectroview.model.m_settings import MSettings
+    from spectroview.view.theme import ThemeManager
+
+    mgr = ThemeManager(MSettings())
+    mgr.apply("gray")
+
+    area = VNotificationArea()
+    area.resize(800, 36)
+    qtbot.addWidget(area)
+
+    area.set_theme("gray")
+    b1 = area.show_notification("Modern gray notification")
+    assert area._is_dark_theme is True
+    assert b1._is_dark_theme is True
+    assert "rgba(74, 74, 76, 245)" in b1.styleSheet()
+
+
 def test_notification_area_resize_relayout(qtbot):
     """Verify badges reposition correctly when notification area is resized."""
     area = VNotificationArea()

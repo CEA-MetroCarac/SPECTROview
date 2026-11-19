@@ -20,6 +20,7 @@ from spectroview.view.components.customize_graph.common import (
     create_scrollable_container,
     highlight_group_style,
 )
+from spectroview.view.theme import current_tokens
 
 _THEME_TEXT_MAP = {"Light": "light", "Dark": "dark"}
 _THEME_VALUE_TEXT = {"light": "Light", "dark": "Dark", "soft_dark": "Dark"}
@@ -153,7 +154,7 @@ class TabGeneral(QWidget):
         sort_layout.addLayout(sort_row)
 
         sort_info = QLabel("Sorts legend and series drawing order for consistent, deterministic plots.")
-        sort_info.setStyleSheet("color: gray; font-style: italic; font-size: 10px;")
+        sort_info.setStyleSheet(f"color: {current_tokens().text_muted}; font-style: italic; font-size: 10px;")
         sort_info.setWordWrap(True)
         sort_layout.addWidget(sort_info)
 

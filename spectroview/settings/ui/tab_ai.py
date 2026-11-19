@@ -24,6 +24,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.view.theme import current_tokens
+
 
 def _highlight_group_style() -> str:
     return (
@@ -70,9 +72,11 @@ class AISettingsTabPage(QWidget):
         api_layout.setContentsMargins(8, 8, 8, 8)
         api_layout.setSpacing(6)
 
-        lbl_vault_note = QLabel("🔒 API keys are securely stored in the system credential vault and excluded from config backups.")
-        lbl_vault_note.setStyleSheet("color: gray; font-size: 11px; font-style: italic; margin-bottom: 4px;")
-        api_layout.addWidget(lbl_vault_note)
+        self._lbl_vault_note = QLabel("🔒 API keys are securely stored in the system credential vault and excluded from config backups.")
+        self._lbl_vault_note.setStyleSheet(
+            f"color: {current_tokens().text_muted}; font-size: 11px; font-style: italic; margin-bottom: 4px;"
+        )
+        api_layout.addWidget(self._lbl_vault_note)
 
         def add_api_row(
             box_layout: QVBoxLayout,
@@ -224,7 +228,7 @@ class AISettingsTabPage(QWidget):
         mcp_layout.addLayout(mcp_row)
 
         self.lbl_mcp_endpoint = QLabel("Endpoint: http://127.0.0.1:8765/mcp")
-        self.lbl_mcp_endpoint.setStyleSheet("color: gray; font-size: 11px;")
+        self.lbl_mcp_endpoint.setStyleSheet(f"color: {current_tokens().text_muted}; font-size: 11px;")
         self.lbl_mcp_endpoint.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.spin_mcp_port.valueChanged.connect(
             lambda port: self.lbl_mcp_endpoint.setText(
@@ -305,3 +309,11 @@ class AISettingsTabPage(QWidget):
 
         if first_match:
             self._scroll.ensureWidgetVisible(first_match, 0, 30)
+
+    def refresh_theme_styles(self) -> None:
+        """Re-apply token-based label styling after a live theme change."""
+        muted = current_tokens().text_muted
+        self._lbl_vault_note.setStyleSheet(
+            f"color: {muted}; font-size: 11px; font-style: italic; margin-bottom: 4px;"
+        )
+        self.lbl_mcp_endpoint.setStyleSheet(f"color: {muted}; font-size: 11px;")

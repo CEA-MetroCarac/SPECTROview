@@ -144,9 +144,11 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
         self.switcher_container.setVisible(False)
         header_layout.addWidget(self.switcher_container, stretch=0)
 
+        tok = current_tokens()
+
         # Exclusion / diagnostic status badge
         self.lbl_context_status = QLabel("", self.header_bar)
-        self.lbl_context_status.setStyleSheet("font-size: 11px; color: #b08840;")
+        self.lbl_context_status.setStyleSheet(f"font-size: 11px; color: {tok.warning};")
         self.lbl_context_status.setVisible(False)
         header_layout.addWidget(self.lbl_context_status, stretch=1)
 
@@ -163,7 +165,6 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
         opts_layout.setContentsMargins(0, 0, 0, 0)
         opts_layout.setSpacing(4)
 
-        tok = current_tokens()
         self.btn_legend = QToolButton(self.options_toolbar)
         self.btn_legend.setObjectName("liveMapsBtnLegend")
         self.btn_legend.setIcon(Icons.legend(color=tok.text_primary))
@@ -195,7 +196,7 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
         # ── Placeholder when all selectors are off ──
         self.lbl_placeholder = QLabel(self)
         self.lbl_placeholder.setAlignment(Qt.AlignCenter)
-        self.lbl_placeholder.setStyleSheet("font-size: 13px; color: #888; padding: 30px;")
+        self.lbl_placeholder.setStyleSheet(f"font-size: 13px; color: {tok.text_muted}; padding: 30px;")
         main_layout.addWidget(self.lbl_placeholder)
 
         # ── Horizontal container for the 3 subpanels ──
@@ -642,6 +643,10 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
         self._icon_color = icon_color
         self.btn_legend.setIcon(Icons.legend(color=icon_color))
         self.btn_options.setIcon(Icons.settings(color=icon_color))
+        if hasattr(self, "lbl_context_status"):
+            self.lbl_context_status.setStyleSheet(f"font-size: 11px; color: {tok.warning};")
+        if hasattr(self, "lbl_placeholder"):
+            self.lbl_placeholder.setStyleSheet(f"font-size: 13px; color: {tok.text_muted}; padding: 30px;")
         for panel in self.panels.values():
             panel.apply_icon_theme(icon_color)
 

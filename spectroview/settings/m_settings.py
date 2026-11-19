@@ -10,6 +10,23 @@ from typing import Optional
 from PySide6.QtCore import QSettings
 
 
+_VALID_THEMES = ("dark", "gray", "light", "classic_dark", "classic_light")
+
+
+def _normalize_app_theme(theme: Optional[str]) -> str:
+    """Normalize legacy/alias application theme names to canonical keys."""
+    raw = str(theme or "").strip().lower()
+    if not raw or raw == "soft_dark":
+        return "dark"
+    if raw in ("modern_warm", "warm"):
+        return "light"
+    if raw in ("modern_gray", "grey", "modern_grey"):
+        return "gray"
+    if raw in _VALID_THEMES:
+        return raw
+    return "dark"
+
+
 LIVE_MAPS_VIEW_OPTION_DEFAULTS = {
     "plot_theme": "Light Mode",
     "xscale": "linear",
@@ -462,27 +479,16 @@ class MSettings:
     
     # ---------- Theme ----------
     def get_theme(self) -> str:
-        """Get current theme (dark, light, classic_dark, classic_light)."""
-        val = self.settings.value("theme", "dark", str)
-        if val == "soft_dark":
-            self.set_theme("dark")
-            return "dark"
-        if val in ("modern_warm", "warm"):
-            self.set_theme("light")
-            return "light"
-        if val not in ("dark", "light", "classic_dark", "classic_light"):
-            self.set_theme("dark")
-            return "dark"
+        """Get current theme (dark, gray, light, classic_dark, classic_light)."""
+        raw = self.settings.value("theme", "dark", str)
+        val = _normalize_app_theme(raw)
+        if val != raw:
+            self.set_theme(val)
         return val
 
     def set_theme(self, theme: str):
-        """Set theme (dark, light, classic_dark, classic_light)."""
-        if theme == "soft_dark":
-            theme = "dark"
-        elif theme in ("modern_warm", "warm"):
-            theme = "light"
-        elif theme not in ("dark", "light", "classic_dark", "classic_light"):
-            theme = "dark"
+        """Set theme (dark, gray, light, classic_dark, classic_light)."""
+        theme = _normalize_app_theme(theme)
         self.settings.setValue("theme", theme)
         self.settings.sync()
         self._auto_export_config()

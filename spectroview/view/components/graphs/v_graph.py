@@ -304,6 +304,16 @@ class VGraph(GraphBreakInsetMixin, GraphAxesStyleMixin, GraphAnnotationMixin, QW
         except (RuntimeError, AttributeError, TypeError):
             pass
 
+    def apply_global_theme(self, theme: str = "") -> None:
+        """Refresh widget-level theme colors without modifying MGraph.figure_theme."""
+        tok = current_tokens()
+        if hasattr(self, "lbl_coordinates"):
+            self.lbl_coordinates.setStyleSheet(
+                f"font-size: 11px; padding: 0px 4px; color: {tok.text_secondary};"
+            )
+        if hasattr(self, "btn_copy_figure"):
+            self.btn_copy_figure.setIcon(Icons.copy(color=tok.text_primary))
+
     def _rescale(self):
         """Reset the plot to its original auto-scaled view -- the matplotlib
         toolbar's Home action, exposed for the Ctrl+R shortcut."""

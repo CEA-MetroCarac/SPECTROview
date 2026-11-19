@@ -4,7 +4,7 @@ import pytest
 from PySide6.QtCore import QSize
 from spectroview import ICON_DIR
 from spectroview.view.theme import svg_icon
-from spectroview.view.theme.tokens import DARK_TOKENS, LIGHT_TOKENS
+from spectroview.view.theme.tokens import DARK_TOKENS, GRAY_TOKENS, LIGHT_TOKENS
 from spectroview.view.theme.qss_template import build_stylesheet
 from spectroview.view.components.lower_tabs import VPeakTable, ROW_HEIGHT
 from PySide6.QtWidgets import QApplication
@@ -20,11 +20,11 @@ from spectroview.view.components.graphs.v_export_dialog import VExportDialog
 from spectroview.view.components.customize_graph.customize_more_options import CustomizeMoreOptions
 
 
-EXPECTED_THEMES = {"dark", "light", "classic_dark", "classic_light"}
+EXPECTED_THEMES = {"dark", "gray", "light", "classic_dark", "classic_light"}
 
 
-def test_theme_constants_have_exactly_four_themes():
-    """Verify that only the 4 canonical themes exist across all theme definitions."""
+def test_theme_constants_have_exactly_five_themes():
+    """Verify that the 5 canonical themes exist across all theme definitions."""
     assert set(THEME_TOKENS.keys()) == EXPECTED_THEMES
     assert set(_PALETTE_BUILDERS.keys()) == EXPECTED_THEMES
     assert set(_VIEWER_THEME_NAMES.keys()) == EXPECTED_THEMES
@@ -32,9 +32,10 @@ def test_theme_constants_have_exactly_four_themes():
 
     menubar_keys = {key for key, _ in THEME_OPTIONS if key != "---"}
     assert menubar_keys == EXPECTED_THEMES
-    assert len(menubar_keys) == 4
+    assert len(menubar_keys) == 5
 
     assert THEME_TOKENS["dark"].checkbox_checked_image == "check_white.svg"
+    assert THEME_TOKENS["gray"].checkbox_checked_image == "check_white.svg"
     assert THEME_TOKENS["light"].checkbox_checked_image == "check_white.svg"
 
 
@@ -47,6 +48,12 @@ def test_theme_manager_is_dark():
     assert mgr.workspace_theme == "dark"
     assert mgr.viewer_theme_name == "Dark Mode"
     assert mgr.icon_color == "#EDEDEF"
+
+    mgr._current = "gray"
+    assert mgr.is_dark is True
+    assert mgr.workspace_theme == "dark"
+    assert mgr.viewer_theme_name == "Dark Mode"
+    assert mgr.icon_color == "#ECECEE"
 
     mgr._current = "classic_dark"
     assert mgr.is_dark is True
@@ -184,6 +191,10 @@ def test_progressbar_contrast_and_tokens():
     dark_tokens = THEME_TOKENS["dark"]
     assert dark_tokens.progress_text == "#EDEDEF"
 
+    # Specifically for gray theme, progress_text must be high contrast
+    gray_tokens = THEME_TOKENS["gray"]
+    assert gray_tokens.progress_text == "#ECECEE"
+
     # Specifically for light theme, progress_text must be high-contrast white
     light_tokens = THEME_TOKENS["light"]
     assert light_tokens.progress_text == "#FFFFFF"
@@ -191,12 +202,14 @@ def test_progressbar_contrast_and_tokens():
     # Verify stylesheet contains the progress_text in QProgressBar rule
     qss = build_stylesheet(dark_tokens)
     assert f"color: {dark_tokens.progress_text};" in qss
+    gray_qss = build_stylesheet(gray_tokens)
+    assert f"color: {gray_tokens.progress_text};" in gray_qss
 
 
 def test_rgba_integer_alpha_tokens_and_stylesheet():
-    """Verify all rgba(...) tokens in DARK_TOKENS, LIGHT_TOKENS, and build_stylesheet use integer alpha 0..255 (never float 0.x)."""
+    """Verify all rgba(...) tokens in DARK_TOKENS, GRAY_TOKENS, LIGHT_TOKENS, and build_stylesheet use integer alpha 0..255."""
     rgba_pattern = re.compile(r"rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([^\)]+)\)")
-    for tok_obj in (DARK_TOKENS, LIGHT_TOKENS):
+    for tok_obj in (DARK_TOKENS, GRAY_TOKENS, LIGHT_TOKENS):
         for field, val in tok_obj.__dict__.items():
             if isinstance(val, str) and "rgba" in val:
                 for match in rgba_pattern.finditer(val):
@@ -205,7 +218,7 @@ def test_rgba_integer_alpha_tokens_and_stylesheet():
                     alpha_int = int(alpha_str)
                     assert 0 <= alpha_int <= 255, f"Alpha out of range 0..255 in token {field}: {val}"
 
-    for tok_obj in (DARK_TOKENS, LIGHT_TOKENS):
+    for tok_obj in (DARK_TOKENS, GRAY_TOKENS, LIGHT_TOKENS):
         qss = build_stylesheet(tok_obj)
         for match in rgba_pattern.finditer(qss):
             alpha_str = match.group(4).strip()
@@ -261,13 +274,19 @@ def test_svg_icon_engine_dynamic_paint_color(qtbot):
     pix_dark = icon.pixmap(QSize(20, 20))
     assert not pix_dark.isNull()
 
+    mgr.apply("gray")
+    pix_gray = icon.pixmap(QSize(20, 20))
+    assert not pix_gray.isNull()
+
     mgr.apply("light")
     pix_light = icon.pixmap(QSize(20, 20))
     assert not pix_light.isNull()
 
     img_dark = pix_dark.toImage()
+    img_gray = pix_gray.toImage()
     img_light = pix_light.toImage()
     assert img_dark.bits() != img_light.bits()
+    assert img_gray.bits() != img_light.bits()
 
 
 def test_resources_icons_only_contains_active_files():
@@ -432,15 +451,169 @@ def test_tab_pane_transparent_scroll_rounded_splitter_and_fit_results_buttons(qa
 
 
 def test_text_browser_styled_with_surface_in_themes():
-    """Verify that QTextBrowser uses @surface background and adapts between dark and light themes."""
+    """Verify that QTextBrowser uses @surface background and adapts between dark, gray, and light themes."""
     from spectroview.view.theme.qss_template import build_stylesheet
     from spectroview.view.theme.tokens import THEME_TOKENS
     dark_qss = build_stylesheet(THEME_TOKENS["dark"])
+    gray_qss = build_stylesheet(THEME_TOKENS["gray"])
     light_qss = build_stylesheet(THEME_TOKENS["light"])
 
     assert "QTextBrowser" in dark_qss
+    assert "QTextBrowser" in gray_qss
     assert "QTextBrowser" in light_qss
     assert THEME_TOKENS["dark"].surface in dark_qss
+    assert THEME_TOKENS["gray"].surface in gray_qss
     assert THEME_TOKENS["light"].surface in light_qss
+
+
+def _rel_luminance(hex_col: str) -> float:
+    from PySide6.QtGui import QColor
+
+    c = QColor(hex_col)
+    channels = []
+    for v in (c.redF(), c.greenF(), c.blueF()):
+        channels.append(v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4)
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+
+
+def _contrast_ratio(c1: str, c2: str) -> float:
+    l1, l2 = _rel_luminance(c1), _rel_luminance(c2)
+    return (max(l1, l2) + 0.05) / (min(l1, l2) + 0.05)
+
+
+def test_modern_gray_neutral_palette_and_surface_hierarchy():
+    """Verify Modern Gray uses neutral gray tones, intermediate brightness, and monotonic surface depth."""
+    from PySide6.QtGui import QColor
+
+    for field in (
+        "background",
+        "rail_bg",
+        "sidebar_bg",
+        "surface",
+        "surface_sunken",
+        "surface_elevated",
+        "surface_hover",
+        "surface_pressed",
+        "input_bg",
+        "input_border",
+        "border",
+        "border_subtle",
+        "border_strong",
+        "text_secondary",
+        "text_muted",
+    ):
+        col = QColor(getattr(GRAY_TOKENS, field))
+        assert col.red() == col.green() == col.blue(), f"Token {field}={getattr(GRAY_TOKENS, field)} is not neutral gray"
+
+    # Background brightness sits cleanly between Modern Dark and Modern Light
+    assert QColor(DARK_TOKENS.background).lightness() < QColor(GRAY_TOKENS.background).lightness() < QColor(LIGHT_TOKENS.background).lightness()
+
+    # Monotonic 3-tier surface elevation hierarchy
+    lums = [
+        QColor(GRAY_TOKENS.rail_bg).lightness(),
+        QColor(GRAY_TOKENS.sidebar_bg).lightness(),
+        QColor(GRAY_TOKENS.background).lightness(),
+        QColor(GRAY_TOKENS.surface).lightness(),
+        QColor(GRAY_TOKENS.surface_elevated).lightness(),
+        QColor(GRAY_TOKENS.surface_hover).lightness(),
+        QColor(GRAY_TOKENS.surface_pressed).lightness(),
+    ]
+    assert lums == sorted(lums) and len(set(lums)) == len(lums)
+
+
+def test_modern_gray_wcag_contrast_thresholds():
+    """Verify Modern Gray text and solid CTA tokens satisfy WCAG contrast thresholds."""
+    assert _contrast_ratio(GRAY_TOKENS.text_primary, GRAY_TOKENS.background) >= 7.0
+    assert _contrast_ratio(GRAY_TOKENS.text_primary, GRAY_TOKENS.surface) >= 7.0
+    assert _contrast_ratio(GRAY_TOKENS.text_primary, GRAY_TOKENS.surface_elevated) >= 4.5
+    assert _contrast_ratio(GRAY_TOKENS.text_primary, GRAY_TOKENS.surface_hover) >= 4.5
+    assert _contrast_ratio(GRAY_TOKENS.text_secondary, GRAY_TOKENS.surface) >= 4.5
+    assert _contrast_ratio(GRAY_TOKENS.on_solid, GRAY_TOKENS.solid) >= 7.0
+
+
+def test_modern_gray_alias_normalization():
+    """Verify 'modern_gray' and 'grey' aliases normalize to canonical 'gray' across layers."""
+    from spectroview.view.theme import build_palette, modern_gray_palette, normalize_theme_key
+
+    for alias in ("gray", "modern_gray", "grey", "modern_grey", "Modern_Gray"):
+        assert normalize_theme_key(alias) == "gray"
+
+        settings = MSettings()
+        settings.set_theme(alias)
+        assert settings.get_theme() == "gray"
+
+        mgr = ThemeManager(settings)
+        assert mgr.current_theme == "gray"
+        assert mgr.is_dark is True
+
+        menubar = VMenuBar()
+        menubar.set_current_theme(alias)
+        assert menubar._current_theme == "gray"
+        menubar.close()
+
+        pal = build_palette(alias)
+        assert pal.color(pal.ColorRole.Window) == modern_gray_palette().color(pal.ColorRole.Window)
+
+
+def test_modern_gray_update_banner_and_live_maps(qtbot):
+    """Verify VUpdateBanner and VLiveMaps adapt to Modern Gray cleanly."""
+    from spectroview.view.components.common.v_update_banner import VUpdateBanner, _MODERN_GRAY_STYLE
+    from spectroview.view.components.rgb_live_maps import VLiveMaps
+    from spectroview.view.components.rgb_live_maps.common import _normalize_plot_theme
+
+    settings = MSettings()
+    mgr = ThemeManager(settings)
+    mgr.apply("gray")
+
+    banner = VUpdateBanner("v99.0.0", "https://example.invalid", lambda _t: None, lambda: None)
+    qtbot.addWidget(banner)
+    banner.apply_theme("gray")
+    assert banner.styleSheet() == _MODERN_GRAY_STYLE
+
+    assert _normalize_plot_theme("gray") == "Dark Mode"
+    assert _normalize_plot_theme("modern_gray") == "Dark Mode"
+
+    live_maps = VLiveMaps()
+    qtbot.addWidget(live_maps)
+    live_maps.apply_theme("gray")
+    assert live_maps.get_view_options()["plot_theme"] == "Dark Mode"
+    assert GRAY_TOKENS.text_muted in live_maps.lbl_placeholder.styleSheet()
+
+
+def test_canvas_card_and_graph_coordinate_theme_sync(qtbot):
+    """Verify canvas_card border and VGraph coordinates update when switching to Modern Gray."""
+    from spectroview.view.components.map_viewer import VMapViewer
+    from spectroview.view.workspaces.graphs import VWorkspaceGraphs
+
+    settings = MSettings()
+    mgr = ThemeManager(settings)
+    mgr.apply("gray")
+
+    sv = VSpectraViewer()
+    qtbot.addWidget(sv)
+    sv.apply_global_theme("gray")
+    assert GRAY_TOKENS.border in sv.canvas_card.styleSheet()
+    assert GRAY_TOKENS.text_secondary in sv.lbl_coordinates.styleSheet()
+
+    mv = VMapViewer()
+    qtbot.addWidget(mv)
+    mv.apply_global_theme("gray")
+    assert GRAY_TOKENS.border in mv.canvas_card.styleSheet()
+    assert GRAY_TOKENS.text_secondary in mv.lbl_coordinates.styleSheet()
+
+    ws_graphs = VWorkspaceGraphs()
+    qtbot.addWidget(ws_graphs)
+    vg = VGraph(graph_id=1)
+    vg.create_plot_widget(dpi=80)
+    qtbot.addWidget(vg)
+    ws_graphs.graph_widgets[1] = (vg, None, None)
+
+    mgr.apply("dark")
+    ws_graphs.apply_theme("dark")
+    assert DARK_TOKENS.text_secondary in vg.lbl_coordinates.styleSheet()
+
+    mgr.apply("gray")
+    ws_graphs.apply_theme("gray")
+    assert GRAY_TOKENS.text_secondary in vg.lbl_coordinates.styleSheet()
 
 

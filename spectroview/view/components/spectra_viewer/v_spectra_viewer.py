@@ -737,3 +737,10 @@ class VSpectraViewer(
             self.btn_eraser.setIcon(Icons.eraser(color=icon_color))
             self.btn_erase_undo.setIcon(Icons.undo(color=icon_color))
             self.btn_erase_validate.setIcon(Icons.check(color=icon_color))
+
+        if hasattr(self, "canvas_card") and getattr(self, "figure", None) is not None:
+            from matplotlib.colors import to_hex
+            fig_hex = to_hex(self.figure.patch.get_facecolor())
+            self.canvas_card.setStyleSheet(
+                f"QFrame#canvasCard {{ background-color: {fig_hex}; border: 1px solid {tok.border}; border-radius: 8px; }}"
+            )

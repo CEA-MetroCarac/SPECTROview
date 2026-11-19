@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview.ai_agent.m_conversation_store import ConversationSummary, MConversationStore
-from spectroview.view.theme import Icons
+from spectroview.view.theme import Icons, current_tokens
 
 
 class _ConversationItemWidget(QWidget):
@@ -87,9 +87,10 @@ class _ConversationItemWidget(QWidget):
             except Exception:
                 formatted_dt = timestamp_str
 
+        tok = current_tokens()
         msg_label = f"{message_count} message{'s' if message_count != 1 else ''}"
         self.lbl_details = QLabel(f"{formatted_dt}  ·  {msg_label}")
-        self.lbl_details.setStyleSheet("color: #8E8E93; font-size: 11px;")
+        self.lbl_details.setStyleSheet(f"color: {tok.text_muted}; font-size: 11px;")
         text_layout.addWidget(self.lbl_details)
 
         layout.addLayout(text_layout, 1)
@@ -99,17 +100,17 @@ class _ConversationItemWidget(QWidget):
         actions_layout.setContentsMargins(0, 0, 0, 0)
         actions_layout.setSpacing(4)
 
-        btn_base_style = """
-            QPushButton {
+        btn_base_style = f"""
+            QPushButton {{
                 background: transparent;
-                border: 1px solid rgba(128, 128, 128, 0.25);
+                border: 1px solid {tok.border};
                 border-radius: 4px;
                 padding: 2px;
-            }
-            QPushButton:hover {
-                background: rgba(128, 128, 128, 0.25);
-                border-color: rgba(128, 128, 128, 0.45);
-            }
+            }}
+            QPushButton:hover {{
+                background: {tok.surface_hover};
+                border-color: {tok.border_strong};
+            }}
         """
 
         # Pin / Unpin button
@@ -120,7 +121,7 @@ class _ConversationItemWidget(QWidget):
         self.btn_pin.setCursor(Qt.PointingHandCursor)
         if self.pinned:
             self.btn_pin.setStyleSheet(
-                btn_base_style + "QPushButton { background: rgba(91, 140, 255, 0.18); border-color: #5B8CFF; }"
+                btn_base_style + f"QPushButton {{ background: {tok.accent_tint}; border-color: {tok.accent}; }}"
             )
         else:
             self.btn_pin.setStyleSheet(btn_base_style)
@@ -155,7 +156,7 @@ class _ConversationItemWidget(QWidget):
         self.btn_delete.setCursor(Qt.PointingHandCursor)
         self.btn_delete.setObjectName("btnRowDanger")
         self.btn_delete.setStyleSheet(
-            btn_base_style + "QPushButton#btnRowDanger:hover { background: rgba(239, 68, 68, 0.22); border-color: #EF4444; }"
+            btn_base_style + f"QPushButton#btnRowDanger:hover {{ background: {tok.error_tint}; border-color: {tok.error}; }}"
         )
         self.btn_delete.clicked.connect(lambda: self.on_delete.emit(self.conv_id))
         actions_layout.addWidget(self.btn_delete)
@@ -228,10 +229,11 @@ class VHistoryDialog(QDialog):
         self.list_widget = QListWidget()
         self.list_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.list_widget.setSpacing(2)
+        tok = current_tokens()
         self.list_widget.setStyleSheet(
-            "QListWidget { background: transparent; border: 1px solid rgba(128, 128, 128, 0.25); border-radius: 6px; padding: 4px; } "
+            f"QListWidget {{ background: transparent; border: 1px solid {tok.border}; border-radius: 6px; padding: 4px; }} "
             "QListWidget::item { border-radius: 5px; margin: 1px 0px; } "
-            "QListWidget::item:selected { background-color: rgba(91, 140, 255, 0.25); }"
+            f"QListWidget::item:selected {{ background-color: {tok.selection}; }}"
         )
         self.list_widget.itemDoubleClicked.connect(self._on_item_double_clicked)
         layout.addWidget(self.list_widget, stretch=1)
@@ -322,7 +324,7 @@ class VHistoryDialog(QDialog):
         lbl = QLabel(label_text)
         lbl.setObjectName("historyDateHeader")
         lbl.setStyleSheet(
-            "font-weight: bold; font-size: 11px; color: #5B8CFF; "
+            f"font-weight: bold; font-size: 11px; color: {current_tokens().accent}; "
             "padding: 8px 6px 3px 6px; background: transparent;"
         )
         # Give generous explicit height so the header is fully visible and never clipped

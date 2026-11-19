@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from PySide6.QtGui import QIcon, QPixmap
 from .icons_svg import svg_icon, svg_pixmap
+from .tokens import is_dark_theme_key
 
 # ---------------------------------------------------------------------------
 # Legacy icon name mapping
@@ -321,7 +322,7 @@ class Icons:
             except Exception:
                 is_dark = True
         else:
-            is_dark = theme in ("dark", "classic_dark", "soft_dark") or "dark" in str(theme).lower()
+            is_dark = is_dark_theme_key(theme)
 
         icon_name = "moon" if is_dark else "sun"
         return svg_icon(icon_name, size=size, color=color)

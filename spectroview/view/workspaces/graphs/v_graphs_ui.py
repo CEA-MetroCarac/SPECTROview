@@ -415,9 +415,11 @@ class GraphsUIMixin:
             self._build_secondary_axis_group("y3", "Tertiary Y axis (right offset, green):"))
 
         x2_group = self._build_secondary_axis_group("x2", "Secondary X axis (top, purple):")
-        info_x2 = QLabel("Applicable plot styles: point, scatter, line")
-        info_x2.setStyleSheet("color: gray; font-style: italic; font-size: 10px;")
-        x2_group.layout().addWidget(info_x2)
+        self.lbl_info_x2 = QLabel("Applicable plot styles: point, scatter, line")
+        self.lbl_info_x2.setStyleSheet(
+            f"color: {current_tokens().text_muted}; font-style: italic; font-size: 10px;"
+        )
+        x2_group.layout().addWidget(self.lbl_info_x2)
         tab_more_layout.addWidget(x2_group)
 
         tab_more_layout.addStretch()
@@ -518,6 +520,16 @@ class GraphsUIMixin:
             for i in range(self.cbb_plot_style.count()):
                 style = self.cbb_plot_style.itemText(i)
                 self.cbb_plot_style.setItemIcon(i, Icons.get(style, color=icon_color))
+
+        if hasattr(self, 'lbl_info_x2'):
+            self.lbl_info_x2.setStyleSheet(
+                f"color: {tok.text_muted}; font-style: italic; font-size: 10px;"
+            )
+
+        for entry in getattr(self, 'graph_widgets', {}).values():
+            gw = entry[0] if isinstance(entry, (tuple, list)) and entry else entry
+            if hasattr(gw, 'apply_global_theme'):
+                gw.apply_global_theme(theme)
 
     def _setup_keyboard_shortcuts(self):
         """Undo/redo/copy-figure/paste-style/customize accelerators scoped to self.mdi_area."""

@@ -676,6 +676,12 @@ QSS_TEMPLATE = r"""
         border: 3px solid @surface_elevated;
     }
 
+    QLineEdit:disabled, QComboBox:disabled,
+    QSpinBox:disabled, QDoubleSpinBox:disabled,
+    QCheckBox:disabled, QRadioButton:disabled {
+        color: @text_muted;
+    }
+
     /* ═══════════════════════════════════════════════
        TABLE VIEW & HEADER VIEW
        ═══════════════════════════════════════════════ */

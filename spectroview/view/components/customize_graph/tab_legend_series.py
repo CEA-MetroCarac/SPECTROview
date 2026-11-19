@@ -33,6 +33,7 @@ from spectroview.view.components.customize_graph.spin_widgets import (
     PlaceholderDoubleSpinBox,
     PlaceholderSpinBox,
 )
+from spectroview.view.theme import current_tokens
 
 _MARKER_STYLES = ("scatter", "trendline", "point")
 _UNSET = -999999.0
@@ -307,7 +308,7 @@ class TabLegendSeries(QWidget):
 
         if not legend_properties:
             lbl_empty = QLabel("No legend series available for this plot.")
-            lbl_empty.setStyleSheet("color: gray; font-style: italic;")
+            lbl_empty.setStyleSheet(f"color: {current_tokens().text_muted}; font-style: italic;")
             self.legend_layout.addWidget(lbl_empty)
         else:
             self._build_legend_widgets(legend_properties)

@@ -139,6 +139,54 @@ DARK_TOKENS = ThemeTokens(
 
 
 # ═══════════════════════════════════════════════════════════════
+#  MODERN GRAY THEME (Soft Office Dark Gray)
+# ═══════════════════════════════════════════════════════════════
+GRAY_TOKENS = ThemeTokens(
+    background="#3C3C3C",
+    rail_bg="#2B2B2B",
+    sidebar_bg="#333333",
+    surface="#454545",
+    surface_sunken="#323232",
+    surface_elevated="#4E4E4E",
+    surface_hover="#5A5A5A",
+    surface_pressed="#666666",
+    input_bg="#393939",
+    input_border="#6A6A6A",
+    border="#5C5C5C",
+    border_subtle="#505050",
+    border_strong="#787878",
+    card_user_bg="#35455C",
+    card_user_border="#5B7EB3",
+    card_assistant_bg="#4B4B4B",
+    card_assistant_border="#636363",
+    text_primary="#ECECEE",
+    text_secondary="#CACACA",
+    text_muted="#B0B0B0",
+    solid="#E6E6E8",
+    solid_hover="#D6D6DA",
+    solid_pressed="#C4C4C9",
+    on_solid="#262626",
+    accent="#5290F2",
+    accent_hover="#6BA3F7",
+    accent_pressed="#3E7CE0",
+    accent_tint="rgba(82, 144, 242, 48)",
+    selection="rgba(82, 144, 242, 82)",
+    success="#4AD994",
+    success_tint="rgba(74, 217, 148, 42)",
+    warning="#F6C978",
+    warning_tint="rgba(246, 201, 120, 44)",
+    error="#F46363",
+    error_tint="rgba(244, 99, 99, 44)",
+    scrollbar_thumb="rgba(255, 255, 255, 76)",
+    scrollbar_thumb_hover="rgba(255, 255, 255, 120)",
+    progress_text="#ECECEE",
+    checkbox_checked_image="check_white.svg",
+    icon_color="#ECECEE",
+    is_dark=True,
+)
+
+
+# ═══════════════════════════════════════════════════════════════
 #  MODERN LIGHT THEME (Flagship Daylight)
 # ═══════════════════════════════════════════════════════════════
 LIGHT_TOKENS = ThemeTokens(
@@ -196,7 +244,34 @@ CLASSIC_LIGHT_TOKENS = LIGHT_TOKENS
 # ── Canonical Dictionary ─────────────────────────────────────
 THEME_TOKENS: dict[str, ThemeTokens] = {
     "dark": DARK_TOKENS,
+    "gray": GRAY_TOKENS,
     "light": LIGHT_TOKENS,
     "classic_dark": CLASSIC_DARK_TOKENS,
     "classic_light": CLASSIC_LIGHT_TOKENS,
 }
+
+
+def normalize_theme_key(theme_key: str | None) -> str:
+    """Normalize legacy or alias theme identifiers to a canonical theme key."""
+    raw = str(theme_key or "").strip().lower()
+    if not raw or raw == "soft_dark":
+        return "dark"
+    if raw in ("modern_warm", "warm"):
+        return "light"
+    if raw in ("modern_gray", "grey", "modern_grey"):
+        return "gray"
+    if raw in THEME_TOKENS:
+        return raw
+    return "dark"
+
+
+def is_dark_theme_key(theme_key: str | None) -> bool:
+    """Return True if *theme_key* belongs to the dark-family theme group."""
+    raw = str(theme_key or "").strip().lower()
+    if raw in THEME_TOKENS:
+        return THEME_TOKENS[raw].is_dark
+    if "dark" in raw or raw in ("gray", "modern_gray", "grey", "modern_grey"):
+        return True
+    if "light" in raw or raw in ("modern_warm", "warm"):
+        return False
+    return THEME_TOKENS[normalize_theme_key(theme_key)].is_dark

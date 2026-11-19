@@ -219,10 +219,11 @@ class TestThemeSelectionAndSynchronization:
         dialog = _dialog(qapp)
         assert hasattr(dialog, "cbb_theme")
         cbb = dialog.cbb_theme
-        assert cbb.count() == 4
+        assert cbb.count() == 5
         items = [(cbb.itemText(i), cbb.itemData(i)) for i in range(cbb.count())]
         expected = [
             ("Modern Dark", "dark"),
+            ("Modern Gray", "gray"),
             ("Modern Light", "light"),
             ("Classic Dark", "classic_dark"),
             ("Classic Light", "classic_light"),
@@ -236,6 +237,11 @@ class TestThemeSelectionAndSynchronization:
             dialog.cbb_theme.setCurrentIndex(idx)
         assert blocker.args == ["light"]
 
+        with qtbot.waitSignal(dialog.theme_selected, timeout=2000) as blocker:
+            idx_gray = dialog.cbb_theme.findData("gray")
+            dialog.cbb_theme.setCurrentIndex(idx_gray)
+        assert blocker.args == ["gray"]
+
     def test_theme_round_trip_via_dialog_accept(self, qapp):
         dialog = _dialog(qapp)
         idx = dialog.cbb_theme.findData("classic_dark")
@@ -244,6 +250,19 @@ class TestThemeSelectionAndSynchronization:
 
         reloaded = _dialog(qapp)
         assert reloaded.cbb_theme.currentData() == "classic_dark"
+
+    def test_modern_gray_round_trip_and_search_highlight(self, qapp):
+        dialog = _dialog(qapp)
+        idx = dialog.cbb_theme.findData("gray")
+        dialog.cbb_theme.setCurrentIndex(idx)
+        dialog._on_accept()
+
+        reloaded = _dialog(qapp)
+        assert reloaded.cbb_theme.currentData() == "gray"
+
+        reloaded._search_edit.setText("gray")
+        assert reloaded._nav_list.item(0).isHidden() is False
+        assert "border" in reloaded._tab_general.grp_theme.styleSheet()
 
 
 class TestAboutTabPageRefinements:

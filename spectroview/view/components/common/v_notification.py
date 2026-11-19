@@ -49,6 +49,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.view.theme import ThemeManager, current_tokens, is_dark_theme_key
 from spectroview.view.theme.icons_svg import svg_pixmap
 
 
@@ -278,21 +279,29 @@ class VNotificationBadge(QFrame):
         # Render semantic status icon
         self._icon_label.setPixmap(svg_pixmap(icon_name, size=14, color=accent))
 
-        # Close icon
-        close_color = "#94a3b8" if is_dark else "#64748b"
-        self._close_btn.setIcon(QIcon(svg_pixmap("close", size=10, color=close_color)))
-
         # Frame/border color: yellow for WARNING, green for SUCCESS, blue for INFO, red for ERROR
         frame_color = cfg.get("frame_dark" if is_dark else "frame_light", accent)
         hover_frame = cfg.get("frame_hover_dark" if is_dark else "frame_hover_light", frame_color)
         active_border = hover_frame if self._is_hovered else frame_color
 
-        if is_dark:
+        mgr = ThemeManager.instance()
+        is_modern_gray = is_dark and mgr is not None and mgr.current_theme == "gray"
+        if is_modern_gray:
+            tok = current_tokens()
+            close_color = tok.text_secondary
+            bg = "rgba(74, 74, 76, 245)"
+            text_color = tok.text_primary
+        elif is_dark:
+            close_color = "#94a3b8"
             bg = "rgba(22, 26, 34, 0.95)"
             text_color = "#f1f5f9"
         else:
+            close_color = "#64748b"
             bg = "rgba(255, 255, 255, 0.98)"
             text_color = "#0f172a"
+
+        # Close icon
+        self._close_btn.setIcon(QIcon(svg_pixmap("close", size=10, color=close_color)))
 
         self.setStyleSheet(f"""
             VNotificationBadge {{
@@ -429,7 +438,7 @@ class VNotificationArea(QWidget):
 
     def set_theme(self, theme_key: str) -> None:
         """Update active theme across container and all live badges."""
-        is_dark = "dark" in str(theme_key).lower()
+        is_dark = is_dark_theme_key(theme_key)
         self._is_dark_theme = is_dark
         for badge in self._badges:
             badge.apply_theme(is_dark)

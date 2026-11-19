@@ -734,8 +734,8 @@ def svg_icon(
     """Return a crisp vector QIcon powered by _SvgIconEngine with dynamic theme color resolution."""
     norm_color = _normalize_explicit_color(color)
     from spectroview.view.theme import current_tokens
-    is_dark = current_tokens().is_dark
-    key = (name, norm_color or "", is_dark)
+    tok = current_tokens()
+    key = (name, norm_color or "", tok.is_dark, tok.icon_color)
     cached = _ICON_CACHE.get(key)
     if cached is not None:
         return cached

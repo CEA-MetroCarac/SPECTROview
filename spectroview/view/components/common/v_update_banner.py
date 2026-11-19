@@ -62,6 +62,34 @@ _LIGHT_STYLE = """
     }
 """
 
+_MODERN_GRAY_STYLE = """
+    QWidget#UpdateBanner {
+        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+            stop:0 #3E4A59, stop:0.5 #465568, stop:1 #3E4A59);
+        border-bottom: 1px solid #5B7EB3;
+    }
+    QLabel#banner_icon { color: #7DB4FA; font-size: 15px; }
+    QLabel#banner_text { color: #ECECEE; font-size: 12px; }
+    QLabel#banner_version { color: #7DB4FA; font-weight: bold; font-size: 12px; }
+    QPushButton#btn_update {
+        background: #2E7D32; color: white; border: 1px solid #4AD994;
+        border-radius: 4px; padding: 3px 10px; font-size: 11px; font-weight: bold;
+    }
+    QPushButton#btn_update:hover { background: #388E3C; }
+    QPushButton#btn_download {
+        background: #3E7CE0; color: #FFFFFF; border: 1px solid #5290F2;
+        border-radius: 4px; padding: 3px 10px; font-size: 11px; font-weight: bold;
+    }
+    QPushButton#btn_download:hover { background: #5290F2; }
+    QPushButton#btn_skip, QPushButton#btn_dismiss {
+        background: transparent; color: #C6C6C6; border: 1px solid #6A6A6A;
+        border-radius: 4px; padding: 3px 8px; font-size: 11px;
+    }
+    QPushButton#btn_skip:hover, QPushButton#btn_dismiss:hover {
+        color: #ECECEE; border-color: #888888;
+    }
+"""
+
 _MODERN_WARM_STYLE = """
     QWidget#UpdateBanner {
         background: #E8E3DB;
@@ -188,9 +216,12 @@ class VUpdateBanner(QWidget):
 
     def apply_theme(self, theme_key: str) -> None:
         """Switch banner colours to match the application theme."""
-        if theme_key in ("modern_warm", "warm"):
+        low = str(theme_key or "").strip().lower()
+        if low in ("modern_warm", "warm"):
             style = _MODERN_WARM_STYLE
-        elif theme_key in ("dark", "classic_dark"):
+        elif low in ("gray", "modern_gray", "grey", "modern_grey"):
+            style = _MODERN_GRAY_STYLE
+        elif low in ("dark", "classic_dark"):
             style = _DARK_STYLE
         else:
             style = _LIGHT_STYLE

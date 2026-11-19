@@ -11,7 +11,13 @@ from __future__ import annotations
 from PySide6.QtGui import QPalette, QColor
 from PySide6.QtCore import Qt
 
-from .tokens import ThemeTokens, DARK_TOKENS, LIGHT_TOKENS
+from .tokens import (
+    ThemeTokens,
+    DARK_TOKENS,
+    GRAY_TOKENS,
+    LIGHT_TOKENS,
+    normalize_theme_key,
+)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -61,6 +67,11 @@ def _palette_for(t: ThemeTokens) -> QPalette:
 def modern_dark_palette() -> QPalette:
     """Modern Dark palette synchronized with DARK_TOKENS."""
     return _palette_for(DARK_TOKENS)
+
+
+def modern_gray_palette() -> QPalette:
+    """Modern Gray palette synchronized with GRAY_TOKENS."""
+    return _palette_for(GRAY_TOKENS)
 
 
 def modern_light_palette() -> QPalette:
@@ -154,6 +165,7 @@ light_palette = classic_light_palette
 # ── Lookup table ─────────────────────────────────────────────
 _PALETTE_BUILDERS = {
     "dark":          modern_dark_palette,
+    "gray":          modern_gray_palette,
     "light":         modern_light_palette,
     "classic_dark":  classic_dark_palette,
     "classic_light": classic_light_palette,
@@ -162,7 +174,6 @@ _PALETTE_BUILDERS = {
 
 def build_palette(theme_key: str) -> QPalette:
     """Return a QPalette for the given *theme_key*."""
-    if theme_key in ("modern_warm", "warm"):
-        return modern_light_palette()
-    builder = _PALETTE_BUILDERS.get(theme_key, modern_dark_palette)
+    canonical = normalize_theme_key(theme_key)
+    builder = _PALETTE_BUILDERS.get(canonical, modern_dark_palette)
     return builder()

@@ -20,6 +20,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.i18n import (
+    bind_combo_items,
+    bind_text,
+    bind_title,
+    bind_tooltip,
+    combo_data_or_text,
+    set_combo_by_data_or_text,
+    tr,
+)
 from spectroview.view.components.customize_graph.common import (
     create_scrollable_container,
     highlight_group_style,
@@ -61,13 +70,15 @@ class TabAxesLimits(QWidget):
         self.load_settings()
 
     def _make_limit_spinbox(self, start_value: float = 0.0) -> PlaceholderDoubleSpinBox:
-        spin = PlaceholderDoubleSpinBox(self._UNSET_LIMIT, start_value, "default")
+        spin = PlaceholderDoubleSpinBox(self._UNSET_LIMIT, start_value)
         spin.setRange(self._UNSET_LIMIT, 999999)
         return spin
 
     def _add_limit_row_with_slider(self, parent_layout: QVBoxLayout, axis_label: str, prefix: str) -> None:
         row = QHBoxLayout()
-        row.addWidget(QLabel(f"{axis_label} axis limits:"))
+        lbl = QLabel()
+        bind_text(lbl, "{axis} axis limits:", axis=axis_label)
+        row.addWidget(lbl)
 
         spin_min = self._make_limit_spinbox()
         spin_min.setMaximumWidth(_PLACEHOLDER_SPIN_WIDTH)
@@ -151,7 +162,8 @@ class TabAxesLimits(QWidget):
         self._scroll, _container, layout = create_scrollable_container(self)
 
         # ───── Axis Limits (Placed on top per user request) ─────
-        self.grp_limits = QGroupBox("Axis Limits:")
+        self.grp_limits = QGroupBox()
+        bind_title(self.grp_limits, "Axis Limits:")
         limits_layout = QVBoxLayout(self.grp_limits)
         limits_layout.setContentsMargins(8, 8, 8, 8)
         limits_layout.setSpacing(6)
@@ -167,12 +179,14 @@ class TabAxesLimits(QWidget):
         self._add_limit_row_with_slider(limits_layout, "Z", "z")
 
         limits_btn_row = QHBoxLayout()
-        self.btn_set_limits = QPushButton("Get current limits from plot")
-        self.btn_set_limits.setToolTip("Query current rendered axis limits from the active plot canvas.")
+        self.btn_set_limits = QPushButton()
+        bind_text(self.btn_set_limits, "Get current limits from plot")
+        bind_tooltip(self.btn_set_limits, "Query current rendered axis limits from the active plot canvas.")
         self.btn_set_limits.clicked.connect(self._on_get_current_limits)
 
-        self.btn_clear_limits = QPushButton("Reinitialize limits")
-        self.btn_clear_limits.setToolTip("Reset all axis limits back to automatic auto-scaling.")
+        self.btn_clear_limits = QPushButton()
+        bind_text(self.btn_clear_limits, "Reinitialize limits")
+        bind_tooltip(self.btn_clear_limits, "Reset all axis limits back to automatic auto-scaling.")
         self.btn_clear_limits.clicked.connect(self._on_clear_limits)
 
         limits_btn_row.addWidget(self.btn_set_limits)
@@ -183,71 +197,96 @@ class TabAxesLimits(QWidget):
         layout.addWidget(self.grp_limits)
 
         # ───── Primary Scales & Data Types ─────
-        self.grp_scales = QGroupBox("Axis Scales & Data Types:")
+        self.grp_scales = QGroupBox()
+        bind_title(self.grp_scales, "Axis Scales & Data Types:")
         scales_layout = QVBoxLayout(self.grp_scales)
         scales_layout.setContentsMargins(8, 8, 8, 8)
         scales_layout.setSpacing(6)
 
         x_row = QHBoxLayout()
-        lbl_x = QLabel("X axis:")
+        lbl_x = QLabel()
+        bind_text(lbl_x, "X axis:")
         lbl_x.setFixedWidth(50)
         x_row.addWidget(lbl_x)
-        x_row.addWidget(QLabel("Scale:"))
+        lbl_x_scale = QLabel()
+        bind_text(lbl_x_scale, "Scale:")
+        x_row.addWidget(lbl_x_scale)
         self.combo_x_scale = QComboBox()
-        self.combo_x_scale.addItems(["Linear", "Logarithmic", "Symlog"])
+        bind_combo_items(
+            self.combo_x_scale,
+            [("Linear", "linear"), ("Logarithmic", "log"), ("Symlog", "symlog")],
+        )
         self.combo_x_scale.setMinimumWidth(125)
         self.combo_x_scale.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         if self.combo_x_scale.view():
             self.combo_x_scale.view().setMinimumWidth(125)
-        self.combo_x_scale.setToolTip("Scaling mode for the X axis: Linear, Logarithmic, or Symlog (symmetrical log).")
+        bind_tooltip(self.combo_x_scale, "Scaling mode for the X axis: Linear, Logarithmic, or Symlog (symmetrical log).")
         x_row.addWidget(self.combo_x_scale)
 
         x_row.addSpacing(12)
-        x_row.addWidget(QLabel("Data type:"))
+        lbl_x_type = QLabel()
+        bind_text(lbl_x_type, "Data type:")
+        x_row.addWidget(lbl_x_type)
         self.combo_x_type = QComboBox()
-        self.combo_x_type.addItems(["Auto", "Category", "Numerical"])
+        bind_combo_items(
+            self.combo_x_type,
+            [("Auto", "auto"), ("Category", "category"), ("Numerical", "numeric")],
+        )
         self.combo_x_type.setMinimumWidth(110)
         self.combo_x_type.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         if self.combo_x_type.view():
             self.combo_x_type.view().setMinimumWidth(110)
-        self.combo_x_type.setToolTip("Interpretation for X values: Auto (detected), Category (discrete levels), or Numerical (continuous).")
+        bind_tooltip(self.combo_x_type, "Interpretation for X values: Auto (detected), Category (discrete levels), or Numerical (continuous).")
         x_row.addWidget(self.combo_x_type)
 
         x_row.addSpacing(12)
-        self.cb_invert_x = QCheckBox("Invert")
-        self.cb_invert_x.setToolTip("Invert X axis so values decrease from left to right.")
+        self.cb_invert_x = QCheckBox()
+        bind_text(self.cb_invert_x, "Invert")
+        bind_tooltip(self.cb_invert_x, "Invert X axis so values decrease from left to right.")
         x_row.addWidget(self.cb_invert_x)
         x_row.addStretch()
         scales_layout.addLayout(x_row)
 
         y_row = QHBoxLayout()
-        lbl_y = QLabel("Y axis:")
+        lbl_y = QLabel()
+        bind_text(lbl_y, "Y axis:")
         lbl_y.setFixedWidth(50)
         y_row.addWidget(lbl_y)
-        y_row.addWidget(QLabel("Scale:"))
+        lbl_y_scale = QLabel()
+        bind_text(lbl_y_scale, "Scale:")
+        y_row.addWidget(lbl_y_scale)
         self.combo_y_scale = QComboBox()
-        self.combo_y_scale.addItems(["Linear", "Logarithmic", "Symlog"])
+        bind_combo_items(
+            self.combo_y_scale,
+            [("Linear", "linear"), ("Logarithmic", "log"), ("Symlog", "symlog")],
+        )
         self.combo_y_scale.setMinimumWidth(125)
         self.combo_y_scale.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         if self.combo_y_scale.view():
             self.combo_y_scale.view().setMinimumWidth(125)
-        self.combo_y_scale.setToolTip("Scaling mode for the Y axis: Linear, Logarithmic, or Symlog.")
+        bind_tooltip(self.combo_y_scale, "Scaling mode for the Y axis: Linear, Logarithmic, or Symlog.")
         y_row.addWidget(self.combo_y_scale)
 
         y_row.addSpacing(12)
-        y_row.addWidget(QLabel("Data type:"))
+        lbl_y_type = QLabel()
+        bind_text(lbl_y_type, "Data type:")
+        y_row.addWidget(lbl_y_type)
         self.combo_y_type = QComboBox()
-        self.combo_y_type.addItems(["Auto", "Category", "Numerical"])
+        bind_combo_items(
+            self.combo_y_type,
+            [("Auto", "auto"), ("Category", "category"), ("Numerical", "numeric")],
+        )
         self.combo_y_type.setMinimumWidth(110)
         self.combo_y_type.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         if self.combo_y_type.view():
             self.combo_y_type.view().setMinimumWidth(110)
-        self.combo_y_type.setToolTip("Interpretation for Y values: Auto, Category, or Numerical.")
+        bind_tooltip(self.combo_y_type, "Interpretation for Y values: Auto, Category, or Numerical.")
         y_row.addWidget(self.combo_y_type)
 
         y_row.addSpacing(12)
-        self.cb_invert_y = QCheckBox("Invert")
-        self.cb_invert_y.setToolTip("Invert Y axis so values decrease from bottom to top.")
+        self.cb_invert_y = QCheckBox()
+        bind_text(self.cb_invert_y, "Invert")
+        bind_tooltip(self.cb_invert_y, "Invert Y axis so values decrease from bottom to top.")
         y_row.addWidget(self.cb_invert_y)
         y_row.addStretch()
         scales_layout.addLayout(y_row)
@@ -256,31 +295,36 @@ class TabAxesLimits(QWidget):
         self.z_scale_widget = QWidget()
         z_row = QHBoxLayout(self.z_scale_widget)
         z_row.setContentsMargins(0, 0, 0, 0)
-        lbl_z = QLabel("Z axis:")
+        lbl_z = QLabel()
+        bind_text(lbl_z, "Z axis:")
         lbl_z.setFixedWidth(50)
         z_row.addWidget(lbl_z)
-        z_row.addWidget(QLabel("Scale:"))
+        lbl_z_scale = QLabel()
+        bind_text(lbl_z_scale, "Scale:")
+        z_row.addWidget(lbl_z_scale)
         self.combo_z_scale = QComboBox()
-        self.combo_z_scale.addItem("Linear", "linear")
-        self.combo_z_scale.addItem("Logarithmic", "log")
-        self.combo_z_scale.addItem("Centered", "centered")
+        bind_combo_items(
+            self.combo_z_scale,
+            [("Linear", "linear"), ("Logarithmic", "log"), ("Centered", "centered")],
+        )
         self.combo_z_scale.setMinimumWidth(125)
         self.combo_z_scale.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         if self.combo_z_scale.view():
             self.combo_z_scale.view().setMinimumWidth(125)
-        self.combo_z_scale.setToolTip("Colormap normalization for wafer/2Dmap plots: Linear, Logarithmic, or Centered.")
+        bind_tooltip(self.combo_z_scale, "Colormap normalization for wafer/2Dmap plots: Linear, Logarithmic, or Centered.")
         self.combo_z_scale.currentIndexChanged.connect(self._on_z_scale_changed)
         z_row.addWidget(self.combo_z_scale)
 
         z_row.addSpacing(12)
-        self.lbl_colormap_center = QLabel("Center value:")
+        self.lbl_colormap_center = QLabel()
+        bind_text(self.lbl_colormap_center, "Center value:")
         z_row.addWidget(self.lbl_colormap_center)
         self.spin_colormap_center = QDoubleSpinBox()
         self.spin_colormap_center.setRange(-1e6, 1e6)
         self.spin_colormap_center.setDecimals(2)
         self.spin_colormap_center.setSingleStep(1.0)
         self.spin_colormap_center.setMaximumWidth(90)
-        self.spin_colormap_center.setToolTip("Center midpoint value for Centered colormaps (e.g. 0.0 for delta/strain).")
+        bind_tooltip(self.spin_colormap_center, "Center midpoint value for Centered colormaps (e.g. 0.0 for delta/strain).")
         z_row.addWidget(self.spin_colormap_center)
         z_row.addStretch()
         scales_layout.addWidget(self.z_scale_widget)
@@ -288,45 +332,56 @@ class TabAxesLimits(QWidget):
         layout.addWidget(self.grp_scales)
 
         # ───── Broken Axis ─────
-        self.grp_break = QGroupBox("Broken Axis:")
+        self.grp_break = QGroupBox()
+        bind_title(self.grp_break, "Broken Axis:")
         break_layout = QVBoxLayout(self.grp_break)
         break_layout.setContentsMargins(8, 8, 8, 8)
         break_layout.setSpacing(6)
 
         x_break_row = QHBoxLayout()
-        self.x_break_enabled = QCheckBox("X-axis break")
-        self.x_break_enabled.setToolTip("Enable break on X axis. X and Y breaks cannot both be active simultaneously.")
+        self.x_break_enabled = QCheckBox()
+        bind_text(self.x_break_enabled, "X-axis break")
+        bind_tooltip(self.x_break_enabled, "Enable break on X axis. X and Y breaks cannot both be active simultaneously.")
         self.x_break_start = QDoubleSpinBox()
         self.x_break_start.setRange(-999999, 999999)
         self.x_break_start.setDecimals(2)
-        self.x_break_start.setToolTip("Start coordinate of the omitted X range.")
+        bind_tooltip(self.x_break_start, "Start coordinate of the omitted X range.")
         self.x_break_end = QDoubleSpinBox()
         self.x_break_end.setRange(-999999, 999999)
         self.x_break_end.setDecimals(2)
-        self.x_break_end.setToolTip("End coordinate of the omitted X range.")
+        bind_tooltip(self.x_break_end, "End coordinate of the omitted X range.")
         x_break_row.addWidget(self.x_break_enabled)
-        x_break_row.addWidget(QLabel("from:"))
+        lbl_x_from = QLabel()
+        bind_text(lbl_x_from, "from:")
+        x_break_row.addWidget(lbl_x_from)
         x_break_row.addWidget(self.x_break_start)
-        x_break_row.addWidget(QLabel("to:"))
+        lbl_x_to = QLabel()
+        bind_text(lbl_x_to, "to:")
+        x_break_row.addWidget(lbl_x_to)
         x_break_row.addWidget(self.x_break_end)
         x_break_row.addStretch()
         break_layout.addLayout(x_break_row)
 
         y_break_row = QHBoxLayout()
-        self.y_break_enabled = QCheckBox("Y-axis break")
-        self.y_break_enabled.setToolTip("Enable break on Y axis. X and Y breaks cannot both be active simultaneously.")
+        self.y_break_enabled = QCheckBox()
+        bind_text(self.y_break_enabled, "Y-axis break")
+        bind_tooltip(self.y_break_enabled, "Enable break on Y axis. X and Y breaks cannot both be active simultaneously.")
         self.y_break_start = QDoubleSpinBox()
         self.y_break_start.setRange(-999999, 999999)
         self.y_break_start.setDecimals(2)
-        self.y_break_start.setToolTip("Start coordinate of the omitted Y range.")
+        bind_tooltip(self.y_break_start, "Start coordinate of the omitted Y range.")
         self.y_break_end = QDoubleSpinBox()
         self.y_break_end.setRange(-999999, 999999)
         self.y_break_end.setDecimals(2)
-        self.y_break_end.setToolTip("End coordinate of the omitted Y range.")
+        bind_tooltip(self.y_break_end, "End coordinate of the omitted Y range.")
         y_break_row.addWidget(self.y_break_enabled)
-        y_break_row.addWidget(QLabel("from:"))
+        lbl_y_from = QLabel()
+        bind_text(lbl_y_from, "from:")
+        y_break_row.addWidget(lbl_y_from)
         y_break_row.addWidget(self.y_break_start)
-        y_break_row.addWidget(QLabel("to:"))
+        lbl_y_to = QLabel()
+        bind_text(lbl_y_to, "to:")
+        y_break_row.addWidget(lbl_y_to)
         y_break_row.addWidget(self.y_break_end)
         y_break_row.addStretch()
         break_layout.addLayout(y_break_row)
@@ -370,7 +425,7 @@ class TabAxesLimits(QWidget):
                 self.spin_ymin.setValue(round(ymin, 3))
                 self.spin_ymax.setValue(round(ymax, 3))
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error getting limits: {str(e)}")
+            QMessageBox.critical(self, tr("Error"), tr("Error getting limits: {error}", error=str(e)))
 
     def _on_clear_limits(self) -> None:
         u = self._UNSET_LIMIT
@@ -414,25 +469,27 @@ class TabAxesLimits(QWidget):
 
         # Scales
         if getattr(gw, "xlogscale", False):
-            self.combo_x_scale.setCurrentText(
-                "Symlog" if getattr(gw, "xscale_mode", "log") == "symlog" else "Logarithmic"
-            )
+            x_scale_key = "symlog" if getattr(gw, "xscale_mode", "log") == "symlog" else "log"
         else:
-            self.combo_x_scale.setCurrentText("Linear")
+            x_scale_key = "linear"
+        set_combo_by_data_or_text(self.combo_x_scale, x_scale_key)
 
         if getattr(gw, "ylogscale", False):
-            self.combo_y_scale.setCurrentText(
-                "Symlog" if getattr(gw, "yscale_mode", "log") == "symlog" else "Logarithmic"
-            )
+            y_scale_key = "symlog" if getattr(gw, "yscale_mode", "log") == "symlog" else "log"
         else:
-            self.combo_y_scale.setCurrentText("Linear")
+            y_scale_key = "linear"
+        set_combo_by_data_or_text(self.combo_y_scale, y_scale_key)
 
         # Data types
         x_num = getattr(gw, "x_as_numeric", None)
-        self.combo_x_type.setCurrentText("Auto" if x_num is None else ("Numerical" if x_num else "Category"))
+        set_combo_by_data_or_text(
+            self.combo_x_type, "auto" if x_num is None else ("numeric" if x_num else "category")
+        )
 
         y_num = getattr(gw, "y_as_numeric", None)
-        self.combo_y_type.setCurrentText("Auto" if y_num is None else ("Numerical" if y_num else "Category"))
+        set_combo_by_data_or_text(
+            self.combo_y_type, "auto" if y_num is None else ("numeric" if y_num else "category")
+        )
 
         self.cb_invert_x.setChecked(getattr(gw, "x_inverted", False))
         self.cb_invert_y.setChecked(getattr(gw, "y_inverted", False))
@@ -484,7 +541,7 @@ class TabAxesLimits(QWidget):
             start, end = self.x_break_start.value(), self.x_break_end.value()
             if start >= end:
                 if not silent:
-                    QMessageBox.warning(self, "Invalid Range", "X-axis break start must be less than end.")
+                    QMessageBox.warning(self, tr("Invalid Range"), tr("X-axis break start must be less than end."))
                     return {}
             else:
                 gw.axis_breaks["x"] = {"start": start, "end": end}
@@ -495,26 +552,26 @@ class TabAxesLimits(QWidget):
             start, end = self.y_break_start.value(), self.y_break_end.value()
             if start >= end:
                 if not silent:
-                    QMessageBox.warning(self, "Invalid Range", "Y-axis break start must be less than end.")
+                    QMessageBox.warning(self, tr("Invalid Range"), tr("Y-axis break start must be less than end."))
                     return {}
             else:
                 gw.axis_breaks["y"] = {"start": start, "end": end}
         else:
             gw.axis_breaks["y"] = None
 
-        x_scale_text = self.combo_x_scale.currentText()
-        gw.xlogscale = x_scale_text in ("Logarithmic", "Symlog")
-        gw.xscale_mode = "symlog" if x_scale_text == "Symlog" else "log"
+        x_scale_key = combo_data_or_text(self.combo_x_scale)
+        gw.xlogscale = x_scale_key in ("log", "symlog")
+        gw.xscale_mode = "symlog" if x_scale_key == "symlog" else "log"
 
-        y_scale_text = self.combo_y_scale.currentText()
-        gw.ylogscale = y_scale_text in ("Logarithmic", "Symlog")
-        gw.yscale_mode = "symlog" if y_scale_text == "Symlog" else "log"
+        y_scale_key = combo_data_or_text(self.combo_y_scale)
+        gw.ylogscale = y_scale_key in ("log", "symlog")
+        gw.yscale_mode = "symlog" if y_scale_key == "symlog" else "log"
 
-        x_text = self.combo_x_type.currentText()
-        gw.x_as_numeric = None if x_text == "Auto" else (x_text == "Numerical")
+        x_type_key = combo_data_or_text(self.combo_x_type)
+        gw.x_as_numeric = None if x_type_key == "auto" else (x_type_key == "numeric")
 
-        y_text = self.combo_y_type.currentText()
-        gw.y_as_numeric = None if y_text == "Auto" else (y_text == "Numerical")
+        y_type_key = combo_data_or_text(self.combo_y_type)
+        gw.y_as_numeric = None if y_type_key == "auto" else (y_type_key == "numeric")
 
         gw.x_inverted = self.cb_invert_x.isChecked()
         gw.y_inverted = self.cb_invert_y.isChecked()

@@ -2,6 +2,7 @@ import matplotlib.patches as patches
 import numpy as np
 import pandas as pd
 
+from spectroview.i18n import tr
 from spectroview.view.components.graphs.v_plot_spatial import (
     SpatialPlotMixin,
     WaferPlot,
@@ -488,7 +489,7 @@ class PlotRenderer(SpatialPlotMixin):
                 except Exception:
                     continue
         else:
-            self._draw_trendline_series(df, y, c, 'All data', 0, anchor)
+            self._draw_trendline_series(df, y, c, tr('All data'), 0, anchor)
 
     def _draw_kde_overlay(self, stats_mod, data, x_grid, x_min, x_max, bins, color):
         """Plot a scaled Gaussian KDE curve over histogram bars when data has positive variance."""
@@ -544,7 +545,7 @@ class PlotRenderer(SpatialPlotMixin):
             data = plot_df[self.vg.x].values
             if len(data) > 0:
                 color = colors[0] if colors else 'steelblue'
-                self.vg.ax.hist(data, color=color, label='All data', **hist_kwargs)
+                self.vg.ax.hist(data, color=color, label=tr('All data'), **hist_kwargs)
                 
                 if kde and len(data) > 1:
                     x_min, x_max = self.vg.ax.get_xlim()
@@ -558,16 +559,22 @@ class PlotRenderer(SpatialPlotMixin):
             x_raw = df[self.vg.x].to_numpy(dtype=float)
         except (ValueError, TypeError) as e:
             raise ValueError(
-                f"Could not convert values in X column '{self.vg.x}' to numeric values. "
-                "Trendline fitting requires numeric columns."
+                tr(
+                    "Could not convert values in X column '{col}' to numeric values. "
+                    "Trendline fitting requires numeric columns.",
+                    col=self.vg.x,
+                )
             ) from e
 
         try:
             y_raw = df[y_col].to_numpy(dtype=float)
         except (ValueError, TypeError) as e:
             raise ValueError(
-                f"Could not convert values in Y column '{y_col}' to numeric values. "
-                "Trendline fitting requires numeric columns."
+                tr(
+                    "Could not convert values in Y column '{col}' to numeric values. "
+                    "Trendline fitting requires numeric columns.",
+                    col=y_col,
+                )
             ) from e
 
         mask = ~(np.isnan(x_raw) | np.isnan(y_raw))

@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.i18n import bind_placeholder, bind_text, on_language_changed, tr
 from spectroview.model.graphs.graph_style import can_restyle_without_replot
 from spectroview.view.components.customize_graph.common import NavItemDelegate
 from spectroview.view.components.customize_graph.customize_annotation_dialogs import (
@@ -192,7 +193,7 @@ class CustomizeGraphDialog(QDialog):
         self.graph_widget = graph_widget
         self.graph_id = graph_id
 
-        self.setWindowTitle(f"Customize Graph #{graph_id}")
+        self.setWindowTitle(tr("Customize Graph #{graph_id}", graph_id=graph_id))
         self.setModal(False)
         self.setWindowFlags(
             Qt.Window | Qt.Tool | Qt.CustomizeWindowHint
@@ -233,7 +234,7 @@ class CustomizeGraphDialog(QDialog):
 
         # Top Search Bar
         self._search_edit = QLineEdit()
-        self._search_edit.setPlaceholderText("Search options...")
+        bind_placeholder(self._search_edit, "Search options...")
         self._search_edit.setClearButtonEnabled(True)
         self._search_edit.textChanged.connect(self._on_search_text_changed)
         self._search_edit.returnPressed.connect(self._on_search_return_pressed)
@@ -290,13 +291,15 @@ class CustomizeGraphDialog(QDialog):
 
         bottom_bar.addStretch(1)
 
-        btn_cancel = QPushButton("Cancel")
+        btn_cancel = QPushButton()
+        bind_text(btn_cancel, "Cancel")
         btn_cancel.setIcon(Icons.close())
         btn_cancel.setCursor(Qt.PointingHandCursor)
         btn_cancel.clicked.connect(self.cancel_all)
         bottom_bar.addWidget(btn_cancel)
 
-        btn_apply = QPushButton("Apply")
+        btn_apply = QPushButton()
+        bind_text(btn_apply, "Apply")
         btn_apply.setIcon(Icons.check())
         btn_apply.setCursor(Qt.PointingHandCursor)
         btn_apply.clicked.connect(self.apply_all)
@@ -335,16 +338,31 @@ class CustomizeGraphDialog(QDialog):
 
         for page, title, icon, _kw in self._sections:
             self._stack.addWidget(page)
-            item = QListWidgetItem(icon, title)
+            item = QListWidgetItem(icon, tr(title))
             self._nav_list.addItem(item)
 
         # Select first tab initially
         self._nav_list.setCurrentRow(0)
         self._update_graph_info()
+        on_language_changed(self, self._retranslate_dialog)
+
+    def _retranslate_dialog(self) -> None:
+        self.setWindowTitle(tr("Customize Graph #{graph_id}", graph_id=self.graph_id))
+        for idx, (_page, title, _icon, _kw) in enumerate(self._sections):
+            item = self._nav_list.item(idx)
+            if item:
+                item.setText(tr(title))
+        curr = self._nav_list.currentItem()
+        if curr:
+            self._content_title.setText(curr.text())
+        self._update_graph_info()
 
     def _update_graph_info(self) -> None:
         style = getattr(self.graph_widget, "plot_style", "standard")
-        self._graph_info_label.setText(f"Target: Graph #{self.graph_id} • {style.capitalize()} plot")
+        style_display = tr(style).capitalize()
+        self._graph_info_label.setText(
+            tr("Target: Graph #{graph_id} • {style} plot", graph_id=self.graph_id, style=style_display)
+        )
 
     def _vm(self):
         return getattr(self.parent(), "vm", None)
@@ -422,7 +440,12 @@ class CustomizeGraphDialog(QDialog):
             item = self._nav_list.item(idx)
             if not item:
                 continue
-            matches = not q or q in title.lower() or any(q in kw.lower() for kw in keywords)
+            matches = (
+                not q
+                or q in title.lower()
+                or q in item.text().lower()
+                or any(q in kw.lower() for kw in keywords)
+            )
             item.setHidden(not matches)
             if matches:
                 if first_visible < 0:
@@ -576,7 +599,7 @@ class CustomizeGraphDialog(QDialog):
         self._preview_timer.stop()
         self.graph_widget = graph_widget
         self.graph_id = graph_id
-        self.setWindowTitle(f"Customize Graph #{graph_id}")
+        self.setWindowTitle(tr("Customize Graph #{graph_id}", graph_id=graph_id))
         self._update_graph_info()
 
         self.tab_general.switch_graph(graph_widget)

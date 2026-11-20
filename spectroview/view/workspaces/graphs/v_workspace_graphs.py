@@ -4,6 +4,7 @@ from typing import Optional
 
 from PySide6.QtWidgets import QWidget
 
+from spectroview.i18n import combo_data_or_text, on_language_changed, tr
 from spectroview.model.graphs.m_plot_recipe_store import MPlotRecipeStore
 from spectroview.model.graphs.m_style_template_store import MStyleTemplateStore
 from spectroview.model.m_settings import MSettings
@@ -55,6 +56,23 @@ class VWorkspaceGraphs(
 
         self.init_ui()
         self.setup_connections()
+        on_language_changed(self, self._retranslate_workspace)
+
+    def _retranslate_workspace(self):
+        """Refresh dynamic placeholder and 'None' sentinel combobox items on language switch."""
+        if getattr(self, "_has_df_placeholder", False):
+            for i in range(self.df_listbox.count()):
+                item = self.df_listbox.item(i)
+                if item and item.text():
+                    item.setText(tr("Drag and drop file(s) anywhere to open"))
+                    break
+        for cbb in (self.cbb_z, self.cbb_y2, self.cbb_y3, self.cbb_x2):
+            if cbb.count() > 0 and cbb.itemData(0) == "None":
+                was_blocked = cbb.blockSignals(True)
+                try:
+                    cbb.setItemText(0, tr("None"))
+                finally:
+                    cbb.blockSignals(was_blocked)
 
     def setup_connections(self):
         """Connect signals and slots."""
@@ -86,7 +104,11 @@ class VWorkspaceGraphs(
         self.btn_redo.clicked.connect(self._on_redo_clicked)
 
         # Plot style connection
-        self.cbb_plot_style.currentTextChanged.connect(self._on_plot_style_changed)
+        self.cbb_plot_style.currentIndexChanged.connect(
+            lambda _idx: self._on_plot_style_changed(
+                combo_data_or_text(self.cbb_plot_style)
+            )
+        )
 
         # Bottom toolbar connections
         self.cbb_graph_list.currentIndexChanged.connect(self._on_graph_selected_toolbar)

@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.i18n import bind_text, bind_title, bind_tooltip, on_language_changed, tr
 from spectroview.view.components.customize_graph.common import (
     create_scrollable_container,
     highlight_group_style,
@@ -81,31 +82,36 @@ class TabAnnotations(QWidget):
         self._scroll, _container, layout = create_scrollable_container(self)
 
         # ───── Add Annotation Tools ─────
-        self.grp_add = QGroupBox("Add New Annotation:")
+        self.grp_add = QGroupBox()
+        bind_title(self.grp_add, "Add New Annotation:")
         add_layout = QVBoxLayout(self.grp_add)
         add_layout.setContentsMargins(8, 8, 8, 8)
         add_layout.setSpacing(6)
 
         row1 = QHBoxLayout()
-        self.btn_add_vline = QPushButton("V-Line")
+        self.btn_add_vline = QPushButton()
+        bind_text(self.btn_add_vline, "V-Line")
         self.btn_add_vline.setIcon(Icons.ann_vline())
         self.btn_add_vline.setIconSize(QSize(16, 16))
-        self.btn_add_vline.setToolTip("Add vertical reference line at a specific X coordinate.")
+        bind_tooltip(self.btn_add_vline, "Add vertical reference line at a specific X coordinate.")
 
-        self.btn_add_hline = QPushButton("H-Line")
+        self.btn_add_hline = QPushButton()
+        bind_text(self.btn_add_hline, "H-Line")
         self.btn_add_hline.setIcon(Icons.ann_hline())
         self.btn_add_hline.setIconSize(QSize(16, 16))
-        self.btn_add_hline.setToolTip("Add horizontal reference line at a specific Y coordinate.")
+        bind_tooltip(self.btn_add_hline, "Add horizontal reference line at a specific Y coordinate.")
 
-        self.btn_add_text = QPushButton("Text")
+        self.btn_add_text = QPushButton()
+        bind_text(self.btn_add_text, "Text")
         self.btn_add_text.setIcon(Icons.ann_text())
         self.btn_add_text.setIconSize(QSize(16, 16))
-        self.btn_add_text.setToolTip("Add text annotation at a specific (X, Y) coordinate.")
+        bind_tooltip(self.btn_add_text, "Add text annotation at a specific (X, Y) coordinate.")
 
-        self.btn_add_arrow = QPushButton("Arrow")
+        self.btn_add_arrow = QPushButton()
+        bind_text(self.btn_add_arrow, "Arrow")
         self.btn_add_arrow.setIcon(Icons.ann_arrow())
         self.btn_add_arrow.setIconSize(QSize(16, 16))
-        self.btn_add_arrow.setToolTip("Add directional indicator arrow pointing between two points.")
+        bind_tooltip(self.btn_add_arrow, "Add directional indicator arrow pointing between two points.")
 
         row1.addWidget(self.btn_add_vline)
         row1.addWidget(self.btn_add_hline)
@@ -114,25 +120,29 @@ class TabAnnotations(QWidget):
         add_layout.addLayout(row1)
 
         row2 = QHBoxLayout()
-        self.btn_add_vspan = QPushButton("V-Span")
+        self.btn_add_vspan = QPushButton()
+        bind_text(self.btn_add_vspan, "V-Span")
         self.btn_add_vspan.setIcon(Icons.ann_vspan())
         self.btn_add_vspan.setIconSize(QSize(16, 16))
-        self.btn_add_vspan.setToolTip("Add shaded vertical span region between two X coordinates.")
+        bind_tooltip(self.btn_add_vspan, "Add shaded vertical span region between two X coordinates.")
 
-        self.btn_add_hspan = QPushButton("H-Span")
+        self.btn_add_hspan = QPushButton()
+        bind_text(self.btn_add_hspan, "H-Span")
         self.btn_add_hspan.setIcon(Icons.ann_hspan())
         self.btn_add_hspan.setIconSize(QSize(16, 16))
-        self.btn_add_hspan.setToolTip("Add shaded horizontal span region between two Y coordinates.")
+        bind_tooltip(self.btn_add_hspan, "Add shaded horizontal span region between two Y coordinates.")
 
-        self.btn_add_box = QPushButton("Box")
+        self.btn_add_box = QPushButton()
+        bind_text(self.btn_add_box, "Box")
         self.btn_add_box.setIcon(Icons.ann_box())
         self.btn_add_box.setIconSize(QSize(16, 16))
-        self.btn_add_box.setToolTip("Add rectangular bounding box highlight.")
+        bind_tooltip(self.btn_add_box, "Add rectangular bounding box highlight.")
 
-        self.btn_add_callout = QPushButton("Callout")
+        self.btn_add_callout = QPushButton()
+        bind_text(self.btn_add_callout, "Callout")
         self.btn_add_callout.setIcon(Icons.ann_callout())
         self.btn_add_callout.setIconSize(QSize(16, 16))
-        self.btn_add_callout.setToolTip("Add text box with an arrow pointing to a feature.")
+        bind_tooltip(self.btn_add_callout, "Add text box with an arrow pointing to a feature.")
 
         row2.addWidget(self.btn_add_vspan)
         row2.addWidget(self.btn_add_hspan)
@@ -143,28 +153,31 @@ class TabAnnotations(QWidget):
         layout.addWidget(self.grp_add)
 
         # ───── Current Annotations List & Management ─────
-        self.grp_list = QGroupBox("Active Annotations:")
+        self.grp_list = QGroupBox()
+        bind_title(self.grp_list, "Active Annotations:")
         list_layout = QVBoxLayout(self.grp_list)
         list_layout.setContentsMargins(8, 8, 8, 8)
         list_layout.setSpacing(6)
 
         self.annotation_list = QListWidget()
         self.annotation_list.setMinimumHeight(180)
-        self.annotation_list.setToolTip("List of active annotations. Double-click any item to edit its properties.")
+        bind_tooltip(self.annotation_list, "List of active annotations. Double-click any item to edit its properties.")
         self.annotation_list.itemDoubleClicked.connect(self._on_item_double_clicked)
         list_layout.addWidget(self.annotation_list)
 
         mgmt_row = QHBoxLayout()
-        self.btn_edit = QPushButton("Edit Annotation")
+        self.btn_edit = QPushButton()
+        bind_text(self.btn_edit, "Edit Annotation")
         self.btn_edit.setIcon(Icons.edit())
         self.btn_edit.setIconSize(QSize(16, 16))
-        self.btn_edit.setToolTip("Edit properties of the selected annotation.")
+        bind_tooltip(self.btn_edit, "Edit properties of the selected annotation.")
         self.btn_edit.clicked.connect(self._edit_annotation)
 
-        self.btn_delete = QPushButton("Delete")
+        self.btn_delete = QPushButton()
+        bind_text(self.btn_delete, "Delete")
         self.btn_delete.setIcon(Icons.trash())
         self.btn_delete.setIconSize(QSize(16, 16))
-        self.btn_delete.setToolTip("Delete the selected annotation.")
+        bind_tooltip(self.btn_delete, "Delete the selected annotation.")
         self.btn_delete.clicked.connect(self._delete_annotation)
 
         mgmt_row.addWidget(self.btn_edit)
@@ -174,6 +187,7 @@ class TabAnnotations(QWidget):
 
         layout.addWidget(self.grp_list)
         layout.addStretch()
+        on_language_changed(self, self.load_settings)
 
         # Connect add button actions
         self.btn_add_vline.clicked.connect(self._add_vline)
@@ -229,7 +243,7 @@ class TabAnnotations(QWidget):
         self._commit_new_annotation({
             "type": "vline", "x": center_x,
             "color": "red", "linestyle": "--", "linewidth": 1.5,
-            "label": f"V-Line at x={center_x:.2f}",
+            "label": tr("V-Line at x={value}", value=f"{center_x:.2f}"),
         })
 
     def _add_hline(self) -> None:
@@ -237,14 +251,14 @@ class TabAnnotations(QWidget):
         self._commit_new_annotation({
             "type": "hline", "y": center_y,
             "color": "blue", "linestyle": "--", "linewidth": 1.5,
-            "label": f"H-Line at y={center_y:.2f}",
+            "label": tr("H-Line at y={value}", value=f"{center_y:.2f}"),
         })
 
     def _add_text(self) -> None:
         center_x, center_y = self._get_plot_center()
         self._commit_new_annotation({
             "type": "text", "x": center_x, "y": center_y,
-            "text": "Text", "fontsize": 11, "color": "black",
+            "text": tr("Text"), "fontsize": 11, "color": "black",
             "ha": "center", "va": "center",
             "bbox": {"facecolor": "yellow", "edgecolor": "black", "boxstyle": "round,pad=0.3", "alpha": 0.7},
         })
@@ -293,7 +307,7 @@ class TabAnnotations(QWidget):
         self._commit_new_annotation({
             "type": "callout", "x": center_x, "y": center_y,
             "tx": center_x + x_range * 0.15, "ty": center_y + y_range * 0.15,
-            "text": "Callout", "fontsize": 11, "color": "black", "arrowcolor": "black",
+            "text": tr("Callout"), "fontsize": 11, "color": "black", "arrowcolor": "black",
         })
 
     def _on_item_double_clicked(self, item: QListWidgetItem) -> None:
@@ -303,7 +317,7 @@ class TabAnnotations(QWidget):
     def _edit_annotation(self) -> None:
         selected = self.annotation_list.currentItem()
         if not selected:
-            QMessageBox.warning(self, "No Selection", "Please select an annotation to edit.")
+            QMessageBox.warning(self, tr("No Selection"), tr("Please select an annotation to edit."))
             return
 
         ann_id = selected.data(Qt.UserRole)
@@ -320,9 +334,9 @@ class TabAnnotations(QWidget):
         if dialog.exec() == QDialog.Accepted:
             annotation.update(dialog.get_properties())
             if annotation["type"] == "vline":
-                annotation["label"] = f"V-Line at x={annotation['x']:.2f}"
+                annotation["label"] = tr("V-Line at x={value}", value=f"{annotation['x']:.2f}")
             elif annotation["type"] == "hline":
-                annotation["label"] = f"H-Line at y={annotation['y']:.2f}"
+                annotation["label"] = tr("H-Line at y={value}", value=f"{annotation['y']:.2f}")
             self._notify_annotations_changed()
             self._refresh_plot()
             self.load_settings()
@@ -330,7 +344,7 @@ class TabAnnotations(QWidget):
     def _delete_annotation(self) -> None:
         selected = self.annotation_list.currentItem()
         if not selected:
-            QMessageBox.warning(self, "No Selection", "Please select an annotation to delete.")
+            QMessageBox.warning(self, tr("No Selection"), tr("Please select an annotation to delete."))
             return
 
         ann_id = selected.data(Qt.UserRole)
@@ -349,31 +363,71 @@ class TabAnnotations(QWidget):
             ann_type = ann.get("type")
             if ann_type == "vline":
                 icon = Icons.ann_vline()
-                text = f"VLine @ x={ann['x']:.2f} ({ann.get('color', 'red')})"
+                text = tr(
+                    "VLine @ x={x} ({color})",
+                    x=f"{ann['x']:.2f}",
+                    color=ann.get("color", "red"),
+                )
             elif ann_type == "hline":
                 icon = Icons.ann_hline()
-                text = f"HLine @ y={ann['y']:.2f} ({ann.get('color', 'blue')})"
+                text = tr(
+                    "HLine @ y={y} ({color})",
+                    y=f"{ann['y']:.2f}",
+                    color=ann.get("color", "blue"),
+                )
             elif ann_type == "text":
                 icon = Icons.ann_text()
-                text = f"Text \"{ann.get('text', '')[:20]}\" @ ({ann.get('x', 0):.1f}, {ann.get('y', 0):.1f})"
+                text = tr(
+                    'Text "{text}" @ ({x}, {y})',
+                    text=ann.get("text", "")[:20],
+                    x=f"{ann.get('x', 0):.1f}",
+                    y=f"{ann.get('y', 0):.1f}",
+                )
             elif ann_type == "arrow":
                 icon = Icons.ann_arrow()
-                text = f"Arrow ({ann.get('x1', 0):.1f}, {ann.get('y1', 0):.1f}) → ({ann.get('x2', 0):.1f}, {ann.get('y2', 0):.1f})"
+                text = tr(
+                    "Arrow ({x1}, {y1}) → ({x2}, {y2})",
+                    x1=f"{ann.get('x1', 0):.1f}",
+                    y1=f"{ann.get('y1', 0):.1f}",
+                    x2=f"{ann.get('x2', 0):.1f}",
+                    y2=f"{ann.get('y2', 0):.1f}",
+                )
             elif ann_type == "vspan":
                 icon = Icons.ann_vspan()
-                text = f"V-Span x=[{ann.get('x1', 0):.2f}, {ann.get('x2', 0):.2f}] ({ann.get('color', 'orange')})"
+                text = tr(
+                    "V-Span x=[{x1}, {x2}] ({color})",
+                    x1=f"{ann.get('x1', 0):.2f}",
+                    x2=f"{ann.get('x2', 0):.2f}",
+                    color=ann.get("color", "orange"),
+                )
             elif ann_type == "hspan":
                 icon = Icons.ann_hspan()
-                text = f"H-Span y=[{ann.get('y1', 0):.2f}, {ann.get('y2', 0):.2f}] ({ann.get('color', 'orange')})"
+                text = tr(
+                    "H-Span y=[{y1}, {y2}] ({color})",
+                    y1=f"{ann.get('y1', 0):.2f}",
+                    y2=f"{ann.get('y2', 0):.2f}",
+                    color=ann.get("color", "orange"),
+                )
             elif ann_type == "box":
                 icon = Icons.ann_box()
-                text = f"Box @ ({ann.get('x', 0):.1f}, {ann.get('y', 0):.1f}) {ann.get('width', 0):.2f}×{ann.get('height', 0):.2f}"
+                text = tr(
+                    "Box @ ({x}, {y}) {w}×{h}",
+                    x=f"{ann.get('x', 0):.1f}",
+                    y=f"{ann.get('y', 0):.1f}",
+                    w=f"{ann.get('width', 0):.2f}",
+                    h=f"{ann.get('height', 0):.2f}",
+                )
             elif ann_type == "callout":
                 icon = Icons.ann_callout()
-                text = f"Callout \"{ann.get('text', '')[:20]}\" @ ({ann.get('x', 0):.1f}, {ann.get('y', 0):.1f})"
+                text = tr(
+                    'Callout "{text}" @ ({x}, {y})',
+                    text=ann.get("text", "")[:20],
+                    x=f"{ann.get('x', 0):.1f}",
+                    y=f"{ann.get('y', 0):.1f}",
+                )
             else:
                 icon = QIcon()
-                text = f"Unknown annotation: {ann_type}"
+                text = tr("Unknown annotation: {type}", type=ann_type)
 
             item = QListWidgetItem(icon, text)
             item.setData(Qt.UserRole, ann.get("id"))

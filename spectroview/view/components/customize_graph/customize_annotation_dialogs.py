@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (
     QCheckBox, QFormLayout, QDialogButtonBox, QStyledItemDelegate, QColorDialog,
 )
 
+from spectroview.i18n import bind_combo_items, bind_text, bind_window_title, tr
+
 try:
     from superqt import QLabeledDoubleRangeSlider
 except ImportError:  # pragma: no cover - superqt is a hard dependency in practice
@@ -114,7 +116,7 @@ class EditLineDialog(LivePreviewAnnotationDialog):
 
     def __init__(self, annotation, graph_widget=None, parent=None):
         super().__init__(annotation, graph_widget, parent)
-        self.setWindowTitle("Edit Line Annotation")
+        bind_window_title(self, "Edit Line Annotation")
         self.resize(350, 200)
 
         layout = QFormLayout(self)
@@ -126,10 +128,10 @@ class EditLineDialog(LivePreviewAnnotationDialog):
         self.color_button.clicked.connect(self._pick_color)
 
         self.linestyle_combo = QComboBox()
-        self.linestyle_combo.addItem("Solid", "-")
-        self.linestyle_combo.addItem("Dashed", "--")
-        self.linestyle_combo.addItem("Dotted", ":")
-        self.linestyle_combo.addItem("Dash-Dot", "-.")
+        bind_combo_items(
+            self.linestyle_combo,
+            [("Solid", "-"), ("Dashed", "--"), ("Dotted", ":"), ("Dash-Dot", "-.")],
+        )
         index = self.linestyle_combo.findData(annotation.get('linestyle', '--'))
         if index >= 0:
             self.linestyle_combo.setCurrentIndex(index)
@@ -139,9 +141,9 @@ class EditLineDialog(LivePreviewAnnotationDialog):
         self.linewidth_spin.setSingleStep(0.5)
         self.linewidth_spin.setValue(annotation.get('linewidth', 1.5))
 
-        layout.addRow("Color:", self.color_button)
-        layout.addRow("Line Style:", self.linestyle_combo)
-        layout.addRow("Line Width:", self.linewidth_spin)
+        layout.addRow(tr("Color:"), self.color_button)
+        layout.addRow(tr("Line Style:"), self.linestyle_combo)
+        layout.addRow(tr("Line Width:"), self.linewidth_spin)
 
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self.accept)
@@ -152,7 +154,7 @@ class EditLineDialog(LivePreviewAnnotationDialog):
 
     def _pick_color(self):
         current_color = QColor(self.color_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Line Color")
+        color = QColorDialog.getColor(current_color, self, tr("Select Line Color"))
         if color.isValid():
             self.color_button.setStyleSheet(f"background-color: {color.name()};")
             self.color_button.setText(color.name())
@@ -171,13 +173,13 @@ class EditTextDialog(LivePreviewAnnotationDialog):
 
     def __init__(self, annotation, graph_widget=None, parent=None):
         super().__init__(annotation, graph_widget, parent)
-        self.setWindowTitle("Edit Text Annotation")
+        bind_window_title(self, "Edit Text Annotation")
         self.resize(400, 350)
 
         layout = QFormLayout(self)
 
         self.text_edit = QLineEdit()
-        self.text_edit.setText(annotation.get('text', 'Text'))
+        self.text_edit.setText(annotation.get('text', tr('Text')))
 
         self.fontsize_spin = QSpinBox()
         self.fontsize_spin.setRange(6, 72)
@@ -189,7 +191,8 @@ class EditTextDialog(LivePreviewAnnotationDialog):
         self.text_color_button.setText(current_color.name())
         self.text_color_button.clicked.connect(self._pick_text_color)
 
-        self.frame_checkbox = QCheckBox("Show frame/box")
+        self.frame_checkbox = QCheckBox()
+        bind_text(self.frame_checkbox, "Show frame/box")
         bbox = annotation.get('bbox')
         self.frame_checkbox.setChecked(bbox is not None)
 
@@ -211,12 +214,12 @@ class EditTextDialog(LivePreviewAnnotationDialog):
             current_alpha = bbox['alpha']
         self.transparency_slider.setValue(int(current_alpha * 100))
 
-        layout.addRow("Text:", self.text_edit)
-        layout.addRow("Font Size:", self.fontsize_spin)
-        layout.addRow("Text Color:", self.text_color_button)
+        layout.addRow(tr("Text:"), self.text_edit)
+        layout.addRow(tr("Font Size:"), self.fontsize_spin)
+        layout.addRow(tr("Text Color:"), self.text_color_button)
         layout.addRow("", self.frame_checkbox)
-        layout.addRow("BG Color:", self.bg_color_button)
-        layout.addRow("Transparency:", self.transparency_slider)
+        layout.addRow(tr("BG Color:"), self.bg_color_button)
+        layout.addRow(tr("Transparency:"), self.transparency_slider)
 
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self.accept)
@@ -228,7 +231,7 @@ class EditTextDialog(LivePreviewAnnotationDialog):
 
     def _pick_text_color(self):
         current_color = QColor(self.text_color_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Text Color")
+        color = QColorDialog.getColor(current_color, self, tr("Select Text Color"))
         if color.isValid():
             self.text_color_button.setStyleSheet(f"background-color: {color.name()};")
             self.text_color_button.setText(color.name())
@@ -236,7 +239,7 @@ class EditTextDialog(LivePreviewAnnotationDialog):
 
     def _pick_bg_color(self):
         current_color = QColor(self.bg_color_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Background Color")
+        color = QColorDialog.getColor(current_color, self, tr("Select Background Color"))
         if color.isValid():
             self.bg_color_button.setStyleSheet(f"background-color: {color.name()};")
             self.bg_color_button.setText(color.name())
@@ -267,7 +270,7 @@ class EditArrowDialog(LivePreviewAnnotationDialog):
 
     def __init__(self, annotation, graph_widget=None, parent=None):
         super().__init__(annotation, graph_widget, parent)
-        self.setWindowTitle("Edit Arrow Annotation")
+        bind_window_title(self, "Edit Arrow Annotation")
         self.resize(350, 300)
 
         layout = QFormLayout(self)
@@ -288,10 +291,10 @@ class EditArrowDialog(LivePreviewAnnotationDialog):
         self.color_button.clicked.connect(self._pick_color)
 
         self.linestyle_combo = QComboBox()
-        self.linestyle_combo.addItem("Solid", "-")
-        self.linestyle_combo.addItem("Dashed", "--")
-        self.linestyle_combo.addItem("Dotted", ":")
-        self.linestyle_combo.addItem("Dash-Dot", "-.")
+        bind_combo_items(
+            self.linestyle_combo,
+            [("Solid", "-"), ("Dashed", "--"), ("Dotted", ":"), ("Dash-Dot", "-.")],
+        )
         index = self.linestyle_combo.findData(annotation.get('linestyle', '-'))
         if index >= 0:
             self.linestyle_combo.setCurrentIndex(index)
@@ -301,13 +304,13 @@ class EditArrowDialog(LivePreviewAnnotationDialog):
         self.linewidth_spin.setSingleStep(0.5)
         self.linewidth_spin.setValue(annotation.get('linewidth', 1.5))
 
-        layout.addRow("Start X:", self.x1_spin)
-        layout.addRow("Start Y:", self.y1_spin)
-        layout.addRow("End X:", self.x2_spin)
-        layout.addRow("End Y:", self.y2_spin)
-        layout.addRow("Color:", self.color_button)
-        layout.addRow("Line Style:", self.linestyle_combo)
-        layout.addRow("Line Width:", self.linewidth_spin)
+        layout.addRow(tr("Start X:"), self.x1_spin)
+        layout.addRow(tr("Start Y:"), self.y1_spin)
+        layout.addRow(tr("End X:"), self.x2_spin)
+        layout.addRow(tr("End Y:"), self.y2_spin)
+        layout.addRow(tr("Color:"), self.color_button)
+        layout.addRow(tr("Line Style:"), self.linestyle_combo)
+        layout.addRow(tr("Line Width:"), self.linewidth_spin)
 
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self.accept)
@@ -333,7 +336,7 @@ class EditArrowDialog(LivePreviewAnnotationDialog):
 
     def _pick_color(self):
         current_color = QColor(self.color_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Arrow Color")
+        color = QColorDialog.getColor(current_color, self, tr("Select Arrow Color"))
         if color.isValid():
             self.color_button.setStyleSheet(f"background-color: {color.name()};")
             self.color_button.setText(color.name())
@@ -356,7 +359,7 @@ class EditSpanDialog(LivePreviewAnnotationDialog):
     def __init__(self, annotation, graph_widget=None, parent=None):
         super().__init__(annotation, graph_widget, parent)
         self.is_vertical = annotation.get('type') == 'vspan'
-        self.setWindowTitle("Edit Span Annotation")
+        bind_window_title(self, "Edit Span Annotation")
         self.resize(380, 240)
 
         layout = QFormLayout(self)
@@ -402,12 +405,12 @@ class EditSpanDialog(LivePreviewAnnotationDialog):
         self.alpha_spin.setSingleStep(0.1)
         self.alpha_spin.setValue(annotation.get('alpha', 0.3))
 
-        layout.addRow(f"{axis_label} start:", self.start_spin)
-        layout.addRow(f"{axis_label} end:", self.end_spin)
+        layout.addRow(tr("{axis} start:", axis=axis_label), self.start_spin)
+        layout.addRow(tr("{axis} end:", axis=axis_label), self.end_spin)
         if self.range_slider is not None:
-            layout.addRow("Range:", self.range_slider)
-        layout.addRow("Color:", self.color_button)
-        layout.addRow("Transparency:", self.alpha_spin)
+            layout.addRow(tr("Range:"), self.range_slider)
+        layout.addRow(tr("Color:"), self.color_button)
+        layout.addRow(tr("Transparency:"), self.alpha_spin)
 
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self.accept)
@@ -443,7 +446,7 @@ class EditSpanDialog(LivePreviewAnnotationDialog):
 
     def _pick_color(self):
         current_color = QColor(self.color_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Span Color")
+        color = QColorDialog.getColor(current_color, self, tr("Select Span Color"))
         if color.isValid():
             self.color_button.setStyleSheet(f"background-color: {color.name()};")
             self.color_button.setText(color.name())
@@ -464,7 +467,7 @@ class EditBoxDialog(LivePreviewAnnotationDialog):
 
     def __init__(self, annotation, graph_widget=None, parent=None):
         super().__init__(annotation, graph_widget, parent)
-        self.setWindowTitle("Edit Box Annotation")
+        bind_window_title(self, "Edit Box Annotation")
         self.resize(350, 340)
 
         layout = QFormLayout(self)
@@ -514,14 +517,14 @@ class EditBoxDialog(LivePreviewAnnotationDialog):
         self.alpha_spin.setSingleStep(0.1)
         self.alpha_spin.setValue(annotation.get('alpha', 0.3))
 
-        layout.addRow("X (anchor):", self.x_spin)
-        layout.addRow("Y (anchor):", self.y_spin)
-        layout.addRow("Width:", self.width_spin)
-        layout.addRow("Height:", self.height_spin)
-        layout.addRow("Face Color:", self.facecolor_button)
-        layout.addRow("Edge Color:", self.edgecolor_button)
-        layout.addRow("Line Width:", self.linewidth_spin)
-        layout.addRow("Transparency:", self.alpha_spin)
+        layout.addRow(tr("X (anchor):"), self.x_spin)
+        layout.addRow(tr("Y (anchor):"), self.y_spin)
+        layout.addRow(tr("Width:"), self.width_spin)
+        layout.addRow(tr("Height:"), self.height_spin)
+        layout.addRow(tr("Face Color:"), self.facecolor_button)
+        layout.addRow(tr("Edge Color:"), self.edgecolor_button)
+        layout.addRow(tr("Line Width:"), self.linewidth_spin)
+        layout.addRow(tr("Transparency:"), self.alpha_spin)
 
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self.accept)
@@ -533,7 +536,7 @@ class EditBoxDialog(LivePreviewAnnotationDialog):
 
     def _pick_facecolor(self):
         current_color = QColor(self.facecolor_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Face Color")
+        color = QColorDialog.getColor(current_color, self, tr("Select Face Color"))
         if color.isValid():
             self.facecolor_button.setStyleSheet(f"background-color: {color.name()};")
             self.facecolor_button.setText(color.name())
@@ -541,7 +544,7 @@ class EditBoxDialog(LivePreviewAnnotationDialog):
 
     def _pick_edgecolor(self):
         current_color = QColor(self.edgecolor_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Edge Color")
+        color = QColorDialog.getColor(current_color, self, tr("Select Edge Color"))
         if color.isValid():
             self.edgecolor_button.setStyleSheet(f"background-color: {color.name()};")
             self.edgecolor_button.setText(color.name())
@@ -563,13 +566,13 @@ class EditCalloutDialog(LivePreviewAnnotationDialog):
 
     def __init__(self, annotation, graph_widget=None, parent=None):
         super().__init__(annotation, graph_widget, parent)
-        self.setWindowTitle("Edit Callout Annotation")
+        bind_window_title(self, "Edit Callout Annotation")
         self.resize(380, 380)
 
         layout = QFormLayout(self)
 
         self.text_edit = QLineEdit()
-        self.text_edit.setText(annotation.get('text', 'Text'))
+        self.text_edit.setText(annotation.get('text', tr('Text')))
 
         self.x_spin = QDoubleSpinBox()
         self.y_spin = QDoubleSpinBox()
@@ -602,14 +605,14 @@ class EditCalloutDialog(LivePreviewAnnotationDialog):
         self.arrow_color_button.setText(current_arrow.name())
         self.arrow_color_button.clicked.connect(self._pick_arrow_color)
 
-        layout.addRow("Text:", self.text_edit)
-        layout.addRow("Point X:", self.x_spin)
-        layout.addRow("Point Y:", self.y_spin)
-        layout.addRow("Text X:", self.tx_spin)
-        layout.addRow("Text Y:", self.ty_spin)
-        layout.addRow("Font Size:", self.fontsize_spin)
-        layout.addRow("Text Color:", self.text_color_button)
-        layout.addRow("Arrow Color:", self.arrow_color_button)
+        layout.addRow(tr("Text:"), self.text_edit)
+        layout.addRow(tr("Point X:"), self.x_spin)
+        layout.addRow(tr("Point Y:"), self.y_spin)
+        layout.addRow(tr("Text X:"), self.tx_spin)
+        layout.addRow(tr("Text Y:"), self.ty_spin)
+        layout.addRow(tr("Font Size:"), self.fontsize_spin)
+        layout.addRow(tr("Text Color:"), self.text_color_button)
+        layout.addRow(tr("Arrow Color:"), self.arrow_color_button)
 
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self.accept)
@@ -621,7 +624,7 @@ class EditCalloutDialog(LivePreviewAnnotationDialog):
 
     def _pick_text_color(self):
         current_color = QColor(self.text_color_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Text Color")
+        color = QColorDialog.getColor(current_color, self, tr("Select Text Color"))
         if color.isValid():
             self.text_color_button.setStyleSheet(f"background-color: {color.name()};")
             self.text_color_button.setText(color.name())
@@ -629,7 +632,7 @@ class EditCalloutDialog(LivePreviewAnnotationDialog):
 
     def _pick_arrow_color(self):
         current_color = QColor(self.arrow_color_button.text())
-        color = QColorDialog.getColor(current_color, self, "Select Arrow Color")
+        color = QColorDialog.getColor(current_color, self, tr("Select Arrow Color"))
         if color.isValid():
             self.arrow_color_button.setStyleSheet(f"background-color: {color.name()};")
             self.arrow_color_button.setText(color.name())

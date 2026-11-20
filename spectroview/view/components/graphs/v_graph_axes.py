@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter, NullLocator
 
 from spectroview import DEFAULT_COLORS, DEFAULT_MARKERS
+from spectroview.i18n import tr
 from spectroview.viewmodel.common.ui_utils import show_alert
 
 
@@ -82,7 +83,7 @@ class GraphAxesStyleMixin:
                 color = DEFAULT_COLORS[0] if DEFAULT_COLORS else 'steelblue'
                 rgba_color = list(mcolors.to_rgba(color))
                 legend_properties.append({
-                    'label': 'All data',
+                    'label': tr('All data'),
                     'marker': 'o',
                     'color': color,
                     'rgba': rgba_color
@@ -164,7 +165,7 @@ class GraphAxesStyleMixin:
             elif self.plot_style == '2Dmap':
                 self.renderer._plot_2dmap(df, y)
             else:
-                show_alert("Unsupported plot style")
+                show_alert(tr("Unsupported plot style"))
 
     def _set_legend(self):
         """Sets up and displays the legend for the plot."""
@@ -417,7 +418,7 @@ class GraphAxesStyleMixin:
 
         vmin, vmax = float(vmin), float(vmax)
         if vmin == vmax:
-            self.notify.emit(f"Skipping {axis_name} limits: min == max ({vmin}).")
+            self.notify.emit(tr("Skipping {axis} limits: min == max ({value}).", axis=axis_name, value=vmin))
             return
         setter(vmin, vmax)
 
@@ -457,7 +458,7 @@ class GraphAxesStyleMixin:
             if np.issubdtype(x_data.dtype, np.number):
                 self.ax.set_xscale(self.xscale_mode if self.xscale_mode == 'symlog' else 'log')
             else:
-                self.notify.emit(f"Skipping x-logscale because '{self.x}' is categorical.")
+                self.notify.emit(tr("Skipping x-logscale because '{col}' is categorical.", col=self.x))
         elif reset_linear and self.ax.get_xscale() != 'linear':
             self.ax.set_xscale('linear')
 
@@ -466,7 +467,7 @@ class GraphAxesStyleMixin:
             if np.issubdtype(y_data.dtype, np.number):
                 self.ax.set_yscale(self.yscale_mode if self.yscale_mode == 'symlog' else 'log')
             else:
-                self.notify.emit(f"Skipping y-logscale because '{self.y[0]}' is categorical.")
+                self.notify.emit(tr("Skipping y-logscale because '{col}' is categorical.", col=self.y[0]))
         elif reset_linear and self.ax.get_yscale() != 'linear':
             self.ax.set_yscale('linear')
 
@@ -518,13 +519,13 @@ class GraphAxesStyleMixin:
             param, peaklabel = parts
             param = param.lower()
             if param == "x0":
-                return f"{peaklabel} peak position (cm$^{{-1}}$)"
+                return tr("{peak} peak position (cm$^{{-1}}$)", peak=peaklabel)
             elif param == "fwhm":
-                return f"{peaklabel} peak width (cm$^{{-1}}$)"
+                return tr("{peak} peak width (cm$^{{-1}}$)", peak=peaklabel)
             elif param == "ampli":
-                return f"{peaklabel} peak intensity (a.u.)"
+                return tr("{peak} peak intensity (a.u.)", peak=peaklabel)
             elif param == "area":
-                return f"{peaklabel} peak area (a.u.)"
+                return tr("{peak} peak area (a.u.)", peak=peaklabel)
 
         return col_name
 
@@ -564,7 +565,7 @@ class GraphAxesStyleMixin:
                 self.ax.set_ylabel(self.ylabel)
             else:
                 if self.plot_style == 'histogram':
-                    self.ax.set_ylabel("Frequency")
+                    self.ax.set_ylabel(tr("Frequency"))
                 else:
                     self.ax.set_ylabel(self._get_y_label_default(self.y))
 

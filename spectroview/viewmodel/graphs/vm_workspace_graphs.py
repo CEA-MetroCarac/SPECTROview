@@ -13,6 +13,7 @@ import pandas as pd
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog
 
+from spectroview.i18n import tr
 from spectroview.model.graphs.graph_control import (
     GRAPH_PROPERTY_SET,
     normalize_graph_patch,
@@ -86,9 +87,9 @@ class VMWorkspaceGraphs(QObject, GraphUndoMixin):
         if not file_paths:
             file_paths, _ = QFileDialog.getOpenFileNames(
                 None,
-                "Open DataFrame Files",
+                tr("Open DataFrame Files"),
                 "",
-                "Excel/CSV Files (*.xlsx *.xls *.csv)",
+                tr("Excel/CSV Files (*.xlsx *.xls *.csv)"),
             )
 
         if not file_paths:
@@ -112,10 +113,14 @@ class VMWorkspaceGraphs(QObject, GraphUndoMixin):
                     last_valid_path = path
 
             except Exception as e:
-                self.notify.emit(f"Error loading {Path(file_path).name}: {e}")
+                self.notify.emit(
+                    tr("Error loading {name}: {error}", name=Path(file_path).name, error=e)
+                )
 
         if skipped:
-            self.notify.emit("Already loaded and skipped:\n" + "\n".join(skipped))
+            self.notify.emit(
+                tr("Already loaded and skipped:\n{items}", items="\n".join(skipped))
+            )
 
         self._emit_dataframes_list()
 
@@ -128,17 +133,22 @@ class VMWorkspaceGraphs(QObject, GraphUndoMixin):
         """Add a DataFrame to workspace."""
         is_replace = df_name in self.dataframes
         if is_replace and not force_replace:
-            self.notify.emit(f"DataFrame '{df_name}' already exists.")
+            self.notify.emit(tr("DataFrame '{name}' already exists.", name=df_name))
             return
 
         self.dataframes[df_name] = df
         self._emit_dataframes_list()
 
         if is_replace and force_replace:
-            self.notify.emit(f"DataFrame '{df_name}' successfully replaced.")
+            self.notify.emit(
+                tr("DataFrame '{name}' successfully replaced.", name=df_name)
+            )
         else:
             self.notify.emit(
-                f"DataFrame '{df_name}' sent successfully to Graphs workspace."
+                tr(
+                    "DataFrame '{name}' sent successfully to Graphs workspace.",
+                    name=df_name,
+                )
             )
 
     def remove_dataframe(self, df_name: str):
@@ -196,7 +206,7 @@ class VMWorkspaceGraphs(QObject, GraphUndoMixin):
             return False
 
         except Exception as e:
-            self.notify.emit(f"Error refreshing DataFrame: {e}")
+            self.notify.emit(tr("Error refreshing DataFrame: {error}", error=e))
             return False
 
     def save_dataframe(self, df_name: str):
@@ -207,9 +217,9 @@ class VMWorkspaceGraphs(QObject, GraphUndoMixin):
         last_dir = self.settings.get_last_directory()
         file_path, selected_filter = QFileDialog.getSaveFileName(
             None,
-            "Save DataFrame",
+            tr("Save DataFrame"),
             str(Path(last_dir) / f"{df_name}.xlsx"),
-            "Excel Files (*.xlsx);;CSV Files (*.csv)",
+            tr("Excel Files (*.xlsx);;CSV Files (*.csv)"),
         )
 
         if file_path:
@@ -223,10 +233,12 @@ class VMWorkspaceGraphs(QObject, GraphUndoMixin):
                         file_path += ".xlsx"
                     self.dataframes[df_name].to_excel(file_path, index=False)
 
-                self.notify.emit(f"DataFrame saved: {Path(file_path).name}")
+                self.notify.emit(
+                    tr("DataFrame saved: {name}", name=Path(file_path).name)
+                )
                 self.settings.set_last_directory(str(Path(file_path).parent))
             except Exception as e:
-                self.notify.emit(f"Error saving DataFrame: {e}")
+                self.notify.emit(tr("Error saving DataFrame: {error}", error=e))
 
     # ═════════════════════════════════════════════════════════════════════
     # Filter Management
@@ -250,7 +262,7 @@ class VMWorkspaceGraphs(QObject, GraphUndoMixin):
             try:
                 df = df.query(expression)
             except Exception as e:
-                self.notify.emit(f"Filter error: {e}")
+                self.notify.emit(tr("Filter error: {error}", error=e))
                 return None
 
         return df
@@ -407,9 +419,9 @@ class VMWorkspaceGraphs(QObject, GraphUndoMixin):
         """Save workspace to file using high-performance ZIP + Pickle architecture."""
         file_path, _ = QFileDialog.getSaveFileName(
             None,
-            "Save Graphs Workspace",
+            tr("Save Graphs Workspace"),
             "",
-            "Graphs Files (*.graphs)",
+            tr("Graphs Files (*.graphs)"),
         )
 
         if not file_path:
@@ -430,9 +442,11 @@ class VMWorkspaceGraphs(QObject, GraphUndoMixin):
                 file_path, metadata, dataframes=self.dataframes
             )
 
-            self.notify.emit(f"Workspace saved: {Path(file_path).name}")
+            self.notify.emit(
+                tr("Workspace saved: {name}", name=Path(file_path).name)
+            )
         except Exception as e:
-            self.notify.emit(f"Error saving workspace: {e}")
+            self.notify.emit(tr("Error saving workspace: {error}", error=e))
 
     def load_workspace(self, file_path: str):
         """Load workspace supporting both legacy JSON and new ZIP formats."""
@@ -461,7 +475,7 @@ class VMWorkspaceGraphs(QObject, GraphUndoMixin):
             self._emit_dataframes_list()
             self._emit_graphs_list()
         except Exception as e:
-            self.notify.emit(f"Error loading workspace: {e}")
+            self.notify.emit(tr("Error loading workspace: {error}", error=e))
 
     def load_workspace_legacy(self, file_path: str):
         """Legacy JSON loader for backward compatibility with old .graphs files."""
@@ -490,7 +504,7 @@ class VMWorkspaceGraphs(QObject, GraphUndoMixin):
             self._emit_graphs_list()
 
         except Exception as e:
-            self.notify.emit(f"Error loading legacy workspace: {e}")
+            self.notify.emit(tr("Error loading legacy workspace: {error}", error=e))
 
     def clear_workspace(self):
         """Clear workspace."""

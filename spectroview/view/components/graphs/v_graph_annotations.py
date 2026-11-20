@@ -4,6 +4,8 @@ import matplotlib.patches as patches
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog
 
+from spectroview.i18n import tr
+
 from spectroview.view.components.customize_graph.customize_annotation_dialogs import (
     EditArrowDialog,
     EditBoxDialog,
@@ -372,9 +374,9 @@ class GraphAnnotationMixin:
         if dialog.exec() == QDialog.Accepted:
             annotation.update(dialog.get_properties())
             if annotation['type'] == 'vline':
-                annotation['label'] = f"V-Line at x={annotation['x']:.2f}"
+                annotation['label'] = tr("V-Line at x={value}", value=f"{annotation['x']:.2f}")
             elif annotation['type'] == 'hline':
-                annotation['label'] = f"H-Line at y={annotation['y']:.2f}"
+                annotation['label'] = tr("H-Line at y={value}", value=f"{annotation['y']:.2f}")
             if self.df is not None:
                 self.plot(self.df)
 

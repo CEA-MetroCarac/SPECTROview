@@ -1,6 +1,7 @@
 # view/components/v_data_filter.py
 """DataFrame filtering widget with checkboxes."""
 
+from spectroview.i18n import bind_placeholder, bind_text, bind_title, bind_tooltip, tr
 from spectroview.view.theme import Icons
 
 from PySide6.QtWidgets import (
@@ -22,7 +23,7 @@ class VDataFilter(QGroupBox):
     def __init__(self, parent=None):
         """Initialize the data filter widget."""
         super().__init__(parent)
-        self.setTitle("Dataframe filters:")
+        bind_title(self, "Dataframe filters:")
         self._init_ui()
     
     def _init_ui(self):
@@ -37,7 +38,7 @@ class VDataFilter(QGroupBox):
         
         # Filter query input with autocomplete
         self.filter_query = ExpressionLineEdit()
-        self.filter_query.setPlaceholderText("Enter your filter expression...")
+        bind_placeholder(self.filter_query, "Enter your filter expression...")
         self.filter_query.returnPressed.connect(self._on_add_filter)
         layout_buttons.addWidget(self.filter_query)
         
@@ -51,21 +52,22 @@ class VDataFilter(QGroupBox):
         # Add filter button
         self.btn_add = QPushButton()
         self.btn_add.setIcon(Icons.plus())
-        self.btn_add.setToolTip("Add filter")
+        bind_tooltip(self.btn_add, "Add filter")
         self.btn_add.clicked.connect(self._on_add_filter)
         layout_buttons.addWidget(self.btn_add)
         
         # Remove filter button
         self.btn_remove = QPushButton()
         self.btn_remove.setIcon(Icons.close())
-        self.btn_remove.setToolTip("Remove selected filter")
+        bind_tooltip(self.btn_remove, "Remove selected filter")
         self.btn_remove.clicked.connect(self._on_remove_filter)
         layout_buttons.addWidget(self.btn_remove)
         
         # Apply filters button
-        self.btn_apply = QPushButton("Apply")
+        self.btn_apply = QPushButton()
+        bind_text(self.btn_apply, "Apply")
         self.btn_apply.setIcon(Icons.check())
-        self.btn_apply.setToolTip("Click to apply checked filters to the selected dataframe")
+        bind_tooltip(self.btn_apply, "Click to apply checked filters to the selected dataframe")
         self.btn_apply.clicked.connect(self._on_apply)
         layout_buttons.addWidget(self.btn_apply)
         
@@ -186,7 +188,7 @@ class VDataFilter(QGroupBox):
             return
         
         menu = QMenu(self)
-        copy_action = menu.addAction(Icons.copy(), "Copy filter text")
+        copy_action = menu.addAction(Icons.copy(), tr("Copy filter text"))
         
         action = menu.exec(self.filter_listbox.mapToGlobal(pos))
         if action == copy_action:

@@ -4,6 +4,7 @@ import copy
 
 from PySide6.QtWidgets import QInputDialog, QMessageBox
 
+from spectroview.i18n import tr, tr_plural
 from spectroview.model.graphs.graph_style import apply_style_dict, default_style, extract_style
 from spectroview.model.graphs.m_plot_recipe_store import MPlotRecipeStore
 from spectroview.model.graphs.m_style_template_store import MStyleTemplateStore
@@ -40,21 +41,32 @@ class GraphsActionsMixin:
             configs.append(cfg)
 
         if not configs:
-            self._show_notification("No open graphs to save as a recipe.", notification_type="warning")
+            self._show_notification(
+                tr("No open graphs to save as a recipe."), notification_type="warning"
+            )
             return
 
-        name, ok = QInputDialog.getText(self, "Save Plot Recipe", "Recipe name:")
+        name, ok = QInputDialog.getText(
+            self, tr("Save Plot Recipe"), tr("Recipe name:")
+        )
         if ok and name:
             self.recipe_store.save_recipe(name, configs)
             self._show_notification(
-                f"Saved plot recipe '{name}' with {len(configs)} plot{'s' if len(configs) > 1 else ''}.",
+                tr_plural(
+                    "Saved plot recipe '{name}' with {count} plot.",
+                    "Saved plot recipe '{name}' with {count} plots.",
+                    len(configs),
+                    name=name,
+                ),
                 notification_type="success",
             )
 
     def _on_export_all_clicked(self) -> None:
         """Export every currently open graph to a folder in one pass."""
         if not self.graph_widgets:
-            self._show_notification("No open graphs to export.", notification_type="warning")
+            self._show_notification(
+                tr("No open graphs to export."), notification_type="warning"
+            )
             return
 
         widgets = {gid: gw for gid, (gw, _, _) in self.graph_widgets.items()}
@@ -64,7 +76,9 @@ class GraphsActionsMixin:
     def _on_compose_figure_clicked(self) -> None:
         """Open the multi-panel composer to combine several open graphs into one exported figure."""
         if not self.graph_widgets:
-            self._show_notification("No open graphs to compose.", notification_type="warning")
+            self._show_notification(
+                tr("No open graphs to compose."), notification_type="warning"
+            )
             return
 
         widgets = {gid: gw for gid, (gw, _, _) in self.graph_widgets.items()}
@@ -84,10 +98,13 @@ class GraphsActionsMixin:
             self._apply_style_template_dialog(gw)
         elif action == "copy":
             self._copied_style = extract_style(vars(gw))
-            self._show_notification(f"Style copied from graph {graph_id}.")
+            self._show_notification(tr("Style copied from graph {gid}.", gid=graph_id))
         elif action == "paste":
             if not self._copied_style:
-                self._show_notification("Nothing to paste. Copy a graph's style first.", notification_type="warning")
+                self._show_notification(
+                    tr("Nothing to paste. Copy a graph's style first."),
+                    notification_type="warning",
+                )
                 return
             self._apply_style_to_graph(gw, self._copied_style)
         elif action == "reset":
@@ -95,22 +112,26 @@ class GraphsActionsMixin:
         elif action == "set_default":
             self.m_settings.set_default_graph_style(extract_style(vars(gw)))
             self._show_notification(
-                f"Graph {graph_id}'s style is now the default for new plots."
+                tr(
+                    "Graph {gid}'s style is now the default for new plots.",
+                    gid=graph_id,
+                )
             )
 
     def _save_style_template(self, gw: VGraph) -> None:
         self._refresh_recipe_and_style_stores()
-        name, ok = QInputDialog.getText(self, "Save Style", "Style name:")
+        name, ok = QInputDialog.getText(self, tr("Save Style"), tr("Style name:"))
         if not (ok and name):
             return
         style = extract_style(vars(gw))
         tpl_id = self.style_template_store.save_template(name, style)
         if tpl_id:
-            self._show_notification(f"Saved style '{name}'.")
+            self._show_notification(tr("Saved style '{name}'.", name=name))
         else:
             QMessageBox.warning(
-                self, "Could Not Save",
-                "No working folder is configured yet (set one in Settings)."
+                self,
+                tr("Could Not Save"),
+                tr("No working folder is configured yet (set one in Settings)."),
             )
 
     def _apply_style_template_dialog(self, gw: VGraph) -> None:
@@ -133,8 +154,9 @@ class GraphsActionsMixin:
         df_name = self.vm.selected_df_name
         if not df_name:
             QMessageBox.warning(
-                self, "No DataFrame Selected",
-                "Please select a DataFrame before applying a recipe."
+                self,
+                tr("No DataFrame Selected"),
+                tr("Please select a DataFrame before applying a recipe."),
             )
             return
 
@@ -162,16 +184,31 @@ class GraphsActionsMixin:
 
         if skipped:
             lines = [
-                f"Plot {i} can not be plotted since the selected dataframe "
-                f"does not have columns: {', '.join(cols)}."
+                tr(
+                    "Plot {index} can not be plotted since the selected dataframe does not have columns: {cols}.",
+                    index=i,
+                    cols=", ".join(cols),
+                )
                 for i, cols in skipped
             ]
             QMessageBox.warning(
-                self, "Some Plots Skipped",
-                f"{applied} of {len(configs)} plot(s) applied.\n\n" + "\n".join(lines)
+                self,
+                tr("Some Plots Skipped"),
+                tr(
+                    "{applied} of {total} plot(s) applied.\n\n{details}",
+                    applied=applied,
+                    total=len(configs),
+                    details="\n".join(lines),
+                ),
             )
         elif applied:
-            self.vm.notify.emit(f"Applied {applied} plot(s) from recipe.")
+            self.vm.notify.emit(
+                tr_plural(
+                    "Applied {count} plot from recipe.",
+                    "Applied {count} plots from recipe.",
+                    applied,
+                )
+            )
 
     @staticmethod
     def _required_plot_columns(cfg: dict) -> set:
@@ -285,7 +322,12 @@ class GraphsActionsMixin:
 
             def _on_render_error(e, graph_model=graph_model):
                 self.vm.notify.emit(
-                    f"Skipped graph {graph_model.graph_id} ({graph_model.plot_style}): could not render ({e})"
+                    tr(
+                        "Skipped graph {gid} ({style}): could not render ({error})",
+                        gid=graph_model.graph_id,
+                        style=graph_model.plot_style,
+                        error=e,
+                    )
                 )
 
             self._build_graph_widget(graph_model, filtered_df, _on_render_error,
@@ -298,13 +340,13 @@ class GraphsActionsMixin:
         """Revert the last undo-tracked action."""
         if self.vm.undo():
             self._rebuild_all_graph_widgets()
-            self.vm.notify.emit("Undid last action.")
+            self.vm.notify.emit(tr("Undid last action."))
 
     def _on_redo_clicked(self):
         """Re-apply the last undone action."""
         if self.vm.redo():
             self._rebuild_all_graph_widgets()
-            self.vm.notify.emit("Redid last action.")
+            self.vm.notify.emit(tr("Redid last action."))
 
     def _on_undo_state_changed(self):
         """Keep the Undo/Redo buttons' enabled state in sync with the ViewModel's undo/redo stacks."""

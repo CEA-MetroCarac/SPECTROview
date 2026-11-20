@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox, QFileDialog,
 )
 
+from spectroview.i18n import bind_text, bind_tooltip, bind_window_title, tr
 from spectroview.viewmodel.common.export_utils import export_figure_to_file
 from spectroview.view.components.common.v_notification import show_notification
 from spectroview.view.components.graphs.v_export_dialog import (
@@ -84,7 +85,7 @@ class VMultiPanelDialog(QDialog):
         super().__init__(parent)
         self.graph_widgets = graph_widgets
 
-        self.setWindowTitle("Compose Multi-Panel Figure")
+        bind_window_title(self, "Compose Multi-Panel Figure")
         self.setModal(True)
         self.resize(480, 620)
 
@@ -96,7 +97,9 @@ class VMultiPanelDialog(QDialog):
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(10)
 
-        layout.addWidget(QLabel("Select graphs to include and order them (Up/Down):"))
+        lbl_select = QLabel()
+        bind_text(lbl_select, "Select graphs to include and order them (Up/Down):")
+        layout.addWidget(lbl_select)
 
         list_row = QHBoxLayout()
         self.graph_list = QListWidget()
@@ -106,11 +109,11 @@ class VMultiPanelDialog(QDialog):
         reorder_col = QVBoxLayout()
         self.btn_move_up = QPushButton("↑")
         self.btn_move_up.setFixedWidth(30)
-        self.btn_move_up.setToolTip("Move selected graph earlier in the panel order")
+        bind_tooltip(self.btn_move_up, "Move selected graph earlier in the panel order")
         self.btn_move_up.clicked.connect(self._move_selected_up)
         self.btn_move_down = QPushButton("↓")
         self.btn_move_down.setFixedWidth(30)
-        self.btn_move_down.setToolTip("Move selected graph later in the panel order")
+        bind_tooltip(self.btn_move_down, "Move selected graph later in the panel order")
         self.btn_move_down.clicked.connect(self._move_selected_down)
         reorder_col.addWidget(self.btn_move_up)
         reorder_col.addWidget(self.btn_move_down)
@@ -119,28 +122,37 @@ class VMultiPanelDialog(QDialog):
         layout.addLayout(list_row)
 
         grid_row = QHBoxLayout()
-        grid_row.addWidget(QLabel("Grid:"))
-        grid_row.addWidget(QLabel("Rows"))
+        lbl_grid = QLabel()
+        bind_text(lbl_grid, "Grid:")
+        grid_row.addWidget(lbl_grid)
+        lbl_rows = QLabel()
+        bind_text(lbl_rows, "Rows")
+        grid_row.addWidget(lbl_rows)
         self.spin_rows = QSpinBox()
         self.spin_rows.setRange(1, 12)
         grid_row.addWidget(self.spin_rows)
-        grid_row.addWidget(QLabel("Cols"))
+        lbl_cols = QLabel()
+        bind_text(lbl_cols, "Cols")
+        grid_row.addWidget(lbl_cols)
         self.spin_cols = QSpinBox()
         self.spin_cols.setRange(1, 12)
         grid_row.addWidget(self.spin_cols)
-        self.btn_auto_grid = QPushButton("Auto")
-        self.btn_auto_grid.setToolTip("Suggest a roughly-square grid for the checked graphs")
+        self.btn_auto_grid = QPushButton()
+        bind_text(self.btn_auto_grid, "Auto")
+        bind_tooltip(self.btn_auto_grid, "Suggest a roughly-square grid for the checked graphs")
         self.btn_auto_grid.clicked.connect(self._auto_grid)
         grid_row.addWidget(self.btn_auto_grid)
         grid_row.addStretch()
         layout.addLayout(grid_row)
 
-        self.cb_shared_labels = QCheckBox("Shared axis labels (hide tick/axis labels on interior panels)")
+        self.cb_shared_labels = QCheckBox()
+        bind_text(self.cb_shared_labels, "Shared axis labels (hide tick/axis labels on interior panels)")
         self.cb_shared_labels.setChecked(True)
         layout.addWidget(self.cb_shared_labels)
 
         label_row = QHBoxLayout()
-        self.cb_panel_labels = QCheckBox("Panel labels:")
+        self.cb_panel_labels = QCheckBox()
+        bind_text(self.cb_panel_labels, "Panel labels:")
         self.cb_panel_labels.setChecked(True)
         label_row.addWidget(self.cb_panel_labels)
         self.combo_label_style = QComboBox()
@@ -154,13 +166,19 @@ class VMultiPanelDialog(QDialog):
         self.settings = self.panel.settings
 
         size_row = QHBoxLayout()
-        size_row.addWidget(QLabel("Combined figure size (mm):"))
-        size_row.addWidget(QLabel("Width"))
+        lbl_fig_size = QLabel()
+        bind_text(lbl_fig_size, "Combined figure size (mm):")
+        size_row.addWidget(lbl_fig_size)
+        lbl_width = QLabel()
+        bind_text(lbl_width, "Width")
+        size_row.addWidget(lbl_width)
         self.spin_fig_width = QDoubleSpinBox()
         self.spin_fig_width.setRange(10.0, 2000.0)
         self.spin_fig_width.setValue(180.0)
         size_row.addWidget(self.spin_fig_width)
-        size_row.addWidget(QLabel("Height"))
+        lbl_height = QLabel()
+        bind_text(lbl_height, "Height")
+        size_row.addWidget(lbl_height)
         self.spin_fig_height = QDoubleSpinBox()
         self.spin_fig_height.setRange(10.0, 2000.0)
         self.spin_fig_height.setValue(150.0)
@@ -172,10 +190,12 @@ class VMultiPanelDialog(QDialog):
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
-        btn_cancel = QPushButton("Cancel")
+        btn_cancel = QPushButton()
+        bind_text(btn_cancel, "Cancel")
         btn_cancel.clicked.connect(self.reject)
         btn_row.addWidget(btn_cancel)
-        self.btn_export = QPushButton("Export...")
+        self.btn_export = QPushButton()
+        bind_text(self.btn_export, "Export...")
         self.btn_export.clicked.connect(self._on_export_clicked)
         btn_row.addWidget(self.btn_export)
         layout.addLayout(btn_row)
@@ -256,7 +276,7 @@ class VMultiPanelDialog(QDialog):
         the requested grid. Raises ValueError if nothing is checked."""
         graph_ids = self._checked_graph_ids_in_order()
         if not graph_ids:
-            raise ValueError("No graphs selected.")
+            raise ValueError(tr("No graphs selected."))
 
         rows, cols = self.spin_rows.value(), self.spin_cols.value()
         width_mm, height_mm = self.spin_fig_width.value(), self.spin_fig_height.value()
@@ -309,7 +329,7 @@ class VMultiPanelDialog(QDialog):
         ext, file_filter = self.panel.format_ext(), self.panel.file_filter()
         last_dir = self.settings.get_last_directory()
         filepath, _ = QFileDialog.getSaveFileName(
-            self, "Export Composed Figure", str(Path(last_dir) / f"multipanel.{ext}"), file_filter
+            self, tr("Export Composed Figure"), str(Path(last_dir) / f"multipanel.{ext}"), file_filter
         )
         if not filepath:
             return

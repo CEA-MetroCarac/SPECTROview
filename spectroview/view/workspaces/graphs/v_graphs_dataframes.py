@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QApplication, QCheckBox, QDialog, QVBoxLayout
 
+from spectroview.i18n import set_combo_by_data_or_text, tr, tr_plural
 from spectroview.view.components.lists.v_dataframe_table import VDataframeTable
 
 
@@ -34,7 +35,9 @@ class GraphsDataFramesMixin:
         """View DataFrame in table, or open source file if Ctrl is held."""
         current_item = self.df_listbox.currentItem()
         if not current_item:
-            self._show_notification("Please select a DataFrame to view.", notification_type="warning")
+            self._show_notification(
+                tr("Please select a DataFrame to view."), notification_type="warning"
+            )
             return
 
         df_name = current_item.text()
@@ -46,19 +49,32 @@ class GraphsDataFramesMixin:
                 try:
                     file_url = QUrl.fromLocalFile(source_path)
                     if QDesktopServices.openUrl(file_url):
-                        self.vm.notify.emit(f"Opening file: {os.path.basename(source_path)}")
+                        self.vm.notify.emit(
+                            tr("Opening file: {name}", name=os.path.basename(source_path))
+                        )
                     else:
-                        self._show_notification(f"Could not open file: {source_path}", notification_type="error")
+                        self._show_notification(
+                            tr("Could not open file: {path}", path=source_path),
+                            notification_type="error",
+                        )
                 except Exception as e:
-                    self._show_notification(f"Could not open file: {str(e)}", notification_type="error")
+                    self._show_notification(
+                        tr("Could not open file: {path}", path=str(e)),
+                        notification_type="error",
+                    )
             else:
-                self._show_notification(f"No source file found for '{df_name}'.", notification_type="warning")
+                self._show_notification(
+                    tr("No source file found for '{name}'.", name=df_name),
+                    notification_type="warning",
+                )
             return
 
         df = self.vm.get_dataframe(df_name)
 
         if df is None or df.empty:
-            self._show_notification("Selected DataFrame is empty.", notification_type="warning")
+            self._show_notification(
+                tr("Selected DataFrame is empty."), notification_type="warning"
+            )
             return
 
         filters = self.v_data_filter.get_filters()
@@ -67,13 +83,19 @@ class GraphsDataFramesMixin:
         if active_filters:
             df = self.vm.apply_filters(df_name, filters)
             if df is None or df.empty:
-                self._show_notification("No data after applying filters.", notification_type="warning")
+                self._show_notification(
+                    tr("No data after applying filters."), notification_type="warning"
+                )
                 return
 
         dialog = QDialog(self)
-        title = f"DataFrame: {df_name}"
+        title = tr("DataFrame: {name}", name=df_name)
         if active_filters:
-            title += f" (with {len(active_filters)} filter(s))"
+            title += " " + tr_plural(
+                "(with {count} filter)",
+                "(with {count} filters)",
+                len(active_filters),
+            )
         dialog.setWindowTitle(title)
         dialog.resize(800, 600)
 
@@ -104,7 +126,9 @@ class GraphsDataFramesMixin:
         """Refresh DataFrame from source file."""
         current_item = self.df_listbox.currentItem()
         if not current_item:
-            self._show_notification("Please select a DataFrame to refresh.", notification_type="warning")
+            self._show_notification(
+                tr("Please select a DataFrame to refresh."), notification_type="warning"
+            )
             return
 
         df_name = current_item.text()
@@ -117,7 +141,9 @@ class GraphsDataFramesMixin:
         success = self.vm.refresh_dataframe(df_name)
 
         if success:
-            self.vm.notify.emit(f"DataFrame '{df_name}' refreshed successfully")
+            self.vm.notify.emit(
+                tr("DataFrame '{name}' refreshed successfully", name=df_name)
+            )
 
             if current_graph_id:
                 graph_model = self.vm.get_graph(current_graph_id)
@@ -125,7 +151,10 @@ class GraphsDataFramesMixin:
                     self._sync_gui_from_graph(graph_model)
         else:
             self._show_notification(
-                f"Could not refresh DataFrame '{df_name}'. Source file may not exist or be accessible.",
+                tr(
+                    "Could not refresh DataFrame '{name}'. Source file may not exist or be accessible.",
+                    name=df_name,
+                ),
                 notification_type="warning",
             )
 
@@ -175,14 +204,14 @@ class GraphsDataFramesMixin:
 
         self.cbb_x.addItems(columns)
         self.cbb_y.addItems(columns)
-        self.cbb_z.addItem("None")
+        self.cbb_z.addItem(tr("None"), "None")
         self.cbb_z.addItems(columns)
 
-        self.cbb_y2.addItem("None")
+        self.cbb_y2.addItem(tr("None"), "None")
         self.cbb_y2.addItems(columns)
-        self.cbb_y3.addItem("None")
+        self.cbb_y3.addItem(tr("None"), "None")
         self.cbb_y3.addItems(columns)
-        self.cbb_x2.addItem("None")
+        self.cbb_x2.addItem(tr("None"), "None")
         self.cbb_x2.addItems(columns)
 
         self.v_data_filter.update_column_list(columns)
@@ -259,7 +288,9 @@ class GraphsDataFramesMixin:
         checked_slots = [int(float(cb.text())) for cb in self.slot_checkboxes if cb.isChecked()]
 
         if not checked_slots:
-            self._show_notification("Please select at least one slot.", notification_type="warning")
+            self._show_notification(
+                tr("Please select at least one slot."), notification_type="warning"
+            )
             return
 
         if not self._validate_plot_request():
@@ -267,9 +298,7 @@ class GraphsDataFramesMixin:
 
         self.vm.begin_undo_batch()
         try:
-            wafer_index = self.cbb_plot_style.findText('wafer')
-            if wafer_index >= 0:
-                self.cbb_plot_style.setCurrentIndex(wafer_index)
+            set_combo_by_data_or_text(self.cbb_plot_style, 'wafer')
 
             plot_config = self._collect_plot_config(include_labels=False)
             plot_config['plot_style'] = 'wafer'
@@ -289,7 +318,11 @@ class GraphsDataFramesMixin:
                 def _on_render_error(e, graph_model=graph_model):
                     slot_expr = graph_model.filters[-1].get('expression', 'unknown') if graph_model.filters else 'unknown'
                     self._show_notification(
-                        f"Error rendering plot for {slot_expr}: {str(e)}",
+                        tr(
+                            "Error rendering plot for {expr}: {error}",
+                            expr=slot_expr,
+                            error=str(e),
+                        ),
                         notification_type="warning",
                     )
 
@@ -300,6 +333,12 @@ class GraphsDataFramesMixin:
             self._update_graph_list(self.vm.get_graph_ids())
 
             if successfully_created > 0:
-                self.vm.notify.emit(f"Created {successfully_created} wafer plot(s)")
+                self.vm.notify.emit(
+                    tr_plural(
+                        "Created {count} wafer plot",
+                        "Created {count} wafer plots",
+                        successfully_created,
+                    )
+                )
         finally:
             self.vm.end_undo_batch()

@@ -17,6 +17,15 @@ from PySide6.QtWidgets import (
     QComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QFileDialog, QWidget,
 )
 
+from spectroview.i18n import (
+    bind_combo_items,
+    bind_text,
+    bind_window_title,
+    combo_data_or_text,
+    set_combo_by_data_or_text,
+    tr,
+    tr_plural,
+)
 from spectroview.model.m_settings import MSettings
 from spectroview.viewmodel.common.export_utils import export_figure_to_file
 from spectroview.view.components.common.v_notification import show_notification
@@ -94,7 +103,9 @@ class _ExportSettingsPanel(QWidget):
         layout.setSpacing(10)
 
         fmt_row = QHBoxLayout()
-        fmt_row.addWidget(QLabel("Format:"))
+        lbl_fmt = QLabel()
+        bind_text(lbl_fmt, "Format:")
+        fmt_row.addWidget(lbl_fmt)
         self.combo_format = QComboBox()
         self.combo_format.addItems(list(_FORMAT_EXTENSIONS.keys()))
         fmt_row.addWidget(self.combo_format)
@@ -102,24 +113,33 @@ class _ExportSettingsPanel(QWidget):
         layout.addLayout(fmt_row)
 
         dpi_row = QHBoxLayout()
-        dpi_row.addWidget(QLabel("DPI:"))
+        lbl_dpi = QLabel()
+        bind_text(lbl_dpi, "DPI:")
+        dpi_row.addWidget(lbl_dpi)
         self.spin_dpi = QSpinBox()
         self.spin_dpi.setRange(72, 1200)
         self.spin_dpi.setSingleStep(50)
         dpi_row.addWidget(self.spin_dpi)
-        note = QLabel("(export resolution -- separate from the on-screen canvas DPI)")
+        note = QLabel()
+        bind_text(note, "(export resolution -- separate from the on-screen canvas DPI)")
         note.setStyleSheet(f"color: {current_tokens().text_muted}; font-style: italic; font-size: 10px;")
         dpi_row.addWidget(note)
         dpi_row.addStretch()
         layout.addLayout(dpi_row)
 
-        self.cb_transparent = QCheckBox("Transparent background")
+        self.cb_transparent = QCheckBox()
+        bind_text(self.cb_transparent, "Transparent background")
         layout.addWidget(self.cb_transparent)
 
         theme_row = QHBoxLayout()
-        theme_row.addWidget(QLabel("Theme:"))
+        lbl_theme = QLabel()
+        bind_text(lbl_theme, "Theme:")
+        theme_row.addWidget(lbl_theme)
         self.combo_theme = QComboBox()
-        self.combo_theme.addItems(list(_THEME_DISPLAY_TO_KEY.keys()))
+        bind_combo_items(
+            self.combo_theme,
+            [("Light Mode", "light"), ("Dark Mode", "dark")],
+        )
         theme_row.addWidget(self.combo_theme)
         theme_row.addStretch()
         layout.addLayout(theme_row)
@@ -130,24 +150,34 @@ class _ExportSettingsPanel(QWidget):
             self.combo_format.setCurrentIndex(idx)
         self.spin_dpi.setValue(opts["dpi"])
         self.cb_transparent.setChecked(opts["transparent"])
-        self.combo_theme.setCurrentText(
-            _THEME_KEY_TO_DISPLAY.get(default_theme_key, "Light Mode")
-        )
+        theme_key = "dark" if default_theme_key in ("dark", "soft_dark") else "light"
+        set_combo_by_data_or_text(self.combo_theme, theme_key)
 
     def format_ext(self) -> str:
         return _FORMAT_EXTENSIONS[self.combo_format.currentText()][0]
 
     def file_filter(self) -> str:
-        return _FORMAT_EXTENSIONS[self.combo_format.currentText()][1]
+        fmt = self.combo_format.currentText()
+        if fmt == "PNG":
+            return tr("PNG Image (*.png)")
+        if fmt == "TIFF":
+            return tr("TIFF Image (*.tiff *.tif)")
+        if fmt == "SVG":
+            return tr("SVG Vector (*.svg)")
+        if fmt == "PDF":
+            return tr("PDF Document (*.pdf)")
+        if fmt == "EPS":
+            return tr("EPS Vector (*.eps)")
+        return tr(_FORMAT_EXTENSIONS[fmt][1])
 
     def theme_key(self) -> str:
-        return _THEME_DISPLAY_TO_KEY[self.combo_theme.currentText()]
+        return combo_data_or_text(self.combo_theme)
 
     def save_as_last_used(self):
         self.settings.save_export_options({
             "format": self.format_ext(), "dpi": self.spin_dpi.value(),
             "transparent": self.cb_transparent.isChecked(),
-            "theme": self.combo_theme.currentText(),
+            "theme": _THEME_KEY_TO_DISPLAY.get(self.theme_key(), "Light Mode"),
         })
 
 
@@ -164,7 +194,7 @@ class VExportDialog(QDialog):
         self.graph_widget = graph_widget
         self._unit = "mm"  # canonical storage is always mm; this only affects display
 
-        self.setWindowTitle(f"Export Graph {graph_widget.graph_id}")
+        bind_window_title(self, "Export Graph {id}", id=graph_widget.graph_id)
         self.setModal(True)
         self.resize(420, 340)
 
@@ -183,23 +213,40 @@ class VExportDialog(QDialog):
         # Physical size -- blank (default) uses the figure's current
         # on-screen size; journal preset selection fills width/height/DPI.
         preset_row = QHBoxLayout()
-        preset_row.addWidget(QLabel("Journal preset:"))
+        lbl_preset = QLabel()
+        bind_text(lbl_preset, "Journal preset:")
+        preset_row.addWidget(lbl_preset)
         self.combo_preset = QComboBox()
-        self.combo_preset.addItems(list(_JOURNAL_PRESETS.keys()))
-        self.combo_preset.currentTextChanged.connect(self._on_preset_selected)
+        bind_combo_items(
+            self.combo_preset,
+            [
+                ("Custom", "Custom"),
+                ("Nature - single column (89 mm)", "Nature - single column (89 mm)"),
+                ("Nature - double column (183 mm)", "Nature - double column (183 mm)"),
+                ("Science - single column (55 mm)", "Science - single column (55 mm)"),
+                ("Generic - half page (90x68mm, 300dpi)", "Generic - half page (90x68mm, 300dpi)"),
+            ],
+        )
+        self.combo_preset.currentIndexChanged.connect(
+            lambda _idx: self._on_preset_selected(combo_data_or_text(self.combo_preset))
+        )
         preset_row.addWidget(self.combo_preset)
         preset_row.addStretch()
         layout.addLayout(preset_row)
 
         size_row = QHBoxLayout()
-        size_row.addWidget(QLabel("Width:"))
+        lbl_width = QLabel()
+        bind_text(lbl_width, "Width:")
+        size_row.addWidget(lbl_width)
         self.spin_width = QDoubleSpinBox()
         self.spin_width.setRange(self._UNSET, 2000)
         self.spin_width.setSpecialValueText(" ")
         self.spin_width.setDecimals(1)
         size_row.addWidget(self.spin_width)
 
-        size_row.addWidget(QLabel("Height:"))
+        lbl_height = QLabel()
+        bind_text(lbl_height, "Height:")
+        size_row.addWidget(lbl_height)
         self.spin_height = QDoubleSpinBox()
         self.spin_height.setRange(self._UNSET, 2000)
         self.spin_height.setSpecialValueText(" ")
@@ -211,7 +258,8 @@ class VExportDialog(QDialog):
         self.combo_unit.currentTextChanged.connect(self._on_unit_changed)
         size_row.addWidget(self.combo_unit)
 
-        note = QLabel("(blank = use current on-screen size)")
+        note = QLabel()
+        bind_text(note, "(blank = use current on-screen size)")
         note.setStyleSheet(f"color: {current_tokens().text_muted}; font-style: italic; font-size: 10px;")
         size_row.addWidget(note)
         size_row.addStretch()
@@ -221,10 +269,12 @@ class VExportDialog(QDialog):
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
-        btn_cancel = QPushButton("Cancel")
+        btn_cancel = QPushButton()
+        bind_text(btn_cancel, "Cancel")
         btn_cancel.clicked.connect(self.reject)
         btn_row.addWidget(btn_cancel)
-        self.btn_export = QPushButton("Export...")
+        self.btn_export = QPushButton()
+        bind_text(self.btn_export, "Export...")
         self.btn_export.clicked.connect(self._on_export_clicked)
         btn_row.addWidget(self.btn_export)
         layout.addLayout(btn_row)
@@ -277,7 +327,7 @@ class VExportDialog(QDialog):
         last_dir = self.settings.get_last_directory()
         default_name = f"graph_{self.graph_widget.graph_id}.{ext}"
         filepath, _ = QFileDialog.getSaveFileName(
-            self, "Export Graph", str(Path(last_dir) / default_name), file_filter
+            self, tr("Export Graph"), str(Path(last_dir) / default_name), file_filter
         )
         if not filepath:
             return
@@ -322,7 +372,7 @@ class VBatchExportDialog(QDialog):
         super().__init__(parent)
         self.graph_widgets = graph_widgets
 
-        self.setWindowTitle("Export All Graphs")
+        bind_window_title(self, "Export All Graphs")
         self.setModal(True)
         self.resize(420, 260)
 
@@ -333,7 +383,15 @@ class VBatchExportDialog(QDialog):
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(10)
 
-        layout.addWidget(QLabel(f"Export {len(self.graph_widgets)} open graph(s) to a folder:"))
+        layout.addWidget(
+            QLabel(
+                tr_plural(
+                    "Export {count} open graph to a folder:",
+                    "Export {count} open graphs to a folder:",
+                    len(self.graph_widgets),
+                )
+            )
+        )
 
         self.panel = _ExportSettingsPanel("light")
         layout.addWidget(self.panel)
@@ -343,17 +401,19 @@ class VBatchExportDialog(QDialog):
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
-        btn_cancel = QPushButton("Cancel")
+        btn_cancel = QPushButton()
+        bind_text(btn_cancel, "Cancel")
         btn_cancel.clicked.connect(self.reject)
         btn_row.addWidget(btn_cancel)
-        self.btn_export_all = QPushButton("Choose Folder && Export All...")
+        self.btn_export_all = QPushButton()
+        bind_text(self.btn_export_all, "Choose Folder && Export All...")
         self.btn_export_all.clicked.connect(self._on_export_all_clicked)
         btn_row.addWidget(self.btn_export_all)
         layout.addLayout(btn_row)
 
     def _on_export_all_clicked(self):
         last_dir = self.settings.get_last_directory()
-        folder = QFileDialog.getExistingDirectory(self, "Export All Graphs To", last_dir)
+        folder = QFileDialog.getExistingDirectory(self, tr("Export All Graphs To"), last_dir)
         if not folder:
             return
 
@@ -389,15 +449,25 @@ class VBatchExportDialog(QDialog):
 
         if failed:
             show_notification(
-                f"{succeeded} of {len(self.graph_widgets)} graph(s) exported. Some exports failed.",
+                tr_plural(
+                    "{succeeded} of {total} graph exported. Some exports failed.",
+                    "{succeeded} of {total} graphs exported. Some exports failed.",
+                    len(self.graph_widgets),
+                    succeeded=succeeded,
+                    total=len(self.graph_widgets),
+                ),
                 notification_type="warning",
-                title="Batch Export",
+                title=tr("Batch Export"),
             )
         else:
             show_notification(
-                f"Successfully exported {succeeded} graph(s).",
+                tr_plural(
+                    "Successfully exported {count} graph.",
+                    "Successfully exported {count} graphs.",
+                    succeeded,
+                ),
                 notification_type="success",
-                title="Batch Export",
+                title=tr("Batch Export"),
             )
         self.accept()
 

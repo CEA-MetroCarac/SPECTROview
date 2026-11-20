@@ -22,7 +22,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from spectroview import AXIS_LABELS, PLOT_STYLES
+from spectroview import AXIS_LABELS
+from spectroview.i18n import (
+    bind_combo_items,
+    bind_placeholder,
+    bind_tab_text,
+    bind_text,
+    bind_title,
+    bind_tooltip,
+    tr,
+)
 from spectroview.view.components.common.customized_widgets import CustomizedPalette
 from spectroview.view.components.graphs.v_data_filter import VDataFilter
 from spectroview.view.theme import Icons, current_tokens
@@ -87,7 +96,7 @@ class GraphsUIMixin:
         self.btn_delete_all.setIcon(Icons.trash(color="#EF4444"))
         self.btn_delete_all.setIconSize(QSize(22, 22))
         self.btn_delete_all.setFixedSize(30, 30)
-        self.btn_delete_all.setToolTip("Delete all graphs from workspace")
+        bind_tooltip(self.btn_delete_all, "Delete all graphs from workspace")
         toolbar_layout.addWidget(self.btn_delete_all)
 
         # Minimize all button -- icon only, no label.
@@ -95,7 +104,7 @@ class GraphsUIMixin:
         self.btn_minimize_all.setIcon(Icons.minimize_windows())
         self.btn_minimize_all.setIconSize(QSize(26, 26))
         self.btn_minimize_all.setFixedSize(30, 30)
-        self.btn_minimize_all.setToolTip("Minimize All")
+        bind_tooltip(self.btn_minimize_all, "Minimize All")
         toolbar_layout.addWidget(self.btn_minimize_all)
 
         # Undo/Redo -- workspace-global actions living in the fixed toolbar
@@ -103,7 +112,7 @@ class GraphsUIMixin:
         self.btn_undo.setIcon(Icons.undo())
         self.btn_undo.setIconSize(QSize(26, 26))
         self.btn_undo.setFixedSize(30, 30)
-        self.btn_undo.setToolTip("Undo the last action (Ctrl+Z)")
+        bind_tooltip(self.btn_undo, "Undo the last action (Ctrl+Z)")
         self.btn_undo.setEnabled(False)
         toolbar_layout.addWidget(self.btn_undo)
 
@@ -111,7 +120,7 @@ class GraphsUIMixin:
         self.btn_redo.setIcon(Icons.redo())
         self.btn_redo.setIconSize(QSize(26, 26))
         self.btn_redo.setFixedSize(30, 30)
-        self.btn_redo.setToolTip("Redo the last undone action (Ctrl+Shift+Z)")
+        bind_tooltip(self.btn_redo, "Redo the last undone action (Ctrl+Shift+Z)")
         self.btn_redo.setEnabled(False)
         toolbar_layout.addWidget(self.btn_redo)
 
@@ -120,7 +129,10 @@ class GraphsUIMixin:
         self.btn_compose_figure.setIcon(Icons.multipanel())
         self.btn_compose_figure.setIconSize(QSize(22, 22))
         self.btn_compose_figure.setFixedSize(30, 30)
-        self.btn_compose_figure.setToolTip("Combine several open graphs into one multi-panel exported figure")
+        bind_tooltip(
+            self.btn_compose_figure,
+            "Combine several open graphs into one multi-panel exported figure",
+        )
         toolbar_layout.addWidget(self.btn_compose_figure)
 
         # Toolbar buttons should never steal focus from the MDI subwindow/canvas
@@ -158,7 +170,8 @@ class GraphsUIMixin:
 
     def _setup_dataframe_section(self, parent_layout):
         """Setup DataFrame section."""
-        group_box = QGroupBox("Loaded dataframes:")
+        group_box = QGroupBox()
+        bind_title(group_box, "Loaded dataframes:")
         group_layout = QVBoxLayout(group_box)
         group_layout.setContentsMargins(2, 0, 2, 0)
 
@@ -181,28 +194,28 @@ class GraphsUIMixin:
         self.btn_view_df = QPushButton()
         self.btn_view_df.setIcon(Icons.search())
         self.btn_view_df.setIconSize(QSize(18, 18))
-        self.btn_view_df.setToolTip("View DataFrame\nCtrl+Click: Open source file")
+        bind_tooltip(self.btn_view_df, "View DataFrame\nCtrl+Click: Open source file")
         self.btn_view_df.setMaximumWidth(35)
         self.btn_view_df.setMaximumHeight(22)
 
         self.btn_remove_df = QPushButton()
         self.btn_remove_df.setIcon(Icons.trash())
         self.btn_remove_df.setIconSize(QSize(18, 18))
-        self.btn_remove_df.setToolTip("Remove DataFrame")
+        bind_tooltip(self.btn_remove_df, "Remove DataFrame")
         self.btn_remove_df.setMaximumWidth(35)
         self.btn_remove_df.setMaximumHeight(22)
 
         self.btn_save_df = QPushButton()
         self.btn_save_df.setIcon(Icons.save())
         self.btn_save_df.setIconSize(QSize(18, 18))
-        self.btn_save_df.setToolTip("Save DataFrame to Excel")
+        bind_tooltip(self.btn_save_df, "Save DataFrame to Excel")
         self.btn_save_df.setMaximumWidth(35)
         self.btn_save_df.setMaximumHeight(22)
 
         self.btn_refresh_df = QPushButton()
         self.btn_refresh_df.setIcon(Icons.refresh())
         self.btn_refresh_df.setIconSize(QSize(18, 18))
-        self.btn_refresh_df.setToolTip("Refresh DataFrame from source file")
+        bind_tooltip(self.btn_refresh_df, "Refresh DataFrame from source file")
         self.btn_refresh_df.setMaximumWidth(35)
         self.btn_refresh_df.setMaximumHeight(22)
 
@@ -231,10 +244,12 @@ class GraphsUIMixin:
 
         # Label and Select All checkbox in same row
         header_layout = QHBoxLayout()
-        lbl_slot = QLabel("Select wafer slot(s):")
+        lbl_slot = QLabel()
+        bind_text(lbl_slot, "Select wafer slot(s):")
         header_layout.addWidget(lbl_slot)
 
-        self.select_all_checkbox = QCheckBox("Select All")
+        self.select_all_checkbox = QCheckBox()
+        bind_text(self.select_all_checkbox, "Select All")
         self.select_all_checkbox.setChecked(False)
         self.select_all_checkbox.setVisible(False)
         header_layout.addWidget(self.select_all_checkbox)
@@ -261,8 +276,10 @@ class GraphsUIMixin:
         plot_tab = self._create_plot_tab()
         more_options_tab = self._create_more_options_tab()
 
-        self.plot_tabs.addTab(plot_tab, "Plot")
-        self.plot_tabs.addTab(more_options_tab, "Plot multiple axes (beta)")
+        self.plot_tabs.addTab(plot_tab, "")
+        bind_tab_text(self.plot_tabs, plot_tab, "Plot")
+        self.plot_tabs.addTab(more_options_tab, "")
+        bind_tab_text(self.plot_tabs, more_options_tab, "Plot multiple axes (beta)")
 
         parent_layout.addWidget(self.plot_tabs, stretch=2)
 
@@ -274,13 +291,29 @@ class GraphsUIMixin:
 
         # Plot style and color palette
         plot_style_layout = QHBoxLayout()
-        lbl_ps = QLabel("Plot style:")
+        lbl_ps = QLabel()
+        bind_text(lbl_ps, "Plot style:")
         lbl_ps.setFixedWidth(60)
         plot_style_layout.addWidget(lbl_ps)
         self.cbb_plot_style = QComboBox()
         self.cbb_plot_style.setIconSize(QSize(30, 30))
-        for style in PLOT_STYLES:
-            self.cbb_plot_style.addItem(Icons.get(style), style)
+        bind_combo_items(
+            self.cbb_plot_style,
+            [
+                ("point", "point"),
+                ("scatter", "scatter"),
+                ("box", "box"),
+                ("bar", "bar"),
+                ("line", "line"),
+                ("trendline", "trendline"),
+                ("histogram", "histogram"),
+                ("wafer", "wafer"),
+                ("2Dmap", "2Dmap"),
+            ],
+        )
+        for i in range(self.cbb_plot_style.count()):
+            style = self.cbb_plot_style.itemData(i)
+            self.cbb_plot_style.setItemIcon(i, Icons.get(style))
         plot_style_layout.addWidget(self.cbb_plot_style)
 
         # Color palette using CustomizedPalette
@@ -318,7 +351,8 @@ class GraphsUIMixin:
             h_layout.addWidget(cbb)
 
             if axis_name == 'z':
-                lbl_wafer = QLabel("Wafer size:")
+                lbl_wafer = QLabel()
+                bind_text(lbl_wafer, "Wafer size:")
                 h_layout.addWidget(lbl_wafer)
                 self.cbb_wafer_size = QComboBox()
                 self.cbb_wafer_size.addItems(['300', '200', '150', '100'])
@@ -333,27 +367,30 @@ class GraphsUIMixin:
 
     def _create_title_and_labels(self, parent_layout):
         """Create title and labels controls."""
-        title_labels_group = QGroupBox("Title and labels:")
+        title_labels_group = QGroupBox()
+        bind_title(title_labels_group, "Title and labels:")
         group_layout = QVBoxLayout(title_labels_group)
         group_layout.setContentsMargins(5, 6, 5, 6)
         group_layout.setSpacing(6)
 
+        # Note: static calls use tr literal keys via bind_* below
         labels = [
-            ('plot_title', 'Plot title:', 'Type to modify the plot title'),
-            ('plot_subtitle', 'Subtitle:', 'Optional text shown under the title'),
-            ('xlabel', 'X label:', 'X axis label'),
-            ('ylabel', 'Y label:', 'Y axis label'),
-            ('zlabel', 'Z label:', 'Z axis label')
+            ("plot_title", "Plot title:", "Type to modify the plot title"),
+            ("plot_subtitle", "Subtitle:", "Optional text shown under the title"),
+            ("xlabel", "X label:", "X axis label"),
+            ("ylabel", "Y label:", "Y axis label"),
+            ("zlabel", "Z label:", "Z axis label"),
         ]
 
         for attr_name, label_text, placeholder in labels:
             h_layout = QHBoxLayout()
-            lbl = QLabel(label_text)
+            lbl = QLabel()
+            bind_text(lbl, label_text)
             lbl.setFixedWidth(60)
             h_layout.addWidget(lbl)
 
             line_edit = QLineEdit()
-            line_edit.setPlaceholderText(placeholder)
+            bind_placeholder(line_edit, placeholder)
 
             if attr_name in ['xlabel', 'ylabel', 'zlabel']:
                 completer = QCompleter(AXIS_LABELS)
@@ -371,7 +408,8 @@ class GraphsUIMixin:
         """One secondary-axis group box (column combo + log toggle + label
         edit); creates self.cbb_<key>, self.cb_<key>log, self.edit_<key>label."""
         name = key.upper()
-        group = QGroupBox(title)
+        group = QGroupBox()
+        bind_title(group, title)
         layout = QVBoxLayout(group)
         layout.setContentsMargins(5, 2, 5, 2)
         layout.setSpacing(2)
@@ -382,16 +420,19 @@ class GraphsUIMixin:
         combo.setFixedWidth(200)
         setattr(self, f'cbb_{key}', combo)
         col_layout.addWidget(combo)
-        log_cb = QCheckBox("Log scale")
+        log_cb = QCheckBox()
+        bind_text(log_cb, "Log scale")
         setattr(self, f'cb_{key}log', log_cb)
         col_layout.addWidget(log_cb)
         col_layout.addStretch()
         layout.addLayout(col_layout)
 
         label_layout = QHBoxLayout()
-        label_layout.addWidget(QLabel(f"{name} label:"))
+        lbl_ax_label = QLabel()
+        bind_text(lbl_ax_label, "{name} label:", name=name)
+        label_layout.addWidget(lbl_ax_label)
         edit = QLineEdit()
-        edit.setPlaceholderText(f"{name} axis label")
+        bind_placeholder(edit, "{name} axis label", name=name)
         completer = QCompleter(AXIS_LABELS)
         completer.setCaseSensitivity(Qt.CaseInsensitive)
         completer.setCompletionMode(QCompleter.PopupCompletion)
@@ -415,7 +456,8 @@ class GraphsUIMixin:
             self._build_secondary_axis_group("y3", "Tertiary Y axis (right offset, green):"))
 
         x2_group = self._build_secondary_axis_group("x2", "Secondary X axis (top, purple):")
-        self.lbl_info_x2 = QLabel("Applicable plot styles: point, scatter, line")
+        self.lbl_info_x2 = QLabel()
+        bind_text(self.lbl_info_x2, "Applicable plot styles: point, scatter, line")
         self.lbl_info_x2.setStyleSheet(
             f"color: {current_tokens().text_muted}; font-style: italic; font-size: 10px;"
         )
@@ -429,7 +471,9 @@ class GraphsUIMixin:
     def _setup_action_buttons(self, parent_layout):
         """Setup action buttons."""
         graph_list_layout = QHBoxLayout()
-        graph_list_layout.addWidget(QLabel("Active plot:"))
+        lbl_active_plot = QLabel()
+        bind_text(lbl_active_plot, "Active plot:")
+        graph_list_layout.addWidget(lbl_active_plot)
         self.cbb_graph_list = QComboBox()
         self.cbb_graph_list.setMinimumWidth(150)
         graph_list_layout.addWidget(self.cbb_graph_list)
@@ -437,22 +481,25 @@ class GraphsUIMixin:
 
         action_buttons_layout = QHBoxLayout()
 
-        self.btn_add_plot = QPushButton("Add plot")
+        self.btn_add_plot = QPushButton()
+        bind_text(self.btn_add_plot, "Add plot")
         self.btn_add_plot.setIcon(Icons.plus())
         self.btn_add_plot.setIconSize(QSize(20, 20))
-        self.btn_add_plot.setToolTip("Add new plot with current configuration")
+        bind_tooltip(self.btn_add_plot, "Add new plot with current configuration")
         self.btn_add_plot.setMinimumHeight(25)
 
-        self.btn_update_plot = QPushButton("Update plot")
+        self.btn_update_plot = QPushButton()
+        bind_text(self.btn_update_plot, "Update plot")
         self.btn_update_plot.setIcon(Icons.refresh())
         self.btn_update_plot.setIconSize(QSize(20, 20))
-        self.btn_update_plot.setToolTip("Update selected plot with current configuration")
+        bind_tooltip(self.btn_update_plot, "Update selected plot with current configuration")
         self.btn_update_plot.setMinimumHeight(25)
 
-        self.btn_add_multi_wafer = QPushButton("Add Multi-Wafer")
+        self.btn_add_multi_wafer = QPushButton()
+        bind_text(self.btn_add_multi_wafer, "Add Multi-Wafer")
         self.btn_add_multi_wafer.setIcon(Icons.plus())
         self.btn_add_multi_wafer.setIconSize(QSize(20, 20))
-        self.btn_add_multi_wafer.setToolTip("Create wafer plots for selected slots")
+        bind_tooltip(self.btn_add_multi_wafer, "Create wafer plots for selected slots")
         self.btn_add_multi_wafer.setMinimumHeight(25)
         self.btn_add_multi_wafer.setVisible(False)  # Initially hidden
 
@@ -464,16 +511,21 @@ class GraphsUIMixin:
 
         template_buttons_layout = QHBoxLayout()
 
-        self.btn_apply_recipe = QPushButton("Plot Recipes")
+        self.btn_apply_recipe = QPushButton()
+        bind_text(self.btn_apply_recipe, "Plot Recipes")
         self.btn_apply_recipe.setIcon(Icons.get("recipe"))
         self.btn_apply_recipe.setIconSize(QSize(18, 18))
-        self.btn_apply_recipe.setToolTip("Browse & apply saved plot recipes")
+        bind_tooltip(self.btn_apply_recipe, "Browse & apply saved plot recipes")
         self.btn_apply_recipe.setMinimumHeight(25)
 
-        self.btn_save_as_recipe = QPushButton("Save Plot Recipe")
+        self.btn_save_as_recipe = QPushButton()
+        bind_text(self.btn_save_as_recipe, "Save Plot Recipe")
         self.btn_save_as_recipe.setIcon(Icons.save())
         self.btn_save_as_recipe.setIconSize(QSize(18, 18))
-        self.btn_save_as_recipe.setToolTip("Save all currently open plots as a Plot Recipe")
+        bind_tooltip(
+            self.btn_save_as_recipe,
+            "Save all currently open plots as a Plot Recipe",
+        )
         self.btn_save_as_recipe.setMinimumHeight(25)
 
         template_buttons_layout.addWidget(self.btn_apply_recipe)
@@ -518,7 +570,7 @@ class GraphsUIMixin:
         # Refresh plot style item icons
         if hasattr(self, 'cbb_plot_style'):
             for i in range(self.cbb_plot_style.count()):
-                style = self.cbb_plot_style.itemText(i)
+                style = self.cbb_plot_style.itemData(i) or self.cbb_plot_style.itemText(i)
                 self.cbb_plot_style.setItemIcon(i, Icons.get(style, color=icon_color))
 
         if hasattr(self, 'lbl_info_x2'):
@@ -565,7 +617,9 @@ class GraphsUIMixin:
                 spacer.setFlags(Qt.NoItemFlags)
                 self.df_listbox.addItem(spacer)
 
-            placeholder = QListWidgetItem("Drag and drop file(s) anywhere to open")
+            placeholder = QListWidgetItem(
+                tr("Drag and drop file(s) anywhere to open")
+            )
             placeholder.setFlags(Qt.NoItemFlags)
             placeholder.setForeground(Qt.gray)
             placeholder.setTextAlignment(Qt.AlignCenter)

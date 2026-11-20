@@ -15,21 +15,22 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.i18n import (
+    bind_combo_items,
+    bind_text,
+    bind_title,
+    bind_tooltip,
+    combo_data_or_text,
+    on_language_changed,
+    set_combo_by_data_or_text,
+    tr,
+)
 from spectroview.view.components.customize_graph.common import (
     create_scrollable_container,
     highlight_group_style,
 )
 
-_TICK_DIRECTION_MAP = {"Default": None, "In": "in", "Out": "out", "In & Out": "inout"}
-_TICK_DIRECTION_TEXT = {v: k for k, v in _TICK_DIRECTION_MAP.items()}
-
-_TICK_FORMAT_PRESETS = [
-    ("Auto (default)", None),
-    ("Integer  (e.g. 1234)", "%.0f"),
-    ("1 decimal  (e.g. 12.3)", "%.1f"),
-    ("2 decimals  (e.g. 12.34)", "%.2f"),
-    ("Scientific  (e.g. 1.2e+03)", "%.1e"),
-]
+_TICK_FORMAT_PRESET_VALUES = {None, "%.0f", "%.1f", "%.2f", "%.1e"}
 
 
 class TabTicksSpines(QWidget):
@@ -57,36 +58,42 @@ class TabTicksSpines(QWidget):
         self._scroll, _container, layout = create_scrollable_container(self)
 
         # ───── Tick Appearance ─────
-        self.grp_ticks = QGroupBox("Tick Appearance:")
+        self.grp_ticks = QGroupBox()
+        bind_title(self.grp_ticks, "Tick Appearance:")
         ticks_layout = QVBoxLayout(self.grp_ticks)
         ticks_layout.setContentsMargins(8, 8, 8, 8)
         ticks_layout.setSpacing(6)
 
         tick_row = QHBoxLayout()
-        lbl_td = QLabel("Tick direction:")
-        lbl_td.setToolTip("Direction of tick marks relative to the axes spine: In (pointing inward), Out (outward), or In & Out.")
+        lbl_td = QLabel()
+        bind_text(lbl_td, "Tick direction:")
+        bind_tooltip(lbl_td, "Direction of tick marks relative to the axes spine: In (pointing inward), Out (outward), or In & Out.")
         tick_row.addWidget(lbl_td)
         self.combo_tick_direction = QComboBox()
-        self.combo_tick_direction.addItems(list(_TICK_DIRECTION_MAP.keys()))
+        bind_combo_items(
+            self.combo_tick_direction,
+            [("Default", "default"), ("In", "in"), ("Out", "out"), ("In & Out", "inout")],
+        )
         self.combo_tick_direction.setMinimumWidth(120)
         self.combo_tick_direction.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         if self.combo_tick_direction.view():
             self.combo_tick_direction.view().setMinimumWidth(120)
-        self.combo_tick_direction.setToolTip("Direction of tick marks relative to the axes spine: In (pointing inward), Out (outward), or In & Out.")
+        bind_tooltip(self.combo_tick_direction, "Direction of tick marks relative to the axes spine: In (pointing inward), Out (outward), or In & Out.")
         tick_row.addWidget(self.combo_tick_direction)
 
         tick_row.addSpacing(16)
-        lbl_tf = QLabel("Tick label format:")
-        lbl_tf.setToolTip("Numeric formatting applied to major tick values (integer, decimal places, or scientific notation).")
+        lbl_tf = QLabel()
+        bind_text(lbl_tf, "Tick label format:")
+        bind_tooltip(lbl_tf, "Numeric formatting applied to major tick values (integer, decimal places, or scientific notation).")
         tick_row.addWidget(lbl_tf)
         self.combo_tick_format = QComboBox()
-        for label, value in _TICK_FORMAT_PRESETS:
-            self.combo_tick_format.addItem(label, value)
+        self._repopulate_tick_formats()
+        on_language_changed(self, self._retranslate_tick_formats)
         self.combo_tick_format.setMinimumWidth(180)
         self.combo_tick_format.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         if self.combo_tick_format.view():
             self.combo_tick_format.view().setMinimumWidth(180)
-        self.combo_tick_format.setToolTip("Numeric formatting applied to major tick values (integer, decimal places, or scientific notation).")
+        bind_tooltip(self.combo_tick_format, "Numeric formatting applied to major tick values (integer, decimal places, or scientific notation).")
         tick_row.addWidget(self.combo_tick_format)
 
         tick_row.addStretch()
@@ -94,19 +101,24 @@ class TabTicksSpines(QWidget):
         layout.addWidget(self.grp_ticks)
 
         # ───── Minor Ticks ─────
-        self.grp_minor = QGroupBox("Show Minor Ticks:")
+        self.grp_minor = QGroupBox()
+        bind_title(self.grp_minor, "Show Minor Ticks:")
         minor_layout = QHBoxLayout(self.grp_minor)
         minor_layout.setContentsMargins(8, 8, 8, 8)
         minor_layout.setSpacing(16)
 
-        self.cb_minor_bottom = QCheckBox("Bottom")
-        self.cb_minor_bottom.setToolTip("Show minor subdivision tick marks along the bottom X axis.")
-        self.cb_minor_left = QCheckBox("Left")
-        self.cb_minor_left.setToolTip("Show minor subdivision tick marks along the left Y axis.")
-        self.cb_minor_top = QCheckBox("Top")
-        self.cb_minor_top.setToolTip("Show minor subdivision tick marks along the top X axis.")
-        self.cb_minor_right = QCheckBox("Right")
-        self.cb_minor_right.setToolTip("Show minor subdivision tick marks along the right Y axis.")
+        self.cb_minor_bottom = QCheckBox()
+        bind_text(self.cb_minor_bottom, "Bottom")
+        bind_tooltip(self.cb_minor_bottom, "Show minor subdivision tick marks along the bottom X axis.")
+        self.cb_minor_left = QCheckBox()
+        bind_text(self.cb_minor_left, "Left")
+        bind_tooltip(self.cb_minor_left, "Show minor subdivision tick marks along the left Y axis.")
+        self.cb_minor_top = QCheckBox()
+        bind_text(self.cb_minor_top, "Top")
+        bind_tooltip(self.cb_minor_top, "Show minor subdivision tick marks along the top X axis.")
+        self.cb_minor_right = QCheckBox()
+        bind_text(self.cb_minor_right, "Right")
+        bind_tooltip(self.cb_minor_right, "Show minor subdivision tick marks along the right Y axis.")
 
         minor_layout.addWidget(self.cb_minor_bottom)
         minor_layout.addWidget(self.cb_minor_left)
@@ -116,19 +128,24 @@ class TabTicksSpines(QWidget):
         layout.addWidget(self.grp_minor)
 
         # ───── Spines (Frame Borders) ─────
-        self.grp_spines = QGroupBox("Show Spines (Frame Borders):")
+        self.grp_spines = QGroupBox()
+        bind_title(self.grp_spines, "Show Spines (Frame Borders):")
         spines_layout = QHBoxLayout(self.grp_spines)
         spines_layout.setContentsMargins(8, 8, 8, 8)
         spines_layout.setSpacing(16)
 
-        self.cb_spine_bottom = QCheckBox("Bottom")
-        self.cb_spine_bottom.setToolTip("Draw the bottom bounding spine line.")
-        self.cb_spine_left = QCheckBox("Left")
-        self.cb_spine_left.setToolTip("Draw the left bounding spine line.")
-        self.cb_spine_top = QCheckBox("Top")
-        self.cb_spine_top.setToolTip("Draw the top bounding spine line.")
-        self.cb_spine_right = QCheckBox("Right")
-        self.cb_spine_right.setToolTip("Draw the right bounding spine line.")
+        self.cb_spine_bottom = QCheckBox()
+        bind_text(self.cb_spine_bottom, "Bottom")
+        bind_tooltip(self.cb_spine_bottom, "Draw the bottom bounding spine line.")
+        self.cb_spine_left = QCheckBox()
+        bind_text(self.cb_spine_left, "Left")
+        bind_tooltip(self.cb_spine_left, "Draw the left bounding spine line.")
+        self.cb_spine_top = QCheckBox()
+        bind_text(self.cb_spine_top, "Top")
+        bind_tooltip(self.cb_spine_top, "Draw the top bounding spine line.")
+        self.cb_spine_right = QCheckBox()
+        bind_text(self.cb_spine_right, "Right")
+        bind_tooltip(self.cb_spine_right, "Draw the right bounding spine line.")
 
         spines_layout.addWidget(self.cb_spine_bottom)
         spines_layout.addWidget(self.cb_spine_left)
@@ -139,22 +156,52 @@ class TabTicksSpines(QWidget):
 
         layout.addStretch()
 
+    def _repopulate_tick_formats(self, custom_value: Optional[str] = None) -> None:
+        presets = [
+            (tr("Auto (default)"), None),
+            (tr("Integer  (e.g. 1234)"), "%.0f"),
+            (tr("1 decimal  (e.g. 12.3)"), "%.1f"),
+            (tr("2 decimals  (e.g. 12.34)"), "%.2f"),
+            (tr("Scientific  (e.g. 1.2e+03)"), "%.1e"),
+        ]
+        combo = self.combo_tick_format
+        combo.blockSignals(True)
+        try:
+            combo.clear()
+            for label, val in presets:
+                combo.addItem(label, val)
+            if custom_value is not None and custom_value not in _TICK_FORMAT_PRESET_VALUES:
+                combo.addItem(tr("Custom  ({value})", value=custom_value), custom_value)
+        finally:
+            combo.blockSignals(False)
+
+    def _retranslate_tick_formats(self) -> None:
+        current_val = self.combo_tick_format.currentData() if self.combo_tick_format.count() else None
+        self._repopulate_tick_formats(current_val)
+        self.combo_tick_format.blockSignals(True)
+        try:
+            idx = self.combo_tick_format.findData(current_val)
+            self.combo_tick_format.setCurrentIndex(idx if idx >= 0 else 0)
+        finally:
+            self.combo_tick_format.blockSignals(False)
+
     def _load_tick_format(self, value: Optional[str]) -> None:
         combo = self.combo_tick_format
         idx = combo.findData(value)
-        if combo.itemData(combo.count() - 1) not in dict(_TICK_FORMAT_PRESETS).values():
+        if combo.itemData(combo.count() - 1) not in _TICK_FORMAT_PRESET_VALUES:
             combo.removeItem(combo.count() - 1)
             idx = combo.findData(value)
         if idx < 0:
-            combo.addItem(f"Custom  ({value})", value)
+            combo.addItem(tr("Custom  ({value})", value=value), value)
             idx = combo.count() - 1
         combo.setCurrentIndex(idx)
 
     def load_settings(self) -> None:
         """Load tick and spine settings from current graph widget."""
         gw = self.graph_widget
-        self.combo_tick_direction.setCurrentText(
-            _TICK_DIRECTION_TEXT.get(getattr(gw, "tick_direction", None), "Default")
+        set_combo_by_data_or_text(
+            self.combo_tick_direction,
+            getattr(gw, "tick_direction", None) or "default",
         )
         self._load_tick_format(getattr(gw, "tick_label_format", None))
 
@@ -193,7 +240,8 @@ class TabTicksSpines(QWidget):
     def apply_settings(self, replot: bool = False) -> dict:
         """Write controls back to graph widget, returning changed properties dict."""
         gw = self.graph_widget
-        gw.tick_direction = _TICK_DIRECTION_MAP[self.combo_tick_direction.currentText()]
+        td = combo_data_or_text(self.combo_tick_direction)
+        gw.tick_direction = None if td in ("default", "Default", None) else td
         gw.tick_label_format = self.combo_tick_format.currentData()
 
         # Keep an "auto" (None) minor-tick setting as None while the checkbox

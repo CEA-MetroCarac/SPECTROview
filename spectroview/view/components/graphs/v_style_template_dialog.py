@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 
+from spectroview.i18n import bind_placeholder, bind_text, bind_window_title, tr
 from spectroview.model.graphs.m_style_template_store import MStyleTemplateStore, StyleTemplateSummary
 from spectroview.view.theme import Icons
 
@@ -38,12 +39,15 @@ class _StyleTemplateItemWidget(QWidget):
         self.lbl_name.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         layout.addWidget(self.lbl_name, stretch=1)
 
-        self.btn_apply = QPushButton("Apply")
+        self.btn_apply = QPushButton()
+        bind_text(self.btn_apply, "Apply")
         self.btn_apply.setStyleSheet("font-weight: bold;")
         self.btn_apply.setIcon(Icons.check())
-        self.btn_rename = QPushButton("Rename")
+        self.btn_rename = QPushButton()
+        bind_text(self.btn_rename, "Rename")
         self.btn_rename.setIcon(Icons.edit())
-        self.btn_delete = QPushButton("Delete")
+        self.btn_delete = QPushButton()
+        bind_text(self.btn_delete, "Delete")
         self.btn_delete.setIcon(Icons.trash())
 
         for btn in (self.btn_apply, self.btn_rename, self.btn_delete):
@@ -64,7 +68,7 @@ class VStyleTemplateDialog(QDialog):
         super().__init__(parent)
         self.store = store
         self._cached_summaries: list[StyleTemplateSummary] = []
-        self.setWindowTitle("Style Templates")
+        bind_window_title(self, "Style Templates")
         self.setMinimumSize(480, 360)
         self.resize(520, 420)
 
@@ -73,7 +77,7 @@ class VStyleTemplateDialog(QDialog):
         layout.setSpacing(6)
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search style templates...")
+        bind_placeholder(self.search_input, "Search style templates...")
         self.search_input.textChanged.connect(self._on_search)
         layout.addWidget(self.search_input)
 
@@ -83,7 +87,8 @@ class VStyleTemplateDialog(QDialog):
 
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
-        btn_close = QPushButton("Close")
+        btn_close = QPushButton()
+        bind_text(btn_close, "Close")
         btn_close.setIcon(Icons.close())
         btn_close.clicked.connect(self.reject)
         btn_layout.addWidget(btn_close)
@@ -101,7 +106,7 @@ class VStyleTemplateDialog(QDialog):
         filter_text = filter_text.lower()
 
         if not self._cached_summaries:
-            self.list_widget.addItem(QListWidgetItem("No style templates saved yet."))
+            self.list_widget.addItem(QListWidgetItem(tr("No style templates saved yet.")))
             return
 
         for summary in self._cached_summaries:
@@ -136,7 +141,7 @@ class VStyleTemplateDialog(QDialog):
         summary = self.store.get_summary(template_id)
         current_name = summary.name if summary else ""
         new_name, ok = QInputDialog.getText(
-            self, "Rename Style Template", "New name:", text=current_name
+            self, tr("Rename Style Template"), tr("New name:"), text=current_name
         )
         if ok and new_name:
             style = self.store.load_style(template_id)
@@ -146,9 +151,9 @@ class VStyleTemplateDialog(QDialog):
                 self._reload_and_render(self.search_input.text())
 
     def _on_delete(self, template_id: str) -> None:
-        name = next((s.name for s in self._cached_summaries if s.id == template_id), "this style")
+        name = next((s.name for s in self._cached_summaries if s.id == template_id), tr("this style"))
         reply = QMessageBox.question(
-            self, "Delete Style Template", f"Permanently delete '{name}'?",
+            self, tr("Delete Style Template"), tr("Permanently delete '{name}'?", name=name),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
         )
         if reply != QMessageBox.Yes:

@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 
+from spectroview.i18n import bind_placeholder, bind_text, bind_window_title, tr, tr_plural
 from spectroview.model.graphs.m_plot_recipe_store import MPlotRecipeStore, PlotRecipeSummary
 from spectroview.view.theme import Icons
 
@@ -48,19 +49,25 @@ class _PlotRecipeItemWidget(QWidget):
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(6)
 
-        lbl_meta = QLabel(f"{graph_count} graph{'s' if graph_count != 1 else ''}")
+        lbl_meta = QLabel(
+            tr_plural("{count} graph", "{count} graphs", graph_count)
+        )
         lbl_meta.setStyleSheet("font-size: 11px;")
 
-        self.btn_apply = QPushButton("Apply")
+        self.btn_apply = QPushButton()
+        bind_text(self.btn_apply, "Apply")
         self.btn_apply.setObjectName("btnRowPrimary")
         self.btn_apply.setIcon(Icons.check())
-        self.btn_rename = QPushButton("Rename")
+        self.btn_rename = QPushButton()
+        bind_text(self.btn_rename, "Rename")
         self.btn_rename.setObjectName("btnRowLink")
         self.btn_rename.setIcon(Icons.edit())
-        self.btn_duplicate = QPushButton("Duplicate")
+        self.btn_duplicate = QPushButton()
+        bind_text(self.btn_duplicate, "Duplicate")
         self.btn_duplicate.setObjectName("btnRowLink")
         self.btn_duplicate.setIcon(Icons.copy())
-        self.btn_delete = QPushButton("Delete")
+        self.btn_delete = QPushButton()
+        bind_text(self.btn_delete, "Delete")
         self.btn_delete.setObjectName("btnRowDanger")
         self.btn_delete.setIcon(Icons.trash())
 
@@ -98,7 +105,7 @@ class VPlotRecipeDialog(QDialog):
         super().__init__(parent)
         self.store = store
         self._cached_summaries: list[PlotRecipeSummary] = []
-        self.setWindowTitle("Plot Recipes")
+        bind_window_title(self, "Plot Recipes")
         self.setMinimumSize(600, 400)
         self.resize(700, 500)
 
@@ -107,7 +114,7 @@ class VPlotRecipeDialog(QDialog):
         layout.setSpacing(6)
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search recipes...")
+        bind_placeholder(self.search_input, "Search recipes...")
         self.search_input.textChanged.connect(self._on_search)
         layout.addWidget(self.search_input)
 
@@ -117,7 +124,8 @@ class VPlotRecipeDialog(QDialog):
 
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
-        btn_close = QPushButton("Close")
+        btn_close = QPushButton()
+        bind_text(btn_close, "Close")
         btn_close.setIcon(Icons.close())
         btn_close.clicked.connect(self.accept)
         btn_layout.addWidget(btn_close)
@@ -171,7 +179,7 @@ class VPlotRecipeDialog(QDialog):
         if not summary:
             return
         new_name, ok = QInputDialog.getText(
-            self, "Rename Recipe", "New name:", text=summary.name
+            self, tr("Rename Recipe"), tr("New name:"), text=summary.name
         )
         if ok and new_name:
             recipe = self.store.load_recipe(recipe_id)
@@ -189,9 +197,9 @@ class VPlotRecipeDialog(QDialog):
 
     def _on_delete(self, recipe_id: str) -> None:
         summary = self.store.get_summary(recipe_id)
-        name = summary.name if summary else "this recipe"
+        name = summary.name if summary else tr("this recipe")
         reply = QMessageBox.question(
-            self, "Delete Recipe", f"Permanently delete '{name}'?",
+            self, tr("Delete Recipe"), tr("Permanently delete '{name}'?", name=name),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
         )
         if reply != QMessageBox.Yes:

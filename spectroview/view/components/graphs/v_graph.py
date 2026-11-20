@@ -13,6 +13,7 @@ from PySide6.QtGui import QAction
 from spectroview import (
     PLOT_POLICY_LIGHT, PLOT_POLICY_DARK,
 )
+from spectroview.i18n import bind_text, bind_tooltip, on_language_changed
 from spectroview.view.theme import Icons, current_tokens
 from spectroview.model.graphs.m_graph import MGraph
 from spectroview.viewmodel.common.export_utils import copy_fig_to_clb
@@ -78,6 +79,12 @@ class VGraph(GraphBreakInsetMixin, GraphAxesStyleMixin, GraphAnnotationMixin, QW
         self.setLayout(self.graph_layout)
         self.graph_layout.setContentsMargins(0, 0, 0, 0)
         self.graph_layout.setSpacing(0)
+        on_language_changed(self, self._retranslate_graph)
+
+    def _retranslate_graph(self):
+        """Re-render the current plot when UI language changes so localized labels update."""
+        if self.df is not None and self.canvas is not None and self.ax is not None:
+            self.plot(self.df)
 
     def clear_layout(self, layout):
         """Clears all widgets and layouts from the specified layout."""
@@ -132,7 +139,7 @@ class VGraph(GraphBreakInsetMixin, GraphAxesStyleMixin, GraphAnnotationMixin, QW
         self.btn_home.setIcon(Icons.rescale())
         self.btn_home.setIconSize(QSize(22, 22))
         self.btn_home.setFixedSize(30, 30)
-        self.btn_home.setToolTip("Rescale plot to fit data (Ctrl+R)")
+        bind_tooltip(self.btn_home, "Rescale plot to fit data (Ctrl+R)")
         self.btn_home.clicked.connect(self.toolbar.home)
         self.btn_rescale = self.btn_home  # Alias matching v_spectra_viewer / v_map_viewer
 
@@ -141,7 +148,7 @@ class VGraph(GraphBreakInsetMixin, GraphAxesStyleMixin, GraphAnnotationMixin, QW
         self.btn_pan.setIcon(Icons.pan())
         self.btn_pan.setIconSize(QSize(22, 22))
         self.btn_pan.setFixedSize(30, 30)
-        self.btn_pan.setToolTip("Pan / Drag axes with left mouse, zoom with right")
+        bind_tooltip(self.btn_pan, "Pan / Drag axes with left mouse, zoom with right")
         self.btn_pan.clicked.connect(self.toolbar.pan)
 
         self.btn_zoom = QToolButton()
@@ -149,7 +156,7 @@ class VGraph(GraphBreakInsetMixin, GraphAxesStyleMixin, GraphAnnotationMixin, QW
         self.btn_zoom.setIcon(Icons.zoom())
         self.btn_zoom.setIconSize(QSize(22, 22))
         self.btn_zoom.setFixedSize(30, 30)
-        self.btn_zoom.setToolTip("Zoom to rectangle")
+        bind_tooltip(self.btn_zoom, "Zoom to rectangle")
         self.btn_zoom.clicked.connect(self.toolbar.zoom)
 
         # Bidirectional sync with matplotlib toolbar action checked states
@@ -164,7 +171,7 @@ class VGraph(GraphBreakInsetMixin, GraphAxesStyleMixin, GraphAnnotationMixin, QW
         self.btn_replicate.setIcon(Icons.duplicate())
         self.btn_replicate.setIconSize(QSize(22, 22))
         self.btn_replicate.setFixedSize(30, 30)
-        self.btn_replicate.setToolTip("Duplicate selected graph")
+        bind_tooltip(self.btn_replicate, "Duplicate selected graph")
         self.btn_replicate.clicked.connect(lambda *args: self.replicate_requested.emit(self.graph_id))
 
         # Create Export button
@@ -173,7 +180,7 @@ class VGraph(GraphBreakInsetMixin, GraphAxesStyleMixin, GraphAnnotationMixin, QW
         self.btn_export.setIcon(Icons.export())
         self.btn_export.setIconSize(QSize(22, 22))
         self.btn_export.setFixedSize(30, 30)
-        self.btn_export.setToolTip("Export selected graph to file. Hold Ctrl + Click to export all open graphs")
+        bind_tooltip(self.btn_export, "Export selected graph to file. Hold Ctrl + Click to export all open graphs")
         self.btn_export.clicked.connect(self._on_export_clicked)
 
         # Style menu: every action just emits style_action_requested,
@@ -182,7 +189,7 @@ class VGraph(GraphBreakInsetMixin, GraphAxesStyleMixin, GraphAnnotationMixin, QW
         self.btn_style_menu.setFixedSize(30, 30)
         self.btn_style_menu.setIcon(Icons.styling())
         self.btn_style_menu.setIconSize(QSize(22, 22))
-        self.btn_style_menu.setToolTip("Graph style: save/apply, copy/paste, reset, set default")
+        bind_tooltip(self.btn_style_menu, "Graph style: save/apply, copy/paste, reset, set default")
         self.btn_style_menu.setPopupMode(QToolButton.InstantPopup)
         style_menu = QMenu(self)
         _style_actions = [
@@ -195,6 +202,7 @@ class VGraph(GraphBreakInsetMixin, GraphAxesStyleMixin, GraphAnnotationMixin, QW
         ]
         for action_text, action_name, action_icon in _style_actions:
             action = QAction(action_icon, action_text, self)
+            bind_text(action, action_text)
             action.triggered.connect(
                 lambda checked=False, name=action_name: self.style_action_requested.emit(self.graph_id, name)
             )
@@ -206,7 +214,7 @@ class VGraph(GraphBreakInsetMixin, GraphAxesStyleMixin, GraphAnnotationMixin, QW
         self.btn_customize.setIcon(Icons.edit())
         self.btn_customize.setIconSize(QSize(22, 22))
         self.btn_customize.setFixedSize(30, 30)
-        self.btn_customize.setToolTip("Customize graph (Ctrl + E)")
+        bind_tooltip(self.btn_customize, "Customize graph (Ctrl + E)")
         self.btn_customize.clicked.connect(lambda: self.customize_requested.emit(self.graph_id))
 
         # Create Copy button
@@ -214,7 +222,7 @@ class VGraph(GraphBreakInsetMixin, GraphAxesStyleMixin, GraphAnnotationMixin, QW
         self.btn_copy_figure.setIcon(Icons.copy())
         self.btn_copy_figure.setIconSize(QSize(22, 22))
         self.btn_copy_figure.setFixedSize(30, 30)
-        self.btn_copy_figure.setToolTip("Copy selected figure to clipboard (Ctrl + C)")
+        bind_tooltip(self.btn_copy_figure, "Copy selected figure to clipboard (Ctrl + C)")
         self.btn_copy_figure.clicked.connect(self.copy_to_clipboard)
 
         # Create toolbar layout:

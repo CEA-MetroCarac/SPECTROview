@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QDialog, QMdiSubWindow, QMessageBox, QVBoxLayout
 
+from spectroview.i18n import combo_data_or_text, set_combo_by_data_or_text, tr
 from spectroview.model.graphs.graph_control import GraphValidationError, normalize_graph_patch
 from spectroview.view.components.graphs.graph_commit import snapshot
 from spectroview.view.components.graphs.v_graph import VGraph
@@ -62,7 +63,9 @@ class GraphsMdiMixin:
 
         plot_config = self._collect_plot_config(include_labels=False)
         if not plot_config['x'] or not plot_config['y']:
-            self._show_notification("Please select X and Y axes.", notification_type="warning")
+            self._show_notification(
+                tr("Please select X and Y axes."), notification_type="warning"
+            )
             return
         self._apply_default_style_to_config(plot_config)
 
@@ -102,12 +105,16 @@ class GraphsMdiMixin:
     def _validate_plot_request(self) -> bool:
         """Validate DataFrame selection."""
         if not self.vm.selected_df_name:
-            self._show_notification("Please select a DataFrame first.", notification_type="warning")
+            self._show_notification(
+                tr("Please select a DataFrame first."), notification_type="warning"
+            )
             return False
 
         df = self.vm.get_dataframe(self.vm.selected_df_name)
         if df is None or df.empty:
-            self._show_notification("Selected DataFrame is empty.", notification_type="warning")
+            self._show_notification(
+                tr("Selected DataFrame is empty."), notification_type="warning"
+            )
             return False
         return True
 
@@ -161,7 +168,10 @@ class GraphsMdiMixin:
             filtered_df = self.vm.apply_filters(plot_config['df_name'], filters)
 
             def _on_render_error(e):
-                self._show_notification(f"Error rendering plot: {str(e)}", notification_type="error")
+                self._show_notification(
+                    tr("Error rendering plot: {error}", error=str(e)),
+                    notification_type="error",
+                )
 
             if self._build_graph_widget(graph_model, filtered_df, _on_render_error) is None:
                 return
@@ -204,11 +214,15 @@ class GraphsMdiMixin:
             try:
                 target_ids = [int(graph_id)]
             except (TypeError, ValueError):
-                self.vm.notify.emit("Graph update rejected: graph ID must be numeric or 'all'.")
+                self.vm.notify.emit(
+                    tr("Graph update rejected: graph ID must be numeric or 'all'.")
+                )
                 return []
         target_ids = [gid for gid in target_ids if self.vm.get_graph(gid) is not None]
         if not target_ids:
-            self.vm.notify.emit("Graph update rejected: no matching open graph.")
+            self.vm.notify.emit(
+                tr("Graph update rejected: no matching open graph.")
+            )
             return []
 
         prepared = {}
@@ -224,7 +238,9 @@ class GraphsMdiMixin:
                 )
                 snapshots[gid] = model.save()
         except GraphValidationError as exc:
-            self.vm.notify.emit(f"Graph update rejected: {exc}")
+            self.vm.notify.emit(
+                tr("Graph update rejected: {error}", error=exc)
+            )
             return []
 
         self.vm.begin_undo_batch()
@@ -242,7 +258,7 @@ class GraphsMdiMixin:
                 except Exception:
                     pass
             self._show_notification(
-                f"Graph update rolled back: {exc}",
+                tr("Graph update rolled back: {error}", error=exc),
                 notification_type="warning",
             )
             return []
@@ -294,7 +310,10 @@ class GraphsMdiMixin:
             plot_config['plot_height'] = size.height()
 
         if not plot_config.get('df_name'):
-            self._show_notification("Cannot replicate a plot without a valid DataFrame.", notification_type="warning")
+            self._show_notification(
+                tr("Cannot replicate a plot without a valid DataFrame."),
+                notification_type="warning",
+            )
             return
 
         self._create_and_display_plot(plot_config, select_in_list=True, filters=plot_config.get('filters', []))
@@ -316,7 +335,9 @@ class GraphsMdiMixin:
         try:
             active_subwindow = self.mdi_area.activeSubWindow()
             if not active_subwindow:
-                self._show_notification("Please select a plot to update.", notification_type="warning")
+                self._show_notification(
+                    tr("Please select a plot to update."), notification_type="warning"
+                )
                 return
 
             gid = self._graph_id_for_subwindow(active_subwindow)
@@ -386,7 +407,10 @@ class GraphsMdiMixin:
             try:
                 self._render_plot(graph_widget, filtered_df, graph_model)
             except Exception as e:
-                self._show_notification(f"Error updating plot: {str(e)}", notification_type="error")
+                self._show_notification(
+                    tr("Error updating plot: {error}", error=str(e)),
+                    notification_type="error",
+                )
                 return
 
             self.vm.sync_derived_graph_properties(graph_model.graph_id, {
@@ -442,8 +466,8 @@ class GraphsMdiMixin:
         """Delete all graphs."""
         reply = QMessageBox.question(
             self,
-            "Delete All Graphs",
-            "Are you sure you want to delete all graphs?",
+            tr("Delete All Graphs"),
+            tr("Are you sure you want to delete all graphs?"),
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No
         )
@@ -552,9 +576,7 @@ class GraphsMdiMixin:
 
             for cbb_name, value in [('plot_style', model.plot_style), ('x', model.x), ('z', model.z or "None")]:
                 cbb = getattr(self, f'cbb_{cbb_name}')
-                idx = cbb.findText(value)
-                if idx >= 0:
-                    cbb.setCurrentIndex(idx)
+                set_combo_by_data_or_text(cbb, value)
 
             if model.y:
                 idx = self.cbb_y.findText(model.y[0])
@@ -564,19 +586,13 @@ class GraphsMdiMixin:
             self.v_data_filter.set_filters(model.filters)
 
             y2_val = model.y2 or "None"
-            idx = self.cbb_y2.findText(y2_val)
-            if idx >= 0:
-                self.cbb_y2.setCurrentIndex(idx)
+            set_combo_by_data_or_text(self.cbb_y2, y2_val)
 
             y3_val = model.y3 or "None"
-            idx = self.cbb_y3.findText(y3_val)
-            if idx >= 0:
-                self.cbb_y3.setCurrentIndex(idx)
+            set_combo_by_data_or_text(self.cbb_y3, y3_val)
 
             x2_val = getattr(model, 'x2', None) or "None"
-            idx = self.cbb_x2.findText(x2_val)
-            if idx >= 0:
-                self.cbb_x2.setCurrentIndex(idx)
+            set_combo_by_data_or_text(self.cbb_x2, x2_val)
 
             self._sync_side_panel_shared_fields(model)
         finally:
@@ -621,10 +637,15 @@ class GraphsMdiMixin:
 
     def _collect_plot_config(self, include_labels: bool = True) -> dict:
         """Collect plot configuration."""
-        plot_style = self.cbb_plot_style.currentText()
-        z_value = self.cbb_z.currentText() if self.cbb_z.currentText() != "None" else None
+        plot_style = combo_data_or_text(self.cbb_plot_style)
+        z_raw = combo_data_or_text(self.cbb_z)
+        z_value = z_raw if z_raw != "None" else None
 
         use_palette = plot_style in ['wafer', '2Dmap'] or z_value is not None
+
+        y2_raw = combo_data_or_text(self.cbb_y2)
+        y3_raw = combo_data_or_text(self.cbb_y3)
+        x2_raw = combo_data_or_text(self.cbb_x2)
 
         return {
             'df_name': self.vm.selected_df_name,
@@ -643,9 +664,9 @@ class GraphsMdiMixin:
             'wafer_size': float(self.cbb_wafer_size.currentText()),
             'legend_visible': True,
             'filters': self.v_data_filter.get_filters(),
-            'y2': self.cbb_y2.currentText() if self.cbb_y2.currentText() != "None" else None,
-            'y3': self.cbb_y3.currentText() if self.cbb_y3.currentText() != "None" else None,
-            'x2': self.cbb_x2.currentText() if self.cbb_x2.currentText() != "None" else None,
+            'y2': y2_raw if y2_raw != "None" else None,
+            'y3': y3_raw if y3_raw != "None" else None,
+            'x2': x2_raw if x2_raw != "None" else None,
             'y2label': (self.edit_y2label.text() or None) if include_labels else None,
             'y3label': (self.edit_y3label.text() or None) if include_labels else None,
             'x2label': (self.edit_x2label.text() or None) if include_labels else None,

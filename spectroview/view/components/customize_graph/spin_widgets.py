@@ -12,14 +12,24 @@ arrow-click from "unset" jumps straight to a configurable start value.
 """
 from PySide6.QtWidgets import QDoubleSpinBox, QSpinBox
 
+from spectroview.i18n import on_language_changed, tr
+
 
 class _PlaceholderMixin:
-    def _init_placeholder(self, unset_value, start_value, placeholder_text="default"):
+    def _init_placeholder(self, unset_value, start_value, placeholder_text=None):
         self._unset_value = unset_value
         self._start_value = start_value
-        self.setSpecialValueText(placeholder_text)
+        self._uses_default_placeholder = placeholder_text is None
+        self._has_numeric_placeholder = False
+        self.setSpecialValueText(tr("default") if placeholder_text is None else placeholder_text)
+        if placeholder_text is None:
+            on_language_changed(self, self._retranslate_placeholder)
         self.valueChanged.connect(self._update_placeholder_style)
         self._update_placeholder_style()
+
+    def _retranslate_placeholder(self):
+        if self._uses_default_placeholder and not self._has_numeric_placeholder:
+            self.setSpecialValueText(tr("default"))
 
     def set_start_value(self, value):
         """Update the value the first arrow-click from "unset" jumps to
@@ -33,6 +43,7 @@ class _PlaceholderMixin:
         user what will actually be used. Formatted with this spinbox's own
         configured decimals() (QDoubleSpinBox only; QSpinBox is always a
         plain integer)."""
+        self._has_numeric_placeholder = True
         if hasattr(self, 'decimals'):
             self.setSpecialValueText(f"{value:.{self.decimals()}f}")
         else:
@@ -74,7 +85,7 @@ class PlaceholderDoubleSpinBox(_PlaceholderMixin, QDoubleSpinBox):
     """Optional-override QDoubleSpinBox: shows a grayed placeholder word at
     its sentinel (range-minimum) value instead of a blank box."""
 
-    def __init__(self, unset_value, start_value, placeholder_text="default", parent=None):
+    def __init__(self, unset_value, start_value, placeholder_text=None, parent=None):
         super().__init__(parent)
         self._init_placeholder(unset_value, start_value, placeholder_text)
 
@@ -82,6 +93,6 @@ class PlaceholderDoubleSpinBox(_PlaceholderMixin, QDoubleSpinBox):
 class PlaceholderSpinBox(_PlaceholderMixin, QSpinBox):
     """Integer counterpart of PlaceholderDoubleSpinBox."""
 
-    def __init__(self, unset_value, start_value, placeholder_text="default", parent=None):
+    def __init__(self, unset_value, start_value, placeholder_text=None, parent=None):
         super().__init__(parent)
         self._init_placeholder(unset_value, start_value, placeholder_text)

@@ -24,6 +24,17 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview import DEFAULT_COLORS, MARKERS
+from spectroview.i18n import (
+    bind_combo_items,
+    bind_placeholder,
+    bind_text,
+    bind_title,
+    bind_tooltip,
+    combo_data_or_text,
+    on_language_changed,
+    set_combo_by_data_or_text,
+    tr,
+)
 from spectroview.view.components.customize_graph.common import (
     create_scrollable_container,
     highlight_group_style,
@@ -76,7 +87,7 @@ class TabLegendSeries(QWidget):
         start_value: float = 0.0,
     ) -> PlaceholderSpinBox | PlaceholderDoubleSpinBox:
         cls = PlaceholderSpinBox if is_int else PlaceholderDoubleSpinBox
-        spin = cls(self._UNSET, start_value, "default")
+        spin = cls(self._UNSET, start_value)
         lo = self._UNSET if minimum is None else min(minimum, self._UNSET)
         hi = 999999 if maximum is None else maximum
         spin.setRange(lo, hi)
@@ -90,41 +101,46 @@ class TabLegendSeries(QWidget):
         self._scroll, _container, layout = create_scrollable_container(self)
 
         # ───── Legend Box Configuration ─────
-        self.grp_legend_box = QGroupBox("Legend Box Configuration:")
+        self.grp_legend_box = QGroupBox()
+        bind_title(self.grp_legend_box, "Legend Box Configuration:")
         box_layout = QVBoxLayout(self.grp_legend_box)
         box_layout.setContentsMargins(8, 8, 8, 8)
         box_layout.setSpacing(6)
 
         # Row 1: Outside plot, Show frame, Columns, Title
         top_row = QHBoxLayout()
-        self.cb_legend_outside = QCheckBox("Outside plot")
-        self.cb_legend_outside.setToolTip("Place the legend outside the plot bounding box.")
+        self.cb_legend_outside = QCheckBox()
+        bind_text(self.cb_legend_outside, "Outside plot")
+        bind_tooltip(self.cb_legend_outside, "Place the legend outside the plot bounding box.")
         self.cb_legend_outside.stateChanged.connect(self._on_legend_outside_changed)
         top_row.addWidget(self.cb_legend_outside)
 
         top_row.addSpacing(14)
-        self.cb_legend_frame = QCheckBox("Show frame")
-        self.cb_legend_frame.setToolTip("Display a border frame around the legend box.")
+        self.cb_legend_frame = QCheckBox()
+        bind_text(self.cb_legend_frame, "Show frame")
+        bind_tooltip(self.cb_legend_frame, "Display a border frame around the legend box.")
         top_row.addWidget(self.cb_legend_frame)
 
         top_row.addSpacing(14)
-        lbl_cols = QLabel("Columns:")
-        lbl_cols.setToolTip("Number of columns for arranging legend entries.")
+        lbl_cols = QLabel()
+        bind_text(lbl_cols, "Columns:")
+        bind_tooltip(lbl_cols, "Number of columns for arranging legend entries.")
         top_row.addWidget(lbl_cols)
         self.spin_legend_ncol = QSpinBox()
         self.spin_legend_ncol.setRange(1, 10)
         self.spin_legend_ncol.setFixedWidth(50)
-        self.spin_legend_ncol.setToolTip("Number of columns for arranging legend entries.")
+        bind_tooltip(self.spin_legend_ncol, "Number of columns for arranging legend entries.")
         top_row.addWidget(self.spin_legend_ncol)
 
         top_row.addSpacing(14)
-        lbl_title = QLabel("Title:")
-        lbl_title.setToolTip("Optional title displayed at the top of the legend box.")
+        lbl_title = QLabel()
+        bind_text(lbl_title, "Title:")
+        bind_tooltip(lbl_title, "Optional title displayed at the top of the legend box.")
         top_row.addWidget(lbl_title)
         self.edit_legend_title = QLineEdit()
-        self.edit_legend_title.setPlaceholderText("None")
+        bind_placeholder(self.edit_legend_title, "None")
         self.edit_legend_title.setFixedWidth(130)
-        self.edit_legend_title.setToolTip("Optional title displayed at the top of the legend box.")
+        bind_tooltip(self.edit_legend_title, "Optional title displayed at the top of the legend box.")
         top_row.addWidget(self.edit_legend_title)
 
         top_row.addStretch()
@@ -132,42 +148,56 @@ class TabLegendSeries(QWidget):
 
         # Row 2: Position, Font size, Alpha
         style_row = QHBoxLayout()
-        lbl_pos = QLabel("Position:")
-        lbl_pos.setToolTip("Location of the legend within the plot axes (active when not outside).")
+        lbl_pos = QLabel()
+        bind_text(lbl_pos, "Position:")
+        bind_tooltip(lbl_pos, "Location of the legend within the plot axes (active when not outside).")
         style_row.addWidget(lbl_pos)
         self.combo_legend_loc = QComboBox()
-        self.combo_legend_loc.addItems([
-            "best", "upper right", "upper left", "lower left", "lower right",
-            "center left", "center right", "lower center", "upper center", "center",
-        ])
+        bind_combo_items(
+            self.combo_legend_loc,
+            [
+                ("best", "best"),
+                ("upper right", "upper right"),
+                ("upper left", "upper left"),
+                ("lower left", "lower left"),
+                ("lower right", "lower right"),
+                ("center left", "center left"),
+                ("center right", "center right"),
+                ("lower center", "lower center"),
+                ("upper center", "upper center"),
+                ("center", "center"),
+            ],
+        )
         self.combo_legend_loc.setMinimumWidth(125)
         self.combo_legend_loc.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         if self.combo_legend_loc.view():
             self.combo_legend_loc.view().setMinimumWidth(125)
-        self.combo_legend_loc.setToolTip("Location of the legend within the plot axes (active when not outside).")
+        bind_tooltip(self.combo_legend_loc, "Location of the legend within the plot axes (active when not outside).")
         style_row.addWidget(self.combo_legend_loc)
 
         style_row.addSpacing(14)
-        lbl_fs = QLabel("Font size:")
-        lbl_fs.setToolTip("Legend label font size in points (pt).")
+        lbl_fs = QLabel()
+        bind_text(lbl_fs, "Font size:")
+        bind_tooltip(lbl_fs, "Legend label font size in points (pt).")
         style_row.addWidget(lbl_fs)
         self.spin_legend_fontsize = QSpinBox()
         self.spin_legend_fontsize.setRange(4, 72)
         self.spin_legend_fontsize.setValue(9)
         self.spin_legend_fontsize.setFixedWidth(55)
-        self.spin_legend_fontsize.setToolTip("Legend label font size in points (pt).")
+        bind_tooltip(self.spin_legend_fontsize, "Legend label font size in points (pt).")
         style_row.addWidget(self.spin_legend_fontsize)
 
         style_row.addSpacing(14)
-        lbl_alpha = QLabel("Alpha:")
-        lbl_alpha.setToolTip("Legend background frame opacity (0.0 = transparent, 1.0 = solid).")
+        lbl_alpha = QLabel()
+        bind_text(lbl_alpha, "Alpha:")
+        bind_tooltip(lbl_alpha, "Legend background frame opacity (0.0 = transparent, 1.0 = solid).")
         style_row.addWidget(lbl_alpha)
         self.spin_legend_alpha = QDoubleSpinBox()
         self.spin_legend_alpha.setRange(0.0, 1.0)
         self.spin_legend_alpha.setDecimals(2)
         self.spin_legend_alpha.setSingleStep(0.1)
         self.spin_legend_alpha.setFixedWidth(65)
-        self.spin_legend_alpha.setToolTip("Legend background frame opacity (0.0 = transparent, 1.0 = solid).")
+        bind_tooltip(self.spin_legend_alpha, "Legend background frame opacity (0.0 = transparent, 1.0 = solid).")
         style_row.addWidget(self.spin_legend_alpha)
 
         style_row.addStretch()
@@ -175,17 +205,20 @@ class TabLegendSeries(QWidget):
         layout.addWidget(self.grp_legend_box)
 
         # ───── Global Marker Styling ─────
-        self.grp_markers = QGroupBox("Global Marker Styling:")
+        self.grp_markers = QGroupBox()
+        bind_title(self.grp_markers, "Global Marker Styling:")
         marker_box_layout = QVBoxLayout(self.grp_markers)
         marker_box_layout.setContentsMargins(8, 8, 8, 8)
         marker_box_layout.setSpacing(6)
 
         # Row 1: Checkbox to unify
         unify_row = QHBoxLayout()
-        self.cb_unify_marker_style = QCheckBox("Unify marker style across series")
-        self.cb_unify_marker_style.setToolTip(
+        self.cb_unify_marker_style = QCheckBox()
+        bind_text(self.cb_unify_marker_style, "Unify marker style across series")
+        bind_tooltip(
+            self.cb_unify_marker_style,
             "Checked: every series uses the uniform marker size and edge color below.\n"
-            "Unchecked: each series can override them individually in the table below."
+            "Unchecked: each series can override them individually in the table below.",
         )
         self.cb_unify_marker_style.toggled.connect(self._on_unify_marker_style_toggled)
         unify_row.addWidget(self.cb_unify_marker_style)
@@ -198,24 +231,26 @@ class TabLegendSeries(QWidget):
         unified_layout.setContentsMargins(0, 0, 0, 0)
         unified_layout.setSpacing(8)
 
-        lbl_ms = QLabel("Marker size:")
-        lbl_ms.setToolTip("Uniform marker size for all series in points².")
+        lbl_ms = QLabel()
+        bind_text(lbl_ms, "Marker size:")
+        bind_tooltip(lbl_ms, "Uniform marker size for all series in points².")
         unified_layout.addWidget(lbl_ms)
         self.spin_scatter_size = QSpinBox()
         self.spin_scatter_size.setRange(5, 500)
         self.spin_scatter_size.setSingleStep(10)
         self.spin_scatter_size.setValue(70)
         self.spin_scatter_size.setFixedWidth(65)
-        self.spin_scatter_size.setToolTip("Uniform marker size for all series in points².")
+        bind_tooltip(self.spin_scatter_size, "Uniform marker size for all series in points².")
         unified_layout.addWidget(self.spin_scatter_size)
 
         unified_layout.addSpacing(14)
-        lbl_ec = QLabel("Edge color:")
-        lbl_ec.setToolTip("Click to choose a uniform marker border/edge color.")
+        lbl_ec = QLabel()
+        bind_text(lbl_ec, "Edge color:")
+        bind_tooltip(lbl_ec, "Click to choose a uniform marker border/edge color.")
         unified_layout.addWidget(lbl_ec)
         self.btn_scatter_edgecolor = QPushButton()
         self.btn_scatter_edgecolor.setFixedWidth(80)
-        self.btn_scatter_edgecolor.setToolTip("Click to choose a uniform marker border/edge color.")
+        bind_tooltip(self.btn_scatter_edgecolor, "Click to choose a uniform marker border/edge color.")
         self._set_color_button(self.btn_scatter_edgecolor, "black")
         self.btn_scatter_edgecolor.clicked.connect(self._pick_scatter_edgecolor)
         unified_layout.addWidget(self.btn_scatter_edgecolor)
@@ -225,7 +260,8 @@ class TabLegendSeries(QWidget):
         layout.addWidget(self.grp_markers)
 
         # ───── Series Customization Table ─────
-        self.grp_series = QGroupBox("Series Customization:")
+        self.grp_series = QGroupBox()
+        bind_title(self.grp_series, "Series Customization:")
         series_box_layout = QVBoxLayout(self.grp_series)
         series_box_layout.setContentsMargins(8, 8, 8, 8)
         series_box_layout.setSpacing(6)
@@ -237,6 +273,7 @@ class TabLegendSeries(QWidget):
         layout.addWidget(self.grp_series)
 
         layout.addStretch()
+        on_language_changed(self, self._rebuild_legend_widgets)
 
     def _set_color_button(self, button: QPushButton, color_str: str) -> None:
         button.setText(color_str)
@@ -250,13 +287,13 @@ class TabLegendSeries(QWidget):
 
     def _pick_scatter_edgecolor(self) -> None:
         current = QColor(self.btn_scatter_edgecolor.text())
-        color = QColorDialog.getColor(current, self, "Select Marker Edge Color")
+        color = QColorDialog.getColor(current, self, tr("Select Marker Edge Color"))
         if color.isValid():
             self._set_color_button(self.btn_scatter_edgecolor, color.name())
 
     def _pick_series_edge_color(self, idx: int, btn: QPushButton) -> None:
         current = QColor(btn.text())
-        color = QColorDialog.getColor(current, self, "Select Series Edge Color")
+        color = QColorDialog.getColor(current, self, tr("Select Series Edge Color"))
         if color.isValid():
             self._set_color_button(btn, color.name())
             btn.setToolTip("")
@@ -307,7 +344,7 @@ class TabLegendSeries(QWidget):
                 item.widget().deleteLater()
 
         if not legend_properties:
-            lbl_empty = QLabel("No legend series available for this plot.")
+            lbl_empty = QLabel(tr("No legend series available for this plot."))
             lbl_empty.setStyleSheet(f"color: {current_tokens().text_muted}; font-style: italic;")
             self.legend_layout.addWidget(lbl_empty)
         else:
@@ -366,16 +403,16 @@ class TabLegendSeries(QWidget):
             headers.append(("Edge Color", edge_color_layout, "Individual marker edge border color."))
 
         for header_text, h_layout, h_tip in headers:
-            lbl = QLabel(f"<b>{header_text}</b>")
+            lbl = QLabel(f"<b>{tr(header_text)}</b>")
             lbl.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-            lbl.setToolTip(h_tip)
+            lbl.setToolTip(tr(h_tip))
             h_layout.addWidget(lbl)
 
         for idx, prop in enumerate(legend_properties):
             # Label
             label = QLineEdit(prop.get("label", ""))
             label.setFixedWidth(120)
-            label.setToolTip(f"Series #{idx + 1} display label")
+            label.setToolTip(tr("Series #{num} display label", num=idx + 1))
             label.textChanged.connect(lambda text, i=idx: self._update_legend_property(i, "label", text))
             label_layout.addWidget(label)
 
@@ -385,7 +422,7 @@ class TabLegendSeries(QWidget):
                 marker.setFixedWidth(55)
                 marker.addItems(MARKERS)
                 marker.setCurrentText(prop.get("marker", "o"))
-                marker.setToolTip(f"Series #{idx + 1} marker shape")
+                marker.setToolTip(tr("Series #{num} marker shape", num=idx + 1))
                 marker.currentTextChanged.connect(lambda text, i=idx: self._update_legend_property(i, "marker", text))
                 marker_layout.addWidget(marker)
 
@@ -398,7 +435,7 @@ class TabLegendSeries(QWidget):
                 item = color.model().item(color.count() - 1)
                 item.setBackground(QColor(color_code))
             color.setCurrentText(prop.get("color", "#1f77b4"))
-            color.setToolTip(f"Series #{idx + 1} line/marker color")
+            color.setToolTip(tr("Series #{num} line/marker color", num=idx + 1))
             color.currentIndexChanged.connect(lambda *_a, cb=color: self._update_combobox_color(cb))
             color.currentTextChanged.connect(lambda text, i=idx: self._update_legend_property(i, "color", text))
             color_layout.addWidget(color)
@@ -410,7 +447,7 @@ class TabLegendSeries(QWidget):
                 lw_spin.setFixedWidth(65)
                 lw_spin.setValue(prop.get("linewidth", self._UNSET))
                 lw_spin.set_placeholder_value(1.5)
-                lw_spin.setToolTip(f"Series #{idx + 1} line stroke width")
+                lw_spin.setToolTip(tr("Series #{num} line stroke width", num=idx + 1))
                 lw_spin.valueChanged.connect(lambda v, i=idx: self._update_legend_property_numeric(i, "linewidth", v))
                 linewidth_layout.addWidget(lw_spin)
 
@@ -419,7 +456,7 @@ class TabLegendSeries(QWidget):
             alpha_spin.setFixedWidth(65)
             alpha_spin.setValue(prop.get("alpha", self._UNSET))
             alpha_spin.set_placeholder_value(1.0)
-            alpha_spin.setToolTip(f"Series #{idx + 1} opacity (0.0 - 1.0)")
+            alpha_spin.setToolTip(tr("Series #{num} opacity (0.0 - 1.0)", num=idx + 1))
             alpha_spin.valueChanged.connect(lambda v, i=idx: self._update_legend_property_numeric(i, "alpha", v))
             alpha_layout.addWidget(alpha_spin)
 
@@ -430,7 +467,7 @@ class TabLegendSeries(QWidget):
                 ms_spin.setFixedWidth(65)
                 ms_spin.setValue(int(prop.get("marker_size", self._UNSET)))
                 ms_spin.set_placeholder_value(def_size)
-                ms_spin.setToolTip(f"Series #{idx + 1} marker size override")
+                ms_spin.setToolTip(tr("Series #{num} marker size override", num=idx + 1))
                 ms_spin.valueChanged.connect(lambda v, i=idx: self._update_legend_property_numeric(i, "marker_size", v))
                 marker_size_layout.addWidget(ms_spin)
 
@@ -438,7 +475,7 @@ class TabLegendSeries(QWidget):
                 edge_btn.setFixedWidth(75)
                 edge_val = prop.get("edge_color")
                 self._set_color_button(edge_btn, edge_val or getattr(self.graph_widget, "scatter_edgecolor", "black"))
-                edge_btn.setToolTip(f"Series #{idx + 1} marker edge color override")
+                edge_btn.setToolTip(tr("Series #{num} marker edge color override", num=idx + 1))
                 edge_btn.clicked.connect(lambda *_a, i=idx, btn=edge_btn: self._pick_series_edge_color(i, btn))
                 edge_color_layout.addWidget(edge_btn)
 
@@ -470,7 +507,7 @@ class TabLegendSeries(QWidget):
         self.edit_legend_title.setText(getattr(gw, "legend_title", None) or "")
         self.spin_legend_fontsize.setValue(getattr(gw, "legend_fontsize", None) or 9)
         self.spin_legend_alpha.setValue(getattr(gw, "legend_alpha", 0.7))
-        self.combo_legend_loc.setCurrentText(getattr(gw, "legend_loc", "best"))
+        set_combo_by_data_or_text(self.combo_legend_loc, getattr(gw, "legend_loc", "best"))
         self.combo_legend_loc.setEnabled(not self.original_legend_outside)
 
         is_marker_style = getattr(gw, "plot_style", "") in _MARKER_STYLES
@@ -496,7 +533,7 @@ class TabLegendSeries(QWidget):
         gw.legend_title = self.edit_legend_title.text().strip() or None
         gw.legend_fontsize = self.spin_legend_fontsize.value()
         gw.legend_alpha = self.spin_legend_alpha.value()
-        gw.legend_loc = self.combo_legend_loc.currentText()
+        gw.legend_loc = combo_data_or_text(self.combo_legend_loc)
 
         gw.unify_marker_style = self.cb_unify_marker_style.isChecked()
         gw.scatter_size = self.spin_scatter_size.value()

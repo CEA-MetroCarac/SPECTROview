@@ -7,6 +7,8 @@ from matplotlib.colors import CenteredNorm, LogNorm
 import numpy as np
 import pandas as pd
 
+from spectroview.i18n import tr
+
 # scipy is imported inside WaferPlot.plot() so `scipy.interpolate` stays off startup imports.
 
 
@@ -137,7 +139,7 @@ class SpatialPlotMixin:
                     try:
                         slot_num = expr.split("==")[1].strip()
                         self.vg.ax.text(
-                            0.02, 0.98, f"Slot {slot_num}",
+                            0.02, 0.98, tr("Slot {num}", num=slot_num),
                             transform=self.vg.ax.transAxes,
                             fontsize=12, color='black',
                             fontweight='bold',
@@ -199,7 +201,7 @@ class WaferPlot:
         wafer_circle = patches.Circle((0, 0), radius=r, fill=False, color='black', linewidth=1)
         ax.add_patch(wafer_circle)
 
-        ax.set_ylabel("Wafer size (mm)")
+        ax.set_ylabel(tr("Wafer size (mm)"))
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
         ax.spines['bottom'].set_visible(False)
@@ -233,16 +235,16 @@ class WaferPlot:
             transform=ax.transAxes, fontsize=10, verticalalignment='bottom',
         )
         ax.text(
-            0.99, -0.1, f"Max: {max_value:.2f}",
+            0.99, -0.1, tr("Max: {val}", val=f"{max_value:.2f}"),
             transform=ax.transAxes, fontsize=10,
             verticalalignment='bottom', horizontalalignment='right',
         )
         ax.text(
-            0.99, -0.05, f"Min: {min_value:.2f}",
+            0.99, -0.05, tr("Min: {val}", val=f"{min_value:.2f}"),
             transform=ax.transAxes, fontsize=10,
             verticalalignment='bottom', horizontalalignment='right',
         )
         ax.text(
-            0.05, -0.05, f"Mean: {mean_value:.2f}",
+            0.05, -0.05, tr("Mean: {val}", val=f"{mean_value:.2f}"),
             transform=ax.transAxes, fontsize=10, verticalalignment='bottom',
         )

@@ -23,6 +23,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.i18n import (
+    bind_header_labels,
+    bind_text,
+    bind_title,
+    bind_tooltip,
+    on_language_changed,
+    tr,
+)
 from spectroview.view.components.customize_graph.common import (
     create_scrollable_container,
     highlight_group_style,
@@ -30,12 +38,6 @@ from spectroview.view.components.customize_graph.common import (
 from spectroview.view.theme import Icons
 
 _ERROR_BAR_STYLES = ("point", "line", "bar")
-_ERROR_BAR_LABELS_POINT_LINE = [
-    ("None", "none"), ("Std. Dev.", "sd"), ("Std. Error", "sem"), ("95% CI", "ci95"),
-]
-_ERROR_BAR_LABELS_BAR = [
-    ("Std. Dev.", "sd"), ("Std. Error", "sem"), ("95% CI", "ci95"),
-]
 
 
 class TabPlotStyles(QWidget):
@@ -65,54 +67,63 @@ class TabPlotStyles(QWidget):
         self._scroll, _container, layout = create_scrollable_container(self)
 
         # ───── Plot Style Options ─────
-        self.grp_style_options = QGroupBox("Plot Style Options:")
+        self.grp_style_options = QGroupBox()
+        bind_title(self.grp_style_options, "Plot Style Options:")
         opt_layout = QVBoxLayout(self.grp_style_options)
         opt_layout.setContentsMargins(8, 8, 8, 8)
         opt_layout.setSpacing(6)
 
-        self._cb_join = QCheckBox("Join data points (point plot)")
-        self._cb_join.setToolTip("Connect consecutive data points with line segments in point plot mode.")
+        self._cb_join = QCheckBox()
+        bind_text(self._cb_join, "Join data points (point plot)")
+        bind_tooltip(self._cb_join, "Connect consecutive data points with line segments in point plot mode.")
         opt_layout.addWidget(self._cb_join)
 
-        self._cb_dodge = QCheckBox("Dodge overlapping points (point plot)")
-        self._cb_dodge.setToolTip("Separate overlapping data points along category intervals in point plot mode.")
+        self._cb_dodge = QCheckBox()
+        bind_text(self._cb_dodge, "Dodge overlapping points (point plot)")
+        bind_tooltip(self._cb_dodge, "Separate overlapping data points along category intervals in point plot mode.")
         opt_layout.addWidget(self._cb_dodge)
 
-        self._cb_dodge_scatter = QCheckBox("Dodge overlapping points (scatter plot)")
-        self._cb_dodge_scatter.setToolTip("Slightly shift overlapping points horizontally to reduce visual overplotting.")
+        self._cb_dodge_scatter = QCheckBox()
+        bind_text(self._cb_dodge_scatter, "Dodge overlapping points (scatter plot)")
+        bind_tooltip(self._cb_dodge_scatter, "Slightly shift overlapping points horizontally to reduce visual overplotting.")
         opt_layout.addWidget(self._cb_dodge_scatter)
 
-        self._cb_wafer_stats = QCheckBox("Show statistics summary (wafer plot)")
-        self._cb_wafer_stats.setToolTip("Display statistical summary overlay (Mean, Std Dev, Min, Max, Uniformity) for wafer maps.")
+        self._cb_wafer_stats = QCheckBox()
+        bind_text(self._cb_wafer_stats, "Show statistics summary (wafer plot)")
+        bind_tooltip(self._cb_wafer_stats, "Display statistical summary overlay (Mean, Std Dev, Min, Max, Uniformity) for wafer maps.")
         opt_layout.addWidget(self._cb_wafer_stats)
 
         layout.addWidget(self.grp_style_options)
 
         # ───── Error Bars (Unified) ─────
-        self.grp_error_bars = QGroupBox("Error Bars:")
+        self.grp_error_bars = QGroupBox()
+        bind_title(self.grp_error_bars, "Error Bars:")
         eb_layout = QVBoxLayout(self.grp_error_bars)
         eb_layout.setContentsMargins(8, 8, 8, 8)
         eb_layout.setSpacing(6)
 
-        self._cb_error_bar = QCheckBox("Show error bars (bar plot)")
-        self._cb_error_bar.setToolTip("Toggle error bar visibility on bar plots.")
+        self._cb_error_bar = QCheckBox()
+        bind_text(self._cb_error_bar, "Show error bars (bar plot)")
+        bind_tooltip(self._cb_error_bar, "Toggle error bar visibility on bar plots.")
         eb_layout.addWidget(self._cb_error_bar)
 
         eb_ctrl_row = QHBoxLayout()
-        lbl_eb_type = QLabel("Type:")
-        lbl_eb_type.setToolTip("Dispersion or confidence calculation for error bars (Std Dev, Std Error, or 95% Confidence Interval).")
+        lbl_eb_type = QLabel()
+        bind_text(lbl_eb_type, "Type:")
+        bind_tooltip(lbl_eb_type, "Dispersion or confidence calculation for error bars (Std Dev, Std Error, or 95% Confidence Interval).")
         eb_ctrl_row.addWidget(lbl_eb_type)
         self.cbb_error_bar_type = QComboBox()
         self.cbb_error_bar_type.setMinimumWidth(130)
         self.cbb_error_bar_type.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         if self.cbb_error_bar_type.view():
             self.cbb_error_bar_type.view().setMinimumWidth(130)
-        self.cbb_error_bar_type.setToolTip("Dispersion or confidence calculation for error bars.")
+        bind_tooltip(self.cbb_error_bar_type, "Dispersion or confidence calculation for error bars.")
         eb_ctrl_row.addWidget(self.cbb_error_bar_type)
 
         eb_ctrl_row.addSpacing(16)
-        lbl_cap = QLabel("Cap size:")
-        lbl_cap.setToolTip("Width of horizontal crossbars at error bar endpoints in points (pt).")
+        lbl_cap = QLabel()
+        bind_text(lbl_cap, "Cap size:")
+        bind_tooltip(lbl_cap, "Width of horizontal crossbars at error bar endpoints in points (pt).")
         eb_ctrl_row.addWidget(lbl_cap)
         self.spin_error_bar_capsize = QDoubleSpinBox()
         self.spin_error_bar_capsize.setRange(0.0, 20.0)
@@ -120,7 +131,7 @@ class TabPlotStyles(QWidget):
         self.spin_error_bar_capsize.setSingleStep(0.5)
         self.spin_error_bar_capsize.setValue(3.0)
         self.spin_error_bar_capsize.setMaximumWidth(70)
-        self.spin_error_bar_capsize.setToolTip("Width of horizontal crossbars at error bar endpoints in points (pt).")
+        bind_tooltip(self.spin_error_bar_capsize, "Width of horizontal crossbars at error bar endpoints in points (pt).")
         eb_ctrl_row.addWidget(self.spin_error_bar_capsize)
 
         eb_ctrl_row.addStretch()
@@ -128,38 +139,45 @@ class TabPlotStyles(QWidget):
         layout.addWidget(self.grp_error_bars)
 
         # ───── Trendline Fitting (trendline style only) ─────
-        self._trendline_group = QGroupBox("Trendline Fitting:")
+        self._trendline_group = QGroupBox()
+        bind_title(self._trendline_group, "Trendline Fitting:")
         tl_layout = QVBoxLayout(self._trendline_group)
         tl_layout.setContentsMargins(8, 8, 8, 8)
         tl_layout.setSpacing(6)
 
         order_row = QHBoxLayout()
-        lbl_ord = QLabel("Polynomial order:")
-        lbl_ord.setToolTip("Degree of polynomial fit (1 = Linear, 2 = Quadratic, etc.).")
+        lbl_ord = QLabel()
+        bind_text(lbl_ord, "Polynomial order:")
+        bind_tooltip(lbl_ord, "Degree of polynomial fit (1 = Linear, 2 = Quadratic, etc.).")
         order_row.addWidget(lbl_ord)
         self._spin_order = QSpinBox()
         self._spin_order.setRange(1, 10)
         self._spin_order.setValue(1)
         self._spin_order.setMaximumWidth(60)
-        self._spin_order.setToolTip("Degree of polynomial fit (1 = Linear, 2 = Quadratic, etc.).")
+        bind_tooltip(self._spin_order, "Degree of polynomial fit (1 = Linear, 2 = Quadratic, etc.).")
         order_row.addWidget(self._spin_order)
-        order_row.addWidget(QLabel("<i>(Apply to recompute equations)</i>"))
+        lbl_recompute = QLabel()
+        bind_text(lbl_recompute, "<i>(Apply to recompute equations)</i>")
+        order_row.addWidget(lbl_recompute)
         order_row.addStretch()
         tl_layout.addLayout(order_row)
 
-        self._anchor_grp = QGroupBox("Anchor point")
+        self._anchor_grp = QGroupBox()
+        bind_title(self._anchor_grp, "Anchor point")
         self._anchor_grp.setCheckable(True)
         self._anchor_grp.setChecked(False)
-        self._anchor_grp.setToolTip("Force polynomial fitted curve to pass through a specific fixed coordinate.")
+        bind_tooltip(self._anchor_grp, "Force polynomial fitted curve to pass through a specific fixed coordinate.")
         anchor_layout = QVBoxLayout(self._anchor_grp)
         anchor_layout.setContentsMargins(6, 6, 6, 6)
         anchor_layout.setSpacing(6)
 
-        self._rb_origin = QRadioButton("Through origin (0, 0)")
+        self._rb_origin = QRadioButton()
+        bind_text(self._rb_origin, "Through origin (0, 0)")
         self._rb_origin.setChecked(True)
-        self._rb_origin.setToolTip("Force trendline curve through (0, 0).")
-        self._rb_custom = QRadioButton("Custom point:")
-        self._rb_custom.setToolTip("Force trendline curve through custom (X₀, Y₀).")
+        bind_tooltip(self._rb_origin, "Force trendline curve through (0, 0).")
+        self._rb_custom = QRadioButton()
+        bind_text(self._rb_custom, "Custom point:")
+        bind_tooltip(self._rb_custom, "Force trendline curve through custom (X₀, Y₀).")
         anchor_layout.addWidget(self._rb_origin)
 
         custom_row = QHBoxLayout()
@@ -169,14 +187,14 @@ class TabPlotStyles(QWidget):
         self._spin_ax.setRange(-999999, 999999)
         self._spin_ax.setValue(0.0)
         self._spin_ax.setMaximumWidth(90)
-        self._spin_ax.setToolTip("Fixed X anchor coordinate.")
+        bind_tooltip(self._spin_ax, "Fixed X anchor coordinate.")
         custom_row.addWidget(self._spin_ax)
         custom_row.addWidget(QLabel("Y₀:"))
         self._spin_ay = QDoubleSpinBox()
         self._spin_ay.setRange(-999999, 999999)
         self._spin_ay.setValue(0.0)
         self._spin_ay.setMaximumWidth(90)
-        self._spin_ay.setToolTip("Fixed Y anchor coordinate.")
+        bind_tooltip(self._spin_ay, "Fixed Y anchor coordinate.")
         custom_row.addWidget(self._spin_ay)
         custom_row.addStretch()
         anchor_layout.addLayout(custom_row)
@@ -188,18 +206,21 @@ class TabPlotStyles(QWidget):
         tl_layout.addWidget(self._anchor_grp)
 
         eq_header_row = QHBoxLayout()
-        eq_header_row.addWidget(QLabel("Fit Equation(s):"))
-        self._btn_copy_eq = QPushButton("Copy")
+        lbl_eq = QLabel()
+        bind_text(lbl_eq, "Fit Equation(s):")
+        eq_header_row.addWidget(lbl_eq)
+        self._btn_copy_eq = QPushButton()
+        bind_text(self._btn_copy_eq, "Copy")
         self._btn_copy_eq.setIcon(Icons.copy())
         self._btn_copy_eq.setMaximumWidth(80)
-        self._btn_copy_eq.setToolTip("Copy fit equations and R² coefficients to clipboard.")
+        bind_tooltip(self._btn_copy_eq, "Copy fit equations and R² coefficients to clipboard.")
         self._btn_copy_eq.clicked.connect(self._copy_equations)
         eq_header_row.addStretch()
         eq_header_row.addWidget(self._btn_copy_eq)
         tl_layout.addLayout(eq_header_row)
 
         self._eq_table = QTableWidget(0, 3)
-        self._eq_table.setHorizontalHeaderLabels(["Group", "Equation", "R²"])
+        bind_header_labels(self._eq_table, ["Group", "Equation", "R²"])
         self._eq_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self._eq_table.setMinimumHeight(90)
         tl_layout.addWidget(self._eq_table)
@@ -207,37 +228,43 @@ class TabPlotStyles(QWidget):
         layout.addWidget(self._trendline_group)
 
         # ───── Histogram Settings (histogram style only) ─────
-        self._histogram_group = QGroupBox("Histogram Settings:")
+        self._histogram_group = QGroupBox()
+        bind_title(self._histogram_group, "Histogram Settings:")
         hist_layout = QVBoxLayout(self._histogram_group)
         hist_layout.setContentsMargins(8, 8, 8, 8)
         hist_layout.setSpacing(6)
 
         bins_row = QHBoxLayout()
-        lbl_bins = QLabel("Bins count:")
-        lbl_bins.setToolTip("Number of equal-width bins used to partition the data range.")
+        lbl_bins = QLabel()
+        bind_text(lbl_bins, "Bins count:")
+        bind_tooltip(lbl_bins, "Number of equal-width bins used to partition the data range.")
         bins_row.addWidget(lbl_bins)
         self._spin_bins = QSpinBox()
         self._spin_bins.setRange(2, 500)
         self._spin_bins.setSingleStep(10)
         self._spin_bins.setValue(20)
         self._spin_bins.setMaximumWidth(80)
-        self._spin_bins.setToolTip("Number of equal-width bins used to partition the data range.")
+        bind_tooltip(self._spin_bins, "Number of equal-width bins used to partition the data range.")
         bins_row.addWidget(self._spin_bins)
         bins_row.addStretch()
         hist_layout.addLayout(bins_row)
 
-        self._cb_kde = QCheckBox("Overlay KDE density curve")
-        self._cb_kde.setToolTip("Plot a smooth Gaussian Kernel Density Estimate curve alongside bars.")
+        self._cb_kde = QCheckBox()
+        bind_text(self._cb_kde, "Overlay KDE density curve")
+        bind_tooltip(self._cb_kde, "Plot a smooth Gaussian Kernel Density Estimate curve alongside bars.")
         hist_layout.addWidget(self._cb_kde)
 
         step_row = QHBoxLayout()
-        lbl_fill = QLabel("Fill style:")
-        lbl_fill.setToolTip("Bar appearance: solid filled bars or outline step style.")
+        lbl_fill = QLabel()
+        bind_text(lbl_fill, "Fill style:")
+        bind_tooltip(lbl_fill, "Bar appearance: solid filled bars or outline step style.")
         step_row.addWidget(lbl_fill)
-        self._rb_filled = QRadioButton("Filled")
-        self._rb_filled.setToolTip("Render histogram with solid filled bars.")
-        self._rb_step = QRadioButton("Step (outline)")
-        self._rb_step.setToolTip("Render histogram with outline step boundary.")
+        self._rb_filled = QRadioButton()
+        bind_text(self._rb_filled, "Filled")
+        bind_tooltip(self._rb_filled, "Render histogram with solid filled bars.")
+        self._rb_step = QRadioButton()
+        bind_text(self._rb_step, "Step (outline)")
+        bind_tooltip(self._rb_step, "Render histogram with outline step boundary.")
         self._rb_filled.setChecked(True)
         step_row.addWidget(self._rb_filled)
         step_row.addWidget(self._rb_step)
@@ -246,6 +273,7 @@ class TabPlotStyles(QWidget):
 
         layout.addWidget(self._histogram_group)
         layout.addStretch()
+        on_language_changed(self, self._retranslate_error_bar_types)
 
     def _refresh_equation_table(self) -> None:
         equations = getattr(self.graph_widget, "trendline_equations", [])
@@ -260,10 +288,33 @@ class TabPlotStyles(QWidget):
         equations = getattr(self.graph_widget, "trendline_equations", [])
         if not equations:
             return
-        lines = ["Group\tEquation\tR²"]
+        lines = [f"{tr('Group')}\t{tr('Equation')}\tR²"]
         for entry in equations:
             lines.append(f"{entry.get('label', '')}\t{entry.get('equation', '')}\t{entry.get('r2', '')}")
         QApplication.clipboard().setText("\n".join(lines))
+
+    def _retranslate_error_bar_types(self) -> None:
+        style = getattr(self.graph_widget, "plot_style", "")
+        if style not in _ERROR_BAR_STYLES:
+            return
+        current_value = self.cbb_error_bar_type.currentData() if self.cbb_error_bar_type.count() else None
+        is_bar = (style == "bar")
+        labels = [
+            (tr("Std. Dev."), "sd"),
+            (tr("Std. Error"), "sem"),
+            (tr("95% CI"), "ci95"),
+        ]
+        if not is_bar:
+            labels = [(tr("None"), "none")] + labels
+        self.cbb_error_bar_type.blockSignals(True)
+        try:
+            self.cbb_error_bar_type.clear()
+            for text, value in labels:
+                self.cbb_error_bar_type.addItem(text, value)
+            idx = self.cbb_error_bar_type.findData(current_value)
+            self.cbb_error_bar_type.setCurrentIndex(idx if idx >= 0 else 0)
+        finally:
+            self.cbb_error_bar_type.blockSignals(False)
 
     def _load_error_bar_settings(self) -> None:
         style = getattr(self.graph_widget, "plot_style", "")
@@ -275,19 +326,27 @@ class TabPlotStyles(QWidget):
         self._cb_error_bar.setVisible(is_bar)
         self._cb_error_bar.setChecked(getattr(self.graph_widget, "show_bar_plot_error_bar", True))
 
-        labels = _ERROR_BAR_LABELS_BAR if is_bar else _ERROR_BAR_LABELS_POINT_LINE
+        labels = [
+            (tr("Std. Dev."), "sd"),
+            (tr("Std. Error"), "sem"),
+            (tr("95% CI"), "ci95"),
+        ]
+        if not is_bar:
+            labels = [(tr("None"), "none")] + labels
         current_value = (
             getattr(self.graph_widget, "bar_error_bar_type", "sd") if is_bar
             else getattr(self.graph_widget, "error_bar_type", "ci95")
         )
 
         self.cbb_error_bar_type.blockSignals(True)
-        self.cbb_error_bar_type.clear()
-        for text, value in labels:
-            self.cbb_error_bar_type.addItem(text, value)
-        idx = self.cbb_error_bar_type.findData(current_value)
-        self.cbb_error_bar_type.setCurrentIndex(idx if idx >= 0 else 0)
-        self.cbb_error_bar_type.blockSignals(False)
+        try:
+            self.cbb_error_bar_type.clear()
+            for text, value in labels:
+                self.cbb_error_bar_type.addItem(text, value)
+            idx = self.cbb_error_bar_type.findData(current_value)
+            self.cbb_error_bar_type.setCurrentIndex(idx if idx >= 0 else 0)
+        finally:
+            self.cbb_error_bar_type.blockSignals(False)
 
         self.spin_error_bar_capsize.setValue(getattr(self.graph_widget, "error_bar_capsize", 3.0))
 

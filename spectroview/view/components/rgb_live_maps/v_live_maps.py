@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview import DEFAULT_COLORS
+from spectroview.i18n import bind_text, bind_tooltip, on_language_changed, tr
 from spectroview.model.spectra.spectral_parameters import (
     SELECTOR_BLUE,
     SELECTOR_GREEN,
@@ -92,6 +93,7 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
         self._current_theme = self._view_options["plot_theme"]
         self._init_ui()
         self.set_mode(mode)
+        on_language_changed(self, self._retranslate_live_maps)
 
     def _init_ui(self):
         main_layout = QVBoxLayout(self)
@@ -119,13 +121,14 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
         switcher_layout.setContentsMargins(0, 0, 0, 0)
         switcher_layout.setSpacing(4)
 
-        lbl_2d = QLabel("2D Map:", self.switcher_container)
-        lbl_2d.setStyleSheet("font-size: 11px; font-weight: bold;")
-        switcher_layout.addWidget(lbl_2d)
+        self.lbl_2d = QLabel(self.switcher_container)
+        bind_text(self.lbl_2d, "2D Map:")
+        self.lbl_2d.setStyleSheet("font-size: 11px; font-weight: bold;")
+        switcher_layout.addWidget(self.lbl_2d)
 
         self.btn_prev_2d = QPushButton("◀", self.switcher_container)
         self.btn_prev_2d.setFixedSize(22, 22)
-        self.btn_prev_2d.setToolTip("Previous selected 2D map")
+        bind_tooltip(self.btn_prev_2d, "Previous selected 2D map")
         self.btn_prev_2d.clicked.connect(lambda: self._step_2d_candidate(-1))
         switcher_layout.addWidget(self.btn_prev_2d)
 
@@ -137,7 +140,7 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
 
         self.btn_next_2d = QPushButton("▶", self.switcher_container)
         self.btn_next_2d.setFixedSize(22, 22)
-        self.btn_next_2d.setToolTip("Next selected 2D map")
+        bind_tooltip(self.btn_next_2d, "Next selected 2D map")
         self.btn_next_2d.clicked.connect(lambda: self._step_2d_candidate(1))
         switcher_layout.addWidget(self.btn_next_2d)
 
@@ -172,8 +175,9 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
         self.btn_legend.setFixedSize(26, 26)
         self.btn_legend.setCheckable(True)
         self.btn_legend.setChecked(self._view_options["show_legend"])
-        self.btn_legend.setToolTip(
-            "Show / Hide plot legend\n(Double-click a canvas legend box to edit labels)"
+        bind_tooltip(
+            self.btn_legend,
+            "Show / Hide plot legend\n(Double-click a canvas legend box to edit labels)",
         )
         self.btn_legend.toggled.connect(self._on_legend_toggled)
         opts_layout.addWidget(self.btn_legend)
@@ -184,7 +188,7 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
         self.btn_options.setIconSize(QSize(16, 16))
         self.btn_options.setFixedSize(26, 26)
         self.btn_options.setPopupMode(QToolButton.InstantPopup)
-        self.btn_options.setToolTip("More view options")
+        bind_tooltip(self.btn_options, "More view options")
         self.options_menu = self._create_options_menu()
         self.btn_options.setMenu(self.options_menu)
         opts_layout.addWidget(self.btn_options)
@@ -301,7 +305,7 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
             return [
                 {
                     "key": str(e.get("name", f"Map {idx + 1}")),
-                    "default_label": str(e.get("name", f"Map {idx + 1}")),
+                    "default_label": str(e.get("name") or tr("Map {index}", index=idx + 1)),
                     "auto_color": DEFAULT_COLORS[idx % len(DEFAULT_COLORS)],
                 }
                 for idx, e in enumerate(self._last_raw_entries)
@@ -310,10 +314,9 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
         for cid in SELECTOR_KEYS:
             panel = self.panels.get(cid)
             if panel is not None and self._active_states.get(cid, False):
-                param = panel.get_selected_parameter()
                 entries.append({
                     "key": cid,
-                    "default_label": f"{panel.color_name}: {param}",
+                    "default_label": f"{panel.color_display_name()}: {panel.get_selected_parameter_display()}",
                     "auto_color": panel.color_hex,
                 })
         if not entries:
@@ -321,7 +324,7 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
                 panel = self.panels[cid]
                 entries.append({
                     "key": cid,
-                    "default_label": f"{panel.color_name}: {panel.get_selected_parameter()}",
+                    "default_label": f"{panel.color_display_name()}: {panel.get_selected_parameter_display()}",
                     "auto_color": panel.color_hex,
                 })
         return entries
@@ -396,6 +399,30 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
                 panel.ax.set_ylim(g_lo, g_hi)
                 panel.canvas.draw_idle()
 
+    def _retranslate_live_maps(self, _lang: str = ""):
+        """Refresh mode-dependent strings on active language changes."""
+        self._update_placeholder_text()
+
+    def _update_placeholder_text(self):
+        """Update empty-state instructional text for the active mode and language."""
+        if self.mode == "spectra":
+            self.lbl_placeholder.setText(
+                tr(
+                    "Live Spectral Mapping\n\n"
+                    "Activate one or more spectral range selectors (Red, Blue, Green)\n"
+                    "in the Spectra viewer right panel to display live parameter variation graphs."
+                )
+            )
+        else:
+            self.lbl_placeholder.setText(
+                tr(
+                    "Live Spectral Mapping\n\n"
+                    "Activate one or more spectral range selectors (Red, Blue, Green)\n"
+                    "in the Spectra viewer right panel to display live 2D heatmaps\n"
+                    "(or line plots for 1D profile maps)."
+                )
+            )
+
     def set_mode(self, mode: str):
         """Configure tab for 'map' (2D spatial heatmaps) or 'spectra' (1D variation graphs) mode."""
         self.mode = mode
@@ -403,19 +430,7 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
             self._spatial_sites = None
             self._selected_points = []
             self._selected_map_name = None
-        if mode == "spectra":
-            self.lbl_placeholder.setText(
-                "Live Spectral Mapping\n\n"
-                "Activate one or more spectral range selectors (Red, Blue, Green)\n"
-                "in the Spectra viewer right panel to display live parameter variation graphs."
-            )
-        else:
-            self.lbl_placeholder.setText(
-                "Live Spectral Mapping\n\n"
-                "Activate one or more spectral range selectors (Red, Blue, Green)\n"
-                "in the Spectra viewer right panel to display live 2D heatmaps\n"
-                "(or line plots for 1D profile maps)."
-            )
+        self._update_placeholder_text()
         for panel in self.panels.values():
             panel.set_mode(mode)
             if mode != "map":
@@ -591,7 +606,7 @@ class VLiveMaps(LiveMapsOptionsMenuMixin, QWidget):
             panel.update_series(
                 values, None, status_msg, theme=plot_theme,
                 x_values=positions if positions is not None else np.array([]),
-                x_label=f"{axis_label or 'Position'} (mm)",
+                x_label=f"{axis_label} (mm)" if axis_label else tr("Position (mm)"),
             )
         self._sync_shared_y()
 

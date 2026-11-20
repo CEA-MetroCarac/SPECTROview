@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview.view.components.common.customized_widgets import CustomizedPalette
+from spectroview.i18n import tr
 from spectroview.view.components.spectra_viewer.common import (
     LEGEND_EDITOR_MAX_ROWS,
     SPECTRA_COLOR_PALETTES,
@@ -73,25 +74,30 @@ class SpectrumColorComboBox(QComboBox):
         self.clear()
         self.addItem(
             self._color_icon(self._auto_color),
-            "Automatic",
+            tr("Automatic"),
             None,
         )
         self.setItemData(
             0,
-            f"Assigned from the selected palette ({self._auto_color})",
+            tr(
+                "Assigned from the selected palette ({color})",
+                color=self._auto_color,
+            ),
             Qt.ToolTipRole,
         )
 
         if selected and selected not in available:
             self.addItem(
-                self._color_icon(selected), f"{selected} (current)", selected
+                self._color_icon(selected),
+                tr("{color} (current)", color=selected),
+                selected,
             )
 
         for color in available:
             self.addItem(self._color_icon(color), color, color)
 
         self.insertSeparator(self.count())
-        self.addItem("More colors…", self._MORE_COLORS)
+        self.addItem(tr("More colors…"), self._MORE_COLORS)
 
         self._select_color(selected)
         self._last_selected_color = selected
@@ -122,7 +128,7 @@ class SpectrumColorComboBox(QComboBox):
 
         initial = self._last_selected_color or self._auto_color
         color = QColorDialog.getColor(
-            QColor(initial), self, "Choose spectrum color"
+            QColor(initial), self, tr("Choose spectrum color")
         )
         if color.isValid():
             selected = color.name()
@@ -155,7 +161,7 @@ class SpectraLegendEditorDialog(QDialog):
         parent=None,
     ):
         super().__init__(parent)
-        self.setWindowTitle("Edit spectrum legend")
+        self.setWindowTitle(tr("Edit spectrum legend"))
         self.setModal(True)
 
         self._entries = [dict(entry) for entry in entries]
@@ -171,31 +177,32 @@ class SpectraLegendEditorDialog(QDialog):
 
         layout = QVBoxLayout(self)
 
-        settings_group = QGroupBox("Legend settings")
+        settings_group = QGroupBox(tr("Legend settings"))
         settings_layout = QFormLayout(settings_group)
         self.palette_combo = CustomizedPalette(
             palette_list=palette_names,
             custom_palettes=custom_palettes,
         )
         self.palette_combo.setCurrentText(current_palette)
-        settings_layout.addRow("Color palette:", self.palette_combo)
+        settings_layout.addRow(tr("Color palette:"), self.palette_combo)
 
         self.max_items_spin = QSpinBox()
         self.max_items_spin.setRange(1, 1000)
         self.max_items_spin.setValue(max_legend_items)
         self.max_items_spin.setToolTip(
-            "Maximum number of entries displayed in the plot legend"
+            tr("Maximum number of entries displayed in the plot legend")
         )
-        settings_layout.addRow("Max legend items:", self.max_items_spin)
+        settings_layout.addRow(tr("Max legend items:"), self.max_items_spin)
         layout.addWidget(settings_group)
 
         if self._total_entry_count > len(self._entries):
-            entries_title = (
-                f"Plotted spectra (showing {len(self._entries)} of "
-                f"{self._total_entry_count})"
+            entries_title = tr(
+                "Plotted spectra (showing {shown} of {total})",
+                shown=len(self._entries),
+                total=self._total_entry_count,
             )
         else:
-            entries_title = f"Plotted spectra ({len(self._entries)})"
+            entries_title = tr("Plotted spectra ({count})", count=len(self._entries))
         entries_group = QGroupBox(entries_title)
         entries_layout = QVBoxLayout(entries_group)
         if truncation_message:
@@ -205,7 +212,9 @@ class SpectraLegendEditorDialog(QDialog):
             entries_layout.addWidget(truncation_label)
         if self._entries:
             self.table = QTableWidget(len(self._entries), 3)
-            self.table.setHorizontalHeaderLabels(["Spectrum", "Color", "Label"])
+            self.table.setHorizontalHeaderLabels(
+                [tr("Spectrum"), tr("Color"), tr("Label")]
+            )
             self.table.verticalHeader().setVisible(False)
             self.table.setAlternatingRowColors(True)
             self.table.setSelectionMode(QAbstractItemView.NoSelection)
@@ -226,7 +235,9 @@ class SpectraLegendEditorDialog(QDialog):
 
                 label_edit = QLineEdit(entry["display_label"])
                 label_edit.setClearButtonEnabled(True)
-                label_edit.setToolTip("Leave empty to restore the spectrum filename")
+                label_edit.setToolTip(
+                    tr("Leave empty to restore the spectrum filename")
+                )
                 self.label_edits.append(label_edit)
                 self.table.setCellWidget(row, 2, label_edit)
                 self.table.setRowHeight(row, 28)
@@ -234,7 +245,7 @@ class SpectraLegendEditorDialog(QDialog):
             entries_layout.addWidget(self.table)
         else:
             self.table = QTableWidget(0, 3)
-            entries_layout.addWidget(QLabel("No spectra are currently plotted."))
+            entries_layout.addWidget(QLabel(tr("No spectra are currently plotted.")))
         layout.addWidget(entries_group, 1)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -455,7 +466,7 @@ class SpectraLegendMixin:
             name = (
                 str(fnames[index])
                 if index < len(fnames) and fnames[index]
-                else f"Spectrum {index + 1}"
+                else tr("Spectrum {index}", index=index + 1)
             )
             display_label = (
                 str(labels[index])
@@ -480,10 +491,10 @@ class SpectraLegendMixin:
         entries = self._legend_editor_entries()
         truncation_message = ""
         if len(entries) < spectrum_count:
-            truncation_message = (
-                f"Performance safeguard: showing the first "
-                f"{len(entries)} of {spectrum_count} plotted spectra. "
-                "Narrow the selection to edit spectra outside this batch."
+            truncation_message = tr(
+                "Performance safeguard: showing the first {shown} of {total} plotted spectra. Narrow the selection to edit spectra outside this batch.",
+                shown=len(entries),
+                total=spectrum_count,
             )
         return SpectraLegendEditorDialog(
             entries=entries,
@@ -554,7 +565,7 @@ class SpectraLegendMixin:
                 new_label = (
                     self._tensor_data.get("fnames", [])[index]
                     if index < len(self._tensor_data.get("fnames", []))
-                    else f"Spectrum {index + 1}"
+                    else tr("Spectrum {index}", index=index + 1)
                 )
             if new_label != edited.get("original_display_label"):
                 labels[index] = new_label

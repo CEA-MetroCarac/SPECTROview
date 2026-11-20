@@ -8,6 +8,7 @@ from matplotlib.ticker import AutoLocator, MaxNLocator
 import numpy as np
 
 from spectroview import DEFAULT_COLORS
+from spectroview.i18n import tr
 from spectroview.view.components.rgb_live_maps.common import (
     _get_cached_style_dict,
     _normalize_plot_theme,
@@ -319,7 +320,7 @@ class LiveMap1DMixin:
         if has_content is None:
             has_content = bool(self.img is not None or self.lines)
         want_label = bool(self._view_options.get("show_figure_label", False)) and bool(has_content)
-        target = f"{self.color_name}: {self.cbb_param.currentText()}" if want_label else ""
+        target = f"{self.color_display_name()}: {self.cbb_param.currentText()}" if want_label else ""
         if self.ax.get_title() != target:
             text_fs = max(6, int(self._view_options.get("text_fontsize", 10)))
             self.ax.set_title(target, fontsize=text_fs, pad=4)
@@ -383,7 +384,8 @@ class LiveMap1DMixin:
         self._current_theme = active_theme
 
         param_name = self.cbb_param.currentText()
-        title_text = f"{self.color_name}: {param_name}"
+        title_text = f"{self.color_display_name()}: {param_name}"
+        resolved_xlabel = tr("Spectrum #") if x_label == "Spectrum #" else x_label
         custom_labels = self._view_options.get("custom_labels", {})
         custom_colors = self._view_options.get("custom_colors", {})
         curve_label = custom_labels.get(self.color_id) or title_text
@@ -418,8 +420,8 @@ class LiveMap1DMixin:
                 is_index_axis=is_index_axis,
             )
             self._apply_grid_state(show_grid, active_theme, force=False)
-            if self.ax.get_xlabel() != x_label:
-                self.ax.set_xlabel(x_label)
+            if self.ax.get_xlabel() != resolved_xlabel:
+                self.ax.set_xlabel(resolved_xlabel)
             if self.ax.get_ylabel() != param_name:
                 self.ax.set_ylabel(param_name)
             self._sync_title(has_content=True)
@@ -438,7 +440,7 @@ class LiveMap1DMixin:
         if not has_valid:
             self._valid_y_bounds = None
             self._valid_pos_y_bounds = None
-            msg = status_msg or ("No spectra selected" if is_index_axis else "No profile data available")
+            msg = status_msg or (tr("No spectra selected") if is_index_axis else tr("No profile data available"))
             self.ax.text(
                 0.5, 0.5, msg,
                 ha="center", va="center", transform=self.ax.transAxes,
@@ -467,7 +469,7 @@ class LiveMap1DMixin:
             is_index_axis=is_index_axis,
         )
         self._apply_grid_state(show_grid, active_theme)
-        self.ax.set_xlabel(x_label)
+        self.ax.set_xlabel(resolved_xlabel)
         self.ax.set_ylabel(param_name)
         self._sync_title(has_content=True)
         self._apply_figure_theme(active_theme)
@@ -503,7 +505,11 @@ class LiveMap1DMixin:
         x_label = (
             shared_x_label
             if shared_x_label.endswith("(mm)")
-            else f"{shared_x_label or 'Position'} (mm)"
+            else (
+                f"{shared_x_label} (mm)"
+                if shared_x_label
+                else tr("Position (mm)")
+            )
         )
 
         # Compute finite bounds across normalized curves without mutating cached raw entries
@@ -545,7 +551,7 @@ class LiveMap1DMixin:
         ):
             self._sync_1d_controls_visibility()
             for idx, (ln, (entry, px, vy)) in enumerate(zip(self.lines, plotted_curves)):
-                key = entry.get("name", f"Map {idx + 1}")
+                key = entry.get("name") or tr("Map {index}", index=idx + 1)
                 auto_color = (
                     self.color_hex
                     if len(plotted_curves) == 1
@@ -585,7 +591,7 @@ class LiveMap1DMixin:
         if not has_valid:
             self._valid_y_bounds = None
             self._valid_pos_y_bounds = None
-            msg = status_msg or "No valid profile data within selected range"
+            msg = status_msg or tr("No valid profile data within selected range")
             self.ax.text(
                 0.5, 0.5, msg,
                 ha="center", va="center", transform=self.ax.transAxes,
@@ -598,7 +604,7 @@ class LiveMap1DMixin:
 
         new_lines = []
         for idx, (entry, px, vy) in enumerate(plotted_curves):
-            key = entry.get("name", f"Map {idx + 1}")
+            key = entry.get("name") or tr("Map {index}", index=idx + 1)
             auto_color = (
                 self.color_hex
                 if len(plotted_curves) == 1

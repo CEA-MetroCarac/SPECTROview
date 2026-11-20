@@ -21,8 +21,15 @@ from PySide6.QtWidgets import (
 from spectroview import (
     PLOT_POLICY_DARK,
     PLOT_POLICY_LIGHT,
-    X_AXIS_UNIT,
-    Y_AXIS_UNIT,
+)
+from spectroview.i18n import (
+    bind_combo_items,
+    bind_placeholder,
+    bind_text,
+    bind_tooltip,
+    combo_data_or_text,
+    set_combo_by_data_or_text,
+    tr,
 )
 from spectroview.view.components.common.customized_widgets import CustomizedPalette
 from spectroview.view.components.spectra_viewer.common import (
@@ -44,7 +51,9 @@ class SpectraOptionsMenuMixin:
         row_layout = QHBoxLayout(row_widget)
         row_layout.setContentsMargins(2, 1, 2, 1)
         row_layout.setSpacing(6)
-        row_layout.addWidget(QLabel(label, row_widget))
+        lbl = QLabel(row_widget)
+        bind_text(lbl, label)
+        row_layout.addWidget(lbl)
         row_layout.addWidget(widget, stretch=1)
         return row_widget
 
@@ -66,11 +75,13 @@ class SpectraOptionsMenuMixin:
         on_toggled,
     ):
         """Create a compact QCheckBox synchronized with a programmatic QAction."""
-        act = QAction(text, menu)
+        act = QAction(menu)
+        bind_text(act, text)
         act.setCheckable(True)
         act.setChecked(bool(checked))
 
-        chk = QCheckBox(text, parent_widget)
+        chk = QCheckBox(parent_widget)
+        bind_text(chk, text)
         chk.setChecked(bool(checked))
 
         def _on_act_toggled(val: bool):
@@ -116,28 +127,52 @@ class SpectraOptionsMenuMixin:
 
         # ── Left Column: Theme, Axes, Plot Style, Palette, Line/Dot Sizes & Copy Options ──
         self.cbb_theme = QComboBox(left_col)
-        self.cbb_theme.addItems(["Light Mode", "Dark Mode"])
+        bind_combo_items(
+            self.cbb_theme,
+            [("Light Mode", "Light Mode"), ("Dark Mode", "Dark Mode")],
+        )
         self.cbb_theme.currentIndexChanged.connect(self._apply_plot_style)
         left_layout.addWidget(
             self._wrap_menu_row(left_col, "Plot Theme:", self.cbb_theme)
         )
 
         self.cbb_xaxis = QComboBox(left_col)
-        self.cbb_xaxis.addItems(X_AXIS_UNIT)
+        bind_combo_items(
+            self.cbb_xaxis,
+            [
+                ("Wavenumber (cm$^{-1}$)", "Wavenumber (cm$^{-1}$)"),
+                ("Wavelength (nm)", "Wavelength (nm)"),
+                ("Emission energy (eV)", "Emission energy (eV)"),
+                ("Binding energy (eV)", "Binding energy (eV)"),
+                ("Energy (keV)", "Energy (keV)"),
+                ("Frequency (GHz)", "Frequency (GHz)"),
+                (r"$2\theta$ (°)", r"$2\theta$ (°)"),
+                ("Time (ns)", "Time (ns)"),
+            ],
+        )
         self.cbb_xaxis.currentIndexChanged.connect(self._emit_view_options)
         left_layout.addWidget(
             self._wrap_menu_row(left_col, "X-axis:", self.cbb_xaxis)
         )
 
         self.cbb_yaxis = QComboBox(left_col)
-        self.cbb_yaxis.addItems(Y_AXIS_UNIT)
+        bind_combo_items(
+            self.cbb_yaxis,
+            [
+                ("Intensity (a.u.)", "Intensity (a.u.)"),
+                ("Intensity (a.u./s)", "Intensity (a.u./s)"),
+            ],
+        )
         self.cbb_yaxis.currentIndexChanged.connect(self._emit_view_options)
         left_layout.addWidget(
             self._wrap_menu_row(left_col, "Y-axis:", self.cbb_yaxis)
         )
 
         self.cbb_yscale = QComboBox(left_col)
-        self.cbb_yscale.addItems(["Linear", "Log"])
+        bind_combo_items(
+            self.cbb_yscale,
+            [("Linear", "Linear"), ("Log", "Log")],
+        )
         self.cbb_yscale.currentIndexChanged.connect(self._emit_view_options)
         left_layout.addWidget(
             self._wrap_menu_row(left_col, "Y-scale:", self.cbb_yscale)
@@ -146,7 +181,10 @@ class SpectraOptionsMenuMixin:
         left_layout.addWidget(self._menu_h_separator(left_col))
 
         self.cbb_plotstyle = QComboBox(left_col)
-        self.cbb_plotstyle.addItems(["line", "dot"])
+        bind_combo_items(
+            self.cbb_plotstyle,
+            [("line", "line"), ("dot", "dot")],
+        )
         self.cbb_plotstyle.currentIndexChanged.connect(self._emit_view_options)
         left_layout.addWidget(
             self._wrap_menu_row(left_col, "Spectrum plot style:", self.cbb_plotstyle)
@@ -158,9 +196,10 @@ class SpectraOptionsMenuMixin:
             parent=left_col,
         )
         self.cbb_color_palette.setCurrentText("DEFAULT_COLORS")
-        self.cbb_color_palette.setToolTip(
+        bind_tooltip(
+            self.cbb_color_palette,
             "Choose colors for the selected spectrum series. Custom colors "
-            "set from the legend continue to take priority."
+            "set from the legend continue to take priority.",
         )
         self.cbb_color_palette.currentIndexChanged.connect(self._emit_view_options)
         left_layout.addWidget(
@@ -191,7 +230,9 @@ class SpectraOptionsMenuMixin:
         ratio_layout = QHBoxLayout(ratio_widget)
         ratio_layout.setContentsMargins(2, 1, 2, 1)
         ratio_layout.setSpacing(4)
-        ratio_layout.addWidget(QLabel("Copied figure size:", ratio_widget))
+        lbl_copy_size = QLabel(ratio_widget)
+        bind_text(lbl_copy_size, "Copied figure size:")
+        ratio_layout.addWidget(lbl_copy_size)
         ratio_layout.addStretch(1)
 
         self.width_entry = QLineEdit(ratio_widget)
@@ -208,7 +249,10 @@ class SpectraOptionsMenuMixin:
         left_layout.addWidget(ratio_widget)
 
         self.cbb_copy_theme = QComboBox(left_col)
-        self.cbb_copy_theme.addItems(["Light Mode", "Dark Mode"])
+        bind_combo_items(
+            self.cbb_copy_theme,
+            [("Light Mode", "Light Mode"), ("Dark Mode", "Dark Mode")],
+        )
         self.cbb_copy_theme.currentIndexChanged.connect(self._emit_view_options)
         left_layout.addWidget(
             self._wrap_menu_row(left_col, "Copied figure theme:", self.cbb_copy_theme)
@@ -291,10 +335,11 @@ class SpectraOptionsMenuMixin:
 
         # Colorbar sub-options (shown only when "Show colorbar instead of legend" is checked)
         self.cbb_colorbar_param = QComboBox(right_col)
-        self.cbb_colorbar_param.addItem("Index", None)
-        self.cbb_colorbar_param.setToolTip(
+        self.cbb_colorbar_param.addItem(tr("Index"), None)
+        bind_tooltip(
+            self.cbb_colorbar_param,
             "Colorbar parameter: choose parameter for the colorbar.\n"
-            "Index = spectrum order, or select a token parsed from filenames."
+            "Index = spectrum order, or select a token parsed from filenames.",
         )
         self.cbb_colorbar_param.currentIndexChanged.connect(
             self._on_colorbar_param_changed
@@ -305,11 +350,12 @@ class SpectraOptionsMenuMixin:
         right_layout.addWidget(self.row_colorbar_param)
 
         self.le_colorbar_label = QLineEdit(right_col)
-        self.le_colorbar_label.setPlaceholderText("Colorbar label")
-        self.le_colorbar_label.setToolTip(
+        bind_placeholder(self.le_colorbar_label, "Colorbar label")
+        bind_tooltip(
+            self.le_colorbar_label,
             "Custom label for the spectrum colorbar.\n"
             "Leave empty for the automatic token name.\n"
-            "Example: Temperature (°C)"
+            "Example: Temperature (°C)",
         )
         self.le_colorbar_label.textChanged.connect(self._on_heatmap_ylabel_changed)
         self.row_colorbar_label = self._wrap_menu_row(
@@ -341,12 +387,28 @@ class SpectraOptionsMenuMixin:
     # ─────────────────────────────────────────
     def get_options_state(self):
         """Get the complete state of all view options."""
+        cb_param = "Index"
+        if hasattr(self, "cbb_colorbar_param"):
+            cb_param = (
+                "Index"
+                if self.cbb_colorbar_param.currentData() is None
+                and self.cbb_colorbar_param.currentIndex() == 0
+                else self.cbb_colorbar_param.currentText()
+            )
+        hm_yaxis = "Index"
+        if hasattr(self, "cbb_heatmap_yaxis"):
+            hm_yaxis = (
+                "Index"
+                if self.cbb_heatmap_yaxis.currentData() is None
+                and self.cbb_heatmap_yaxis.currentIndex() == 0
+                else self.cbb_heatmap_yaxis.currentText()
+            )
         return {
-            "theme": self.cbb_theme.currentText() if hasattr(self, "cbb_theme") else "Light Mode",
-            "xaxis": self.cbb_xaxis.currentText() if hasattr(self, "cbb_xaxis") else "",
-            "yaxis": self.cbb_yaxis.currentText() if hasattr(self, "cbb_yaxis") else "",
-            "yscale": self.cbb_yscale.currentText() if hasattr(self, "cbb_yscale") else "Linear",
-            "plotstyle": self.cbb_plotstyle.currentText() if hasattr(self, "cbb_plotstyle") else "line",
+            "theme": combo_data_or_text(self.cbb_theme) if hasattr(self, "cbb_theme") else "Light Mode",
+            "xaxis": combo_data_or_text(self.cbb_xaxis) if hasattr(self, "cbb_xaxis") else "",
+            "yaxis": combo_data_or_text(self.cbb_yaxis) if hasattr(self, "cbb_yaxis") else "",
+            "yscale": combo_data_or_text(self.cbb_yscale) if hasattr(self, "cbb_yscale") else "Linear",
+            "plotstyle": combo_data_or_text(self.cbb_plotstyle) if hasattr(self, "cbb_plotstyle") else "line",
             "color_palette": self.cbb_color_palette.currentText() if hasattr(self, "cbb_color_palette") else "DEFAULT_COLORS",
             "lw": self.spin_lw.value() if hasattr(self, "spin_lw") else 0.75,
             "dotsize": self.spin_dotsize.value() if hasattr(self, "spin_dotsize") else 3.0,
@@ -361,14 +423,14 @@ class SpectraOptionsMenuMixin:
             "legend": self.btn_legend.isChecked() if hasattr(self, "btn_legend") else False,
             "legend_outside": self.act_legend_outside.isChecked() if hasattr(self, "act_legend_outside") else False,
             "legend_colorbar": self.act_legend_colorbar.isChecked() if hasattr(self, "act_legend_colorbar") else False,
-            "colorbar_param": self.cbb_colorbar_param.currentText() if hasattr(self, "cbb_colorbar_param") else "Index",
+            "colorbar_param": cb_param,
             "colorbar_label": self.le_colorbar_label.text() if hasattr(self, "le_colorbar_label") else "",
             "bestfit": self.btn_bestfit.isChecked() if hasattr(self, "btn_bestfit") else True,
             "max_legend_items": self.spin_max_legend_items.value() if hasattr(self, "spin_max_legend_items") else 15,
-            "copy_fig_theme": self.cbb_copy_theme.currentText() if hasattr(self, "cbb_copy_theme") else "Light Mode",
+            "copy_fig_theme": combo_data_or_text(self.cbb_copy_theme) if hasattr(self, "cbb_copy_theme") else "Light Mode",
             "heatmap": self.btn_heatmap.isChecked() if hasattr(self, "btn_heatmap") else False,
             "view_3d": self.btn_3d.isChecked() if hasattr(self, "btn_3d") else False,
-            "heatmap_yaxis": self.cbb_heatmap_yaxis.currentText() if hasattr(self, "cbb_heatmap_yaxis") else "Index",
+            "heatmap_yaxis": hm_yaxis,
             "heatmap_ylabel": self.le_heatmap_ylabel.text() if hasattr(self, "le_heatmap_ylabel") else "",
             "heatmap_interp": self.spin_heatmap_interp.value() if hasattr(self, "spin_heatmap_interp") else 300,
         }
@@ -394,11 +456,11 @@ class SpectraOptionsMenuMixin:
         theme_val = state.get("theme")
         if theme_val == "Soft Dark Mode":
             theme_val = "Dark Mode"
-        _update(self.cbb_theme, self.cbb_theme.setCurrentText, theme_val)
-        _update(self.cbb_xaxis, self.cbb_xaxis.setCurrentText, state.get("xaxis"))
-        _update(self.cbb_yaxis, self.cbb_yaxis.setCurrentText, state.get("yaxis"))
-        _update(self.cbb_yscale, self.cbb_yscale.setCurrentText, state.get("yscale"))
-        _update(self.cbb_plotstyle, self.cbb_plotstyle.setCurrentText, state.get("plotstyle"))
+        _update(self.cbb_theme, lambda v: set_combo_by_data_or_text(self.cbb_theme, v), theme_val)
+        _update(self.cbb_xaxis, lambda v: set_combo_by_data_or_text(self.cbb_xaxis, v), state.get("xaxis"))
+        _update(self.cbb_yaxis, lambda v: set_combo_by_data_or_text(self.cbb_yaxis, v), state.get("yaxis"))
+        _update(self.cbb_yscale, lambda v: set_combo_by_data_or_text(self.cbb_yscale, v), state.get("yscale"))
+        _update(self.cbb_plotstyle, lambda v: set_combo_by_data_or_text(self.cbb_plotstyle, v), state.get("plotstyle"))
         if hasattr(self, "cbb_color_palette"):
             _update(
                 self.cbb_color_palette,
@@ -444,15 +506,22 @@ class SpectraOptionsMenuMixin:
         if hasattr(self, "cbb_colorbar_param"):
             cb_param = state.get("colorbar_param", "Index")
             if cb_param:
-                if self.cbb_colorbar_param.findText(cb_param) < 0:
-                    self.cbb_colorbar_param.blockSignals(True)
-                    self.cbb_colorbar_param.addItem(cb_param, None)
-                    self.cbb_colorbar_param.blockSignals(False)
-                _update(
-                    self.cbb_colorbar_param,
-                    self.cbb_colorbar_param.setCurrentText,
-                    cb_param,
-                )
+                if cb_param in ("Index", tr("Index")) and self.cbb_colorbar_param.count() > 0:
+                    _update(
+                        self.cbb_colorbar_param,
+                        self.cbb_colorbar_param.setCurrentIndex,
+                        0,
+                    )
+                else:
+                    if self.cbb_colorbar_param.findText(cb_param) < 0:
+                        self.cbb_colorbar_param.blockSignals(True)
+                        self.cbb_colorbar_param.addItem(cb_param, None)
+                        self.cbb_colorbar_param.blockSignals(False)
+                    _update(
+                        self.cbb_colorbar_param,
+                        self.cbb_colorbar_param.setCurrentText,
+                        cb_param,
+                    )
             self._record_token_selection(
                 self.cbb_colorbar_param, self._colorbar_param_selection
             )
@@ -474,7 +543,7 @@ class SpectraOptionsMenuMixin:
         if hasattr(self, "cbb_copy_theme"):
             _update(
                 self.cbb_copy_theme,
-                self.cbb_copy_theme.setCurrentText,
+                lambda v: set_combo_by_data_or_text(self.cbb_copy_theme, v),
                 state.get("copy_fig_theme", "Light Mode"),
             )
         want_heatmap = bool(state.get("heatmap", False))
@@ -497,15 +566,22 @@ class SpectraOptionsMenuMixin:
         if hasattr(self, "cbb_heatmap_yaxis"):
             hm_yaxis = state.get("heatmap_yaxis", "Index")
             if hm_yaxis:
-                if self.cbb_heatmap_yaxis.findText(hm_yaxis) < 0:
-                    self.cbb_heatmap_yaxis.blockSignals(True)
-                    self.cbb_heatmap_yaxis.addItem(hm_yaxis, None)
-                    self.cbb_heatmap_yaxis.blockSignals(False)
-                _update(
-                    self.cbb_heatmap_yaxis,
-                    self.cbb_heatmap_yaxis.setCurrentText,
-                    hm_yaxis,
-                )
+                if hm_yaxis in ("Index", tr("Index")) and self.cbb_heatmap_yaxis.count() > 0:
+                    _update(
+                        self.cbb_heatmap_yaxis,
+                        self.cbb_heatmap_yaxis.setCurrentIndex,
+                        0,
+                    )
+                else:
+                    if self.cbb_heatmap_yaxis.findText(hm_yaxis) < 0:
+                        self.cbb_heatmap_yaxis.blockSignals(True)
+                        self.cbb_heatmap_yaxis.addItem(hm_yaxis, None)
+                        self.cbb_heatmap_yaxis.blockSignals(False)
+                    _update(
+                        self.cbb_heatmap_yaxis,
+                        self.cbb_heatmap_yaxis.setCurrentText,
+                        hm_yaxis,
+                    )
             self._record_token_selection(
                 self.cbb_heatmap_yaxis, self._heatmap_yaxis_selection
             )
@@ -562,7 +638,7 @@ class SpectraOptionsMenuMixin:
 
     def _apply_plot_style(self):
         self._has_applied_plot_style = True
-        style_name = self.cbb_theme.currentText()
+        style_name = combo_data_or_text(self.cbb_theme)
         if style_name == "Dark Mode":
             style_path = PLOT_POLICY_DARK
         else:

@@ -120,6 +120,14 @@ def extract_keys_from_sources(source_root: Path) -> ExtractedCatalog:
                     tip = _str_literal(node.args[3])
                     if tip:
                         extracted.add_string(tip, ctx)
+            elif name == "_wrap_menu_row" and len(node.args) >= 2:
+                lbl = _str_literal(node.args[1])
+                if lbl:
+                    extracted.add_string(lbl, ctx)
+            elif name == "_bind_menu_checkbox" and len(node.args) >= 3:
+                txt = _str_literal(node.args[2])
+                if txt:
+                    extracted.add_string(txt, ctx)
             elif name == "bind_tab_text" and len(node.args) >= 3:
                 src = _str_literal(node.args[2])
                 if src:

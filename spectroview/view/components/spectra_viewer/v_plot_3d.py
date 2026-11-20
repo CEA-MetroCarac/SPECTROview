@@ -14,6 +14,7 @@ import numpy as np
 
 from spectroview import PLOT_POLICY_DARK, PLOT_POLICY_LIGHT
 from spectroview.fit_engine.evaluator import eval_peak_initial
+from spectroview.i18n import combo_data_or_text, tr
 from spectroview.view.components.spectra_viewer.common import (
     get_cached_style_dict,
     non_singular_bounds,
@@ -111,7 +112,7 @@ class SpectraPlot3DMixin:
         if not hasattr(self.ax, "zaxis"):
             return
         style_name = (
-            self.cbb_theme.currentText()
+            combo_data_or_text(self.cbb_theme)
             if hasattr(self, "cbb_theme")
             else "Light Mode"
         )
@@ -183,7 +184,7 @@ class SpectraPlot3DMixin:
             self.figure.delaxes(old_ax)
 
         style_name = (
-            self.cbb_theme.currentText()
+            combo_data_or_text(self.cbb_theme)
             if hasattr(self, "cbb_theme")
             else "Light Mode"
         )
@@ -350,7 +351,7 @@ class SpectraPlot3DMixin:
                 np.isfinite(y_values), y_values, np.arange(N, dtype=float)
             )
 
-        plot_style = self.cbb_plotstyle.currentText()
+        plot_style = combo_data_or_text(self.cbb_plotstyle)
         lw = self.spin_lw.value()
         dot_size = self.spin_dotsize.value()
         main_colors = self._resolve_series_colors(N)
@@ -539,7 +540,7 @@ class SpectraPlot3DMixin:
         self.ax.set_xlim(x_lo, x_hi)
         self.ax.set_ylim(y_lo, y_hi)
 
-        if self.cbb_yscale.currentText() == "Log" and z_hi > 0:
+        if combo_data_or_text(self.cbb_yscale) == "Log" and z_hi > 0:
             z_pos_lo = min(pos_z_mins) if pos_z_mins else max(z_hi * 1e-4, 1e-9)
             if z_pos_lo >= z_hi:
                 z_pos_lo = z_hi * 0.1
@@ -583,7 +584,7 @@ class SpectraPlot3DMixin:
                         else (
                             t_fnames[spec_idx]
                             if spec_idx < len(t_fnames)
-                            else f"Spectrum {spec_idx + 1}"
+                            else tr("Spectrum {index}", index=spec_idx + 1)
                         )
                     )
                     proxy_line = mlines.Line2D(

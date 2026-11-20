@@ -7,6 +7,7 @@ from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QLabel
 
+from spectroview.i18n import tr
 from spectroview.view.components.common.v_notification import show_notification
 from spectroview.viewmodel.common.spectral_utils import fano_display_amplitude
 
@@ -141,9 +142,12 @@ class SpectraInteractionMixin:
             if event.button == 1:
                 if self.btn_norm.isChecked():
                     show_notification(
-                        "Deactivate Normalization before adding a baseline point to use the real intensity scale.",
+                        tr(
+                            "Deactivate Normalization before adding a baseline point "
+                            "to use the real intensity scale."
+                        ),
                         notification_type="warning",
-                        title="Normalization Active",
+                        title=tr("Normalization Active"),
                     )
                     return
                 self.baseline_add_requested.emit(x, y)
@@ -266,9 +270,9 @@ class SpectraInteractionMixin:
                 display_intensity = fano_display_amplitude(display_intensity, q)
 
             fields = [
-                ("label", info.get("peak_label")),
-                ("center", info.get("x0")),
-                ("intensity", display_intensity),
+                (tr("label"), info.get("peak_label")),
+                (tr("center"), info.get("x0")),
+                (tr("intensity"), display_intensity),
                 ("fwhm", info.get("fwhm")),
                 ("fwhm_l", info.get("fwhm_l")),
                 ("fwhm_r", info.get("fwhm_r")),

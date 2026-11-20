@@ -21,8 +21,12 @@ from PySide6.QtWidgets import (
     QWidgetAction,
 )
 
-from spectroview.view.components.rgb_live_maps.v_live_maps_legend_editor import (
-    LEGEND_LOCATIONS,
+from spectroview.i18n import (
+    bind_combo_items,
+    bind_text,
+    bind_tooltip,
+    combo_data_or_text,
+    set_combo_by_data_or_text,
 )
 
 
@@ -35,7 +39,9 @@ class LiveMapsOptionsMenuMixin:
         row_layout = QHBoxLayout(row_widget)
         row_layout.setContentsMargins(2, 1, 2, 1)
         row_layout.setSpacing(6)
-        row_layout.addWidget(QLabel(label, row_widget))
+        lbl = QLabel(row_widget)
+        bind_text(lbl, label)
+        row_layout.addWidget(lbl)
         row_layout.addWidget(widget, stretch=1)
         return row_widget
 
@@ -57,11 +63,13 @@ class LiveMapsOptionsMenuMixin:
         on_toggled,
     ) -> Tuple[QAction, QCheckBox]:
         """Create a compact QCheckBox synchronized with a programmatic QAction."""
-        act = QAction(text, menu)
+        act = QAction(menu)
+        bind_text(act, text)
         act.setCheckable(True)
         act.setChecked(bool(checked))
 
-        chk = QCheckBox(text, parent_widget)
+        chk = QCheckBox(parent_widget)
+        bind_text(chk, text)
         chk.setChecked(bool(checked))
 
         def _on_act_toggled(val: bool):
@@ -136,31 +144,45 @@ class LiveMapsOptionsMenuMixin:
 
         # ── Left Column: Plot theme, Axis scales, Style/Sizes & Copy size/theme ──
         self.cbb_plot_theme = QComboBox(left_col)
-        self.cbb_plot_theme.addItems(["Light Mode", "Dark Mode"])
-        self.cbb_plot_theme.setCurrentText(self._view_options["plot_theme"])
-        self.cbb_plot_theme.currentTextChanged.connect(
-            lambda txt: self._update_option("plot_theme", txt)
+        bind_combo_items(
+            self.cbb_plot_theme,
+            [("Light Mode", "Light Mode"), ("Dark Mode", "Dark Mode")],
+        )
+        set_combo_by_data_or_text(self.cbb_plot_theme, self._view_options["plot_theme"])
+        self.cbb_plot_theme.currentIndexChanged.connect(
+            lambda _idx: self._update_option(
+                "plot_theme", combo_data_or_text(self.cbb_plot_theme)
+            )
         )
         left_layout.addWidget(self._wrap_menu_row(left_col, "Plot theme:", self.cbb_plot_theme))
 
         self.cbb_xscale = QComboBox(left_col)
-        self.cbb_xscale.addItems(["Linear", "Log"])
-        self.cbb_xscale.currentTextChanged.connect(
-            lambda txt: self._update_option("xscale", txt.lower())
+        bind_combo_items(self.cbb_xscale, [("Linear", "linear"), ("Log", "log")])
+        set_combo_by_data_or_text(
+            self.cbb_xscale, "log" if self._view_options["xscale"] == "log" else "linear"
+        )
+        self.cbb_xscale.currentIndexChanged.connect(
+            lambda _idx: self._update_option("xscale", combo_data_or_text(self.cbb_xscale))
         )
         left_layout.addWidget(self._wrap_menu_row(left_col, "X-scale:", self.cbb_xscale))
 
         self.cbb_yscale = QComboBox(left_col)
-        self.cbb_yscale.addItems(["Linear", "Log"])
-        self.cbb_yscale.currentTextChanged.connect(
-            lambda txt: self._update_option("yscale", txt.lower())
+        bind_combo_items(self.cbb_yscale, [("Linear", "linear"), ("Log", "log")])
+        set_combo_by_data_or_text(
+            self.cbb_yscale, "log" if self._view_options["yscale"] == "log" else "linear"
+        )
+        self.cbb_yscale.currentIndexChanged.connect(
+            lambda _idx: self._update_option("yscale", combo_data_or_text(self.cbb_yscale))
         )
         left_layout.addWidget(self._wrap_menu_row(left_col, "Y-scale:", self.cbb_yscale))
 
         self.cbb_zscale = QComboBox(left_col)
-        self.cbb_zscale.addItems(["Linear", "Log"])
-        self.cbb_zscale.currentTextChanged.connect(
-            lambda txt: self._update_option("zscale", txt.lower())
+        bind_combo_items(self.cbb_zscale, [("Linear", "linear"), ("Log", "log")])
+        set_combo_by_data_or_text(
+            self.cbb_zscale, "log" if self._view_options["zscale"] == "log" else "linear"
+        )
+        self.cbb_zscale.currentIndexChanged.connect(
+            lambda _idx: self._update_option("zscale", combo_data_or_text(self.cbb_zscale))
         )
         left_layout.addWidget(self._wrap_menu_row(left_col, "Color (Z) scale:", self.cbb_zscale))
 
@@ -173,13 +195,14 @@ class LiveMapsOptionsMenuMixin:
         }
         self._style_keys_to_labels = {v: k for k, v in self._style_labels_to_keys.items()}
         self.cbb_plot_style = QComboBox(left_col)
-        self.cbb_plot_style.addItems(list(self._style_labels_to_keys.keys()))
-        self.cbb_plot_style.setCurrentText(
-            self._style_keys_to_labels.get(self._view_options["plot_style"], "Line")
+        bind_combo_items(
+            self.cbb_plot_style,
+            [("Line", "line"), ("Line + Dots", "line+dots"), ("Dot", "dot")],
         )
-        self.cbb_plot_style.currentTextChanged.connect(
-            lambda txt: self._update_option(
-                "plot_style", self._style_labels_to_keys.get(txt, "line")
+        set_combo_by_data_or_text(self.cbb_plot_style, self._view_options["plot_style"])
+        self.cbb_plot_style.currentIndexChanged.connect(
+            lambda _idx: self._update_option(
+                "plot_style", combo_data_or_text(self.cbb_plot_style) or "line"
             )
         )
         left_layout.addWidget(self._wrap_menu_row(left_col, "Plot style:", self.cbb_plot_style))
@@ -222,7 +245,9 @@ class LiveMapsOptionsMenuMixin:
         ratio_layout = QHBoxLayout(ratio_widget)
         ratio_layout.setContentsMargins(2, 1, 2, 1)
         ratio_layout.setSpacing(4)
-        ratio_layout.addWidget(QLabel("Copied figure size:", ratio_widget))
+        lbl_copy_size = QLabel(ratio_widget)
+        bind_text(lbl_copy_size, "Copied figure size:")
+        ratio_layout.addWidget(lbl_copy_size)
         ratio_layout.addStretch(1)
 
         dim_validator = QDoubleValidator(0.5, 50.0, 2, ratio_widget)
@@ -230,7 +255,7 @@ class LiveMapsOptionsMenuMixin:
         self.width_entry.setFixedWidth(40)
         self.width_entry.setValidator(dim_validator)
         self.width_entry.setText(self._view_options["copy_fig_width"])
-        self.width_entry.setToolTip("Copied figure width (inches)")
+        bind_tooltip(self.width_entry, "Copied figure width (inches)")
         self.width_entry.editingFinished.connect(self._commit_copy_size_entries)
         ratio_layout.addWidget(self.width_entry)
 
@@ -238,16 +263,21 @@ class LiveMapsOptionsMenuMixin:
         self.height_entry.setFixedWidth(40)
         self.height_entry.setValidator(dim_validator)
         self.height_entry.setText(self._view_options["copy_fig_height"])
-        self.height_entry.setToolTip("Copied figure height (inches)")
+        bind_tooltip(self.height_entry, "Copied figure height (inches)")
         self.height_entry.editingFinished.connect(self._commit_copy_size_entries)
         ratio_layout.addWidget(self.height_entry)
         left_layout.addWidget(ratio_widget)
 
         self.cbb_copy_theme = QComboBox(left_col)
-        self.cbb_copy_theme.addItems(["Light Mode", "Dark Mode"])
-        self.cbb_copy_theme.setCurrentText(self._view_options["copy_fig_theme"])
-        self.cbb_copy_theme.currentTextChanged.connect(
-            lambda txt: self._update_option("copy_fig_theme", txt)
+        bind_combo_items(
+            self.cbb_copy_theme,
+            [("Light Mode", "Light Mode"), ("Dark Mode", "Dark Mode")],
+        )
+        set_combo_by_data_or_text(self.cbb_copy_theme, self._view_options["copy_fig_theme"])
+        self.cbb_copy_theme.currentIndexChanged.connect(
+            lambda _idx: self._update_option(
+                "copy_fig_theme", combo_data_or_text(self.cbb_copy_theme)
+            )
         )
         left_layout.addWidget(
             self._wrap_menu_row(left_col, "Copied figure theme:", self.cbb_copy_theme)
@@ -262,10 +292,23 @@ class LiveMapsOptionsMenuMixin:
         right_layout.addWidget(self.chk_show_legend)
 
         self.cbb_legend_loc = QComboBox(right_col)
-        self.cbb_legend_loc.addItems(LEGEND_LOCATIONS)
-        self.cbb_legend_loc.setCurrentText(self._view_options["legend_loc"])
-        self.cbb_legend_loc.currentTextChanged.connect(
-            lambda txt: self._update_option("legend_loc", txt)
+        bind_combo_items(
+            self.cbb_legend_loc,
+            [
+                ("Best", "best"),
+                ("Upper right", "upper right"),
+                ("Upper left", "upper left"),
+                ("Lower left", "lower left"),
+                ("Lower right", "lower right"),
+                ("Outside right", "outside right"),
+                ("Outside top", "outside top"),
+            ],
+        )
+        set_combo_by_data_or_text(self.cbb_legend_loc, self._view_options["legend_loc"])
+        self.cbb_legend_loc.currentIndexChanged.connect(
+            lambda _idx: self._update_option(
+                "legend_loc", combo_data_or_text(self.cbb_legend_loc)
+            )
         )
         right_layout.addWidget(self._wrap_menu_row(right_col, "Legend location:", self.cbb_legend_loc))
 
@@ -289,9 +332,11 @@ class LiveMapsOptionsMenuMixin:
             self._wrap_menu_row(right_col, "Legend font size:", self.spb_legend_fontsize)
         )
 
-        self.act_edit_legend = QAction("Edit legend labels...", menu)
+        self.act_edit_legend = QAction(menu)
+        bind_text(self.act_edit_legend, "Edit legend labels...")
         self.act_edit_legend.triggered.connect(self.open_legend_editor)
-        self.btn_edit_legend = QPushButton("Edit legend labels...", right_col)
+        self.btn_edit_legend = QPushButton(right_col)
+        bind_text(self.btn_edit_legend, "Edit legend labels...")
         self.btn_edit_legend.setProperty("variant", "ghost")
         self.btn_edit_legend.setStyleSheet("text-align: left; padding: 3px 6px;")
         self.btn_edit_legend.clicked.connect(
@@ -305,8 +350,9 @@ class LiveMapsOptionsMenuMixin:
             right_col, menu, "Show figure label", self._view_options["show_figure_label"],
             lambda chk: self._update_option("show_figure_label", bool(chk)),
         )
-        self.chk_show_figure_label.setToolTip(
-            "Show or hide the title label above each RGB plot canvas"
+        bind_tooltip(
+            self.chk_show_figure_label,
+            "Show or hide the title label above each RGB plot canvas",
         )
         right_layout.addWidget(self.chk_show_figure_label)
 
@@ -337,9 +383,11 @@ class LiveMapsOptionsMenuMixin:
         right_layout.addStretch(1)
         right_layout.addWidget(self._menu_h_separator(right_col))
 
-        self.act_reset_options = QAction("Reset view options", menu)
+        self.act_reset_options = QAction(menu)
+        bind_text(self.act_reset_options, "Reset view options")
         self.act_reset_options.triggered.connect(self.reset_view_options)
-        self.btn_reset_options = QPushButton("Reset view options", right_col)
+        self.btn_reset_options = QPushButton(right_col)
+        bind_text(self.btn_reset_options, "Reset view options")
         self.btn_reset_options.setProperty("variant", "ghost")
         self.btn_reset_options.setStyleSheet("text-align: left; padding: 3px 6px;")
         self.btn_reset_options.clicked.connect(
@@ -383,25 +431,27 @@ class LiveMapsOptionsMenuMixin:
         for w in widgets:
             w.blockSignals(True)
         try:
-            self.cbb_plot_theme.setCurrentText(opts["plot_theme"])
-            self.cbb_xscale.setCurrentText("Log" if opts["xscale"] == "log" else "Linear")
-            self.cbb_yscale.setCurrentText("Log" if opts["yscale"] == "log" else "Linear")
-            self.cbb_zscale.setCurrentText("Log" if opts["zscale"] == "log" else "Linear")
-            self.cbb_plot_style.setCurrentText(
-                self._style_keys_to_labels.get(opts["plot_style"], "Line")
+            set_combo_by_data_or_text(self.cbb_plot_theme, opts["plot_theme"])
+            set_combo_by_data_or_text(
+                self.cbb_xscale, "log" if opts["xscale"] == "log" else "linear"
             )
+            set_combo_by_data_or_text(
+                self.cbb_yscale, "log" if opts["yscale"] == "log" else "linear"
+            )
+            set_combo_by_data_or_text(
+                self.cbb_zscale, "log" if opts["zscale"] == "log" else "linear"
+            )
+            set_combo_by_data_or_text(self.cbb_plot_style, opts["plot_style"])
             self.spb_linewidth.setValue(float(opts["line_width"]))
             self.spb_dotsize.setValue(float(opts["dot_size"]))
             self.spb_text_fontsize.setValue(int(opts["text_fontsize"]))
             self.width_entry.setText(str(opts["copy_fig_width"]))
             self.height_entry.setText(str(opts["copy_fig_height"]))
-            self.cbb_copy_theme.setCurrentText(opts["copy_fig_theme"])
+            set_combo_by_data_or_text(self.cbb_copy_theme, opts["copy_fig_theme"])
             self.btn_legend.setChecked(bool(opts["show_legend"]))
             self.act_show_legend.setChecked(bool(opts["show_legend"]))
             self.chk_show_legend.setChecked(bool(opts["show_legend"]))
-            loc = opts["legend_loc"]
-            if self.cbb_legend_loc.findText(loc) >= 0:
-                self.cbb_legend_loc.setCurrentText(loc)
+            set_combo_by_data_or_text(self.cbb_legend_loc, opts["legend_loc"])
             self.spb_legend_ncol.setValue(int(opts["legend_ncol"]))
             self.spb_legend_fontsize.setValue(int(opts["legend_fontsize"]))
             self.act_show_figure_label.setChecked(bool(opts["show_figure_label"]))

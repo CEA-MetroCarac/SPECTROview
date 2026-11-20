@@ -18,6 +18,7 @@ from PySide6.QtCore import QObject, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QToolButton, QVBoxLayout, QWidget
 
+from spectroview.i18n import on_language_changed, tr
 from spectroview.model.spectra.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
     PARAM_RB_RATIO,
@@ -85,6 +86,21 @@ class VRangeSelectorPanel(QWidget):
 
         self.buttons: Dict[str, QToolButton] = {}
         self._init_ui()
+        on_language_changed(self, self._retranslate_buttons)
+
+    @staticmethod
+    def _color_display(color_id: str) -> str:
+        return {
+            SELECTOR_RED: tr("Red"),
+            SELECTOR_BLUE: tr("Blue"),
+            SELECTOR_GREEN: tr("Green"),
+        }.get(color_id, SELECTOR_NAMES.get(color_id, color_id))
+
+    def _retranslate_buttons(self, _lang: str = ""):
+        for color_id, btn in self.buttons.items():
+            btn.setToolTip(
+                tr("Toggle {color} Spectral Range Selector", color=self._color_display(color_id))
+            )
 
     def _init_ui(self):
         layout = QVBoxLayout(self)
@@ -100,7 +116,9 @@ class VRangeSelectorPanel(QWidget):
             btn.setFixedSize(22, 22)
             btn.setIconSize(QSize(16, 16))
             btn.setIcon(create_color_icon(color_hex, size=16))
-            btn.setToolTip(f"Toggle {SELECTOR_NAMES[color_id]} Spectral Range Selector")
+            btn.setToolTip(
+                tr("Toggle {color} Spectral Range Selector", color=self._color_display(color_id))
+            )
 
             # Style button with color accent when checked
             btn.setStyleSheet(f"""

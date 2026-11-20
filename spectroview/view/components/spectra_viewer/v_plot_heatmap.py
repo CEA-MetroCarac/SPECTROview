@@ -11,6 +11,7 @@ from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QComboBox
 
 from spectroview import PLOT_POLICY_DARK, PLOT_POLICY_LIGHT
+from spectroview.i18n import combo_data_or_text, tr
 from spectroview.view.components.spectra_viewer.common import (
     SPECTRA_DISCRETE_PALETTES,
     extract_filename_tokens,
@@ -122,7 +123,7 @@ class SpectraHeatmapMixin:
         """Render the selected spectra as a 2D pcolormesh heatmap."""
         from scipy.interpolate import interp1d
 
-        style_name = self.cbb_theme.currentText()
+        style_name = combo_data_or_text(self.cbb_theme)
         if style_name == "Dark Mode":
             style_path = PLOT_POLICY_DARK
         else:
@@ -144,7 +145,7 @@ class SpectraHeatmapMixin:
         N = len(Y_data)
 
         if N < 2 or x_data is None:
-            self.ax.set_title("Heatmap requires ≥ 2 spectra", color=fg_color)
+            self.ax.set_title(tr("Heatmap requires ≥ 2 spectra"), color=fg_color)
             self.canvas.draw_idle()
             return
 

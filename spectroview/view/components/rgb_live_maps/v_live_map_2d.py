@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, Normalize
 import numpy as np
 
+from spectroview.i18n import tr
 from spectroview.view.components.rgb_live_maps.common import _normalize_plot_theme
 
 
@@ -134,7 +135,7 @@ class LiveMap2DMixin:
         self._apply_figure_theme(active_theme)
 
         if not has_valid_grid:
-            msg = status_msg or "No map data available"
+            msg = status_msg or tr("No map data available")
             self.ax.text(
                 0.5, 0.5, msg,
                 ha="center", va="center", transform=self.ax.transAxes,

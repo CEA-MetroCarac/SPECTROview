@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QTimer
 
+from spectroview.i18n import combo_data_or_text
 from spectroview.view.components.map_viewer.map_selection import (
     get_drag_box_edgecolor,
     is_ctrl_event,
@@ -107,7 +108,7 @@ class MapInteractionMixin:
         if hasattr(self, 'v_spectra_viewer_ref'):
             sv = self.v_spectra_viewer_ref
             if hasattr(sv, 'cbb_copy_theme'):
-                target_theme = sv.cbb_copy_theme.currentText()
+                target_theme = combo_data_or_text(sv.cbb_copy_theme)
 
         original_theme = getattr(self, 'current_style', "Light Mode")
 

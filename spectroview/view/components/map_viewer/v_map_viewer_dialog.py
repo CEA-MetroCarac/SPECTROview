@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QDialog, QVBoxLayout
 
+from spectroview.i18n import bind_tooltip, bind_window_title
 from spectroview.view.components.map_viewer.v_map_viewer import VMapViewer
 
 
@@ -25,7 +26,7 @@ class VMapViewerDialog(QDialog):
         self.viewer_number = viewer_number
 
         # Dialog setup
-        self.setWindowTitle(f"Map Viewer {viewer_number}")
+        bind_window_title(self, "Map Viewer {num}", num=viewer_number)
         self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)  # Independent window, always on top
         self.resize(450, 550)
 
@@ -43,7 +44,7 @@ class VMapViewerDialog(QDialog):
 
         # Don't allow nested viewers from dialogs
         self.map_viewer.btn_add_viewer.setEnabled(False)
-        self.map_viewer.btn_add_viewer.setToolTip("Only available in main viewer")
+        bind_tooltip(self.map_viewer.btn_add_viewer, "Only available in main viewer")
 
     # Public API - delegate to internal viewer
     def set_map_data(self, map_df, map_name, df_fit_results=None, selected_points=None):

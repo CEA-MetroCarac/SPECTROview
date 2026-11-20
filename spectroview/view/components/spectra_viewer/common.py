@@ -10,6 +10,7 @@ import matplotlib as mpl
 import numpy as np
 
 from spectroview import DEFAULT_COLORS
+from spectroview.i18n import tr
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QComboBox
@@ -151,7 +152,7 @@ def extract_filename_tokens(fname: str) -> list[tuple[int, str, float]]:
 
 def token_pattern(token_text: str) -> str:
     """Normalize numeric parts of a filename token to '#' (e.g. '25°C' -> '#°C')."""
-    if not token_text or token_text == "Index":
+    if not token_text or token_text in ("Index", tr("Index")):
         return "Index"
     return _RE_NUMBERS.sub("#", token_text)
 
@@ -160,7 +161,7 @@ def record_token_selection(combo: QComboBox, state_dict: dict) -> None:
     """Record the active parameter selection (text, token slot position, unit pattern)."""
     text = combo.currentText()
     pos = combo.currentData()
-    if not text or text == "Index":
+    if pos is None or not text or text in ("Index", tr("Index")):
         state_dict.update({"text": "Index", "pos": None, "pattern": "Index"})
     else:
         state_dict.update({
@@ -182,7 +183,7 @@ def refresh_token_combobox(
 
     combo.blockSignals(True)
     combo.clear()
-    combo.addItem("Index", None)
+    combo.addItem(tr("Index"), None)
     for pos, token_text in tokens:
         combo.addItem(token_text, pos)
 
@@ -241,8 +242,8 @@ def extract_series_parameter_values(
     """
     custom = custom_label.strip() if custom_label else ""
 
-    if selected_token == "Index" or not fnames:
-        return np.arange(n_spectra, dtype=float), (custom or "Spectrum index")
+    if (token_pos is None and selected_token in ("Index", tr("Index"))) or not fnames:
+        return np.arange(n_spectra, dtype=float), (custom or tr("Spectrum index"))
 
     resolved_pos = token_pos if isinstance(token_pos, int) else None
     if resolved_pos is None:

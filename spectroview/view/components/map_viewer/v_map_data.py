@@ -7,6 +7,7 @@ import re
 import numpy as np
 import pandas as pd
 
+from spectroview.i18n import combo_data_or_text
 from spectroview.view.components.map_viewer.map_selection import compute_2d_spatial_geometry
 
 
@@ -26,14 +27,14 @@ class MapDataProcessingMixin:
     def _build_cache_key(self):
         """Construct cache key for the current heatmap configuration."""
         xmin, xmax = self.x_range_slider.value()
-        parameter = self.cbb_zparameter.currentText()
-        map_type = self.cbb_map_type.currentText()
+        parameter = combo_data_or_text(self.cbb_zparameter)
+        map_type = combo_data_or_text(self.cbb_map_type)
         mask_enabled = self.cb_enable_mask.isChecked() if map_type == '2Dmap' else False
         remove_outliers = self.action_remove_outlier.isChecked()
 
         if mask_enabled:
             mask_config = (
-                self.cbb_mask_param.currentText(),
+                combo_data_or_text(self.cbb_mask_param),
                 self.cbb_mask_operator.currentText(),
                 self.spin_mask_threshold.value()
             )
@@ -97,7 +98,7 @@ class MapDataProcessingMixin:
         x_col, y_col = self._get_measurement_sites()
 
         # Compute Z values based on selected parameter
-        parameter = self.cbb_zparameter.currentText()
+        parameter = combo_data_or_text(self.cbb_zparameter)
 
         if parameter == 'Area':
             data_matrix = self.map_df[filtered_columns].to_numpy(dtype=float, copy=False)
@@ -144,7 +145,7 @@ class MapDataProcessingMixin:
             return heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col
 
         # Apply mask (2D map only)
-        map_type = self.cbb_map_type.currentText()
+        map_type = combo_data_or_text(self.cbb_map_type)
         if map_type == '2Dmap' and self.cb_enable_mask.isChecked():
             z_col = self._apply_mask(z_col, self.map_df)
 
@@ -248,7 +249,7 @@ class MapDataProcessingMixin:
 
     def _apply_mask(self, z_col, filtered_df):
         """Apply mask to z_col based on mask settings."""
-        mask_param = self.cbb_mask_param.currentText()
+        mask_param = combo_data_or_text(self.cbb_mask_param)
         mask_operator = self.cbb_mask_operator.currentText()
         threshold = self.spin_mask_threshold.value()
 

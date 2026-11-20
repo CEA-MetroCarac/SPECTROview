@@ -29,6 +29,16 @@ from superqt import QLabeledDoubleRangeSlider
 
 from spectroview import PLOT_POLICY_LIGHT
 from spectroview.view.components.common.customized_widgets import CustomizedPalette
+from spectroview.i18n import (
+    bind_combo_items,
+    bind_placeholder,
+    bind_text,
+    bind_tooltip,
+    combo_data_or_text,
+    on_language_changed,
+    set_combo_by_data_or_text,
+    tr,
+)
 from spectroview.view.components.map_viewer.map_selection import MapCanvasSelector
 from spectroview.view.components.map_viewer.v_map_data import MapDataProcessingMixin
 from spectroview.view.components.map_viewer.v_map_interactions import (
@@ -82,6 +92,22 @@ class VMapViewer(
         self.plot_timer.timeout.connect(self._do_plot_heatmap)
 
         self._init_ui()
+        on_language_changed(self, self._retranslate_map_viewer)
+
+    def _retranslate_map_viewer(self, _lang: str = ""):
+        """Update dynamic Z-parameter labels and re-render map plot."""
+        self.cbb_zparameter.blockSignals(True)
+        try:
+            for idx in range(self.cbb_zparameter.count()):
+                key = self.cbb_zparameter.itemData(idx)
+                if key == "Intensity":
+                    self.cbb_zparameter.setItemText(idx, tr("Intensity"))
+                elif key == "Area":
+                    self.cbb_zparameter.setItemText(idx, tr("Area"))
+        finally:
+            self.cbb_zparameter.blockSignals(False)
+        if self.map_df is not None and not self.map_df.empty:
+            self.plot_heatmap()
 
     @property
     def rect_start(self):
@@ -155,7 +181,7 @@ class VMapViewer(
         self.btn_home.setIcon(Icons.rescale())
         self.btn_home.setIconSize(QSize(20, 20))
         self.btn_home.setFixedSize(28, 28)
-        self.btn_home.setToolTip("Rescale / Reset original view (Ctrl+R)")
+        bind_tooltip(self.btn_home, "Rescale / Reset original view (Ctrl+R)")
         self.btn_home.clicked.connect(self.toolbar.home)
         self.btn_rescale = self.btn_home  # Alias matching v_spectra_viewer
 
@@ -164,7 +190,7 @@ class VMapViewer(
         self.btn_pan.setIcon(Icons.pan())
         self.btn_pan.setIconSize(QSize(20, 20))
         self.btn_pan.setFixedSize(28, 28)
-        self.btn_pan.setToolTip("Pan / Drag axes with left mouse, zoom with right")
+        bind_tooltip(self.btn_pan, "Pan / Drag axes with left mouse, zoom with right")
         self.btn_pan.clicked.connect(self.toolbar.pan)
 
         self.btn_zoom = QToolButton()
@@ -172,7 +198,7 @@ class VMapViewer(
         self.btn_zoom.setIcon(Icons.zoom())
         self.btn_zoom.setIconSize(QSize(20, 20))
         self.btn_zoom.setFixedSize(28, 28)
-        self.btn_zoom.setToolTip("Zoom to rectangle")
+        bind_tooltip(self.btn_zoom, "Zoom to rectangle")
         self.btn_zoom.clicked.connect(self.toolbar.zoom)
 
         # Bidirectional sync with matplotlib toolbar action checked states
@@ -219,7 +245,7 @@ class VMapViewer(
         self.btn_add_viewer = QPushButton()
         self.btn_add_viewer.setIcon(Icons.plus())
         self.btn_add_viewer.setIconSize(QSize(20, 20))
-        self.btn_add_viewer.setToolTip("Open a new map viewer window")
+        bind_tooltip(self.btn_add_viewer, "Open a new map viewer window")
         self.btn_add_viewer.setFixedSize(28, 28)
         self.btn_add_viewer.clicked.connect(lambda: self.multi_viewer_requested.emit(1))
         toolbar_layout.addWidget(self.btn_add_viewer)
@@ -228,7 +254,7 @@ class VMapViewer(
         self.btn_copy = QPushButton()
         self.btn_copy.setIcon(Icons.copy())
         self.btn_copy.setIconSize(QSize(20, 20))
-        self.btn_copy.setToolTip("Copy figure to clipboard")
+        bind_tooltip(self.btn_copy, "Copy figure to clipboard")
         self.btn_copy.setFixedSize(28, 28)
         self.btn_copy.clicked.connect(self._copy_figure_to_clipboard)
         toolbar_layout.addWidget(self.btn_copy)
@@ -275,12 +301,21 @@ class VMapViewer(
         type_layout = QHBoxLayout()
         type_layout.setContentsMargins(2, 2, 2, 2)
 
-        lbl = QLabel("Select map type:")
+        lbl = QLabel()
+        bind_text(lbl, "Select map type:")
         type_layout.addWidget(lbl)
         self.cbb_map_type = QComboBox()
-        self.cbb_map_type.addItems(['2Dmap', 'Wafer_300mm', 'Wafer_200mm', 'Wafer_100mm'])
+        bind_combo_items(
+            self.cbb_map_type,
+            [
+                ("2Dmap", "2Dmap"),
+                ("Wafer_300mm", "Wafer_300mm"),
+                ("Wafer_200mm", "Wafer_200mm"),
+                ("Wafer_100mm", "Wafer_100mm"),
+            ],
+        )
         self.cbb_map_type.setFixedWidth(120)
-        self.cbb_map_type.currentTextChanged.connect(lambda: self.plot_heatmap())
+        self.cbb_map_type.currentIndexChanged.connect(lambda: self.plot_heatmap())
         type_layout.addWidget(self.cbb_map_type)
 
         self.cbb_palette = CustomizedPalette()
@@ -295,14 +330,16 @@ class VMapViewer(
         z_slider_layout.setContentsMargins(2, 2, 2, 2)
 
         self.cbb_zparameter = QComboBox()
-        self.cbb_zparameter.addItems(['Intensity', 'Area'])
+        self.cbb_zparameter.addItem(tr('Intensity'), 'Intensity')
+        self.cbb_zparameter.addItem(tr('Area'), 'Area')
         self.cbb_zparameter.setFixedWidth(68)
-        self.cbb_zparameter.setToolTip("Select parameter to plot in heatmap")
-        self.cbb_zparameter.currentTextChanged.connect(lambda: self._on_parameter_changed())
+        bind_tooltip(self.cbb_zparameter, "Select parameter to plot in heatmap")
+        self.cbb_zparameter.currentIndexChanged.connect(lambda: self._on_parameter_changed())
         z_slider_layout.addWidget(self.cbb_zparameter)
 
-        self.cb_fix_z = QCheckBox("Fix")
-        self.cb_fix_z.setToolTip("Fix Z-range when changing maps")
+        self.cb_fix_z = QCheckBox()
+        bind_text(self.cb_fix_z, "Fix")
+        bind_tooltip(self.cb_fix_z, "Fix Z-range when changing maps")
         z_slider_layout.addWidget(self.cb_fix_z)
 
         self.spin_zmin = QDoubleSpinBox()
@@ -339,12 +376,14 @@ class VMapViewer(
         x_slider_layout = QHBoxLayout()
         x_slider_layout.setContentsMargins(2, 2, 2, 2)
 
-        lbl_x_slider = QLabel("X-range:")
+        lbl_x_slider = QLabel()
+        bind_text(lbl_x_slider, "X-range:")
         lbl_x_slider.setFixedWidth(68)
         x_slider_layout.addWidget(lbl_x_slider)
 
-        self.cb_fix_x = QCheckBox("Fix")
-        self.cb_fix_x.setToolTip("Fix X-range when refreshing")
+        self.cb_fix_x = QCheckBox()
+        bind_text(self.cb_fix_x, "Fix")
+        bind_tooltip(self.cb_fix_x, "Fix X-range when refreshing")
         x_slider_layout.addWidget(self.cb_fix_x)
 
         self.spin_xmin = QDoubleSpinBox()
@@ -381,19 +420,20 @@ class VMapViewer(
         mask_layout = QHBoxLayout()
         mask_layout.setContentsMargins(2, 2, 2, 2)
 
-        self.cb_enable_mask = QCheckBox("Enable mask:")
+        self.cb_enable_mask = QCheckBox()
+        bind_text(self.cb_enable_mask, "Enable mask:")
         self.cb_enable_mask.stateChanged.connect(lambda: self.plot_heatmap())
         mask_layout.addWidget(self.cb_enable_mask)
 
         self.cbb_mask_param = QComboBox()
         self.cbb_mask_param.setFixedWidth(100)
-        self.cbb_mask_param.currentTextChanged.connect(lambda: self.plot_heatmap())
+        self.cbb_mask_param.currentIndexChanged.connect(lambda: self.plot_heatmap())
         mask_layout.addWidget(self.cbb_mask_param)
 
         self.cbb_mask_operator = QComboBox()
         self.cbb_mask_operator.addItems([">", "<", ">=", "<=", "=="])
         self.cbb_mask_operator.setFixedWidth(50)
-        self.cbb_mask_operator.currentTextChanged.connect(lambda: self.plot_heatmap())
+        self.cbb_mask_operator.currentIndexChanged.connect(lambda: self.plot_heatmap())
         mask_layout.addWidget(self.cbb_mask_operator)
 
         self.spin_mask_threshold = QDoubleSpinBox()
@@ -411,7 +451,7 @@ class VMapViewer(
         self.btn_options.setText("...")
         self.btn_options.setPopupMode(QToolButton.InstantPopup)
         self.btn_options.setIcon(Icons.settings())
-        self.btn_options.setToolTip("Additional options")
+        bind_tooltip(self.btn_options, "Additional options")
 
         # Create options menu
         self.options_menu = QMenu(self)
@@ -431,10 +471,11 @@ class VMapViewer(
 
         self.txt_profile_name = QLineEdit()
         self.txt_profile_name.setText("Profile_1")
-        self.txt_profile_name.setPlaceholderText("Profile name...")
+        bind_placeholder(self.txt_profile_name, "Profile name...")
         self.txt_profile_name.setFixedWidth(150)
 
-        self.btn_extract_profile = QPushButton("Extract profile")
+        self.btn_extract_profile = QPushButton()
+        bind_text(self.btn_extract_profile, "Extract profile")
         self.btn_extract_profile.setFixedWidth(110)
         self.btn_extract_profile.clicked.connect(
             lambda: self.extract_profile_requested.emit(self.txt_profile_name.text())
@@ -450,25 +491,29 @@ class VMapViewer(
         self.options_menu.addSeparator()
 
         # Checkable options
-        self.action_remove_outlier = QAction("Remove Outlier", self)
+        self.action_remove_outlier = QAction(self)
+        bind_text(self.action_remove_outlier, "Remove Outlier")
         self.action_remove_outlier.setCheckable(True)
         self.action_remove_outlier.setChecked(True)
         self.action_remove_outlier.triggered.connect(lambda: self._on_plot_option_changed())
         self.options_menu.addAction(self.action_remove_outlier)
 
-        self.action_smoothing = QAction("Smoothing", self)
+        self.action_smoothing = QAction(self)
+        bind_text(self.action_smoothing, "Smoothing")
         self.action_smoothing.setCheckable(True)
         self.action_smoothing.setChecked(False)
         self.action_smoothing.triggered.connect(lambda: self.plot_heatmap())
         self.options_menu.addAction(self.action_smoothing)
 
-        self.action_grid = QAction("Grid", self)
+        self.action_grid = QAction(self)
+        bind_text(self.action_grid, "Grid")
         self.action_grid.setCheckable(True)
         self.action_grid.setChecked(False)
         self.action_grid.triggered.connect(lambda: self.plot_heatmap())
         self.options_menu.addAction(self.action_grid)
 
-        self.action_show_stats = QAction("Show stats", self)
+        self.action_show_stats = QAction(self)
+        bind_text(self.action_show_stats, "Show stats")
         self.action_show_stats.setCheckable(True)
         self.action_show_stats.setChecked(False)
         self.action_show_stats.triggered.connect(lambda: self.plot_heatmap())
@@ -480,13 +525,19 @@ class VMapViewer(
         scale_widget = QWidget()
         scale_layout = QHBoxLayout(scale_widget)
         scale_layout.setContentsMargins(5, 5, 5, 5)
-        scale_layout.addWidget(QLabel("Color scale:"))
+        lbl_scale = QLabel()
+        bind_text(lbl_scale, "Color scale:")
+        scale_layout.addWidget(lbl_scale)
         self.cbb_color_scale = QComboBox()
-        self.cbb_color_scale.addItems(["Linear", "Log"])
-        self.cbb_color_scale.setToolTip(
-            "Color-scale normalization for the heatmap (log needs positive values)"
+        bind_combo_items(
+            self.cbb_color_scale,
+            [("Linear", "Linear"), ("Log", "Log")],
         )
-        self.cbb_color_scale.currentTextChanged.connect(lambda: self.plot_heatmap())
+        bind_tooltip(
+            self.cbb_color_scale,
+            "Color-scale normalization for the heatmap (log needs positive values)",
+        )
+        self.cbb_color_scale.currentIndexChanged.connect(lambda: self.plot_heatmap())
         scale_layout.addWidget(self.cbb_color_scale)
         scale_layout.addStretch()
 
@@ -586,30 +637,31 @@ class VMapViewer(
         self.cbb_zparameter.blockSignals(True)
         self.cbb_mask_param.blockSignals(True)
 
-        current_z = self.cbb_zparameter.currentText()
-        current_mask = self.cbb_mask_param.currentText()
+        current_z = combo_data_or_text(self.cbb_zparameter)
+        current_mask = combo_data_or_text(self.cbb_mask_param)
 
         # Update Z parameters
         self.cbb_zparameter.clear()
-        self.cbb_zparameter.addItems(['Intensity', 'Area'])
+        self.cbb_zparameter.addItem(tr('Intensity'), 'Intensity')
+        self.cbb_zparameter.addItem(tr('Area'), 'Area')
         self.cbb_mask_param.clear()
 
         if not self.df_fit_results.empty:
             fit_columns = [col for col in self.df_fit_results.columns
                           if col not in ['Filename', 'X', 'Y']]
-            self.cbb_zparameter.addItems(fit_columns)
-            self.cbb_mask_param.addItems(fit_columns)
+            for col in fit_columns:
+                self.cbb_zparameter.addItem(col, col)
+                self.cbb_mask_param.addItem(col, col)
 
         # Restore selection if possible
-        if current_z and self.cbb_zparameter.findText(current_z) >= 0:
-            self.cbb_zparameter.setCurrentText(current_z)
-        else:
-            self.cbb_zparameter.setCurrentIndex(0)
+        self.cbb_zparameter.setCurrentIndex(0)
+        if current_z:
+            set_combo_by_data_or_text(self.cbb_zparameter, current_z)
 
-        if current_mask and self.cbb_mask_param.findText(current_mask) >= 0:
-            self.cbb_mask_param.setCurrentText(current_mask)
-        elif self.cbb_mask_param.count() > 0:
+        if self.cbb_mask_param.count() > 0:
             self.cbb_mask_param.setCurrentIndex(0)
+            if current_mask:
+                set_combo_by_data_or_text(self.cbb_mask_param, current_mask)
 
         self.cbb_zparameter.blockSignals(False)
         self.cbb_mask_param.blockSignals(False)

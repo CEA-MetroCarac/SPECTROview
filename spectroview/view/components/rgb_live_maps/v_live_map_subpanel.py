@@ -21,12 +21,28 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview import DEFAULT_COLORS
+from spectroview.i18n import (
+    bind_tooltip,
+    combo_data_or_text,
+    on_language_changed,
+    set_combo_by_data_or_text,
+    tr,
+)
 from spectroview.model.spectra.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
+    PARAM_MAX_INTENSITY,
+    PARAM_MEAN_INTENSITY,
+    PARAM_PEAK_AREA_FIT,
+    PARAM_PEAK_HEIGHT,
+    PARAM_PEAK_HEIGHT_FIT,
+    PARAM_PEAK_POSITION,
+    PARAM_PEAK_POSITION_FIT,
     PARAM_RB_RATIO,
+    SELECTOR_BLUE,
     SELECTOR_COLORS,
     SELECTOR_GREEN,
     SELECTOR_NAMES,
+    SELECTOR_RED,
     SPECTRAL_PARAMETERS,
 )
 from spectroview.view.components.common.customized_widgets import NoDoubleClickZoomToolbar
@@ -130,6 +146,39 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
 
         self._init_ui()
         self.set_mode(mode)
+        on_language_changed(self, self._retranslate_subpanel)
+
+    @staticmethod
+    def _selector_color_display(color_id: str) -> str:
+        """Return localized display label for a range selector channel ID."""
+        return {
+            SELECTOR_RED: tr("Red"),
+            SELECTOR_BLUE: tr("Blue"),
+            SELECTOR_GREEN: tr("Green"),
+        }.get(color_id, SELECTOR_NAMES.get(color_id, color_id))
+
+    @staticmethod
+    def _param_display(param: str) -> str:
+        """Return localized display label for a spectral parameter key."""
+        return {
+            PARAM_INTEGRATED_INTENSITY: tr("Integrated intensity"),
+            PARAM_MEAN_INTENSITY: tr("Mean intensity"),
+            PARAM_MAX_INTENSITY: tr("Maximum intensity"),
+            PARAM_PEAK_POSITION: tr("Peak position"),
+            PARAM_PEAK_HEIGHT: tr("Peak height"),
+            PARAM_PEAK_POSITION_FIT: tr("Peak position (fit)"),
+            PARAM_PEAK_HEIGHT_FIT: tr("Peak height (fit)"),
+            PARAM_PEAK_AREA_FIT: tr("Peak area (fit)"),
+            PARAM_RB_RATIO: tr("R/B ratio"),
+        }.get(param, tr(param))
+
+    def color_display_name(self) -> str:
+        """Return the localized channel name for this subpanel."""
+        return self._selector_color_display(self.color_id)
+
+    def get_selected_parameter_display(self) -> str:
+        """Return currently displayed localized parameter text."""
+        return self.cbb_param.currentText()
 
     @property
     def line(self):
@@ -152,7 +201,7 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
         row1_layout.setSpacing(4)
 
         self.lbl_badge = QLabel(self)
-        self.lbl_badge.setText(f" {self.color_name} ")
+        self.lbl_badge.setText(f" {self.color_display_name()} ")
         self.lbl_badge.setStyleSheet(f"""
             QLabel {{
                 background-color: {self.color_hex};
@@ -180,7 +229,7 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
         self.btn_home.setIcon(Icons.rescale(color=icon_color))
         self.btn_home.setIconSize(QSize(14, 14))
         self.btn_home.setFixedSize(22, 22)
-        self.btn_home.setToolTip("Rescale / Reset original view")
+        bind_tooltip(self.btn_home, "Rescale / Reset original view")
         row1_layout.addWidget(self.btn_home)
         self.btn_rescale = self.btn_home
 
@@ -189,7 +238,7 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
         self.btn_pan.setIcon(Icons.pan(color=icon_color))
         self.btn_pan.setIconSize(QSize(14, 14))
         self.btn_pan.setFixedSize(22, 22)
-        self.btn_pan.setToolTip("Pan / Drag axes with left mouse, zoom with right")
+        bind_tooltip(self.btn_pan, "Pan / Drag axes with left mouse, zoom with right")
         row1_layout.addWidget(self.btn_pan)
 
         self.btn_zoom = QToolButton(self)
@@ -197,14 +246,13 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
         self.btn_zoom.setIcon(Icons.zoom(color=icon_color))
         self.btn_zoom.setIconSize(QSize(14, 14))
         self.btn_zoom.setFixedSize(22, 22)
-        self.btn_zoom.setToolTip("Zoom to rectangle")
+        bind_tooltip(self.btn_zoom, "Zoom to rectangle")
         row1_layout.addWidget(self.btn_zoom)
 
         self.btn_copy = QPushButton(self)
         self.btn_copy.setIcon(Icons.copy(color=icon_color))
         self.btn_copy.setIconSize(QSize(14, 14))
         self.btn_copy.setFixedSize(22, 22)
-        self.btn_copy.setToolTip("Copy map to clipboard. Hold Ctrl + Click to copy data to clipboard")
         self.btn_copy.clicked.connect(self._copy_to_clipboard)
         row1_layout.addWidget(self.btn_copy)
 
@@ -217,21 +265,24 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
 
         self.cbb_param = QComboBox(self)
         for param in SPECTRAL_PARAMETERS:
-            self.cbb_param.addItem(param)
+            self.cbb_param.addItem(self._param_display(param), param)
         if self.color_id == SELECTOR_GREEN:
             # Derived option: Red/Blue integrated-intensity ratio
             self.cbb_param.insertSeparator(self.cbb_param.count())
-            self.cbb_param.addItem(PARAM_RB_RATIO)
+            self.cbb_param.addItem(self._param_display(PARAM_RB_RATIO), PARAM_RB_RATIO)
             self.cbb_param.setItemData(
                 self.cbb_param.count() - 1,
-                "Ratio of the Red and Blue integrated intensities (I_Red / I_Blue).\n"
-                "Requires the Red and Blue range selectors to be active.",
+                tr(
+                    "Ratio of the Red and Blue integrated intensities (I_Red / I_Blue).\n"
+                    "Requires the Red and Blue range selectors to be active."
+                ),
                 Qt.ToolTipRole,
             )
-        self.cbb_param.setCurrentText(PARAM_INTEGRATED_INTENSITY)
-        self.cbb_param.setToolTip("Select spectral parameter for this map")
+        set_combo_by_data_or_text(self.cbb_param, PARAM_INTEGRATED_INTENSITY)
         self.cbb_param.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.cbb_param.currentTextChanged.connect(self._on_param_changed)
+        self.cbb_param.currentIndexChanged.connect(
+            lambda _idx: self._on_param_changed(self.get_selected_parameter())
+        )
         row2_layout.addWidget(self.cbb_param, stretch=1)
 
         self.cbb_palette = QComboBox(self)
@@ -239,7 +290,7 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
         default_pal = DEFAULT_PALETTES.get(self.color_id, "viridis")
         self.cbb_palette.setCurrentText(default_pal)
         self.cbb_palette.setFixedWidth(85)
-        self.cbb_palette.setToolTip("Select colormap")
+        bind_tooltip(self.cbb_palette, "Select colormap")
         self.cbb_palette.currentTextChanged.connect(self._on_palette_changed)
         row2_layout.addWidget(self.cbb_palette)
 
@@ -251,9 +302,10 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
         self.btn_norm.setIcon(Icons.norm(color=icon_color))
         self.btn_norm.setIconSize(QSize(14, 14))
         self.btn_norm.setFixedSize(22, 22)
-        self.btn_norm.setToolTip(
+        bind_tooltip(
+            self.btn_norm,
             "Intensity normalization to maximum of curve or selected [Xmin, Xmax] region.\n"
-            "Note: Visual change only; underlying data is not modified."
+            "Note: Visual change only; underlying data is not modified.",
         )
         self.btn_norm.toggled.connect(self._on_norm_toggled)
         self.btn_norm.setVisible(False)
@@ -262,8 +314,9 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
         self.norm_xmin = QLineEdit(self)
         self.norm_xmin.setFixedSize(48, 22)
         self.norm_xmin.setPlaceholderText("Xmin")
-        self.norm_xmin.setToolTip(
-            "Minimum X bound for local 1D normalization peak search"
+        bind_tooltip(
+            self.norm_xmin,
+            "Minimum X bound for local 1D normalization peak search",
         )
         self.norm_xmin.editingFinished.connect(self._on_norm_range_edited)
         self.norm_xmin.setVisible(False)
@@ -272,8 +325,9 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
         self.norm_xmax = QLineEdit(self)
         self.norm_xmax.setFixedSize(48, 22)
         self.norm_xmax.setPlaceholderText("Xmax")
-        self.norm_xmax.setToolTip(
-            "Maximum X bound for local 1D normalization peak search"
+        bind_tooltip(
+            self.norm_xmax,
+            "Maximum X bound for local 1D normalization peak search",
         )
         self.norm_xmax.editingFinished.connect(self._on_norm_range_edited)
         self.norm_xmax.setVisible(False)
@@ -507,15 +561,47 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
                 theme=active_theme,
             )
 
+    def _retranslate_mode_tooltips(self):
+        """Update mode-dependent Copy and parameter selector tooltips."""
+        if self.mode == "map":
+            self.btn_copy.setToolTip(
+                tr("Copy map to clipboard. Hold Ctrl + Click to copy data to clipboard")
+            )
+            self.cbb_param.setToolTip(tr("Select spectral parameter for this map"))
+        else:
+            self.btn_copy.setToolTip(
+                tr("Copy graph to clipboard. Hold Ctrl + Click to copy data to clipboard")
+            )
+            self.cbb_param.setToolTip(tr("Select spectral parameter for this graph"))
+
+    def _retranslate_subpanel(self, _lang: str = ""):
+        """Refresh badge, parameter combo labels, tooltips, and cached plot annotations."""
+        self.lbl_badge.setText(f" {self.color_display_name()} ")
+        self.cbb_param.blockSignals(True)
+        try:
+            for idx in range(self.cbb_param.count()):
+                key = self.cbb_param.itemData(idx)
+                if isinstance(key, str) and key:
+                    self.cbb_param.setItemText(idx, self._param_display(key))
+                    if key == PARAM_RB_RATIO:
+                        self.cbb_param.setItemData(
+                            idx,
+                            tr(
+                                "Ratio of the Red and Blue integrated intensities (I_Red / I_Blue).\n"
+                                "Requires the Red and Blue range selectors to be active."
+                            ),
+                            Qt.ToolTipRole,
+                        )
+        finally:
+            self.cbb_param.blockSignals(False)
+        self._retranslate_mode_tooltips()
+        if self._display_kind is not None:
+            self.rerender_cached(theme=self._current_theme)
+
     def set_mode(self, mode: str):
         """Configure subpanel for 'map' (2D heatmap) or 'spectra' (1D variation graph) mode."""
         self.mode = mode
-        if mode == "map":
-            self.btn_copy.setToolTip("Copy map to clipboard. Hold Ctrl + Click to copy data to clipboard")
-            self.cbb_param.setToolTip("Select spectral parameter for this map")
-        else:
-            self.btn_copy.setToolTip("Copy graph to clipboard. Hold Ctrl + Click to copy data to clipboard")
-            self.cbb_param.setToolTip("Select spectral parameter for this graph")
+        self._retranslate_mode_tooltips()
         self._sync_palette_visibility()
 
     def _invalidate_style_caches(self):
@@ -599,7 +685,7 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
 
     def is_ratio_display(self) -> bool:
         """True if this panel currently displays the Red/Blue ratio."""
-        return self.cbb_param.currentText() == PARAM_RB_RATIO
+        return self.get_selected_parameter() == PARAM_RB_RATIO
 
     def _on_param_changed(self, param: str):
         self._refresh_range_label()
@@ -640,7 +726,7 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
         """Build a pandas DataFrame containing the current subpanel's underlying numerical data."""
         import pandas as pd
 
-        param_name = self.cbb_param.currentText() or "Value"
+        param_name = self.cbb_param.currentText() or tr("Value")
         kind = self._display_kind
 
         if kind == "multi_profile":
@@ -653,7 +739,7 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
                     continue
                 if not np.any(np.isfinite(px) & np.isfinite(vy)):
                     continue
-                raw_name = str(entry.get("name") or f"Map {idx + 1}")
+                raw_name = str(entry.get("name") or tr("Map {index}", index=idx + 1))
                 display_name = str(custom_labels.get(raw_name) or raw_name)
                 valid_entries.append((display_name, px, vy))
             if not valid_entries:
@@ -662,7 +748,11 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
             x_label = (
                 self._multi_x_label
                 if self._multi_x_label.endswith("(mm)")
-                else f"{self._multi_x_label or 'Position'} (mm)"
+                else (
+                    f"{self._multi_x_label} (mm)"
+                    if self._multi_x_label
+                    else tr("Position (mm)")
+                )
             )
             ref_x = valid_entries[0][1]
             shared_x = all(
@@ -688,14 +778,14 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
             if not np.any(np.isfinite(val_arr)):
                 return None
             if self._series_x is not None and len(self._series_x) == len(val_arr):
-                x_label = self._series_xlabel or "Position (mm)"
+                x_label = self._series_xlabel or tr("Position (mm)")
                 return pd.DataFrame({
                     x_label: np.asarray(self._series_x, dtype=np.float64),
                     param_name: val_arr,
                 })
-            data = {"Spectrum #": np.arange(1, len(val_arr) + 1)}
+            data = {tr("Spectrum #"): np.arange(1, len(val_arr) + 1)}
             if self._series_labels and len(self._series_labels) == len(val_arr):
-                data["Spectrum"] = [str(lbl) for lbl in self._series_labels]
+                data[tr("Spectrum")] = [str(lbl) for lbl in self._series_labels]
             data[param_name] = val_arr
             return pd.DataFrame(data)
 
@@ -805,14 +895,12 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
             self.lbl_range.setText(target)
 
     def get_selected_parameter(self) -> str:
-        """Return currently selected parameter name."""
-        return self.cbb_param.currentText()
+        """Return currently selected canonical parameter key."""
+        return combo_data_or_text(self.cbb_param)
 
     def set_selected_parameter(self, parameter: str):
-        """Select a parameter in the dropdown."""
-        idx = self.cbb_param.findText(parameter)
-        if idx >= 0:
-            self.cbb_param.setCurrentIndex(idx)
+        """Select a parameter in the dropdown by canonical key or display text."""
+        set_combo_by_data_or_text(self.cbb_param, parameter)
 
     def apply_view_options_fast(
         self,
@@ -873,12 +961,12 @@ class LiveMapSubpanel(LiveMap1DMixin, LiveMap2DMixin, LiveMapSelectionMixin, QFr
                 custom_labels = self._view_options.get("custom_labels", {})
                 custom_colors = self._view_options.get("custom_colors", {})
                 if self._display_kind == "series" and self.line is not None:
-                    title_text = f"{self.color_name}: {self.cbb_param.currentText()}"
+                    title_text = f"{self.color_display_name()}: {self.cbb_param.currentText()}"
                     self.line.set_label(custom_labels.get(self.color_id) or title_text)
                     self.line.set_color(custom_colors.get(self.color_id) or self.color_hex)
                 elif self._display_kind == "multi_profile":
                     for idx, (ln, entry) in enumerate(zip(self.lines, self._multi_entries)):
-                        key = entry.get("name", f"Map {idx + 1}")
+                        key = entry.get("name") or tr("Map {index}", index=idx + 1)
                         auto_col = (
                             self.color_hex
                             if len(self._multi_entries) == 1

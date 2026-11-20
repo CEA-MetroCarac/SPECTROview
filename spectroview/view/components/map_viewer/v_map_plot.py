@@ -9,6 +9,7 @@ from matplotlib.colors import LogNorm
 import numpy as np
 
 from spectroview import PLOT_POLICY_DARK, PLOT_POLICY_LIGHT
+from spectroview.i18n import combo_data_or_text, tr
 from spectroview.view.components.common.v_notification import show_notification
 from spectroview.view.theme import current_tokens
 
@@ -63,7 +64,7 @@ class MapPlotMixin:
                     self._selector.draw_2d_overlay(self.selected_points, dx, dy, draw=False)
 
                 # Plot profile if exactly 2 points selected and in 2D map mode
-                map_type = self.cbb_map_type.currentText()
+                map_type = combo_data_or_text(self.cbb_map_type)
                 if len(self.selected_points) == 2 and map_type == '2Dmap':
                     self._plot_height_profile_on_map()
 
@@ -111,7 +112,7 @@ class MapPlotMixin:
             self.canvas.draw_idle()
             return
 
-        map_type = self.cbb_map_type.currentText()
+        map_type = combo_data_or_text(self.cbb_map_type)
         show_stats = self.action_show_stats.isChecked() if map_type != '2Dmap' else False
         show_grid = self.action_grid.isChecked()
 
@@ -142,7 +143,7 @@ class MapPlotMixin:
                 # ULTRA-FAST PATH: if heatmap data parameters did not change,
                 # only update clim/norm and colorbar without touching any data or collections
                 if last_rendered_key == cache_key:
-                    if self.cbb_color_scale.currentText() == "Log" and vmin_plot is not None and vmin_plot > 0:
+                    if combo_data_or_text(self.cbb_color_scale) == "Log" and vmin_plot is not None and vmin_plot > 0:
                         self.img.set_norm(LogNorm(vmin=vmin_plot, vmax=vmax_plot))
                     else:
                         self.img.set_norm(None)
@@ -172,7 +173,7 @@ class MapPlotMixin:
                         raise ValueError("PatchCollection count mismatch")
                     img_data = None
                     self.img.set_cmap(cmap)
-                    if self.cbb_color_scale.currentText() == "Log" and vmin_plot is not None and vmin_plot > 0:
+                    if combo_data_or_text(self.cbb_color_scale) == "Log" and vmin_plot is not None and vmin_plot > 0:
                         self.img.set_norm(LogNorm(vmin=vmin_plot, vmax=vmax_plot))
                     else:
                         self.img.set_norm(None)
@@ -192,7 +193,7 @@ class MapPlotMixin:
                 if img_data is not None and hasattr(self.img, 'set_data'):
                     self.img.set_cmap(cmap)
                     self.img.set_interpolation(interpolation)
-                    if self.cbb_color_scale.currentText() == "Log" and vmin_plot is not None and vmin_plot > 0:
+                    if combo_data_or_text(self.cbb_color_scale) == "Log" and vmin_plot is not None and vmin_plot > 0:
                         self.img.set_norm(LogNorm(vmin=vmin_plot, vmax=vmax_plot))
                     else:
                         self.img.set_norm(None)
@@ -350,15 +351,15 @@ class MapPlotMixin:
             error_msg = str(e)
             if "could not convert string to float" in error_msg or "dtype object cannot be converted to float" in error_msg:
                 show_notification(
-                    "Selected parameter contains non-numeric values and cannot be plotted.",
+                    tr("Selected parameter contains non-numeric values and cannot be plotted."),
                     notification_type="warning",
-                    title="Non-Numeric Data",
+                    title=tr("Non-Numeric Data"),
                 )
             else:
                 show_notification(
-                    f"Error plotting heatmap: {error_msg}",
+                    tr("Error plotting heatmap: {error}", error=error_msg),
                     notification_type="error",
-                    title="Plot Error",
+                    title=tr("Plot Error"),
                 )
             self.ax.clear()
             self.canvas.draw_idle()
@@ -366,9 +367,9 @@ class MapPlotMixin:
         except Exception as e:
             # Handle any other errors
             show_notification(
-                f"Error plotting heatmap: {str(e)}",
+                tr("Error plotting heatmap: {error}", error=str(e)),
                 notification_type="error",
-                title="Plot Error",
+                title=tr("Plot Error"),
             )
             self.ax.clear()
             self.canvas.draw_idle()
@@ -410,7 +411,7 @@ class MapPlotMixin:
         values -- intensity/area are clipped >=0 and fit parameters can be
         <=0 -- so fall back to linear rather than raising when vmin <= 0.
         """
-        if self.cbb_color_scale.currentText() == "Log" and vmin is not None and vmin > 0:
+        if combo_data_or_text(self.cbb_color_scale) == "Log" and vmin is not None and vmin > 0:
             return dict(norm=LogNorm(vmin=vmin, vmax=vmax))
         return dict(vmin=vmin, vmax=vmax)
 
@@ -438,10 +439,12 @@ class MapPlotMixin:
         std = float(np.std(arr_clean, ddof=1)) if len(arr_clean) > 1 else 0.0
         sigma3 = 3 * std
 
-        txt = (f"mean: {mean:.2f}\n"
-               f"min: {mn:.2f}\n"
-               f"max: {mx:.2f}\n"
-               f"3σ: {sigma3:.2f}")
+        txt = (
+            f"{tr('mean: {val}', val=f'{mean:.2f}')}\n"
+            f"{tr('min: {val}', val=f'{mn:.2f}')}\n"
+            f"{tr('max: {val}', val=f'{mx:.2f}')}\n"
+            f"3σ: {sigma3:.2f}"
+        )
 
         # Place text box on axes
         self._last_stats_text_artist = self.ax.text(

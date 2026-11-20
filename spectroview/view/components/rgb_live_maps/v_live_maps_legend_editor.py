@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview import DEFAULT_COLORS
+from spectroview.i18n import combo_data_or_text, set_combo_by_data_or_text, tr
 from spectroview.view.components.spectra_viewer.v_spectra_legend_editor import (
     SpectrumColorComboBox,
 )
@@ -33,6 +34,16 @@ LEGEND_LOCATIONS = [
     "lower right",
     "outside right",
     "outside top",
+]
+
+_LEGEND_LOCATION_ITEMS = [
+    ("Best", "best"),
+    ("Upper right", "upper right"),
+    ("Upper left", "upper left"),
+    ("Lower left", "lower left"),
+    ("Lower right", "lower right"),
+    ("Outside right", "outside right"),
+    ("Outside top", "outside top"),
 ]
 
 
@@ -50,7 +61,7 @@ class LiveMapsLegendEditorDialog(QDialog):
         parent=None,
     ):
         super().__init__(parent)
-        self.setWindowTitle("Edit Live Maps Legend")
+        self.setWindowTitle(tr("Edit Live Maps Legend"))
         self.resize(520, 380)
 
         self._entries = list(entries)
@@ -67,32 +78,35 @@ class LiveMapsLegendEditorDialog(QDialog):
         layout = QVBoxLayout(self)
 
         # ── Legend Box Options ──
-        box_group = QGroupBox("Legend box", self)
+        box_group = QGroupBox(tr("Legend box"), self)
         box_form = QFormLayout(box_group)
 
         self.cbb_loc = QComboBox(box_group)
-        self.cbb_loc.addItems(LEGEND_LOCATIONS)
-        self.cbb_loc.setCurrentText(self._initial_loc)
-        box_form.addRow("Location:", self.cbb_loc)
+        for label_en, loc_key in _LEGEND_LOCATION_ITEMS:
+            self.cbb_loc.addItem(tr(label_en), loc_key)
+        set_combo_by_data_or_text(self.cbb_loc, self._initial_loc)
+        box_form.addRow(tr("Location:"), self.cbb_loc)
 
         self.spb_ncol = QSpinBox(box_group)
         self.spb_ncol.setRange(1, 4)
         self.spb_ncol.setValue(self._initial_ncol)
-        box_form.addRow("Columns:", self.spb_ncol)
+        box_form.addRow(tr("Columns:"), self.spb_ncol)
 
         self.spb_fontsize = QSpinBox(box_group)
         self.spb_fontsize.setRange(6, 16)
         self.spb_fontsize.setValue(self._initial_fontsize)
-        box_form.addRow("Font size:", self.spb_fontsize)
+        box_form.addRow(tr("Font size:"), self.spb_fontsize)
 
         layout.addWidget(box_group)
 
         # ── Series Labels & Colors Table ──
-        table_group = QGroupBox("Series labels and colors", self)
+        table_group = QGroupBox(tr("Series labels and colors"), self)
         table_layout = QVBoxLayout(table_group)
 
         self.table = QTableWidget(len(self._entries), 3, table_group)
-        self.table.setHorizontalHeaderLabels(["Series / Map", "Color", "Custom label"])
+        self.table.setHorizontalHeaderLabels(
+            [tr("Series / Map"), tr("Color"), tr("Custom label")]
+        )
         self.table.setSelectionMode(QAbstractItemView.NoSelection)
         self.table.setFocusPolicy(Qt.NoFocus)
         self.table.verticalHeader().setVisible(False)
@@ -143,7 +157,7 @@ class LiveMapsLegendEditorDialog(QDialog):
 
     def _reset_defaults(self):
         """Reset custom labels/colors and legend box settings back to defaults."""
-        self.cbb_loc.setCurrentText("best")
+        set_combo_by_data_or_text(self.cbb_loc, "best")
         self.spb_ncol.setValue(1)
         self.spb_fontsize.setValue(8)
         for _key, _default_label, auto_color, color_combo, label_edit in self._row_widgets:
@@ -164,7 +178,7 @@ class LiveMapsLegendEditorDialog(QDialog):
         return {
             "custom_labels": labels,
             "custom_colors": colors,
-            "legend_loc": self.cbb_loc.currentText(),
+            "legend_loc": combo_data_or_text(self.cbb_loc),
             "legend_ncol": int(self.spb_ncol.value()),
             "legend_fontsize": int(self.spb_fontsize.value()),
         }

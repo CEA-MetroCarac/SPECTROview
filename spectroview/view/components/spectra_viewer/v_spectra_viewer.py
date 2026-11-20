@@ -29,6 +29,14 @@ from spectroview import (
     PLOT_POLICY_DARK,
     PLOT_POLICY_LIGHT,
 )
+from spectroview.i18n import (
+    bind_placeholder,
+    bind_tooltip,
+    combo_data_or_text,
+    on_language_changed,
+    set_combo_by_data_or_text,
+    tr,
+)
 from spectroview.view.components.common.customized_widgets import (
     NoDoubleClickZoomToolbar,
 )
@@ -142,6 +150,7 @@ class VSpectraViewer(
 
         # ── Spectral Range Selector state & manager ──
         self._init_range_brackets()
+        on_language_changed(self, self._retranslate_viewer)
 
     def _init_ui(self):
         main_layout = QVBoxLayout(self)
@@ -213,8 +222,9 @@ class VSpectraViewer(
         self.btn_eraser.setIcon(Icons.eraser())
         self.btn_eraser.setIconSize(QSize(18, 18))
         self.btn_eraser.setFixedSize(22, 22)
-        self.btn_eraser.setToolTip(
-            "Erase Cosmic Ray - click and drag over a spike to remove it"
+        bind_tooltip(
+            self.btn_eraser,
+            "Erase Cosmic Ray - click and drag over a spike to remove it",
         )
         self.btn_eraser.toggled.connect(self._toggle_erase_mode)
         layout.addWidget(self.btn_eraser, 0, Qt.AlignHCenter)
@@ -224,7 +234,7 @@ class VSpectraViewer(
         self.btn_erase_undo.setIcon(Icons.undo())
         self.btn_erase_undo.setIconSize(QSize(18, 18))
         self.btn_erase_undo.setFixedSize(22, 22)
-        self.btn_erase_undo.setToolTip("Undo last erasure")
+        bind_tooltip(self.btn_erase_undo, "Undo last erasure")
         self.btn_erase_undo.clicked.connect(self._erase_undo)
         self.btn_erase_undo.setVisible(False)
         layout.addWidget(self.btn_erase_undo, 0, Qt.AlignHCenter)
@@ -234,7 +244,7 @@ class VSpectraViewer(
         self.btn_erase_validate.setIcon(Icons.check())
         self.btn_erase_validate.setIconSize(QSize(18, 18))
         self.btn_erase_validate.setFixedSize(22, 22)
-        self.btn_erase_validate.setToolTip("Validate erasures and save corrections")
+        bind_tooltip(self.btn_erase_validate, "Validate erasures and save corrections")
         self.btn_erase_validate.clicked.connect(self._erase_validate)
         self.btn_erase_validate.setVisible(False)
         layout.addWidget(self.btn_erase_validate, 0, Qt.AlignHCenter)
@@ -247,13 +257,13 @@ class VSpectraViewer(
         # ── Y Shift slider ──
         lbl_y = QLabel("Y")
         lbl_y.setAlignment(Qt.AlignCenter)
-        lbl_y.setToolTip("Shift spectra vertically (waterfall offset)")
+        bind_tooltip(lbl_y, "Shift spectra vertically (waterfall offset)")
 
         self.slider_y_shift = QSlider(Qt.Vertical)
         self.slider_y_shift.setFixedHeight(120)
         self.slider_y_shift.setRange(0, 100)
         self.slider_y_shift.setValue(0)
-        self.slider_y_shift.setToolTip("Y Shift: offset each spectrum vertically")
+        bind_tooltip(self.slider_y_shift, "Y Shift: offset each spectrum vertically")
         self.slider_y_shift.valueChanged.connect(self._plot)
 
         layout.addWidget(lbl_y, 0, Qt.AlignHCenter)
@@ -264,13 +274,13 @@ class VSpectraViewer(
         # ── X Shift slider ──
         lbl_x = QLabel("X")
         lbl_x.setAlignment(Qt.AlignCenter)
-        lbl_x.setToolTip("Shift spectra horizontally")
+        bind_tooltip(lbl_x, "Shift spectra horizontally")
 
         self.slider_x_shift = QSlider(Qt.Vertical)
         self.slider_x_shift.setFixedHeight(120)
         self.slider_x_shift.setRange(0, 100)
         self.slider_x_shift.setValue(0)
-        self.slider_x_shift.setToolTip("X Shift: offset each spectrum horizontally")
+        bind_tooltip(self.slider_x_shift, "X Shift: offset each spectrum horizontally")
         self.slider_x_shift.valueChanged.connect(self._plot)
 
         layout.addWidget(lbl_x, 0, Qt.AlignHCenter)
@@ -291,7 +301,7 @@ class VSpectraViewer(
         self.btn_rescale.setIcon(Icons.rescale())
         self.btn_rescale.setIconSize(QSize(22, 22))
         self.btn_rescale.setFixedSize(30, 30)
-        self.btn_rescale.setToolTip("Rescale (Ctrl+R)")
+        bind_tooltip(self.btn_rescale, "Rescale (Ctrl+R)")
         self.btn_rescale.clicked.connect(self._rescale)
         layout.addWidget(self.btn_rescale)
 
@@ -299,6 +309,9 @@ class VSpectraViewer(
         self.btn_zoom = self._tool_btn("zoom.png", "Zoom", True)
         self.btn_baseline = self._tool_btn("baseline.png", "Baseline")
         self.btn_peak = self._tool_btn("peak.png", "Peak")
+        bind_tooltip(self.btn_zoom, "Zoom")
+        bind_tooltip(self.btn_baseline, "Baseline")
+        bind_tooltip(self.btn_peak, "Peak")
 
         self._tool_group = QButtonGroup(self)
         self._tool_group.setExclusive(False)
@@ -316,9 +329,10 @@ class VSpectraViewer(
         self.btn_norm.setObjectName("btn_norm")
         self._update_norm_button_style()
         self.btn_norm.setIcon(Icons.norm())
-        self.btn_norm.setToolTip(
+        bind_tooltip(
+            self.btn_norm,
             "Intensity normalization to maximum of spectrum or selected region.\n"
-            "Note: This normalization is just for visual change, the actual data is not changed."
+            "Note: This normalization is just for visual change, the actual data is not changed.",
         )
         self.btn_norm.setIconSize(QSize(22, 22))
         self.btn_norm.setFixedSize(30, 30)
@@ -328,17 +342,19 @@ class VSpectraViewer(
 
         self.norm_xmin = QLineEdit()
         self.norm_xmin.setFixedSize(50, 30)
-        self.norm_xmin.setPlaceholderText("Xmin")
-        self.norm_xmin.setToolTip(
-            "Intensity normalization to maximum of spectrum or selected region"
+        bind_placeholder(self.norm_xmin, "Xmin")
+        bind_tooltip(
+            self.norm_xmin,
+            "Intensity normalization to maximum of spectrum or selected region",
         )
         layout.addWidget(self.norm_xmin)
 
         self.norm_xmax = QLineEdit()
         self.norm_xmax.setFixedSize(50, 30)
-        self.norm_xmax.setPlaceholderText("Xmax")
-        self.norm_xmax.setToolTip(
-            "Intensity normalization to maximum of spectrum or selected region"
+        bind_placeholder(self.norm_xmax, "Xmax")
+        bind_tooltip(
+            self.norm_xmax,
+            "Intensity normalization to maximum of spectrum or selected region",
         )
         layout.addWidget(self.norm_xmax)
 
@@ -350,7 +366,7 @@ class VSpectraViewer(
         self.btn_bestfit.setCheckable(True)
         self.btn_bestfit.setChecked(True)
         self.btn_bestfit.setIcon(Icons.bestfit())
-        self.btn_bestfit.setToolTip("Show or hide best-fit lines")
+        bind_tooltip(self.btn_bestfit, "Show or hide best-fit lines")
         self.btn_bestfit.setIconSize(QSize(22, 22))
         self.btn_bestfit.setFixedSize(30, 30)
         self.btn_bestfit.toggled.connect(self._emit_view_options)
@@ -360,9 +376,10 @@ class VSpectraViewer(
         self.btn_legend = QToolButton()
         self.btn_legend.setCheckable(True)
         self.btn_legend.setIcon(Icons.legend())
-        self.btn_legend.setToolTip(
+        bind_tooltip(
+            self.btn_legend,
             "Show or hide the legend box. Double-click the legend to edit "
-            "all spectrum labels and colors."
+            "all spectrum labels and colors.",
         )
         self.btn_legend.setIconSize(QSize(22, 22))
         self.btn_legend.setFixedSize(30, 30)
@@ -372,10 +389,11 @@ class VSpectraViewer(
         # Heatmap / 3D Y-axis controls (hidden until heatmap or 3D mode is active)
         self.cbb_heatmap_yaxis = QComboBox()
         self.cbb_heatmap_yaxis.setFixedHeight(30)
-        self.cbb_heatmap_yaxis.addItem("Index", None)
-        self.cbb_heatmap_yaxis.setToolTip(
+        self.cbb_heatmap_yaxis.addItem(tr("Index"), None)
+        bind_tooltip(
+            self.cbb_heatmap_yaxis,
             "Heatmap Y-axis: choose parameter for vertical axis.\n"
-            "Index = spectrum order, or select a token parsed from filenames."
+            "Index = spectrum order, or select a token parsed from filenames.",
         )
         self.cbb_heatmap_yaxis.currentIndexChanged.connect(
             self._on_heatmap_yaxis_changed
@@ -386,11 +404,12 @@ class VSpectraViewer(
         self.le_heatmap_ylabel = QLineEdit()
         self.le_heatmap_ylabel.setFixedHeight(30)
         self.le_heatmap_ylabel.setFixedWidth(80)
-        self.le_heatmap_ylabel.setPlaceholderText("Y label")
-        self.le_heatmap_ylabel.setToolTip(
+        bind_placeholder(self.le_heatmap_ylabel, "Y label")
+        bind_tooltip(
+            self.le_heatmap_ylabel,
             "Custom label for the heatmap Y-axis.\n"
             "Leave empty for the automatic token name.\n"
-            "Example: Temperature (°C)"
+            "Example: Temperature (°C)",
         )
         self.le_heatmap_ylabel.textChanged.connect(self._on_heatmap_ylabel_changed)
         self.le_heatmap_ylabel.setVisible(False)
@@ -401,10 +420,11 @@ class VSpectraViewer(
         self.spin_heatmap_interp.setFixedWidth(85)
         self.spin_heatmap_interp.setRange(0, 2000)
         self.spin_heatmap_interp.setValue(300)
-        self.spin_heatmap_interp.setPrefix("Pts: ")
-        self.spin_heatmap_interp.setToolTip(
+        self.spin_heatmap_interp.setPrefix(tr("Pts: "))
+        bind_tooltip(
+            self.spin_heatmap_interp,
             "Number of interpolation points along the Y-axis for smooth\n"
-            "rendering. Set to 0 to disable interpolation (raw rows only)."
+            "rendering. Set to 0 to disable interpolation (raw rows only).",
         )
         self.spin_heatmap_interp.valueChanged.connect(self._emit_view_options)
         self.spin_heatmap_interp.setVisible(False)
@@ -423,7 +443,7 @@ class VSpectraViewer(
         self.lbl_r2 = QLabel("R²=0")
         layout.addWidget(self.lbl_r2)
         # Noise level
-        self.lbl_noise = QLabel("Noise=0")
+        self.lbl_noise = QLabel(tr("Noise={value}", value="0"))
         layout.addWidget(self.lbl_noise)
 
         # Vertical separator between navigation/coordinates and right-side mode/options/copy actions
@@ -436,10 +456,11 @@ class VSpectraViewer(
         self.btn_heatmap = QToolButton()
         self.btn_heatmap.setCheckable(True)
         self.btn_heatmap.setIcon(Icons.map_2d())
-        self.btn_heatmap.setToolTip(
+        bind_tooltip(
+            self.btn_heatmap,
             "Plot Heatmap — display multiple spectra as a 2D intensity map.\n"
             "X-axis: spectral axis, Y-axis: varying parameter (see options), "
-            "Color: intensity."
+            "Color: intensity.",
         )
         self.btn_heatmap.setIconSize(QSize(22, 22))
         self.btn_heatmap.setFixedSize(30, 30)
@@ -449,9 +470,10 @@ class VSpectraViewer(
         self.btn_3d = QToolButton()
         self.btn_3d.setCheckable(True)
         self.btn_3d.setIcon(Icons.view_3d())
-        self.btn_3d.setToolTip(
+        bind_tooltip(
+            self.btn_3d,
             "3D View — display selected spectra in 3D.\n"
-            "Drag with the mouse to rotate and explore viewing angles."
+            "Drag with the mouse to rotate and explore viewing angles.",
         )
         self.btn_3d.setIconSize(QSize(22, 22))
         self.btn_3d.setFixedSize(30, 30)
@@ -461,7 +483,7 @@ class VSpectraViewer(
         self.options_menu = self._create_options_menu()
         self.btn_options = QToolButton()
         self.btn_options.setIcon(Icons.settings())
-        self.btn_options.setToolTip("More view options")
+        bind_tooltip(self.btn_options, "More view options")
         self.btn_options.setIconSize(QSize(22, 22))
         self.btn_options.setFixedSize(30, 30)
         self.btn_options.setPopupMode(QToolButton.InstantPopup)
@@ -470,8 +492,9 @@ class VSpectraViewer(
 
         self.btn_copy = QPushButton()
         self.btn_copy.setIcon(Icons.copy())
-        self.btn_copy.setToolTip(
-            "Copy figure to clipboard. Hold Ctrl + Click to copy data to clipboard"
+        bind_tooltip(
+            self.btn_copy,
+            "Copy figure to clipboard. Hold Ctrl + Click to copy data to clipboard",
         )
         self.btn_copy.setIconSize(QSize(22, 22))
         self.btn_copy.setFixedSize(30, 30)
@@ -516,13 +539,26 @@ class VSpectraViewer(
         self._rescale()
 
     def _plot(self):
-        style_name = self.cbb_theme.currentText()
+        style_name = combo_data_or_text(self.cbb_theme)
         if style_name == "Dark Mode":
             style_path = PLOT_POLICY_DARK
         else:
             style_path = PLOT_POLICY_LIGHT
         with plt.style.context(style_path):
             self._plot_internal()
+
+    def _retranslate_viewer(self):
+        """Refresh non-bound labels, 'Index' token entries, and active plot on language switch."""
+        for attr in ("cbb_colorbar_param", "cbb_heatmap_yaxis"):
+            cb = getattr(self, attr, None)
+            if cb is not None and cb.count() > 0 and cb.itemData(0) is None:
+                cb.setItemText(0, tr("Index"))
+        if hasattr(self, "spin_heatmap_interp"):
+            self.spin_heatmap_interp.setPrefix(tr("Pts: "))
+        if getattr(self, "_tensor_data", None):
+            self._plot()
+        elif hasattr(self, "lbl_noise") and self.lbl_noise.text():
+            self.lbl_noise.setText(tr("Noise={value}", value="0"))
 
     def _plot_internal(self):
         if self._range_drag_bg is not None or self._suspended_range_layout is not None:
@@ -569,7 +605,7 @@ class VSpectraViewer(
         Y = self._tensor_data["y"]
         Y_norm = self._get_normalized_y_tensor(x, Y)
         x_shift_step, y_shift_step = self._compute_shift_steps(Y_norm=Y_norm)
-        plot_style = self.cbb_plotstyle.currentText()
+        plot_style = combo_data_or_text(self.cbb_plotstyle)
         lw = self.spin_lw.value()
         dot_size = self.spin_dotsize.value()
         if self._is_legend_colorbar_active():
@@ -660,24 +696,24 @@ class VSpectraViewer(
             height = float(self.height_entry.text()) if self.height_entry.text() else 4.0
 
             target_theme = (
-                self.cbb_copy_theme.currentText()
+                combo_data_or_text(self.cbb_copy_theme)
                 if hasattr(self, "cbb_copy_theme")
                 else "Light Mode"
             )
-            original_theme = self.cbb_theme.currentText()
+            original_theme = combo_data_or_text(self.cbb_theme)
 
             if target_theme != original_theme:
                 self._is_copying = True
                 try:
                     self.cbb_theme.blockSignals(True)
-                    self.cbb_theme.setCurrentText(target_theme)
+                    set_combo_by_data_or_text(self.cbb_theme, target_theme)
                     self._apply_plot_style()
                     self._plot()
                     self.canvas.draw()
 
                     copy_fig_to_clb(self.canvas, size_ratio=(width, height))
                 finally:
-                    self.cbb_theme.setCurrentText(original_theme)
+                    set_combo_by_data_or_text(self.cbb_theme, original_theme)
                     self.cbb_theme.blockSignals(False)
                     self._apply_plot_style()
                     self._plot()

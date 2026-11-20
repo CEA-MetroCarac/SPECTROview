@@ -12,6 +12,7 @@ from PySide6.QtCore import QSettings
 
 from spectroview.fit_engine.evaluator import eval_peak_initial
 from spectroview.fit_engine.noise import detect_noise_level
+from spectroview.i18n import combo_data_or_text, tr
 from spectroview.view.components.spectra_viewer.common import (
     _MockPeakModelObj,
     compute_normalized_y,
@@ -228,7 +229,7 @@ class SpectraPlot1DMixin:
                     else (
                         t_fnames[spec_idx]
                         if spec_idx < len(t_fnames)
-                        else f"Spectrum {spec_idx + 1}"
+                        else tr("Spectrum {index}", index=spec_idx + 1)
                     )
                 )
                 proxy_line = mlines.Line2D(
@@ -283,7 +284,7 @@ class SpectraPlot1DMixin:
             y_base = self._get_tensor_item("y_baseline", spec_idx, is_tensor_list)
             if y_base is not None and not is_sub:
                 self.ax.plot(
-                    x + x_offset, y_base + y_offset, "g--", lw=1.5, label="baseline"
+                    x + x_offset, y_base + y_offset, "g--", lw=1.5, label=tr("baseline")
                 )
 
             # ── Baseline anchor points ──
@@ -321,7 +322,7 @@ class SpectraPlot1DMixin:
                         residual + y_offset,
                         "blue",
                         lw=1.0,
-                        label="residual",
+                        label=tr("residual"),
                     )
 
             # ── Noise level ──
@@ -559,7 +560,9 @@ class SpectraPlot1DMixin:
             ampli_noise = detect_noise_level(y_data)
             noise_level = coef_noise * ampli_noise
             noise_label = (
-                f"noise ({coef_noise}×{ampli_noise:.1f})" if spec_idx == 0 else None
+                tr("noise ({coef}×{ampli})", coef=coef_noise, ampli=f"{ampli_noise:.1f}")
+                if spec_idx == 0
+                else None
             )
             self.ax.axhline(
                 y=noise_level + y_offset,
@@ -655,7 +658,7 @@ class SpectraPlot1DMixin:
 
         self.ax.set_xlabel(self.cbb_xaxis.currentText())
         self.ax.set_ylabel(self.cbb_yaxis.currentText())
-        is_log = self.cbb_yscale.currentText() == "Log"
+        is_log = combo_data_or_text(self.cbb_yscale) == "Log"
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 "ignore",
@@ -687,7 +690,7 @@ class SpectraPlot1DMixin:
         """Display R² value and noise level from the first selected spectrum."""
         if not self._tensor_data:
             self.lbl_r2.setText("R²=0")
-            self.lbl_noise.setText("Noise=0")
+            self.lbl_noise.setText(tr("Noise={value}", value="0"))
             return
 
         r2_vals = self._tensor_data.get("fit_r2")
@@ -706,6 +709,6 @@ class SpectraPlot1DMixin:
                 )
                 noise = detect_noise_level(y0)
                 noise_val = coef_noise * noise
-                self.lbl_noise.setText(f"Noise={noise_val:.1f}")
+                self.lbl_noise.setText(tr("Noise={value}", value=f"{noise_val:.1f}"))
             except Exception:
-                self.lbl_noise.setText("Noise=0")
+                self.lbl_noise.setText(tr("Noise={value}", value="0"))

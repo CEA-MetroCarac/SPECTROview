@@ -436,12 +436,17 @@ class TestLanguageSettings:
         settings.settings.setValue("language", "")
         assert settings.get_language() == "en"
 
-        settings.settings.setValue("language", "de")
+        settings.settings.setValue("language", "xx_unsupported")
         assert settings.get_language() == "en"
 
         settings.set_language("fr-FR")
         assert settings.get_language() == "fr"
         assert MSettings().get_language() == "fr"
+
+        for raw, expected in (("zh_CN", "zh"), ("de-DE", "de"), ("ru_RU", "ru")):
+            settings.set_language(raw)
+            assert settings.get_language() == expected
+            assert MSettings().get_language() == expected
 
     def test_language_config_export_and_import_round_trip(self, settings, tmp_path):
         settings.set_language("fr")

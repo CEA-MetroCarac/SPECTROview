@@ -63,7 +63,8 @@ def test_verify_app_bundle_and_stage_dmg_contents(tmp_path):
     (contents / "Info.plist").write_text("<plist/>", encoding="utf-8")
     (contents / "MacOS" / "SPECTROview").write_bytes(b"mach-o")
     (contents / "Frameworks" / "spectroview" / "resources" / "build_info.json").write_text("{}", encoding="utf-8")
-    (contents / "Frameworks" / "spectroview" / "resources" / "i18n" / "fr.json").write_text("{}", encoding="utf-8")
+    for _lang in ("fr", "zh", "de", "ru"):
+        (contents / "Frameworks" / "spectroview" / "resources" / "i18n" / f"{_lang}.json").write_text("{}", encoding="utf-8")
     (contents / "Frameworks" / "spectroview" / "ai_agent" / "config" / "model.yaml").write_text("m: 1", encoding="utf-8")
     (contents / "Frameworks" / "spectroview" / "ai_agent" / "prompts" / "system.md").write_text("# hi", encoding="utf-8")
     (contents / "Frameworks" / "certifi" / "cacert.pem").write_text("CERT", encoding="utf-8")

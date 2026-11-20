@@ -92,6 +92,9 @@ class NotificationType(str, Enum):
         if any(w in msg_lower for w in (
             "error", "failed", "failure", "rejected", "invalid", "cannot", "exception",
             "erreur", "échec", "echou", "rejeté", "invalide", "impossible",
+            "fehler", "fehlgeschlagen", "abgelehnt", "ungültig", "ausnahme",
+            "ошибка", "не удалось", "отклон", "неверн", "недопустим", "исключен",
+            "错误", "出错", "失败", "无效", "拒绝", "无法", "异常",
         )):
             return cls.ERROR
 
@@ -108,6 +111,16 @@ class NotificationType(str, Enum):
             or msg_lower.startswith("manquant")
             or msg_lower.startswith("veuillez ")
             or msg_lower.startswith("merci de ")
+            or msg_lower.startswith("kein")
+            or msg_lower.startswith("nicht ")
+            or msg_lower.startswith("bitte ")
+            or msg_lower.startswith("нет ")
+            or msg_lower.startswith("не ")
+            or msg_lower.startswith("пожалуйста")
+            or msg_lower.startswith("无")
+            or msg_lower.startswith("未")
+            or msg_lower.startswith("请")
+            or msg_lower.startswith("缺少")
             or any(w in msg_lower for w in (
                 "warning", "skipping", "skip", "no spectrum", "no map", "no data",
                 "no peak", "no baseline", "no model", "no fit", "already",
@@ -115,6 +128,11 @@ class NotificationType(str, Enum):
                 "avertissement", "ignoré", "déjà", "introuvable", "veuillez patienter",
                 "aucun spectre", "aucune carte", "aucune donnée", "aucun pic",
                 "aucune ligne de base", "aucun modèle",
+                "warnung", "übersprungen", "bereits", "nicht gefunden", "bitte warten",
+                "kein spektrum", "keine karte", "keine daten", "kein peak", "kein modell",
+                "предупрежден", "пропущ", "уже ", "не найден", "пожалуйста, подождите",
+                "нет спектра", "нет карты", "нет данных", "нет пика", "нет модели",
+                "警告", "跳过", "已存在", "未找到", "请稍候", "没有光谱", "没有图", "没有数据", "没有峰", "没有模型",
             ))
         ):
             return cls.WARNING
@@ -127,6 +145,11 @@ class NotificationType(str, Enum):
             "enregistré", "chargé avec succès", "actualisé avec succès",
             "créé", "envoyé", "validé", "annulé", "rétabli",
             "copié", "terminé", "succès", "réussi", "remplacé",
+            "gespeichert", "erfolgreich", "erstellt", "gesendet", "validiert",
+            "rückgängig", "wiederhergestellt", "kopiert", "abgeschlossen", "fertig",
+            "сохранен", "успешно", "создан", "отправлен", "проверен", "отменен",
+            "возвращен", "скопирован", "готово", "завершен", "заменен",
+            "已保存", "成功", "已创建", "已发送", "已验证", "已撤销", "已重做", "已复制", "完成", "已替换",
         )):
             return cls.SUCCESS
 

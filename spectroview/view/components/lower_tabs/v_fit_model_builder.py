@@ -94,8 +94,8 @@ class VFitModelBuilder(QWidget):
         # ==================================================
         left_scroll = QScrollArea()
         left_scroll.setFrameShape(QFrame.NoFrame)
-        left_scroll.setMaximumWidth(400)
-        left_scroll.setMinimumWidth(300)
+        left_scroll.setMaximumWidth(450)
+        left_scroll.setMinimumWidth(330)
         left_scroll.setWidgetResizable(True)
 
         left_container = QWidget()
@@ -144,7 +144,7 @@ class VFitModelBuilder(QWidget):
         splitter.addWidget(right_widget)
 
         # Initial sizes
-        splitter.setSizes([390, 650])
+        splitter.setSizes([380, 660])
 
         self._apply_initial_icons()
 
@@ -386,7 +386,7 @@ class VFitModelBuilder(QWidget):
 
         self.btn_base_subtract = QPushButton()
         bind_text(self.btn_base_subtract, "Subtract")
-        self.btn_base_subtract.setFixedSize(80, 24)
+        self.btn_base_subtract.setMinimumSize(80, 24)
         bind_tooltip(
             self.btn_base_subtract,
             "Subtract baseline. Hold Ctrl to subtract from all spectra.",
@@ -747,7 +747,7 @@ class VFitModelBuilder(QWidget):
         row1 = QHBoxLayout()
         self.btn_fit = QPushButton()
         bind_text(self.btn_fit, "Fit")
-        self.btn_fit.setFixedSize(81, 24)
+        self.btn_fit.setMinimumSize(81, 24)
         bind_tooltip(self.btn_fit, "Fit the spectrum. Hold Ctrl to fit all spectra.")
         self.btn_fit.clicked.connect(
             lambda: self._emit_with_ctrl(self.fit_requested)
@@ -802,7 +802,7 @@ class VFitModelBuilder(QWidget):
 
         self.btn_apply = QPushButton()
         bind_text(self.btn_apply, "Apply")
-        self.btn_apply.setFixedWidth(86)
+        self.btn_apply.setMinimumWidth(86)
         bind_tooltip(
             self.btn_apply,
             "Apply selected fit model to current selected spectrum(s).",

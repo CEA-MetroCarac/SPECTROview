@@ -56,7 +56,12 @@ class GeneralTabPage(QWidget):
         "theme", "thème", "appearance", "apparence", "dark", "sombre", "gray", "grey", "gris",
         "light", "clair", "modern", "moderne", "classic", "classique",
         "modern dark", "modern gray", "modern grey", "modern light", "classic dark", "classic light",
-        "language", "langue", "english", "anglais", "french", "français", "francais", "locale",
+        "language", "langue", "sprache", "язык", "语言",
+        "english", "anglais", "englisch", "английский", "英语",
+        "french", "français", "francais", "französisch", "французский", "法语",
+        "chinese", "简体中文", "中文", "chinois", "chinesisch", "китайский",
+        "german", "deutsch", "allemand", "немецкий", "德语",
+        "russian", "русский", "russe", "russisch", "俄语", "locale",
     ]
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -89,7 +94,7 @@ class GeneralTabPage(QWidget):
         self.btn_working_folder = QPushButton()
         bind_text(self.btn_working_folder, "Browse")
         self.btn_working_folder.setIcon(Icons.folder())
-        self.btn_working_folder.setMaximumWidth(95)
+        self.btn_working_folder.setMinimumWidth(95)
         bind_tooltip(self.btn_working_folder, "Select or change the SPECTROview working folder")
 
         self.le_working_folder = QLineEdit()
@@ -101,7 +106,7 @@ class GeneralTabPage(QWidget):
         self.btn_open_working_folder = QPushButton()
         bind_text(self.btn_open_working_folder, "Open")
         self.btn_open_working_folder.setIcon(Icons.open())
-        self.btn_open_working_folder.setMaximumWidth(85)
+        self.btn_open_working_folder.setMinimumWidth(85)
         bind_tooltip(self.btn_open_working_folder, "Open working folder in system file manager")
         self.btn_open_working_folder.clicked.connect(self._on_open_working_folder)
 
@@ -321,7 +326,12 @@ class GeneralTabPage(QWidget):
             "gray", "grey", "gris", "light", "clair", "modern", "moderne", "classic", "classique",
         ]
         language_terms = [
-            "language", "langue", "english", "anglais", "french", "français", "francais", "locale",
+            "language", "langue", "sprache", "язык", "语言",
+        "english", "anglais", "englisch", "английский", "英语",
+        "french", "français", "francais", "französisch", "французский", "法语",
+        "chinese", "简体中文", "中文", "chinois", "chinesisch", "китайский",
+        "german", "deutsch", "allemand", "немецкий", "德语",
+        "russian", "русский", "russe", "russisch", "俄语", "locale",
         ]
         update_terms = [
             "update", "updates", "mise à jour", "mises à jour", "startup", "démarrage",

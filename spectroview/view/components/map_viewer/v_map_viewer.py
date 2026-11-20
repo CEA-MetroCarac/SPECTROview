@@ -332,7 +332,7 @@ class VMapViewer(
         self.cbb_zparameter = QComboBox()
         self.cbb_zparameter.addItem(tr('Intensity'), 'Intensity')
         self.cbb_zparameter.addItem(tr('Area'), 'Area')
-        self.cbb_zparameter.setFixedWidth(68)
+        self.cbb_zparameter.setMinimumWidth(68)
         bind_tooltip(self.cbb_zparameter, "Select parameter to plot in heatmap")
         self.cbb_zparameter.currentIndexChanged.connect(lambda: self._on_parameter_changed())
         z_slider_layout.addWidget(self.cbb_zparameter)
@@ -476,7 +476,7 @@ class VMapViewer(
 
         self.btn_extract_profile = QPushButton()
         bind_text(self.btn_extract_profile, "Extract profile")
-        self.btn_extract_profile.setFixedWidth(110)
+        self.btn_extract_profile.setMinimumWidth(110)
         self.btn_extract_profile.clicked.connect(
             lambda: self.extract_profile_requested.emit(self.txt_profile_name.text())
         )

@@ -54,8 +54,9 @@ axes.labelsize : 12
 
 figure.dpi       : 90      # figure dots per inch
 
-# Use sans-serif fonts
-font.family : Arial
+# Use Arial for Latin/Cyrillic with sans-serif CJK fallback
+font.family : Arial, DejaVu Sans, sans-serif
+font.sans-serif : Microsoft YaHei, SimHei, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, WenQuanYi Micro Hei, DejaVu Sans
 mathtext.fontset : dejavusans
 
 # Use LaTeX for math formatting

@@ -20,10 +20,23 @@ def test_get_application_font_macos():
 
 
 def test_get_application_font_windows():
-    """Verify that Windows resolves to Segoe UI at 10pt (standard 96-DPI Windows desktop font)."""
+    """Verify that Windows resolves to Segoe UI at 10pt with CJK/Cyrillic fallbacks."""
     font = get_application_font(platform="win32")
     assert font.family() == "Segoe UI"
     assert font.pointSize() == 10
+    assert any("YaHei" in fam or "CJK" in fam for fam in font.families())
+
+
+def test_plotpolicy_styles_include_cjk_and_cyrillic_font_fallbacks():
+    """Verify Matplotlib style sheets specify sans-serif with CJK/Cyrillic fallbacks."""
+    import matplotlib as mpl
+    from spectroview import PLOT_POLICY, PLOT_POLICY_DARK, PLOT_POLICY_LIGHT
+
+    for style_path in (PLOT_POLICY, PLOT_POLICY_DARK, PLOT_POLICY_LIGHT):
+        rc = mpl.rc_params_from_file(style_path)
+        assert rc["font.family"] == ["Arial", "DejaVu Sans", "sans-serif"]
+        sans = list(rc["font.sans-serif"])
+        assert any("YaHei" in f or "CJK" in f for f in sans)
 
 
 def test_get_application_font_linux():

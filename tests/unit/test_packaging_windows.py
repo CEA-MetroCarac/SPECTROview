@@ -49,7 +49,8 @@ def test_verify_onedir_bundle_and_create_portable_zip(tmp_path):
 
     (dist_dir / "SPECTROview.exe").write_bytes(b"MZ")
     (dist_dir / "_internal" / "spectroview" / "resources" / "build_info.json").write_text("{}", encoding="utf-8")
-    (dist_dir / "_internal" / "spectroview" / "resources" / "i18n" / "fr.json").write_text("{}", encoding="utf-8")
+    for _lang in ("fr", "zh", "de", "ru"):
+        (dist_dir / "_internal" / "spectroview" / "resources" / "i18n" / f"{_lang}.json").write_text("{}", encoding="utf-8")
     (dist_dir / "_internal" / "spectroview" / "ai_agent" / "config" / "model.yaml").write_text("k: v", encoding="utf-8")
     (dist_dir / "_internal" / "spectroview" / "ai_agent" / "prompts" / "system.md").write_text("# hi", encoding="utf-8")
     (dist_dir / "_internal" / "certifi" / "cacert.pem").write_text("CERT", encoding="utf-8")

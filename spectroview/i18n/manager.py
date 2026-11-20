@@ -16,23 +16,72 @@ logger = logging.getLogger(__name__)
 SUPPORTED_LANGUAGES: tuple[tuple[str, str], ...] = (
     ("en", "English"),
     ("fr", "Français"),
+    ("zh", "简体中文"),
+    ("de", "Deutsch"),
+    ("ru", "Русский"),
 )
+LOCALE_TAGS: dict[str, str] = {
+    "en": "en_US",
+    "fr": "fr_FR",
+    "zh": "zh_CN",
+    "de": "de_DE",
+    "ru": "ru_RU",
+}
 DEFAULT_LANGUAGE: str = "en"
 
 _VALID_LANG_CODES = {code for code, _ in SUPPORTED_LANGUAGES}
 
+_LANGUAGE_ALIASES: dict[str, str] = {
+    "en": "en",
+    "english": "en",
+    "anglais": "en",
+    "fr": "fr",
+    "french": "fr",
+    "français": "fr",
+    "francais": "fr",
+    "zh": "zh",
+    "zh_cn": "zh",
+    "zh_hans": "zh",
+    "zh_hans_cn": "zh",
+    "chinese": "zh",
+    "simplified chinese": "zh",
+    "简体中文": "zh",
+    "中文": "zh",
+    "de": "de",
+    "de_de": "de",
+    "de_at": "de",
+    "de_ch": "de",
+    "deutsch": "de",
+    "german": "de",
+    "allemand": "de",
+    "ru": "ru",
+    "ru_ru": "ru",
+    "russian": "ru",
+    "русский": "ru",
+    "russe": "ru",
+}
+
+_QTBASE_CANDIDATES: dict[str, tuple[str, ...]] = {
+    "fr": ("qtbase_fr",),
+    "zh": ("qtbase_zh_CN", "qtbase_zh"),
+    "de": ("qtbase_de",),
+    "ru": ("qtbase_ru",),
+}
+
 
 def normalize_language(lang: Optional[str]) -> str:
-    """Normalize arbitrary locale/language strings to canonical codes (``'en'``, ``'fr'``)."""
+    """Normalize arbitrary locale/language strings to canonical codes (``'en'``, ``'fr'``, ``'zh'``, ``'de'``, ``'ru'``)."""
     raw = str(lang or "").strip().lower().replace("-", "_")
     if not raw:
         return DEFAULT_LANGUAGE
     if raw in _VALID_LANG_CODES:
         return raw
-    if raw.startswith("fr") or raw in ("french", "français", "francais"):
-        return "fr"
-    if raw.startswith("en") or raw in ("english", "anglais"):
-        return "en"
+    if raw in _LANGUAGE_ALIASES:
+        return _LANGUAGE_ALIASES[raw]
+    # Also check prefix before region/script separator (e.g. 'en_GB', 'zh_SG', 'de_LU')
+    prefix = raw.split("_", 1)[0]
+    if prefix in _VALID_LANG_CODES:
+        return prefix
     return DEFAULT_LANGUAGE
 
 
@@ -50,10 +99,26 @@ def _format_safe(template: str, fallback: str, kwargs: dict[str, Any]) -> str:
 
 
 def _plural_index(lang: str, count: int) -> int:
-    """Return plural form index (0 = singular, 1 = plural) for *lang*."""
+    """Return plural form index for *lang* using CLDR/gettext rules.
+
+    - ``zh``: 1 form (index ``0``)
+    - ``fr``: 2 forms (``0`` for ``0, 1``; ``1`` otherwise)
+    - ``de`` / ``en``: 2 forms (``0`` for ``1``; ``1`` otherwise)
+    - ``ru``: 3 Slavic forms (``0`` for ``1, 21, ...``; ``1`` for ``2-4, 22-24, ...``; ``2`` for ``0, 5-20, ...``)
+    """
     n = abs(count)
+    if lang == "zh":
+        return 0
     if lang == "fr":
         return 0 if n in (0, 1) else 1
+    if lang == "ru":
+        n10 = n % 10
+        n100 = n % 100
+        if n10 == 1 and n100 != 11:
+            return 0
+        if 2 <= n10 <= 4 and not (12 <= n100 <= 14):
+            return 1
+        return 2
     return 0 if n == 1 else 1
 
 
@@ -139,16 +204,20 @@ class TranslationManager(QObject):
             return
 
         translator = QTranslator(self)
-        qm_name = f"qtbase_{lang}"
         qt_dir = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
-        loaded = translator.load(qm_name, qt_dir)
-        if not loaded:
-            loaded = translator.load(qm_name, str(self._i18n_dir()))
+        candidates = _QTBASE_CANDIDATES.get(lang, (f"qtbase_{lang}",))
+        loaded = False
+        loaded_name = candidates[0]
+        for qm_name in candidates:
+            if translator.load(qm_name, qt_dir) or translator.load(qm_name, str(self._i18n_dir())):
+                loaded = True
+                loaded_name = qm_name
+                break
         if loaded:
             app.installTranslator(translator)
             self._qt_translator = translator
         else:
-            logger.debug("Qt standard translator '%s' not found in %s", qm_name, qt_dir)
+            logger.debug("Qt standard translator '%s' not found in %s", loaded_name, qt_dir)
 
     def translate(self, text: str, *, ctx: str = "", **kwargs: Any) -> str:
         """Translate *text* into the active language, optionally using *ctx* and format *kwargs*."""
@@ -182,7 +251,7 @@ class TranslationManager(QObject):
         """Translate a countable string using locale-appropriate pluralization rules."""
         fmt_kwargs = {"count": count, **kwargs}
         idx = _plural_index(self._current_lang, count)
-        default_template = singular if idx == 0 else plural
+        default_template = singular if abs(count) == 1 else plural
 
         if self._current_lang == DEFAULT_LANGUAGE:
             return _format_safe(default_template, default_template, fmt_kwargs)

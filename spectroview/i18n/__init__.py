@@ -20,6 +20,7 @@ from spectroview.i18n.bindings import (
 )
 from spectroview.i18n.manager import (
     DEFAULT_LANGUAGE,
+    LOCALE_TAGS,
     SUPPORTED_LANGUAGES,
     TranslationManager,
     get_language,
@@ -31,6 +32,7 @@ from spectroview.i18n.manager import (
 
 __all__ = [
     "DEFAULT_LANGUAGE",
+    "LOCALE_TAGS",
     "SUPPORTED_LANGUAGES",
     "TranslationManager",
     "bind_combo_items",

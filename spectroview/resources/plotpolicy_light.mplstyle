@@ -61,7 +61,8 @@ lines.markersize  : 4            # markersize, in points
 # The font.size property is the default font size for text, given in pts.
 # 12pt is the standard value.
 #
-font.family         : Arial
+font.family         : Arial, DejaVu Sans, sans-serif
+font.sans-serif     : Microsoft YaHei, SimHei, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, WenQuanYi Micro Hei, DejaVu Sans
 #font.style          : normal
 #font.variant        : normal
 #font.weight         : medium

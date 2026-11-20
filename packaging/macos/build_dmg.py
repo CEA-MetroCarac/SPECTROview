@@ -80,6 +80,9 @@ def verify_app_bundle(app_path: Path) -> None:
     for rel in (
         "spectroview/resources/build_info.json",
         "spectroview/resources/i18n/fr.json",
+        "spectroview/resources/i18n/zh.json",
+        "spectroview/resources/i18n/de.json",
+        "spectroview/resources/i18n/ru.json",
         "spectroview/ai_agent/config/model.yaml",
         "spectroview/ai_agent/prompts/system.md",
         "certifi/cacert.pem",

@@ -103,12 +103,12 @@ class TestVFitModelBuilderCopyPasteFeedback:
         builder.btn_peak_paste.click()
         assert len(peak_paste_emitted) == 1
 
-        # Fit button size (increased by 50% from 54px to 81px)
-        assert builder.btn_fit.width() == 81
-        assert builder.btn_fit.height() == 24
+        # Fit button size (minimum increased by 50% from 54px to 81px; expandable for i18n)
+        assert builder.btn_fit.minimumWidth() == 81
+        assert builder.btn_fit.minimumHeight() == 24
 
-        # Apply fit model button size (increased by 30% from 66px to 86px)
-        assert builder.btn_apply.width() == 86
+        # Apply fit model button size (minimum increased by 30% from 66px to 86px)
+        assert builder.btn_apply.minimumWidth() == 86
 
         # Fit model combobox size (reduced maximum width by 10% from 336px to 302px)
         assert builder.cbb_model.maximumWidth() == 302

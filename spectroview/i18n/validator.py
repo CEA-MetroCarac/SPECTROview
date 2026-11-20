@@ -155,7 +155,9 @@ def _placeholder_names(template: str) -> set[str]:
     names: set[str] = set()
     for _, field_name, _, _ in Formatter().parse(template):
         if field_name is not None:
-            names.add(field_name.split(".")[0].split("[")[0])
+            root = field_name.split(".")[0].split("[")[0]
+            if root.isidentifier():
+                names.add(root)
     return names
 
 
@@ -183,12 +185,23 @@ class ValidationReport:
         )
 
 
+def expected_plural_forms(lang: str) -> int:
+    """Return the required plural form count for language code *lang*."""
+    norm = lang.strip().lower().split("_")[0].split("-")[0]
+    if norm == "zh":
+        return 1
+    if norm == "ru":
+        return 3
+    return 2
+
+
 def validate_catalog(
     lang: str = "fr",
     *,
     source_root: Optional[Path] = None,
     catalog_path: Optional[Path] = None,
     required_strings: Iterable[str] = (),
+    required_plurals: Iterable[str] = (),
 ) -> ValidationReport:
     """Validate ``spectroview/resources/i18n/<lang>.json`` against extracted keys."""
     pkg_root = source_root or Path(__file__).resolve().parents[1]
@@ -198,12 +211,15 @@ def validate_catalog(
     extracted = extract_keys_from_sources(pkg_root)
     for req in required_strings:
         extracted.add_string(req)
+    for req in required_plurals:
+        extracted.plurals.add(req)
 
     strings_map: dict[str, str] = catalog.get("strings", {})
     plurals_map: dict[str, list[str]] = catalog.get("plurals", {})
     contexts_map: dict[str, dict[str, Any]] = catalog.get("contexts", {})
 
     report = ValidationReport()
+    req_forms = expected_plural_forms(lang)
 
     for key in sorted(extracted.strings):
         if key not in strings_map:
@@ -223,13 +239,13 @@ def validate_catalog(
             s_en, p_en = key.split("|", 1)
             if (
                 not isinstance(forms, list)
-                or len(forms) < 2
-                or not all(isinstance(f, str) and f.strip() for f in forms[:2])
+                or len(forms) < req_forms
+                or not all(isinstance(f, str) and f.strip() for f in forms[:req_forms])
             ):
                 report.empty_plurals.append(key)
             else:
                 expected = _placeholder_names(s_en) | _placeholder_names(p_en)
-                if not all(_placeholder_names(f) <= expected for f in forms[:2]):
+                if not all(_placeholder_names(f) <= expected for f in forms[:req_forms]):
                     report.placeholder_mismatches.append(f"{key!r} -> {forms!r}")
 
     for ctx, keys in sorted(extracted.contexts.items()):

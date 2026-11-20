@@ -115,13 +115,13 @@ try:
 except Exception as exc:
     print(f"[main.spec] Warning: PyInstaller hook helper issue: {exc}")
 
-# Bundle Qt base translations (e.g. qtbase_fr.qm) so standard QMessageBox/QDialogButtonBox
-# buttons remain localized in frozen builds without shipping all unused QML/designer catalogs.
+# Bundle Qt base translations so standard QMessageBox/QDialogButtonBox buttons
+# remain localized in frozen builds across all supported languages.
 try:
     from PySide6.QtCore import QLibraryInfo
 
     _qt_tr_dir = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
-    for _qm_name in ("qtbase_fr.qm",):
+    for _qm_name in ("qtbase_fr.qm", "qtbase_zh_CN.qm", "qtbase_de.qm", "qtbase_ru.qm"):
         _qm_path = os.path.join(_qt_tr_dir, _qm_name)
         if os.path.isfile(_qm_path):
             extra_datas.append((_qm_path, "spectroview/resources/i18n"))

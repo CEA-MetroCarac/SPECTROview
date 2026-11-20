@@ -41,17 +41,21 @@ def get_application_font(
     if plat == "darwin":
         # macOS uses 72 DPI points where 1 pt = 1 px.
         # Apple Human Interface Guidelines set standard control/body text to 13pt.
-        # .AppleSystemUIFont is the native San Francisco system font.
+        # .AppleSystemUIFont is the native San Francisco system font, with explicit
+        # CJK/Cyrillic fallbacks for multilingual UI consistency.
         font = QFont(".AppleSystemUIFont")
         point_size = app.font().pointSize() if app and app.font().pointSize() >= 12 else 13
         font.setPointSize(point_size)
         font.setStyleHint(QFont.StyleHint.SansSerif)
+        font.setFamilies([".AppleSystemUIFont", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Helvetica Neue"])
         return font
     elif plat.startswith("win"):
         # Windows uses 96 DPI standard scaling where 10pt = 13.33px.
-        # 'Segoe UI' at 10pt provides the canonical Windows appearance.
+        # 'Segoe UI' remains the primary family while explicit CJK/Cyrillic fallbacks
+        # prevent missing-glyph boxes in Simplified Chinese and Russian.
         font = QFont("Segoe UI", 10)
         font.setStyleHint(QFont.StyleHint.SansSerif)
+        font.setFamilies(["Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", "SimSun", "Noto Sans CJK SC", "DejaVu Sans"])
         return font
     else:
         # Linux / X11 / Wayland: inherit desktop font or default to sans-serif >= 10pt.
@@ -59,6 +63,8 @@ def get_application_font(
         point_size = app.font().pointSize() if app and app.font().pointSize() >= 10 else 10
         font.setPointSize(point_size)
         font.setStyleHint(QFont.StyleHint.SansSerif)
+        base_family = font.family() or "Sans Serif"
+        font.setFamilies([base_family, "Noto Sans", "DejaVu Sans", "Noto Sans CJK SC", "WenQuanYi Micro Hei"])
         return font
 
 

@@ -592,9 +592,17 @@ class VMChat(QObject):
             .replace("{active_df_info}", active_df_info)
             .replace("{graphs_info}", graphs_info)
         )
-        if get_language() == "fr":
+        _LANG_RESPONSE_HINTS = {
+            "fr": "French (français)",
+            "zh": "Simplified Chinese (简体中文)",
+            "de": "German (Deutsch)",
+            "ru": "Russian (Русский)",
+        }
+        active_lang = get_language()
+        if active_lang in _LANG_RESPONSE_HINTS:
+            lang_label = _LANG_RESPONSE_HINTS[active_lang]
             prompt += (
-                "\n\nRespond to the user in French (français). Keep scientific "
+                f"\n\nRespond to the user in {lang_label}. Keep scientific "
                 "symbols, units, DataFrame column names, plot style identifiers, "
                 "and tool arguments unchanged."
             )

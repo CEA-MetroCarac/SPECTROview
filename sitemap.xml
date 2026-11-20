@@ -1,143 +1,493 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/changelog/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/changelog/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/changelog/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/changelog/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/log/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/log/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/log/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/log/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/api/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/api/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/api/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/api/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/api/2dmap/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/api/2dmap/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/api/2dmap/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/api/2dmap/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/api/calculators/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/api/calculators/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/api/calculators/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/api/calculators/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/api/extending/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/api/extending/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/api/extending/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/api/extending/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/api/graphs/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/api/graphs/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/api/graphs/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/api/graphs/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/api/spectra/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/api/spectra/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/api/spectra/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/api/spectra/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/ai_agent/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/ai_agent/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/ai_agent/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/ai_agent/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/file_loading/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/file_loading/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/file_loading/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/file_loading/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/graphs/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/graphs/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/graphs/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/graphs/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/maps/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/maps/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/maps/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/maps/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/mcp_server/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/mcp_server/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/mcp_server/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/mcp_server/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/mva/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/mva/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/mva/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/mva/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/spectra/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/spectra/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/spectra/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/spectra/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/spectra_store/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/spectra_store/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/spectra_store/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/spectra_store/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/theme_design_system/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/theme_design_system/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/theme_design_system/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/theme_design_system/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/vbf_engine/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/developer/vbf_engine/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/vbf_engine/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/vbf_engine/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/roadmaps/multi_map_selection_live_maps/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/roadmaps/multi_map_selection_live_maps/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/roadmaps/multi_map_selection_live_maps/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/roadmaps/multi_map_selection_live_maps/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/roadmaps/vbf_performance_audit_and_roadmap/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/roadmaps/vbf_performance_audit_and_roadmap/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/roadmaps/vbf_performance_audit_and_roadmap/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/roadmaps/vbf_performance_audit_and_roadmap/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/ai_agent/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/ai_agent/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/ai_agent/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/ai_agent/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/calculators/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/calculators/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/calculators/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/calculators/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/graphs/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/graphs/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/graphs/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/graphs/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/installation/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/installation/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/installation/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/installation/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/menu_bar/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/menu_bar/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/menu_bar/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/menu_bar/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/mva/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/mva/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/mva/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/mva/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/save_load/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/save_load/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/save_load/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/save_load/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/settings/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/settings/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/settings/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/settings/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/shortcuts/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/shortcuts/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/shortcuts/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/shortcuts/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/spectra_maps/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/spectra_maps/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/spectra_maps/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/spectra_maps/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/supported_data/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/supported_data/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/supported_data/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/supported_data/"/>
     </url>
     <url>
-         <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/ui_overview/</loc>
-         <lastmod>2026-11-20</lastmod>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/user_manual/ui_overview/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/ui_overview/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/ui_overview/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/changelog/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/changelog/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/changelog/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/log/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/log/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/log/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/api/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/api/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/api/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/api/2dmap/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/api/2dmap/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/api/2dmap/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/api/calculators/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/api/calculators/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/api/calculators/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/api/extending/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/api/extending/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/api/extending/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/api/graphs/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/api/graphs/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/api/graphs/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/api/spectra/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/api/spectra/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/api/spectra/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/ai_agent/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/ai_agent/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/ai_agent/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/file_loading/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/file_loading/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/file_loading/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/graphs/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/graphs/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/graphs/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/maps/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/maps/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/maps/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/mcp_server/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/mcp_server/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/mcp_server/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/mva/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/mva/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/mva/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/spectra/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/spectra/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/spectra/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/spectra_store/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/spectra_store/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/spectra_store/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/theme_design_system/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/theme_design_system/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/theme_design_system/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/vbf_engine/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/vbf_engine/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/developer/vbf_engine/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/roadmaps/multi_map_selection_live_maps/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/roadmaps/multi_map_selection_live_maps/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/roadmaps/multi_map_selection_live_maps/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/roadmaps/vbf_performance_audit_and_roadmap/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/roadmaps/vbf_performance_audit_and_roadmap/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/roadmaps/vbf_performance_audit_and_roadmap/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/ai_agent/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/ai_agent/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/ai_agent/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/calculators/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/calculators/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/calculators/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/graphs/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/graphs/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/graphs/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/installation/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/installation/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/installation/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/menu_bar/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/menu_bar/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/menu_bar/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/mva/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/mva/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/mva/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/save_load/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/save_load/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/save_load/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/settings/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/settings/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/settings/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/shortcuts/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/shortcuts/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/shortcuts/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/spectra_maps/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/spectra_maps/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/spectra_maps/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/supported_data/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/supported_data/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/supported_data/"/>
+    </url>
+    <url>
+        <loc>https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/ui_overview/</loc>
+        <lastmod>2026-11-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/ui_overview/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://CEA-MetroCarac.github.io/SPECTROview/user_manual/ui_overview/"/>
     </url>
 </urlset>

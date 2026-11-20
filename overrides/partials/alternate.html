@@ -1,0 +1,37 @@
+{#- Custom EN/FR language switcher: globe icon + active locale code (EN/FR) + chevron -#}
+{% set current_locale = i18n_page_locale | default(config.theme.language, true) | default('en', true) %}
+{% set icon = config.theme.icon.alternate or "material/web" %}
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="{{ lang.t('select.language') }}"
+      title="{{ lang.t('select.language') }}"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        {% include ".icons/" ~ icon ~ ".svg" %}
+      </span>
+      <span class="md-lang-switcher__code">{{ current_locale | upper }}</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        {% include ".icons/material/chevron-down.svg" %}
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        {% for alt in config.extra.alternate %}
+          <li class="md-select__item">
+            <a
+              href="{{ alt.link | url }}"
+              hreflang="{{ alt.lang }}"
+              class="md-select__link"
+              {%- if alt.lang == current_locale %} aria-current="true"{% endif %}
+            >
+              {{ alt.name }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>

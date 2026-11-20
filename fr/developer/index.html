@@ -1,0 +1,2636 @@
+
+<!doctype html>
+<html lang="fr" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Outil interactif de traitement, d'ajustement et de visualisation de données spectroscopiques">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/">
+      
+      
+        <link rel="prev" href="../user_manual/ai_agent/">
+      
+      
+        <link rel="next" href="file_loading/">
+      
+      
+        
+          <link rel="alternate" href="../../developer/" hreflang="en">
+        
+          <link rel="alternate" href="./" hreflang="fr">
+        
+      
+      
+      <link rel="icon" href="../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Architecture - Documentation SPECTROview</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#architecture-de-lapplication" class="md-skip">
+          Aller au contenu
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="../" title="Documentation SPECTROview" class="md-header__button md-logo" aria-label="Documentation SPECTROview" data-md-component="logo">
+      
+  <img src="../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Documentation SPECTROview
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Sélectionner la langue"
+      title="Sélectionner la langue"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">FR</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../developer/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="fr"
+              class="md-select__link" aria-current="true"
+            >
+              Français
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Recherche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initialisation de la recherche
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Onglets" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accueil
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Manuel utilisateur
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Agent IA
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guide développeur
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Historique des versions
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../" title="Documentation SPECTROview" class="md-nav__button md-logo" aria-label="Documentation SPECTROview" data-md-component="logo">
+      
+  <img src="../../assets/icon.png" alt="logo">
+
+    </a>
+    Documentation SPECTROview
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accueil
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manuel utilisateur
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Manuel utilisateur
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formats pris en charge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aperçu de l'interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Barre de menus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espaces Spectra et Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analyse multivariée (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calculateurs rapides
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paramètres
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sauvegarde et chargement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Raccourcis et astuces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent IA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="./" class="md-nav__link md-nav__link--active">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guide développeur
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link md-nav__link--active" for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guide développeur
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline de chargement des fichiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture de données SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Spectra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moteur d'ajustement vectorisé par lots (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analyse multivariée (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent IA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Serveur MCP local
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Spectra (chargement, prétraitement, ajustement)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Maps (hyperspectral, cartes thermiques)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualisation de données (Graphs)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calculateurs rapides
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Étendre SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Historique des versions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Accueil
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="./" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Guide développeur
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="architecture-de-lapplication"><strong>Architecture de l'application</strong><a class="headerlink" href="#architecture-de-lapplication" title="Permanent link">&para;</a></h1>
+<p>Ce guide couvre l'architecture technique, l'organisation du code et les patrons de développement de <code>SPECTROview</code>. Il s'adresse aux développeurs souhaitant comprendre, maintenir ou étendre l'application.</p>
+<hr />
+<h2 id="patron-mvvm"><strong>Patron MVVM</strong><a class="headerlink" href="#patron-mvvm" title="Permanent link">&para;</a></h2>
+<p><code>SPECTROview</code> applique strictement une architecture <strong>Modèle-Vue-VueModèle (MVVM)</strong>.
+Chaque espace de travail respecte la même séparation des responsabilités en trois couches :</p>
+<ul>
+<li><strong>Model (Modèle)</strong> — Conteneurs de données purs et logique métier. Les modèles ne détiennent aucune référence vers des widgets Qt et peuvent être testés de manière autonome.</li>
+<li><strong>ViewModel (Vue-Modèle)</strong> — Orchestrateur de la logique applicative. Le ViewModel lit et modifie les Models, puis notifie la View par des signaux Qt. Il n'<strong>importe et ne référence jamais</strong> de classes View.</li>
+<li><strong>View (Vue)</strong> — Couche de widgets Qt. Les Views se connectent aux signaux du ViewModel et appellent ses méthodes en réponse aux actions utilisateur.</li>
+</ul>
+<pre class="mermaid"><code>graph LR
+    A["Action utilisateur"] --&gt; B["View (v_*)"]
+    B --&gt;|"appel de méthode"| C["ViewModel (vm_*)"]
+    C --&gt;|"appel de méthode"| D["Model (m_*)"]
+    D --&gt;|"retour de données"| C
+    C --&gt;|"émission de signal"| B
+    B --&gt;|"mise à jour UI"| A</code></pre>
+<h3 id="convention-de-nommage-des-fichiers"><strong>Convention de nommage des fichiers</strong><a class="headerlink" href="#convention-de-nommage-des-fichiers" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Couche</th>
+<th>Préfixe</th>
+<th>Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>View</td>
+<td><code>v_</code></td>
+<td><code>workspaces/v_workspace_spectra.py</code></td>
+</tr>
+<tr>
+<td>ViewModel</td>
+<td><code>vm_</code></td>
+<td><code>spectra/vm_workspace_spectra.py</code></td>
+</tr>
+<tr>
+<td>Model</td>
+<td><code>m_</code></td>
+<td><code>spectra/spectra_store.py</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="regles-dimportation"><strong>Règles d'importation</strong><a class="headerlink" href="#regles-dimportation" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Couche</th>
+<th>Peut importer</th>
+<th>Ne peut pas importer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>View</strong></td>
+<td>ViewModel, Components</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>ViewModel</strong></td>
+<td>Model, <code>fit_engine</code></td>
+<td>View</td>
+</tr>
+<tr>
+<td><strong>Model</strong></td>
+<td>Bibliothèques standard uniquement</td>
+<td>View, ViewModel</td>
+</tr>
+</tbody>
+</table>
+<h3 id="communication-par-signaux-et-slots"><strong>Communication par signaux et slots</strong><a class="headerlink" href="#communication-par-signaux-et-slots" title="Permanent link">&para;</a></h3>
+<p>Les Views et les ViewModels communiquent <strong>exclusivement via les signaux et slots Qt</strong>. Un ViewModel ne doit jamais appeler directement une méthode d'une View, et une View ne doit jamais modifier l'état d'un Model sans passer par son ViewModel.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># ── Le ViewModel définit les signaux ──</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">VMWorkspaceSpectra</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">spectra_list_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>       <span class="c1"># ViewModel → View</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">fit_progress_updated</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># ── La View s'y connecte dans __init__ ──</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">class</span><span class="w"> </span><span class="nc">VWorkspaceSpectra</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">spectra_list_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_list</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="structure-du-projet"><strong>Structure du projet</strong><a class="headerlink" href="#structure-du-projet" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>spectroview/
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├── __init__.py             # Constantes, modèles de pics, chemins de ressources, VERSION, BUILD_NUMBER
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├── _build_info.py          # Métadonnées de build, renseignées avec l'horodatage lors du packaging wheel/sdist
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>├── main.py                 # Point d'entrée, QMainWindow, câblage inter-espaces
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>├── application/            # Façade API pour l'état courant de l'application de bureau
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│   ├── service.py          # Opérations métier sur jeux de données/spectres/ajustements/graphiques/cartes
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│   ├── dispatch.py         # Frontière d'exécution en file sur le thread principal Qt
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│   └── errors.py           # Codes d'erreur d'intégration stables
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>├── settings/               # Architecture unifiée des paramètres (Model, ViewModel et UI à 2 panneaux)
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│   ├── m_settings.py          # Paramètres persistants et config.json portable
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│   ├── vm_settings.py         # ViewModel des paramètres et testeur de connexion LLM en arrière-plan
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│   ├── secrets.py             # Magasin de secrets obfusqué multiplateforme sous QSettings (_credentials/)
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│   ├── build_info.py          # Résolution double mode des dépendances et capture d'instantané de build
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│   └── ui/                    # Boîte de dialogue des paramètres à deux volets avec recherche instantanée
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│       ├── settings_dialog.py # Fenêtre hôte avec navigation latérale et recherche instantanée
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>│       ├── tab_general.py     # Préférences générales et dossier de travail
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>│       ├── tab_fit.py         # Convergence du solveur d'ajustement et bornes des pics
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>│       ├── tab_ai.py          # Identifiants LLM, tests de connexion et serveur MCP local
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>│       └── tab_about.py       # Détails de l'application, environnement Python et dépendances
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>│
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>├── model/                  # Modèles de données organisés par domaine (aucun widget Qt)
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>│   ├── m_settings.py       # Façade de compatibilité des paramètres persistants (encapsule spectroview.settings)
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>│   ├── io/                 # Chargeurs de fichiers et sérialisation des espaces de travail
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>│   │   ├── m_io.py         # Routage universel et lecteurs texte/CSV
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>│   │   ├── m_wdf.py        # Lecteur binaire Renishaw WiRE WDF
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>│   │   ├── m_spc.py        # Lecteur binaire Galactic SPC
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>│   │   ├── m_l6s.py        # Lecteur binaire HORIBA LabSpec 6 (.l6s / .l6m)
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>│   │   ├── m_ngs.py        # Lecteur binaire HORIBA LabSpec 5 (.ngs / .ngc)
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>│   │   └── workspace_io.py # Sérialisation unifiée pour les espaces de travail
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>│   ├── spectra/            # Magasin tensoriel spectral, métriques et modèles d'ajustement
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>│   │   ├── spectra_store.py       # Structures tensorielles SpectraStore &amp; MapData
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>│   │   ├── spectral_parameters.py # Métriques spectrales brutes vectorisées (Area, Max, Pos_Max, Barycenter, FWHM)
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>│   │   ├── heatmap.py             # Interpolation et triangulation 2D de cartes thermiques en pur NumPy
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>│   │   ├── peak_model.py          # Fonctions utilitaires pour les paramètres de pics
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>│   │   └── m_fit_model_manager.py # Gestion des fichiers de modèles d'ajustement sauvegardés
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>│   ├── graphs/             # Schémas graphiques, recettes et modèles de style
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>│   │   ├── m_graph.py                 # Modèle de configuration de tracé (dataclass MGraph)
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>│   │   ├── graph_control.py           # Contrat de contrôle et validation des graphiques
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>│   │   ├── graph_style.py             # Style graphique et prédicat de restyle sans replot
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>│   │   ├── m_plot_recipe.py           # Dataclass de recette de tracé (+ m_plot_recipe_store.py)
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>│   │   └── m_style_template_store.py  # Persistance des modèles de style graphique
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>│   ├── analysis/           # Moteurs d'analyse numérique et calculateurs
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>│   │   ├── m_mva.py               # Moteur PCA + NMF
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>│   │   └── m_quick_calculators.py # Logique mathématique pure pour les calculateurs scientifiques
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>│   └── system/             # Environnement d'exécution, TLS et services de mise à jour
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>│       ├── m_tls.py              # Validation durcie des certificats TLS (truststore, certifi, pip)
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>│       ├── m_installation.py     # Détection centralisée du mode d'installation (InstallType &amp; InstallationManager)
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>│       ├── m_update_manager.py   # Façade multiplateforme UpdateManager, cache ETag, SHA256SUMS
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>│       ├── m_update_checker.py   # Anciens workers QThread pip/wheel et utilitaire de mise à jour détaché
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>│       └── m_macos_font_patch.py # Correctif de compatibilité pour le rendu des polices sous macOS
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>│
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>├── viewmodel/              # Logique métier et orchestration des données (façade paresseuse PEP 562)
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>│   ├── spectra/            # ViewModel et mixins de l'espace Spectra
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>│   │   ├── vm_workspace_spectra.py     # État principal, sélection et coordination E/S
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>│   │   ├── vm_spectra_preprocessing.py # Corrections X/Y, recadrage ROI, ligne de base et suppression des rayons cosmiques
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>│   │   ├── vm_spectra_fitting.py       # Édition de pics, presse-papiers/JSON de modèle et lancement de VBFthread
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>│   │   ├── vm_spectra_results.py       # Collecte des résultats, colonnes calculées et export Excel/presse-papiers
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>│   │   ├── vm_spectra_persistence.py   # Sauvegarde/chargement ZIP/NPZ et lecteur historique .spectra v1
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>│   │   └── vm_fit_model_builder.py     # Orchestration de gestion des fichiers de modèles d'ajustement
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>│   ├── maps/               # ViewModels de l'espace Maps et de Live Maps
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>│   │   ├── vm_workspace_maps.py        # Espace Maps (étend VMWorkspaceSpectra)
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>│   │   ├── vm_maps_fitting.py          # Ajustement par lots de cartes et post-traitement Zone/Quadrant wafer
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>│   │   ├── vm_maps_persistence.py      # Chargeur JSON historique .maps v1
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>│   │   ├── vm_live_maps.py             # État Live Maps, anti-rebond et évaluation synchrone
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>│   │   └── live_maps_worker.py         # _LiveMapWorker (QRunnable) asynchrone et déchargement par instantané
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>│   ├── graphs/             # ViewModel de l'espace Graphs
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>│   │   ├── vm_workspace_graphs.py      # DataFrames, filtrage, CRUD graphique et persistance
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>│   │   └── graph_undo.py               # Mixin d'annulation/rétablissement par instantané complet et regroupement
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>│   ├── analysis/           # Orchestration de l'analyse numérique
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>│   │   └── vm_mva.py                   # Orchestration de l'analyse multivariée (PCA/NMF)
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>│   ├── common/             # Utilitaires ViewModel partagés
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>│   │   ├── spectral_utils.py           # closest_index, parse_coords_from_fname, Fano et métadonnées
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>│   │   ├── export_utils.py             # Export Excel, presse-papiers et fichiers figure
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>│   │   └── ui_utils.py                 # Adaptateurs de notification, alerte, icône et couleur d'état
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>│   ├── vm_settings.py      # Façade de compatibilité -&gt; spectroview.settings.vm_settings
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>│   └── utils.py            # Façade de ré-export rétrocompatible -&gt; viewmodel.common &amp; v_metadata_tooltip
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>│
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>├── ai_agent/               # Module AI Data Chat (multi-fournisseurs ; optionnel à l'exécution)
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>│   ├── __init__.py              # Docstring uniquement, maintient l'importation protégée
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>│   ├── m_llm_client.py          # Clients LLM multi-fournisseurs (Ollama/OpenAI/Anthropic) + workers QThread
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>│   ├── m_conversation.py        # Modèle de conversation (+ m_conversation_store.py : historique)
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>│   ├── m_prompt_manager.py      # Assemblage du prompt système / règles / connaissances
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>│   ├── mcp/server.py            # Profils partagés FastMCP pour le chat et l'application complète
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>│   ├── mcp/runtime.py           # Cycle de vie optionnel HTTP Streamable sur loopback
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>│   ├── config/, prompts/, rules/, knowledge/, examples/, utils/  # Ressources de prompts et utilitaires (voir ai_agent.md)
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>│   ├── vm_chat.py               # ViewModel du chat (sélection du profil de prompt, boucle agentique)
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>│   └── v_chat_panel.py          # Panneau de discussion intégré (+ v_history_dialog.py)
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>│
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>├── view/                   # Widgets Qt et mise en page UI (façade paresseuse PEP 562)
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>│   ├── __init__.py               # Exports paresseux des espaces, composants et thème
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>│   ├── workspaces/               # Paquets View des espaces de premier niveau
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>│   │   ├── __init__.py                # Exports paresseux des espaces
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>│   │   ├── v_workspace_spectra.py     # View de l'espace Spectra
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>│   │   ├── v_workspace_maps.py        # View de l'espace Maps (étend Spectra)
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>│   │   └── graphs/                    # Paquet View de l'espace Graphs
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>│   │       ├── __init__.py            # Exports du paquet (VWorkspaceGraphs, MdiSubWindow)
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>│   │       ├── v_workspace_graphs.py  # Orchestrateur VWorkspaceGraphs
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>│   │       ├── v_mdi_subwindow.py     # MdiSubWindow (redimensionnement/déplacement par contour)
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>│   │       ├── v_graphs_ui.py         # GraphsUIMixin (panneaux, barres d'outils, raccourcis)
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>│   │       ├── v_graphs_dataframes.py # GraphsDataFramesMixin (sélection et synchronisation de DF)
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>│   │       ├── v_graphs_mdi.py        # GraphsMdiMixin (création MDI et disposition)
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>│   │       └── v_graphs_actions.py    # GraphsActionsMixin (création/mise à jour/export/annulation)
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>│   ├── components/               # Widgets partagés et réutilisables (façade paresseuse PEP 562)
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>│   │   ├── __init__.py                # Exports paresseux des sous-paquets + alias des paramètres
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>│   │   ├── v_settings.py              # Boîte de dialogue des paramètres (shim de compatibilité)
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>│   │   ├── common/                    # Coque principale, notifications, calculateurs et widgets partagés
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>│   │   │   ├── __init__.py
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>│   │   │   ├── v_menubar.py           # Barre de menus principale
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>│   │   │   ├── v_about.py             # Boîte de dialogue À propos
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>│   │   │   ├── v_update_banner.py     # Bannière de notification de mise à jour
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>│   │   │   ├── v_notification.py      # Badges flottants natifs et gestionnaire
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>│   │   │   ├── v_quick_calculators.py # Interface des calculateurs scientifiques
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>│   │   │   ├── customized_widgets.py  # Combobox de palette, barre d'outils personnalisée
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>│   │   │   └── markdown_utils.py      # Normaliseur d'espacement Markdown pour Python-Markdown
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>│   │   ├── lists/                     # Liste de spectres/cartes, tableau DataFrame et infobulles
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>│   │   │   ├── __init__.py
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>│   │   │   ├── v_spectra_list.py      # Liste des spectres avec cases à cocher
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>│   │   │   ├── v_map_list.py          # Panneau des cartes chargées (sélection à deux niveaux)
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>│   │   │   ├── v_dataframe_table.py   # Visionneuse générique de DataFrame
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>│   │   │   └── v_metadata_tooltip.py  # Constructeur d'infobulles de métadonnées
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>│   │   ├── spectra_viewer/            # Paquet du visualiseur de spectres (1D, Heatmap, 3D, interactions)
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>│   │   │   ├── __init__.py            # Exports du paquet (VSpectraViewer, FastLine3DCollection, etc.)
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a>│   │   │   ├── common.py              # Palettes, cache de styles, jetons de noms et normalisation 1D
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>│   │   │   ├── v_spectra_viewer.py    # Widget principal VSpectraViewer, barre d'outils et thème
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a>│   │   │   ├── v_spectra_options.py   # SpectraOptionsMenuMixin (menu options, synchro et style)
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a>│   │   │   ├── v_plot_1d.py           # SpectraPlot1DMixin (segments 1D, décalages, superpositions d'ajustement)
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>│   │   │   ├── v_plot_heatmap.py      # SpectraHeatmapMixin (carte thermique 2D et jetons Y)
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>│   │   │   ├── v_plot_3d.py           # FastLine3DCollection &amp; SpectraPlot3DMixin
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>│   │   │   ├── v_interactions.py      # SpectraInteractionMixin (zoom, survol, déplacement de pics, gomme)
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>│   │   │   └── v_spectra_legend_editor.py  # Dialogue d'édition de légende par lots et mixin
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>│   │   ├── lower_tabs/                # Paquet des onglets inférieurs
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>│   │   │   ├── __init__.py            # Exports (VFitModelBuilder, VPeakTable, VFitResults, VMVA, VMoreTab)
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>│   │   │   ├── v_fit_model_builder.py # Contrôles Baseline + Peak + Fit
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>│   │   │   ├── v_peak_table.py        # Tableau interactif des paramètres de pics
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>│   │   │   ├── v_fit_results.py       # Tableau DataFrame des résultats d'ajustement
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>│   │   │   ├── v_mva.py               # Contrôles PCA/NMF et coordinateur d'onglets
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>│   │   │   ├── v_mva_plots.py         # Widget _PlotTab MVA et mixin de tracé Matplotlib
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>│   │   │   └── v_moretab.py           # Panneau métadonnées et normalisation
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a>│   │   ├── map_viewer/                # Paquet du visualiseur de cartes (2D/wafer, interactions, dialogue)
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>│   │   │   ├── __init__.py            # Exports (VMapViewer, VMapViewerDialog, helpers de sélection)
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a>│   │   │   ├── map_selection.py       # Géométrie spatiale partagée, résolution de sélection et superposition
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>│   │   │   ├── v_map_data.py          # MapDataProcessingMixin (cache griddata, masque, valeurs aberrantes, profil)
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>│   │   │   ├── v_map_plot.py          # MapPlotMixin (rendu carte 2D/wafer, statistiques, profil)
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a>│   │   │   ├── v_map_interactions.py  # MapInteractionMixin (sélection souris, coordonnées, copie)
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a>│   │   │   ├── v_map_viewer.py        # Widget principal VMapViewer, barre d'outils, curseurs et options
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a>│   │   │   └── v_map_viewer_dialog.py # Fenêtre détachable VMapViewerDialog
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a>│   │   ├── rgb_live_maps/             # Paquet sélecteurs de plages RVB et Live Maps
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a>│   │   │   ├── __init__.py            # Exports pour les sélecteurs RVB et Live Maps
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a>│   │   │   ├── common.py              # Palettes, thèmes, options et normalisation 1D partagés
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a>│   │   │   ├── v_live_maps.py         # Vue multi-panneaux VLiveMaps et menu options
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a>│   │   │   ├── v_live_maps_options.py # LiveMapsOptionsMenuMixin (légende et options d'affichage)
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a>│   │   │   ├── v_live_map_subpanel.py # Widget conteneur LiveMapSubpanel
+<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a>│   │   │   ├── v_live_map_1d.py       # LiveMap1DMixin (rendu séries 1D et profils)
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a>│   │   │   ├── v_live_map_2d.py       # LiveMap2DMixin (rendu carte thermique 2D)
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a>│   │   │   ├── v_live_map_selection.py # LiveMapSelectionMixin (sélection point/zone/légende)
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a>│   │   │   ├── v_live_maps_legend_editor.py # LiveMapsLegendEditorDialog éditeur libellés et couleurs
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>│   │   │   ├── v_range_selector.py    # VRangeSelectorPanel &amp; RangeSelectorManager
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a>│   │   │   └── v_range_bracket_mixin.py # SpectraRangeBracketMixin pour VSpectraViewer
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a>│   │   ├── graphs/                    # Paquet de tracé, rendu, filtrage et export Graphs
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a>│   │   │   ├── __init__.py
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>│   │   │   ├── v_graph.py             # Widget orchestrateur VGraph (restyle/replot/actions)
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a>│   │   │   ├── v_graph_canvas.py      # _DebouncedFigureCanvas &amp; _FastNavigationToolbar
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>│   │   │   ├── v_graph_breaks.py      # GraphBreakInsetMixin (axes coupés et incrustés)
+<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>│   │   │   ├── v_graph_axes.py        # GraphAxesStyleMixin (limites, échelles, graduations, thème)
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a>│   │   │   ├── v_graph_annotations.py # GraphAnnotationMixin (8 types d'annotations et glisser sur canevas)
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a>│   │   │   ├── v_plot_renderer.py     # Moteur de rendu Matplotlib sans état (PlotRenderer)
+<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a>│   │   │   ├── v_plot_spatial.py      # SpatialPlotMixin &amp; WaferPlot (rendu 2Dmap / wafer)
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a>│   │   │   ├── graph_commit.py        # Instantané d'état graphique et moteur de diff annuler/rétablir
+<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a>│   │   │   ├── v_export_dialog.py     # Dialogues d'export unitaire et par lots
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a>│   │   │   ├── v_multipanel_dialog.py # Compositeur de figures multi-panneaux pour publication
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a>│   │   │   ├── v_plot_recipe_dialog.py    # Gestionnaire de recettes de tracé
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a>│   │   │   ├── v_style_template_dialog.py # Gestionnaire de modèles de style graphique
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a>│   │   │   └── v_data_filter.py       # Panneau de filtrage dynamique par requête
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a>│   │   └── customize_graph/           # Boîte de dialogue Customize Graph (à deux panneaux type Settings)
+<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a>│   │       ├── customize_graph_dialog.py     # CustomizeGraphDialog (hôte à deux volets avec recherche et aperçu)
+<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>│   │       ├── common.py                     # NavItemDelegate et aides de mise en évidence
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>│   │       ├── tab_general.py                # Onglet General &amp; Typography
+<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>│   │       ├── tab_axes_limits.py            # Onglet Axes &amp; Limits
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a>│   │       ├── tab_ticks_spines.py           # Onglet Ticks &amp; Spines
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>│   │       ├── tab_secondary_inset.py        # Onglet Secondary &amp; Inset
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>│   │       ├── tab_legend_series.py          # Onglet Legend &amp; Series
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a>│   │       ├── tab_plot_styles.py            # Onglet Plot Style &amp; Fitting
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a>│   │       ├── tab_annotations.py            # Onglet Annotations
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a>│   │       └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
+<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a>│   └── theme/                         # Architecture des thèmes et polices (ThemeManager, jetons, palettes, polices)
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a>│       ├── manager.py                 # Propriétaire unique de l'état global du thème
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a>│       ├── fonts.py                   # Configuration multiplateforme des polices (macOS/Windows/Linux)
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>│       ├── palettes.py                # Constructeurs QPalette pour les 5 thèmes canoniques
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a>│       ├── qss_template.py            # Modèle QSS paramétré
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>│       └── tokens.py                  # Dataclass ThemeTokens et préréglages
+<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a>│
+<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a>├── fit_engine/             # Ajustement par lots haute performance
+<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a>│   ├── vbf_engine.py            # Orchestrateur (VBFengine)
+<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>│   ├── optimizer.py             # Levenberg-Marquardt vectorisé par lots
+<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a>│   ├── evaluator.py             # Correspondance de paramètres (VBFevaluator)
+<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a>│   ├── models.py                # Fonctions de pics vectorisées + jacobiennes
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a>│   ├── scalar_models.py         # Fonctions scalaires de repli + PEAK_MODEL_REGISTRY
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>│   ├── vbf_thread.py            # Encapsuleur QThread
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a>│   ├── baseline.py              # Algorithmes de ligne de base (arPLS, airPLS, etc.)
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>│   ├── noise.py                 # Fonctions d'estimation du bruit
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a>│   └── weights.py               # Masque d'ajustement pondéré par région et calcul des poids
+<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a>│
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a>├── resources/              # Icônes, polices, schéma build_info, feuilles de style Matplotlib
+<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a>│   ├── icons/
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a>│   └── *.mplstyle
+<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a>│
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a>packaging/                  # Pipelines de compilation autonomes par plateforme (réutilisant main.spec)
+<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a>├── windows/build_windows.py      # PyInstaller --onedir + Portable ZIP + Velopack vpk pack
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a>├── macos/{build_dmg.py,build_dmg.sh,entitlements.plist}
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a>└── linux/{build_linux.py,build_appimage.sh,build_deb.sh,spectroview.desktop}
+</code></pre></div>
+<hr />
+<h2 id="point-dentree-de-lapplication"><strong>Point d'entrée de l'application</strong><a class="headerlink" href="#point-dentree-de-lapplication" title="Permanent link">&para;</a></h2>
+<p><code>spectroview/main.py</code> instancie la <code>QMainWindow</code> et crée tous les espaces de travail sous forme d'onglets dans un <code>QTabWidget</code> :</p>
+<pre class="mermaid"><code>graph LR
+    Main["main.py"] --&gt; Tabs["QTabWidget"]
+    Tabs --&gt; S["Spectra"]
+    Tabs --&gt; M["Maps"]
+    Tabs --&gt; G["Graphs"]
+    Main --&gt; W["setup_connections()"]
+    W --&gt;|"injection réf."| M
+    W --&gt;|"signal"| S
+    W --&gt;|"signal"| Tabs</code></pre>
+<p>La méthode <code>setup_connections()</code> dans <code>main.py</code> relie les dépendances inter-espaces :</p>
+<ul>
+<li><strong>Maps → Graphs</strong> : <code>VMWorkspaceMaps.set_graphs_workspace(v_graphs)</code> injecte une référence permettant à <code>Maps</code> d'envoyer directement des profils et des DataFrames à l'espace <code>Graphs</code>.</li>
+<li><strong>Maps → Spectra</strong> : <code>main.py</code> connecte <code>send_spectra_to_workspace</code> à la méthode <code>receive_spectra()</code> du ViewModel Spectra, qui insère des copies profondes des spectres de carte sélectionnés dans le <code>SpectraStore</code> de l'onglet <code>Spectra</code>.</li>
+<li><strong>Fit Results → Graphs</strong> : <code>Spectra</code> et <code>Maps</code> émettent tous deux <code>fit_results_updated</code> avec un <code>pd.DataFrame</code> pouvant être transmis à l'espace <code>Graphs</code> pour les tracés statistiques.</li>
+</ul>
+<h3 id="garder-le-chemin-de-demarrage-leger"><strong>Garder le chemin de démarrage léger</strong><a class="headerlink" href="#garder-le-chemin-de-demarrage-leger" title="Permanent link">&para;</a></h3>
+<p>Importer <code>main.py</code> entraîne transitivement l'importation de chaque module atteignable, et ce graphe d'importation domine le temps de démarrage. Deux familles de paquets sont volontairement maintenues <strong>hors</strong> de ce graphe initial et importées uniquement au moment de leur utilisation :</p>
+<table>
+<thead>
+<tr>
+<th>Paquet</th>
+<th>Coût d'import</th>
+<th>Où il est désormais importé</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>anthropic</code>, <code>openai</code>, <code>ollama</code>, <code>mcp</code></td>
+<td>~4,5 s cumulés</td>
+<td><code>Main.open_ai_chat()</code>, <code>_load_*()</code> dans <code>ai_agent/m_llm_client.py</code>, <code>MCPHub._open_session()</code></td>
+</tr>
+<tr>
+<td><code>scipy.stats</code>, <code>scipy.interpolate</code>, <code>scipy.linalg</code></td>
+<td>~1,3 s cumulés</td>
+<td><code>PlotRenderer._plot_histogram()</code> / <code>WaferPlot.plot()</code>, <code>SpectraStore.batch_preprocess()</code>, <code>VMMVA._build_from_all_maps()</code>, <code>build_heatmap_grid()</code>, <code>optimizer._batched_solve()</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>scipy</code> impose une contrainte particulière : une importation purement paresseuse ne ferait que déplacer la latence vers le <em>premier</em> histogramme ou tracé <em>wafer</em>, ce qui ralentissait visiblement l'ouverture d'un espace <code>.graphs</code> enregistré. <code>Main.showEvent()</code> lance donc un thread démon (<code>_prewarm_heavy_imports</code>) qui importe les trois sous-modules <code>scipy</code> juste après le premier affichage — la fenêtre s'affiche en ~2 s et <code>scipy</code> est déjà prêt ~1 s plus tard, faisant de chaque <code>import scipy...</code> local un simple accès en cache <code>sys.modules</code>. Les SDK LLM ne sont volontairement <strong>pas</strong> préchauffés : la majorité des sessions n'ouvrent jamais le panneau de discussion, qui affiche déjà un indicateur de chargement.</p>
+<p>Vérifiez avec <code>python -X importtime -c "import spectroview.main"</code> avant d'ajouter tout nouvel import de paquet lourd au niveau module — s'il n'est pas nécessaire pour afficher la première fenêtre, différez-le. <code>tests/performance/test_startup_imports.py</code> échoue si l'un d'entre eux réapparaît sur le chemin de démarrage.</p>
+<hr />
+<h2 id="cycle-de-vie-des-donnees"><strong>Cycle de vie des données</strong><a class="headerlink" href="#cycle-de-vie-des-donnees" title="Permanent link">&para;</a></h2>
+<h3 id="spectra-chargement-traitement-ajustement-resultats"><strong>Spectra : Chargement → Traitement → Ajustement → Résultats</strong><a class="headerlink" href="#spectra-chargement-traitement-ajustement-resultats" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>sequenceDiagram
+    participant View
+    participant VM as ViewModel
+    participant Engine as FitEngine
+
+    View-&gt;&gt;VM: load_spectra(paths)
+    VM--&gt;&gt;View: spectra_list_changed
+
+    View-&gt;&gt;VM: subtract_baseline(), add_peak()
+
+    View-&gt;&gt;VM: fit(apply_all)
+    VM-&gt;&gt;Engine: fit_spectra()
+    Engine--&gt;&gt;VM: results
+    VM--&gt;&gt;View: fit_results_updated</code></pre>
+<h3 id="maps-chargement-extraction-carte-thermique-profil"><strong>Maps : Chargement → Extraction → Carte thermique → Profil</strong><a class="headerlink" href="#maps-chargement-extraction-carte-thermique-profil" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>sequenceDiagram
+    participant View
+    participant VM as ViewModel
+    participant Viewer as MapViewer
+
+    View-&gt;&gt;VM: load_map_files(paths)
+    VM--&gt;&gt;View: maps_list_changed
+
+    View-&gt;&gt;VM: select_map(name)
+    VM--&gt;&gt;View: map_data_updated
+    View-&gt;&gt;Viewer: plot_heatmap()
+
+    View-&gt;&gt;VM: extract_profile()
+    VM--&gt;&gt;View: switch_to_graphs_tab</code></pre>
+<hr />
+<h2 id="heritage-entre-espaces-de-travail"><strong>Héritage entre espaces de travail</strong><a class="headerlink" href="#heritage-entre-espaces-de-travail" title="Permanent link">&para;</a></h2>
+<p><code>VMWorkspaceMaps</code> <strong>étend</strong> <code>VMWorkspaceSpectra</code>. Ainsi, chaque fonctionnalité d'ajustement, de ligne de base, de gestion des pics et de sérialisation disponible dans <code>Spectra</code> l'est automatiquement dans <code>Maps</code>, complétée par des surcharges propres aux cartes :</p>
+<pre class="mermaid"><code>classDiagram
+    class VMWorkspaceSpectra {
+        +store
+        +fit()
+        +save_work()
+    }
+
+    class VMWorkspaceMaps {
+        +maps
+        +load_map_files()
+        +select_map()
+    }
+
+    class VMWorkspaceGraphs {
+        +dataframes
+        +graphs
+        +create_graph()
+    }
+
+    VMWorkspaceSpectra &lt;|-- VMWorkspaceMaps</code></pre>
+<hr />
+<h2 id="systeme-de-composants-reutilisables"><strong>Système de composants réutilisables</strong><a class="headerlink" href="#systeme-de-composants-reutilisables" title="Permanent link">&para;</a></h2>
+<p>Les espaces sont assemblés à partir de <strong>composants partagés</strong> qui suivent tous le même modèle fondé sur les signaux Qt :</p>
+<table>
+<thead>
+<tr>
+<th>Composant</th>
+<th>Fichier</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VSpectraViewer</code></td>
+<td><code>spectra_viewer/v_spectra_viewer.py</code></td>
+<td>Paquet de canevas Matplotlib pour affichage 1D/Heatmap/3D, zoom/pan, interactions pics/ligne de base/gomme</td>
+</tr>
+<tr>
+<td><code>SpectraLegendEditorDialog</code></td>
+<td><code>spectra_viewer/v_spectra_legend_editor.py</code></td>
+<td>Éditeur transactionnel de palette, limite de légende, libellés et couleurs (par lots de 100 lignes)</td>
+</tr>
+<tr>
+<td><code>VFitModelBuilder</code></td>
+<td><code>lower_tabs/v_fit_model_builder.py</code></td>
+<td>Correction X, plage spectrale, ligne de base, pics, commandes d'ajustement</td>
+</tr>
+<tr>
+<td><code>VPeakTable</code></td>
+<td><code>lower_tabs/v_peak_table.py</code></td>
+<td>Tableau éditable des paramètres de pics (centre, FWHM, amplitude, bornes)</td>
+</tr>
+<tr>
+<td><code>VMapViewer</code></td>
+<td><code>map_viewer/v_map_viewer.py</code></td>
+<td>Canevas carte thermique / wafer avec curseurs Z/X, masque et extraction de profil</td>
+</tr>
+<tr>
+<td><code>VMapViewerDialog</code></td>
+<td><code>map_viewer/v_map_viewer_dialog.py</code></td>
+<td>Fenêtre détachable toujours au premier plan encapsulant <code>VMapViewer</code></td>
+</tr>
+<tr>
+<td><code>VGraph</code></td>
+<td><code>graphs/v_graph.py</code></td>
+<td>Widget graphique Matplotlib prenant en charge plus de 10 variantes et styles de tracé</td>
+</tr>
+<tr>
+<td><code>VDataFilter</code></td>
+<td><code>graphs/v_data_filter.py</code></td>
+<td>Constructeur dynamique de filtres <code>pandas</code> <code>.query()</code></td>
+</tr>
+<tr>
+<td><code>VFitResults</code></td>
+<td><code>lower_tabs/v_fit_results.py</code></td>
+<td>Tableau des résultats d'ajustement coloré par convergence</td>
+</tr>
+<tr>
+<td><code>VMVA</code></td>
+<td><code>lower_tabs/v_mva.py</code></td>
+<td>Contrôles PCA/NMF et graphiques intégrés</td>
+</tr>
+<tr>
+<td><code>VMoreTab</code></td>
+<td><code>lower_tabs/v_moretab.py</code></td>
+<td>Affichage des métadonnées et contrôles de normalisation en Y</td>
+</tr>
+<tr>
+<td><code>CustomizeGraphDialog</code></td>
+<td><code>customize_graph/customize_graph_dialog.py</code></td>
+<td>Boîte de dialogue singleton pour la personnalisation des annotations, légendes et axes</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="systeme-de-themes-et-typographie"><strong>Système de thèmes et typographie</strong><a class="headerlink" href="#systeme-de-themes-et-typographie" title="Permanent link">&para;</a></h2>
+<p>SPECTROview utilise une architecture centralisée de thèmes et de typographie (<code>spectroview/view/theme/</code>) :</p>
+<ul>
+<li><strong><code>ThemeManager</code> (<code>manager.py</code>)</strong> : Détient l'état canonique du thème actif (<code>dark</code>, <code>gray</code>, <code>light</code>, <code>classic_dark</code>, <code>classic_light</code>), applique <code>QPalette</code> ainsi que les feuilles de style paramétrées (<code>qss_template.py</code>) et gère le changement dynamique à chaud.</li>
+<li><strong>Architecture d'icônes vectorielles SVG (<code>icons_svg.py</code> &amp; <code>icons.py</code>)</strong> : Moteur de rendu vectoriel temps réel (<code>_SvgIconEngine(QIconEngine)</code>) remplaçant les PNG pré-rastérisés par un rendu net au ratio de pixels physiques 1:1, une colorisation dynamique à l'affichage selon les jetons du thème et une façade unifiée <code>Icons</code>.</li>
+<li><strong>Polices multiplateformes (<code>fonts.py</code>)</strong> : <code>setup_application_font(app)</code> applique la police par défaut adaptée à chaque plateforme sur <code>QApplication</code> :</li>
+<li><strong>Windows</strong> : <code>Segoe UI</code> à 10 pt (police bureau standard à 96 DPI, ~13,3 px).</li>
+<li><strong>macOS</strong> : <code>.AppleSystemUIFont</code> (San Francisco) à 13 pt (police standard Apple HIG à 72 DPI, 13 px).</li>
+<li><strong>Linux / Autres</strong> : Police sans-serif de l'environnement de bureau à &gt;= 10 pt.</li>
+<li><strong>Invariant de DPI et de dimensionnement</strong> : En évitant les règles globales <code>QWidget { font-size: ... }</code> dans les feuilles de style, les changements de thème évitent le coût d'invalidation du cache des polices. Les contrôles héritent leur taille de la police applicative, préservant la lisibilité native, les métriques standard des menus et la mise à l'échelle multi-écrans sur toutes les plateformes.</li>
+</ul>
+<hr />
+<h2 id="persistance-et-serialisation"><strong>Persistance et sérialisation</strong><a class="headerlink" href="#persistance-et-serialisation" title="Permanent link">&para;</a></h2>
+<p><code>SPECTROview</code> délègue toutes les opérations de chargement et d'enregistrement à la classe unifiée <code>WorkspaceIO</code> (<code>model/io/workspace_io.py</code>), isolant les entrées/sorties des ViewModels. Chaque espace possède son propre format via <code>WorkspaceIO</code> :</p>
+<table>
+<thead>
+<tr>
+<th>Espace</th>
+<th>Extension</th>
+<th>Stratégie clé</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Spectra</code></td>
+<td><code>.spectra</code></td>
+<td>Archive ZIP (<code>format_version: 2</code>) : <code>metadata.json</code> (<code>store_meta</code> par carte) + tableaux NPZ par carte. Écrite par <code>WorkspaceIO.save_workspace()</code>.</td>
+</tr>
+<tr>
+<td><code>Maps</code></td>
+<td><code>.maps</code></td>
+<td>Même format ZIP unifié que <code>.spectra</code> (<code>WorkspaceIO.save_workspace()</code>), dont les métadonnées contiennent en plus <code>maps_metadata</code>, <code>map_type</code> et le DataFrame des résultats d'ajustement.</td>
+</tr>
+<tr>
+<td><code>Graphs</code></td>
+<td><code>.graphs</code></td>
+<td>Archive ZIP (<code>format_version: 4</code>) via <code>WorkspaceIO.save_workspace()</code> : <code>metadata.json</code> (tracés + sources de DataFrames) + DataFrames compressés.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="flux-de-serialisation-dun-spectre"><strong>Flux de sérialisation d'un spectre</strong><a class="headerlink" href="#flux-de-serialisation-dun-spectre" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Enregistrement (format_version 2) : SpectraStore → Archive ZIP (metadata.json + tableaux NPZ)</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="s2">"format_version"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="s2">"store_meta"</span><span class="p">:</span> <span class="p">{</span>                 <span class="c1"># indexé par nom de carte (== fname pour un spectre isolé)</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="s2">"sample_001"</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>            <span class="s2">"fnames"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"sample_001"</span><span class="p">],</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>            <span class="s2">"is_active"</span><span class="p">:</span> <span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>            <span class="s2">"baseline_config"</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>            <span class="s2">"peak_params"</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>            <span class="s2">"range_min"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"range_max"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>            <span class="c1"># ...</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>        <span class="p">}</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="p">}</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="p">}</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="c1"># arrays : blocs NPZ par carte produits par SpectraStore.to_npz_dict(map_name)</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="c1"># (axe brut x0 float64 + intensités Y0 float32, plus éventuels tableaux traités/ajustés)</span>
+</code></pre></div>
+<hr />
+<h2 id="modele-de-threading"><strong>Modèle de threading</strong><a class="headerlink" href="#modele-de-threading" title="Permanent link">&para;</a></h2>
+<p>Les opérations longues s'exécutent dans des sous-classes de <code>QThread</code> afin d'éviter tout gel de l'interface graphique.
+Tous les threads émettent des signaux d'avancement que le ViewModel relaie vers la barre de progression de la View :</p>
+<table>
+<thead>
+<tr>
+<th>Classe de thread</th>
+<th>Emplacement</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VBFthread</code></td>
+<td><code>fit_engine/vbf_thread.py</code></td>
+<td>Ajustement par lots (moteur principal)</td>
+</tr>
+<tr>
+<td><code>_LiveMapWorker</code></td>
+<td><code>viewmodel/maps/live_maps_worker.py</code></td>
+<td><code>QRunnable</code> asynchrone (<code>QThreadPool</code>) pour les calculs Live Maps sur grands jeux de données (<span class="arithmatex">\(\ge 25\,000\)</span> spectres)</td>
+</tr>
+<tr>
+<td><code>UnifiedUpdateCheckWorker</code> / <code>UnifiedUpdateDownloadWorker</code></td>
+<td><code>model/system/m_update_manager.py</code></td>
+<td>Vérifications multiplateformes des versions (cache ETag) et téléchargements vérifiés par SHA-256</td>
+</tr>
+<tr>
+<td><code>UpdateCheckerWorker</code></td>
+<td><code>model/system/m_update_checker.py</code></td>
+<td>Anciens workers pip/wheel conservés pour rétrocompatibilité</td>
+</tr>
+<tr>
+<td><code>LLMWorker</code> / <code>APIWorker</code> / <code>AnthropicWorker</code></td>
+<td><code>ai_agent/m_llm_client.py</code></td>
+<td>Requêtes de chat en streaming pour AI Data Chat — un worker par fournisseur (Ollama / compatible OpenAI / Anthropic)</td>
+</tr>
+<tr>
+<td><code>_ConnectionTestWorker</code></td>
+<td><code>settings/vm_settings.py</code></td>
+<td>Vérification non bloquante en arrière-plan de la connexion aux fournisseurs LLM</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cycle de vie d'un thread</strong> :</p>
+<ol>
+<li>Le ViewModel instancie le thread et connecte les signaux <code>finished</code> / <code>progress</code>.</li>
+<li><code>thread.start()</code> — exécute <code>run()</code> sur un thread OS distinct.</li>
+<li>À l'achèvement, le signal <code>finished</code> déclenche <code>_on_fit_finished()</code> dans le ViewModel.</li>
+<li>Le ViewModel émet les signaux de résultat → la View met à jour l'interface.</li>
+</ol>
+<hr />
+<h2 id="communication-inter-espaces"><strong>Communication inter-espaces</strong><a class="headerlink" href="#communication-inter-espaces" title="Permanent link">&para;</a></h2>
+<p><code>SPECTROview</code> évite tout bus d'événements global. À la place, <code>main.py</code> emploie l'<strong>injection de dépendances</strong> et des <strong>connexions directes de signaux</strong> :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># main.py → setup_connections()</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># 1. Injection de référence : le VM Maps peut appeler les méthodes de l'espace Graphs</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="bp">self</span><span class="o">.</span><span class="n">v_maps_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">set_graphs_workspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v_graphs_workspace</span><span class="p">)</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1"># 2. Maps → Spectra : ingérer les spectres envoyés depuis l'espace Maps</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="bp">self</span><span class="o">.</span><span class="n">v_maps_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">send_spectra_to_workspace</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">v_spectra_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">receive_spectra</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">)</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="c1"># 3. Signal : Maps demande l'ouverture de l'onglet Graphs après extraction d'un profil</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="bp">self</span><span class="o">.</span><span class="n">v_maps_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">switch_to_graphs_tab</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabWidget</span><span class="o">.</span><span class="n">setCurrentWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v_graphs_workspace</span><span class="p">)</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="constantes-globales-__init__py"><strong>Constantes globales (<code>__init__.py</code>)</strong><a class="headerlink" href="#constantes-globales-__init__py" title="Permanent link">&para;</a></h2>
+<p><code>spectroview/__init__.py</code> définit les constantes globales de l'application :</p>
+<table>
+<thead>
+<tr>
+<th>Constante</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VERSION</code>, <code>BUILD_NUMBER</code></td>
+<td>Version sémantique de l'application et horodatage immuable de build</td>
+</tr>
+<tr>
+<td><code>PEAK_MODELS</code></td>
+<td>Profils de pics enregistrés (<code>Lorentzian</code>, <code>Gaussian</code>, <code>PseudoVoigt</code>, <code>GaussianAsym</code>, <code>LorentzianAsym</code>, <code>Fano</code>, <code>DecaySingleExp</code>, <code>DecayBiExp</code>)</td>
+</tr>
+<tr>
+<td><code>PLOT_STYLES</code></td>
+<td>Types de graphiques disponibles (<code>point</code>, <code>scatter</code>, <code>box</code>, <code>bar</code>, <code>line</code>, <code>trendline</code>, <code>histogram</code>, <code>wafer</code>, <code>2Dmap</code>)</td>
+</tr>
+<tr>
+<td><code>PALETTE</code>, <code>DEFAULT_COLORS</code>, <code>MARKERS</code></td>
+<td>Palettes de couleurs, cycle de 20 couleurs adaptées aux publications et marqueurs Matplotlib</td>
+</tr>
+<tr>
+<td><code>X_AXIS_UNIT</code>, <code>Y_AXIS_UNIT</code></td>
+<td>Registres des unités d'axes</td>
+</tr>
+<tr>
+<td><code>AXIS_LABELS</code></td>
+<td>Suggestions d'autocomplétion pour les libellés de graphiques</td>
+</tr>
+<tr>
+<td><code>ICON_DIR</code></td>
+<td>Chemin résolu vers <code>resources/icons/</code></td>
+</tr>
+<tr>
+<td><code>PLOT_POLICY_LIGHT</code>, <code>PLOT_POLICY_DARK</code></td>
+<td>Chemins vers les feuilles de style Matplotlib</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="architecture-de-mise-a-jour-et-de-packaging-multiplateforme"><strong>Architecture de mise à jour et de packaging multiplateforme</strong><a class="headerlink" href="#architecture-de-mise-a-jour-et-de-packaging-multiplateforme" title="Permanent link">&para;</a></h2>
+<h3 id="vue-densemble">Vue d'ensemble<a class="headerlink" href="#vue-densemble" title="Permanent link">&para;</a></h3>
+<p><code>SPECTROview</code> expose une façade unifiée de détection d'installation et de mise à jour (<code>UpdateManager</code> dans <code>model/system/m_update_manager.py</code>) appuyée sur <code>InstallationManager</code> (<code>model/system/m_installation.py</code>) et un durcissement TLS centralisé (<code>model/system/m_tls.py</code>). Les utilisateurs bénéficient d'une même bannière, d'une vérification par cache <code>ETag</code>, d'un sélecteur de préversions et d'une vérification d'intégrité <code>SHA256SUMS.txt</code> sur chaque cible de distribution, sans avoir à connaître la méthode d'installation utilisée.</p>
+<h3 id="fichiers-cles">Fichiers clés<a class="headerlink" href="#fichiers-cles" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Fichier</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>model/system/m_tls.py</code></td>
+<td>Application pure-modèle des autorités de certification (<code>GHSA-6q48-6c7w-9gw2</code>) : <code>SSL_CERT_FILE</code>/<code>REQUESTS_CA_BUNDLE</code> → magasin OS <code>truststore</code> → <code>certifi &gt;= 2026.10.23</code> validé (contrôle <code>pip &gt;= 26.2.2</code> au build)</td>
+</tr>
+<tr>
+<td><code>model/system/m_installation.py</code></td>
+<td>Classificateur pure-modèle <code>InstallType</code> (<code>DEV_SOURCE</code>, <code>PIP_WHEEL</code>, <code>WINDOWS_VELOPACK</code>, <code>WINDOWS_PORTABLE</code>, <code>MACOS_BUNDLE</code>, <code>LINUX_APPIMAGE</code>, <code>LINUX_DEB</code>, <code>STANDALONE_UNKNOWN</code>)</td>
+</tr>
+<tr>
+<td><code>model/system/m_macos_font_patch.py</code></td>
+<td>Correctif du cache de polices macOS interceptant <code>system_profiler SPFontsDataType</code> pour éviter le plantage amont <code>KeyError: '_items'</code> de <code>matplotlib</code> et le gel de 10 s</td>
+</tr>
+<tr>
+<td><code>model/system/m_update_manager.py</code></td>
+<td><code>GitHubReleaseClient</code> (<code>ETag</code> + cache TTL), façade <code>UpdateManager</code>, <code>UnifiedUpdateCheckWorker</code>, <code>UnifiedUpdateDownloadWorker</code> et metteurs à jour par plateforme</td>
+</tr>
+<tr>
+<td><code>model/system/m_update_checker.py</code></td>
+<td>Anciens workers pip/wheel préservés ainsi que le lanceur de mise à niveau pip sécurisé (<code>--use-feature=truststore</code> / <code>--cert</code>)</td>
+</tr>
+<tr>
+<td><code>view/components/common/v_update_banner.py</code></td>
+<td>Bannière fine affichant la transition de version (<code>current → latest</code>) et le libellé d'action adapté à la plateforme</td>
+</tr>
+<tr>
+<td><code>main.py</code></td>
+<td>Exécute <code>_run_velopack_bootstrap()</code> avant <code>QApplication</code> uniquement lorsque Velopack est actif ; connecte la bannière et les dialogues guidés</td>
+</tr>
+<tr>
+<td><code>main.spec</code> &amp; <code>packaging/</code></td>
+<td>Configuration PyInstaller unique et scripts de build pour Windows (<code>Setup.exe</code> + <code>Portable.zip</code>), macOS (<code>.dmg</code> Apple Silicon <code>arm64</code>) et Linux (<code>.AppImage</code> + <code>.deb</code>)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="matrice-de-mise-a-jour-par-plateforme-et-justification-technique">Matrice de mise à jour par plateforme et justification technique<a class="headerlink" href="#matrice-de-mise-a-jour-par-plateforme-et-justification-technique" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th><code>InstallType</code></th>
+<th>Base de détection</th>
+<th>Mécanisme de mise à jour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DEV_SOURCE</code></td>
+<td>Non figé + <code>.git</code> / <code>pyproject.toml</code> / métadonnées éditables PEP 610</td>
+<td><code>UnsupportedUpdater</code> : notification uniquement — ne modifie jamais un dépôt de développement</td>
+</tr>
+<tr>
+<td><code>PIP_WHEEL</code></td>
+<td>Installation <code>site-packages</code> non figée</td>
+<td><code>PythonUpdater</code> : télécharge le <code>.whl</code> vérifié par SHA-256, lance <code>pip install --upgrade</code> avec TLS durci en processus détaché et redémarre</td>
+</tr>
+<tr>
+<td><code>WINDOWS_VELOPACK</code></td>
+<td>Windows figé dans <code>current/</code> avec <code>Update.exe</code> ou <code>sq.version</code></td>
+<td><code>WindowsVelopackUpdater</code> : télécharge <code>releases.win.json</code> et les <code>.nupkg</code> delta/complets en Python via <code>m_tls</code> (en contournant <code>webpki-roots</code> intégré dans <code>velopack 1.2.161</code>), puis transmet uniquement le dossier local à <code>velopack.UpdateManager</code></td>
+</tr>
+<tr>
+<td><code>WINDOWS_PORTABLE</code></td>
+<td>Windows figé hors arborescence Velopack</td>
+<td><code>WindowsPortableUpdater</code> : télécharge et vérifie <code>Portable.zip</code>, propose <strong>Extract to Folder...</strong> avec protection contre le <em>zip-slip</em></td>
+</tr>
+<tr>
+<td><code>MACOS_BUNDLE</code></td>
+<td>macOS figé dans <code>*.app/Contents/MacOS</code></td>
+<td><code>MacOSUpdater</code> : télécharge le <code>.dmg</code> <code>arm64</code> vérifié (les hôtes Intel <code>x64</code> obsolètes ne téléchargent pas de binaire <code>arm64</code> incompatible) et affiche le guide Gatekeeper par Contrôle-clic <em>(le remplacement silencieux est différé tant que la signature/notarisation Apple Developer ID n'est pas configurée)</em></td>
+</tr>
+<tr>
+<td><code>LINUX_APPIMAGE</code></td>
+<td>Linux figé avec <code>$APPIMAGE</code> correspondant à <code>$APPDIR</code></td>
+<td><code>LinuxAppImageUpdater</code> : vérifie l'en-tête ELF et le SHA-256 ; remplacement atomique par <code>mv</code> + relance via un script <code>shlex.quote</code> lorsque <code>$APPIMAGE</code> est accessible en écriture, téléchargement guidé sinon</td>
+</tr>
+<tr>
+<td><code>LINUX_DEB</code></td>
+<td>Linux figé avec <code>/opt/spectroview/</code> ou marqueur <code>.spectroview-deb</code></td>
+<td><code>LinuxDebUpdater</code> : vérifie <code>!&lt;arch&gt;\n</code> + SHA-256 et fournit une commande <code>sudo apt install</code> copiable en un clic</td>
+</tr>
+</tbody>
+</table>
+<h3 id="automatisation-des-releases-multiplateformes-githubworkflowsreleaseyml">Automatisation des releases multiplateformes (<code>.github/workflows/release.yml</code>)<a class="headerlink" href="#automatisation-des-releases-multiplateformes-githubworkflowsreleaseyml" title="Permanent link">&para;</a></h3>
+<p>Le poussage d'un tag de version (<code>vMAJOR.MINOR.PATCH</code> ou <code>vMAJOR.MINOR.PATCH-rc.N</code> correspondant à <code>spectroview.VERSION</code>) déclenche un workflow Python 3.14 unifié :</p>
+<ol>
+<li><strong><code>verify</code></strong> : Valide la correspondance tag/version, impose <code>pip&gt;=26.2.2</code> et <code>certifi&gt;=2026.10.23</code>, et exécute les suites de tests unitaires headless et de temps d'import au démarrage.</li>
+<li><strong>Constructeurs parallèles par plateforme</strong> :</li>
+<li><strong><code>build-python</code></strong> : <code>.whl</code> + <code>.tar.gz</code>, <code>twine check</code> et vérification d'installation propre en environnement virtuel.</li>
+<li><strong><code>build-windows</code></strong> : PyInstaller (<code>--onedir</code>) + test de démarrage offscreen + <code>Portable.zip</code> + <code>vpk pack</code> Velopack (<code>Setup.exe</code>, <code>releases.win.json</code>, <code>*.nupkg</code>, chaînage de l'historique delta).</li>
+<li><strong><code>build-macos</code></strong> (<code>macos-15</code> <code>arm64</code>) : Build natif Apple Silicon <code>.app</code> + <code>.dmg</code> avec hook d'exécution PyInstaller et vérification <code>--smoke-test</code> offscreen (hooks optionnels <code>APPLE_SIGNING_IDENTITY</code> / <code>APPLE_CERTIFICATE_P12</code> / <code>APPLE_ID</code> prêts dès ajout des identifiants).</li>
+<li><strong><code>build-linux</code></strong> (<code>ubuntu-22.04</code> glibc baseline) : Construit <code>.AppImage</code> et <code>.deb</code>, valide <code>.desktop</code>, puis exécute les tests réels <code>apt-get install</code>, lancement offscreen, lancement AppImage et persistance de configuration (<code>~/.config/CEA-Leti/</code>).</li>
+<li><strong><code>release</code></strong> : Publie une GitHub Release unifiée accompagnée de <code>SHA256SUMS.txt</code> (en marquant automatiquement les préversions).</li>
+<li><strong><code>publish-pypi</code></strong> : Pour les versions stables, conserve le mécanisme PyPI Trusted Publisher existant (environnement <code>pypi</code>, <code>id-token: write</code>, <code>pypa/gh-action-pypi-publish@release/v1</code>).</li>
+</ol>
+<p>Avant la première publication PyPI sur un nouveau fork ou dépôt, enregistrez un Trusted Publisher pour <code>CEA-MetroCarac/SPECTROview</code> dans PyPI avec le fichier de workflow <code>release.yml</code> et l'environnement <code>pypi</code>.</p>
+<hr />
+<h2 id="documentation-approfondie"><strong>Documentation approfondie</strong><a class="headerlink" href="#documentation-approfondie" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Sujet</th>
+<th>Page</th>
+<th>Résumé</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Architecture de données : SpectraStore</strong></td>
+<td><a href="spectra_store/">spectra_store.md</a></td>
+<td><code>MapData</code>, <code>MapInfo</code>, <code>SpectrumProxy</code>, hiérarchie des données, pipeline de prétraitement, persistance</td>
+</tr>
+<tr>
+<td><strong>Espace Spectra</strong></td>
+<td><a href="spectra/">spectra.md</a></td>
+<td><code>VMWorkspaceSpectra</code>, cycle de vie d'un spectre, pipeline ligne de base/pics, gestion des modèles d'ajustement</td>
+</tr>
+<tr>
+<td><strong>Espace Maps</strong></td>
+<td><a href="maps/">maps.md</a></td>
+<td><code>VMWorkspaceMaps</code>, chargement hyperspectral, rendu de carte thermique, gestion des coordonnées</td>
+</tr>
+<tr>
+<td><strong>Espace Graphs</strong></td>
+<td><a href="graphs/">graphs.md</a></td>
+<td><code>VMWorkspaceGraphs</code>, gestion des DataFrames, création de tracés, rendu <code>VGraph</code></td>
+</tr>
+<tr>
+<td><strong>Moteur d'ajustement vectorisé (<code>VBF Engine</code>)</strong></td>
+<td><a href="vbf_engine/">vbf_engine.md</a></td>
+<td>Optimiseur LM par lots, jacobiennes analytiques, ajout de nouveaux profils de pics</td>
+</tr>
+<tr>
+<td><strong>Analyse multivariée</strong></td>
+<td><a href="mva/">mva.md</a></td>
+<td>Implémentation PCA/NMF, pipeline de données, export vers <code>Graphs</code></td>
+</tr>
+<tr>
+<td><strong>Agent conversationnel IA</strong></td>
+<td><a href="ai_agent/">ai_agent.md</a></td>
+<td>Chat LLM multi-fournisseurs (Ollama/OpenAI/Anthropic/…), appels d'outils MCP, prompt système, intégration Graphs</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="execution-et-tests"><strong>Exécution et tests</strong><a class="headerlink" href="#execution-et-tests" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Lancer depuis les sources</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>python<span class="w"> </span>-m<span class="w"> </span>spectroview.main
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Installer en mode éditable avec les dépendances de développement</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[dev]"</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Exécuter la suite de tests rapide (ignore les benchmarks lents sur données réelles ; mode offscreen configuré automatiquement)</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not slow"</span><span class="w"> </span>-q
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1"># Exécuter la suite complète de tests (incluant les jeux de benchmark réels ; ~7-8 min)</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-q
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># Vérification statique de syntaxe et d'imports sur les fichiers modifiés</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>python<span class="w"> </span>-m<span class="w"> </span>pyflakes<span class="w"> </span>spectroview/&lt;modified_file&gt;.py
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="c1"># Construire et prévisualiser la documentation</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>mkdocs<span class="w"> </span>serve
+</code></pre></div>
+<blockquote>
+<p>[!NOTE]
+Pour les consignes détaillées de développement et de programmation en binôme, consultez le <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/AGENTS.md">cadre de développement IA (AGENTS.md)</a> ainsi que le guide de la suite de tests dans <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/tests/README.md">tests/README.md</a>.</p>
+</blockquote>
+<hr />
+<h2 id="dependances"><strong>Dépendances</strong><a class="headerlink" href="#dependances" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Paquet</th>
+<th>Contrainte</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PySide6</code></td>
+<td>—</td>
+<td>Liaisons Qt 6 (<strong>et non</strong> PyQt)</td>
+</tr>
+<tr>
+<td><code>matplotlib</code></td>
+<td><code>&amp;ge; 3.8.0, &lt; 3.10.9</code></td>
+<td>Moteur de tracé pour les spectres et les cartes</td>
+</tr>
+<tr>
+<td><code>numpy</code></td>
+<td><code>&amp;ge; 2.0.2</code></td>
+<td>Calcul numérique sur tableaux (NumPy 2.x)</td>
+</tr>
+<tr>
+<td><code>scipy</code></td>
+<td>—</td>
+<td>Interpolation, KDTree, SVD</td>
+</tr>
+<tr>
+<td><code>pandas</code></td>
+<td>—</td>
+<td>Gestion des DataFrames</td>
+</tr>
+<tr>
+<td><code>superqt</code></td>
+<td>—</td>
+<td>Widgets Qt enrichis (curseurs de plage)</td>
+</tr>
+<tr>
+<td><code>ollama</code> / <code>openai</code> / <code>anthropic</code> / <code>mcp</code></td>
+<td><code>ollama ≥ 0.4</code>, <code>mcp ≥ 2.2</code></td>
+<td>Fournisseurs LLM + Model Context Protocol pour AI Data Chat. <strong>Dépendances principales</strong> (aucun groupe optionnel <code>[ai]</code>) — une installation <code>pip</code> standard les inclut ; la fonctionnalité reste uniquement <em>facultative à l'usage</em>.</td>
+</tr>
+<tr>
+<td><code>truststore</code> / <code>certifi</code></td>
+<td><code>truststore ≥ 0.9.0</code>, <code>certifi ≥ 2026.10.23</code></td>
+<td>Vérification TLS durcie utilisant d'abord le magasin système puis le bundle <code>certifi</code> corrigé (<code>GHSA-6q48-6c7w-9gw2</code>) ; importation protégée</td>
+</tr>
+<tr>
+<td><code>velopack</code> / <code>pyinstaller</code> <em>(optionnel <code>[standalone]</code>)</em></td>
+<td><code>velopack ≥ 1.2.161</code>, <code>pyinstaller ≥ 6.10.0</code></td>
+<td>Empaquetage autonome de bureau et hooks d'installation/mise à jour Velopack sous Windows</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Retour en haut de la page
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Pied de page" >
+        
+          
+          <a href="../user_manual/ai_agent/" class="md-footer__link md-footer__link--prev" aria-label="Précédent: Agent IA">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Précédent
+              </span>
+              <div class="md-ellipsis">
+                Agent IA
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="file_loading/" class="md-footer__link md-footer__link--next" aria-label="Suivant: Pipeline de chargement des fichiers">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Suivant
+              </span>
+              <div class="md-ellipsis">
+                Pipeline de chargement des fichiers
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

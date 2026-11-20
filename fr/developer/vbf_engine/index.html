@@ -1,0 +1,2935 @@
+
+<!doctype html>
+<html lang="fr" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Outil interactif de traitement, d'ajustement et de visualisation de données spectroscopiques">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/vbf_engine/">
+      
+      
+        <link rel="prev" href="../graphs/">
+      
+      
+        <link rel="next" href="../mva/">
+      
+      
+        
+          <link rel="alternate" href="../../../developer/vbf_engine/" hreflang="en">
+        
+          <link rel="alternate" href="./" hreflang="fr">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Moteur d'ajustement vectorisé par lots (VBF) - Documentation SPECTROview</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#guide-developpeur-moteur-dajustement-vectorise-par-lots-vbf" class="md-skip">
+          Aller au contenu
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="../../" title="Documentation SPECTROview" class="md-header__button md-logo" aria-label="Documentation SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Documentation SPECTROview
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Moteur d'ajustement vectorisé par lots (VBF)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Sélectionner la langue"
+      title="Sélectionner la langue"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">FR</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../developer/vbf_engine/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="fr"
+              class="md-select__link" aria-current="true"
+            >
+              Français
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Recherche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initialisation de la recherche
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Onglets" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accueil
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Manuel utilisateur
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Agent IA
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guide développeur
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Historique des versions
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="Documentation SPECTROview" class="md-nav__button md-logo" aria-label="Documentation SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    Documentation SPECTROview
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accueil
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manuel utilisateur
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Manuel utilisateur
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formats pris en charge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aperçu de l'interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Barre de menus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espaces Spectra et Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analyse multivariée (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calculateurs rapides
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paramètres
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sauvegarde et chargement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Raccourcis et astuces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent IA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guide développeur
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guide développeur
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline de chargement des fichiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture de données SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Spectra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moteur d'ajustement vectorisé par lots (VBF)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moteur d'ajustement vectorisé par lots (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-pourquoi-le-moteur-vbf-engine-est-nettement-plus-rapide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Pourquoi le moteur VBF Engine est nettement plus rapide
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-optimisations-de-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Optimisations de performance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-logique-du-code-et-principes-dimplementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Logique du code et principes d'implémentation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Logique du code et principes d&#39;implémentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-formulation-mathematique-du-lm-par-lots" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1. Formulation mathématique du LM par lots
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-convergence-independante" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2. Convergence indépendante
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-fonctions-de-perte-robustes-mise-a-lechelle-de-type-irls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3. Fonctions de perte robustes (mise à l'échelle de type IRLS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-structure-des-modules-et-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Structure des modules et classes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-pipeline-de-traitement-et-flux-dexecution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Pipeline de traitement et flux d'exécution
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Pipeline de traitement et flux d&#39;exécution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-vbfthreadrun-orchestration-des-taches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1. VBFthread.run() — Orchestration des tâches
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-vbfenginefit_spectra-le-cur-numerique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2. VBFengine.fit_spectra() — Le cœur numérique
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-detail-de-vbfevaluator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Détail de VBFevaluator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Détail de VBFevaluator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-correspondance-de-lespace-des-parametres" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1. Correspondance de l'espace des paramètres
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-prise-en-charge-des-expressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2. Prise en charge des expressions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-aiguillage-vers-les-modeles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3. Aiguillage vers les modèles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-modeles-de-pics-vectorises-et-jacobiennes-analytiques" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Modèles de pics vectorisés et jacobiennes analytiques
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Modèles de pics vectorisés et jacobiennes analytiques">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-conventions-tensorielles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1. Conventions tensorielles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-modeles-enregistres-batched_models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2. Modèles enregistrés (BATCHED_MODELS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-repli-par-jacobienne-numerique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3. Repli par jacobienne numérique
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-la-classe-vbfthread" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. La classe VBFthread
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. La classe VBFthread">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-branches-de-taches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1. Branches de tâches
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-taille-de-pile-sous-macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2. Taille de pile sous macOS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-signaux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3. Signaux
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-parametres-doptimisation-et-reglages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Paramètres d'optimisation et réglages
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Paramètres d&#39;optimisation et réglages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-parametres-cles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1. Paramètres clés
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-compromis-vitesse-precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2. Compromis vitesse / précision
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-loi-damortissement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3. Loi d'amortissement
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-estimation-du-niveau-de-bruit-et-seuil-de-bruit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Estimation du niveau de bruit et seuil de bruit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Estimation du niveau de bruit et seuil de bruit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-comment-le-niveau-de-bruit-est-estime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1. Comment le niveau de bruit est estimé
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-comment-coef_noise-active-le-seuillage-du-bruit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2. Comment coef_noise active le seuillage du bruit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10.2. Comment coef_noise active le seuillage du bruit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1021-mecanisme-a-masquage-par-poids-vbfthread_prepare_weights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2.1. Mécanisme A — Masquage par poids (VBFthread._prepare_weights)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1022-mecanisme-b-suppression-de-pics-vbfevaluatorapply_noise_threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2.2. Mécanisme B — Suppression de pics (VBFevaluator.apply_noise_threshold)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-gains-en-performance-et-en-precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3. Gains en performance et en précision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10.3. Gains en performance et en précision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1031-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3.1. Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1032-precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3.2. Précision
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104-exemple-pratique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4. Exemple pratique
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#105-choisir-la-bonne-valeur-de-coef_noise" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.5. Choisir la bonne valeur de coef_noise
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-ajouter-de-nouveaux-modeles-de-pics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Ajouter de nouveaux modèles de pics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Ajouter de nouveaux modèles de pics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-voie-rapide-jacobienne-analytique-recommandee" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1. Voie rapide : Jacobienne analytique (recommandée)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-voie-lente-repli-scalaire" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2. Voie lente : Repli scalaire
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-enregistrement-dans-lapplication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3. Enregistrement dans l'application
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-chronometrage-et-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Chronométrage et diagnostics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. Chronométrage et diagnostics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-calcul-du-coefficient-r2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.1. Calcul du coefficient R²
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analyse multivariée (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent IA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Serveur MCP local
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Spectra (chargement, prétraitement, ajustement)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Maps (hyperspectral, cartes thermiques)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualisation de données (Graphs)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calculateurs rapides
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Étendre SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Historique des versions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Accueil
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Guide développeur
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="guide-developpeur-moteur-dajustement-vectorise-par-lots-vbf"><strong>Guide développeur : Moteur d'ajustement vectorisé par lots (<code>VBF</code>)</strong><a class="headerlink" href="#guide-developpeur-moteur-dajustement-vectorise-par-lots-vbf" title="Permanent link">&para;</a></h1>
+<p>Ce document détaille le fonctionnement interne, l'architecture et les caractéristiques de performance du moteur Vectorized Batch Fit (<code>VBF</code>) situé dans <code>spectroview/fit_engine/</code>.</p>
+<hr />
+<h2 id="1-pourquoi-le-moteur-vbf-engine-est-nettement-plus-rapide"><strong>1. Pourquoi le moteur <code>VBF Engine</code> est nettement plus rapide</strong><a class="headerlink" href="#1-pourquoi-le-moteur-vbf-engine-est-nettement-plus-rapide" title="Permanent link">&para;</a></h2>
+<p>Les moteurs d'ajustement historiques fonctionnent <strong>spectre par spectre</strong>. Sur une carte hyperspectrale comptant des milliers de spectres, cette approche engendre un surcoût majeur :</p>
+<ul>
+<li><strong>Surcoût d'appels de fonctions Python</strong> : Appel de la fonction objectif et de l'estimateur de jacobienne des milliers de fois par itération.</li>
+<li><strong>Jacobiennes par différences finies</strong> : L'approximation numérique de la jacobienne exige <code>2 * K</code> évaluations supplémentaires par itération et par spectre (où K est le nombre de paramètres).</li>
+<li><strong>Exécution séquentielle</strong> : Même avec le multiprocessing, la sérialisation et la communication inter-processus créent des goulots d'étranglement.</li>
+</ul>
+<p>Le <strong>moteur Vectorized Batch Fit (<code>VBF Engine</code>)</strong> obtient des accélérations massives grâce aux principes suivants :</p>
+<ol>
+<li><strong>Optimisation simultanée de tout le lot</strong> : Il optimise les <span class="arithmatex">\(N\)</span> spectres en parallèle. Les matrices de paramètres, tableaux de données et résidus sont manipulés comme de grands tenseurs 2D ou 3D.</li>
+<li><strong>Opérations vectorisées (BLAS/LAPACK)</strong> : En formulant le problème sous forme tensorielle, le calcul lourd est confié à des bibliothèques C/Fortran hautement optimisées.<ul>
+<li>Les multiplications et transpositions matricielles pour les équations normales (<span class="arithmatex">\(J^T J\)</span> et <span class="arithmatex">\(J^T r\)</span>) utilisent <code>np.matmul</code>, qui appelle directement un <code>gemm</code> BLAS par lots. (Une ancienne version utilisait <code>np.einsum</code>, qui ne délègue pas au BLAS pour cette contraction et s'est révélée 13 à 20× plus lente — voir §2.)</li>
+<li>Les systèmes linéaires de tous les spectres sont résolus via <strong><code>np.linalg.solve</code> vectorisé</strong> directement sur <code>(Na, K, K)</code> (<code>np.linalg.solve(A, b[..., None])[..., 0]</code>), exécutant toutes les résolutions indépendantes en un seul appel LAPACK par lots sans boucle Python, avec repli Cholesky/<code>np.linalg.solve</code>/<code>0.0</code> uniquement sur <code>LinAlgError</code> singulier. Voir <code>_batched_solve()</code> au §2.</li>
+</ul>
+</li>
+<li><strong>Jacobiennes analytiques</strong> : Au lieu d'estimer les dérivées numériquement, le moteur utilise des formules analytiques exactes pour chaque profil de pic enregistré (<code>Gaussian</code>, <code>Lorentzian</code>, <code>PseudoVoigt</code>, <code>GaussianAsym</code>, <code>LorentzianAsym</code>, <code>Fano</code>, <code>DecaySingleExp</code>, <code>DecayBiExp</code>), supprimant entièrement les <span class="arithmatex">\(2K\)</span> évaluations supplémentaires.</li>
+<li><strong>Aucune propagation spatiale</strong> : Contrairement aux approches séquentielles propageant les estimations en spirale d'un voisin à l'autre, le moteur <code>VBF</code> initialise tous les pixels indépendamment par mise à l'échelle d'amplitude, autorisant un calcul tensoriel purement parallèle.</li>
+<li><strong>Prise en charge des longueurs variables</strong> : Lorsque les spectres ne partagent pas un axe X commun, <code>x</code> est passé comme matrice <code>(N, M)</code> au lieu de <code>(M,)</code>, et chaque fonction de modèle/jacobienne vectorisée s'adapte sur <code>x.ndim</code>.</li>
+<li><strong>Support des expressions symboliques</strong> : Prend en charge les contraintes mathématiques complexes entre paramètres sur tout le lot avant le passage aux paramètres libres.</li>
+</ol>
+<hr />
+<h2 id="2-optimisations-de-performance"><strong>2. Optimisations de performance</strong><a class="headerlink" href="#2-optimisations-de-performance" title="Permanent link">&para;</a></h2>
+<p>Les points suivants concernent spécifiquement le cœur numérique dans <code>fit_engine/</code>. Les optimisations de prétraitement (recadrage, évaluation de ligne de base sur le tenseur complet) résident dans <code>SpectraStore.batch_preprocess()</code> et sont documentées dans <a href="../spectra_store/">spectra_store.md</a>.</p>
+<ol>
+<li><strong>Assemblage vectorisé des équations normales via <code>np.matmul</code> plutôt que <code>np.einsum</code></strong> (13–20× plus rapide pour <span class="arithmatex">\(J^TJ\)</span>, 3–4× pour <span class="arithmatex">\(J^Tr\)</span> sur des tailles N/M/K réalistes) : <code>np.einsum('nmk,nml-&gt;nkl', J, J)</code> ne délègue pas au BLAS et retombe sur une boucle générique de réduction. L'expression mathématiquement équivalente <code>J.transpose(0, 2, 1) @ J</code> déclenche un appel BLAS <code>gemm</code> par lots.</li>
+<li><strong>Suppression des recalculs redondants de jacobienne / équations normales sur pas rejetés</strong> : un essai LM rejeté laisse les paramètres du spectre inchangés ; sa jacobienne — et donc <span class="arithmatex">\(J^TJ\)</span>/<span class="arithmatex">\(J^Tr\)</span> — reste donc strictement exacte ; seul le facteur d'amortissement change avant de réessayer. <code>optimizer.py</code> met en cache <span class="arithmatex">\(J^TJ\)</span>/<span class="arithmatex">\(J^Tr\)</span> par spectre (<code>JTJ_cache</code>, <code>JTr_cache</code>) et ne les recalcule que pour les spectres dont le <em>dernier</em> pas a été accepté (suivis par un masque booléen <code>dirty</code>). C'est exact et sans dérive numérique, éliminant environ 30 % des deux opérations les plus coûteuses sur les cartes à convergence lente.</li>
+<li><strong>Garde sur <code>np.nan_to_num</code></strong> : <code>np.nan_to_num</code> exécute trois parcours complets de tableau (<code>isnan</code>/<code>isposinf</code>/<code>isneginf</code>) plus une affectation par indexation avancée, même lorsque tout est fini. <code>optimizer._finite_or_clean()</code> vérifie d'abord <code>np.isfinite(arr).all()</code> (un seul parcours fusionné) et ne paie le coût du nettoyage que si nécessaire (~10× plus rapide dans le cas nominal).</li>
+<li><strong>Noyaux de modèles et jacobiennes sans allocations temporaires et sur place</strong> : chaque fonction de <code>models.py</code> calcule une seule fois chaque quantité répétée (<code>1/w²</code>, <code>1/w³</code>, <code>dx²</code>, …), remplace les divisions <code>(N,M)</code> répétées par un unique inverse <code>(N,1)</code> suivi d'une multiplication diffusée (<code>inv_wl = 1.0 / wl</code>, <code>inv_wr = 1.0 / wr</code>), et écrit directement dans des tampons préalloués <code>out=</code> dès la première opération (<code>np.subtract(..., out=out)</code>). Les 8 jacobiennes analytiques (<code>batched_*_jac</code>) écrivent directement dans les tranches <code>J[:, :, k]</code> et exploitent l'identité algébrique <span class="arithmatex">\(\frac{\partial f}{\partial w} = \frac{x - x_0}{w} \frac{\partial f}{\partial x_0}\)</span> (<code>J[:, :, 1] = dx * J[:, :, 2] * inv_w</code>), supprimant 3 à 6 allocations temporaires <code>(N, M)</code> par pic et par itération. Les modèles scalaires de référence dans <code>scalar_models.py</code> utilisent les mêmes bornes de sécurité (<code>1e-15</code> en largeur, <code>1e-30</code> en durée de vie) pour garantir une parité machine (<span class="arithmatex">\(\le 10^{-13}\)</span>) avec <code>BATCHED_MODELS</code>.</li>
+<li><strong>Statistiques de bruit partagées, mémoïsation 2D et recherche d'indice de pic en O(N)</strong> : <code>apply_noise_threshold()</code> s'exécute une fois avant l'ajustement (pour fournir une estimation initiale propre) et une fois après (pour nettoyer tout pic ayant dérivé dans une région bruitée — voir §5.2 et §10). Les deux appels réutilisent les statistiques mises en cache par <code>VBFevaluator.compute_noise_stats()</code>, tandis que <code>noise.py</code> met en cache des empreintes 2D sûres vis-à-vis des mutations (<code>_array_2d_fingerprint</code>) pour éviter de calculer <code>mad_noise(Y)</code> et <code>moving_average_5(Y)</code> deux fois de suite. La recherche d'indice de pic sur la grille utilise l'arithmétique uniforme en O(1), <code>np.searchsorted</code> en O(N log M) ou un repli par blocs de 256 au lieu d'allouer une matrice de distances <code>(N, M)</code>.</li>
+<li><strong>Solveur linéaire par lots (<code>_batched_solve()</code>)</strong> : résout tous les systèmes normaux actifs <code>(Na, K, K)</code> en un seul appel <code>np.linalg.solve(A, b[..., None])[..., 0]</code> quelles que soient la taille du lot et le nombre de paramètres, avec repli SciPy <code>cho_solve</code> / <code>np.linalg.solve</code> / <code>0.0</code> uniquement sur <code>LinAlgError</code>.</li>
+<li><strong>Critère de convergence moyen après projection aux bornes</strong> : le test de convergence mesure <code>mean(|dp_actual| / |p|) &lt; xtol</code> sur le déplacement effectif après bornage (<code>p_trial_active - p_improved_old</code>) plutôt que sur <code>dp</code> non borné ou <code>max()</code>, évitant que des ailes dérivant lentement ou des paramètres bloqués sur une borne n'attendent <code>max_ite</code>.</li>
+<li><strong>Rétro-écriture vectorisée</strong> : <code>build_results_batch()</code> évalue toutes les courbes ajustées et calcule R² simultanément sur tout le lot via un unique tampon réutilisable <code>(N, M)</code> en contournant les multiplications superflues lorsque les poids valent uniformément <code>1</code>.</li>
+<li><strong>Sortie anticipée à poids nul et chemin rapide poids uniformes</strong> : les spectres identifiés comme bruit pur (tous poids nuls) convergent instantanément, et <code>weights</code> égal à <code>None</code> ou à <code>1.0</code> uniforme évite les multiplications <code>(N, M)</code> sur les résidus et jacobiennes à chaque itération.</li>
+<li><strong>Disposition transposée <code>(K, N, M)</code> de la jacobienne et chemins sans copie</strong> : <code>batched_levenberg_marquardt()</code> alloue <code>J_buf_base</code> selon l'agencement physique <code>(K, N, M)</code> et expose <code>J_r_buf = J_buf_base[:, :n_recompute, :].transpose(1, 2, 0)</code> de forme logique <code>(Nr, M, K)</code>. Chaque tranche de paramètre <code>J[:, :, k]</code> est ainsi 100 % C-contiguë de forme <code>(Nr, M)</code> lors de l'évaluation de la jacobienne, et l'axe de contraction <code>M</code> conserve un pas de 8 octets lors des appels BLAS <code>dgemm</code> <code>JT_r @ J_r</code> et <code>JT_r @ scaled_r_r[:, :, None]</code>. Aux premières itérations où tous les spectres sont actifs, l'optimiseur écrit directement dans <code>JTJ_cache</code> et <code>JTr_cache</code> via <code>np.matmul(..., out=...)</code> sans copie ni rassemblement indexé.</li>
+<li><strong>Règle de dérivation en chaîne par nombres duaux (<code>_DualVar</code>) pour les expressions</strong> : <code>VBFevaluator</code> trie topologiquement et compile en bytecode les expressions une seule fois dans <code>from_fit_model()</code>, et calcule les dérivées exactes <code>J_expr</code> en une passe par différentiation automatique en mode avant (<code>_DualVar</code>) couplée à <code>J_full @ J_expr</code> (~3× plus rapide sur les modèles contraints par expressions).</li>
+<li><strong>Découpage adaptatif par lots pour cache L3</strong> : lors de l'ajustement de très grandes cartes (<span class="arithmatex">\(N \cdot M \cdot K &gt; 2\,097\,152\)</span> ou <span class="arithmatex">\(N \ge 2\,048\)</span> avec <span class="arithmatex">\(N \cdot M \cdot K &gt; 1\,048\,576\)</span>), <code>batched_levenberg_marquardt()</code> découpe automatiquement le lot en sous-lots tenant en cache L3 (<code>chunk_n</code> ciblant ~4 Mo d'empreinte active), réduisant la mémoire crête jusqu'à 79 % tout en accélérant les calculs.</li>
+<li><strong>Interpolation linéaire de ligne de base en pur NumPy</strong> : <code>eval_baseline()</code> et <code>eval_baseline_batch()</code> évaluent les lignes de base linéaires par morceaux (avec extrapolation linéaire aux bords) via <code>_interp_linear_extrap()</code> en pur NumPy, évitant le coût d'import à froid de <code>scipy.interpolate</code>.</li>
+</ol>
+<h2 id="3-logique-du-code-et-principes-dimplementation"><strong>3. Logique du code et principes d'implémentation</strong><a class="headerlink" href="#3-logique-du-code-et-principes-dimplementation" title="Permanent link">&para;</a></h2>
+<p>Le moteur implémente un algorithme de <strong>Levenberg-Marquardt par lots</strong>.</p>
+<h3 id="31-formulation-mathematique-du-lm-par-lots"><strong>3.1. Formulation mathématique du LM par lots</strong><a class="headerlink" href="#31-formulation-mathematique-du-lm-par-lots" title="Permanent link">&para;</a></h3>
+<p>Pour <span class="arithmatex">\(N\)</span> spectres comptant chacun <span class="arithmatex">\(M\)</span> points spectraux et <span class="arithmatex">\(K\)</span> paramètres libres :</p>
+<ol>
+<li><strong>Évaluation du modèle</strong> : <span class="arithmatex">\(\mathbf{Y}_{pred} = f(\mathbf{x}, \mathbf{p})\)</span>, renvoyant un tenseur <span class="arithmatex">\((N, M)\)</span>.</li>
+<li><strong>Calcul des résidus</strong> : <span class="arithmatex">\(\mathbf{r} = \mathbf{W} \circ (\mathbf{Y}_{pred} - \mathbf{Y}_{data})\)</span>, renvoyant un tenseur <span class="arithmatex">\((N, M)\)</span>.</li>
+<li><strong>Calcul de la jacobienne</strong> : <span class="arithmatex">\(\mathbf{J} = \frac{\partial f}{\partial \mathbf{p}}\)</span>, renvoyant un tenseur <span class="arithmatex">\((N, M, K)\)</span>.</li>
+<li><strong>Équations normales</strong> : Assemblage de <span class="arithmatex">\(J^T J\)</span> (taille <span class="arithmatex">\(N \times K \times K\)</span>) et <span class="arithmatex">\(J^T r\)</span> (taille <span class="arithmatex">\(N \times K\)</span>) via <code>np.matmul</code> (§2).</li>
+<li><strong>Amortissement (pas de Marquardt)</strong> : Ajout d'un facteur d'amortissement <span class="arithmatex">\(\lambda_i\)</span> à la diagonale de <span class="arithmatex">\(J^T J\)</span> pour chaque spectre <span class="arithmatex">\(i\)</span>.</li>
+<li><strong>Résolution</strong> : Résolution simultanée de <span class="arithmatex">\((J^T J + \lambda \text{diag}(J^T J)) \delta \mathbf{p} = -J^T r\)</span> pour les <span class="arithmatex">\(N\)</span> spectres.</li>
+<li><strong>Évaluation du pas</strong> : Mise à jour <span class="arithmatex">\(\mathbf{p} \leftarrow \mathbf{p} + \delta \mathbf{p}\)</span> (avec projection sur les bornes) et évaluation du nouveau coût. Ajustement de <span class="arithmatex">\(\lambda\)</span> par spectre selon le succès ou l'échec du pas.</li>
+</ol>
+<h3 id="32-convergence-independante"><strong>3.2. Convergence indépendante</strong><a class="headerlink" href="#32-convergence-independante" title="Permanent link">&para;</a></h3>
+<p>Bien que le calcul soit groupé par lots, chaque spectre converge indépendamment. L'optimiseur emploie un masque booléen (<code>active = ~converged</code>) pour ignorer le calcul de jacobienne et la résolution linéaire des spectres déjà convergés, accélérant progressivement les dernières itérations. Un second masque (<code>dirty</code>, voir §2) saute en outre le recalcul de jacobienne et des équations normales — mais <em>pas</em> l'évaluation de l'essai — pour les spectres actifs dont le dernier pas a été rejeté.</p>
+<h3 id="33-fonctions-de-perte-robustes-mise-a-lechelle-de-type-irls"><strong>3.3. Fonctions de perte robustes (mise à l'échelle de type IRLS)</strong><a class="headerlink" href="#33-fonctions-de-perte-robustes-mise-a-lechelle-de-type-irls" title="Permanent link">&para;</a></h3>
+<p>Pour résister aux points aberrants tels que les rayons cosmiques ou artefacts détecteurs sans masquage manuel, l'optimiseur prend en charge des M-estimateurs robustes via des moindres carrés itérativement repondérés (IRLS) :</p>
+<ul>
+<li><strong><code>linear</code></strong> (par défaut) : Moindres carrés standard <span class="arithmatex">\(\rho(z) = z\)</span>, <span class="arithmatex">\(\rho'(z) = 1\)</span>. Strictement identique bit à bit au LM non pondéré initial.</li>
+<li><strong><code>soft_l1</code></strong> : Approximation <span class="arithmatex">\(L_1\)</span> lisse <span class="arithmatex">\(\rho(z) = 2(\sqrt{1 + z} - 1)\)</span>, avec facteur de mise à l'échelle dérivé <span class="arithmatex">\(\sqrt{\rho'(z)} = (1 + z)^{-1/4}\)</span> où <span class="arithmatex">\(z = (r / f\_scale)^2\)</span>. Transition douce entre comportement quadratique près de zéro et pénalité linéaire sur les grands résidus.</li>
+<li><strong><code>huber</code></strong> : Perte de Huber <span class="arithmatex">\(\rho(z) = z\)</span> si <span class="arithmatex">\(z \le 1\)</span> sinon <span class="arithmatex">\(2\sqrt{z} - 1\)</span>, avec facteur <span class="arithmatex">\(\sqrt{\rho'(z)} = 1\)</span> si <span class="arithmatex">\(z \le 1\)</span> sinon <span class="arithmatex">\(z^{-1/4}\)</span>.</li>
+</ul>
+<p><strong>Formulation mathématique</strong> :
+Les résidus et lignes de la jacobienne sont pondérés par <span class="arithmatex">\(w_{\text{robust}} = \sqrt{\rho'((r / f\_scale)^2)}\)</span>. Les équations normales résolues à chaque itération deviennent :
+$<span class="arithmatex">\((J^T W J + \lambda \text{diag}(J^T W J)) \delta \mathbf{p} = -J^T W \mathbf{r}\)</span>$
+où <span class="arithmatex">\(W = \text{diag}(w_{\text{hard}}^2 \cdot w_{\text{robust}}^2)\)</span>.</p>
+<p><strong>Ordre de composition des poids</strong> :</p>
+<ol>
+<li><strong>Exclusions strictes</strong> (<code>fit_negative</code> et plancher de bruit <code>coef_noise</code>) évaluées d'abord dans <code>weights.py</code> pour affecter un poids nul (<span class="arithmatex">\(w_{\text{hard}} = 0\)</span>) aux points exclus.</li>
+<li><strong>Pondération robuste</strong> (<span class="arithmatex">\(w_{\text{robust}}\)</span>) appliquée ensuite dans <code>optimizer.py</code> sur les points actifs pour atténuer les grands résidus aberrants. Les points de poids nul restent nuls.</li>
+</ol>
+<hr />
+<h2 id="4-structure-des-modules-et-classes"><strong>4. Structure des modules et classes</strong><a class="headerlink" href="#4-structure-des-modules-et-classes" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>graph TD
+    TFT["VBFthread"] --&gt;|"instancie"| TE["VBFengine"]
+    TE --&gt;|"construit"| EV["VBFevaluator"]
+    TE --&gt;|"appelle"| OPT["batched_LM()"]
+    EV --&gt;|"aiguille vers"| MOD["models.py"]
+    OPT --&gt;|"evaluate / jacobian"| EV</code></pre>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Classe / Fonction</th>
+<th>Responsabilité</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vbf_thread.py</code></td>
+<td><code>VBFthread</code></td>
+<td>Enveloppe <code>QThread</code>. Regroupe les tâches en modes carte unique, méga-lot (<code>grouped_2d_maps</code>) ou groupement par longueur (<code>map_names</code>) ; construit la matrice des poids ; appelle <code>VBFengine.fit_spectra()</code> ; écrit les résultats dans <code>SpectraStore</code>. Émet <code>progress_changed</code> et <code>timings_ready</code>. Configure une pile de 8 Mo sous macOS pour éviter les plantages LAPACK.</td>
+</tr>
+<tr>
+<td><code>vbf_engine.py</code></td>
+<td><code>VBFengine</code></td>
+<td>Orchestrateur d'API publique pour un appel d'ajustement. Construit l'évaluateur, initialise <code>p0</code> + seuil de bruit, lance l'optimiseur, réapplique le seuil de bruit puis construit les tableaux résultats. Enregistre les temps d'étape dans <code>self.timings</code>.</td>
+</tr>
+<tr>
+<td><code>evaluator.py</code></td>
+<td><code>VBFevaluator</code></td>
+<td>Passerelle entre le dictionnaire <code>fit_model</code> et le format tensoriel plat. Analyse les définitions de pics, gère l'indexation libre/fixe, évalue les expressions, appelle les fonctions vectorisées de modèles et construit les tableaux retournés (paramètres, R², meilleures courbes, courbes par pic) sans objets intermédiaires <code>FitResult</code>.</td>
+</tr>
+<tr>
+<td><code>optimizer.py</code></td>
+<td><code>batched_levenberg_marquardt()</code></td>
+<td>Optimiseur numérique pur. Résout simultanément N problèmes aux moindres carrés non linéaires via <code>np.matmul</code>, cache <code>JᵀJ</code>/<code>Jᵀr</code>, <code>np.linalg.solve</code> par lots avec repli singulier, réutilisation de tampons <code>out=</code> et critère de convergence post-bornage. Indépendant de toute UI.</td>
+</tr>
+<tr>
+<td><code>models.py</code></td>
+<td>fonctions <code>batched_*()</code></td>
+<td>Fonctions vectorisées des profils de pics et leurs jacobiennes analytiques. Contient le registre <code>BATCHED_MODELS</code> et le repli <code>numerical_jacobian()</code>.</td>
+</tr>
+<tr>
+<td><code>scalar_models.py</code></td>
+<td>fonctions scalaires</td>
+<td>Implémentations de référence sur spectre unique et registre <code>PEAK_MODEL_REGISTRY</code>. Utilisées par <code>eval_peak_initial()</code> (aperçu UI) et comme repli scalaire encapsulé par <code>_make_batched_scalar()</code> dans <code>evaluator.py</code>.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-pipeline-de-traitement-et-flux-dexecution"><strong>5. Pipeline de traitement et flux d'exécution</strong><a class="headerlink" href="#5-pipeline-de-traitement-et-flux-dexecution" title="Permanent link">&para;</a></h2>
+<p>Le pipeline comporte deux niveaux : <code>VBFthread</code> orchestre les <em>tâches</em> (regroupement des spectres, construction des poids, destination des résultats) et <code>VBFengine.fit_spectra()</code> constitue le cœur numérique pur appelé une fois par tâche.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant VM as ViewModel
+    participant TFT as VBFthread
+    participant TE as VBFengine
+    participant EV as VBFevaluator
+    participant OPT as optimizer
+
+    VM-&gt;&gt;TFT: start()
+    TFT-&gt;&gt;TFT: _prepare_weights() — masquage valeurs négatives et bruit
+    TFT-&gt;&gt;TE: fit_spectra(x, Y, fit_model, weights, fit_params)
+    TE-&gt;&gt;EV: from_fit_model()
+    TE-&gt;&gt;EV: build_p0_matrix() + apply_noise_threshold() (pré-ajustement)
+    TE-&gt;&gt;OPT: batched_levenberg_marquardt()
+    TE-&gt;&gt;EV: apply_noise_threshold() (nettoyage post-ajustement)
+    TE-&gt;&gt;EV: build_results_batch()
+    TE--&gt;&gt;TFT: p_full, success, r², best_fits, Y_peaks
+    TFT-&gt;&gt;TFT: _write_results() → store.set_fit_results(), md.Y_bestfit / md.Y_peaks
+    TFT--&gt;&gt;VM: progress_changed / timings_ready / finished</code></pre>
+<h3 id="51-vbfthreadrun-orchestration-des-taches"><strong>5.1. <code>VBFthread.run()</code> — Orchestration des tâches</strong><a class="headerlink" href="#51-vbfthreadrun-orchestration-des-taches" title="Permanent link">&para;</a></h3>
+<p>Pour chaque tâche, <code>VBFthread</code> choisit l'une des trois branches au sein d'une unique boucle sur <code>self.tasks</code> :</p>
+<table>
+<thead>
+<tr>
+<th>Clé présente dans la tâche</th>
+<th>Quand utilisée</th>
+<th>Comportement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grouped_2d_maps</code></td>
+<td>« Appliquer le modèle à toutes les cartes » avec un modèle partagé</td>
+<td>Empile via <code>np.vstack</code> les matrices <code>Y</code> de toutes les cartes, ajuste en un seul méga-lot puis redistribue les résultats par tranches de lignes dans chaque <code>MapData</code>.</td>
+</tr>
+<tr>
+<td><code>map_names</code></td>
+<td>Ajustement par lots dans Spectra de spectres isolés ayant chacun son propre modèle</td>
+<td>Regroupe les spectres par longueur d'axe X et ajuste chaque groupe de même longueur en un lot.</td>
+</tr>
+<tr>
+<td><code>map_name</code> + <code>indices</code></td>
+<td>Ajustement d'une carte unique (cas courant)</td>
+<td>Extrait <code>Y[indices]</code>, calcule les poids et appelle une fois <code>fit_spectra()</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Avant d'appeler le moteur, <code>VBFthread._prepare_weights()</code> construit la matrice de pondération d'après <code>fit_negative</code> et <code>coef_noise</code> (voir §9 et §10).</p>
+<h3 id="52-vbfenginefit_spectra-le-cur-numerique"><strong>5.2. <code>VBFengine.fit_spectra()</code> — Le cœur numérique</strong><a class="headerlink" href="#52-vbfenginefit_spectra-le-cur-numerique" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Construction de l'évaluateur</strong> — <code>VBFevaluator.from_fit_model(fit_model)</code> traduit <code>peak_models</code> vers l'agencement plat (§6). Si tous les paramètres sont fixés (<code>n_params_free == 0</code>), le moteur court-circuite et retourne aussitôt.</li>
+<li><strong>Construction de <code>p0</code></strong> — <code>build_p0_matrix()</code> duplique les valeurs initiales sur les N spectres et met à l'échelle l'amplitude de chaque pic d'après l'intensité observée en <code>x0</code> (rapport borné à <code>[0.01, 100]</code> pour éviter toute divergence initiale). <code>apply_noise_threshold()</code> met ensuite à zéro l'amplitude/FWHM des pics centrés sous le plancher de bruit.</li>
+<li><strong>Optimisation</strong> — <code>batched_levenberg_marquardt()</code> (§3) itère jusqu'à ce que chaque spectre converge, soit déclaré bloqué (§9.2) ou atteigne <code>max_ite</code>.</li>
+<li><strong>Nettoyage post-ajustement</strong> — <code>apply_noise_threshold()</code> ré-examine les paramètres optimisés si un pic a dérivé vers une zone bruitée durant les itérations LM.</li>
+<li><strong>Construction des résultats</strong> — <code>build_results_batch()</code> évalue en une passe les courbes totales et individuelles des pics et calcule R² vectoriellement sur les N spectres, renvoyant des tableaux simples (<code>p_full</code>, <code>success</code>, <code>rsquared</code>, <code>best_fits</code>, <code>Y_peaks</code>, <code>param_names</code>).</li>
+</ol>
+<p><code>VBFthread._write_results()</code> écrit ensuite ces tableaux dans <code>SpectraStore</code> (<code>set_fit_results()</code>) et sur l'objet <code>MapData</code> (<code>Y_bestfit</code>, <code>Y_peaks</code>).</p>
+<hr />
+<h2 id="6-detail-de-vbfevaluator"><strong>6. Détail de <code>VBFevaluator</code></strong><a class="headerlink" href="#6-detail-de-vbfevaluator" title="Permanent link">&para;</a></h2>
+<p><code>VBFevaluator</code> est la classe la plus complexe du moteur. Elle assure la <strong>passerelle</strong> entre l'univers dictionnaire flexible de l'interface graphique et l'univers tensoriel figé de l'optimiseur.</p>
+<h3 id="61-correspondance-de-lespace-des-parametres"><strong>6.1. Correspondance de l'espace des paramètres</strong><a class="headerlink" href="#61-correspondance-de-lespace-des-parametres" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>fit_model dict                    VBFevaluator                  Optimiseur
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>┌─────────────────┐     ┌────────────────────────────┐     ┌──────────────┐
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│ peak_models:    │     │ _param_names:              │     │              │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   "0":          │     │   ["m01_ampli",            │     │  p_free      │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│     Gaussian:   │ ──► │    "m01_fwhm",             │ ──► │  (N, K_free) │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│       ampli: .. │     │    "m01_x0",               │     │              │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│       fwhm:  .. │     │    "m02_ampli", ...]       │     │              │
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│       x0:    .. │     │                            │     │              │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│   "1":          │     │ _free_idx:  [0, 1, 2, 3]   │     │              │
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│     Lorentzian: │     │ _fixed_idx: [4]            │     │              │
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│       ampli: .. │     │ _fixed_values: [0.5]       │     │              │
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│       ...       │     │                            │     │              │
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>└─────────────────┘     └────────────────────────────┘     └──────────────┘
+</code></pre></div>
+<h3 id="62-prise-en-charge-des-expressions"><strong>6.2. Prise en charge des expressions</strong><a class="headerlink" href="#62-prise-en-charge-des-expressions" title="Permanent link">&para;</a></h3>
+<p>Les paramètres peuvent référencer d'autres paramètres via des expressions mathématiques (ex. <code>m01_fwhm = m02_fwhm</code> ou <code>m01_x0 + 10</code>). L'évaluateur les traite dans <code>_to_full()</code> :</p>
+<ol>
+<li>Les paramètres dotés d'expressions sont marqués comme <strong>fixes</strong> (non optimisés directement).</li>
+<li>Lors de <code>from_fit_model()</code>, les expressions sont triées topologiquement par dépendances et compilées en bytecode Python (<code>_compile_exprs()</code>), évitant l'analyse répétée de chaînes via <code>eval()</code> à chaque itération.</li>
+<li>Dans <code>_to_full()</code>, les expressions compilées sont évaluées en une passe topologique unique dans un espace de noms restreint contenant tous les noms de paramètres, <code>np</code> et les fonctions mathématiques usuelles (<code>sin</code>, <code>cos</code>, <code>tan</code>, <code>exp</code>, <code>log</code>, <code>log10</code>, <code>sqrt</code>, <code>abs</code>, <code>pi</code>, <code>e</code>, <code>minimum</code>, <code>maximum</code>, <code>clip</code>).</li>
+<li>La jacobienne intègre les expressions par la <strong>règle de dérivation en chaîne analytique</strong> : <code>_compute_j_expr()</code> propage les paramètres libres sous forme de nombres duaux vectorisés (<code>_DualVar(value, d_free)</code>) sur les expressions compilées afin d'obtenir le tenseur de sensibilité exact <code>J_expr</code> de forme <code>(N, K_total, K_free)</code>, puis calcule la jacobienne contrainte par produit matriciel BLAS <code>J_full @ J_expr</code>.</li>
+</ol>
+<h3 id="63-aiguillage-vers-les-modeles"><strong>6.3. Aiguillage vers les modèles</strong><a class="headerlink" href="#63-aiguillage-vers-les-modeles" title="Permanent link">&para;</a></h3>
+<p>Les méthodes <code>evaluate()</code> et <code>jacobian()</code> parcourent tous les pics enregistrés et écrivent ou somment proprement leurs contributions dans <code>out</code> lorsqu'il est fourni :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">p_free</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">p_full</span> <span class="o">=</span> <span class="n">p_free</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_free_identity</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_full</span><span class="p">(</span><span class="n">p_free</span><span class="p">)</span>  <span class="c1"># (N, K_total)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="c1"># Les modèles à un seul pic écrivent directement dans `out` ; les multi-pics réutilisent un tampon de travail</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="o">...</span>
+</code></pre></div>
+<p>Pour la jacobienne, si un pic possède une jacobienne analytique (<code>has_jac=True</code>), celle-ci est appelée directement ; sinon <code>numerical_jacobian()</code> sert de repli par différences finies centrées avec pas relatif.</p>
+<hr />
+<h2 id="7-modeles-de-pics-vectorises-et-jacobiennes-analytiques"><strong>7. Modèles de pics vectorisés et jacobiennes analytiques</strong><a class="headerlink" href="#7-modeles-de-pics-vectorises-et-jacobiennes-analytiques" title="Permanent link">&para;</a></h2>
+<h3 id="71-conventions-tensorielles"><strong>7.1. Conventions tensorielles</strong><a class="headerlink" href="#71-conventions-tensorielles" title="Permanent link">&para;</a></h3>
+<p>Toutes les fonctions vectorisées suivent la même signature :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">batched_shape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">"""</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="sd">    x:      (M,) axe partagé  OU  (N, M) axe par spectre</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="sd">    params: (N, n_p) matrice des paramètres</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="sd">    out:    tampon de sortie préalloué optionnel (N, M)</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="sd">    Returns: (N, M) valeurs prédites</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="sd">    """</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">batched_shape_jac</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="sd">"""Returns: (N, M, n_p) tenseur jacobien (écrit dans `out` si fourni)"""</span>
+</code></pre></div>
+<p>En interne, chaque fonction suit le même schéma d'efficacité (§2.4) : calculer une seule fois chaque terme répété (typiquement un inverse tel que <code>1/w²</code>), le réutiliser par multiplication diffusée et écrire sur place dans les tranches de la jacobienne préallouée.</p>
+<h3 id="72-modeles-enregistres-batched_models"><strong>7.2. Modèles enregistrés (<code>BATCHED_MODELS</code>)</strong><a class="headerlink" href="#72-modeles-enregistres-batched_models" title="Permanent link">&para;</a></h3>
+<p>Tous les profils de pics disposent d'implémentations vectorisées par lots dotées de <strong>jacobiennes analytiques</strong>, garantissant des performances maximales pour chaque profil :</p>
+<table>
+<thead>
+<tr>
+<th>Modèle</th>
+<th>Paramètres</th>
+<th>Formule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Gaussian</code></td>
+<td><code>ampli</code>, <code>fwhm</code>, <code>x0</code></td>
+<td><i>a</i> &middot; exp(-4 ln(2) &middot; (x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>)</td>
+</tr>
+<tr>
+<td><code>Lorentzian</code></td>
+<td><code>ampli</code>, <code>fwhm</code>, <code>x0</code></td>
+<td><i>a</i> / [1 + 4(x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>]</td>
+</tr>
+<tr>
+<td><code>PseudoVoigt</code></td>
+<td><code>ampli</code>, <code>fwhm</code>, <code>x0</code>, <code>alpha</code></td>
+<td>&alpha; &middot; G + (1-&alpha;) &middot; L</td>
+</tr>
+<tr>
+<td><code>GaussianAsym</code></td>
+<td><code>ampli</code>, <code>fwhm_l</code>, <code>fwhm_r</code>, <code>x0</code></td>
+<td>Gaussienne par morceaux avec FWHM gauche/droite</td>
+</tr>
+<tr>
+<td><code>LorentzianAsym</code></td>
+<td><code>ampli</code>, <code>fwhm_l</code>, <code>fwhm_r</code>, <code>x0</code></td>
+<td>Lorentzienne par morceaux avec FWHM gauche/droite</td>
+</tr>
+<tr>
+<td><code>Fano</code></td>
+<td><code>ampli</code>, <code>fwhm</code>, <code>x0</code>, <code>q</code></td>
+<td><i>a</i> &middot; (q + &epsilon;)<sup>2</sup> / (1 + &epsilon;<sup>2</sup>), &epsilon; = 2(x-x<sub>0</sub>)/w</td>
+</tr>
+<tr>
+<td><code>DecaySingleExp</code></td>
+<td><code>A</code>, <code>tau</code>, <code>B</code></td>
+<td><i>A</i> &middot; e<sup>-x/&tau;</sup> + B</td>
+</tr>
+<tr>
+<td><code>DecayBiExp</code></td>
+<td><code>A1</code>, <code>tau1</code>, <code>A2</code>, <code>tau2</code>, <code>B</code></td>
+<td><i>A</i><sub>1</sub> &middot; e<sup>-x/&tau;<sub>1</sub></sup> + <i>A</i><sub>2</sub> &middot; e<sup>-x/&tau;<sub>2</sub></sup> + B</td>
+</tr>
+</tbody>
+</table>
+<h3 id="73-repli-par-jacobienne-numerique"><strong>7.3. Repli par jacobienne numérique</strong><a class="headerlink" href="#73-repli-par-jacobienne-numerique" title="Permanent link">&para;</a></h3>
+<p>Pour de futurs modèles personnalisés enregistrés uniquement dans <code>PEAK_MODEL_REGISTRY</code> (sans implémentation vectorisée), <code>numerical_jacobian()</code> utilise les <strong>différences finies centrées</strong> à perturbation relative en secours :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">h</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">|</span><span class="n">param</span><span class="o">|</span> <span class="o">*</span> <span class="n">eps</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>          <span class="c1"># Adapte le pas à l'ordre de grandeur du paramètre</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">J</span><span class="p">[:,:,</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="o">+</span><span class="n">h</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="o">-</span><span class="n">h</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="n">h</span>  <span class="c1"># Différence centrée</span>
+</code></pre></div>
+<p>Ce mode est ~<code>2K</code> fois plus lent par itération qu'une jacobienne analytique, mais assure l'exactitude pour toute nouvelle forme.</p>
+<hr />
+<h2 id="8-la-classe-vbfthread"><strong>8. La classe <code>VBFthread</code></strong><a class="headerlink" href="#8-la-classe-vbfthread" title="Permanent link">&para;</a></h2>
+<h3 id="81-branches-de-taches"><strong>8.1. Branches de tâches</strong><a class="headerlink" href="#81-branches-de-taches" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>graph TD
+    TFT["VBFthread.run()"] --&gt; Check{"clés de tâche ?"}
+    Check --&gt;|"grouped_2d_maps"| G["Méga-lot : empile toutes les cartes, ajuste en bloc, redistribue"]
+    Check --&gt;|"map_names"| B["Regroupe les spectres par longueur d'axe X, ajuste chaque groupe"]
+    Check --&gt;|"map_name + indices"| S["Carte unique : ajuste en une passe"]</code></pre>
+<p>Les trois branches résident dans une même boucle sur <code>self.tasks</code> dans <code>run()</code> — voir §5.1 pour leurs déclencheurs.</p>
+<h3 id="82-taille-de-pile-sous-macos"><strong>8.2. Taille de pile sous macOS</strong><a class="headerlink" href="#82-taille-de-pile-sous-macos" title="Permanent link">&para;</a></h3>
+<p>Le thread force une pile de 8 Mo sous macOS (<code>setStackSize(8 * 1024 * 1024)</code>) car :</p>
+<ul>
+<li>macOS limite par défaut la pile des <code>QThread</code> à 512 Ko.</li>
+<li><code>np.linalg.solve</code> délègue à LAPACK, qui alloue des tableaux de travail sur la pile.</li>
+<li>Pour un K élevé (beaucoup de paramètres), l'allocation pile peut dépasser 512 Ko et provoquer un plantage mémoire (segfault).</li>
+</ul>
+<h3 id="83-signaux"><strong>8.3. Signaux</strong><a class="headerlink" href="#83-signaux" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Charge utile</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>progress_changed</code></td>
+<td><code>Signal(int, int, int, float, int)</code> → <code>(current, total, percent, elapsed_seconds, current)</code></td>
+<td>Met à jour la barre de progression dans la View. (Le 5e argument duplique le 1er.)</td>
+</tr>
+<tr>
+<td><code>timings_ready</code></td>
+<td><code>Signal(str)</code></td>
+<td>Ventilation chronométrée par étape pour console/débogage</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-parametres-doptimisation-et-reglages"><strong>9. Paramètres d'optimisation et réglages</strong><a class="headerlink" href="#9-parametres-doptimisation-et-reglages" title="Permanent link">&para;</a></h2>
+<p>Le comportement du moteur s'ajuste via le dictionnaire <code>fit_params</code> passé à <code>fit_spectra()</code>.</p>
+<h3 id="91-parametres-cles"><strong>9.1. Paramètres clés</strong><a class="headerlink" href="#91-parametres-cles" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>max_ite</code></strong> (défaut : 200) : Nombre maximal d'itérations de Levenberg-Marquardt. L'augmenter aide à faire converger des spectres très complexes au prix d'un temps d'exécution plus long.</li>
+<li><strong><code>xtol</code></strong> (défaut : 1e-4) : Tolérance relative sur le pas des paramètres <span class="arithmatex">\(\delta p\)</span>. La convergence est atteinte lorsque la <strong>moyenne</strong> des variations relatives après bornage sur tous les paramètres actifs (<span class="arithmatex">\(\operatorname{mean}(|\Delta p_{\text{actual}}| / |p|)\)</span>) est inférieure à <code>xtol</code>.</li>
+<li><strong><code>ftol</code></strong> (défaut : 1e-4) : Tolérance relative sur la fonction de coût (somme des carrés des résidus). Si la variation relative du coût devient inférieure à <code>ftol</code>, le spectre est considéré convergé.</li>
+<li><strong><code>fit_negative</code></strong> (défaut : <code>False</code>) : Indique s'il faut inclure les intensités négatives dans l'ajustement. À <code>False</code>, les points négatifs reçoivent un poids nul (<code>VBFthread._prepare_weights()</code>).</li>
+<li><strong><code>coef_noise</code></strong> (défaut : <code>0.0</code>) : Facteur multiplicateur du niveau de bruit. Lorsqu'il est &gt; 0, active le masquage par pondération (<code>VBFthread._prepare_weights()</code>) et la suppression des pics dans le bruit (<code>VBFevaluator.apply_noise_threshold()</code>). Voir <a href="#10-estimation-du-niveau-de-bruit-et-seuil-de-bruit">Section 10</a> pour l'explication complète.</li>
+<li><strong><code>fit_outliers</code></strong> — <strong>clé historique, non lue par le moteur actuel.</strong> D'anciens fichiers <code>fit_model</code> JSON peuvent encore la contenir, mais rien dans <code>fit_engine/</code> ne la consulte ; elle est ignorée silencieusement.</li>
+</ul>
+<h3 id="92-compromis-vitesse-precision"><strong>9.2. Compromis vitesse / précision</strong><a class="headerlink" href="#92-compromis-vitesse-precision" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Cartographie rapide</strong> : Pour des aperçus rapides, passez <code>xtol</code> et <code>ftol</code> à <code>1e-3</code> ou <code>1e-2</code>. L'optimiseur sortira bien plus tôt en produisant un premier ajustement rapide.</li>
+<li><strong>Ajustement de précision</strong> : Pour des résultats de publication, abaissez <code>xtol</code> et <code>ftol</code> à <code>1e-5</code> ou <code>1e-6</code>.</li>
+<li><strong>Gestion des spectres bloqués (« Stuck »)</strong> : L'optimiseur suit <code>consecutive_rejects</code>. Si le coût d'un spectre ne s'améliore pas durant 15 itérations consécutives malgré les ajustements d'amortissement, ce spectre est marqué convergé (bloqué) afin de ne pas ralentir tout le lot (<code>MAX_REJECTS</code> dans <code>optimizer.py</code>).</li>
+</ul>
+<h3 id="93-loi-damortissement"><strong>9.3. Loi d'amortissement</strong><a class="headerlink" href="#93-loi-damortissement" title="Permanent link">&para;</a></h3>
+<p>Le facteur d'amortissement par spectre <span class="arithmatex">\(\lambda\)</span> est initialisé à <code>1e-2</code> puis ajusté après chaque itération :</p>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Ajustement de λ</th>
+<th>Effet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Coût amélioré</td>
+<td><code>λ /= 3.0</code> (plancher <code>1e-10</code>)</td>
+<td>Fait davantage confiance à la direction de Gauss-Newton</td>
+</tr>
+<tr>
+<td>Coût dégradé</td>
+<td><code>λ *= 2.5</code> (plafond <code>1e10</code>)</td>
+<td>Se rapproche de la descente de gradient</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-estimation-du-niveau-de-bruit-et-seuil-de-bruit"><strong>10. Estimation du niveau de bruit et seuil de bruit</strong><a class="headerlink" href="#10-estimation-du-niveau-de-bruit-et-seuil-de-bruit" title="Permanent link">&para;</a></h2>
+<p>Le paramètre <code>coef_noise</code> pilote un filtrage sensible au bruit qui améliore nettement à la fois les <strong>performances</strong> et la <strong>précision</strong> de l'ajustement, notamment sur les cartes hyperspectrales où de nombreux pixels présentent des pics faibles ou absents.</p>
+<h3 id="101-comment-le-niveau-de-bruit-est-estime"><strong>10.1. Comment le niveau de bruit est estimé</strong><a class="headerlink" href="#101-comment-le-niveau-de-bruit-est-estime" title="Permanent link">&para;</a></h3>
+<p>L'utilitaire public <code>detect_noise_level()</code> (<code>fit_engine/noise.py</code>, utilisé par l'UI pour afficher le niveau de bruit dans <code>SpectraViewer</code>) et l'estimateur interne vectorisé (<code>VBFevaluator.compute_noise_stats()</code>, <code>VBFthread._prepare_weights()</code>) emploient tous deux le même estimateur robuste : la médiane des valeurs absolues des différences premières, ramenée à un écart-type gaussien équivalent σ.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">detect_noise_level</span><span class="p">(</span><span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">dy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>                                    <span class="c1"># δ[i] = y[i+1] − y[i]</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dy</span><span class="p">))</span> <span class="o">/</span> <span class="mf">0.6745</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Pourquoi cela fonctionne :</strong></p>
+<table>
+<thead>
+<tr>
+<th>Terme</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>np.diff(y)</code></td>
+<td>Différences point à point — dominées par le bruit, car les bandes spectrales réelles varient lentement à l'échelle d'un pas</td>
+</tr>
+<tr>
+<td><code>np.median(np.abs(dy))</code></td>
+<td>Médiane des écarts absolus — insensible aux rares sauts brusques sur le flanc d'un pic étroit, contrairement à un écart-type classique</td>
+</tr>
+<tr>
+<td><code>/ 0.6745</code></td>
+<td>Convertit l'écart médian absolu (MAD) gaussien en écart-type équivalent (0,6745 = constante MAD-vers-σ d'une loi normale)</td>
+</tr>
+<tr>
+<td><code>* sqrt(2)</code></td>
+<td>La différence première de deux échantillons bruités indépendants a pour variance <span class="arithmatex">\(2\sigma^2\)</span> ; ce facteur restaure le σ par point</td>
+</tr>
+</tbody>
+</table>
+<p><code>VBFevaluator.compute_noise_stats(Y, coef_noise)</code> applique la même logique <code>diff</code>/<code>median</code> selon <code>axis=1</code> pour estimer un niveau de bruit par spectre sur toute la carte, et calcule en parallèle une moyenne glissante sur 5 points du signal (<code>ymean</code>) servant à décider point par point si le <em>signal lui-même</em> dépasse le seuil :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">dy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">ampli_noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dy</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.6745</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>      <span class="c1"># (N,)</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">Y_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'edge'</span><span class="p">)</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">ymean</span> <span class="o">=</span> <span class="p">(</span><span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>         <span class="o">+</span> <span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">:])</span> <span class="o">/</span> <span class="mf">5.0</span>                   <span class="c1"># moyenne glissante 5 points</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">noise_level</span> <span class="o">=</span> <span class="n">coef_noise</span> <span class="o">*</span> <span class="n">ampli_noise</span>                                   <span class="c1"># (N,)</span>
+</code></pre></div>
+<blockquote>
+<p><code>apply_noise_threshold()</code> est appelée deux fois par ajustement (avant et après optimisation — voir §5.2), les deux appels ayant besoin des mêmes <code>ymean</code>/<code>noise_level</code>. <code>VBFengine.fit_spectra()</code> les calcule une seule fois via <code>compute_noise_stats()</code> et transmet le résultat (<code>noise_stats=</code>) aux deux appels au lieu de répéter le calcul (§2).</p>
+</blockquote>
+<h3 id="102-comment-coef_noise-active-le-seuillage-du-bruit"><strong>10.2. Comment <code>coef_noise</code> active le seuillage du bruit</strong><a class="headerlink" href="#102-comment-coef_noise-active-le-seuillage-du-bruit" title="Permanent link">&para;</a></h3>
+<p>Lorsque <code>coef_noise &gt; 0</code>, un <strong>seuil de bruit</strong> vaut <code>noise_level = coef_noise × ampli_noise</code>. Il déclenche <strong>deux mécanismes complémentaires</strong> :</p>
+<h4 id="1021-mecanisme-a-masquage-par-poids-vbfthread_prepare_weights"><strong>10.2.1. Mécanisme A — Masquage par poids (<code>VBFthread._prepare_weights</code>)</strong><a class="headerlink" href="#1021-mecanisme-a-masquage-par-poids-vbfthread_prepare_weights" title="Permanent link">&para;</a></h4>
+<p>Avant le début de l'ajustement, tout point où le signal lissé (<code>ymean</code>) tombe sous le seuil de bruit reçoit un poids nul :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">weights</span><span class="p">[</span><span class="n">ymean</span> <span class="o">&lt;</span> <span class="n">noise_level</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="mf">0.0</span>   <span class="c1"># poids nul → ignoré par l'optimiseur</span>
+</code></pre></div>
+<p>Le calcul des résidus <span class="arithmatex">\(\mathbf{r} = \mathbf{W} \circ (\mathbf{Y}_{pred} - \mathbf{Y}_{data})\)</span> ignore naturellement ces points masqués, concentrant l'optimisation sur les zones contenant du signal utile.</p>
+<h4 id="1022-mecanisme-b-suppression-de-pics-vbfevaluatorapply_noise_threshold"><strong>10.2.2. Mécanisme B — Suppression de pics (<code>VBFevaluator.apply_noise_threshold</code>)</strong><a class="headerlink" href="#1022-mecanisme-b-suppression-de-pics-vbfevaluatorapply_noise_threshold" title="Permanent link">&para;</a></h4>
+<p>Tout pic dont le <strong>centre</strong> (<code>x0</code>) se trouve dans une région sous le seuil voit son amplitude et sa largeur FWHM forcées à zéro ; les autres paramètres de forme de ce pic retrouvent leur estimation initiale (<code>p0_matrix</code>) pour éviter que le bruit aléatoire ne soit cartographié comme une structure réelle. Ce mécanisme s'exécute <strong>deux fois</strong> (§5.2) :</p>
+<ol>
+<li><strong>Avant optimisation</strong> — prépare une estimation initiale propre, évitant que l'optimiseur n'ajuste des pics fictifs sur du bruit.</li>
+<li><strong>Après optimisation</strong> — nettoie tout pic ayant dérivé dans le bruit au fil des itérations LM.</li>
+</ol>
+<h3 id="103-gains-en-performance-et-en-precision"><strong>10.3. Gains en performance et en précision</strong><a class="headerlink" href="#103-gains-en-performance-et-en-precision" title="Permanent link">&para;</a></h3>
+<h4 id="1031-performance"><strong>10.3.1. Performance</strong><a class="headerlink" href="#1031-performance" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Bénéfice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Convergence plus rapide</td>
+<td>Les pics annulés en zone bruitée restent à zéro, réduisant de fait le nombre de paramètres actifs</td>
+</tr>
+<tr>
+<td>Moins d'itérations inutiles</td>
+<td>Sans masquage, l'optimiseur gaspille de nombreuses itérations à ajuster du bruit avec de minuscules pics fantômes</td>
+</tr>
+<tr>
+<td>Meilleure estimation initiale</td>
+<td>La mise à zéro préalable approche <span class="arithmatex">\(p_0\)</span> de la vraie solution, diminuant le nombre d'itérations LM</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1032-precision"><strong>10.3.2. Précision</strong><a class="headerlink" href="#1032-precision" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Bénéfice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Élimine les pics fantômes</td>
+<td>Dans les cartes, certains pixels n'ont pas de pic ou un signal faible. Sans seuil, des pics fictifs polluent les cartes paramétriques</td>
+</tr>
+<tr>
+<td>Stabilise les paramètres corrélés</td>
+<td>Près du plancher de bruit, amplitude, largeur et position deviennent fortement corrélées ; la suppression évite ces dérives</td>
+</tr>
+<tr>
+<td>Évite les interférences (<em>cross-talk</em>)</td>
+<td>Un pic fantôme peut « voler » de l'intensité à un pic voisin réel et fausser son amplitude</td>
+</tr>
+<tr>
+<td>R² plus représentatif</td>
+<td>Les régions bruitées masquées ne pèsent plus dans le calcul de R², qui reflète alors uniquement les régions à signal réel</td>
+</tr>
+</tbody>
+</table>
+<h3 id="104-exemple-pratique"><strong>10.4. Exemple pratique</strong><a class="headerlink" href="#104-exemple-pratique" title="Permanent link">&para;</a></h3>
+<p>Considérons une carte Raman à 3 pics où, pour certains pixels, le pic n° 2 se situe dans une ligne de base plate :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Sans coef_noise (= 0) :
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>  Pic #2 → ampli = 0.3 (artefact de bruit), fwhm = 2.1 (sans signification), x0 = 520.3 (dérive)
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>  Pic #1 → ampli = 18.2 (légèrement biaisée — le pic #2 capte une partie de l'intensité)
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>Avec coef_noise = 1 :
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>  Pic #2 → ampli = 0.0, fwhm = 0.0   (correctement supprimé)
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>  Pic #1 → ampli = 19.1              (exact, sans interférence)
+</code></pre></div>
+<h3 id="105-choisir-la-bonne-valeur-de-coef_noise"><strong>10.5. Choisir la bonne valeur de <code>coef_noise</code></strong><a class="headerlink" href="#105-choisir-la-bonne-valeur-de-coef_noise" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Valeur</th>
+<th>Comportement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td><strong>Désactivé</strong> — tous les pics sont ajustés partout, sans masquage</td>
+</tr>
+<tr>
+<td><code>0.5 – 1.0</code></td>
+<td><strong>Conservateur</strong> — ne supprime que les pics/zones nettement sous le niveau de bruit</td>
+</tr>
+<tr>
+<td><code>1.0 – 2.0</code></td>
+<td><strong>Modéré</strong> — bon réglage par défaut pour la plupart des jeux de données</td>
+</tr>
+<tr>
+<td><code>3.0 – 5.0</code></td>
+<td><strong>Agressif</strong> — risque d'écarter de vrais pics faibles ; à employer avec précaution</td>
+</tr>
+<tr>
+<td><code>&gt; 5.0</code></td>
+<td><strong>Très agressif</strong> — seuls les pics forts et indiscutables subsistent</td>
+</tr>
+</tbody>
+</table>
+<p>La valeur par défaut dans <code>MSettings.load_fit_settings()</code> est <code>0.0</code> (désactivé). L'interface <code>Settings</code> l'expose comme champ numérique sur <code>[0.0, 10.0]</code> par pas de <code>0.5</code>.</p>
+<hr />
+<h2 id="11-ajouter-de-nouveaux-modeles-de-pics"><strong>11. Ajouter de nouveaux modèles de pics</strong><a class="headerlink" href="#11-ajouter-de-nouveaux-modeles-de-pics" title="Permanent link">&para;</a></h2>
+<h3 id="111-voie-rapide-jacobienne-analytique-recommandee"><strong>11.1. Voie rapide : Jacobienne analytique (recommandée)</strong><a class="headerlink" href="#111-voie-rapide-jacobienne-analytique-recommandee" title="Permanent link">&para;</a></h3>
+<p>Pour ajouter un nouveau profil de pic avec des performances maximales :</p>
+<p><strong>Étape 1</strong> — Définissez la fonction d'évaluation vectorisée dans <code>models.py</code> (avec réutilisation optionnelle de <code>out=None</code>) :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">batched_newshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="sd">"""</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="sd">    x:      (M,) ou (N, M)</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="sd">    params: (N, n_p) où les colonnes sont [param1, param2, ...]</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="sd">    out:    tableau préalloué optionnel (N, M)</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="sd">    Returns: (N, M)</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="sd">    """</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">p1</span> <span class="o">=</span> <span class="n">params</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>    <span class="c1"># (N, 1) — diffusé sur M</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="n">p2</span> <span class="o">=</span> <span class="n">params</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>        <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">p2</span>    <span class="c1"># (N, M)</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>        <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">p2</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">*</span> <span class="n">some_function</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>        <span class="n">out</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>        <span class="k">return</span> <span class="n">out</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>    <span class="k">return</span> <span class="n">result</span>
+</code></pre></div>
+<p><strong>Étape 2</strong> — Dérivez et implémentez la jacobienne analytique (en acceptant <code>out=None</code> pour l'écriture directe par tranches) :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">batched_newshape_jac</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="sd">"""Returns: (N, M, n_p) — dérivées partielles par rapport à chaque paramètre."""</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="c1"># ... calculer les intermédiaires ...</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">N</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">shape</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">n_p</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">out</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">J</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_result_d_p1</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">J</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_result_d_p2</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="k">return</span> <span class="n">J</span>
+</code></pre></div>
+<p><strong>Étape 3</strong> — Enregistrez le modèle dans le dictionnaire <code>BATCHED_MODELS</code> :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">BATCHED_MODELS</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="c1"># ... existants ...</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="s2">"NewShape"</span><span class="p">:</span> <span class="p">(</span><span class="n">batched_newshape</span><span class="p">,</span> <span class="n">batched_newshape_jac</span><span class="p">,</span> <span class="p">[</span><span class="s2">"param1"</span><span class="p">,</span> <span class="s2">"param2"</span><span class="p">,</span> <span class="o">...</span><span class="p">]),</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>Lors de la dérivation, appliquez les mêmes bonnes pratiques que le reste de <code>models.py</code> (§2.4, §7.1) : précalculez tout inverse de type <code>1/w</code>, privilégiez les opérations sur place (<code>*=</code>, <code>+=</code>) et validez votre jacobienne analytique face à <code>numerical_jacobian()</code> sur des jeux aléatoires.</p>
+<h3 id="112-voie-lente-repli-scalaire"><strong>11.2. Voie lente : Repli scalaire</strong><a class="headerlink" href="#112-voie-lente-repli-scalaire" title="Permanent link">&para;</a></h3>
+<p>Si le calcul d'une jacobienne analytique est impraticable :</p>
+<p><strong>Étape 1</strong> — Définissez une fonction scalaire dans <code>scalar_models.py</code> :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">newshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">param1</span><span class="p">,</span> <span class="n">param2</span><span class="p">):</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="sd">"""x est un tableau 1D, params sont des scalaires. Renvoie un tableau 1D."""</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="k">return</span> <span class="n">param1</span> <span class="o">*</span> <span class="n">some_function</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">param2</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Étape 2</strong> — Enregistrez-la dans <code>PEAK_MODEL_REGISTRY</code> :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">PEAK_MODEL_REGISTRY</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="c1"># ... existants ...</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="s2">"NewShape"</span><span class="p">:</span> <span class="p">(</span><span class="n">newshape</span><span class="p">,</span> <span class="p">[</span><span class="s2">"param1"</span><span class="p">,</span> <span class="s2">"param2"</span><span class="p">]),</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>L'évaluateur l'encapsulera automatiquement via <code>_make_batched_scalar()</code> et utilisera <code>numerical_jacobian()</code>. Ce mode est fonctionnel mais environ 10 à 50× plus lent par pic et par itération.</p>
+<h3 id="113-enregistrement-dans-lapplication"><strong>11.3. Enregistrement dans l'application</strong><a class="headerlink" href="#113-enregistrement-dans-lapplication" title="Permanent link">&para;</a></h3>
+<p>Après ajout dans le moteur, enregistrez le profil dans <code>spectroview/__init__.py</code> :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">PEAK_MODELS</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="s2">"Gaussian"</span><span class="p">,</span> <span class="s2">"Lorentzian"</span><span class="p">,</span> <span class="s2">"PseudoVoigt"</span><span class="p">,</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="c1"># ... existants ...</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="s2">"NewShape"</span><span class="p">,</span>  <span class="c1"># Ajouter ici pour l'afficher dans les menus déroulants de l'UI</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="p">]</span>
+</code></pre></div>
+<hr />
+<h2 id="12-chronometrage-et-diagnostics"><strong>12. Chronométrage et diagnostics</strong><a class="headerlink" href="#12-chronometrage-et-diagnostics" title="Permanent link">&para;</a></h2>
+<p><code>VBFengine</code> enregistre les temps d'exécution horloge de chaque étape dans <code>self.timings</code> :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Step 3 - build p0:     0.003s
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>Step 4 - batch fit:   1.234s (0.6 ms/spectrum, 1950/2000 converged)
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>Step 5 - write_back:   0.089s
+</code></pre></div>
+<p>Seules ces trois entrées sont renseignées par <code>VBFengine.fit_spectra()</code> — la numérotation débute à 3 car elle prolonge les étapes amont précédant l'appel au moteur : application du modèle sur <code>MapData</code> et <code>SpectraStore.batch_preprocess()</code> (recadrage + soustraction de ligne de base), chronométrées séparément et documentées dans <a href="../spectra_store/">spectra_store.md</a>.</p>
+<p>Ces temps sont émis via <code>VBFthread.timings_ready</code> et affichés en console (passez <code>print_benchmark=True</code> à <code>fit_spectra()</code> pour un affichage en direct durant le débogage) :</p>
+<ul>
+<li>Si <strong>Step 4</strong> domine → comportement normal ; c'est l'optimisation proprement dite.</li>
+<li>Si <strong>Step 4</strong> affiche une faible convergence → vérifiez les valeurs initiales, les bornes ou le choix du modèle plutôt que les performances.</li>
+<li>Si <strong>Step 3</strong> ou <strong>Step 5</strong> paraît anormalement élevé devant Step 4 → profilez ces étapes, qui doivent normalement rester un à deux ordres de grandeur en dessous de Step 4.</li>
+</ul>
+<h3 id="121-calcul-du-coefficient-r2"><strong>12.1. Calcul du coefficient R²</strong><a class="headerlink" href="#121-calcul-du-coefficient-r2" title="Permanent link">&para;</a></h3>
+<p>L'indicateur de qualité d'ajustement R² est calculé lors de <code>build_results_batch()</code> :</p>
+<div class="arithmatex">\[
+R^2 = 1 - \frac{\sum_i w_i (y_i - \hat{y}_i)^2}{\sum_i w_i (y_i - \bar{y}_w)^2}
+\]</div>
+<p>où <span class="arithmatex">\(\bar{y}_w\)</span> désigne la moyenne pondérée. En présence de poids, seuls les points de poids non nul contribuent au numérateur et au dénominateur, empêchant les zones masquées (valeurs négatives, bruit sous le seuil) de biaiser artificiellement la qualité rapportée.</p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Retour en haut de la page
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Pied de page" >
+        
+          
+          <a href="../graphs/" class="md-footer__link md-footer__link--prev" aria-label="Précédent: Espace Graphs">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Précédent
+              </span>
+              <div class="md-ellipsis">
+                Espace Graphs
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../mva/" class="md-footer__link md-footer__link--next" aria-label="Suivant: Analyse multivariée (MVA)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Suivant
+              </span>
+              <div class="md-ellipsis">
+                Analyse multivariée (MVA)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

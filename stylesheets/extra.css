@@ -349,3 +349,102 @@ html {
   padding: 0.6rem 1.2rem;
   transition: color 0.2s ease, border-color 0.2s ease;
 }
+
+/* ============================================================
+   LANGUAGE SWITCHER (EN / FR PILL & DROPDOWN BADGES)
+   ============================================================ */
+.md-header__option .md-select {
+  display: flex;
+  align-items: center;
+}
+
+.md-header__button.md-lang-switcher:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.22rem 0.45rem;
+  margin: 0.2rem 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: currentColor;
+  line-height: 1;
+  transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.md-header__button.md-lang-switcher:hover,
+.md-header__button.md-lang-switcher:focus-visible,
+.md-select:focus-within .md-header__button.md-lang-switcher {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.55);
+  opacity: 1;
+}
+
+.md-lang-switcher__icon svg {
+  display: block;
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: currentColor;
+}
+
+.md-lang-switcher__code {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.md-lang-switcher__caret svg {
+  display: block;
+  width: 0.8rem;
+  height: 0.8rem;
+  fill: currentColor;
+  opacity: 0.8;
+}
+
+.md-select__inner {
+  border-radius: 6px;
+}
+
+.md-select__link {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+[dir="ltr"] .md-select__link {
+  padding-left: 0.6rem;
+  padding-right: 1rem;
+}
+
+.md-select__link::before {
+  content: attr(hreflang);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.55rem;
+  padding: 0.08rem 0.25rem;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(0, 86, 179, 0.12);
+  color: var(--md-primary-fg-color);
+}
+
+[data-md-color-scheme="slate"] .md-select__link::before {
+  background: rgba(51, 133, 255, 0.18);
+}
+
+.md-select__link[aria-current="true"] {
+  font-weight: 600;
+  color: var(--md-accent-fg-color);
+}
+
+.md-select__link[aria-current="true"]::before {
+  background: var(--md-accent-fg-color);
+  color: #ffffff;
+}

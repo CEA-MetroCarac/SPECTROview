@@ -1,0 +1,2351 @@
+
+<!doctype html>
+<html lang="fr" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Outil interactif de traitement, d'ajustement et de visualisation de données spectroscopiques">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/file_loading/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../spectra_store/">
+      
+      
+        
+          <link rel="alternate" href="../../../developer/file_loading/" hreflang="en">
+        
+          <link rel="alternate" href="./" hreflang="fr">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Pipeline de chargement des fichiers - Documentation SPECTROview</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#pipeline-de-chargement-des-fichiers-m_iopy" class="md-skip">
+          Aller au contenu
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="../../" title="Documentation SPECTROview" class="md-header__button md-logo" aria-label="Documentation SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Documentation SPECTROview
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Pipeline de chargement des fichiers
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Sélectionner la langue"
+      title="Sélectionner la langue"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">FR</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../developer/file_loading/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="fr"
+              class="md-select__link" aria-current="true"
+            >
+              Français
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Recherche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initialisation de la recherche
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Onglets" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accueil
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Manuel utilisateur
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Agent IA
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guide développeur
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Historique des versions
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="Documentation SPECTROview" class="md-nav__button md-logo" aria-label="Documentation SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    Documentation SPECTROview
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accueil
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manuel utilisateur
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Manuel utilisateur
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formats pris en charge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aperçu de l'interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Barre de menus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espaces Spectra et Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analyse multivariée (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calculateurs rapides
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paramètres
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sauvegarde et chargement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Raccourcis et astuces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent IA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guide développeur
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guide développeur
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline de chargement des fichiers
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline de chargement des fichiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#vue-densemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vue d'ensemble
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#formats-pris-en-charge-et-points-dentree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Formats pris en charge et points d'entrée
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#formats-de-retour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Formats de retour
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Formats de retour">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dictionnaire-spectra-spectres-discrets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dictionnaire Spectra — Spectres discrets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dataframe-de-carte-cartes-hyperspectrales" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DataFrame de carte — Cartes hyperspectrales
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dictionnaire-de-tableaux-donnees-tabulaires" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dictionnaire de tableaux — Données tabulaires
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comment-linterface-transforme-les-sorties-es-vers-spectrastore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comment l'interface transforme les sorties E/S vers SpectraStore
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Comment l&#39;interface transforme les sorties E/S vers SpectraStore">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#espace-spectra-vmworkspacespectraload_files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Espace Spectra : VMWorkspaceSpectra.load_files()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#espace-maps-vmworkspacemapsload_map_files-et-extract_map_arrays" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Espace Maps : VMWorkspaceMaps.load_map_files() et extract_map_arrays()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#espace-graphs-ingestion-directe-de-dataframes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Espace Graphs : Ingestion directe de DataFrames
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes-darchitecture-et-de-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes d'architecture et de performance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Notes d&#39;architecture et de performance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#classification-den-tete-sans-lecture-du-corps-detect_file_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classification d'en-tête sans lecture du corps (detect_file_type)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dataframes-de-carte-consolides-et-analyse-vectorisee" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DataFrames de carte consolidés et analyse vectorisée
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spectres-sans-en-tete-axes-croissants-et-coordonnees-dupliquees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spectres sans en-tête, axes croissants et coordonnées dupliquées
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metadonnees-pures-en-couche-modele-parse_wdf_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Métadonnées pures en couche modèle (parse_wdf_metadata)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pages-connexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pages connexes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture de données SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Spectra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moteur d'ajustement vectorisé par lots (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analyse multivariée (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent IA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Serveur MCP local
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Spectra (chargement, prétraitement, ajustement)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Maps (hyperspectral, cartes thermiques)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualisation de données (Graphs)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calculateurs rapides
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Étendre SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Historique des versions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Accueil
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Guide développeur
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="pipeline-de-chargement-des-fichiers-m_iopy"><strong>Pipeline de chargement des fichiers (<code>m_io.py</code>)</strong><a class="headerlink" href="#pipeline-de-chargement-des-fichiers-m_iopy" title="Permanent link">&para;</a></h1>
+<p><code>m_io.py</code> est le <strong>lecteur universel de fichiers</strong> de SPECTROview. Il constitue le point d'entrée de toute ingestion de données — les fichiers bruts sur disque le traversent avant qu'aucune autre partie de l'application ne manipule les données.</p>
+<p><strong>Fichier source</strong> : <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/model/io/m_io.py"><code>m_io.py</code></a></p>
+<hr />
+<h2 id="vue-densemble">Vue d'ensemble<a class="headerlink" href="#vue-densemble" title="Permanent link">&para;</a></h2>
+<p><code>m_io.py</code> prend en charge <strong>tous les formats de fichiers supportés</strong> pour trois catégories de données distinctes :</p>
+<table>
+<thead>
+<tr>
+<th>Catégorie</th>
+<th>Description</th>
+<th>Destination</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Spectres discrets</strong></td>
+<td>Fichiers 1D ou multi-spectres (acquisitions ponctuelles, séries temporelles)</td>
+<td>→ <code>SpectraStore</code> → Espace Spectra</td>
+</tr>
+<tr>
+<td><strong>Cartes hyperspectrales</strong></td>
+<td>Grilles spatiales 2D de spectres</td>
+<td>→ <code>SpectraStore</code> → Espace Maps</td>
+</tr>
+<tr>
+<td><strong>Tableaux de données</strong></td>
+<td>Données tabulaires génériques (résultats d'ajustement, jeux externes)</td>
+<td>→ directement vers l'espace Graphs</td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart TD
+    FILE["Fichier sur disque&lt;br/&gt;(.wdf / .spc / .l6s / .l6m / .ngs / .ngc / .txt / .csv / .dat / .xlsx / .xls / .json / .spectra / .maps / .graphs)"]
+
+    FILE --&gt; DETECT["m_io.detect_file_type()&lt;br/&gt;Classification par en-tête / échantillon (&lt; 1 ms)"]
+
+    DETECT --&gt;|"spectra"| MIO_SPEC["load_wdf_spectrum / load_spc_spectrum /&lt;br/&gt;load_l6s_spectrum / load_ngs_spectrum / load_spectrum_file / load_TRPL_data"]
+    DETECT --&gt;|"map"| MIO_MAP["load_wdf_map / load_spc_map /&lt;br/&gt;load_l6m_map / load_ngc_map / load_map_file"]
+    DETECT --&gt;|"dataframe"| MIO_DF["load_dataframe_file"]
+
+    MIO_SPEC --&gt;|"Dictionnaire Spectra {type, items}"| VMSPECTRA["VMWorkspaceSpectra.load_files()"]
+    MIO_MAP --&gt;|"DataFrame (+ métadonnées)"| VMMAPS["VMWorkspaceMaps.load_map_files()&lt;br/&gt;+ extract_map_arrays()"]
+    MIO_DF --&gt;|"dict[str, DataFrame]"| VMGRAPHS["VMWorkspaceGraphs.load_dataframes()"]
+
+    VMSPECTRA --&gt; STORE["SpectraStore.add_map()"]
+    VMMAPS --&gt; STORE
+
+    STORE --&gt; SPECTRA_WS["Espace Spectra"]
+    STORE --&gt; MAPS_WS["Espace Maps"]
+    VMGRAPHS --&gt; GRAPHS_WS["Espace Graphs"]</code></pre>
+<hr />
+<h2 id="formats-pris-en-charge-et-points-dentree">Formats pris en charge et points d'entrée<a class="headerlink" href="#formats-pris-en-charge-et-points-dentree" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Format / Rôle</th>
+<th>Extension</th>
+<th>Fonction</th>
+<th>Valeur de retour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Classificateur rapide</td>
+<td>tous pris en charge</td>
+<td><code>detect_file_type()</code></td>
+<td><code>'spectra'</code> | <code>'map'</code> | <code>'dataframe'</code> | <code>'fit_model'</code> | <code>'spectra_workspace'</code> | <code>'maps_workspace'</code> | <code>'graphs_workspace'</code></td>
+</tr>
+<tr>
+<td>Lecture rapide en-tête WDF</td>
+<td><code>.wdf</code></td>
+<td><code>peek_wdf_measurement_type()</code> / <code>WdfReader.peek_header()</code></td>
+<td><code>'spectra'</code> | <code>'map'</code> / <code>dict</code> (lit les 512 octets d'en-tête <code>WDF1</code>)</td>
+</tr>
+<tr>
+<td>Lecture rapide en-tête SPC</td>
+<td><code>.spc</code></td>
+<td><code>SpcReader.peek_header()</code></td>
+<td><code>dict</code> (lit les 512 octets d'en-tête Galactic SPC)</td>
+</tr>
+<tr>
+<td>Lecture rapide en-tête LabSpec 6</td>
+<td><code>.l6s</code>, <code>.l6m</code></td>
+<td><code>L6sReader.peek_header()</code></td>
+<td><code>dict</code> (valide l'en-tête conteneur <code>"LabSpec6\x00"</code> compressé ou non)</td>
+</tr>
+<tr>
+<td>Lecture rapide en-tête LabSpec 5</td>
+<td><code>.ngs</code>, <code>.ngc</code></td>
+<td><code>NgsReader.peek_header()</code></td>
+<td><code>dict</code> (valide l'en-tête <code>"NGSNextGen"</code> v1/v3 et inspecte le sous-type <code>DataMatrix</code>)</td>
+</tr>
+<tr>
+<td>Spectre / série Renishaw WiRE</td>
+<td><code>.wdf</code></td>
+<td><code>load_wdf_spectrum()</code> (<code>m_wdf.WdfReader</code>)</td>
+<td><code>spectra dict</code></td>
+</tr>
+<tr>
+<td>Carte / profil Renishaw WiRE</td>
+<td><code>.wdf</code></td>
+<td><code>load_wdf_map()</code> (<code>m_wdf.WdfReader</code>)</td>
+<td><code>(DataFrame, metadata dict)</code></td>
+</tr>
+<tr>
+<td>Spectre Galactic SPC</td>
+<td><code>.spc</code></td>
+<td><code>load_spc_spectrum()</code> (<code>m_spc.SpcReader</code>)</td>
+<td><code>spectra dict</code></td>
+</tr>
+<tr>
+<td>Carte Galactic SPC</td>
+<td><code>.spc</code></td>
+<td><code>load_spc_map()</code> (<code>m_spc.SpcReader</code>)</td>
+<td><code>(DataFrame, metadata dict)</code></td>
+</tr>
+<tr>
+<td>Spectre HORIBA LabSpec 6</td>
+<td><code>.l6s</code></td>
+<td><code>load_l6s_spectrum()</code> (<code>m_l6s.L6sReader</code>)</td>
+<td><code>spectra dict</code></td>
+</tr>
+<tr>
+<td>Carte HORIBA LabSpec 6</td>
+<td><code>.l6m</code></td>
+<td><code>load_l6m_map()</code> (<code>m_l6s.L6sReader</code>)</td>
+<td><code>(DataFrame, metadata dict)</code></td>
+</tr>
+<tr>
+<td>Spectre HORIBA LabSpec 5</td>
+<td><code>.ngs</code>, <code>.ngc</code></td>
+<td><code>load_ngs_spectrum()</code> (<code>m_ngs.NgsReader</code>)</td>
+<td><code>spectra dict</code></td>
+</tr>
+<tr>
+<td>Carte HORIBA LabSpec 5</td>
+<td><code>.ngc</code>, <code>.ngs</code></td>
+<td><code>load_ngc_map()</code> (<code>m_ngs.NgsReader</code>)</td>
+<td><code>(DataFrame, metadata dict)</code></td>
+</tr>
+<tr>
+<td>Spectre texte / CSV</td>
+<td><code>.txt</code>, <code>.csv</code></td>
+<td><code>load_spectrum_file()</code></td>
+<td><code>spectra dict</code></td>
+</tr>
+<tr>
+<td>Carte texte / CSV</td>
+<td><code>.txt</code>, <code>.csv</code></td>
+<td><code>load_map_file()</code></td>
+<td><code>DataFrame</code></td>
+</tr>
+<tr>
+<td>PL résolue en temps TRPL</td>
+<td><code>.dat</code></td>
+<td><code>load_TRPL_data()</code></td>
+<td><code>spectra dict</code></td>
+</tr>
+<tr>
+<td>Feuille Excel / CSV</td>
+<td><code>.xlsx</code>, <code>.xls</code>, <code>.csv</code></td>
+<td><code>load_dataframe_file()</code></td>
+<td><code>dict[str, DataFrame]</code></td>
+</tr>
+<tr>
+<td>Extracteur de tenseur de carte</td>
+<td>DataFrame</td>
+<td><code>extract_map_arrays()</code></td>
+<td><code>(x0, Y0, coords, fnames)</code></td>
+</tr>
+<tr>
+<td>Convertisseur format long Renishaw</td>
+<td><code>.txt</code></td>
+<td><code>convert_action()</code></td>
+<td>écrit un fichier <code>.txt</code> matriciel large</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="formats-de-retour">Formats de retour<a class="headerlink" href="#formats-de-retour" title="Permanent link">&para;</a></h2>
+<h3 id="dictionnaire-spectra-spectres-discrets">Dictionnaire Spectra — Spectres discrets<a class="headerlink" href="#dictionnaire-spectra-spectres-discrets" title="Permanent link">&para;</a></h3>
+<p>Tous les chargeurs de spectres (<code>load_wdf_spectrum</code>, <code>load_spc_spectrum</code>, <code>load_l6s_spectrum</code>, <code>load_ngs_spectrum</code>, <code>load_spectrum_file</code>, <code>load_TRPL_data</code>) renvoient un <strong>dictionnaire spectra</strong> unifié :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"spectra"</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="s2">"items"</span><span class="p">:</span> <span class="p">[</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="p">{</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"my_sample"</span><span class="p">,</span>       <span class="c1"># str — identifiant unique (nom sans extension ou nom + indice)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>            <span class="s2">"x0"</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>        <span class="c1"># float64[M] — axe des nombres d'onde</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>            <span class="s2">"y0"</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>        <span class="c1"># float64[M] — valeurs brutes d'intensité</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>            <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{</span>              <span class="c1"># dict — paramètres d'acquisition</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>                <span class="s2">"File Format"</span><span class="p">:</span> <span class="s2">"Renishaw WDF"</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>                <span class="s2">"Laser Wavelength (nm)"</span><span class="p">:</span> <span class="s2">"532.00"</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>                <span class="s2">"Exposure Time (s)"</span><span class="p">:</span> <span class="s2">"1.0"</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>                <span class="c1"># ...</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>            <span class="p">}</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        <span class="p">},</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        <span class="c1"># Éléments supplémentaires pour les fichiers multi-spectres (ex. séries temporelles WDF)</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        <span class="p">{</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"my_sample_1"</span><span class="p">,</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>            <span class="s2">"x0"</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>            <span class="s2">"y0"</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>            <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"Time (s)"</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span> <span class="s2">"..."</span><span class="p">:</span> <span class="s2">"..."</span><span class="p">}</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        <span class="p">},</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    <span class="p">]</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="p">}</span>
+</code></pre></div>
+<blockquote>
+<p>[!IMPORTANT]
+<strong>Pourquoi une liste ?</strong> Un seul fichier <code>.wdf</code> configuré en série temporelle (par exemple 100 acquisitions sur 10 minutes) renferme N spectres, et non 1. La liste <code>items</code> traite uniformément les spectres uniques (N=1) et les fichiers multi-spectres sans branchement conditionnel chez l'appelant.</p>
+</blockquote>
+<h3 id="dataframe-de-carte-cartes-hyperspectrales">DataFrame de carte — Cartes hyperspectrales<a class="headerlink" href="#dataframe-de-carte-cartes-hyperspectrales" title="Permanent link">&para;</a></h3>
+<p>Tous les chargeurs de cartes (<code>load_wdf_map</code>, <code>load_spc_map</code>, <code>load_l6m_map</code>, <code>load_ngc_map</code>, <code>load_map_file</code>) renvoient un <strong>DataFrame pandas</strong> (et éventuellement un dictionnaire de métadonnées pour les formats binaires) :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Type de retour pour WDF/SPC/L6M/NGC : tuple[pd.DataFrame, dict]</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># Type de retour pour TXT/CSV : pd.DataFrame</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">df</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">load_wdf_map</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1">#  Disposition de df :</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1">#   Colonnes : ['X', 'Y', '100.5', '101.0', '101.5', ...]</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="c1">#               |     |     |</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1">#               |     |     +-- valeurs de nombres d'onde sous forme de chaînes (cm-1)</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1">#               +-----+-------- coordonnées spatiales de platine (µm)</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1">#</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="c1">#   Forme : (N_spectra, 2 + M_wavenumbers)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Type de colonne</th>
+<th>Contenu</th>
+<th>dtype</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>X</code></td>
+<td>Position X de platine (µm)</td>
+<td><code>float64</code></td>
+</tr>
+<tr>
+<td><code>Y</code></td>
+<td>Position Y de platine (µm)</td>
+<td><code>float64</code></td>
+</tr>
+<tr>
+<td><code>'100.5'</code>, <code>'101.0'</code>, ...</td>
+<td>Intensités spectrales à ce nombre d'onde</td>
+<td><code>float64</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="dictionnaire-de-tableaux-donnees-tabulaires">Dictionnaire de tableaux — Données tabulaires<a class="headerlink" href="#dictionnaire-de-tableaux-donnees-tabulaires" title="Permanent link">&para;</a></h3>
+<p><code>load_dataframe_file()</code> retourne un dictionnaire associant chaque clé de nom à un DataFrame. Pour les fichiers Excel à feuille unique ou CSV, la clé correspond au nom du fichier sans extension :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Fichier Excel à une feuille ou CSV :</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">load_dataframe_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># -&gt; {"my_results": pd.DataFrame}</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># Fichier Excel multi-feuilles :</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">result</span> <span class="o">=</span> <span class="n">load_dataframe_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># -&gt; {"my_results_Sheet1": pd.DataFrame, "my_results_Sheet2": pd.DataFrame}</span>
+</code></pre></div>
+<hr />
+<h2 id="comment-linterface-transforme-les-sorties-es-vers-spectrastore">Comment l'interface transforme les sorties E/S vers SpectraStore<a class="headerlink" href="#comment-linterface-transforme-les-sorties-es-vers-spectrastore" title="Permanent link">&para;</a></h2>
+<p>La sortie brute de <code>m_io</code> reste volontairement une structure Python simple (<code>dict</code> / <code>DataFrame</code>). La conversion vers le conteneur tensoriel <code>SpectraStore</code> est assurée par la couche ViewModel.</p>
+<h3 id="espace-spectra-vmworkspacespectraload_files">Espace Spectra : <code>VMWorkspaceSpectra.load_files()</code><a class="headerlink" href="#espace-spectra-vmworkspacespectraload_files" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Dans viewmodel/spectra/vm_workspace_spectra.py — simplifié par souci de clarté</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">data_dict</span> <span class="o">=</span> <span class="n">load_wdf_spectrum</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>   <span class="c1"># -&gt; {"type": "spectra", "items": [...]}</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="p">[</span><span class="s2">"items"</span><span class="p">]:</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">fname</span>    <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span>           <span class="c1"># clé unique de carte</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">x0</span>       <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"x0"</span><span class="p">]</span>             <span class="c1"># float64[M]</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">y0</span>       <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"y0"</span><span class="p">]</span>             <span class="c1"># float64[M]</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">metadata</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"metadata"</span><span class="p">]</span>       <span class="c1"># dict</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="c1"># Chaque spectre devient son propre bloc MapData dans SpectraStore :</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="c1"># N=1 (ligne unique), M = len(x0)</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">add_map</span><span class="p">(</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>        <span class="n">name</span>   <span class="o">=</span> <span class="n">fname</span><span class="p">,</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>        <span class="n">x0</span>     <span class="o">=</span> <span class="n">x0</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>        <span class="n">Y0</span>     <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>   <span class="c1"># forme (1, M)</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>        <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>           <span class="c1"># aucune position spatiale</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>        <span class="n">fnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">fname</span><span class="p">],</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    <span class="p">)</span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">get_map_data</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span><span class="o">.</span><span class="n">map_metadata</span> <span class="o">=</span> <span class="n">metadata</span>
+</code></pre></div>
+<blockquote>
+<p>[!NOTE]
+<strong>Chaque spectre dispose de son propre bloc <code>MapData</code></strong> (N=1). Il s'agit de la même structure que pour les spectres d'une carte (N=des milliers). Ce modèle unifié permet à <code>VMWorkspaceMaps</code> d'étendre <code>VMWorkspaceSpectra</code> sans duplication.</p>
+</blockquote>
+<h3 id="espace-maps-vmworkspacemapsload_map_files-et-extract_map_arrays">Espace Maps : <code>VMWorkspaceMaps.load_map_files()</code> et <code>extract_map_arrays()</code><a class="headerlink" href="#espace-maps-vmworkspacemapsload_map_files-et-extract_map_arrays" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Dans viewmodel/maps/vm_workspace_maps.py (et spectroview/api/workspace.py)</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">df</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">load_wdf_map</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>                    <span class="c1"># -&gt; (DataFrame, dict)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">x0</span><span class="p">,</span> <span class="n">Y0</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">fnames</span> <span class="o">=</span> <span class="n">extract_map_arrays</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span> <span class="n">df</span><span class="p">)</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1"># x0:     float64[M]    — tous les canaux numériques valides (ordre croissant)</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># Y0:     float32[N, M] — matrice spectrale contiguë</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># coords: float64[N, 2] — positions (X, Y) de la platine</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1"># fnames: list[str]     — "{map_name}_({x}, {y})" (désambiguïsé avec _{k} en cas de sites répétés)</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">add_map</span><span class="p">(</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="n">name</span>   <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="n">x0</span>     <span class="o">=</span> <span class="n">x0</span><span class="p">,</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="n">Y0</span>     <span class="o">=</span> <span class="n">Y0</span><span class="p">,</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="n">coords</span> <span class="o">=</span> <span class="n">coords</span><span class="p">,</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="n">fnames</span> <span class="o">=</span> <span class="n">fnames</span><span class="p">,</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="espace-graphs-ingestion-directe-de-dataframes">Espace Graphs : Ingestion directe de DataFrames<a class="headerlink" href="#espace-graphs-ingestion-directe-de-dataframes" title="Permanent link">&para;</a></h3>
+<p>Les tableaux contournent entièrement <code>SpectraStore</code> — ils passent directement de <code>m_io</code> au ViewModel de l'espace Graphs :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Dans viewmodel/graphs/vm_workspace_graphs.py</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">dataframes</span> <span class="o">=</span> <span class="n">load_dataframe_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>   <span class="c1"># -&gt; dict[str, DataFrame]</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">dataframes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">dataframes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span>           <span class="c1"># stocké directement dans le VM, sans SpectraStore</span>
+</code></pre></div>
+<hr />
+<h2 id="notes-darchitecture-et-de-performance">Notes d'architecture et de performance<a class="headerlink" href="#notes-darchitecture-et-de-performance" title="Permanent link">&para;</a></h2>
+<h3 id="classification-den-tete-sans-lecture-du-corps-detect_file_type">Classification d'en-tête sans lecture du corps (<code>detect_file_type</code>)<a class="headerlink" href="#classification-den-tete-sans-lecture-du-corps-detect_file_type" title="Permanent link">&para;</a></h3>
+<p>Lors de l'ouverture ou du glisser-déposer de fichiers dans <code>Main._load_files_by_paths()</code>, <code>detect_file_type()</code> classifie les fichiers en <code>&lt; 0,1 ms</code> sans analyser l'intégralité des jeux de données :</p>
+<ul>
+<li><strong><code>.wdf</code></strong> : <code>peek_wdf_measurement_type()</code> lit uniquement les 144 premiers octets de l'en-tête <code>WDF1</code> (<code>measurement_type</code> à l'offset <code>132</code>) au lieu de décoder deux fois des cubes spectraux de plusieurs mégaoctets.</li>
+<li><strong><code>.spc</code></strong> : <code>SpcReader.peek_header()</code> (<code>header_only=True</code>) lit uniquement l'en-tête Galactic SPC de 512 octets (compteur de sous-fichiers <code>fnsub</code>) sans lire les spectres ni les journaux.</li>
+<li><strong><code>.l6s</code> / <code>.l6m</code></strong> : <code>L6sReader.peek_header()</code> valide l'en-tête conteneur <code>"LabSpec6\x00"</code> et les drapeaux (<code>0x01</code> compressé, <code>0x04</code> brassage d'octets sur 4 plans) sans lire les tableaux spectraux complets — décompressant les petits en-têtes (<code>&lt;= 256 KiB</code>) pour inspecter le descripteur racine et validant le préfixe de flux <code>lzhuf</code> en <code>&lt; 1 ms</code> sur les grandes cartes compressées.</li>
+<li><strong><code>.ngs</code> / <code>.ngc</code></strong> : <code>NgsReader.peek_header()</code> valide l'en-tête binaire <code>"NGSNextGen"</code> v1/v3 et inspecte les 96 premiers octets du flux de blocs (sous-type <code>DataMatrix</code> <code>"Spectrum"</code> vs <code>"SpIm"</code> et <code>n_dims</code>) en ~1 ms sans décompresser les spectres.</li>
+<li><strong><code>.txt</code> / <code>.csv</code></strong> : Inspecte jusqu'à 12 lignes non vides en pur Python sans déclencher de lecture <code>pandas</code> par moteur regex lors du routage.</li>
+</ul>
+<h3 id="dataframes-de-carte-consolides-et-analyse-vectorisee">DataFrames de carte consolidés et analyse vectorisée<a class="headerlink" href="#dataframes-de-carte-consolides-et-analyse-vectorisee" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>DataFrames monobloc</strong> : Les cartes binaires (<code>WDF</code>, <code>SPC</code>, <code>L6M</code>, <code>NGC</code>) et converties sont assemblées via <code>_build_map_dataframe()</code>, encapsulant directement la matrice spectrale 2D contiguë au lieu de construire des milliers de tranches de colonnes 1D.</li>
+<li><strong>Chemins rapides CSV/TXT en moteur C</strong> : <code>load_map_file()</code> utilise <code>pd.read_csv(..., engine="c")</code> avec <code>usecols</code> (supprimant les points-virgules finaux dès la lecture), des fonctions <code>skiprows</code> pour les exports CSV <em>wafer</em> à lignes alternées, et une permutation positionnelle par <code>iloc</code> lors du tri des nombres d'onde décroissants afin d'éviter de dupliquer en RAM les grandes matrices spectrales.</li>
+<li><strong>Lecteurs binaires vectorisés WDF, SPC, LabSpec 6 et LabSpec 5</strong> :</li>
+<li><code>WdfReader</code> (<code>spectroview/model/io/m_wdf.py</code>) lit nativement les blocs <code>.wdf</code> Renishaw (<code>WDF1</code>, <code>DATA</code>, <code>XLST</code>, <code>YLST</code>, <code>ORGN</code>, <code>WMAP</code>) en une lecture via <code>struct.unpack_from</code> et <code>np.frombuffer</code> sans dépendance tierce <code>renishawWiRE</code> ni <code>PIL</code>, supprimant les boucles Python par point sur <code>ORGN</code> et les décodages JPEG <code>WHTL</code> superflus.</li>
+<li><code>SpcReader</code> (<code>spectroview/model/io/m_spc.py</code>) lit les cartes <code>.spc</code> multi-sous-fichiers uniformes en un seul appel E/S tamponné via des dtypes structurés NumPy <code>np.frombuffer</code> (prenant en charge IEEE <code>float32</code>, <code>TSPREC</code> <code>int16</code> et virgule fixe <code>int32</code>), ne basculant sur l'analyse séquentielle que pour les fichiers <code>TXYXYS</code> de longueurs variables.</li>
+<li><code>L6sReader</code> (<code>spectroview/model/io/m_l6s.py</code>) décode les arbres binaires HORIBA LabSpec 6 <code>.l6s</code> (spectre 1D) et <code>.l6m</code> (image spectrale 2D <code>SpIm</code>) (signature <code>"LabSpec6\x00"</code>, en-têtes non compressés sur 76 octets ainsi que conteneurs compressés <code>lzhuf</code> + delta d'octets + brassage sur 4 plans via <code>_decompress_ngc()</code>, enregistrements DFS de 24 octets, blocs dédupliqués par <code>0x8000</code> / identifiant de pointeur et sous-arbres d'exécution <code>b'temx'</code>), extrayant les cubes spectraux (<code>float32</code>), les grilles spatiales <code>(X, Y)</code>, les longueurs d'onde laser calibrées (<code>Laser.pos</code> ou <code>Laser (nm).pos</code>), le rapport <code>S/N</code> et toutes les tables de métadonnées d'acquisition/description/historique (<code>_reorder_metadata()</code> place les clés canoniques <code>_METADATA_ORDERED_KEYS</code> en tête et conserve les paramètres instrumentaux supplémentaires à la suite).</li>
+<li><code>NgsReader</code> (<code>spectroview/model/io/m_ngs.py</code>) décode les conteneurs HORIBA LabSpec 5 <code>.ngs</code> (v1 non compressé) et <code>.ngc</code> (v3 compressé par Huffman adaptatif + LZSS de Haruhiko Okumura <code>lzhuf</code> + codage différentiel par <code>np.cumsum</code>, signature <code>"NGSNextGen"</code>), extrayant les tenseurs spectraux/spatiaux <code>DataMatrix</code> et les blocs <code>Table</code> (<code>Param</code>, <code>Acq</code>, <code>Extra</code>, <code>Hist</code>) avec ordre canonique <code>_METADATA_ORDERED_KEYS</code> et conservation intégrale des paramètres additionnels.</li>
+</ul>
+<h3 id="spectres-sans-en-tete-axes-croissants-et-coordonnees-dupliquees">Spectres sans en-tête, axes croissants et coordonnées dupliquées<a class="headerlink" href="#spectres-sans-en-tete-axes-croissants-et-coordonnees-dupliquees" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Fichiers 1D sans en-tête</strong> : <code>load_spectrum_file()</code> examine les premières lignes avant d'appeler <code>pd.read_csv</code>, préservant la ligne <code>0</code> sur les spectres <code>.txt</code>/<code>.csv</code> sans en-tête tout en ignorant les commentaires <code>#</code>, les en-têtes simples ou les anciens en-têtes sur 3 lignes.</li>
+<li><strong>Invariant d'axe X croissant</strong> : Tous les chargeurs de spectres et de cartes (<code>WDF</code>, <code>SPC</code>, <code>L6S</code>, <code>L6M</code>, <code>NGS</code>, <code>NGC</code>, <code>TXT</code>, <code>CSV</code>) normalisent les axes spectraux par ordre strictement croissant afin que le calcul de ligne de base, le recadrage ROI et l'ajustement VBF puissent s'appuyer sur un vecteur <code>x0</code> monotone.</li>
+<li><strong>Cartes résolues en temps à coordonnées fixes</strong> : Lorsqu'une carte contient des coordonnées <code>(X, Y)</code> répétées (par exemple, des CSV <em>wafer</em> multi-balayages résolus en temps), <code>extract_map_arrays()</code> ajoute des suffixes <code>_{k}</code> (<code>map_(x, y)_2</code>, ...) afin que chaque mesure conserve une clé <code>SpectraStore</code> unique tout en permettant à <code>parse_coords_from_fname()</code> de retrouver exactement <code>(X, Y)</code>.</li>
+</ul>
+<h3 id="metadonnees-pures-en-couche-modele-parse_wdf_metadata">Métadonnées pures en couche modèle (<code>parse_wdf_metadata</code>)<a class="headerlink" href="#metadonnees-pures-en-couche-modele-parse_wdf_metadata" title="Permanent link">&para;</a></h3>
+<p><code>parse_wdf_metadata()</code> réside dans <code>spectroview/model/io/m_io.py</code> (ré-exportée dans <code>viewmodel/utils.py</code> pour compatibilité descendante), maintenant <code>spectroview/model/</code> 100 % exempt de toute importation Qt ou ViewModel. Elle analyse les blocs binaires <code>WXIS</code>, <code>WXCS</code>, <code>WXDM</code> et <code>WDF1</code> <code>FILETIME</code> pour en extraire l'objectif, le réseau, la puissance laser, les réglages de fente, le temps d'exposition et l'horodatage.</p>
+<hr />
+<h2 id="pages-connexes">Pages connexes<a class="headerlink" href="#pages-connexes" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><a href="../spectra_store/">Architecture de données : SpectraStore</a></strong> — comment les données chargées sont stockées, indexées et consultées.</li>
+<li><strong><a href="../spectra/">Espace Spectra</a></strong> — <code>VMWorkspaceSpectra.load_files()</code> et cycle de vie complet des spectres.</li>
+<li><strong><a href="../maps/">Espace Maps</a></strong> — <code>VMWorkspaceMaps.load_map_files()</code> et cycle de vie complet des cartes.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Retour en haut de la page
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Pied de page" >
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Précédent: Architecture">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Précédent
+              </span>
+              <div class="md-ellipsis">
+                Architecture
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../spectra_store/" class="md-footer__link md-footer__link--next" aria-label="Suivant: Architecture de données SpectraStore">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Suivant
+              </span>
+              <div class="md-ellipsis">
+                Architecture de données SpectraStore
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,2613 @@
+
+<!doctype html>
+<html lang="fr" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Outil interactif de traitement, d'ajustement et de visualisation de données spectroscopiques">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/user_manual/graphs/">
+      
+      
+        <link rel="prev" href="../spectra_maps/">
+      
+      
+        <link rel="next" href="../mva/">
+      
+      
+        
+          <link rel="alternate" href="../../../user_manual/graphs/" hreflang="en">
+        
+          <link rel="alternate" href="./" hreflang="fr">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Espace Graphs - Documentation SPECTROview</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#espace-de-travail-graphs" class="md-skip">
+          Aller au contenu
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="../../" title="Documentation SPECTROview" class="md-header__button md-logo" aria-label="Documentation SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Documentation SPECTROview
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Espace Graphs
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Sélectionner la langue"
+      title="Sélectionner la langue"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">FR</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../user_manual/graphs/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="fr"
+              class="md-select__link" aria-current="true"
+            >
+              Français
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Recherche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initialisation de la recherche
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Onglets" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accueil
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Manuel utilisateur
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Agent IA
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../developer/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guide développeur
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Historique des versions
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+    <style>
+      /* Hide the default H1 title injected by MkDocs */
+      .md-content h1 { display: none !important; }
+    </style>
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="Documentation SPECTROview" class="md-nav__button md-logo" aria-label="Documentation SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    Documentation SPECTROview
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accueil
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manuel utilisateur
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Manuel utilisateur
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formats pris en charge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aperçu de l'interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Barre de menus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espaces Spectra et Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Graphs
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#espace-de-travail-graphs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Espace de travail : Graphs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Espace de travail : Graphs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-chargement-des-donnees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Chargement des données
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-ajouter-ou-mettre-a-jour-un-graphique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Ajouter ou mettre à jour un graphique
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-la-barre-doutils-partagee" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. La barre d'outils partagée
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-personnaliser-un-graphique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Personnaliser un graphique
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Personnaliser un graphique">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-axes-limits-ticks-spines-et-secondary-inset-axes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Axes &amp; Limits, Ticks &amp; Spines et Secondary &amp; Inset Axes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-legend-series" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Legend &amp; Series
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-annotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Annotations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-general-typography-et-plot-style-fitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 General &amp; Typography et Plot Style &amp; Fitting
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-filtrage-des-donnees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Filtrage des données
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-details-des-calculs-statistiques-et-dajustement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Détails des calculs statistiques et d'ajustement
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Détails des calculs statistiques et d&#39;ajustement">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-graphiques-en-points-et-en-barres-point-et-bar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Graphiques en points et en barres (point et bar)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-boite-a-moustaches-box" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Boîte à moustaches (box)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-estimation-des-courbes-de-tendance-trendline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Estimation des courbes de tendance (trendline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-intervalles-de-confiance-des-courbes-de-tendance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Intervalles de confiance des courbes de tendance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analyse multivariée (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calculateurs rapides
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paramètres
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sauvegarde et chargement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Raccourcis et astuces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent IA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guide développeur
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guide développeur
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline de chargement des fichiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture de données SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Spectra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moteur d'ajustement vectorisé par lots (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analyse multivariée (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent IA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Serveur MCP local
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Spectra (chargement, prétraitement, ajustement)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Maps (hyperspectral, cartes thermiques)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualisation de données (Graphs)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calculateurs rapides
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Étendre SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Historique des versions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Accueil
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Manuel utilisateur
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>Espace Graphs</h1>
+
+<h2 id="espace-de-travail-graphs"><strong>Espace de travail : Graphs</strong><a class="headerlink" href="#espace-de-travail-graphs" title="Permanent link">&para;</a></h2>
+<p>L'espace <strong><code>Graphs</code></strong> est entièrement dédié à la visualisation de données, conçu en mettant l'accent sur la simplicité, la rapidité et la personnalisation.</p>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/ui_graph.gif" alt="Interface de l'espace Graphs" width="900"><br>
+  <i>Vue d'ensemble de l'interface de l'espace Graphs.</i>
+</div>
+<p><br></p>
+<hr />
+<h3 id="1-chargement-des-donnees"><strong>1. Chargement des données</strong><a class="headerlink" href="#1-chargement-des-donnees" title="Permanent link">&para;</a></h3>
+<p>Les jeux de données peuvent être transférés directement depuis les espaces <code>Spectra</code> et <code>Maps</code>, ou importés depuis des fichiers Excel/CSV externes. Tous les jeux disponibles sont suivis dynamiquement et affichés dans la liste des jeux de données.</p>
+<p><img alt="Liste des jeux de données" src="../../../user_manual_images/Graphs/df_list.png" /><br>
+Les quatre boutons utilitaires disponibles vous permettent de :</p>
+<ul>
+<li><strong>View</strong> : Inspecter le tableau de données dans une fenêtre dédiée.</li>
+<li><strong>Delete</strong> : Retirer le jeu de données de l'espace de travail.</li>
+<li><strong>Save</strong> : Exporter le jeu de données au format Excel ou CSV.</li>
+<li><strong>Refresh</strong> : Recharger dynamiquement le fichier CSV/Excel s'il a été modifié à l'extérieur.</li>
+</ul>
+<hr />
+<h3 id="2-ajouter-ou-mettre-a-jour-un-graphique"><strong>2. Ajouter ou mettre à jour un graphique</strong><a class="headerlink" href="#2-ajouter-ou-mettre-a-jour-un-graphique" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Sélectionnez votre jeu de données cible dans la liste.</li>
+<li>Choisissez les colonnes appropriées pour les axes X, Y et Z à l'aide des menus déroulants.</li>
+<li>Sélectionnez le style de tracé souhaité (styles disponibles : <code>scatter</code>, <code>point</code>, <code>bar</code>, <code>box</code>, <code>line</code>, <code>trendline</code>, <code>histogram</code>, <code>2Dmap</code>, <code>wafer</code>).</li>
+<li>Définissez les libellés des axes, les limites et le diamètre de plaquette (<em>wafer</em>), le cas échéant.</li>
+<li>Cliquez sur <strong>Add Plot</strong> pour générer la visualisation.</li>
+</ol>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/add_plot.gif" alt="Ajout d'un graphique" width="800"><br>
+  <i>Démonstration de l'ajout d'un nouveau graphique ou de la mise à jour d'un graphique existant.</i>
+</div>
+
+<hr />
+<h3 id="3-la-barre-doutils-partagee"><strong>3. La barre d'outils partagée</strong><a class="headerlink" href="#3-la-barre-doutils-partagee" title="Permanent link">&para;</a></h3>
+<p>La barre inférieure de l'espace regroupe l'ensemble des commandes globales ainsi qu'une barre d'outils graphique partagée qui agit toujours sur la fenêtre de graphique actuellement active. Pour rendre un graphique actif : cliquez dessus ou choisissez-le dans le menu déroulant <strong>Active plot</strong> du panneau latéral (juste au-dessus de <strong>Add plot</strong> / <strong>Update plot</strong>).</p>
+<table>
+<thead>
+<tr>
+<th>Commande</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Delete all</strong></td>
+<td>Supprime tous les graphiques de l'espace de travail.</td>
+</tr>
+<tr>
+<td><strong>Minimize all</strong></td>
+<td>Réduit toutes les fenêtres de graphique.</td>
+</tr>
+<tr>
+<td><strong>Undo / Redo</strong></td>
+<td>Annule ou rétablit les modifications dans l'historique de l'espace de travail (<code>Ctrl+Z</code> / <code>Ctrl+Shift+Z</code>).</td>
+</tr>
+<tr>
+<td><strong>Compose Figure</strong></td>
+<td>Assemble plusieurs graphiques ouverts en une seule figure multi-panneaux exportable.</td>
+</tr>
+<tr>
+<td><strong>Home / Pan / Zoom / Subplots</strong></td>
+<td>Navigation Matplotlib standard : réinitialiser la vue, déplacer, zoomer par rectangle ou ajuster les marges des sous-graphiques.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Astuce :</strong> Lorsque vous redimensionnez ou déplacez une fenêtre graphique en faisant glisser son bord ou sa barre de titre, un contour s'affiche d'abord. Le graphique n'est retracé qu'une seule fois, à sa nouvelle taille, lorsque vous relâchez la souris, ce qui assure un redimensionnement fluide même pour les graphiques denses. De même, pendant un déplacement (<em>pan</em>), les marges autour des axes restent fixes et sont recalculées au relâchement.</p>
+</blockquote>
+<p>Un séparateur vertical marque le début des commandes propres au graphique actif — toujours alignées sur le bord droit de la fenêtre :</p>
+<table>
+<thead>
+<tr>
+<th>Commande</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Replicate</strong></td>
+<td>Crée une copie du graphique actif.</td>
+</tr>
+<tr>
+<td><strong>Customize</strong></td>
+<td>Ouvre la fenêtre Customize Graph Dialog pour le graphique actif (<code>Ctrl+E</code>, voir ci-dessous).</td>
+</tr>
+<tr>
+<td><strong>Copy</strong></td>
+<td>Copie la figure du graphique actif dans le presse-papiers sous forme d'image (<code>Ctrl+C</code>).</td>
+</tr>
+<tr>
+<td><strong>Export</strong></td>
+<td>Cliquez pour exporter le graphique actif vers un fichier. <strong>Maintenez Ctrl + Clic</strong> pour exporter simultanément tous les graphiques ouverts.</td>
+</tr>
+<tr>
+<td><strong>Style menu (🎨)</strong></td>
+<td>Enregistrer/appliquer un style, copier/coller un style (<code>Ctrl+V</code> pour coller), réinitialiser par défaut ou définir le style courant comme style par défaut pour les nouveaux graphiques.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Remarque</strong> : Les raccourcis <code>Ctrl+Z</code>, <code>Ctrl+Shift+Z</code>, <code>Ctrl+C</code>, <code>Ctrl+V</code> et <code>Ctrl+E</code> ci-dessus ne sont actifs que lorsque l'onglet <strong>Graphs</strong> est sélectionné — ils n'interfèrent donc pas avec les mêmes raccourcis ailleurs dans l'application (par exemple lors de la saisie dans un champ texte).</p>
+</blockquote>
+<hr />
+<h3 id="4-personnaliser-un-graphique"><strong>4. Personnaliser un graphique</strong><a class="headerlink" href="#4-personnaliser-un-graphique" title="Permanent link">&para;</a></h3>
+<p>Vous pouvez modifier rapidement les <strong>libellés</strong> des axes et le <strong>titre</strong> du graphique via le panneau latéral droit (<code>Right Panel</code>). Cliquez sur le bouton <strong>Update Plot</strong> pour appliquer immédiatement les changements :</p>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/labels.png" alt="Personnalisation des libellés" width="400"><br>
+  <i>Personnalisez le graphique sélectionné via le panneau droit. Cliquez sur Update Plot pour appliquer les modifications.</i>
+</div>
+
+<p><br></p>
+<p>Pour une personnalisation avancée, cliquez sur le bouton <strong>Customize</strong> (⚙) afin d'ouvrir la boîte de dialogue <strong>Customize Graph Dialog</strong> (<code>Ctrl + E</code>). La fenêtre propose une interface moderne à deux volets similaire aux Paramètres, dotée d'une recherche globale instantanée sur toutes les options, d'une navigation par catégories à gauche et d'une mise en évidence automatique avec défilement vers l'option recherchée à travers sept catégories modulaires :</p>
+<ul>
+<li><strong>General &amp; Typography</strong> : Thème de figure (Light/Dark), quadrillage, rotation des étiquettes de l'axe X, tailles de police (Title, Axis label, Tick label, Colorbar) et tri intelligent des données.</li>
+<li><strong>Axes &amp; Limits</strong> : Limites des axes avec curseurs de plage interactifs (en haut), échelles principales X/Y/Z (Linear, Logarithmic, Symlog, Centered), types de données numérique/catégoriel, inversion des axes et plages d'axes interrompus (<em>broken axis</em>).</li>
+<li><strong>Ticks &amp; Spines</strong> : Orientation des graduations, formats prédéfinis des étiquettes de graduation, graduations secondaires (Top, Bottom, Left, Right) et visibilité des bordures du cadre.</li>
+<li><strong>Legend &amp; Series</strong> : Emplacement de la légende (à l'intérieur/extérieur), bordure, nombre de colonnes, titre, taille de police, transparence alpha, position, style global des marqueurs et tableau de personnalisation par série.</li>
+<li><strong>Plot Style &amp; Fitting</strong> : Options spécifiques aux styles (relier les points, décaler les points qui se chevauchent, statistiques <em>wafer</em>), contrôles unifiés des barres d'erreur (affichage, type statistique, taille des extrémités), ajustement polynomial de courbe de tendance avec points d'ancrage et tableau des équations, et réglages d'histogramme (classes / courbe KDE).</li>
+<li><strong>Annotations</strong> : Annotations visuelles sur le graphique (V-Line, H-Line, Text, Arrow, V-Span, H-Span, Box, Callout) avec déplacement interactif sur le canevas et édition modale.</li>
+<li><strong>Secondary &amp; Inset Axes</strong> : Axes jumeaux secondaires (Y2, Y3, X2 avec libellés, limites, échelle logarithmique, couleurs et marqueurs dédiés) et sous-axes zoomés en incrustation (<em>Inset</em>) avec lignes de connexion.</li>
+</ul>
+<p>Toutes les modifications effectuées dans les différents onglets sont appliquées ensemble via le bouton unifié <strong>Apply</strong> en bas de la fenêtre, ou annulées via <strong>Cancel</strong>.</p>
+<hr />
+<h4 id="41-axes-limits-ticks-spines-et-secondary-inset-axes">4.1 Axes &amp; Limits, Ticks &amp; Spines et Secondary &amp; Inset Axes<a class="headerlink" href="#41-axes-limits-ticks-spines-et-secondary-inset-axes" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/Customize_Axis.png" alt="Catégories d'axes" width="600"><br>
+  <i>Configuration des axes dans Customize Graph Dialog.</i>
+</div>
+
+<p>Les catégories <strong>Axes &amp; Limits</strong>, <strong>Ticks &amp; Spines</strong> et <strong>Secondary &amp; Inset Axes</strong> contrôlent la mise à l'échelle des axes, les types de données, les limites, l'apparence des graduations et bordures, les coupures d'axes, les vues zoomées incrustées (<em>inset</em>) et les axes jumeaux secondaires. Les tailles de police des titres, libellés et graduations se trouvent dans <strong>General &amp; Typography</strong>.</p>
+<h5 id="proprietes-des-axes-axes-limits">Propriétés des axes (<code>Axes &amp; Limits</code>)<a class="headerlink" href="#proprietes-des-axes-axes-limits" title="Permanent link">&para;</a></h5>
+<p>Configurez indépendamment l'<strong>échelle</strong> et le <strong>type de données</strong> de chaque axe à l'aide des listes déroulantes :</p>
+<table>
+<thead>
+<tr>
+<th>Paramètre</th>
+<th>Options</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>X / Y axis Scale</strong></td>
+<td><code>Linear</code>, <code>Logarithmic</code>, <code>Symlog</code></td>
+<td>Bascule l'axe entre échelle linéaire, logarithmique et logarithmique symétrique. L'échelle logarithmique n'est appliquée que lorsque les données sous-jacentes sont numériques.</td>
+</tr>
+<tr>
+<td><strong>X / Y axis Data type</strong></td>
+<td><code>Auto</code>, <code>Category</code>, <code>Numerical</code></td>
+<td>Contrôle l'interprétation des valeurs de l'axe. <strong>Auto</strong> (par défaut) : détecte automatiquement le meilleur type — numérique si 100 % des valeurs sont numériques, sinon catégoriel. <strong>Category</strong> : force un indexage catégoriel. <strong>Numerical</strong> : force une échelle numérique continue.</td>
+</tr>
+<tr>
+<td><strong>Z axis Scale</strong> <em>(wafer / 2Dmap uniquement)</em></td>
+<td><code>Linear</code>, <code>Logarithmic</code>, <code>Centered</code></td>
+<td>Définit la normalisation de l'<strong>échelle de couleur</strong> de la carte thermique. <strong>Logarithmic</strong> compresse une large dynamique de valeurs (revient en linéaire si les données ne sont pas strictement positives). <strong>Centered</strong> fixe le point médian de la palette sur la valeur <strong>Center value</strong> saisie — idéal pour les données divergentes comme la contrainte/déformation autour de 0.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Remarque</strong> : Avec le type <code>Numerical</code>, l'axe adopte une véritable échelle mathématique où l'espacement reflète la valeur numérique réelle. Avec <code>Category</code>, chaque valeur unique est espacée régulièrement indépendamment de son ordre de grandeur.</p>
+</blockquote>
+<h5 id="definir-les-limites-des-axes-axes-limits">Définir les limites des axes (<code>Axes &amp; Limits</code>)<a class="headerlink" href="#definir-les-limites-des-axes-axes-limits" title="Permanent link">&para;</a></h5>
+<p>Limitez manuellement la plage visible de chaque axe (X, Y, Z) en indiquant les valeurs <strong>min</strong> et <strong>max</strong> :</p>
+<table>
+<thead>
+<tr>
+<th>Commande</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>X / Y / Z axis limits</strong></td>
+<td>Saisissez des bornes min et max pour restreindre la plage visible. Laissez un champ non défini (il affiche alors en grisé la valeur actuelle réelle du graphique) pour garder cette borne automatique.</td>
+</tr>
+<tr>
+<td><strong>Get current limits from plot</strong></td>
+<td>Capture les limites actuellement visibles sur le graphique et remplit les champs. Pratique comme point de départ avant un réglage fin.</td>
+</tr>
+<tr>
+<td><strong>Clear limits</strong></td>
+<td>Réinitialise toutes les limites d'axes en mode automatique.</td>
+</tr>
+</tbody>
+</table>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/adjust_axis_limits.gif" alt="Ajustement des limites des axes" width="650"><br>
+  <i>Ajustement des limites des axes du graphique sélectionné.</i>
+</div>
+
+<h5 id="apparence-des-axes-ticks-spines">Apparence des axes (<code>Ticks &amp; Spines</code>)<a class="headerlink" href="#apparence-des-axes-ticks-spines" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Commande</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Minor ticks</strong> (X Bottom/Top, Y Left/Right)</td>
+<td>Active ou désactive les graduations secondaires indépendamment sur chaque bord du graphique. Par défaut, elles sont activées automatiquement uniquement pour les axes numériques (par exemple X et Y sur les nuages de points, courbes ou histogrammes, et Y sur les barres/boîtes à moustaches/points) et masquées sur les axes catégoriels ou cartes.</td>
+</tr>
+<tr>
+<td><strong>Show spines</strong> (Top/Right/Bottom/Left)</td>
+<td>Affiche ou masque indépendamment chacune des quatre bordures du cadre.</td>
+</tr>
+<tr>
+<td><strong>Tick direction</strong></td>
+<td><code>Default</code>, <code>In</code>, <code>Out</code> ou <code>In &amp; Out</code>.</td>
+</tr>
+<tr>
+<td><strong>Tick label format</strong></td>
+<td><code>Auto</code>, <code>Integer</code>, <code>1-decimal</code>, <code>2-decimal</code> ou <code>Scientific</code>.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="axe-interrompu-axes-limits-beta">Axe interrompu (<code>Axes &amp; Limits</code> — Bêta)<a class="headerlink" href="#axe-interrompu-axes-limits-beta" title="Permanent link">&para;</a></h5>
+<p>Créez une coupure visuelle sur un axe afin d'omettre une plage sans intérêt et mettre en valeur les zones pertinentes :</p>
+<table>
+<thead>
+<tr>
+<th>Commande</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>X-axis break</strong></td>
+<td>Active et spécifie l'intervalle <code>from</code> / <code>to</code> à couper sur l'axe X.</td>
+</tr>
+<tr>
+<td><strong>Y-axis break</strong></td>
+<td>Active et spécifie l'intervalle <code>from</code> / <code>to</code> à couper sur l'axe Y.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Remarque</strong> : Cette fonctionnalité est en version bêta. Les coupures d'axes fonctionnent de façon optimale avec des échelles linéaires.</p>
+</blockquote>
+<h5 id="axes-en-incrustation-zoom-secondary-inset-axes">Axes en incrustation / zoom (<code>Secondary &amp; Inset Axes</code>)<a class="headerlink" href="#axes-en-incrustation-zoom-secondary-inset-axes" title="Permanent link">&para;</a></h5>
+<p>Dessinez une petite vue zoomée d'une région du graphique à l'intérieur de la zone principale :</p>
+<table>
+<thead>
+<tr>
+<th>Commande</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Enable inset axes</strong></td>
+<td>Active ou désactive la vue en incrustation.</td>
+</tr>
+<tr>
+<td><strong>Position (x0, y0) / Size (w, h)</strong></td>
+<td>Position et taille du cadre d'incrustation, exprimées en fraction de la zone de tracé (0–1).</td>
+</tr>
+<tr>
+<td><strong>X / Y limits</strong></td>
+<td>Plage de données zoomée par l'incrustation. Laissez la valeur grisée par défaut pour un ajustement automatique.</td>
+</tr>
+<tr>
+<td><strong>Show zoom indicator</strong></td>
+<td>Trace des lignes de connexion entre le cadre d'incrustation et la zone zoomée sur le graphique principal.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Remarque</strong> : Les axes en incrustation et un axe interrompu sont mutuellement exclusifs — activer l'un désactive l'autre.</p>
+</blockquote>
+<h5 id="axes-secondaires-secondary-inset-axes">Axes secondaires (<code>Secondary &amp; Inset Axes</code>)<a class="headerlink" href="#axes-secondaires-secondary-inset-axes" title="Permanent link">&para;</a></h5>
+<p>Tracez des colonnes Y supplémentaires (ou une seconde colonne X) sur des échelles indépendantes, à raison d'une ligne par axe (<strong>Y2</strong>, <strong>Y3</strong>, <strong>X2</strong>). Chaque ligne s'active dès qu'une colonne est attribuée à cet axe et permet de régler <strong>Label</strong>, les limites <strong>Min/Max</strong>, l'option <strong>Log scale</strong>, <strong>Color</strong> et <strong>Marker</strong>.</p>
+<hr />
+<h4 id="42-legend-series">4.2 Legend &amp; Series<a class="headerlink" href="#42-legend-series" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/Customize_LegendBox.png" alt="Legend & Series" width="650"><br>
+  <i>La catégorie Legend & Series de Customize Graph Dialog.</i>
+</div>
+
+<p>La catégorie <strong>Legend &amp; Series</strong> permet de personnaliser l'apparence et l'emplacement de la légende ainsi que les couleurs, marqueurs, transparences et épaisseurs de trait par série.</p>
+<h5 id="boite-de-legende-et-style-des-series">Boîte de légende et style des séries<a class="headerlink" href="#boite-de-legende-et-style-des-series" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Commande</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Put legend box outside</strong></td>
+<td>Déplace la boîte de légende à droite de la zone de tracé afin de ne pas recouvrir les données. Décochez pour la placer à l'intérieur du graphique.</td>
+</tr>
+<tr>
+<td><strong>Unify marker size / edge color</strong></td>
+<td>Coché par défaut : un seul réglage de taille de marqueur et de couleur de contour en haut s'applique à toutes les séries. Décochez pour afficher les colonnes par série ci-dessous (pour les styles <code>scatter</code>/<code>point</code>/<code>trendline</code>), afin d'ajuster chaque série séparément.</td>
+</tr>
+<tr>
+<td><strong>Label</strong></td>
+<td>Modifie le nom affiché dans la légende pour chaque série de données.</td>
+</tr>
+<tr>
+<td><strong>Marker</strong></td>
+<td>Choisit un symbole de marqueur pour chaque série (disponible pour les graphiques <code>point</code>/<code>scatter</code>).</td>
+</tr>
+<tr>
+<td><strong>Color</strong></td>
+<td>Sélectionne une couleur pour chaque série dans la palette prédéfinie.</td>
+</tr>
+<tr>
+<td><strong>Alpha / Line width</strong></td>
+<td>Transparence par série, et épaisseur de trait pour les styles traçant une ligne (<code>line</code>, <code>trendline</code>, ou <code>point</code> avec l'option Join activée).</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Astuce</strong> : La boîte de légende peut être <strong>déplacée à la souris</strong> n'importe où directement sur le canevas du graphique.</p>
+</blockquote>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/adjust_legends.gif" alt="Ajustement des légendes" width="650"><br>
+  <i>Ajustement des légendes et couleurs du graphique sélectionné.</i>
+</div>
+
+<h5 id="style-de-la-legende">Style de la légende<a class="headerlink" href="#style-de-la-legende" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Commande</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Columns / Frame / Title / Font size / Alpha / Position</strong></td>
+<td>Disposition et apparence de la boîte de légende elle-même.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4 id="43-annotations">4.3 Annotations<a class="headerlink" href="#43-annotations" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/Customize_Annotation.png" alt="Annotations" width="650"><br>
+  <i>La catégorie Annotations de Customize Graph Dialog.</i>
+</div>
+
+<p>La catégorie <strong>Annotations</strong> vous permet de superposer des lignes de référence, des formes géométriques et des étiquettes textuelles sur votre graphique.</p>
+<h5 id="ajouter-des-annotations">Ajouter des annotations<a class="headerlink" href="#ajouter-des-annotations" title="Permanent link">&para;</a></h5>
+<p>Cliquez sur l'un des boutons en haut pour ajouter une annotation au centre de la vue courante :</p>
+<table>
+<thead>
+<tr>
+<th>Bouton</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>V-Line</strong> / <strong>H-Line</strong></td>
+<td>Ajoute une ligne de référence verticale/horizontale (par défaut : rouge/bleu, pointillée).</td>
+</tr>
+<tr>
+<td><strong>Text</strong></td>
+<td>Ajoute une étiquette de texte avec fond arrondi (par défaut : fond jaune).</td>
+</tr>
+<tr>
+<td><strong>Arrow</strong></td>
+<td>Ajoute une flèche reliant deux points.</td>
+</tr>
+<tr>
+<td><strong>V-Span</strong> / <strong>H-Span</strong></td>
+<td>Ajoute une bande ombrée verticale/horizontale entre deux valeurs.</td>
+</tr>
+<tr>
+<td><strong>Box</strong></td>
+<td>Ajoute un rectangle plein ou uniquement contouré.</td>
+</tr>
+<tr>
+<td><strong>Callout</strong></td>
+<td>Ajoute une étiquette texte munie d'une flèche pointant vers un point précis des données.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="gerer-les-annotations">Gérer les annotations<a class="headerlink" href="#gerer-les-annotations" title="Permanent link">&para;</a></h5>
+<p>Toutes les annotations existantes sont listées sous les boutons. Sélectionnez une annotation pour utiliser <strong>Edit</strong> ou <strong>Delete</strong>. Chaque fenêtre d'édition expose les propriétés propres au type choisi — couleur, style et épaisseur de ligne/bande/cadre ; contenu texte, taille de police, couleur et arrière-plan ; extrémités de flèche et point d'attache.</p>
+<blockquote>
+<p><strong>Astuce</strong> : Les annotations peuvent être <strong>déplacées à la souris</strong> directement sur le canevas du graphique. Leur position est conservée lors de la sauvegarde de l'espace de travail. Un double-clic sur une annotation du canevas ouvre également sa boîte d'édition.</p>
+</blockquote>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/adjust_annotation.gif" alt="Ajustement des annotations" width="600"><br>
+  <i>Ajustement de la position et de l'apparence des annotations sur le graphique sélectionné.</i>
+</div>
+
+<hr />
+<h4 id="44-general-typography-et-plot-style-fitting">4.4 General &amp; Typography et Plot Style &amp; Fitting<a class="headerlink" href="#44-general-typography-et-plot-style-fitting" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/Customize_MoreOptions.png" alt="Options générales et de style de tracé" width="450"><br>
+  <i>Typographie, tri et options spécifiques au style dans Customize Graph Dialog.</i>
+</div>
+
+<p>Les catégories <strong>General &amp; Typography</strong> et <strong>Plot Style &amp; Fitting</strong> regroupent la typographie globale, le thème et les paramètres de tri ainsi que les commandes propres à chaque style (barres d'erreur, courbes de tendance et histogrammes).</p>
+<h5 id="options-de-style-de-trace-et-barres-derreur-plot-style-fitting">Options de style de tracé et barres d'erreur (<code>Plot Style &amp; Fitting</code>)<a class="headerlink" href="#options-de-style-de-trace-et-barres-derreur-plot-style-fitting" title="Permanent link">&para;</a></h5>
+<p>Ces commandes s'adaptent au style de graphique actif :</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Style applicable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Join data points</strong></td>
+<td><code>point</code></td>
+<td>Relie les moyennes entre catégories par des segments.</td>
+</tr>
+<tr>
+<td><strong>Dodge overlapping points</strong></td>
+<td><code>point</code></td>
+<td>Décale horizontalement les groupes de couleur (<code>hue</code>) qui se superposent pour éviter les chevauchements.</td>
+</tr>
+<tr>
+<td><strong>Dodge overlapping points</strong></td>
+<td><code>scatter</code></td>
+<td>Décale horizontalement les groupes de couleur qui se superposent sur les nuages de points.</td>
+</tr>
+<tr>
+<td><strong>Show statistics summary</strong></td>
+<td><code>wafer</code></td>
+<td>Superpose un résumé statistique (moyenne, écart-type, min, max, uniformité) sur la carte <em>wafer</em>.</td>
+</tr>
+<tr>
+<td><strong>Show error bars</strong></td>
+<td><code>bar</code></td>
+<td>Affiche des barres d'erreur au sommet de chaque barre.</td>
+</tr>
+<tr>
+<td><strong>Error bar type</strong></td>
+<td><code>point</code>, <code>line</code>, <code>bar</code></td>
+<td><code>Std. Dev.</code>, <code>Std. Error</code>, <code>95% CI</code> ou <code>None</code> (les options dépendent du style de tracé).</td>
+</tr>
+<tr>
+<td><strong>Cap size</strong></td>
+<td><code>point</code>, <code>line</code>, <code>bar</code></td>
+<td>Largeur des embouts horizontaux des barres d'erreur.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="affichage-grille-et-tailles-de-police-general-typography">Affichage, grille et tailles de police (<code>General &amp; Typography</code>)<a class="headerlink" href="#affichage-grille-et-tailles-de-police-general-typography" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Style applicable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Figure theme</strong></td>
+<td>tous les styles</td>
+<td>Jeu de couleurs de la figure : <code>Light</code> ou <code>Dark</code>.</td>
+</tr>
+<tr>
+<td><strong>X label rotation</strong></td>
+<td>tous les styles</td>
+<td>Fait pivoter les étiquettes des graduations de l'axe X (0–90°).</td>
+</tr>
+<tr>
+<td><strong>Show grid lines</strong></td>
+<td>tous les styles</td>
+<td>Active ou désactive les lignes de grille en arrière-plan du graphique.</td>
+</tr>
+</tbody>
+</table>
+<p>Réglez indépendamment la taille en points de <strong>Title</strong>, <strong>Axis label</strong>, <strong>Tick label</strong> et <strong>Colorbar</strong> (valeurs par défaut : 12/12/9/10). Le réglage <strong>Colorbar</strong> contrôle la taille du texte des graduations sur les barres de couleur des graphiques <code>wafer</code>/<code>2Dmap</code>. Le sous-titre n'a pas de contrôle de taille propre — il s'affiche toujours 2 pt plus petit que le titre ; son <em>texte</em> se modifie dans le panneau latéral et non ici.</p>
+<h5 id="tri-des-donnees-general-typography">Tri des données (<code>General &amp; Typography</code>)<a class="headerlink" href="#tri-des-donnees-general-typography" title="Permanent link">&para;</a></h5>
+<p>Contrôle l'ordre d'affichage des catégories et des éléments de légende :</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Enable intelligent data sorting</strong></td>
+<td>Lorsqu'elle est cochée, trie de façon déterministe le jeu de données sous-jacent avant le tracé (recommandé). Si décochée, le graphique respecte strictement l'ordre initial des lignes du jeu de données.</td>
+</tr>
+<tr>
+<td><strong>Sort by</strong></td>
+<td>Lorsque le tri est activé, choisissez l'axe cible du tri :<br>- <strong>Z (hue values)</strong> : Trie principalement par groupe de légende (par défaut).<br>- <strong>X values</strong> : Trie selon les catégories de l'axe X.<br>- <strong>Y values</strong> : Trie les données par ordre croissant selon la métrique Y.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Remarque</strong> : Désactiver le tri intelligent est utile si votre jeu de données est déjà pré-trié et que vous souhaitez conserver exactement cette séquence. Lorsque vous modifiez les réglages de tri, les couleurs de la légende sont automatiquement réinitialisées selon l'ordre de la palette par défaut afin de préserver une association chromatique cohérente.</p>
+</blockquote>
+<h5 id="parametres-de-courbe-de-tendance-plot-style-fitting">Paramètres de courbe de tendance (<code>Plot Style &amp; Fitting</code>)<a class="headerlink" href="#parametres-de-courbe-de-tendance-plot-style-fitting" title="Permanent link">&para;</a></h5>
+<p>Visibles uniquement lorsque le style de tracé est <code>trendline</code> :</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Polynomial order</strong></td>
+<td>Degré de l'ajustement polynomial (1 = linéaire, 2 = quadratique, …, jusqu'à 10).</td>
+</tr>
+<tr>
+<td><strong>Anchor point</strong></td>
+<td>Force la courbe à passer par un point donné. Choisissez <strong>Origin (0, 0)</strong> ou saisissez un point <strong>personnalisé (X₀, Y₀)</strong>.</td>
+</tr>
+<tr>
+<td><strong>Fit equation(s)</strong></td>
+<td>Affiche l'équation calculée et le coefficient R² pour chaque groupe dans un tableau. Cliquez sur <strong>Copy</strong> pour copier au format texte tabulé (collable directement dans Excel).</td>
+</tr>
+</tbody>
+</table>
+<h5 id="parametres-dhistogramme-plot-style-fitting">Paramètres d'histogramme (<code>Plot Style &amp; Fitting</code>)<a class="headerlink" href="#parametres-dhistogramme-plot-style-fitting" title="Permanent link">&para;</a></h5>
+<p>Visibles uniquement lorsque le style de tracé est <code>histogram</code> :</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bins</strong></td>
+<td>Nombre de classes de l'histogramme (2–500, 20 par défaut).</td>
+</tr>
+<tr>
+<td><strong>Overlay KDE curve</strong></td>
+<td>Superpose une courbe lissée d'estimation de densité par noyau (KDE) sur l'histogramme.</td>
+</tr>
+<tr>
+<td><strong>Fill style</strong></td>
+<td>Choisissez des barres <strong>Filled</strong> (pleines, par défaut) ou <strong>Step</strong> (contour uniquement).</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Échelle de couleur (wafer / 2Dmap)</strong> : la normalisation de l'échelle de couleur (<code>Linear</code> / <code>Logarithmic</code> / <code>Centered</code>) se trouve dans <strong>Axes &amp; Limits</strong> sous le nom <strong>Z axis Scale</strong>.</p>
+</blockquote>
+<p><br></p>
+<hr />
+<h3 id="5-filtrage-des-donnees"><strong>5. Filtrage des données</strong><a class="headerlink" href="#5-filtrage-des-donnees" title="Permanent link">&para;</a></h3>
+<p>Vous pouvez filtrer dynamiquement les données tracées à l'aide d'expressions logiques booléennes dans le champ <strong>Filter</strong> selon la syntaxe : <code>(nom_colonne) (opérateur) (valeur)</code>.</p>
+<blockquote>
+<p><strong>Remarque</strong> : Les chaînes de caractères doivent être encadrées par des guillemets doubles (<code>"text"</code>). Les noms de colonnes contenant des espaces doivent être encadrés par des accents graves (<code>`column name`</code>).</p>
+</blockquote>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/data_filter.png" alt="Filtre de données" width="350"><br>
+  <i>Exemple illustrant l'application dynamique de filtres à un jeu de données.</i>
+</div>
+<p><br></p>
+<table>
+<thead>
+<tr>
+<th>Expression de filtre</th>
+<th>Résultat obtenu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Confocal != "high"</code></td>
+<td>Exclut tous les points pour lesquels la colonne « Confocal » vaut « high ».</td>
+</tr>
+<tr>
+<td><code>Thickness == "1ML" or Thickness == "3ML"</code></td>
+<td>Conserve uniquement les points pour lesquels la colonne « Thickness » vaut exactement « 1ML » ou « 3ML ».</td>
+</tr>
+<tr>
+<td><code>`Laser Power` &lt;= 5</code></td>
+<td>Conserve les points pour lesquels la colonne « Laser Power » est inférieure ou égale à 5.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="6-details-des-calculs-statistiques-et-dajustement"><strong>6. Détails des calculs statistiques et d'ajustement</strong><a class="headerlink" href="#6-details-des-calculs-statistiques-et-dajustement" title="Permanent link">&para;</a></h3>
+<p>Pour les styles de tracé statistiques (<code>point</code>, <code>bar</code>, <code>box</code> et <code>trendline</code>), SPECTROview calcule automatiquement les indicateurs clés et représente la distribution de vos données.</p>
+<h4 id="61-graphiques-en-points-et-en-barres-point-et-bar">6.1 <strong>Graphiques en points et en barres (<code>point</code> et <code>bar</code>)</strong><a class="headerlink" href="#61-graphiques-en-points-et-en-barres-point-et-bar" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Valeur centrale (Moyenne)</strong> : Le point principal (marqueur circulaire d'un tracé <code>point</code> ou sommet de la barre d'un tracé <code>bar</code>) représente la <strong>moyenne arithmétique</strong> de toutes les valeurs Y pour une catégorie X donnée.</li>
+<li><strong>Barres d'erreur (IC 95 %)</strong> : Les barres d'erreur de part et d'autre de la moyenne représentent l'<strong>intervalle de confiance à 95 %</strong> de la moyenne, calculé à partir de l'erreur type sur la moyenne (SEM) :
+  <code>Error Bar = ± (1.96 × SEM)</code>
+  où <code>SEM = Standard Deviation / sqrt(N)</code>.</li>
+</ul>
+<h4 id="62-boite-a-moustaches-box">6.2 <strong>Boîte à moustaches (<code>box</code>)</strong><a class="headerlink" href="#62-boite-a-moustaches-box" title="Permanent link">&para;</a></h4>
+<p>Le tracé <code>box</code> représente nativement la distribution statistique du jeu de données selon le résumé standard en cinq nombres :</p>
+<ul>
+<li><strong>Limites de la boîte (Q1 à Q3)</strong> : Le corps de la boîte s'étend du premier quartile (25e percentile) au troisième quartile (75e percentile), soit l'écart interquartile (IQR).</li>
+<li><strong>Ligne médiane</strong> : Le trait horizontal à l'intérieur de la boîte indique la <strong>médiane</strong> (50e percentile).</li>
+<li><strong>Moustaches</strong> : Les moustaches s'étendent jusqu'aux points les plus éloignés situés à moins de <code>1.5 × IQR</code> des bords de la boîte.</li>
+<li><strong>Valeurs aberrantes (Fliers)</strong> : Tous les points situés au-delà des moustaches sont représentés individuellement comme points aberrants.</li>
+</ul>
+<h4 id="63-estimation-des-courbes-de-tendance-trendline">6.3 <strong>Estimation des courbes de tendance (<code>trendline</code>)</strong><a class="headerlink" href="#63-estimation-des-courbes-de-tendance-trendline" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>Ajustement standard (sans ancrage)</strong> : La courbe de tendance est calculée par régression linéaire aux moindres carrés ordinaires (OLS) sur un polynôme du degré spécifié :
+  <code>y = p₀·xᵈ + p₁·xᵈ⁻¹ + ... + p_d</code>
+  où <code>d</code> est l'ordre du polynôme.</p>
+</li>
+<li>
+<p><strong>Ajustement ancré (contraint à passer par un point (x₀, y₀))</strong> : Le repère est translaté pour placer le point d'ancrage à l'origine (<code>x' = x - x₀</code>, <code>y' = y - y₀</code>). Un polynôme sans terme constant (ordonnée à l'origine nulle) est alors ajusté sur les variables translatées :</p>
+</li>
+<li><strong>Pour un ordre linéaire (1)</strong> : La pente <code>m</code> est directement calculée par :
+    <code>m = sum(x'_i * y'_i) / sum((x'_i)²)</code></li>
+<li><strong>Pour des ordres supérieurs (&gt;1)</strong> : Les données translatées sont ajustées sans terme constant par un solveur linéaire aux moindres carrés.
+  La courbe ajustée est ensuite ramenée dans l'espace de coordonnées d'origine.</li>
+</ul>
+<h4 id="64-intervalles-de-confiance-des-courbes-de-tendance">6.4 <strong>Intervalles de confiance des courbes de tendance</strong><a class="headerlink" href="#64-intervalles-de-confiance-des-courbes-de-tendance" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Niveau de confiance</strong> : La bande ombrée autour des courbes de tendance standard représente l'<strong>intervalle de confiance à 95 %</strong> de la réponse moyenne ajustée.</li>
+<li><strong>Méthode d'estimation</strong> : L'intervalle est calculé <strong>analytiquement</strong> à partir des résidus de régression : l'erreur type de l'estimation <code>SE = sqrt(Σ(yᵢ − ŷᵢ)² / (N − 2))</code> est combinée à la formule standard de réponse moyenne <code>± 1.96 · SE · sqrt(1/N + (x − x̄)² / Σ(xᵢ − x̄)²)</code>, ce qui explique l'élargissement de la bande aux extrémités des données (remplaçant une ancienne estimation par bootstrap sous Seaborn ; l'espace Graphs n'utilise plus Seaborn).</li>
+<li><strong>Ajustements ancrés</strong> : Les intervalles de confiance ne sont calculés et affichés que pour les ajustements libres. Lorsqu'un point d'ancrage est activé, la bande de confiance est omise.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Retour en haut de la page
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Pied de page" >
+        
+          
+          <a href="../spectra_maps/" class="md-footer__link md-footer__link--prev" aria-label="Précédent: Espaces Spectra et Maps">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Précédent
+              </span>
+              <div class="md-ellipsis">
+                Espaces Spectra et Maps
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../mva/" class="md-footer__link md-footer__link--next" aria-label="Suivant: Analyse multivariée (MVA)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Suivant
+              </span>
+              <div class="md-ellipsis">
+                Analyse multivariée (MVA)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

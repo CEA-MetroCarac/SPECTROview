@@ -1,0 +1,2955 @@
+
+<!doctype html>
+<html lang="fr" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Outil interactif de traitement, d'ajustement et de visualisation de données spectroscopiques">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/fr/developer/graphs/">
+      
+      
+        <link rel="prev" href="../maps/">
+      
+      
+        <link rel="next" href="../vbf_engine/">
+      
+      
+        
+          <link rel="alternate" href="../../../developer/graphs/" hreflang="en">
+        
+          <link rel="alternate" href="./" hreflang="fr">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Espace Graphs - Documentation SPECTROview</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#espace-de-travail-graphs" class="md-skip">
+          Aller au contenu
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="../../" title="Documentation SPECTROview" class="md-header__button md-logo" aria-label="Documentation SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Documentation SPECTROview
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Espace Graphs
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Sélectionner la langue"
+      title="Sélectionner la langue"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">FR</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../developer/graphs/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="fr"
+              class="md-select__link" aria-current="true"
+            >
+              Français
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Recherche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initialisation de la recherche
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Onglets" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Accueil
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Manuel utilisateur
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Agent IA
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guide développeur
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Historique des versions
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="Documentation SPECTROview" class="md-nav__button md-logo" aria-label="Documentation SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    Documentation SPECTROview
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accueil
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manuel utilisateur
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Manuel utilisateur
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formats pris en charge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Aperçu de l'interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Barre de menus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espaces Spectra et Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analyse multivariée (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calculateurs rapides
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Paramètres
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sauvegarde et chargement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Raccourcis et astuces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent IA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guide développeur
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guide développeur
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline de chargement des fichiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture de données SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Spectra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Graphs
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#vue-densemble-de-larchitecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vue d'ensemble de l'architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classes-principales" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes principales
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes principales">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vmworkspacegraphs-le-viewmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMWorkspaceGraphs — Le ViewModel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VMWorkspaceGraphs — Le ViewModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#signaux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signaux
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mgraph-le-modele-de-configuration-de-trace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MGraph — Le modèle de configuration de tracé
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph_controlpy-contrat-partage-detat-et-de-commande-graphique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_control.py — Contrat partagé d'état et de commande graphique
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vworkspacegraphs-lorchestrateur-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VWorkspaceGraphs — L'orchestrateur View
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vgraph-le-widget-de-rendu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VGraph — Le widget de rendu
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plotrenderer-le-moteur-de-trace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PlotRenderer — Le moteur de tracé
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PlotRenderer — Le moteur de tracé">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#normalisation-des-palettes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Normalisation des palettes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#flux-de-donnees-creation-dun-graphique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flux de données : Création d'un graphique
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Flux de données : Création d&#39;un graphique">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#flux-de-donnees-mise-a-jour-ia-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flux de données : Mise à jour IA / MCP
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#styles-de-trace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Styles de tracé
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Styles de tracé">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prise-en-charge-multi-axes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prise en charge multi-axes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gestion-des-dataframes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gestion des DataFrames
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Gestion des DataFrames">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chargement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chargement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#suivi-des-sources-et-actualisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suivi des sources et actualisation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#injection-programmatique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Injection programmatique
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#systeme-de-filtrage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Système de filtrage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Système de filtrage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#flux-multi-wafer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flux multi-wafer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#personnalisation-des-graphiques" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Personnalisation des graphiques
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Personnalisation des graphiques">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#customizegraphdialog-singleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CustomizeGraphDialog (Singleton)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apercu-temps-reel-et-chemin-rapide-restyle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aperçu temps réel et chemin rapide Restyle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph_stylepy-partition-style-donnees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_style.py — Partition style / données
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph_commitpy-suivi-des-modifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_commit.py — Suivi des modifications
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annuler-retablir" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annuler / Rétablir
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raccourcis-clavier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raccourcis clavier
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-typography-tabgeneral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General &amp; Typography (TabGeneral)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#axes-limits-tabaxeslimits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Axes &amp; Limits (TabAxesLimits)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ticks-spines-tabticksspines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ticks &amp; Spines (TabTicksSpines)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#legend-series-tablegendseries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legend &amp; Series (TabLegendSeries)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plot-style-fitting-tabplotstyles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plot Style &amp; Fitting (TabPlotStyles)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotations-tabannotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations (TabAnnotations)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secondary-inset-axes-tabsecondaryinset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secondary &amp; Inset Axes (TabSecondaryInset)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modeles-de-style-et-recettes-de-trace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modèles de style et recettes de tracé
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#export-et-compositeur-multi-panneaux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Export et compositeur multi-panneaux
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gestion-de-la-zone-mdi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gestion de la zone MDI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Gestion de la zone MDI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stockage-des-graphiques" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stockage des graphiques
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persistance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persistance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Persistance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dossier-de-travail-spectroview-working-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dossier de travail SPECTROview (Working Folder)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#format-de-sauvegarde-graphs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Format de sauvegarde (.graphs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#replication-de-graphiques" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Réplication de graphiques
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moteur d'ajustement vectorisé par lots (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analyse multivariée (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent IA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Serveur MCP local
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Spectra (chargement, prétraitement, ajustement)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Espace Maps (hyperspectral, cartes thermiques)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualisation de données (Graphs)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calculateurs rapides
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Étendre SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Historique des versions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Accueil
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Guide développeur
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="espace-de-travail-graphs"><strong>Espace de travail : Graphs</strong><a class="headerlink" href="#espace-de-travail-graphs" title="Permanent link">&para;</a></h1>
+<p>L'espace <strong><code>Graphs</code></strong> est un environnement autonome de tracé statistique. Il gère des DataFrames (issus de fichiers ou injectés depuis d'autres espaces), applique des filtres dynamiques et produit des graphiques prêts pour la publication en pur <code>Matplotlib</code> (avec <code>scipy</code> pour les statistiques) au sein d'une zone MDI (<em>Multiple Document Interface</em>). Il ne dépend plus de Seaborn — chaque style de tracé est dessiné directement avec des primitives Matplotlib dans <code>PlotRenderer</code>.</p>
+<hr />
+<h2 id="vue-densemble-de-larchitecture"><strong>Vue d'ensemble de l'architecture</strong><a class="headerlink" href="#vue-densemble-de-larchitecture" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>graph TD
+    GUI["Panneau latéral / Dialogue Customize"] --&gt; GCL["graph_control : GraphPatch + validation"]
+    AI["Commandes typées IA / MCP"] --&gt; GCL
+    GCL --&gt; VMWG["VMWorkspaceGraphs"]
+    VWG["VWorkspaceGraphs"] --&gt; MDI["QMdiArea"]
+    MDI --&gt; VG["VGraph"]
+    VG --&gt; PR["PlotRenderer"]
+    VWG --&gt; DF["DataFilter"]
+    VWG --&gt; CGD["CustomizeGraphDialog"]
+    CGD --&gt; GC["graph_commit (instantané/diff)"]
+    CGD --&gt; GS["graph_style (partition style/restyle)"]
+
+    VWG --&gt; RS["MPlotRecipeStore"]
+    VWG --&gt; STS["MStyleTemplateStore"]
+    VWG --&gt; EXP["VExportDialog / VBatchExportDialog"]
+    VWG --&gt; MP["VMultiPanelDialog"]
+
+    VWG --&gt;|"appelle"| GCL
+    VMWG --&gt;|"signaux"| VWG
+    VMWG --&gt; MG["MGraph"]
+    VMWG --&gt; UNDO["Piles annuler/rétablir"]</code></pre>
+<hr />
+<h2 id="classes-principales"><strong>Classes principales</strong><a class="headerlink" href="#classes-principales" title="Permanent link">&para;</a></h2>
+<h3 id="vmworkspacegraphs-le-viewmodel"><strong><code>VMWorkspaceGraphs</code> — Le ViewModel</strong><a class="headerlink" href="#vmworkspacegraphs-le-viewmodel" title="Permanent link">&para;</a></h3>
+<p><strong>Fichier</strong> : <code>spectroview/viewmodel/graphs/vm_workspace_graphs.py</code> (avec annulation/rétablissement dans <code>spectroview/viewmodel/graphs/graph_undo.py</code>)</p>
+<p>Gère les DataFrames, les modèles de graphiques et l'historique annuler/rétablir de l'espace de travail. Contrairement aux ViewModels <code>Spectra</code>/<code>Maps</code>, celui-ci reste relativement léger — la logique lourde de rendu réside dans le widget <code>VGraph</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Responsabilité</th>
+<th>Méthodes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Chargement de DataFrames</strong></td>
+<td><code>load_dataframes(paths)</code> — Prend en charge <code>.xlsx</code>, <code>.xls</code>, <code>.csv</code></td>
+</tr>
+<tr>
+<td><strong>Gestion des DataFrames</strong></td>
+<td><code>add_dataframe()</code>, <code>remove_dataframe()</code>, <code>select_dataframe()</code>, <code>refresh_dataframe()</code></td>
+</tr>
+<tr>
+<td><strong>CRUD graphiques</strong></td>
+<td><code>create_graph()</code>, <code>get_graph()</code>, <code>update_graph()</code>, <code>delete_graph()</code></td>
+</tr>
+<tr>
+<td><strong>Filtrage</strong></td>
+<td><code>apply_filters(df_name, filters)</code> — basé sur <code>pd.DataFrame.query()</code></td>
+</tr>
+<tr>
+<td><strong>Multi-wafer</strong></td>
+<td><code>create_multi_wafer_graphs()</code> — Crée par lots un tracé wafer par slot</td>
+</tr>
+<tr>
+<td><strong>Annuler/rétablir</strong></td>
+<td><code>undo()</code>, <code>redo()</code>, <code>begin_undo_batch()</code>/<code>end_undo_batch()</code>, <code>can_undo</code>/<code>can_redo</code></td>
+</tr>
+<tr>
+<td><strong>Persistance</strong></td>
+<td><code>save_workspace()</code>, <code>load_workspace()</code>, <code>clear_workspace()</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="signaux"><strong>Signaux</strong><a class="headerlink" href="#signaux" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">dataframes_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>           <span class="c1"># Liste des noms de DataFrames mise à jour</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">dataframe_columns_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>    <span class="c1"># Noms des colonnes du DataFrame sélectionné</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">graphs_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>               <span class="c1"># Liste des identifiants de graphiques mise à jour</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">graph_state_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>              <span class="c1"># Toute propriété persistante modifiée (synchro contexte IA)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">undo_state_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>               <span class="c1"># can_undo/can_redo modifié -- synchronise les boutons</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">notify</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>                        <span class="c1"># Notification flottante</span>
+</code></pre></div>
+<h3 id="mgraph-le-modele-de-configuration-de-trace"><strong><code>MGraph</code> — Le modèle de configuration de tracé</strong><a class="headerlink" href="#mgraph-le-modele-de-configuration-de-trace" title="Permanent link">&para;</a></h3>
+<p><strong>Fichier</strong> : <code>spectroview/model/graphs/m_graph.py</code></p>
+<p>Dataclass pure stockant tout le nécessaire pour recréer un graphique. <code>save()</code>/<code>load(data)</code> assurent une sérialisation complète ; <code>get_display_name()</code> construit le titre de la sous-fenêtre MDI. Plutôt que de maintenir ici une liste dupliquée susceptible de dériver (voir <code>m_graph.py</code> pour le schéma exhaustif faisant autorité), les champs se regroupent par domaine :</p>
+<table>
+<thead>
+<tr>
+<th>Catégorie</th>
+<th>Exemples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identité / source de données</td>
+<td><code>graph_id</code>, <code>df_name</code>, <code>plot_style</code>, <code>x</code>/<code>y</code>/<code>z</code>, <code>filters</code></td>
+</tr>
+<tr>
+<td>Limites des axes principaux</td>
+<td><code>xmin</code>/<code>xmax</code>, <code>ymin</code>/<code>ymax</code>, <code>zmin</code>/<code>zmax</code></td>
+</tr>
+<tr>
+<td>Échelle et orientation</td>
+<td><code>xlogscale</code>/<code>ylogscale</code>, <code>xscale_mode</code>/<code>yscale_mode</code>, <code>x_inverted</code>/<code>y_inverted</code></td>
+</tr>
+<tr>
+<td>Axes secondaires (Y2/Y3/X2)</td>
+<td>colonne par axe, <code>color</code>, <code>marker</code>, <code>min</code>/<code>max</code>, <code>logscale</code>, <code>label</code></td>
+</tr>
+<tr>
+<td>Libellés et titres</td>
+<td><code>plot_title</code>, <code>plot_subtitle</code>, <code>xlabel</code>/<code>ylabel</code>/<code>zlabel</code></td>
+</tr>
+<tr>
+<td>Style et apparence</td>
+<td><code>grid</code>, <code>tick_direction</code>, <code>tick_label_format</code>, tailles de polices, <code>figure_facecolor</code>, <code>figure_margins</code>, <code>spines_visible</code>, <code>figure_theme</code>, graduations secondaires</td>
+</tr>
+<tr>
+<td>Légende</td>
+<td><code>legend_visible</code>, <code>legend_outside</code>, <code>legend_properties</code>, <code>legend_bbox</code>, <code>legend_ncol</code>, <code>legend_frame</code>, <code>legend_title</code>, <code>legend_fontsize</code>, <code>legend_alpha</code>, <code>legend_loc</code></td>
+</tr>
+<tr>
+<td>Spécifique au style de tracé</td>
+<td>palette wafer/2Dmap (<code>color_palette</code>, <code>colormap_norm</code>, <code>colormap_center</code>), ajustement/ancrage trendline, barres d'erreur, point/scatter (<code>scatter_size</code>, <code>scatter_edgecolor</code>, <code>unify_marker_style</code>), histogramme, ordre de tri</td>
+</tr>
+<tr>
+<td>Annotations</td>
+<td><code>annotations</code> (liste de dicts typés, voir <a href="#annotations-tabannotations">Annotations (<code>TabAnnotations</code>)</a>)</td>
+</tr>
+<tr>
+<td>Axe interrompu</td>
+<td><code>axis_breaks</code></td>
+</tr>
+<tr>
+<td>Axes en incrustation (zoom)</td>
+<td><code>inset_enabled</code>, <code>inset_bounds</code>, <code>inset_xmin</code>/<code>xmax</code>/<code>ymin</code>/<code>ymax</code>, <code>inset_show_zoom_indicator</code></td>
+</tr>
+<tr>
+<td>Export et géométrie de fenêtre</td>
+<td><code>plot_width</code>/<code>height</code>, <code>dpi</code>, <code>export_width_mm</code>/<code>height_mm</code></td>
+</tr>
+</tbody>
+</table>
+<p>Remarque : les modèles de style, les recettes de tracé et le dossier de travail ne sont <strong>pas</strong> des champs de <code>MGraph</code> — ce sont des systèmes distincts bâtis autour de sous-ensembles de ces champs (voir <a href="#modeles-de-style-et-recettes-de-trace">Modèles de style et recettes de tracé</a>).</p>
+<h3 id="graph_controlpy-contrat-partage-detat-et-de-commande-graphique"><strong><code>graph_control.py</code> — Contrat partagé d'état et de commande graphique</strong><a class="headerlink" href="#graph_controlpy-contrat-partage-detat-et-de-commande-graphique" title="Permanent link">&para;</a></h3>
+<p><strong>Fichier</strong> : <code>spectroview/model/graphs/graph_control.py</code></p>
+<p>Toutes les mutations GUI, IA et MCP convergent vers cette couche sans Qt avant d'atteindre <code>MGraph</code>. <code>GraphPatch</code> est généré automatiquement à partir des champs de la dataclass, de sorte que le schéma MCP expose de lui-même chaque propriété mutable. Les structures imbriquées importantes (filtres, styles par série, bordures, coupures d'axes et les huit types d'annotations) disposent chacune d'un schéma strict.</p>
+<p><code>normalize_graph_patch()</code> valide un patch sur l'état fusionné sans mutation : clés inconnues, nullabilité, plages, valeurs énumérées, colonnes, limites, géométrie d'incrustation, structure des annotations et exclusion mutuelle avec les coupures d'axes sont vérifiés d'un bloc. <code>apply_graph_patch()</code> applique ensuite atomiquement le patch déjà validé. Les champs omis sont préservés ; un <code>null</code> explicite n'efface que les propriétés nullables. Tout changement d'identité des données ou séries réinitialise <code>legend_properties</code> sauf si l'appelant fournit une liste de remplacement.</p>
+<p>Ce contrat reste volontairement indépendant du moteur de rendu. La View reste responsable de la création de figure/canevas Matplotlib, de l'évaluation des filtres, du ré-affichage, de la géométrie de fenêtre et du rafraîchissement d'un dialogue Customize ouvert.</p>
+<h3 id="vworkspacegraphs-lorchestrateur-view"><strong><code>VWorkspaceGraphs</code> — L'orchestrateur View</strong><a class="headerlink" href="#vworkspacegraphs-lorchestrateur-view" title="Permanent link">&para;</a></h3>
+<p><strong>Paquet</strong> : <code>spectroview/view/workspaces/graphs/</code> (<code>v_workspace_graphs.py</code>, <code>v_mdi_subwindow.py</code>, <code>v_graphs_ui.py</code>, <code>v_graphs_dataframes.py</code>, <code>v_graphs_mdi.py</code>, <code>v_graphs_actions.py</code>)</p>
+<p><code>VWorkspaceGraphs</code> assemble l'interface de l'espace Graphs (<code>GraphsUIMixin</code>), le panneau de sélection/filtrage des DataFrames (<code>GraphsDataFramesMixin</code>), la gestion des fenêtres MDI, mosaïque/cascade et barre active (<code>GraphsMdiMixin</code>), et les actions de création/mise à jour/export/annulation/modèles (<code>GraphsActionsMixin</code>), en encapsulant chaque <code>VGraph</code> dans un <code>MdiSubWindow</code>.</p>
+<h3 id="vgraph-le-widget-de-rendu"><strong><code>VGraph</code> — Le widget de rendu</strong><a class="headerlink" href="#vgraph-le-widget-de-rendu" title="Permanent link">&para;</a></h3>
+<p><strong>Paquet</strong> : <code>spectroview/view/components/graphs/</code> (<code>v_graph.py</code> avec <code>v_graph_canvas.py</code>, <code>v_graph_breaks.py</code>, <code>v_graph_axes.py</code>, <code>v_graph_annotations.py</code>)</p>
+<p>Chaque graphique de la zone MDI est une instance de <code>VGraph</code>. Il possède une <code>Figure</code> + <code>FigureCanvas</code> Matplotlib et joue le rôle d'enveloppe UI. Il gère les interactions, menus contextuels et actions de barre d'outils (menu Style, Export, Replicate), mais délègue le tracé effectif à <code>PlotRenderer</code>. <code>create_plot_widget()</code> construit la barre de navigation Matplotlib et la rangée de boutons d'action propres à chaque <code>VGraph</code> (<code>self.toolbar_container</code>), sans les ajouter dans la mise en page du graphique lui-même — voir <a href="#gestion-de-la-zone-mdi">la barre d'outils inférieure</a> pour son hébergement réel.</p>
+<p><strong>Réactivité lors du redimensionnement et du déplacement.</strong> Chaque figure utilise <code>layout="compressed"</code>, et chaque redessin Agg réexécute la mise en page contrainte, ce qui coûte plusieurs centaines de millisecondes. Trois mécanismes garantissent la fluidité :</p>
+<ul>
+<li><code>MdiSubWindow</code> active <code>RubberBandResize</code>/<code>RubberBandMove</code>. Faire glisser un bord ou une barre de titre ne déplace qu'un contour léger, et le canevas n'est redimensionné et retracé qu'<strong>une seule fois</strong> au relâchement de la souris.</li>
+<li><code>VGraph.canvas</code> est un <code>_DebouncedFigureCanvas</code>. Le premier <code>resizeEvent</code> d'une rafale s'applique immédiatement ; les suivants survenant dans <code>RESIZE_DEBOUNCE_MS</code> (60 ms) fusionnent en un seul redessin final. Cela couvre les redimensionnements hors contour (mosaïque, maximisation, séparateur). Le temporisateur anti-rebond est parenté au canevas.</li>
+<li><code>VGraph.toolbar</code> est un <code>_FastNavigationToolbar</code>, l'assistant <code>NavigationToolbar2QT</code> masqué pilotant Pan/Zoom. Il suspend le moteur de mise en page entre <code>press_pan</code> et <code>release_pan</code> (seules les limites des axes changent pendant le glisser), limite la cadence à ~30 FPS (<code>PAN_FRAME_S</code>) et restaure le moteur avec un redessin complet au relâchement.</li>
+</ul>
+<p>Deux chemins de rendu existent :</p>
+<ul>
+<li><strong><code>plot(df)</code></strong> — redessin complet : efface et reconstruit les axes de zéro. Indispensable dès que les artistes eux-mêmes changent (données des séries, couleurs/marqueurs par point, palette, axes jumeaux secondaires, annotations, incrustations) ou qu'une coupure d'axe est active/basculée.</li>
+<li><strong><code>restyle()</code></strong> — chemin rapide qui repeint sur place des axes déjà tracés (titres/libellés/tailles de police, grille, direction/format des graduations, limites des axes principaux, échelles log/symlog, couleur de fond/bordures/marges, style de la boîte de légende) sans toucher aux données tracées. Avant de basculer un axe vers <code>"log"</code>, <code>GraphAxesStyleMixin</code> (<code>v_graph_axes.py</code>) assainit les bornes automatiques linéaires non positives via <code>_sanitize_log_axis_limits()</code> afin que Matplotlib n'émette pas d'avertissement. Retourne <code>False</code> (déclenchant un redessin complet) dès qu'une coupure d'axe est active. Voir <a href="#apercu-temps-reel-et-chemin-rapide-restyle">Aperçu temps réel et chemin rapide Restyle</a> pour le choix entre les deux chemins.</li>
+</ul>
+<p><code>_set_figure_style()</code> ré-applique <code>axes.facecolor</code>/<code>figure.facecolor</code>/<code>axes.labelcolor</code>/<code>text.color</code>/<code>xtick.color</code>/<code>ytick.color</code>/<code>axes.edgecolor</code> depuis <code>plt.rcParams</code> à chaque rendu — indispensable car <code>ax.clear()</code> ne repeint pas rétroactivement des axes créés sous un autre style Matplotlib, ce qui laissait autrefois des graduations ou libellés noirs après un passage au thème sombre.</p>
+<h3 id="plotrenderer-le-moteur-de-trace"><strong><code>PlotRenderer</code> — Le moteur de tracé</strong><a class="headerlink" href="#plotrenderer-le-moteur-de-trace" title="Permanent link">&para;</a></h3>
+<p><strong>Fichiers</strong> : <code>spectroview/view/components/graphs/v_plot_renderer.py</code> (composé avec <code>SpatialPlotMixin</code> et <code>WaferPlot</code> dans <code>v_plot_spatial.py</code>)</p>
+<p>Séparé de <code>VGraph</code> par souci de maintenabilité, ce module encapsule le tracé Matplotlib pur pour tous les styles (ex. <code>_plot_scatter</code>, <code>_plot_histogram</code> et <code>WaferPlot</code>). Il reçoit une référence vers l'instance <code>VGraph</code> (<code>self.vg</code>) pour lire sa configuration et trace directement sur les <code>Axes</code> Matplotlib.</p>
+<h4 id="normalisation-des-palettes">Normalisation des palettes<a class="headerlink" href="#normalisation-des-palettes" title="Permanent link">&para;</a></h4>
+<p><code>_build_color_norm(vmin, vmax, norm_kind, center)</code> construit la normalisation chromatique des cartes thermiques <code>wafer</code>/<code>2Dmap</code> à partir de <code>MGraph.colormap_norm</code> (<code>"linear"</code>/<code>"log"</code>/<code>"centered"</code>) et <code>MGraph.colormap_center</code>, éditables dans l'onglet <strong>Axes &amp; Limits</strong> sous le contrôle d'échelle <strong>Z axis</strong>. <code>"log"</code> emploie <code>LogNorm</code>, <code>"centered"</code> emploie <code>CenteredNorm</code> (idéal pour les données divergentes centrées autour de 0 comme la contrainte), et les deux retombent proprement en échelle linéaire <code>vmin</code>/<code>vmax</code> lorsque les données ne sont pas valides pour la normalisation demandée.</p>
+<p><code>_plot_wafer</code> et <code>_plot_2dmap</code> passent d'abord <code>vmin</code>/<code>vmax</code> par <code>_clear_degenerate_zlim(zmin, zmax)</code>, traitant un couple explicite <code>zmin == zmax</code> comme non défini pour retrouver l'étendue des données (évitant ainsi qu'anciens fichiers <code>.graphs</code> enregistrés avec <code>zmin == zmax == 0.0</code> n'écrasent toute la carte sur une couleur unique).</p>
+<p><code>_resolve_marker_size(style, fallback)</code> et <code>_resolve_edge_color(style, fallback)</code> centralisent le comportement « Unify Marker size / Edge color » (voir <a href="#legend-series-tablegendseries">Legend &amp; Series (<code>TabLegendSeries</code>)</a>).</p>
+<hr />
+<h2 id="flux-de-donnees-creation-dun-graphique"><strong>Flux de données : Création d'un graphique</strong><a class="headerlink" href="#flux-de-donnees-creation-dun-graphique" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Action utilisateur</strong> : Sélection d'un DataFrame, configuration des axes X/Y/Z et clic sur « Add plot » dans <code>VWorkspaceGraphs</code>.</li>
+<li><strong>Capture de la configuration</strong> : La View appelle <code>_collect_plot_config()</code> pour rassembler les réglages UI, puis fusionne <code>MSettings.get_default_graph_style()</code> (style par défaut défini par « Set as Default Style ») via <code>_apply_default_style_to_config()</code>. Les champs d'identité de données (<code>x</code>/<code>y</code>/<code>z</code>/<code>df_name</code>/<code>plot_style</code>) priment toujours sur le style par défaut.</li>
+<li><strong>Création du modèle</strong> : La View appelle <code>vm.create_graph(plot_config)</code>. Le ViewModel valide l'ensemble via <code>graph_control</code>, instancie et met à jour atomiquement un <code>MGraph(graph_id)</code>, enregistre un point d'annulation et le retourne.</li>
+<li><strong>Initialisation du widget</strong> : La View crée un widget <code>VGraph(graph_id)</code> et appelle <code>create_plot_widget(dpi)</code> pour préparer le canevas Matplotlib.</li>
+<li><strong>Filtrage des données</strong> : La View récupère <code>filtered_df</code> depuis le ViewModel via <code>vm.apply_filters(df_name, filters)</code>.</li>
+<li><strong>Rendu</strong> : La View appelle <code>VGraph.plot(filtered_df)</code>.</li>
+<li><strong>Exécution du tracé</strong> : <code>VGraph</code> appelle <code>_plot_primary_axis()</code>, qui instancie <code>PlotRenderer(self)</code>, délègue le tracé (<code>self.renderer._plot_scatter()</code>, etc.), puis applique limites, libellés et légendes.</li>
+<li><strong>Intégration UI</strong> : La View place <code>VGraph</code> dans un <code>QMdiSubWindow</code> ajouté à la zone MDI.</li>
+</ol>
+<p>Cette fusion du style par défaut s'applique également à <code>_on_plot_multi_wafer()</code>, mais est volontairement ignorée lors de l'application d'une recette de tracé ou de la réplication d'un graphique existant.</p>
+<h3 id="flux-de-donnees-mise-a-jour-ia-mcp"><strong>Flux de données : Mise à jour IA / MCP</strong><a class="headerlink" href="#flux-de-donnees-mise-a-jour-ia-mcp" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>update_graph</code> valide son <code>GraphPatch</code> typé sur chaque graphique cible et son DataFrame (<code>graph_id="all"</code> est développé avant toute mutation).</li>
+<li>Le serveur MCP met en file un objet typé <code>UpdatePlot</code> sans jamais importer Qt ni modifier un widget.</li>
+<li><code>VMChat</code> convertit les commandes en configurations applicatives et <code>main.py</code> achemine la mise à jour vers <code>VWorkspaceGraphs.update_graphs_from_config()</code>.</li>
+<li>L'espace de travail prévalide toutes les cibles, ouvre un lot d'annulation unique, met à jour chaque <code>MGraph</code>, reconstruit/retrace chaque widget, redimensionne la géométrie explicite et rafraîchit le dialogue Customize s'il est ouvert. Un échec de rendu restaure tous les instantanés afin qu'aucun lot ne soit appliqué partiellement.</li>
+<li><code>graph_state_changed</code> actualise le contexte sérialisé complet transmis à l'IA après toute édition GUI, édition IA, annulation/rétablissement, chargement ou synchronisation issue du rendu.</li>
+</ol>
+<hr />
+<h2 id="styles-de-trace"><strong>Styles de tracé</strong><a class="headerlink" href="#styles-de-trace" title="Permanent link">&para;</a></h2>
+<p>Chaque style de tracé correspond à une méthode <code>PlotRenderer._plot_*</code> dessinant directement avec des primitives Matplotlib (sans Seaborn) :</p>
+<table>
+<thead>
+<tr>
+<th>Style</th>
+<th>Primitive Matplotlib</th>
+<th>Support <code>hue</code></th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>point</code></td>
+<td><code>ax.errorbar()</code></td>
+<td>✓ Colonne Z</td>
+<td>Moyennes par catégorie avec barres d'erreur ; option « Join » pour relier ; seul style doté d'une colonne Marker par série</td>
+</tr>
+<tr>
+<td><code>scatter</code></td>
+<td><code>ax.scatter()</code></td>
+<td>✓ Colonne Z</td>
+<td>Taille/bordure des marqueurs unifiées par défaut (voir case Unify)</td>
+</tr>
+<tr>
+<td><code>box</code></td>
+<td><code>ax.boxplot()</code></td>
+<td>✓ Colonne Z</td>
+<td>Support de palette ; largeur de boîte calculée d'après l'espacement catégoriel</td>
+</tr>
+<tr>
+<td><code>bar</code></td>
+<td><code>ax.bar()</code></td>
+<td>✓ Colonne Z</td>
+<td>Barres d'erreur optionnelles (sd / IC 95 %)</td>
+</tr>
+<tr>
+<td><code>line</code></td>
+<td><code>ax.plot()</code></td>
+<td>✓ Colonne Z</td>
+<td>Tracé linéaire standard</td>
+</tr>
+<tr>
+<td><code>trendline</code></td>
+<td>ajustement <code>np.poly1d</code> + <code>ax.scatter()</code> / <code>ax.plot()</code> / <code>ax.fill_between()</code></td>
+<td>✓ Colonne Z</td>
+<td>Régression polynomiale avec ancrage possible, bande IC 95 % analytique et export des équations</td>
+</tr>
+<tr>
+<td><code>histogram</code></td>
+<td><code>ax.hist()</code> (+ <code>scipy.stats.gaussian_kde</code>)</td>
+<td>✓ Colonne Z</td>
+<td>Nombre de classes personnalisable, courbe KDE optionnelle, barres pleines ou contour</td>
+</tr>
+<tr>
+<td><code>wafer</code></td>
+<td><code>WaferPlot</code> personnalisé (<code>ax.scatter()</code>)</td>
+<td>—</td>
+<td>Visualisation circulaire sur wafer avec sites de puces ; normalisation de palette (linéaire/log/centrée)</td>
+</tr>
+<tr>
+<td><code>2Dmap</code></td>
+<td><code>ax.imshow()</code></td>
+<td>—</td>
+<td>Carte thermique rectangulaire via <code>pivot()</code> ; mêmes options de normalisation de palette que wafer</td>
+</tr>
+</tbody>
+</table>
+<h3 id="prise-en-charge-multi-axes"><strong>Prise en charge multi-axes</strong><a class="headerlink" href="#prise-en-charge-multi-axes" title="Permanent link">&para;</a></h3>
+<p><code>VGraph</code> gère jusqu'à <strong>3 axes Y</strong>, ainsi qu'un axe X secondaire :</p>
+<ul>
+<li><strong>Y principal</strong> (<code>self.ax</code>) : Axe gauche standard</li>
+<li><strong>Y secondaire</strong> (<code>self.ax2</code>) : Axe droit, créé via <code>ax.twinx()</code></li>
+<li><strong>Y tertiaire</strong> (<code>self.ax3</code>) : Axe droit déporté vers l'extérieur</li>
+<li><strong>X secondaire</strong> (<code>x2</code>) : créé via <code>ax.twiny()</code></li>
+</ul>
+<p>Chaque axe secondaire peut utiliser une colonne distincte et dispose de son propre libellé, limites min/max, échelle logarithmique, couleur et marqueur — tous éditables dans l'onglet <strong>Secondary &amp; Inset Axes</strong> (<code>TabSecondaryInset</code>). Chaque ligne s'active dès qu'une colonne est assignée à l'axe correspondant.</p>
+<hr />
+<h2 id="gestion-des-dataframes"><strong>Gestion des DataFrames</strong><a class="headerlink" href="#gestion-des-dataframes" title="Permanent link">&para;</a></h2>
+<h3 id="chargement"><strong>Chargement</strong><a class="headerlink" href="#chargement" title="Permanent link">&para;</a></h3>
+<p><code>VMWorkspaceGraphs.load_dataframes()</code> utilise <code>m_io.load_dataframe_file()</code> :</p>
+<ul>
+<li><strong>Excel</strong> (<code>.xlsx</code>/<code>.xls</code>) : Feuille unique → <code>{filename: df}</code>. Multi-feuilles → <code>{filename_sheetname: df}</code> par feuille.</li>
+<li><strong>CSV</strong> : Détection automatique du séparateur point-virgule ou virgule.</li>
+</ul>
+<h3 id="suivi-des-sources-et-actualisation"><strong>Suivi des sources et actualisation</strong><a class="headerlink" href="#suivi-des-sources-et-actualisation" title="Permanent link">&para;</a></h3>
+<p>Le chemin source de chaque DataFrame chargé est mémorisé dans <code>self.dataframe_sources</code>. Le bouton « Refresh » relit le fichier sur disque, facilitant les flux itératifs lorsque des outils externes modifient les données.</p>
+<h3 id="injection-programmatique"><strong>Injection programmatique</strong><a class="headerlink" href="#injection-programmatique" title="Permanent link">&para;</a></h3>
+<p>Les autres espaces peuvent injecter directement des DataFrames :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Depuis l'espace Maps :</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">graphs_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">add_dataframe</span><span class="p">(</span><span class="n">profile_name</span><span class="p">,</span> <span class="n">profile_df</span><span class="p">)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Depuis les résultats d'ajustement Spectra/Maps :</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="bp">self</span><span class="o">.</span><span class="n">graphs_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">add_dataframe</span><span class="p">(</span><span class="s2">"fit_results"</span><span class="p">,</span> <span class="n">df_fit_results</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="systeme-de-filtrage"><strong>Système de filtrage</strong><a class="headerlink" href="#systeme-de-filtrage" title="Permanent link">&para;</a></h2>
+<p>Le widget <code>VDataFilter</code> fournit un constructeur dynamique de requêtes :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Chaque filtre est un dict :</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="s2">"expression"</span><span class="p">:</span> <span class="s2">"Slot == 5"</span><span class="p">,</span>    <span class="c1"># Expression Pandas query</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="s2">"state"</span><span class="p">:</span> <span class="kc">True</span>                  <span class="c1"># Bascule actif/inactif</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
+</code></pre></div>
+<p>Les filtres sont appliqués via <code>pd.DataFrame.query()</code> :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df_name</span><span class="p">,</span> <span class="n">filters</span><span class="p">):</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframes</span><span class="p">[</span><span class="n">df_name</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">for</span> <span class="n">filter_data</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">:</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="k">if</span> <span class="n">filter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"state"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">filter_data</span><span class="p">[</span><span class="s2">"expression"</span><span class="p">])</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="k">return</span> <span class="n">df</span>
+</code></pre></div>
+<p>Les filtres sont <strong>enregistrés par graphique</strong> dans <code>MGraph.filters</code>, permettant à chaque tracé d'avoir ses propres filtres actifs.</p>
+<h3 id="flux-multi-wafer"><strong>Flux multi-wafer</strong><a class="headerlink" href="#flux-multi-wafer" title="Permanent link">&para;</a></h3>
+<p>Lorsqu'un DataFrame contient une colonne <code>Slot</code> (fréquent dans les jeux de données semi-conducteurs) :</p>
+<ol>
+<li>La View affiche des cases à cocher par slot et le bouton « Add Multi-Wafer ».</li>
+<li>L'utilisateur sélectionne les slots (ex. 1, 3, 5, 7).</li>
+<li><code>create_multi_wafer_graphs()</code> crée un tracé wafer par slot avec le filtre <code>Slot == N</code> fusionné aux filtres de base.</li>
+<li>Tous les tracés apparaissent simultanément dans la zone MDI.</li>
+</ol>
+<hr />
+<h2 id="personnalisation-des-graphiques"><strong>Personnalisation des graphiques</strong><a class="headerlink" href="#personnalisation-des-graphiques" title="Permanent link">&para;</a></h2>
+<h3 id="customizegraphdialog-singleton"><strong><code>CustomizeGraphDialog</code> (Singleton)</strong><a class="headerlink" href="#customizegraphdialog-singleton" title="Permanent link">&para;</a></h3>
+<p><strong>Paquet</strong> : <code>spectroview/view/components/customize_graph/</code> — <code>CustomizeGraphDialog</code> (dans <code>customize_graph_dialog.py</code>) adopte une disposition moderne à deux volets similaire aux Paramètres, incluant une barre latérale gauche avec recherche instantanée par mot-clé, un délégué stylé à indicateur gauche et pilule de sélection, ainsi que sept pages modulaires à défilement avec surlignage des encadrés :</p>
+<table>
+<thead>
+<tr>
+<th>Catégorie</th>
+<th>Classe</th>
+<th>Module</th>
+<th>Périmètre</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>General &amp; Typography</td>
+<td><code>TabGeneral</code></td>
+<td><code>tab_general.py</code></td>
+<td>Thème figure (Light/Dark), grille, rotation X, tailles de polices (Title/Axis/Tick/Colorbar), tri</td>
+</tr>
+<tr>
+<td>Axes &amp; Limits</td>
+<td><code>TabAxesLimits</code></td>
+<td><code>tab_axes_limits.py</code></td>
+<td>Limites avec curseurs de plage (en haut), échelles X/Y (Linear/Log/Symlog), types de données, inversion, échelle Z, coupures d'axes</td>
+</tr>
+<tr>
+<td>Ticks &amp; Spines</td>
+<td><code>TabTicksSpines</code></td>
+<td><code>tab_ticks_spines.py</code></td>
+<td>Orientation des graduations, formats prédéfinis, graduations secondaires (T/R/B/L), bordures (T/R/B/L)</td>
+</tr>
+<tr>
+<td>Legend &amp; Series</td>
+<td><code>TabLegendSeries</code></td>
+<td><code>tab_legend_series.py</code></td>
+<td>Disposition/police/alpha/position de légende, unification des marqueurs, tableau de style par série</td>
+</tr>
+<tr>
+<td>Plot Style &amp; Fitting</td>
+<td><code>TabPlotStyles</code></td>
+<td><code>tab_plot_styles.py</code></td>
+<td>Options de style (point/scatter/wafer), barres d'erreur unifiées, polynôme/ancrage/équations trendline, histogramme</td>
+</tr>
+<tr>
+<td>Annotations</td>
+<td><code>TabAnnotations</code></td>
+<td><code>tab_annotations.py</code></td>
+<td>Annotations visuelles (V-Line, H-Line, Text, Arrow, V-Span, H-Span, Box, Callout) et fenêtres d'édition modales</td>
+</tr>
+<tr>
+<td>Secondary &amp; Inset Axes</td>
+<td><code>TabSecondaryInset</code></td>
+<td><code>tab_secondary_inset.py</code></td>
+<td>Axes jumeaux secondaires (Y2/Y3/X2 avec libellé/min/max/log/couleur/marqueur), axes zoom en incrustation</td>
+</tr>
+</tbody>
+</table>
+<p>Dialogue singleton à l'échelle de l'espace qui change automatiquement de cible lorsque l'utilisateur active une autre sous-fenêtre MDI (<code>switch_graph(graph_widget, graph_id)</code>). Comporte <code>_TabsCompatibilityProxy</code> et des façades de propriétés rétrocompatibles (<code>legend_widget</code>, <code>axis_widget</code>, <code>more_options_widget</code>, <code>annotations_widget</code>).</p>
+<h3 id="apercu-temps-reel-et-chemin-rapide-restyle"><strong>Aperçu temps réel et chemin rapide Restyle</strong><a class="headerlink" href="#apercu-temps-reel-et-chemin-rapide-restyle" title="Permanent link">&para;</a></h3>
+<p>Chaque contrôle dans chaque onglet redémarre un temporisateur unique de 400 ms à chaque modification. À échéance, chaque onglet applique ses valeurs avec <code>replot=False</code> sur le widget actif, et <code>graph_commit.snapshot()</code>/<code>diff()</code> déterminent exactement les champs modifiés. Si ces champs forment un sous-ensemble de <code>graph_style.RESTYLE_SAFE_FIELDS</code>, le dialogue appelle <code>VGraph.restyle()</code> (rafraîchissement rapide sur place) ; sinon il effectue un <code>VGraph.plot(df)</code> complet. Cet aperçu ne touche jamais la pile d'annulation ni <code>vm.update_graph()</code> — il reste purement visuel jusqu'au clic sur <strong>Apply</strong>, qui regroupe toutes les modifications dans un bloc unique <code>vm.begin_undo_batch()</code>/<code>end_undo_batch()</code>. <strong>Cancel</strong> restaure le widget à partir de l'instantané capturé à l'ouverture sans avoir jamais modifié le ViewModel.</p>
+<h3 id="graph_stylepy-partition-style-donnees"><strong><code>graph_style.py</code> — Partition style / données</strong><a class="headerlink" href="#graph_stylepy-partition-style-donnees" title="Permanent link">&para;</a></h3>
+<p><strong>Fichier</strong> : <code>spectroview/model/graphs/graph_style.py</code></p>
+<ul>
+<li><strong><code>STYLE_FIELD_NAMES</code></strong> — chaque champ de <code>MGraph</code> <em>sauf</em> identité/colonnes de données, limites en coordonnées de données, annotations et géométrie de fenêtre/export (calculé par exclusion de <code>_NON_STYLE_FIELDS</code>). Représente « l'apparence d'un graphique », transférable indépendamment des données.</li>
+<li><strong><code>RESTYLE_SAFE_FIELDS</code></strong> — sous-ensemble plus strict de <code>STYLE_FIELD_NAMES</code> : champs sûrs pour <code>VGraph.restyle()</code> (titres/libellés/tailles de police, grille, direction/format des graduations, limites des axes principaux, échelles log/symlog, couleur de fond/bordures/marges, style de légende). Exclut tout élément nécessitant de recréer les artistes (couleurs/marqueurs/tailles par série, palette, axes secondaires, annotations, incrustations).</li>
+<li><strong><code>extract_style(source_dict)</code></strong> / <strong><code>apply_style_dict(graph_widget, style_dict)</code></strong> / <strong><code>default_style()</code></strong> — extraient les champs de style, appliquent un dictionnaire de style sur un widget (en réinitialisant <code>legend_properties</code> pour recalculer les couleurs par série) et fournissent le style d'usine par défaut.</li>
+<li><strong><code>can_restyle_without_replot(changed_fields)</code></strong> — <code>True</code> ssi chaque champ modifié appartient à <code>RESTYLE_SAFE_FIELDS</code>.</li>
+</ul>
+<h3 id="graph_commitpy-suivi-des-modifications"><strong><code>graph_commit.py</code> — Suivi des modifications</strong><a class="headerlink" href="#graph_commitpy-suivi-des-modifications" title="Permanent link">&para;</a></h3>
+<p><strong>Fichier</strong> : <code>spectroview/view/components/graphs/graph_commit.py</code></p>
+<p><code>snapshot(gw)</code> copie en profondeur tous les champs <code>MGraph</code> (sauf <code>graph_id</code>) d'un widget <code>VGraph</code> ; <code>diff(gw, before)</code> renvoie un patch contenant uniquement les champs modifiés. Utilisé à la fois par l'aperçu temps réel du dialogue Customize et par les éditions directes sur la barre/canevas (légende déplacée, sous-fenêtre redimensionnée avant <code>save_workspace()</code>) via <code>properties_changed.emit()</code> → <code>vm.update_graph()</code>.</p>
+<h3 id="annuler-retablir"><strong>Annuler / Rétablir</strong><a class="headerlink" href="#annuler-retablir" title="Permanent link">&para;</a></h3>
+<p>La pile annuler/rétablir réside dans <code>VMWorkspaceGraphs</code>, et non dans la View : <code>_undo_stack</code>/<code>_redo_stack</code> conservent des instantanés complets d'espace (<code>{graph_id: MGraph.save()-dict}</code>), plafonnés à 50 entrées. Chaque <code>create_graph()</code>/<code>update_graph()</code>/<code>delete_graph()</code> enregistre une étape, sauf à l'intérieur d'un bloc <code>begin_undo_batch()</code>/<code>end_undo_batch()</code> qui fusionne tout le lot en une étape unique (utilisé par Apply et par l'application de recettes de tracé). <code>undo_state_changed</code> maintient les boutons Undo/Redo synchronisés via <code>can_undo</code>/<code>can_redo</code>.</p>
+<h3 id="raccourcis-clavier"><strong>Raccourcis clavier</strong><a class="headerlink" href="#raccourcis-clavier" title="Permanent link">&para;</a></h3>
+<p>Enregistrés sur <code>self.mdi_area</code> (et non sur tout le widget d'espace, afin de ne pas masquer les raccourcis natifs des champs <code>QLineEdit</code> latéraux) et agissant sur la sous-fenêtre MDI active. Ce contexte <code>WidgetWithChildrenShortcut</code> garantit également qu'ils sont automatiquement restreints à l'onglet Graphs :</p>
+<table>
+<thead>
+<tr>
+<th>Raccourci</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Ctrl+Z</code></td>
+<td>Annuler</td>
+</tr>
+<tr>
+<td><code>Ctrl+Shift+Z</code></td>
+<td>Rétablir</td>
+</tr>
+<tr>
+<td><code>Ctrl+C</code></td>
+<td>Copier la <em>figure</em> du graphique actif dans le presse-papiers (<code>VGraph.copy_to_clipboard()</code>)</td>
+</tr>
+<tr>
+<td><code>Ctrl+V</code></td>
+<td>Coller le <em>style</em> copié sur le graphique actif</td>
+</tr>
+<tr>
+<td><code>Ctrl+E</code></td>
+<td>Ouvrir Customize Graph Dialog pour le graphique actif</td>
+</tr>
+</tbody>
+</table>
+<p>La copie de style n'a plus son propre raccourci <code>Ctrl+C</code> (<code>_on_copy_style_shortcut()</code> a été supprimé) — <code>Ctrl+C</code> copie désormais la figure, usage bien plus fréquent. « Copy Style » reste accessible en un clic dans le menu Style, et <code>Ctrl+V</code> colle toujours le dernier style copié.</p>
+<h3 id="general-typography-tabgeneral"><strong>General &amp; Typography (<code>TabGeneral</code>)</strong><a class="headerlink" href="#general-typography-tabgeneral" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Display &amp; Grid</strong> : sélecteur <strong>Figure theme</strong> (Light/Dark), case <strong>Show grid lines</strong> (<code>MGraph.grid</code>) et champ <strong>X label rotation</strong> (<code>MGraph.x_rot</code>).</li>
+<li><strong>Typography &amp; Font Sizes (pt)</strong> : champs Title, Axis label, Tick label et Colorbar sur une même ligne (valeurs par défaut 12/12/9/10). <strong>Colorbar</strong> (<code>MGraph.colorbar_fontsize</code>) fixe la taille des étiquettes de la barre de couleur wafer/2Dmap — <code>PlotRenderer._apply_colorbar_fontsize()</code> l'applique après (re)création, déclenchant donc un replot complet (volontairement hors de <code>RESTYLE_SAFE_FIELDS</code>). Le <strong>sous-titre</strong> reste toujours 2 pt plus petit que le titre (<code>title_fontsize − 2</code> dans <code>_set_figure_style</code>) ; son texte est édité dans le panneau latéral.</li>
+<li><strong>Data Sorting</strong> : bascule de tri catégoriel intelligent (<code>MGraph.intelligent_sorting</code>).</li>
+</ul>
+<h3 id="axes-limits-tabaxeslimits"><strong>Axes &amp; Limits (<code>TabAxesLimits</code>)</strong><a class="headerlink" href="#axes-limits-tabaxeslimits" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Set Axis Limits</strong> : une ligne champ-curseur par axe X/Y/Z (X/Y masqués pour <code>wafer</code>/<code>2Dmap</code>, où Z contrôle l'échelle de couleur). Les champs non définis affichent en grisé la valeur réelle courante du graphique plutôt qu'un texte générique — règle appliquée partout dans ce dialogue.</li>
+<li><strong>Axis Scales &amp; Data Types</strong> : échelle par axe (Linear/Logarithmic/Symlog), type de données (Auto/Category/Numerical) et inversion. Pour <code>wafer</code>/<code>2Dmap</code>, une ligne supplémentaire d'échelle <strong>Z axis</strong> apparaît (Linear/Logarithmic/Centered, plus Center value) — voir <a href="#normalisation-des-palettes">Normalisation des palettes</a>.</li>
+<li><strong>Broken axis</strong> : coupures X et Y mutuellement exclusives. Le rendu divise les axes en deux panneaux via <code>gridspec</code> — côte à côte partageant Y pour une coupure X, empilés partageant X pour une coupure Y — avec marques diagonales <code>//</code> sur les bordures. Force toujours un replot complet (<code>VGraph.restyle()</code> renvoie <code>False</code>) et est mutuellement exclusif avec les axes en incrustation.</li>
+</ul>
+<h3 id="ticks-spines-tabticksspines"><strong>Ticks &amp; Spines (<code>TabTicksSpines</code>)</strong><a class="headerlink" href="#ticks-spines-tabticksspines" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Tick Appearance</strong> : direction des graduations (Default/In/Out/In &amp; Out) et format d'étiquettes (Auto/Integer/1-decimal/2-decimal/Scientific).</li>
+<li><strong>Minor Ticks &amp; Spines</strong> : graduations secondaires indépendantes (X-Bottom/X-Top/Y-Left/Y-Right, activées intelligemment sur les axes numériques) et visibilité des bordures <strong>Show Spines / Frame Borders</strong> (Top/Right/Bottom/Left).</li>
+</ul>
+<h3 id="legend-series-tablegendseries"><strong>Legend &amp; Series (<code>TabLegendSeries</code>)</strong><a class="headerlink" href="#legend-series-tablegendseries" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Legend Box Styling</strong> : colonnes, cadre, titre, taille de police, transparence alpha et position.</li>
+<li><strong>Series Styling</strong> : case optionnelle <strong>"Unify marker size / edge color"</strong> (cochée par défaut). Lorsqu'elle est décochée, les colonnes par série Marker size / Edge color deviennent visibles pour les styles <code>point</code>/<code>scatter</code> — implémentées via <code>PlotRenderer._resolve_marker_size()</code>/<code>_resolve_edge_color()</code>. Les champs non définis affichent en grisé la valeur effective qui sera utilisée.</li>
+</ul>
+<h3 id="plot-style-fitting-tabplotstyles"><strong>Plot Style &amp; Fitting (<code>TabPlotStyles</code>)</strong><a class="headerlink" href="#plot-style-fitting-tabplotstyles" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Plot Style Options</strong> : cases dépendant du style (<code>Join data points</code>, <code>Dodge overlapping points</code>, <code>Show statistics summary</code>).</li>
+<li><strong>Error Bars (Unified)</strong> : visibilité, type (<code>95% CI</code> / <code>Std. Dev.</code> / <code>Std. Error</code> / <code>None</code>) et taille d'embout pour <code>point</code>, <code>line</code> et <code>bar</code>.</li>
+<li><strong>Trendline &amp; Histogram Controls</strong> : degré polynomial, point d'ancrage (<span class="arithmatex">\(x_0, y_0\)</span>), tableau en lecture seule des équations et <span class="arithmatex">\(R^2\)</span> avec bouton de copie, nombre de classes, mode (<code>Filled</code> / <code>Step</code>) et courbe KDE.</li>
+</ul>
+<h3 id="annotations-tabannotations"><strong>Annotations (<code>TabAnnotations</code>)</strong><a class="headerlink" href="#annotations-tabannotations" title="Permanent link">&para;</a></h3>
+<p>Huit types d'annotations, chacun associé à un bouton d'ajout et à une fenêtre d'édition dans <code>customize_annotation_dialogs.py</code> :</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Rôle</th>
+<th>Fenêtre d'édition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vline</code> / <code>hline</code></td>
+<td>Ligne de référence verticale/horizontale</td>
+<td><code>EditLineDialog</code></td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td>Étiquette texte libre avec fond optionnel</td>
+<td><code>EditTextDialog</code></td>
+</tr>
+<tr>
+<td><code>arrow</code></td>
+<td>Flèche point à point</td>
+<td><code>EditArrowDialog</code></td>
+</tr>
+<tr>
+<td><code>vspan</code> / <code>hspan</code></td>
+<td>Bande ombrée verticale/horizontale</td>
+<td><code>EditSpanDialog</code></td>
+</tr>
+<tr>
+<td><code>box</code></td>
+<td>Rectangle plein ou contouré</td>
+<td><code>EditBoxDialog</code></td>
+</tr>
+<tr>
+<td><code>callout</code></td>
+<td>Étiquette avec flèche vers un point</td>
+<td><code>EditCalloutDialog</code></td>
+</tr>
+</tbody>
+</table>
+<p>Toutes stockées sous forme de dicts typés dans <code>MGraph.annotations</code>. Chaque type gère le <strong>glisser-déposer interactif</strong> via <code>GraphAnnotationMixin._on_annotation_click()</code>/<code>_on_annotation_drag()</code>/<code>_on_annotation_release()</code> dans <code>graphs/v_graph_annotations.py</code>. La détection des clics est réalisée manuellement (<code>self.ax.findobj()</code> + <code>artist.contains(event)</code>) au lieu de <code>pick_event</code> de Matplotlib : en présence d'un axe secondaire <code>twinx()</code> (<code>y2</code>/<code>y3</code>), <code>event.inaxes</code> pointe vers l'axe secondaire superposé, ce qui bloquait autrefois le déplacement sur l'axe principal. <code>VGraph._ax_data_coords(event)</code> convertit directement les coordonnées pixels de l'événement via <code>self.ax.transData</code>.</p>
+<h3 id="secondary-inset-axes-tabsecondaryinset"><strong>Secondary &amp; Inset Axes (<code>TabSecondaryInset</code>)</strong><a class="headerlink" href="#secondary-inset-axes-tabsecondaryinset" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Secondary Twin Axes</strong> : une ligne par axe Y2/Y3/X2 (désactivée tant qu'aucune colonne n'est affectée), exposant Label, Min/Max, Log, Color et Marker — voir <a href="#prise-en-charge-multi-axes">Prise en charge multi-axes</a>.</li>
+<li><strong>Inset (Zoom) Axes</strong> : groupe activable avec Position (x0, y0) et Size (w, h) en coordonnées relatives d'axes, limites X/Y indépendantes et « Show zoom indicator » (<code>ax.indicate_inset_zoom()</code>). Reconstruit à chaque rendu depuis <code>MGraph.inset_bounds</code> ; mutuellement exclusif avec les coupures d'axes.</li>
+</ul>
+<hr />
+<h2 id="modeles-de-style-et-recettes-de-trace"><strong>Modèles de style et recettes de tracé</strong><a class="headerlink" href="#modeles-de-style-et-recettes-de-trace" title="Permanent link">&para;</a></h2>
+<p>Deux fonctionnalités distinctes :</p>
+<ul>
+<li><strong>Recette de tracé (<code>Plot Recipe</code>)</strong> (<code>MPlotRecipeStore</code> / <code>VPlotRecipeDialog</code>, dossier : <code>&lt;working folder&gt;/plot_recipe/</code>) — <strong>ensemble sauvegardé de configurations complètes</strong> (liaisons de données <em>et</em> style : <code>df_name</code>, <code>x</code>/<code>y</code>/<code>z</code>, <code>filters</code> et tous les champs de style), un fichier JSON par recette. L'application crée de nouveaux graphiques en reciblant le DataFrame <em>actuellement sélectionné</em> et en ignorant avec notification tout graphique dont les colonnes requises manquent, le tout en une seule étape d'annulation. Le dialogue gère parcours/recherche/application/renommage/<strong>duplication</strong>/suppression.</li>
+<li><strong>Modèle de style (<code>Style Template</code>)</strong> (<code>MStyleTemplateStore</code> / <code>VStyleTemplateDialog</code>, dossier : <code>&lt;working folder&gt;/plot_style/</code>) — dictionnaire <strong>d'apparence uniquement</strong> (<code>graph_style.extract_style()</code>). Son application (<code>_apply_style_to_graph()</code>) écrit sur un graphique <strong>existant</strong> via <code>graph_style.apply_style_dict()</code> sans jamais toucher aux liaisons de données.</li>
+</ul>
+<p>Les deux magasins sont <strong>reconstruits depuis le Working Folder courant au moment de l'usage</strong> (<code>VWorkspaceGraphs._refresh_recipe_and_style_stores()</code>, ainsi que dans <code>VMChat.refresh_recipe_store()</code>), de sorte qu'un changement de dossier de travail prend effet immédiatement sans redémarrer l'application.</p>
+<p>Le <strong>menu Style</strong> de chaque <code>VGraph</code> relie ces mécanismes : <strong>Save Style…</strong> / <strong>Apply Style…</strong>, <strong>Copy Style</strong> / <strong>Paste Style</strong> (<code>Ctrl+C</code>/<code>Ctrl+V</code>), <strong>Reset to Default</strong> (toujours le style d'usine <code>graph_style.default_style()</code>) et <strong>Set as Default Style</strong> (enregistre le style courant via <code>MSettings.set_default_graph_style()</code> comme base des <em>nouveaux</em> graphiques uniquement).</p>
+<hr />
+<h2 id="export-et-compositeur-multi-panneaux"><strong>Export et compositeur multi-panneaux</strong><a class="headerlink" href="#export-et-compositeur-multi-panneaux" title="Permanent link">&para;</a></h2>
+<p><strong>Fichier</strong> : <code>spectroview/view/components/graphs/v_export_dialog.py</code></p>
+<ul>
+<li><strong><code>VExportDialog(graph_widget, parent=None)</code></strong> — exporte un graphique unique en PNG/TIFF/SVG/PDF/EPS avec contrôles format/DPI/transparence/thème d'export et dimensions physiques (préréglages revues, mm/pouces, vide = taille écran), persistées dans <code>export_width_mm</code>/<code>export_height_mm</code>.</li>
+<li><strong><code>VBatchExportDialog(graph_widgets: dict, parent=None)</code></strong> — exporte tous les graphiques ouverts vers un dossier choisi en une passe, chacun à sa taille physique persistée, avec rapport des éventuels échecs.</li>
+</ul>
+<p><strong>Fichier</strong> : <code>spectroview/view/components/graphs/v_multipanel_dialog.py</code></p>
+<ul>
+<li><strong><code>VMultiPanelDialog(graph_widgets: dict, parent=None)</code></strong> — assemble plusieurs graphiques cochés/réordonnés dans une grille <code>matplotlib.figure.Figure</code> temporaire (lignes/colonnes suggérées, mise en page contrainte, fusion des libellés d'axes partagés, étiquettes de panneaux). Chaque panneau est tracé en redirigeant temporairement <code>.ax</code>/<code>.figure</code> du <code>VGraph</code> source puis en le restaurant sans jamais modifier les graphiques ouverts. Les graphiques comportant une coupure d'axe s'affichent selon un chemin simplifié à panneau unique dans la figure composée (limitation documentée).</li>
+</ul>
+<p>IA/MCP exposent la taille physique persistante d'export (<code>export_width_mm</code> / <code>export_height_mm</code>) et la géométrie/DPI écran via <code>GraphPatch</code>. Les actions Export, Batch Export et Multi-Panel restent des flux GUI (format, chemin de destination, transparence, thème d'export et grille de panneaux étant des choix ponctuels et non de l'état <code>MGraph</code>).</p>
+<hr />
+<h2 id="gestion-de-la-zone-mdi"><strong>Gestion de la zone MDI</strong><a class="headerlink" href="#gestion-de-la-zone-mdi" title="Permanent link">&para;</a></h2>
+<p>L'espace <code>Graphs</code> utilise un <code>QMdiArea</code> pour afficher simultanément plusieurs tracés :</p>
+<pre class="mermaid"><code>graph LR
+    MDI["QMdiArea"] --&gt; SW1["SubWindow 1"]
+    MDI --&gt; SW2["SubWindow 2"]
+    MDI --&gt; SW3["SubWindow 3"]
+    SW1 --&gt; VG1["VGraph"]
+    SW2 --&gt; VG2["VGraph"]
+    SW3 --&gt; VG3["VGraph"]</code></pre>
+<ul>
+<li>Chaque tracé est encapsulé dans un <code>QMdiSubWindow</code> avec bordure aplatie à 1 px via QSS.</li>
+<li>La barre inférieure regroupe les commandes globales (réduire/supprimer tout, Undo/Redo, Compose Figure) et un unique <strong>emplacement de barre d'outils graphique partagée</strong> (<code>self.graph_toolbar_slot</code> / <code>self._graph_toolbar_slot_layout</code>, facteur d'étirement 1). Chaque <code>VGraph</code> construit sa propre barre Matplotlib + séparateur <code>QFrame.VLine</code> + boutons d'action (Replicate/Customize/Copy/Export/Style menu) dans <code>self.toolbar_container</code>, sans l'afficher dans sa fenêtre MDI. Le bouton Export gère à la fois le clic simple (export unitaire) et <code>Ctrl+Click</code> (export groupé). <code>VWorkspaceGraphs._sync_active_graph_toolbar()</code> reparente la barre du graphique actif dans l'emplacement partagé à chaque changement de fenêtre, création, mise à jour ou fermeture.</li>
+<li>La liste déroulante « Active plot: » réside dans le panneau latéral juste au-dessus de Add/Update Plot (<code>VWorkspaceGraphs._setup_action_buttons()</code>).</li>
+<li>« Minimize All » réduit toutes les fenêtres pour désencombrer l'espace.</li>
+<li>Sélectionner un graphique dans la liste déroulante active sa sous-fenêtre et synchronise les contrôles du panneau droit.</li>
+</ul>
+<h3 id="stockage-des-graphiques"><strong>Stockage des graphiques</strong><a class="headerlink" href="#stockage-des-graphiques" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># VWorkspaceGraphs maintient une table de correspondance :</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">graph_widgets</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">graph_id</span><span class="p">:</span> <span class="p">(</span><span class="n">VGraph</span><span class="p">,</span> <span class="n">QDialog</span><span class="p">,</span> <span class="n">QMdiSubWindow</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>Lorsqu'un graphique est sélectionné :</p>
+<ol>
+<li><code>_on_subwindow_activated()</code> identifie le <code>graph_id</code>.</li>
+<li>Le modèle <code>MGraph</code> correspondant est lu depuis le ViewModel.</li>
+<li>Les contrôles du panneau droit (listes X/Y/Z, libellés, style) sont synchronisés.</li>
+</ol>
+<hr />
+<h2 id="persistance"><strong>Persistance</strong><a class="headerlink" href="#persistance" title="Permanent link">&para;</a></h2>
+<h3 id="dossier-de-travail-spectroview-working-folder"><strong>Dossier de travail SPECTROview (<code>Working Folder</code>)</strong><a class="headerlink" href="#dossier-de-travail-spectroview-working-folder" title="Permanent link">&para;</a></h3>
+<p>Dossier racine unique configuré dans les Paramètres, créant automatiquement cinq sous-dossiers et un fichier de configuration portable (<code>os.makedirs(..., exist_ok=True)</code>) :</p>
+<table>
+<thead>
+<tr>
+<th>Sous-dossier / Fichier</th>
+<th>Rôle</th>
+<th>Accesseur <code>MSettings</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fit_model/</code></td>
+<td>Modèles d'ajustement JSON (espaces Spectra/Maps)</td>
+<td><code>get_fit_model_folder()</code></td>
+</tr>
+<tr>
+<td><code>plot_recipe/</code></td>
+<td>Recettes de tracé</td>
+<td><code>get_plot_recipe_folder()</code></td>
+</tr>
+<tr>
+<td><code>plot_style/</code></td>
+<td>Modèles de style</td>
+<td><code>get_plot_style_folder()</code></td>
+</tr>
+<tr>
+<td><code>ai_chat_history/</code></td>
+<td>Historique des conversations IA</td>
+<td><code>get_history_folder()</code> / <code>get_ai_history_folder()</code></td>
+</tr>
+<tr>
+<td><code>template/</code></td>
+<td>Modèles et préréglages utilisateur</td>
+<td><code>get_template_folder()</code></td>
+</tr>
+<tr>
+<td><code>config.json</code></td>
+<td>Sauvegarde portable de la configuration</td>
+<td><code>export_config()</code> / <code>import_config()</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>get_working_folder()</code> migre automatiquement les anciens réglages séparés « Fit model folder » / « Plot template folder » s'ils étaient configurés. <code>get_default_graph_style()</code>/<code>set_default_graph_style()</code> stockent séparément dans <code>QSettings</code> le style de base défini par « Set as Default Style ».</p>
+<h3 id="format-de-sauvegarde-graphs"><strong>Format de sauvegarde (<code>.graphs</code>)</strong><a class="headerlink" href="#format-de-sauvegarde-graphs" title="Permanent link">&para;</a></h3>
+<p>Le format actuel (<code>format_version: 4</code>) est une <strong>archive ZIP</strong>, écrite par <code>WorkspaceIO.save_workspace()</code>. La version 4 préserve <code>x_as_numeric=False</code> comme sélection explicite Category ; les versions antérieures conservent la migration historique False-vers-Auto :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>metadata.json                          # {"format_version": 4, "plots": {...}, "dataframe_sources": {...}}
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>dataframes/&lt;name&gt;.parquet              # un fichier Parquet par DataFrame, écrit en flux direct dans le zip
+</code></pre></div>
+<p>Chaque entrée de <code>metadata["plots"]</code> est un dictionnaire <code>MGraph.save()</code> complet indexé par <code>graph_id</code> :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="nt">"plots"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">        </span><span class="nt">"1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">            </span><span class="nt">"graph_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">            </span><span class="nt">"df_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fit_results"</span><span class="p">,</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">            </span><span class="nt">"plot_style"</span><span class="p">:</span><span class="w"> </span><span class="s2">"point"</span><span class="p">,</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">            </span><span class="nt">"x"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Slot"</span><span class="p">,</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">            </span><span class="nt">"y"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Si_center"</span><span class="p">],</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">            </span><span class="nt">"z"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Zone"</span><span class="p">,</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">            </span><span class="nt">"filters"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"expression"</span><span class="p">:</span><span class="w"> </span><span class="s2">"R² &gt; 0.95"</span><span class="p">,</span><span class="w"> </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}],</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">            </span><span class="nt">"legend_properties"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">            </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">            </span><span class="nt">"plot_width"</span><span class="p">:</span><span class="w"> </span><span class="mi">480</span><span class="p">,</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">            </span><span class="nt">"plot_height"</span><span class="p">:</span><span class="w"> </span><span class="mi">400</span><span class="p">,</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">            </span><span class="nt">"dpi"</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">    </span><span class="nt">"dataframe_sources"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">        </span><span class="nt">"fit_results"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/path/to/original.xlsx"</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="p">}</span>
+</code></pre></div>
+<p><code>WorkspaceIO.load_workspace()</code> inspecte l'en-tête magique ZIP ; les fichiers plus anciens (JSON brut contenant des DataFrames CSV gzippés encodés en hexadécimal sous <code>original_dfs</code>) sont détectés comme historiques et relus via le chargeur de compatibilité uniquement en lecture.</p>
+<hr />
+<h2 id="replication-de-graphiques"><strong>Réplication de graphiques</strong><a class="headerlink" href="#replication-de-graphiques" title="Permanent link">&para;</a></h2>
+<p>Le bouton « Replicate » (dans la barre d'outils partagée, agissant sur le graphique actif) crée une copie profonde du tracé :</p>
+<ol>
+<li>Sérialise le <code>MGraph</code> courant via <code>save()</code>.</li>
+<li>Supprime <code>graph_id</code> (le ViewModel en attribue un nouveau).</li>
+<li>Capture la taille courante de la sous-fenêtre pour la réplique.</li>
+<li>Appelle <code>_create_and_display_plot()</code> avec la configuration clonée.</li>
+</ol>
+<p>Cela permet une comparaison A/B rapide des mêmes données sous différents réglages visuels. Contrairement aux nouveaux tracés (Add Plot / Add Multi-Wafer), un graphique répliqué n'est <strong>pas</strong> écrasé par le style par défaut « Set as Default Style », puisqu'il embarque déjà un style complet et intentionnel.</p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Retour en haut de la page
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Pied de page" >
+        
+          
+          <a href="../maps/" class="md-footer__link md-footer__link--prev" aria-label="Précédent: Espace Maps">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Précédent
+              </span>
+              <div class="md-ellipsis">
+                Espace Maps
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../vbf_engine/" class="md-footer__link md-footer__link--next" aria-label="Suivant: Moteur d&#39;ajustement vectorisé par lots (VBF)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Suivant
+              </span>
+              <div class="md-ellipsis">
+                Moteur d'ajustement vectorisé par lots (VBF)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

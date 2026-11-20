@@ -1,12 +1,12 @@
 
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="fr" class="no-js">
   <head>
     
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A Tool for Spectroscopic Data Processing and Visualization">
+        <meta name="description" content="Outil interactif de traitement, d'ajustement et de visualisation de données spectroscopiques">
       
       
         <meta name="author" content="Van Hoan Le">
@@ -16,6 +16,10 @@
       
       
         
+          <link rel="alternate" href="/SPECTROview/user_manual/ui_overview/" hreflang="en">
+        
+          <link rel="alternate" href="/SPECTROview/fr/user_manual/ui_overview/" hreflang="fr">
+        
       
       
       <link rel="icon" href="/SPECTROview/assets/icon.png">
@@ -23,7 +27,7 @@
     
     
       
-        <title>SPECTROview Documentation</title>
+        <title>Documentation SPECTROview</title>
       
     
     
@@ -96,8 +100,8 @@
   
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/SPECTROview/." title="SPECTROview Documentation" class="md-header__button md-logo" aria-label="SPECTROview Documentation" data-md-component="logo">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="/SPECTROview/fr/" title="Documentation SPECTROview" class="md-header__button md-logo" aria-label="Documentation SPECTROview" data-md-component="logo">
       
   <img src="/SPECTROview/assets/icon.png" alt="logo">
 
@@ -110,7 +114,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            SPECTROview Documentation
+            Documentation SPECTROview
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -153,6 +157,52 @@
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Sélectionner la langue"
+      title="Sélectionner la langue"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">FR</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="/SPECTROview/user_manual/ui_overview/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="/SPECTROview/fr/user_manual/ui_overview/"
+              hreflang="fr"
+              class="md-select__link" aria-current="true"
+            >
+              Français
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
     
       
       
@@ -164,16 +214,16 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
         
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
         
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
       </label>
-      <nav class="md-search__options" aria-label="Search">
+      <nav class="md-search__options" aria-label="Recherche">
         
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
@@ -186,7 +236,7 @@
       <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
-            Initializing search
+            Initialisation de la recherche
           </div>
           <ol class="md-search-result__list" role="presentation"></ol>
         </div>
@@ -198,7 +248,7 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Aller au dépôt" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
@@ -213,7 +263,7 @@
   
     
       
-<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+<nav class="md-tabs" aria-label="Onglets" data-md-component="tabs">
   <div class="md-grid">
     <ul class="md-tabs__list">
       
@@ -223,13 +273,13 @@
   
   
     <li class="md-tabs__item">
-      <a href="/SPECTROview/." class="md-tabs__link">
+      <a href="/SPECTROview/fr/" class="md-tabs__link">
         
   
   
     
   
-  Home
+  Accueil
 
       </a>
     </li>
@@ -242,7 +292,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="/SPECTROview/user_manual/installation/" class="md-tabs__link">
+      <a href="/SPECTROview/fr/user_manual/installation/" class="md-tabs__link">
         
   
   
@@ -263,13 +313,13 @@
     
     
       <li class="md-tabs__item">
-        <a href="/SPECTROview/user_manual/" class="md-tabs__link">
+        <a href="/SPECTROview/fr/user_manual/" class="md-tabs__link">
           
   
   
     
   
-  User Manual
+  Manuel utilisateur
 
         </a>
       </li>
@@ -283,13 +333,13 @@
   
   
     <li class="md-tabs__item">
-      <a href="/SPECTROview/user_manual/ai_agent/" class="md-tabs__link">
+      <a href="/SPECTROview/fr/user_manual/ai_agent/" class="md-tabs__link">
         
   
   
     
   
-  AI Agent
+  Agent IA
 
       </a>
     </li>
@@ -304,13 +354,13 @@
     
     
       <li class="md-tabs__item">
-        <a href="/SPECTROview/developer/" class="md-tabs__link">
+        <a href="/SPECTROview/fr/developer/" class="md-tabs__link">
           
   
   
     
   
-  Developer Guide
+  Guide développeur
 
         </a>
       </li>
@@ -326,7 +376,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="/SPECTROview/api/" class="md-tabs__link">
+        <a href="/SPECTROview/fr/api/" class="md-tabs__link">
           
   
   
@@ -346,13 +396,13 @@
   
   
     <li class="md-tabs__item">
-      <a href="/SPECTROview/changelog/" class="md-tabs__link">
+      <a href="/SPECTROview/fr/changelog/" class="md-tabs__link">
         
   
   
     
   
-  Changelog
+  Historique des versions
 
       </a>
     </li>
@@ -372,9 +422,14 @@
   
         
       
+
   
   
   
+  
+
+  
+
   
 
       <main class="md-main" data-md-component="main">
@@ -395,16 +450,16 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/SPECTROview/." title="SPECTROview Documentation" class="md-nav__button md-logo" aria-label="SPECTROview Documentation" data-md-component="logo">
+    <a href="/SPECTROview/fr/" title="Documentation SPECTROview" class="md-nav__button md-logo" aria-label="Documentation SPECTROview" data-md-component="logo">
       
   <img src="/SPECTROview/assets/icon.png" alt="logo">
 
     </a>
-    SPECTROview Documentation
+    Documentation SPECTROview
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Aller au dépôt" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
@@ -424,14 +479,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/." class="md-nav__link">
+      <a href="/SPECTROview/fr/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Home
+    Accueil
   
 
     
@@ -451,7 +506,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/user_manual/installation/" class="md-nav__link">
+      <a href="/SPECTROview/fr/user_manual/installation/" class="md-nav__link">
         
   
   
@@ -523,14 +578,14 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="/SPECTROview/user_manual/" class="md-nav__link ">
+            <a href="/SPECTROview/fr/user_manual/" class="md-nav__link ">
               
   
   
   <span class="md-ellipsis">
     
   
-    User Manual
+    Manuel utilisateur
   
 
     
@@ -552,7 +607,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    User Manual
+    Manuel utilisateur
   
 
           </label>
@@ -567,14 +622,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/user_manual/supported_data/" class="md-nav__link">
+      <a href="/SPECTROview/fr/user_manual/supported_data/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Supported Data
+    Formats pris en charge
   
 
     
@@ -595,14 +650,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/user_manual/ui_overview/" class="md-nav__link">
+      <a href="/SPECTROview/fr/user_manual/ui_overview/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    UI Overview
+    Aperçu de l'interface
   
 
     
@@ -623,14 +678,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/user_manual/menu_bar/" class="md-nav__link">
+      <a href="/SPECTROview/fr/user_manual/menu_bar/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Menu Bar
+    Barre de menus
   
 
     
@@ -651,14 +706,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/user_manual/spectra_maps/" class="md-nav__link">
+      <a href="/SPECTROview/fr/user_manual/spectra_maps/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Workspace Spectra & Maps
+    Espaces Spectra et Maps
   
 
     
@@ -679,14 +734,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/user_manual/graphs/" class="md-nav__link">
+      <a href="/SPECTROview/fr/user_manual/graphs/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Workspace Graphs
+    Espace Graphs
   
 
     
@@ -707,14 +762,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/user_manual/mva/" class="md-nav__link">
+      <a href="/SPECTROview/fr/user_manual/mva/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Multivariate Analysis (MVA)
+    Analyse multivariée (MVA)
   
 
     
@@ -735,14 +790,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/user_manual/calculators/" class="md-nav__link">
+      <a href="/SPECTROview/fr/user_manual/calculators/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Quick Calculators
+    Calculateurs rapides
   
 
     
@@ -763,14 +818,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/user_manual/settings/" class="md-nav__link">
+      <a href="/SPECTROview/fr/user_manual/settings/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Settings
+    Paramètres
   
 
     
@@ -791,14 +846,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/user_manual/save_load/" class="md-nav__link">
+      <a href="/SPECTROview/fr/user_manual/save_load/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Save & Load
+    Sauvegarde et chargement
   
 
     
@@ -819,14 +874,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/user_manual/shortcuts/" class="md-nav__link">
+      <a href="/SPECTROview/fr/user_manual/shortcuts/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Shortcuts & Tips
+    Raccourcis et astuces
   
 
     
@@ -854,14 +909,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/user_manual/ai_agent/" class="md-nav__link">
+      <a href="/SPECTROview/fr/user_manual/ai_agent/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    AI Agent
+    Agent IA
   
 
     
@@ -924,14 +979,14 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="/SPECTROview/developer/" class="md-nav__link ">
+            <a href="/SPECTROview/fr/developer/" class="md-nav__link ">
               
   
   
   <span class="md-ellipsis">
     
   
-    Developer Guide
+    Guide développeur
   
 
     
@@ -953,7 +1008,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Developer Guide
+    Guide développeur
   
 
           </label>
@@ -968,14 +1023,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/developer/file_loading/" class="md-nav__link">
+      <a href="/SPECTROview/fr/developer/file_loading/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    File Loading Pipeline
+    Pipeline de chargement des fichiers
   
 
     
@@ -996,14 +1051,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/developer/spectra_store/" class="md-nav__link">
+      <a href="/SPECTROview/fr/developer/spectra_store/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Data Architecture SpectraStore
+    Architecture de données SpectraStore
   
 
     
@@ -1024,14 +1079,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/developer/spectra/" class="md-nav__link">
+      <a href="/SPECTROview/fr/developer/spectra/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Workspace Spectra
+    Espace Spectra
   
 
     
@@ -1052,14 +1107,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/developer/maps/" class="md-nav__link">
+      <a href="/SPECTROview/fr/developer/maps/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Workspace Maps
+    Espace Maps
   
 
     
@@ -1080,14 +1135,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/developer/graphs/" class="md-nav__link">
+      <a href="/SPECTROview/fr/developer/graphs/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Workspace Graphs
+    Espace Graphs
   
 
     
@@ -1108,14 +1163,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/developer/vbf_engine/" class="md-nav__link">
+      <a href="/SPECTROview/fr/developer/vbf_engine/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Vectorized Batch Fit Engine (VBF)
+    Moteur d'ajustement vectorisé par lots (VBF)
   
 
     
@@ -1136,14 +1191,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/developer/mva/" class="md-nav__link">
+      <a href="/SPECTROview/fr/developer/mva/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Multivariate Analysis (MVA)
+    Analyse multivariée (MVA)
   
 
     
@@ -1164,14 +1219,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/developer/ai_agent/" class="md-nav__link">
+      <a href="/SPECTROview/fr/developer/ai_agent/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    AI Agent
+    Agent IA
   
 
     
@@ -1192,14 +1247,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/developer/mcp_server/" class="md-nav__link">
+      <a href="/SPECTROview/fr/developer/mcp_server/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Local MCP Server
+    Serveur MCP local
   
 
     
@@ -1262,7 +1317,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="/SPECTROview/api/" class="md-nav__link ">
+            <a href="/SPECTROview/fr/api/" class="md-nav__link ">
               
   
   
@@ -1306,14 +1361,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/api/spectra/" class="md-nav__link">
+      <a href="/SPECTROview/fr/api/spectra/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Spectra Workspace (load, preprocess, fit)
+    Espace Spectra (chargement, prétraitement, ajustement)
   
 
     
@@ -1334,14 +1389,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/api/2dmap/" class="md-nav__link">
+      <a href="/SPECTROview/fr/api/2dmap/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Maps Workspace (hyperspectral, heatmaps)
+    Espace Maps (hyperspectral, cartes thermiques)
   
 
     
@@ -1362,14 +1417,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/api/graphs/" class="md-nav__link">
+      <a href="/SPECTROview/fr/api/graphs/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Data Visualization (Graphs)
+    Visualisation de données (Graphs)
   
 
     
@@ -1390,14 +1445,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/api/calculators/" class="md-nav__link">
+      <a href="/SPECTROview/fr/api/calculators/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Quick Calculators
+    Calculateurs rapides
   
 
     
@@ -1418,14 +1473,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/api/extending/" class="md-nav__link">
+      <a href="/SPECTROview/fr/api/extending/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Extending SPECTROview
+    Étendre SPECTROview
   
 
     
@@ -1453,14 +1508,14 @@
   
   
     <li class="md-nav__item">
-      <a href="/SPECTROview/changelog/" class="md-nav__link">
+      <a href="/SPECTROview/fr/changelog/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Changelog
+    Historique des versions
   
 
     
@@ -1508,7 +1563,7 @@
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
-  Back to top
+  Retour en haut de la page
 </button>
         
       </main>
@@ -1569,13 +1624,11 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
-    
     
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "/SPECTROview/", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.instant", "navigation.instant.progress", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "/SPECTROview/assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "/SPECTROview/", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "/SPECTROview/assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
     
     
       <script src="/SPECTROview/assets/javascripts/bundle.c21346df.min.js"></script>

@@ -2,35 +2,55 @@
 
 {% block tabs %}
   {{ super() }}
-  
-  {% if page and (page.url == "" or page.url.startswith("user_manual")) %}
+
+  {% set current_locale = i18n_page_locale | default(config.theme.language, true) | default('en', true) %}
+  {% set src_norm = page.file.src_path.replace('\\', '/') if page and page.file else '' %}
+  {% set is_home = page and (page.is_homepage or page.url in ('', 'fr/') or src_norm in ('index.md', 'index.fr.md')) %}
+  {% set is_user_manual = page and (src_norm.startswith('user_manual/') or page.url.startswith('user_manual') or page.url.startswith('fr/user_manual')) %}
+
+  {% if page and (is_home or is_user_manual) %}
     <style>
       /* Hide the default H1 title injected by MkDocs */
       .md-content h1 { display: none !important; }
     </style>
   {% endif %}
-  
-  {% if page and page.url == "" %}
+
+  {% if is_home %}
+    {% if current_locale == 'fr' %}
+      {% set banner_alt = "Bannière SPECTROview" %}
+      {% set manual_title = "Manuel utilisateur" %}
+      {% set manual_label = "Commencer" %}
+      {% set repo_title = "Dépôt GitHub" %}
+      {% set repo_label = "Voir sur GitHub" %}
+      {% set pypi_title = "Paquet PyPI" %}
+      {% set pypi_label = "Voir sur PyPI" %}
+    {% else %}
+      {% set banner_alt = "SPECTROview Banner" %}
+      {% set manual_title = "User Manual" %}
+      {% set manual_label = "Get Started" %}
+      {% set repo_title = "GitHub Repository" %}
+      {% set repo_label = "View on GitHub" %}
+      {% set pypi_title = "PyPI Package" %}
+      {% set pypi_label = "View on PyPI" %}
+    {% endif %}
     <section class="tx-hero">
       <div class="tx-hero__image">
-        <img src="assets/top_banner.png" alt="SPECTROview Banner" style="width: 100%; display: block; max-width: 1200px; margin: 0 auto; padding-top: 2rem;" />
+        <img src="{{ 'assets/top_banner.png' | url }}" alt="{{ banner_alt }}" style="width: 100%; display: block; max-width: 1200px; margin: 0 auto; padding-top: 2rem;" />
       </div>
       <div class="md-grid md-typeset">
         <div class="tx-hero__content">
           <h1 style="display: none;">SPECTROview</h1>
-          <a href="user_manual/" title="User Manual" class="md-button md-button--primary">
-            Get Started
+          <a href="user_manual/" title="{{ manual_title }}" class="md-button md-button--primary">
+            {{ manual_label }}
           </a>
-          <a href="{{ config.repo_url }}" title="GitHub Repository" class="md-button">
-            View on GitHub
+          <a href="{{ config.repo_url }}" title="{{ repo_title }}" class="md-button">
+            {{ repo_label }}
           </a>
-          <a href="https://pypi.org/project/spectroview/" title="PyPi Package" class="md-button">
-            View on PyPi
+          <a href="https://pypi.org/project/spectroview/" title="{{ pypi_title }}" class="md-button">
+            {{ pypi_label }}
           </a>
         </div>
       </div>
     </section>
   {% endif %}
 {% endblock %}
-
-

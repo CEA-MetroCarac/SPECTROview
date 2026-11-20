@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from PySide6.QtCore import Signal
 
+from spectroview.i18n import tr, tr_plural
 from spectroview.model.io.m_io import (
     extract_map_arrays,
     load_l6m_map,
@@ -66,7 +67,7 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
             map_name = path.stem
 
             if map_name in self.maps:
-                self.notify.emit(f"Map '{map_name}' already loaded, skipping.")
+                self.notify.emit(tr("Map '{name}' already loaded, skipping.", name=map_name))
                 continue
 
             try:
@@ -86,7 +87,7 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
                 loaded_maps.append(map_name)
                 last_valid_path = path
             except Exception as e:
-                self.notify.emit(f"Error loading {path.name}: {e}")
+                self.notify.emit(tr("Error loading {name}: {error}", name=path.name, error=e))
 
         if loaded_maps:
             self._emit_maps_list_update()
@@ -346,13 +347,13 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
     def save_current_map_to_csv(self, file_path: str):
         """Save the currently selected map to a CSV file (readable by m_io.py)."""
         if not self.current_map_name or self.current_map_name not in self.maps:
-            self.notify.emit("No map selected.")
+            self.notify.emit(tr("No map selected."))
             return
 
         try:
             md = self.store.get_map_data(self.current_map_name)
             if not md:
-                self.notify.emit("Map data not found.")
+                self.notify.emit(tr("Map data not found."))
                 return
 
             x_axis = md.x_axis
@@ -369,19 +370,19 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
                 f.write("SPECTROview Map Data\n")
             df.to_csv(file_path, sep=";", index=False, mode="a")
 
-            self.notify.emit(f"Map '{self.current_map_name}' saved to CSV.")
+            self.notify.emit(tr("Map '{name}' saved to CSV.", name=self.current_map_name))
         except Exception as e:
-            self.notify.emit(f"Error saving map: {e}")
+            self.notify.emit(tr("Error saving map: {error}", error=e))
 
     def delete_current_map(self):
         """Delete the currently selected Primary map."""
         if not self.current_map_name:
-            self.notify.emit("No map selected.")
+            self.notify.emit(tr("No map selected."))
             return
 
         map_name = self.current_map_name
         self.remove_map(map_name)
-        self.notify.emit(f"Map '{map_name}' deleted.")
+        self.notify.emit(tr("Map '{name}' deleted.", name=map_name))
 
     def delete_selected_maps(self):
         """Delete all currently selected maps (batch delete when multiple selected)."""
@@ -389,12 +390,12 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
         if not targets and self.current_map_name and self.current_map_name in self.maps:
             targets = [self.current_map_name]
         if not targets:
-            self.notify.emit("No map selected.")
+            self.notify.emit(tr("No map selected."))
             return
 
         if len(targets) == 1:
             self.remove_map(targets[0])
-            self.notify.emit(f"Map '{targets[0]}' deleted.")
+            self.notify.emit(tr("Map '{name}' deleted.", name=targets[0]))
             return
 
         existing_order = list(self.maps.keys())
@@ -425,7 +426,9 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
             self.map_data_updated.emit(pd.DataFrame())
             self.live_maps_selection_changed.emit([], None)
 
-        self.notify.emit(f"Deleted {len(targets)} map(s).")
+        self.notify.emit(
+            tr_plural("Deleted {count} map.", "Deleted {count} maps.", len(targets))
+        )
 
     def select_all_current_map_spectra(self):
         """Select all spectra from the currently displayed map."""
@@ -549,7 +552,7 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
     def send_selected_spectra_to_spectra_workspace(self):
         """Send selected spectra to the Spectra workspace tab for comparison."""
         if not self.selected_fnames:
-            self.notify.emit("No spectrum selected.")
+            self.notify.emit(tr("No spectrum selected."))
             return
 
         md = self.store.get_map_data(self.current_map_name)
@@ -582,7 +585,11 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
         if spectra_payloads:
             self.send_spectra_to_workspace.emit(spectra_payloads)
             self.notify.emit(
-                f"Sent {len(spectra_payloads)} spectra to Spectra workspace."
+                tr_plural(
+                    "Sent {count} spectrum to Spectra workspace.",
+                    "Sent {count} spectra to Spectra workspace.",
+                    len(spectra_payloads),
+                )
             )
 
     def remove_map(self, map_name: str):
@@ -723,16 +730,18 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
         """Extract profile data and send to Graphs workspace for plotting."""
         if profile_df is None or profile_df.empty:
             self.notify.emit(
-                "No profile data to extract. Select exactly 2 points in 2D map mode."
+                tr(
+                    "No profile data to extract. Select exactly 2 points in 2D map mode."
+                )
             )
             return
 
         if not profile_name or profile_name.strip() == "":
-            self.notify.emit("Please provide a name for the profile.")
+            self.notify.emit(tr("Please provide a name for the profile."))
             return
 
         if self.graphs_workspace is None:
-            self.notify.emit("Graphs workspace not available.")
+            self.notify.emit(tr("Graphs workspace not available."))
             return
 
         self.graphs_workspace.vm.add_dataframe(profile_name, profile_df)
@@ -752,6 +761,8 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
 
         if success:
             self.switch_to_graphs_tab.emit()
-            self.notify.emit(f"Profile '{profile_name}' sent to Graphs workspace")
+            self.notify.emit(
+                tr("Profile '{name}' sent to Graphs workspace", name=profile_name)
+            )
         else:
-            self.notify.emit("Failed to create profile plot.")
+            self.notify.emit(tr("Failed to create profile plot."))

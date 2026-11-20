@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 from PySide6.QtCore import QObject, Signal
 
+from spectroview.i18n import tr
 from spectroview.model.analysis.m_mva import MMVA, NMFResult, PCAResult
 from spectroview.model.spectra.spectra_store import SpectraStore
 
@@ -69,7 +70,7 @@ class VMMVA(QObject):
     def _build_data_matrix(self) -> tuple[np.ndarray, np.ndarray, list[str]]:
         """Build (X, x_axis, fnames) from the store."""
         if self._store is None:
-            raise ValueError("No store available.")
+            raise ValueError(tr("No store available."))
 
         if self._current_map_name is not None:
             return self._build_from_single_map(self._current_map_name)
@@ -105,7 +106,7 @@ class VMMVA(QObject):
             fnames.append(name)
 
         if len(rows) < 2:
-            raise ValueError("At least 2 active spectra are required for MVA.")
+            raise ValueError(tr("At least 2 active spectra are required for MVA."))
 
         return np.vstack(rows).astype(np.float64), x_ref, fnames
 
@@ -115,15 +116,19 @@ class VMMVA(QObject):
         """Maps-workspace mode: all active spectra from one MapData."""
         md = self._store.get_map_data(map_name)
         if md is None:
-            raise ValueError(f"Map '{map_name}' not found in store.")
+            raise ValueError(tr("Map '{name}' not found in store.", name=map_name))
 
         active = md.is_active
         active_indices = np.where(active)[0]
 
         if len(active_indices) < 2:
             raise ValueError(
-                f"At least 2 active spectra are required for MVA "
-                f"(map '{map_name}' has {len(active_indices)} active)."
+                tr(
+                    "At least 2 active spectra are required for MVA "
+                    "(map '{name}' has {count} active).",
+                    name=map_name,
+                    count=len(active_indices),
+                )
             )
 
         x = (md.x if md.x is not None else md.x0).astype(np.float64)
@@ -148,7 +153,7 @@ class VMMVA(QObject):
         try:
             result = self.model.run_pca(x_mat, n_components, center=center)
         except Exception as e:
-            self.notify.emit(f"PCA failed: {e}")
+            self.notify.emit(tr("PCA failed: {error}", error=e))
             return
 
         recon_errors = self.model.reconstruction_error_per_spectrum(
@@ -173,8 +178,12 @@ class VMMVA(QObject):
         }
         self.pca_results_ready.emit(payload)
         self.notify.emit(
-            f"PCA complete — {n_components} components, "
-            f"{result.cumulative_variance[-1] * 100:.1f}% variance explained."
+            tr(
+                "PCA complete — {n_components} components, "
+                "{variance}% variance explained.",
+                n_components=n_components,
+                variance=f"{result.cumulative_variance[-1] * 100:.1f}",
+            )
         )
 
     # ── NMF ───────────────────────────────────────────────────────────
@@ -194,7 +203,7 @@ class VMMVA(QObject):
                 x_mat, n_components, max_iter=max_iter, tol=tol, seed=seed
             )
         except Exception as e:
-            self.notify.emit(f"NMF failed: {e}")
+            self.notify.emit(tr("NMF failed: {error}", error=e))
             return
 
         recon_errors = self.model.reconstruction_error_per_spectrum(
@@ -219,9 +228,14 @@ class VMMVA(QObject):
         }
         self.nmf_results_ready.emit(payload)
         self.notify.emit(
-            f"NMF complete — {n_components} components, "
-            f"{result.n_iterations} iterations, "
-            f"reconstruction error = {result.reconstruction_error:.2f}."
+            tr(
+                "NMF complete — {n_components} components, "
+                "{n_iterations} iterations, "
+                "reconstruction error = {error}.",
+                n_components=n_components,
+                n_iterations=result.n_iterations,
+                error=f"{result.reconstruction_error:.2f}",
+            )
         )
 
     # ── Export to Graphs workspace ────────────────────────────────────
@@ -233,7 +247,7 @@ class VMMVA(QObject):
         elif self._last_nmf_result is not None:
             self._export_nmf(df_name)
         else:
-            self.notify.emit("No MVA results to export. Run an analysis first.")
+            self.notify.emit(tr("No MVA results to export. Run an analysis first."))
 
     def _export_pca(self, df_name: str):
         """Export PCA scores as a DataFrame."""
@@ -245,7 +259,7 @@ class VMMVA(QObject):
         df.insert(0, "Spectrum", fnames)
 
         self.send_df_to_graphs.emit(df_name, df)
-        self.notify.emit(f"PCA scores sent to Graphs as '{df_name}'.")
+        self.notify.emit(tr("PCA scores sent to Graphs as '{name}'.", name=df_name))
 
     def _export_nmf(self, df_name: str):
         """Export NMF scores (W matrix) as a DataFrame."""
@@ -257,4 +271,4 @@ class VMMVA(QObject):
         df.insert(0, "Spectrum", fnames)
 
         self.send_df_to_graphs.emit(df_name, df)
-        self.notify.emit(f"NMF scores sent to Graphs as '{df_name}'.")
+        self.notify.emit(tr("NMF scores sent to Graphs as '{name}'.", name=df_name))

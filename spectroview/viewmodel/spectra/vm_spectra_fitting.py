@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QFileDialog
 from spectroview.fit_engine.baseline import eval_baseline_batch
 from spectroview.fit_engine.evaluator import eval_peak_initial
 from spectroview.fit_engine.vbf_thread import VBFthread
+from spectroview.i18n import tr
 from spectroview.model.spectra.peak_model import initialize_peak_params
 from spectroview.viewmodel.common.spectral_utils import (
     build_clean_fit_model,
@@ -259,12 +260,12 @@ class SpectraFittingMixin:
     def copy_peaks(self) -> bool:
         """Copy peak definitions from the primary selected spectrum."""
         if not self.selected_fnames:
-            self.notify.emit("No spectrum selected.")
+            self.notify.emit(tr("No spectrum selected."))
             return False
 
         md = self._get_primary_selected_map_data()
         if not md or not md.fit_model or not md.fit_model.get("peak_models"):
-            self.notify.emit("No peaks to copy.")
+            self.notify.emit(tr("No peaks to copy."))
             return False
         self._peaks_clipboard = deepcopy(md.fit_model)
         self.clipboard_action_succeeded.emit("peaks_copy")
@@ -273,13 +274,13 @@ class SpectraFittingMixin:
     def paste_peaks(self, apply_all: bool = False) -> bool:
         """Paste copied peak definitions onto target spectra."""
         if not hasattr(self, "_peaks_clipboard") or self._peaks_clipboard is None:
-            self.notify.emit("No peaks copied.")
+            self.notify.emit(tr("No peaks copied."))
             return False
 
         mds = self._get_target_mds(apply_all)
         if not mds:
             if not apply_all:
-                self.notify.emit("No spectrum selected.")
+                self.notify.emit(tr("No spectrum selected."))
             return False
 
         for md in mds:
@@ -297,7 +298,7 @@ class SpectraFittingMixin:
         mds = self._get_target_mds(apply_all)
         if not mds:
             if not apply_all:
-                self.notify.emit("No spectrum selected.")
+                self.notify.emit(tr("No spectrum selected."))
             return
 
         for md in mds:
@@ -435,12 +436,12 @@ class SpectraFittingMixin:
     def copy_fit_model(self) -> bool:
         """Copy full fit model (preprocessing + peaks + settings) to internal clipboard."""
         if not self.selected_fnames:
-            self.notify.emit("No spectrum selected.")
+            self.notify.emit(tr("No spectrum selected."))
             return False
 
         md = self._get_primary_selected_map_data()
         if not md or not md.fit_model:
-            self.notify.emit("No fit results to copy.")
+            self.notify.emit(tr("No fit results to copy."))
             return False
 
         self._sync_fit_model_metadata(md)
@@ -452,7 +453,7 @@ class SpectraFittingMixin:
     def paste_fit_model(self, apply_all: bool = False) -> bool:
         """Paste the copied fit model onto target spectra and launch fitting."""
         if not hasattr(self, "_fitmodel_clipboard") or self._fitmodel_clipboard is None:
-            self.notify.emit("No fit model copied.")
+            self.notify.emit(tr("No fit model copied."))
             return False
 
         self._fitmodel_clipboard["fit_params"] = self.settings.load_fit_settings()
@@ -461,7 +462,7 @@ class SpectraFittingMixin:
             self._get_active_spectra() if apply_all else self._get_selected_spectra()
         )
         if not fnames:
-            self.notify.emit("No spectrum selected.")
+            self.notify.emit(tr("No spectrum selected."))
             return False
 
         for md in self._get_unique_map_data(fnames):
@@ -475,12 +476,12 @@ class SpectraFittingMixin:
     def save_fit_model(self):
         """Save the primary spectrum's fit model to a JSON file."""
         if not self.selected_fnames:
-            self.notify.emit("No spectrum selected.")
+            self.notify.emit(tr("No spectrum selected."))
             return
 
         md = self._get_primary_selected_map_data()
         if not md or not md.fit_model:
-            self.notify.emit("No fit model to save.")
+            self.notify.emit(tr("No fit model to save."))
             return
 
         self._sync_fit_model_metadata(md)
@@ -493,9 +494,9 @@ class SpectraFittingMixin:
 
         path, _ = QFileDialog.getSaveFileName(
             None,
-            "Save Fit Model",
+            tr("Save Fit Model"),
             default_dir,
-            "JSON Files (*.json)",
+            tr("JSON Files (*.json)"),
         )
 
         if not path:
@@ -513,17 +514,17 @@ class SpectraFittingMixin:
         with open(path, "w", encoding="utf-8") as f:
             json.dump({"0": clean_model}, f, indent=2, default=default_encoder)
 
-        self.notify.emit("Fit model saved successfully.")
+        self.notify.emit(tr("Fit model saved successfully."))
 
     def _load_selected_fit_model_dict(self) -> dict | None:
         """Load the fit model dictionary currently selected in FitModelBuilder."""
         if not hasattr(self, "_vm_fit_model_builder") or self._vm_fit_model_builder is None:
-            self.notify.emit("Fit model manager not connected.")
+            self.notify.emit(tr("Fit model manager not connected."))
             return None
 
         model_path = self._vm_fit_model_builder.get_current_model_path()
         if model_path is None or not model_path.exists():
-            self.notify.emit("No fit model selected.")
+            self.notify.emit(tr("No fit model selected."))
             return None
 
         try:
@@ -531,7 +532,7 @@ class SpectraFittingMixin:
                 data = json.load(f)
             return data.get("0", {})
         except Exception as e:
-            self.notify.emit(f"Failed to load fit model: {e}")
+            self.notify.emit(tr("Failed to load fit model: {error}", error=e))
             return None
 
     def apply_fit_model(self, apply_all: bool = False):
@@ -544,7 +545,7 @@ class SpectraFittingMixin:
             self._get_active_spectra() if apply_all else self._get_selected_spectra()
         )
         if not fnames:
-            self.notify.emit("No spectrum selected.")
+            self.notify.emit(tr("No spectrum selected."))
             return
 
         for md in self._get_unique_map_data(fnames):
@@ -556,7 +557,7 @@ class SpectraFittingMixin:
     def fit(self, apply_all: bool = False):
         """Fitting action for selected spectra with their current individual models."""
         if self._is_fitting:
-            self.notify.emit("Fit already in progress. Please wait...")
+            self.notify.emit(tr("Fit already in progress. Please wait..."))
             return
 
         spectra_fnames = (
@@ -580,18 +581,18 @@ class SpectraFittingMixin:
                 })
 
         if not tasks:
-            self.notify.emit("No peaks to fit.")
+            self.notify.emit(tr("No peaks to fit."))
             return
 
         self._launch_fit_thread(tasks)
 
     def _run_fit_thread(self, fit_model: dict, fnames):
         if self._is_fitting:
-            self.notify.emit("Fit already in progress. Please wait...")
+            self.notify.emit(tr("Fit already in progress. Please wait..."))
             return
 
         if not fnames:
-            self.notify.emit("No spectra selected.")
+            self.notify.emit(tr("No spectra selected."))
             return
 
         if "fit_params" not in fit_model:
@@ -660,7 +661,7 @@ class SpectraFittingMixin:
 
             self._is_fitting = False
             self.fit_in_progress.emit(False)
-            self.notify.emit("Fitting stopped by user.")
+            self.notify.emit(tr("Fitting stopped by user."))
 
     def set_fit_model_builder(self, vm_fit_model_builder):
         """Inject the VMFitModelBuilder dependency."""

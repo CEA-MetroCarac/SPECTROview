@@ -6,6 +6,13 @@ from PySide6.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QFrame, QDialog, QFileDialog, QMessageBox
 )
 
+from spectroview.i18n import (
+    bind_plural_text,
+    combo_data_or_text,
+    set_combo_by_data_or_text,
+    tr,
+    tr_plural,
+)
 from spectroview.view.workspaces.v_workspace_spectra import VWorkspaceSpectra
 from spectroview.view.components.lists.v_map_list import VMapsList
 from spectroview.view.components.map_viewer import VMapViewer, VMapViewerDialog
@@ -135,7 +142,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         footer_layout = QHBoxLayout()
         footer_layout.setSpacing(4)
         
-        self.lbl_count.setText("0 spectra")
+        bind_plural_text(self.lbl_count, "{count} spectrum", "{count} spectra", 0)
         self.progress_bar.setFixedHeight(17)
         
         # Stop button is inherited from parent but needs to be added to layout
@@ -186,7 +193,11 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         # ── VMapViewer → ViewModel connections ──
         self.v_map_viewer.spectra_selected.connect(self._on_map_viewer_selection)
         self.v_map_viewer.multi_viewer_requested.connect(self._on_add_viewer_requested)
-        self.v_map_viewer.cbb_map_type.currentTextChanged.connect(self._on_map_type_changed)
+        self.v_map_viewer.cbb_map_type.currentIndexChanged.connect(
+            lambda _idx: self._on_map_type_changed(
+                combo_data_or_text(self.v_map_viewer.cbb_map_type)
+            )
+        )
         self.v_map_viewer.extract_profile_requested.connect(self._on_extract_profile_requested)
 
         # ── VSpectraViewer → ViewModel connections ──
@@ -261,8 +272,12 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         if len(selected) > 1:
             reply = QMessageBox.question(
                 self,
-                "Delete Selected Maps",
-                f"Delete {len(selected)} selected maps?",
+                tr("Delete Selected Maps"),
+                tr_plural(
+                    "Delete {count} selected map?",
+                    "Delete {count} selected maps?",
+                    len(selected),
+                ),
                 QMessageBox.Yes | QMessageBox.No,
                 QMessageBox.No,
             )
@@ -352,7 +367,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         dialog = VMapViewerDialog(self, viewer_number=self.next_viewer_number)
         self.next_viewer_number += 1
         if hasattr(self, 'v_spectra_viewer') and hasattr(self.v_spectra_viewer, 'cbb_theme'):
-            dialog.map_viewer.apply_plot_style(self.v_spectra_viewer.cbb_theme.currentText())
+            dialog.map_viewer.apply_plot_style(
+                combo_data_or_text(self.v_spectra_viewer.cbb_theme)
+            )
         
         # Track the dialog
         self.viewer_dialogs.append(dialog)
@@ -362,7 +379,11 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         dialog.extract_profile_requested.connect(lambda name, d=dialog: self._on_extract_profile_from_dialog(name, d))
         
         # Connect map type change to centralized handler
-        dialog.map_viewer.cbb_map_type.currentTextChanged.connect(self._on_map_type_changed)
+        dialog.map_viewer.cbb_map_type.currentIndexChanged.connect(
+            lambda _idx, d=dialog: self._on_map_type_changed(
+                combo_data_or_text(d.map_viewer.cbb_map_type)
+            )
+        )
 
         # Keep this dialog's griddata cache in sync with the same invalidation
         # signal the main viewer listens to (baseline/fit/normalization changes, etc.)
@@ -379,7 +400,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Sync map type with centralized value
         dialog.map_viewer.cbb_map_type.blockSignals(True)
-        dialog.map_viewer.cbb_map_type.setCurrentText(self.selected_map_type)
+        set_combo_by_data_or_text(dialog.map_viewer.cbb_map_type, self.selected_map_type)
         dialog.map_viewer.cbb_map_type.blockSignals(False)
         
         # Clean up when dialog is closed
@@ -421,14 +442,14 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Sync main viewer combobox and trigger replot
         self.v_map_viewer.cbb_map_type.blockSignals(True)
-        self.v_map_viewer.cbb_map_type.setCurrentText(map_type)
+        set_combo_by_data_or_text(self.v_map_viewer.cbb_map_type, map_type)
         self.v_map_viewer.cbb_map_type.blockSignals(False)
         self.v_map_viewer.plot_heatmap()  # Manually trigger plot update
         
         # Sync all dialog viewers comboboxes and trigger replots
         for dialog in self.viewer_dialogs:
             dialog.map_viewer.cbb_map_type.blockSignals(True)
-            dialog.map_viewer.cbb_map_type.setCurrentText(map_type)
+            set_combo_by_data_or_text(dialog.map_viewer.cbb_map_type, map_type)
             dialog.map_viewer.cbb_map_type.blockSignals(False)
             dialog.map_viewer.plot_heatmap()  # Manually trigger plot update
     
@@ -527,9 +548,15 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         # Create dialog to show the DataFrame
         dialog = QDialog(self)
-        title = f"Map Data: {self.vm.current_map_name}"
+        title = tr("Map Data: {name}", name=self.vm.current_map_name)
         if len(df) > max_rows or len(df.columns) > max_cols:
-            title += f" (showing {len(df_limited)} of {len(df)} rows, {len(df_limited.columns)} of {len(df.columns)} columns)"
+            title += tr(
+                " (showing {shown_rows} of {total_rows} rows, {shown_cols} of {total_cols} columns)",
+                shown_rows=len(df_limited),
+                total_rows=len(df),
+                shown_cols=len(df_limited.columns),
+                total_cols=len(df.columns),
+            )
         dialog.setWindowTitle(title)
         dialog.resize(800, 600)
         
@@ -548,9 +575,9 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         
         file_path, _ = QFileDialog.getSaveFileName(
             self,
-            "Save Map Data",
+            tr("Save Map Data"),
             f"{self.vm.current_map_name}.csv",
-            "CSV Files (*.csv)"
+            tr("CSV Files (*.csv)")
         )
         
         if file_path:
@@ -588,7 +615,7 @@ class VWorkspaceMaps(VWorkspaceSpectra):
         profile_df = viewer._extract_profile()
         if profile_df is None or profile_df.empty:
             self._show_notification(
-                "Select exactly 2 points in 2D map mode to extract a profile.",
+                tr("Select exactly 2 points in 2D map mode to extract a profile."),
                 notification_type="warning",
             )
             return

@@ -10,6 +10,7 @@ import re
 import numpy as np
 import pandas as pd
 
+from spectroview.i18n import tr
 from spectroview.model.spectra.spectra_store import SpectraStore
 
 
@@ -191,4 +192,4 @@ class MapsPersistenceMixin:
             self.select_map(map_names[0])
         self.maps_list_changed.emit(map_names)
         self.count_changed.emit(sum(md.n_spectra for md in self.store._maps.values()))
-        self.notify.emit("Legacy maps workspace loaded successfully.")
+        self.notify.emit(tr("Legacy maps workspace loaded successfully."))

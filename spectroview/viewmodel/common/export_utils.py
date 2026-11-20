@@ -9,6 +9,7 @@ import numpy as np
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import QApplication
 
+from spectroview.i18n import tr
 from spectroview.viewmodel.common.ui_utils import show_notification
 
 # Vector formats where embedding real (editable/searchable) text instead of
@@ -23,13 +24,13 @@ def save_df_to_excel(save_path, df):
     falling back to openpyxl if xlsxwriter is unavailable.
     """
     if not save_path:
-        return False, "No save path provided."
+        return False, tr("No save path provided.")
 
     try:
         import pandas as pd
 
         if df is None or df.empty:
-            return False, "DataFrame is empty. Nothing to save."
+            return False, tr("DataFrame is empty. Nothing to save.")
 
         palette = ["#bda16d", "#a27ba0", "#cb5b12", "#23993b", "#008281", "#147ce4"]
 
@@ -62,7 +63,7 @@ def save_df_to_excel(save_path, df):
                 ws.write_column(1, col_idx, clean_vals, fmt)
 
             wb.close()
-            return True, "DataFrame saved successfully."
+            return True, tr("DataFrame saved successfully.")
         except ImportError:
             pass
 
@@ -96,16 +97,16 @@ def save_df_to_excel(save_path, df):
                 for cell in col_cells:
                     cell.fill = fill
 
-        return True, "DataFrame saved successfully."
+        return True, tr("DataFrame saved successfully.")
 
     except Exception as e:
-        return False, f"Error when saving DataFrame: {e!s}"
+        return False, tr("Error when saving DataFrame: {error}", error=f"{e!s}")
 
 
 def copy_fig_to_clb(canvas, size_ratio=None):
     """Copy matplotlib figure canvas to clipboard with optional resizing."""
     if not canvas:
-        show_notification("No plot to copy.", notification_type="warning")
+        show_notification(tr("No plot to copy."), notification_type="warning")
         return
 
     figure = canvas.figure
@@ -154,7 +155,7 @@ def export_figure_to_file(
     ``matplotlib.rc_context``.
     """
     if not canvas:
-        show_notification("No plot to export.", notification_type="warning")
+        show_notification(tr("No plot to export."), notification_type="warning")
         return False
 
     figure = canvas.figure
@@ -183,7 +184,7 @@ def export_figure_to_file(
             figure.savefig(filepath, **savefig_kwargs)
         return True
     except Exception as e:
-        show_notification(f"Error exporting figure: {e}", notification_type="error")
+        show_notification(tr("Error exporting figure: {error}", error=e), notification_type="error")
         return False
     finally:
         figure.set_size_inches(original_size, forward=True)

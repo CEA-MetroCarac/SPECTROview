@@ -7,6 +7,8 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 
+from spectroview.i18n import tr
+
 
 class MapsFittingMixin:
     """Overrides fitting and result collection for 2D/wafer hyperspectral maps."""
@@ -57,11 +59,11 @@ class MapsFittingMixin:
     def paste_fit_model(self, apply_all: bool = False) -> bool:
         """Override parent to apply clipboard fit model and sync preprocessing/fit thread."""
         if not hasattr(self, "_fitmodel_clipboard") or self._fitmodel_clipboard is None:
-            self.notify.emit("No fit model copied.")
+            self.notify.emit(tr("No fit model copied."))
             return False
 
         if not apply_all and not self.selected_fnames and not self.current_map_name:
-            self.notify.emit("No spectrum selected.")
+            self.notify.emit(tr("No spectrum selected."))
             return False
 
         self._fitmodel_clipboard["fit_params"] = self.settings.load_fit_settings()
@@ -73,7 +75,7 @@ class MapsFittingMixin:
     def fit(self, apply_all: bool = False):
         """Override: Fitting action for the Maps workspace."""
         if self._is_fitting:
-            self.notify.emit("Fit already in progress. Please wait...")
+            self.notify.emit(tr("Fit already in progress. Please wait..."))
             return
 
         tasks = []
@@ -90,7 +92,7 @@ class MapsFittingMixin:
         else:
             md = self.store.get_map_data(self.current_map_name)
             if not md or not md.fit_model or not md.fit_model.get("peak_models"):
-                self.notify.emit("No peaks to fit.")
+                self.notify.emit(tr("No peaks to fit."))
                 return
             self._reindex_fit_model(md)
             fnames = self._get_selected_spectra()
@@ -119,7 +121,7 @@ class MapsFittingMixin:
         call for maximum speed.
         """
         if self._is_fitting:
-            self.notify.emit("Fit already in progress. Please wait...")
+            self.notify.emit(tr("Fit already in progress. Please wait..."))
             return
 
         tasks = []
@@ -183,7 +185,7 @@ class MapsFittingMixin:
         """Collect fit results, delegating to SpectraStore via parent class and post-processing wafer coords."""
         map_names = self.store.map_names
         if not map_names:
-            self.notify.emit("No maps loaded to collect results from.")
+            self.notify.emit(tr("No maps loaded to collect results from."))
             return
 
         super().collect_fit_results(map_names=map_names)

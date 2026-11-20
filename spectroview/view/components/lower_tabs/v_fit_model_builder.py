@@ -21,6 +21,15 @@ from PySide6.QtWidgets import (
 
 from spectroview import PEAK_MODELS
 from spectroview.fit_engine.baseline import get_baseline_method_meta
+from spectroview.i18n import (
+    bind_combo_items,
+    bind_text,
+    bind_tooltip,
+    bind_title,
+    on_language_changed,
+    set_combo_by_data_or_text,
+    tr,
+)
 from spectroview.view.components.lower_tabs.v_peak_table import VPeakTable
 from spectroview.view.theme import Icons, current_tokens
 
@@ -143,14 +152,15 @@ class VFitModelBuilder(QWidget):
     # GROUPS
     # ======================================================
     def _x_correction_group(self):
-        gb = QGroupBox("X-axis correction")
+        gb = QGroupBox()
+        bind_title(gb, "X-axis correction")
         l = QHBoxLayout(gb)
         l.setContentsMargins(2, 2, 2, 2)
 
         # Reference selection
         self.cbb_xcorr = QComboBox()
-        self.cbb_xcorr.addItems(["None", "Si-Ref"])
-        self.cbb_xcorr.setCurrentText("Si-Ref")
+        bind_combo_items(self.cbb_xcorr, [("None", "None"), ("Si-Ref", "Si-Ref")])
+        set_combo_by_data_or_text(self.cbb_xcorr, "Si-Ref")
 
         # User correction value
         self.spin_xcorr = QDoubleSpinBox()
@@ -158,18 +168,19 @@ class VFitModelBuilder(QWidget):
         self.spin_xcorr.setFixedWidth(80)
         self.spin_xcorr.setDecimals(3)
         self.spin_xcorr.setValue(0)
-        self.spin_xcorr.setToolTip("Type measured reference peak position")
+        bind_tooltip(self.spin_xcorr, "Type measured reference peak position")
 
         # Label showing corrected value
         self.lbl_xcorr_value = QLabel("(0)")
 
         # Buttons
-        self.btn_xcorrect = QPushButton("Correct")
-        self.btn_xcorrect.setToolTip("Apply X correction to current selected spectrum(s)")
+        self.btn_xcorrect = QPushButton()
+        bind_text(self.btn_xcorrect, "Correct")
+        bind_tooltip(self.btn_xcorrect, "Apply X correction to current selected spectrum(s)")
 
         self.btn_undo_corr = QPushButton()
         self.btn_undo_corr.setFixedSize(30, 24)
-        self.btn_undo_corr.setToolTip("Undo X correction")
+        bind_tooltip(self.btn_undo_corr, "Undo X correction")
 
         # --- Layout order ---
         l.addWidget(self.cbb_xcorr)
@@ -199,7 +210,8 @@ class VFitModelBuilder(QWidget):
         self.spin_xmax.blockSignals(False)
 
     def _spectral_range_group(self):
-        gb = QGroupBox("Spectral range (X axis)")
+        gb = QGroupBox()
+        bind_title(gb, "Spectral range (X axis)")
         l = QHBoxLayout(gb)
         l.setContentsMargins(2, 2, 2, 2)
 
@@ -213,12 +225,18 @@ class VFitModelBuilder(QWidget):
         self.spin_xmin.setRange(-1e9, 1e9)
         self.spin_xmax.setRange(-1e9, 1e9)
 
-        self.btn_extract = QPushButton("Crop")
-        self.btn_extract.setToolTip("Extract selected spectra range. Hold Ctrl + click to apply cropping to all spectra.")
+        self.btn_extract = QPushButton()
+        bind_text(self.btn_extract, "Crop")
+        bind_tooltip(
+            self.btn_extract,
+            "Extract selected spectra range. Hold Ctrl + click to apply cropping to all spectra.",
+        )
 
         self.btn_extract.clicked.connect(self._on_extract_clicked)
 
-        l.addWidget(QLabel("Min/Max:"))
+        lbl_minmax = QLabel()
+        bind_text(lbl_minmax, "Min/Max:")
+        l.addWidget(lbl_minmax)
         l.addWidget(self.spin_xmin)
         l.addWidget(QLabel("/"))
         l.addWidget(self.spin_xmax)
@@ -240,7 +258,8 @@ class VFitModelBuilder(QWidget):
     _BASELINE_MODE_KEYS = []  # populated at runtime
 
     def _baseline_group(self):
-        gb = QGroupBox("Baseline")
+        gb = QGroupBox()
+        bind_title(gb, "Baseline")
         v = QVBoxLayout(gb)
         v.setContentsMargins(2, 4, 2, 4)
         v.setSpacing(4)
@@ -250,14 +269,17 @@ class VFitModelBuilder(QWidget):
 
         self.cbb_baseline_mode = QComboBox()
         self._populate_baseline_mode_combobox()
-        self.cbb_baseline_mode.setToolTip(
+        bind_tooltip(
+            self.cbb_baseline_mode,
             "Baseline correction mode.\n"
             "Manual modes (Linear/Polynomial): place anchor points on the plot.\n"
             "Auto modes (arPLS, airPLS, …): no anchor points needed; "
-            "adjust the smoothness slider for a real-time preview."
+            "adjust the smoothness slider for a real-time preview.",
         )
 
-        row0.addWidget(QLabel("Mode:"))
+        lbl_mode = QLabel()
+        bind_text(lbl_mode, "Mode:")
+        row0.addWidget(lbl_mode)
         row0.addWidget(self.cbb_baseline_mode)
         row0.addStretch()
 
@@ -267,25 +289,30 @@ class VFitModelBuilder(QWidget):
         row1 = QHBoxLayout(self._row1_widget)
         row1.setContentsMargins(0, 0, 0, 0)
 
-        self.lbl_poly_order = QLabel("Order:")
+        self.lbl_poly_order = QLabel()
+        bind_text(self.lbl_poly_order, "Order:")
         self.spin_poly = QSpinBox()
         self.spin_poly.setRange(2, 20)
         self.spin_poly.setFixedWidth(44)
-        self.spin_poly.setToolTip("Polynomial order")
+        bind_tooltip(self.spin_poly, "Polynomial order")
 
-        self.chk_attached = QCheckBox("Attached")
+        self.chk_attached = QCheckBox()
+        bind_text(self.chk_attached, "Attached")
         self.chk_attached.setChecked(True)
-        self.chk_attached.setToolTip(
-            "Snap baseline anchor points vertically to the spectrum profile"
+        bind_tooltip(
+            self.chk_attached,
+            "Snap baseline anchor points vertically to the spectrum profile",
         )
 
-        self.lbl_sigma = QLabel("Corr. noise:")
+        self.lbl_sigma = QLabel()
+        bind_text(self.lbl_sigma, "Corr. noise:")
         self.spin_noise = QSpinBox()
         self.spin_noise.setRange(0, 20)
         self.spin_noise.setValue(4)
         self.spin_noise.setFixedWidth(40)
-        self.spin_noise.setToolTip(
-            "Gaussian smoothing σ applied before attachment (noise correction)"
+        bind_tooltip(
+            self.spin_noise,
+            "Gaussian smoothing σ applied before attachment (noise correction)",
         )
 
         row1.addWidget(self.lbl_poly_order)
@@ -305,16 +332,18 @@ class VFitModelBuilder(QWidget):
         self.sld_coef.setFixedWidth(200)
         self.sld_coef.setRange(10, 100)   # ×10 for one decimal precision
         self.sld_coef.setValue(50)         # default coef = 5 → λ = 1e5
-        self.sld_coef.setToolTip(
+        bind_tooltip(
+            self.sld_coef,
             "Smoothness parameter (λ = 10^coef).\n"
-            "Move right for smoother / higher background insensitivity."
+            "Move right for smoother / higher background insensitivity.",
         )
 
         self.lbl_coef = QLabel("λ=1e5")
         self.lbl_coef.setFixedWidth(54)
 
         # Secondary parameter (order / sigma depending on method)
-        self.lbl_coef2 = QLabel("Order:")
+        self.lbl_coef2 = QLabel()
+        bind_text(self.lbl_coef2, "Order:")
         self.spin_coef2 = QSpinBox()
         self.spin_coef2.setRange(1, 20)
         self.spin_coef2.setValue(1)
@@ -322,7 +351,9 @@ class VFitModelBuilder(QWidget):
         self.spin_coef2.setVisible(False)
         self.lbl_coef2.setVisible(False)
 
-        row2.addWidget(QLabel("Coef:"))
+        lbl_coef_title = QLabel()
+        bind_text(lbl_coef_title, "Coef:")
+        row2.addWidget(lbl_coef_title)
         row2.addWidget(self.sld_coef)
         row2.addWidget(self.lbl_coef)
         row2.addWidget(self.lbl_coef2)
@@ -334,9 +365,10 @@ class VFitModelBuilder(QWidget):
 
         self.btn_base_delete = QPushButton()
         self.btn_base_delete.setFixedSize(30, 24)
-        self.btn_base_delete.setToolTip(
+        bind_tooltip(
+            self.btn_base_delete,
             "Undo baseline subtraction (reinitialise + re-crop spectrum).\n"
-            "Hold Ctrl to apply to all spectra."
+            "Hold Ctrl to apply to all spectra.",
         )
         self.btn_base_delete.clicked.connect(
             lambda: self._emit_with_ctrl(self.baseline_delete_requested)
@@ -344,18 +376,20 @@ class VFitModelBuilder(QWidget):
 
         self.btn_base_copy = QPushButton()
         self.btn_base_copy.setFixedSize(30, 24)
-        self.btn_base_copy.setToolTip("Copy baseline")
+        bind_tooltip(self.btn_base_copy, "Copy baseline")
         self.btn_base_copy.clicked.connect(self._on_base_copy_clicked)
 
         self.btn_base_paste = QPushButton()
         self.btn_base_paste.setFixedSize(30, 24)
-        self.btn_base_paste.setToolTip("Paste baseline. Hold Ctrl to paste to all spectra.")
+        bind_tooltip(self.btn_base_paste, "Paste baseline. Hold Ctrl to paste to all spectra.")
         self.btn_base_paste.clicked.connect(self._on_base_paste_clicked)
 
-        self.btn_base_subtract = QPushButton("Subtract")
+        self.btn_base_subtract = QPushButton()
+        bind_text(self.btn_base_subtract, "Subtract")
         self.btn_base_subtract.setFixedSize(80, 24)
-        self.btn_base_subtract.setToolTip(
-            "Subtract baseline. Hold Ctrl to subtract from all spectra."
+        bind_tooltip(
+            self.btn_base_subtract,
+            "Subtract baseline. Hold Ctrl to subtract from all spectra.",
         )
         self.btn_base_subtract.clicked.connect(
             lambda: self._emit_with_ctrl(self.baseline_subtract_requested)
@@ -394,8 +428,12 @@ class VFitModelBuilder(QWidget):
         VFitModelBuilder._BASELINE_MODE_KEYS = []
 
         # ── Manual methods
-        for key in ("Linear", "Polynomial"):
-            cbb.addItem(key)
+        manual_modes = (
+            ("Linear", tr("Linear")),
+            ("Polynomial", tr("Polynomial")),
+        )
+        for key, label in manual_modes:
+            cbb.addItem(label, key)
             VFitModelBuilder._BASELINE_MODE_KEYS.append(key)
 
         # separator
@@ -411,11 +449,23 @@ class VFitModelBuilder(QWidget):
         }
 
         for key, label in _AUTO_WHITELIST.items():
-            cbb.addItem(label)
+            cbb.addItem(label, key)
             VFitModelBuilder._BASELINE_MODE_KEYS.append(key)
 
         # Set default to "Linear"
         cbb.setCurrentIndex(0)
+        on_language_changed(self, self._retranslate_baseline_modes)
+
+    def _retranslate_baseline_modes(self):
+        """Retranslate manual baseline mode entries while preserving indices."""
+        cbb = self.cbb_baseline_mode
+        was_blocked = cbb.blockSignals(True)
+        try:
+            if cbb.count() >= 2:
+                cbb.setItemText(0, tr("Linear"))
+                cbb.setItemText(1, tr("Polynomial"))
+        finally:
+            cbb.blockSignals(was_blocked)
 
     def _current_mode_key(self):
         """Return the baseline mode key for the current combobox selection."""
@@ -445,12 +495,12 @@ class VFitModelBuilder(QWidget):
         if is_auto:
             meta = get_baseline_method_meta(mode)
             if meta.get("order_kwarg"):
-                self.lbl_coef2.setText("Order:")
+                bind_text(self.lbl_coef2, "Order:")
                 self.spin_coef2.setRange(1, 20)
                 self.lbl_coef2.setVisible(True)
                 self.spin_coef2.setVisible(True)
             elif meta.get("sigma_kwarg"):
-                self.lbl_coef2.setText("σ:")
+                bind_text(self.lbl_coef2, "σ:")
                 self.spin_coef2.setRange(0, 50)
                 self.lbl_coef2.setVisible(True)
                 self.spin_coef2.setVisible(True)
@@ -583,7 +633,8 @@ class VFitModelBuilder(QWidget):
         self._apply_mode_visibility(mode)
 
     def _peaks_group(self):
-        gb = QGroupBox("Peaks")
+        gb = QGroupBox()
+        bind_title(gb, "Peaks")
         v = QVBoxLayout(gb)
         v.setContentsMargins(2, 2, 2, 2)
 
@@ -592,25 +643,33 @@ class VFitModelBuilder(QWidget):
         self.cbb_peak_shape.addItems(PEAK_MODELS)
         self.cbb_peak_shape.currentTextChanged.connect(self.peak_shape_changed.emit)
 
-        row1.addWidget(QLabel("Peak shape:"))
+        lbl_peak_shape = QLabel()
+        bind_text(lbl_peak_shape, "Peak shape:")
+        row1.addWidget(lbl_peak_shape)
         row1.addWidget(self.cbb_peak_shape)
 
         row2 = QHBoxLayout()
         self.btn_peak_delete = QPushButton()
         self.btn_peak_delete.setFixedSize(30, 24)
-        self.btn_peak_delete.setToolTip("Delete peaks. Hold Ctrl to delete from all spectra.")
+        bind_tooltip(
+            self.btn_peak_delete,
+            "Delete peaks. Hold Ctrl to delete from all spectra.",
+        )
         self.btn_peak_delete.clicked.connect(
             lambda: self._emit_with_ctrl(self.peaks_delete_requested)
         )
 
         self.btn_peak_copy = QPushButton()
         self.btn_peak_copy.setFixedSize(30, 24)
-        self.btn_peak_copy.setToolTip("Copy peaks.")
+        bind_tooltip(self.btn_peak_copy, "Copy peaks.")
         self.btn_peak_copy.clicked.connect(self._on_peak_copy_clicked)
 
         self.btn_peak_paste = QPushButton()
         self.btn_peak_paste.setFixedSize(30, 24)
-        self.btn_peak_paste.setToolTip("Paste peaks. Hold Ctrl to paste to all spectra.")
+        bind_tooltip(
+            self.btn_peak_paste,
+            "Paste peaks. Hold Ctrl to paste to all spectra.",
+        )
         self.btn_peak_paste.clicked.connect(self._on_peak_paste_clicked)
 
         for b in (self.btn_peak_delete, self.btn_peak_copy, self.btn_peak_paste):
@@ -686,27 +745,36 @@ class VFitModelBuilder(QWidget):
 
         # ── Row 1: Fit actions
         row1 = QHBoxLayout()
-        self.btn_fit = QPushButton("Fit")
+        self.btn_fit = QPushButton()
+        bind_text(self.btn_fit, "Fit")
         self.btn_fit.setFixedSize(81, 24)
-        self.btn_fit.setToolTip("Fit the spectrum. Hold Ctrl to fit all spectra.")
+        bind_tooltip(self.btn_fit, "Fit the spectrum. Hold Ctrl to fit all spectra.")
         self.btn_fit.clicked.connect(
             lambda: self._emit_with_ctrl(self.fit_requested)
         )
 
-        self.btn_copy = QPushButton("Copy")
-        self.btn_copy.setToolTip("Copy fit model of selected spectrum.")
+        self.btn_copy = QPushButton()
+        bind_text(self.btn_copy, "Copy")
+        bind_tooltip(self.btn_copy, "Copy fit model of selected spectrum.")
         self.btn_copy.clicked.connect(self._on_fitmodel_copy_clicked)
 
-        self.btn_paste = QPushButton("Paste")
-        self.btn_paste.setToolTip("Paste fit model of selected spectrum. Hold Ctrl to paste to all spectra.")
+        self.btn_paste = QPushButton()
+        bind_text(self.btn_paste, "Paste")
+        bind_tooltip(
+            self.btn_paste,
+            "Paste fit model of selected spectrum. Hold Ctrl to paste to all spectra.",
+        )
         self.btn_paste.clicked.connect(self._on_fitmodel_paste_clicked)
 
-        self.btn_save = QPushButton("Save")
-        self.btn_save.setToolTip("Save the current fit model.")
+        self.btn_save = QPushButton()
+        bind_text(self.btn_save, "Save")
+        bind_tooltip(self.btn_save, "Save the current fit model.")
         self.btn_save.clicked.connect(self.fitmodel_save_requested.emit)
 
-        self.chk_limits = QCheckBox("Limits")
-        self.chk_expr = QCheckBox("Expression")
+        self.chk_limits = QCheckBox()
+        bind_text(self.chk_limits, "Limits")
+        self.chk_expr = QCheckBox()
+        bind_text(self.chk_expr, "Expression")
 
         self.chk_limits.toggled.connect(self.peak_table.set_show_limits)
         self.chk_expr.toggled.connect(self.peak_table.set_show_expr)
@@ -719,28 +787,41 @@ class VFitModelBuilder(QWidget):
 
         # ── Row 2: Model selection
         row2 = QHBoxLayout()
-        row2.addWidget(QLabel("Fit model:"))
+        lbl_fit_model = QLabel()
+        bind_text(lbl_fit_model, "Fit model:")
+        row2.addWidget(lbl_fit_model)
 
         self.cbb_model = QComboBox()
         self.cbb_model.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.cbb_model.setMaximumWidth(302)
 
-        self.cbb_model.setToolTip("Select fit model, or drag and drop a JSON model file here.")
+        bind_tooltip(
+            self.cbb_model,
+            "Select fit model, or drag and drop a JSON model file here.",
+        )
 
-        self.btn_apply = QPushButton("Apply")
+        self.btn_apply = QPushButton()
+        bind_text(self.btn_apply, "Apply")
         self.btn_apply.setFixedWidth(86)
-        self.btn_apply.setToolTip("Apply selected fit model to current selected spectrum(s).")
+        bind_tooltip(
+            self.btn_apply,
+            "Apply selected fit model to current selected spectrum(s).",
+        )
         self.btn_apply.clicked.connect(
             lambda: self._emit_with_ctrl(self.apply_loaded_fit_model_requested)
         )
 
-        self.btn_load = QPushButton("Load")
-        self.btn_load.setToolTip("Load fit model from a JSON file (or drag and drop JSON file).")
+        self.btn_load = QPushButton()
+        bind_text(self.btn_load, "Load")
+        bind_tooltip(
+            self.btn_load,
+            "Load fit model from a JSON file (or drag and drop JSON file).",
+        )
         self.btn_load.clicked.connect(self.load_fit_models_requested.emit)
 
         self.btn_refresh = QPushButton()
         self.btn_refresh.setFixedSize(30, 24)
-        self.btn_refresh.setToolTip("Refresh fit model list.")
+        bind_tooltip(self.btn_refresh, "Refresh fit model list.")
         self.btn_refresh.clicked.connect(self.refresh_fit_models_requested.emit)
 
         row2.addWidget(self.cbb_model)
@@ -761,13 +842,13 @@ class VFitModelBuilder(QWidget):
         self.btn_paste.setEnabled(enabled)
         if not enabled:
             tok = current_tokens()
-            self.btn_fit.setText("Fitting")
+            bind_text(self.btn_fit, "Fitting")
             self.btn_fit.setStyleSheet(f"QPushButton {{ color: {tok.error}; font-weight: 600; }}")
-            self.btn_apply.setText("Applying")
+            bind_text(self.btn_apply, "Applying")
         else:
-            self.btn_fit.setText("Fit")
+            bind_text(self.btn_fit, "Fit")
             self.btn_fit.setStyleSheet("")
-            self.btn_apply.setText("Apply")
+            bind_text(self.btn_apply, "Apply")
 
     def _apply_initial_icons(self):
         """Set default vector icons with dynamic paint-time theme coloring."""

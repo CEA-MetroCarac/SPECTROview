@@ -8,6 +8,7 @@ from pathlib import Path
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog
 
+from spectroview.i18n import tr
 from spectroview.model.m_settings import MSettings
 from spectroview.model.spectra.m_fit_model_manager import MFitModelManager
 
@@ -41,7 +42,7 @@ class VMFitModelBuilder(QObject):
 
         if not folder:
             self.models_changed.emit([])
-            self.notify.emit("No model folder defined in Settings.")
+            self.notify.emit(tr("No model folder defined in Settings."))
             return
 
         base_models = self.model_manager.scan_folder(folder)
@@ -61,7 +62,7 @@ class VMFitModelBuilder(QObject):
         """Load a JSON fit model file without changing default model folder."""
         path = Path(file_path)
         if not path.is_file() or path.suffix.lower() != ".json":
-            self.notify.emit(f"Invalid fit model file: {path.name}")
+            self.notify.emit(tr("Invalid fit model file: {name}", name=path.name))
             return False
 
         try:
@@ -69,11 +70,16 @@ class VMFitModelBuilder(QObject):
                 data = json.load(f)
             if not isinstance(data, dict):
                 self.notify.emit(
-                    f"Invalid fit model format: {path.name} must be a JSON object."
+                    tr(
+                        "Invalid fit model format: {name} must be a JSON object.",
+                        name=path.name,
+                    )
                 )
                 return False
         except Exception as e:
-            self.notify.emit(f"Failed to read fit model {path.name}: {e}")
+            self.notify.emit(
+                tr("Failed to read fit model {name}: {error}", name=path.name, error=e)
+            )
             return False
 
         model_name = path.name
@@ -99,9 +105,9 @@ class VMFitModelBuilder(QObject):
 
         file_path, _ = QFileDialog.getOpenFileName(
             None,
-            "Select Fit Model",
+            tr("Select Fit Model"),
             start_dir,
-            "JSON files (*.json)",
+            tr("JSON files (*.json)"),
         )
 
         if not file_path:

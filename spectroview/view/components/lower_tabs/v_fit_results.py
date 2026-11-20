@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.i18n import bind_placeholder, bind_text, bind_tooltip
 from spectroview.view.components.common.customized_widgets import ExpressionLineEdit
 from spectroview.view.components.lists.v_dataframe_table import VDataframeTable
 from spectroview.view.theme import Icons, current_tokens
@@ -49,14 +50,17 @@ class VFitResults(QWidget):
 
         # Row 0: Fit-results decimal precision (label + spinbox on one line)
         decimals_layout = QHBoxLayout()
-        decimals_layout.addWidget(QLabel("Fit results decimals:"))
+        lbl_decimals = QLabel()
+        bind_text(lbl_decimals, "Fit results decimals:")
+        decimals_layout.addWidget(lbl_decimals)
         self.spin_results_decimals = QSpinBox()
         self.spin_results_decimals.setRange(0, 8)
         self.spin_results_decimals.setValue(3)
         self.spin_results_decimals.setFixedWidth(60)
-        self.spin_results_decimals.setToolTip(
+        bind_tooltip(
+            self.spin_results_decimals,
             "Number of decimal places for values (x0, ampli, fwhm, area, R2, "
-            "computed columns) in the results table. Re-collect / recompute to apply."
+            "computed columns) in the results table. Re-collect / recompute to apply.",
         )
         self.spin_results_decimals.valueChanged.connect(self.results_decimals_changed.emit)
         decimals_layout.addWidget(self.spin_results_decimals)
@@ -64,36 +68,49 @@ class VFitResults(QWidget):
         left_layout.addLayout(decimals_layout)
 
         # Row 1: Collect Results button
-        self.btn_collect = QPushButton("Collect Fit Results")
+        self.btn_collect = QPushButton()
+        bind_text(self.btn_collect, "Collect Fit Results")
         self.btn_collect.setIcon(Icons.get("collect"))
         self.btn_collect.setMinimumHeight(50)
-        self.btn_collect.setToolTip("Collect fit parameters from all fitted spectra into the results table.")
+        bind_tooltip(
+            self.btn_collect,
+            "Collect fit parameters from all fitted spectra into the results table.",
+        )
         self.btn_collect.clicked.connect(self.collect_results_requested.emit)
         left_layout.addWidget(self.btn_collect)
 
         # Row 2: Split filename controls
-        lbl_split = QLabel("Split the filename of spectra:")
+        lbl_split = QLabel()
+        bind_text(lbl_split, "Split the filename of spectra:")
         left_layout.addWidget(lbl_split)
 
         split_layout = QHBoxLayout()
 
-        self.btn_split = QPushButton("Split")
+        self.btn_split = QPushButton()
+        bind_text(self.btn_split, "Split")
         self.btn_split.setIcon(Icons.cut())
         self.btn_split.setMinimumWidth(68)
-        self.btn_split.setToolTip("Split spectrum filenames by underscore ('_') into selectable parts.")
+        bind_tooltip(
+            self.btn_split,
+            "Split spectrum filenames by underscore ('_') into selectable parts.",
+        )
         self.btn_split.clicked.connect(self.split_fname_requested.emit)
 
         self.cbb_split_fname = QComboBox()
         self.cbb_split_fname.setMinimumWidth(100)
 
         self.ent_col_name = QLineEdit()
-        self.ent_col_name.setPlaceholderText("Column name")
+        bind_placeholder(self.ent_col_name, "Column name")
         self.ent_col_name.setMinimumWidth(90)
 
-        self.btn_add = QPushButton("Add")
+        self.btn_add = QPushButton()
+        bind_text(self.btn_add, "Add")
         self.btn_add.setIcon(Icons.plus())
         self.btn_add.setMinimumWidth(68)
-        self.btn_add.setToolTip("Add the selected filename part as a new column in the fit results table.")
+        bind_tooltip(
+            self.btn_add,
+            "Add the selected filename part as a new column in the fit results table.",
+        )
         self.btn_add.clicked.connect(self._on_add_column)
 
         split_layout.addWidget(self.btn_split)
@@ -104,18 +121,19 @@ class VFitResults(QWidget):
         left_layout.addLayout(split_layout)
 
         # Row 3: Computed column from expression
-        lbl_compute = QLabel("Add computed column from expression:")
+        lbl_compute = QLabel()
+        bind_text(lbl_compute, "Add computed column from expression:")
         left_layout.addWidget(lbl_compute)
 
         compute_layout = QHBoxLayout()
 
         self.ent_compute_col_name = QLineEdit()
-        self.ent_compute_col_name.setPlaceholderText("New Column Name")
+        bind_placeholder(self.ent_compute_col_name, "New Column Name")
         self.ent_compute_col_name.setMinimumWidth(60)
 
         # Use custom ExpressionLineEdit for smart autocomplete
         self.ent_compute_expression = ExpressionLineEdit()
-        self.ent_compute_expression.setPlaceholderText("e.g., column1 - column2 * 2")
+        bind_placeholder(self.ent_compute_expression, "e.g., column1 - column2 * 2")
         self.ent_compute_expression.setMinimumWidth(120)
 
         # Add autocomplete for column names
@@ -124,10 +142,14 @@ class VFitResults(QWidget):
         self.completer.setCompletionMode(QCompleter.PopupCompletion)
         self.ent_compute_expression.setCompleter(self.completer)
 
-        self.btn_compute = QPushButton("Compute && Add")
+        self.btn_compute = QPushButton()
+        bind_text(self.btn_compute, "Compute && Add")
         self.btn_compute.setIcon(Icons.calc())
         self.btn_compute.setMinimumWidth(130)
-        self.btn_compute.setToolTip("Compute a new column from the expression and add it to the fit results table.")
+        bind_tooltip(
+            self.btn_compute,
+            "Compute a new column from the expression and add it to the fit results table.",
+        )
         self.btn_compute.clicked.connect(self._on_compute_column)
 
         compute_layout.addWidget(self.ent_compute_col_name)
@@ -137,21 +159,24 @@ class VFitResults(QWidget):
         left_layout.addLayout(compute_layout)
 
         # Row 4: Send to visualization
-        lbl_send = QLabel("Send fit results to Graphs Workspace for visualization:")
+        lbl_send = QLabel()
+        bind_text(lbl_send, "Send fit results to Graphs Workspace for visualization:")
         left_layout.addWidget(lbl_send)
 
         send_layout = QHBoxLayout()
 
         self.ent_send_df_to_viz = QLineEdit()
-        self.ent_send_df_to_viz.setPlaceholderText("DataFrame name")
+        bind_placeholder(self.ent_send_df_to_viz, "DataFrame name")
         self.ent_send_df_to_viz.setText("best_fit_results")
 
-        self.btn_send = QPushButton("Send to Graphs")
+        self.btn_send = QPushButton()
+        bind_text(self.btn_send, "Send to Graphs")
         self.btn_send.setIcon(Icons.send())
         self.btn_send.setMinimumWidth(130)
-        self.btn_send.setToolTip(
+        bind_tooltip(
+            self.btn_send,
             "Send fit results DataFrame to the Graphs Workspace for visualization.\n"
-            "Hold Ctrl to force-replace an existing DataFrame with the same name."
+            "Hold Ctrl to force-replace an existing DataFrame with the same name.",
         )
         self.btn_send.clicked.connect(self._on_send_to_viz)
 
@@ -163,8 +188,9 @@ class VFitResults(QWidget):
         # Row 5: Save button at bottom
         left_layout.addStretch()
 
-        self.btn_save = QPushButton("Save Fit Results")
-        self.btn_save.setToolTip("Save fit results to Excel file")
+        self.btn_save = QPushButton()
+        bind_text(self.btn_save, "Save Fit Results")
+        bind_tooltip(self.btn_save, "Save fit results to Excel file")
         self.btn_save.setIcon(Icons.save())
         self.btn_save.setIconSize(QSize(24, 24))
         self.btn_save.setMinimumHeight(40)

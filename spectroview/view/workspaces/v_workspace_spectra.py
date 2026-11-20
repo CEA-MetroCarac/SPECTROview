@@ -11,6 +11,13 @@ from PySide6.QtWidgets import (
     QFrame
 )
 
+from spectroview.i18n import (
+    bind_plural_text,
+    bind_tab_text,
+    bind_text,
+    bind_tooltip,
+    tr,
+)
 from spectroview.model.m_settings import MSettings
 
 from spectroview.view.components.common.v_notification import show_notification
@@ -82,11 +89,16 @@ class VWorkspaceSpectra(QWidget):
         if self.vm is not None:
             self.vm.set_fit_model_builder(self.vm_fit_model_builder) # 🔑 inject dependency
         
-        self.bottom_tabs.addTab(self.v_fit_model_builder, "Fit Model Builder")
-        self.bottom_tabs.addTab(self.v_fit_results, "Fit Results")
-        self.bottom_tabs.addTab(self.v_live_maps, "Live Maps")
-        self.bottom_tabs.addTab(self.v_mva, "MVA (beta)")
-        self.bottom_tabs.addTab(self.v_more_tab, "More")
+        self.bottom_tabs.addTab(self.v_fit_model_builder, tr("Fit Model Builder"))
+        self.bottom_tabs.addTab(self.v_fit_results, tr("Fit Results"))
+        self.bottom_tabs.addTab(self.v_live_maps, tr("Live Maps"))
+        self.bottom_tabs.addTab(self.v_mva, tr("MVA (beta)"))
+        self.bottom_tabs.addTab(self.v_more_tab, tr("More"))
+        bind_tab_text(self.bottom_tabs, self.v_fit_model_builder, "Fit Model Builder")
+        bind_tab_text(self.bottom_tabs, self.v_fit_results, "Fit Results")
+        bind_tab_text(self.bottom_tabs, self.v_live_maps, "Live Maps")
+        bind_tab_text(self.bottom_tabs, self.v_mva, "MVA (beta)")
+        bind_tab_text(self.bottom_tabs, self.v_more_tab, "More")
         
         left_splitter.addWidget(self.v_spectra_viewer)
         left_splitter.addWidget(self.bottom_tabs)
@@ -107,19 +119,21 @@ class VWorkspaceSpectra(QWidget):
 
         self.btn_select_all = QPushButton()
         self.btn_select_all.setIcon(Icons.check_circle())
-        self.btn_select_all.setToolTip("Select all spectra")
+        bind_tooltip(self.btn_select_all, "Select all spectra")
         
         self.btn_remove = QPushButton()
         self.btn_remove.setIcon(Icons.trash())
-        self.btn_remove.setToolTip("Remove selected spectra")
+        bind_tooltip(self.btn_remove, "Remove selected spectra")
 
-        self.btn_reinit = QPushButton("Reinit")
+        self.btn_reinit = QPushButton()
         self.btn_reinit.setIcon(Icons.undo())
-        self.btn_reinit.setToolTip("Reinitialize selected spectra to original values")
+        bind_text(self.btn_reinit, "Reinit")
+        bind_tooltip(self.btn_reinit, "Reinitialize selected spectra to original values")
 
-        self.btn_save_spectra_data = QPushButton("Save Data")
+        self.btn_save_spectra_data = QPushButton()
         self.btn_save_spectra_data.setIcon(Icons.save())
-        self.btn_save_spectra_data.setToolTip("Save selected spectra data to TXT file")
+        bind_text(self.btn_save_spectra_data, "Save Data")
+        bind_tooltip(self.btn_save_spectra_data, "Save selected spectra data to TXT file")
 
         for btn in (self.btn_select_all, self.btn_remove, self.btn_reinit, self.btn_save_spectra_data):
             buttons_layout.addWidget(btn)
@@ -127,7 +141,8 @@ class VWorkspaceSpectra(QWidget):
         right_layout.addLayout(buttons_layout)
 
         # --- Check all checkbox
-        self.cb_check_all = QCheckBox("Check All")
+        self.cb_check_all = QCheckBox()
+        bind_text(self.cb_check_all, "Check All")
         self.cb_check_all.setChecked(True)  # Checked by default
         right_layout.addWidget(self.cb_check_all)
 
@@ -139,12 +154,14 @@ class VWorkspaceSpectra(QWidget):
         footer_layout = QHBoxLayout()
         footer_layout.setSpacing(4)
         
-        self.lbl_count = QLabel("0 spectra")
+        self.lbl_count = QLabel()
+        bind_plural_text(self.lbl_count, "{count} spectrum", "{count} spectra", 0)
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(100)
         self.progress_bar.setFixedHeight(17)
         
-        self.btn_stop_fit = QPushButton("Stop")
+        self.btn_stop_fit = QPushButton()
+        bind_text(self.btn_stop_fit, "Stop")
         self.btn_stop_fit.setIcon(Icons.stop())
         self.btn_stop_fit.setFixedHeight(17)
         self.btn_stop_fit.setFixedWidth(50)
@@ -170,7 +187,15 @@ class VWorkspaceSpectra(QWidget):
             self.progress_bar.setValue(percentage)
             # Format elapsed time in seconds with 2 decimal places
             time_str = f"{elapsed_time:.2f}s"
-            self.progress_bar.setFormat(f"({percentage}%) converged {converged}/{total} - {time_str}")
+            self.progress_bar.setFormat(
+                tr(
+                    "({percentage}%) converged {converged}/{total} - {time_str}",
+                    percentage=percentage,
+                    converged=converged,
+                    total=total,
+                    time_str=time_str,
+                )
+            )
         else:
             # Reset to default state
             self.progress_bar.setValue(100)
@@ -267,7 +292,9 @@ class VWorkspaceSpectra(QWidget):
         vm.spectra_selection_changed.connect(self._update_metadata_display)
         vm.spectra_selection_changed.connect(self.v_fit_model_builder.update_baseline_ui)
         vm.spectra_selection_changed.connect(self._update_peak_table)
-        vm.count_changed.connect(lambda n: self.lbl_count.setText(f"{n} spectra"))
+        vm.count_changed.connect(
+            lambda n: bind_plural_text(self.lbl_count, "{count} spectrum", "{count} spectra", n)
+        )
         vm.notify.connect(self._show_notification)
 
         # MetaData connections
@@ -576,7 +603,7 @@ class VWorkspaceSpectra(QWidget):
         success = self.vm_fit_model_builder.load_model_file(file_path)
         if success:
             self.bottom_tabs.setCurrentWidget(self.v_fit_model_builder)
-            self._show_notification(f"Fit model loaded: {Path(file_path).name}")
+            self._show_notification(tr("Fit model loaded: {name}", name=Path(file_path).name))
         return success
 
     # ───── Drag & Drop handling ──────────────────────────────────

@@ -36,6 +36,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.i18n import (
+    bind_placeholder,
+    bind_tab_text,
+    bind_text,
+    bind_title,
+    bind_tooltip,
+    on_language_changed,
+    tr,
+)
 from spectroview.view.components.lower_tabs.v_mva_plots import MVAPlotMixin, _PlotTab
 from spectroview.view.theme import Icons, current_tokens
 
@@ -61,7 +70,9 @@ class VMVA(QWidget, MVAPlotMixin):
         super().__init__(parent)
         self._pca_payload = None   # cached PCA results for re-plotting
         self._nmf_payload = None   # cached NMF results for re-plotting
+        self._status_is_ready = False
         self.init_ui()
+        on_language_changed(self, self._retranslate_mva)
 
     # ══════════════════════════════════════════════════════════════════
     # UI Construction
@@ -87,7 +98,9 @@ class VMVA(QWidget, MVAPlotMixin):
 
         # Method selection
         method_layout = QHBoxLayout()
-        method_layout.addWidget(QLabel("Method:"))
+        lbl_method = QLabel()
+        bind_text(lbl_method, "Method:")
+        method_layout.addWidget(lbl_method)
         self.rb_nmf = QRadioButton("NMF")
         self.rb_pca = QRadioButton("PCA")
         self.rb_pca.setChecked(True)
@@ -100,12 +113,15 @@ class VMVA(QWidget, MVAPlotMixin):
         left_layout.addLayout(method_layout)
 
         # ── PCA Parameters ────────────────────────────────────────────
-        self.grp_pca_params = QGroupBox("PCA Parameters")
+        self.grp_pca_params = QGroupBox()
+        bind_title(self.grp_pca_params, "PCA Parameters")
         pca_params_layout = QVBoxLayout(self.grp_pca_params)
 
         # Number of components
         row_nc_pca = QHBoxLayout()
-        row_nc_pca.addWidget(QLabel("Components:"))
+        lbl_nc_pca = QLabel()
+        bind_text(lbl_nc_pca, "Components:")
+        row_nc_pca.addWidget(lbl_nc_pca)
         self.spin_n_components_pca = QSpinBox()
         self.spin_n_components_pca.setRange(2, 50)
         self.spin_n_components_pca.setValue(5)
@@ -113,23 +129,28 @@ class VMVA(QWidget, MVAPlotMixin):
         pca_params_layout.addLayout(row_nc_pca)
 
         # Mean centering checkbox
-        self.cb_center = QCheckBox("Mean centering")
+        self.cb_center = QCheckBox()
+        bind_text(self.cb_center, "Mean centering")
         self.cb_center.setChecked(True)
-        self.cb_center.setToolTip(
+        bind_tooltip(
+            self.cb_center,
             "Subtract the mean spectrum before SVD.\n"
-            "Standard practice for PCA on spectral data."
+            "Standard practice for PCA on spectral data.",
         )
         pca_params_layout.addWidget(self.cb_center)
 
         left_layout.addWidget(self.grp_pca_params)
 
         # ── NMF Parameters ────────────────────────────────────────────
-        self.grp_nmf_params = QGroupBox("NMF Parameters")
+        self.grp_nmf_params = QGroupBox()
+        bind_title(self.grp_nmf_params, "NMF Parameters")
         nmf_params_layout = QVBoxLayout(self.grp_nmf_params)
 
         # Number of components
         row_nc_nmf = QHBoxLayout()
-        row_nc_nmf.addWidget(QLabel("Components:"))
+        lbl_nc_nmf = QLabel()
+        bind_text(lbl_nc_nmf, "Components:")
+        row_nc_nmf.addWidget(lbl_nc_nmf)
         self.spin_n_components_nmf = QSpinBox()
         self.spin_n_components_nmf.setRange(2, 50)
         self.spin_n_components_nmf.setValue(5)
@@ -138,7 +159,9 @@ class VMVA(QWidget, MVAPlotMixin):
 
         # Max iterations
         row_iter = QHBoxLayout()
-        row_iter.addWidget(QLabel("Max iterations:"))
+        lbl_max_iter = QLabel()
+        bind_text(lbl_max_iter, "Max iterations:")
+        row_iter.addWidget(lbl_max_iter)
         self.spin_max_iter = QSpinBox()
         self.spin_max_iter.setRange(50, 5000)
         self.spin_max_iter.setValue(500)
@@ -148,7 +171,9 @@ class VMVA(QWidget, MVAPlotMixin):
 
         # Tolerance
         row_tol = QHBoxLayout()
-        row_tol.addWidget(QLabel("Tolerance:"))
+        lbl_tol = QLabel()
+        bind_text(lbl_tol, "Tolerance:")
+        row_tol.addWidget(lbl_tol)
         self.spin_tol = QDoubleSpinBox()
         self.spin_tol.setDecimals(6)
         self.spin_tol.setRange(1e-8, 1.0)
@@ -159,30 +184,35 @@ class VMVA(QWidget, MVAPlotMixin):
 
         # Random seed
         row_seed = QHBoxLayout()
-        row_seed.addWidget(QLabel("Random seed:"))
+        lbl_seed = QLabel()
+        bind_text(lbl_seed, "Random seed:")
+        row_seed.addWidget(lbl_seed)
         self.spin_seed = QSpinBox()
         self.spin_seed.setRange(0, 99999)
         self.spin_seed.setValue(42)
-        self.spin_seed.setToolTip("Random seed for reproducible NMF results")
+        bind_tooltip(self.spin_seed, "Random seed for reproducible NMF results")
         row_seed.addWidget(self.spin_seed)
         nmf_params_layout.addLayout(row_seed)
 
         left_layout.addWidget(self.grp_nmf_params)
 
         # Run button
-        self.btn_run = QPushButton("Run Analysis")
+        self.btn_run = QPushButton()
+        bind_text(self.btn_run, "Run Analysis")
         self.btn_run.setIcon(Icons.play())
         self.btn_run.setMinimumHeight(30)
         left_layout.addWidget(self.btn_run)
 
         # Export section
-        grp_export = QGroupBox("Export to Graphs")
+        grp_export = QGroupBox()
+        bind_title(grp_export, "Export to Graphs")
         export_layout = QVBoxLayout(grp_export)
         self.ent_df_name = QLineEdit()
-        self.ent_df_name.setPlaceholderText("DataFrame name")
+        bind_placeholder(self.ent_df_name, "DataFrame name")
         self.ent_df_name.setText("MVA_scores")
         export_layout.addWidget(self.ent_df_name)
-        self.btn_send = QPushButton("Send to Graphs")
+        self.btn_send = QPushButton()
+        bind_text(self.btn_send, "Send to Graphs")
         self.btn_send.setIcon(Icons.send())
         export_layout.addWidget(self.btn_send)
         left_layout.addWidget(grp_export)
@@ -211,18 +241,26 @@ class VMVA(QWidget, MVAPlotMixin):
         self.tab_scores = _PlotTab()
         self.tab_residuals = _PlotTab()
 
-        self.plot_tabs.addTab(self.tab_summary, "Summary")
-        self.plot_tabs.addTab(self.tab_scree, "Scree Plot")
-        self.plot_tabs.addTab(self.tab_loadings, "Loadings")
-        self.plot_tabs.addTab(self.tab_heatmap, "Heatmap")
-        self.plot_tabs.addTab(self.tab_scores, "Scores")
-        self.plot_tabs.addTab(self.tab_residuals, "Residuals")
+        self.plot_tabs.addTab(self.tab_summary, tr("Summary"))
+        self.plot_tabs.addTab(self.tab_scree, tr("Scree Plot"))
+        self.plot_tabs.addTab(self.tab_loadings, tr("Loadings"))
+        self.plot_tabs.addTab(self.tab_heatmap, tr("Heatmap"))
+        self.plot_tabs.addTab(self.tab_scores, tr("Scores"))
+        self.plot_tabs.addTab(self.tab_residuals, tr("Residuals"))
+        bind_tab_text(self.plot_tabs, self.tab_summary, "Summary")
+        bind_tab_text(self.plot_tabs, self.tab_scree, "Scree Plot")
+        bind_tab_text(self.plot_tabs, self.tab_loadings, "Loadings")
+        bind_tab_text(self.plot_tabs, self.tab_heatmap, "Heatmap")
+        bind_tab_text(self.plot_tabs, self.tab_scores, "Scores")
+        bind_tab_text(self.plot_tabs, self.tab_residuals, "Residuals")
 
         # Score axis selectors — placed above the tab widget
         score_controls = QWidget()
         score_controls_layout = QHBoxLayout(score_controls)
         score_controls_layout.setContentsMargins(4, 2, 4, 2)
-        score_controls_layout.addWidget(QLabel("Score axes:"))
+        lbl_score_axes = QLabel()
+        bind_text(lbl_score_axes, "Score axes:")
+        score_controls_layout.addWidget(lbl_score_axes)
         score_controls_layout.addWidget(QLabel("X:"))
         self.cbb_score_x = QComboBox()
         self.cbb_score_x.setMinimumWidth(60)
@@ -238,7 +276,9 @@ class VMVA(QWidget, MVAPlotMixin):
         heatmap_controls = QWidget()
         heatmap_controls_layout = QHBoxLayout(heatmap_controls)
         heatmap_controls_layout.setContentsMargins(4, 2, 4, 2)
-        heatmap_controls_layout.addWidget(QLabel("Component to map:"))
+        lbl_comp_map = QLabel()
+        bind_text(lbl_comp_map, "Component to map:")
+        heatmap_controls_layout.addWidget(lbl_comp_map)
         self.cbb_heatmap_comp = QComboBox()
         self.cbb_heatmap_comp.setMinimumWidth(80)
         heatmap_controls_layout.addWidget(self.cbb_heatmap_comp)
@@ -285,7 +325,8 @@ class VMVA(QWidget, MVAPlotMixin):
         scree_idx = self.plot_tabs.indexOf(self.tab_scree)
         if is_pca:
             if scree_idx < 0:
-                self.plot_tabs.insertTab(1, self.tab_scree, "Scree Plot")
+                self.plot_tabs.insertTab(1, self.tab_scree, tr("Scree Plot"))
+                bind_tab_text(self.plot_tabs, self.tab_scree, "Scree Plot")
         else:
             if scree_idx >= 0:
                 self.plot_tabs.removeTab(scree_idx)
@@ -332,7 +373,14 @@ class VMVA(QWidget, MVAPlotMixin):
         self.cbb_score_y.clear()
         self.cbb_heatmap_comp.clear()
         self._show_all_placeholders()
-        self.set_status("Ready")
+        self._status_is_ready = True
+        self.lbl_status.setText(tr("Ready"))
+
+    def _retranslate_mva(self):
+        """Retranslate status label and MVA figures after a live language change."""
+        if self._status_is_ready:
+            self.lbl_status.setText(tr("Ready"))
+        self._retranslate_plots()
 
     # ══════════════════════════════════════════════════════════════════
     # Public slots — called by ViewModel via signals
@@ -381,6 +429,7 @@ class VMVA(QWidget, MVAPlotMixin):
 
     def set_status(self, msg: str):
         """Update the status label."""
+        self._status_is_ready = False
         self.lbl_status.setText(msg)
 
     def apply_theme(self, theme: str = ""):

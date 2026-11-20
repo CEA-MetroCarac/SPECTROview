@@ -7,6 +7,7 @@ from copy import deepcopy
 import numpy as np
 
 from spectroview.fit_engine.baseline import eval_baseline_batch
+from spectroview.i18n import tr
 from spectroview.viewmodel.common.spectral_utils import closest_index
 
 
@@ -84,7 +85,7 @@ class SpectraPreprocessingMixin:
                 m = min(md.Y.shape[1], md.Y0.shape[1])
                 md.Y0[:, :m] = md.Y[:, :m]
 
-        self.notify.emit("Cosmic ray erasure validated and saved.")
+        self.notify.emit(tr("Cosmic ray erasure validated and saved."))
         self._emit_selected_spectra()
 
     def add_baseline_point(self, x: float, y: float):
@@ -96,7 +97,7 @@ class SpectraPreprocessingMixin:
         is_sub = getattr(md, "is_baseline_subtracted", False)
         is_sub_any = is_sub.any() if isinstance(is_sub, np.ndarray) else bool(is_sub)
         if is_sub_any:
-            self.notify.emit("Baseline already subtracted. Please reinit first.")
+            self.notify.emit(tr("Baseline already subtracted. Please reinit first."))
             return
 
         if md.baseline_config is None:
@@ -156,7 +157,7 @@ class SpectraPreprocessingMixin:
     def apply_x_correction(self, measured_peak: float):
         """Shift X-axis so *measured_peak* aligns with the 520.7 cm^-1 Si reference."""
         if not self.selected_fnames:
-            self.notify.emit("No spectrum selected.")
+            self.notify.emit(tr("No spectrum selected."))
             return
 
         fnames = self._get_selected_spectra()
@@ -186,7 +187,7 @@ class SpectraPreprocessingMixin:
     def undo_x_correction(self):
         """Undo X-axis correction for selected spectra."""
         if not self.selected_fnames:
-            self.notify.emit("No spectrum selected.")
+            self.notify.emit(tr("No spectrum selected."))
             return
 
         fnames = self._get_selected_spectra()
@@ -256,7 +257,7 @@ class SpectraPreprocessingMixin:
         mds = self._get_target_mds(apply_all)
         if not mds:
             if not apply_all:
-                self.notify.emit("No spectrum selected.")
+                self.notify.emit(tr("No spectrum selected."))
             return
 
         for md in mds:
@@ -276,7 +277,7 @@ class SpectraPreprocessingMixin:
         mds = self._get_target_mds(apply_all)
         if not mds:
             if not apply_all:
-                self.notify.emit("No spectrum selected.")
+                self.notify.emit(tr("No spectrum selected."))
             return
 
         if xmin > xmax:
@@ -311,12 +312,12 @@ class SpectraPreprocessingMixin:
     def copy_baseline(self) -> bool:
         """Copy baseline configuration of the primary selected spectrum."""
         if not self.selected_fnames:
-            self.notify.emit("No spectrum selected.")
+            self.notify.emit(tr("No spectrum selected."))
             return False
 
         md = self._get_primary_selected_map_data()
         if not (md and md.baseline_config):
-            self.notify.emit("No baseline to copy.")
+            self.notify.emit(tr("No baseline to copy."))
             return False
 
         self._baseline_clipboard = deepcopy(md.baseline_config)
@@ -326,13 +327,13 @@ class SpectraPreprocessingMixin:
     def paste_baseline(self, apply_all: bool = False) -> bool:
         """Paste the copied baseline configuration onto target spectra."""
         if self._baseline_clipboard is None:
-            self.notify.emit("No baseline copied.")
+            self.notify.emit(tr("No baseline copied."))
             return False
 
         mds = self._get_target_mds(apply_all)
         if not mds:
             if not apply_all:
-                self.notify.emit("No spectrum selected.")
+                self.notify.emit(tr("No spectrum selected."))
             return False
 
         baseline_data = deepcopy(self._baseline_clipboard)
@@ -353,7 +354,7 @@ class SpectraPreprocessingMixin:
         mds = self._get_target_mds(apply_all)
         if not mds:
             if not apply_all:
-                self.notify.emit("No spectrum selected.")
+                self.notify.emit(tr("No spectrum selected."))
             return
 
         subtracted_any = False
@@ -390,14 +391,14 @@ class SpectraPreprocessingMixin:
         if subtracted_any:
             self._post_bulk_action(apply_all, "subtract_baseline")
         else:
-            self.notify.emit("Baseline already subtracted for all selected spectra.")
+            self.notify.emit(tr("Baseline already subtracted for all selected spectra."))
 
     def delete_baseline(self, apply_all: bool = False):
         """Undo baseline subtraction: reinitialise spectrum data, re-apply crop range."""
         mds = self._get_target_mds(apply_all)
         if not mds:
             if not apply_all:
-                self.notify.emit("No spectrum selected.")
+                self.notify.emit(tr("No spectrum selected."))
             return
 
         for md in mds:

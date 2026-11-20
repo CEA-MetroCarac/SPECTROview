@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QRectF
 from PySide6.QtGui import QFont, QPainter, QColor
 
+from spectroview.i18n import on_language_changed, tr
 from spectroview.view.components.lists.v_metadata_tooltip import MetadataTooltipManager
 from spectroview.viewmodel.common.ui_utils import set_spectrum_item_color
 
@@ -127,7 +128,7 @@ class VSpectraList(QListWidget):
                 self.addItem(spacer)
             
             # Add the centered placeholder item with larger text
-            placeholder = QListWidgetItem("Drag and drop file(s) anywhere to open")
+            placeholder = QListWidgetItem(tr("Drag and drop file(s) anywhere to open"))
             placeholder.setFlags(Qt.NoItemFlags)  # Make it non-selectable and non-editable
             placeholder.setForeground(Qt.gray)
             placeholder.setTextAlignment(Qt.AlignCenter)  # Center the text horizontally
@@ -140,7 +141,9 @@ class VSpectraList(QListWidget):
             
             self.addItem(placeholder)
             
+            self._placeholder_item = placeholder
             self._has_placeholder = True
+            on_language_changed(self, self._retranslate_placeholder)
         else:
             # Remove all placeholder items if they exist
             if hasattr(self, '_has_placeholder') and self._has_placeholder:
@@ -151,7 +154,17 @@ class VSpectraList(QListWidget):
                         self.takeItem(i)
                     else:
                         i += 1
+                self._placeholder_item = None
                 self._has_placeholder = False
+
+    def _retranslate_placeholder(self):
+        if getattr(self, "_has_placeholder", False):
+            item = getattr(self, "_placeholder_item", None)
+            if item is not None:
+                try:
+                    item.setText(tr("Drag and drop file(s) anywhere to open"))
+                except RuntimeError:
+                    pass
 
     # ───── Public API (used by ViewModel) ────────────────────────
     def set_spectra_names(self, spectra: list):
@@ -165,6 +178,7 @@ class VSpectraList(QListWidget):
         self.blockSignals(True)
         
         self.clear()
+        self._placeholder_item = None
         self._has_placeholder = False  # Reset placeholder flag
 
         items_by_fname = {}

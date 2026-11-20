@@ -22,6 +22,7 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple
 import numpy as np
 from PySide6.QtCore import QObject, QThreadPool, QTimer, Signal
 
+from spectroview.i18n import tr, tr_plural
 from spectroview.model.m_settings import MSettings
 from spectroview.model.spectra.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
@@ -44,7 +45,7 @@ from spectroview.viewmodel.maps.live_maps_worker import (
     _EMPTY_EXTENT,
     _VERSIONED_CACHE_MAX,
     ASYNC_SPECTRUM_THRESHOLD,
-    MSG_RATIO_NEEDS_RB,
+    MSG_RATIO_NEEDS_RB,  # noqa: F401
     LiveMapsAsyncMixin,
     _LiveMapWorker,
     _LiveMapWorkerBridge,
@@ -225,8 +226,8 @@ class VMLiveMaps(QObject, LiveMapsAsyncMixin):
             else ""
         )
         if self._display_mode == "multi_profile":
-            return f"Excluded 2D map(s): {shown}{extra}"
-        return f"Excluded 1D profile(s): {shown}{extra}"
+            return tr("Excluded 2D map(s): {shown}{extra}", shown=shown, extra=extra)
+        return tr("Excluded 1D profile(s): {shown}{extra}", shown=shown, extra=extra)
 
     def _sync_or_init_ranges_from_axis(self, x_axis: np.ndarray):
         """Initialize or clamp selector intervals against a spectral axis."""
@@ -729,7 +730,7 @@ class VMLiveMaps(QObject, LiveMapsAsyncMixin):
 
         axis_labels = {e["axis_label"] for e in entries if e["positions"].size > 0}
         shared_x_label = (
-            next(iter(axis_labels)) if len(axis_labels) == 1 else "Spatial Position"
+            next(iter(axis_labels)) if len(axis_labels) == 1 else tr("Spatial Position")
         )
         notes = []
         excl = self._format_excluded_status()
@@ -737,7 +738,7 @@ class VMLiveMaps(QObject, LiveMapsAsyncMixin):
             notes.append(excl)
         if out_of_range_names:
             notes.append(
-                f"Out of range / undefined: {', '.join(out_of_range_names[:3])}"
+                tr("Out of range / undefined: {names}", names=", ".join(out_of_range_names[:3]))
             )
         elif primary_msg and primary_msg != "OK":
             notes.append(primary_msg)
@@ -760,7 +761,7 @@ class VMLiveMaps(QObject, LiveMapsAsyncMixin):
     ) -> _Result:
         """Evaluate *param* on *md* with LRU versioned caching keyed by MapData.data_version."""
         if md is None:
-            return np.array([], dtype=np.float64), [], False, "No hyperspectral map loaded"
+            return np.array([], dtype=np.float64), [], False, tr("No hyperspectral map loaded")
         cache_key = (id(md), md.name, getattr(md, "data_version", 0), param, x_range)
         cached = self._versioned_cache.get(cache_key)
         if cached is not None:
@@ -782,7 +783,7 @@ class VMLiveMaps(QObject, LiveMapsAsyncMixin):
     ) -> _Result:
         """Direct spectral parameter computation for a single MapData (no cache)."""
         if md is None:
-            return np.array([], dtype=np.float64), [], False, "No hyperspectral map loaded"
+            return np.array([], dtype=np.float64), [], False, tr("No hyperspectral map loaded")
         has_fit = md.has_fit_results()
         vals, ok, msg = compute_spectral_parameter(
             x_axis=md.x_axis,
@@ -827,27 +828,33 @@ class VMLiveMaps(QObject, LiveMapsAsyncMixin):
             self._states[SELECTOR_RED]["active"]
             and self._states[SELECTOR_BLUE]["active"]
         ):
-            return np.array([], dtype=np.float64), [], False, MSG_RATIO_NEEDS_RB
+            return np.array([], dtype=np.float64), [], False, tr(
+                "Activate the Red and Blue range selectors to display the R/B ratio"
+            )
 
         r_vals, labels, r_ok, r_msg = intensity_fn(SELECTOR_RED)
         if not r_ok:
-            return r_vals, labels, False, f"Red range: {r_msg}"
+            return r_vals, labels, False, tr("Red range: {msg}", msg=r_msg)
         b_vals, _, b_ok, b_msg = intensity_fn(SELECTOR_BLUE)
         if not b_ok:
-            return b_vals, labels, False, f"Blue range: {b_msg}"
+            return b_vals, labels, False, tr("Blue range: {msg}", msg=b_msg)
         if len(r_vals) != len(b_vals):
             return (
                 np.array([], dtype=np.float64),
                 labels,
                 False,
-                "Red/Blue size mismatch",
+                tr("Red/Blue size mismatch"),
             )
 
         ratio, n_masked = compute_intensity_ratio(r_vals, b_vals)
         if n_masked == ratio.size:
-            return ratio, labels, False, "R/B ratio undefined: Blue intensity is zero"
+            return ratio, labels, False, tr("R/B ratio undefined: Blue intensity is zero")
         msg = (
-            f"{n_masked} point(s) with ~zero Blue intensity masked"
+            tr_plural(
+                "{count} point with ~zero Blue intensity masked",
+                "{count} points with ~zero Blue intensity masked",
+                int(n_masked),
+            )
             if n_masked
             else "OK"
         )
@@ -875,7 +882,7 @@ class VMLiveMaps(QObject, LiveMapsAsyncMixin):
                     color_id,
                     np.array([]),
                     labels,
-                    msg or "Unable to calculate parameter",
+                    msg or tr("Unable to calculate parameter"),
                 )
             else:
                 self.series_data_ready.emit(color_id, vals, labels, msg)
@@ -889,7 +896,7 @@ class VMLiveMaps(QObject, LiveMapsAsyncMixin):
                     np.array([]),
                     np.array([]),
                     geom.axis_label,
-                    msg or "Unable to calculate parameter",
+                    msg or tr("Unable to calculate parameter"),
                 )
                 return
             vals_arr = np.asarray(vals, dtype=np.float64)
@@ -899,7 +906,7 @@ class VMLiveMaps(QObject, LiveMapsAsyncMixin):
                     np.array([]),
                     np.array([]),
                     geom.axis_label,
-                    "All spectra unchecked or undefined",
+                    tr("All spectra unchecked or undefined"),
                 )
                 return
             order = geom.order
@@ -915,7 +922,7 @@ class VMLiveMaps(QObject, LiveMapsAsyncMixin):
                 list(_EMPTY_EXTENT),
                 0.0,
                 1.0,
-                msg or "Unable to calculate parameter",
+                msg or tr("Unable to calculate parameter"),
             )
             return
         gridder = self._get_gridder_for(self._current_md)
@@ -929,7 +936,7 @@ class VMLiveMaps(QObject, LiveMapsAsyncMixin):
                 list(_EMPTY_EXTENT),
                 0.0,
                 1.0,
-                "All spectra unchecked or undefined",
+                tr("All spectra unchecked or undefined"),
             )
             return
         self.map_data_ready.emit(color_id, grid, extent, vmin, vmax, msg)

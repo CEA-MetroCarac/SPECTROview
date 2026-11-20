@@ -8,6 +8,8 @@ import os
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QListWidgetItem, QMessageBox
 
+from spectroview.i18n import tr
+
 
 @lru_cache(maxsize=128)
 def get_tinted_icon(path: str, color_str: str) -> QIcon:
@@ -89,7 +91,7 @@ def show_alert(message):
     """Show a modal warning message box."""
     msg_box = QMessageBox()
     msg_box.setIcon(QMessageBox.Warning)
-    msg_box.setWindowTitle("Alert")
+    msg_box.setWindowTitle(tr("Alert"))
     msg_box.setText(message)
     msg_box.exec_()
 

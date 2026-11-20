@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from PySide6.QtCore import QObject, QRunnable, Signal
 
+from spectroview.i18n import tr, tr_plural
 from spectroview.model.spectra.spectral_parameters import (
     PARAM_INTEGRATED_INTENSITY,
     PARAM_RB_RATIO,
@@ -105,19 +106,21 @@ class _LiveMapWorker(QRunnable):
 
         def ratio_for(md_snap: dict) -> _Result:
             if not (states[SELECTOR_RED]["active"] and states[SELECTOR_BLUE]["active"]):
-                return np.array([], dtype=np.float64), [], False, MSG_RATIO_NEEDS_RB
+                return np.array([], dtype=np.float64), [], False, tr(
+                    "Activate the Red and Blue range selectors to display the R/B ratio"
+                )
             r_vals, labels, r_ok, r_msg = integrated_for(md_snap, SELECTOR_RED)
             if not r_ok:
-                return r_vals, labels, False, f"Red range: {r_msg}"
+                return r_vals, labels, False, tr("Red range: {msg}", msg=r_msg)
             b_vals, _, b_ok, b_msg = integrated_for(md_snap, SELECTOR_BLUE)
             if not b_ok:
-                return b_vals, labels, False, f"Blue range: {b_msg}"
+                return b_vals, labels, False, tr("Blue range: {msg}", msg=b_msg)
             if len(r_vals) != len(b_vals):
                 return (
                     np.array([], dtype=np.float64),
                     labels,
                     False,
-                    "Red/Blue size mismatch",
+                    tr("Red/Blue size mismatch"),
                 )
             ratio, n_masked = compute_intensity_ratio(r_vals, b_vals)
             if n_masked == ratio.size:
@@ -125,10 +128,14 @@ class _LiveMapWorker(QRunnable):
                     ratio,
                     labels,
                     False,
-                    "R/B ratio undefined: Blue intensity is zero",
+                    tr("R/B ratio undefined: Blue intensity is zero"),
                 )
             msg = (
-                f"{n_masked} point(s) with ~zero Blue intensity masked"
+                tr_plural(
+                    "{count} point with ~zero Blue intensity masked",
+                    "{count} points with ~zero Blue intensity masked",
+                    int(n_masked),
+                )
                 if n_masked
                 else "OK"
             )
@@ -160,9 +167,9 @@ class _LiveMapWorker(QRunnable):
                                 "positions": np.array([], dtype=np.float64),
                                 "values": np.array([], dtype=np.float64),
                                 "is_primary": is_primary,
-                                "axis_label": "Position",
+                                "axis_label": tr("Position"),
                                 "out_of_range": True,
-                                "msg": "No coordinates",
+                                "msg": tr("No coordinates"),
                             })
                             continue
                         geom = md_snap["geom"]
@@ -176,7 +183,7 @@ class _LiveMapWorker(QRunnable):
                             out_of_range = False
                             if np.all(np.isnan(val_sorted)):
                                 out_of_range = True
-                                msg = "All spectra unchecked or undefined"
+                                msg = tr("All spectra unchecked or undefined")
                         else:
                             val_sorted = np.full(
                                 len(pos_sorted), np.nan, dtype=np.float64
@@ -200,14 +207,14 @@ class _LiveMapWorker(QRunnable):
                     shared_x_label = (
                         next(iter(axis_labels))
                         if len(axis_labels) == 1
-                        else "Spatial Position"
+                        else tr("Spatial Position")
                     )
                     notes = []
                     if excluded_status:
                         notes.append(excluded_status)
                     if out_of_range_names:
                         notes.append(
-                            f"Out of range / undefined: {', '.join(out_of_range_names[:3])}"
+                            tr("Out of range / undefined: {names}", names=", ".join(out_of_range_names[:3]))
                         )
                     elif primary_msg and primary_msg != "OK":
                         notes.append(primary_msg)
@@ -232,7 +239,7 @@ class _LiveMapWorker(QRunnable):
                                 np.array([]),
                                 np.array([]),
                                 geom.axis_label,
-                                msg or "Unable to calculate parameter",
+                                msg or tr("Unable to calculate parameter"),
                             ))
                         else:
                             vals_arr = np.asarray(vals, dtype=np.float64)
@@ -243,7 +250,7 @@ class _LiveMapWorker(QRunnable):
                                     np.array([]),
                                     np.array([]),
                                     geom.axis_label,
-                                    "All spectra unchecked or undefined",
+                                    tr("All spectra unchecked or undefined"),
                                 ))
                             else:
                                 order = geom.order
@@ -264,7 +271,7 @@ class _LiveMapWorker(QRunnable):
                                 list(_EMPTY_EXTENT),
                                 0.0,
                                 1.0,
-                                msg or "Unable to calculate parameter",
+                                msg or tr("Unable to calculate parameter"),
                             ))
                         else:
                             grid, extent, vmin, vmax = compute_map_grid(
@@ -278,7 +285,7 @@ class _LiveMapWorker(QRunnable):
                                     list(_EMPTY_EXTENT),
                                     0.0,
                                     1.0,
-                                    "All spectra unchecked or undefined",
+                                    tr("All spectra unchecked or undefined"),
                                 ))
                             else:
                                 outputs.append((

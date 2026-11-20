@@ -12,6 +12,7 @@ import pandas as pd
 from PySide6.QtWidgets import QFileDialog
 
 from spectroview.fit_engine.baseline import eval_baseline_batch
+from spectroview.i18n import tr
 from spectroview.model.io.workspace_io import WorkspaceIO
 from spectroview.model.spectra.spectra_store import SpectraStore
 
@@ -84,9 +85,9 @@ class SpectraPersistenceMixin:
         is_maps = hasattr(self, "maps")
         file_path, _ = QFileDialog.getSaveFileName(
             None,
-            "Save work",
+            tr("Save work"),
             "",
-            "SPECTROview Maps (*.maps)" if is_maps else "SPECTROview Files (*.spectra)",
+            tr("SPECTROview Maps (*.maps)") if is_maps else tr("SPECTROview Files (*.spectra)"),
         )
         if not file_path:
             return
@@ -130,11 +131,11 @@ class SpectraPersistenceMixin:
                 dataframes["df_fit_results"] = self.df_fit_results
 
             WorkspaceIO.save_workspace(file_path, metadata, arrays, dataframes)
-            self.notify.emit("Work saved successfully.")
+            self.notify.emit(tr("Work saved successfully."))
 
         except Exception as e:
             traceback.print_exc()
-            self.notify.emit(f"Error saving workspace: {e}")
+            self.notify.emit(tr("Error saving workspace: {error}", error=e))
 
     def load_work(self, file_path: str):
         """Load previously saved workspace from legacy JSON (v1) or newest ZIP-streaming (v2)."""
@@ -199,11 +200,11 @@ class SpectraPersistenceMixin:
             if self.df_fit_results is not None:
                 self.fit_results_updated.emit(self.df_fit_results)
 
-            self.notify.emit("Work loaded successfully.")
+            self.notify.emit(tr("Work loaded successfully."))
 
         except Exception as e:
             traceback.print_exc()
-            self.notify.emit(f"Error loading workspace: {e}")
+            self.notify.emit(tr("Error loading workspace: {error}", error=e))
 
     def _load_legacy_spectra(self, file_path: str):
         """Load legacy JSON-based .spectra workspace (OLD version)."""
@@ -309,4 +310,4 @@ class SpectraPersistenceMixin:
         else:
             self.selected_fnames = []
             self.spectra_selection_changed.emit([])
-        self.notify.emit("Legacy spectra workspace loaded successfully.")
+        self.notify.emit(tr("Legacy spectra workspace loaded successfully."))

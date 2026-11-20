@@ -17,6 +17,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.i18n import (
+    bind_form_row,
+    bind_header_labels,
+    bind_text,
+    bind_title,
+    bind_tooltip,
+)
 from spectroview.view.theme import Icons, current_tokens
 
 
@@ -36,13 +43,14 @@ class VMoreTab(QWidget):
         main_layout.setContentsMargins(2, 2, 2, 2)
 
         # --- LEFT: Metadata Table ---
-        self.group_metadata = QGroupBox("Metadata")
+        self.group_metadata = QGroupBox()
+        bind_title(self.group_metadata, "Metadata")
         layout_metadata = QVBoxLayout(self.group_metadata)
         layout_metadata.setContentsMargins(0, 0, 0, 0)
         self.table = QTableWidget()
         self.table.setFrameShape(QTableWidget.NoFrame)
         self.table.setColumnCount(2)
-        self.table.setHorizontalHeaderLabels(["Parameter", "Value"])
+        bind_header_labels(self.table, ["Parameter", "Value"])
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.table.verticalHeader().setVisible(False)
@@ -55,7 +63,11 @@ class VMoreTab(QWidget):
 
         # Placeholder label for no data
         tok = current_tokens()
-        self.lbl_placeholder = QLabel("No metadata available\n\nSelect a spectrum to view its metadata")
+        self.lbl_placeholder = QLabel()
+        bind_text(
+            self.lbl_placeholder,
+            "No metadata available\n\nSelect a spectrum to view its metadata",
+        )
         self.lbl_placeholder.setAlignment(Qt.AlignCenter)
         self.lbl_placeholder.setStyleSheet(f"color: {tok.text_muted}; font-size: 14px; padding: 40px;")
         layout_metadata.addWidget(self.lbl_placeholder)
@@ -63,7 +75,8 @@ class VMoreTab(QWidget):
         main_layout.addWidget(self.group_metadata, stretch=2)
 
         # --- MIDDLE: Custom Attributes ---
-        self.group_custom = QGroupBox("Other informations")
+        self.group_custom = QGroupBox()
+        bind_title(self.group_custom, "Other informations")
         layout_custom = QFormLayout(self.group_custom)
 
         self.lbl_label = QLineEdit()
@@ -93,34 +106,39 @@ class VMoreTab(QWidget):
         self.lbl_baseline_points = QLineEdit()
         self.lbl_baseline_points.setReadOnly(True)
 
-        layout_custom.addRow("Label:", self.lbl_label)
-        layout_custom.addRow("Color:", self.lbl_color)
-        layout_custom.addRow("X-Correction:", self.lbl_xcorr)
-        layout_custom.addRow("Source Path:", self.lbl_source)
-        layout_custom.addRow("Intensity Normalization Factor:", self.lbl_norm_factor)
-        layout_custom.addRow("Baseline Mode:", self.lbl_baseline_mode)
-        layout_custom.addRow("Baseline Coef:", self.lbl_baseline_coef)
-        layout_custom.addRow("Baseline Points:", self.lbl_baseline_points)
-        layout_custom.addRow("Baseline Subtracted:", self.lbl_baseline_subtracted)
+        bind_form_row(layout_custom, "Label:", self.lbl_label)
+        bind_form_row(layout_custom, "Color:", self.lbl_color)
+        bind_form_row(layout_custom, "X-Correction:", self.lbl_xcorr)
+        bind_form_row(layout_custom, "Source Path:", self.lbl_source)
+        bind_form_row(layout_custom, "Intensity Normalization Factor:", self.lbl_norm_factor)
+        bind_form_row(layout_custom, "Baseline Mode:", self.lbl_baseline_mode)
+        bind_form_row(layout_custom, "Baseline Coef:", self.lbl_baseline_coef)
+        bind_form_row(layout_custom, "Baseline Points:", self.lbl_baseline_points)
+        bind_form_row(layout_custom, "Baseline Subtracted:", self.lbl_baseline_subtracted)
 
         main_layout.addWidget(self.group_custom, stretch=2)
 
         # --- RIGHT: Intensity Normalization ---
-        self.group_norm = QGroupBox("More options")
+        self.group_norm = QGroupBox()
+        bind_title(self.group_norm, "More options")
         layout_norm = QVBoxLayout(self.group_norm)
 
-        layout_norm.addWidget(QLabel("Normalization Factor:"))
+        lbl_norm_title = QLabel()
+        bind_text(lbl_norm_title, "Normalization Factor:")
+        layout_norm.addWidget(lbl_norm_title)
         self.spin_norm_factor = QDoubleSpinBox()
         self.spin_norm_factor.setDecimals(4)
         self.spin_norm_factor.setRange(1e-6, 1e6)
         self.spin_norm_factor.setValue(1.0)
 
-        self.btn_normalize = QPushButton("Normalize")
+        self.btn_normalize = QPushButton()
+        bind_text(self.btn_normalize, "Normalize")
         self.btn_normalize.setIcon(Icons.norm())
-        self.btn_normalize.setToolTip("Normalize the current spectrum")
-        self.btn_undo_norm = QPushButton("Undo")
+        bind_tooltip(self.btn_normalize, "Normalize the current spectrum")
+        self.btn_undo_norm = QPushButton()
+        bind_text(self.btn_undo_norm, "Undo")
         self.btn_undo_norm.setIcon(Icons.undo())
-        self.btn_undo_norm.setToolTip("Undo the last normalization")
+        bind_tooltip(self.btn_undo_norm, "Undo the last normalization")
 
         # Horizontal layout for normalize buttons
         norm_btns_layout = QHBoxLayout()

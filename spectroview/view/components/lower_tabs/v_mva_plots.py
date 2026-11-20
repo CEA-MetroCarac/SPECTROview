@@ -13,6 +13,7 @@ from PySide6.QtCore import QEvent, QObject, QTimer
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from spectroview import PLOT_POLICY_LIGHT
+from spectroview.i18n import tr
 from spectroview.view.theme import current_tokens
 from spectroview.viewmodel.common.spectral_utils import parse_coords_from_fname
 
@@ -68,8 +69,10 @@ class _PlotTab(QWidget):
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
 
-    def clear_and_placeholder(self, message: str = "Run an analysis to see results here"):
+    def clear_and_placeholder(self, message: str | None = None):
         """Clear the axes and show a placeholder message."""
+        if message is None:
+            message = tr("Run an analysis to see results here")
         tok = current_tokens()
         self.ax.clear()
         self.ax.text(
@@ -156,7 +159,9 @@ class MVAPlotMixin:
                 valid_indices.append(i)
 
         if not coords_x:
-            self.tab_heatmap.clear_and_placeholder("Cannot render heatmap:\nNo spatial (x, y) coordinates found in spectra names.")
+            self.tab_heatmap.clear_and_placeholder(
+                tr("Cannot render heatmap:\nNo spatial (x, y) coordinates found in spectra names.")
+            )
             return
 
         coords_x = np.array(coords_x)
@@ -172,9 +177,9 @@ class MVAPlotMixin:
 
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
-        ax.set_title(f"Spatial Map: {prefix}{comp_idx+1} Scores")
+        ax.set_title(tr("Spatial Map: {comp} Scores", comp=f"{prefix}{comp_idx+1}"))
 
-        self.tab_heatmap.figure.colorbar(sc, ax=ax, label="Score Value")
+        self.tab_heatmap.figure.colorbar(sc, ax=ax, label=tr("Score Value"))
 
         self.tab_heatmap.redraw()
 
@@ -212,8 +217,8 @@ class MVAPlotMixin:
             n = len(explained_var_ratio)
             indices = np.arange(1, min(n + 1, 11))  # Top 10 max
             ax_scree.bar(indices, explained_var_ratio[:10] * 100, color="#5B9BD5", alpha=0.85)
-            ax_scree.set_title("Scree Plot (Top 10)", fontsize=9)
-            ax_scree.set_ylabel("Variance (%)", fontsize=8)
+            ax_scree.set_title(tr("Scree Plot (Top 10)"), fontsize=9)
+            ax_scree.set_ylabel(tr("Variance (%)"), fontsize=8)
             ax_scree.tick_params(labelsize=8)
             ax2 = ax_scree.twinx()
             ax2.plot(indices, cumulative[:10] * 100, "o-", color="#E87722", ms=4, lw=1.5)
@@ -229,7 +234,7 @@ class MVAPlotMixin:
             if explained_var_ratio is not None:
                 label += f" ({explained_var_ratio[i]*100:.1f}%)"
             ax_loadings.plot(x_axis, loadings[i], lw=1.0, color=color, label=label)
-        ax_loadings.set_title(f"Loadings (First {n_comp_plot})", fontsize=9)
+        ax_loadings.set_title(tr("Loadings (First {n})", n=n_comp_plot), fontsize=9)
         ax_loadings.legend(fontsize=6)
         ax_loadings.axhline(0, color="gray", lw=0.5, ls="--")
         ax_loadings.tick_params(labelsize=8)
@@ -244,7 +249,7 @@ class MVAPlotMixin:
                 y_label += f" ({explained_var_ratio[1]*100:.1f}%)"
             ax_sc1.set_xlabel(x_label, fontsize=8)
             ax_sc1.set_ylabel(y_label, fontsize=8)
-            ax_sc1.set_title(f"Scores: {prefix}1 vs {prefix}2", fontsize=9)
+            ax_sc1.set_title(tr("Scores: {x} vs {y}", x=f"{prefix}1", y=f"{prefix}2"), fontsize=9)
             ax_sc1.axhline(0, color="gray", lw=0.5, ls="--")
             ax_sc1.axvline(0, color="gray", lw=0.5, ls="--")
             ax_sc1.tick_params(labelsize=8)
@@ -261,7 +266,7 @@ class MVAPlotMixin:
                 y_label += f" ({explained_var_ratio[2]*100:.1f}%)"
             ax_sc2.set_xlabel(x_label, fontsize=8)
             ax_sc2.set_ylabel(y_label, fontsize=8)
-            ax_sc2.set_title(f"Scores: {prefix}2 vs {prefix}3", fontsize=9)
+            ax_sc2.set_title(tr("Scores: {x} vs {y}", x=f"{prefix}2", y=f"{prefix}3"), fontsize=9)
             ax_sc2.axhline(0, color="gray", lw=0.5, ls="--")
             ax_sc2.axvline(0, color="gray", lw=0.5, ls="--")
             ax_sc2.tick_params(labelsize=8)
@@ -297,12 +302,12 @@ class MVAPlotMixin:
         # Cumulative line
         ax2 = ax.twinx()
         ax2.plot(indices, cumulative * 100, "o-", color="#E87722", lw=2, ms=5, zorder=3)
-        ax2.set_ylabel("Cumulative (%)")
+        ax2.set_ylabel(tr("Cumulative (%)"))
         ax2.set_ylim(0, 105)
 
-        ax.set_xlabel("Principal Component")
-        ax.set_ylabel("Explained Variance (%)")
-        ax.set_title("Scree Plot")
+        ax.set_xlabel(tr("Principal Component"))
+        ax.set_ylabel(tr("Explained Variance (%)"))
+        ax.set_title(tr("Scree Plot"))
         ax.set_xticks(indices)
         ax.set_xlim(0.4, n + 0.6)
 
@@ -332,9 +337,9 @@ class MVAPlotMixin:
             # Subtle fill-between for visual clarity (inspired by PyFASMA)
             ax.fill_between(x_axis, loadings[i], alpha=0.08, color=color)
 
-        ax.set_xlabel("Wavenumber")
-        ax.set_ylabel("Loading")
-        ax.set_title(f"{prefix} Loadings")
+        ax.set_xlabel(tr("Wavenumber"))
+        ax.set_ylabel(tr("Loading"))
+        ax.set_title(tr("{prefix} Loadings", prefix=prefix))
         ax.legend(loc="best", fontsize=8)
         ax.axhline(0, color="gray", lw=0.5, ls="--", alpha=0.5)
 
@@ -384,7 +389,7 @@ class MVAPlotMixin:
 
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
-        ax.set_title(f"Scores: {prefix}{ix+1} vs {prefix}{iy+1}")
+        ax.set_title(tr("Scores: {x} vs {y}", x=f"{prefix}{ix+1}", y=f"{prefix}{iy+1}"))
         ax.axhline(0, color="gray", lw=0.5, ls="--")
         ax.axvline(0, color="gray", lw=0.5, ls="--")
 
@@ -405,9 +410,9 @@ class MVAPlotMixin:
             color="#70AD47", edgecolor="#548235", alpha=0.85, zorder=2,
         )
 
-        ax.set_xlabel("Spectrum")
-        ax.set_ylabel("Reconstruction Error (L2)")
-        ax.set_title("Per-Spectrum Reconstruction Error")
+        ax.set_xlabel(tr("Spectrum"))
+        ax.set_ylabel(tr("Reconstruction Error (L2)"))
+        ax.set_title(tr("Per-Spectrum Reconstruction Error"))
 
         # Show spectrum names on x-axis if not too many
         if n <= 30:
@@ -419,3 +424,30 @@ class MVAPlotMixin:
             ax.set_xticks([0, n // 4, n // 2, 3 * n // 4, n - 1])
 
         self.tab_residuals.redraw()
+
+    def _retranslate_plots(self):
+        """Re-render active MVA figures or empty placeholders on live language change."""
+        if self._pca_payload is not None:
+            payload = self._pca_payload
+            result = payload["result"]
+            self._plot_summary()
+            self._plot_scree(result.explained_variance_ratio, result.cumulative_variance)
+            self._plot_loadings(
+                payload["x_axis"],
+                result.loadings,
+                prefix="PC",
+                explained_var_ratio=result.explained_variance_ratio,
+            )
+            self._replot_heatmap()
+            self._replot_scores()
+            self._plot_residuals(payload["fnames"], payload["reconstruction_errors"])
+        elif self._nmf_payload is not None:
+            payload = self._nmf_payload
+            result = payload["result"]
+            self._plot_summary()
+            self._plot_loadings(payload["x_axis"], result.H, prefix="NMF")
+            self._replot_heatmap()
+            self._replot_scores()
+            self._plot_residuals(payload["fnames"], payload["reconstruction_errors"])
+        else:
+            self._show_all_placeholders()

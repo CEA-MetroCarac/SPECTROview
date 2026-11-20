@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QFileDialog
 
 from spectroview.fit_engine.evaluator import eval_peak_initial
+from spectroview.i18n import tr
 from spectroview.viewmodel.common.export_utils import save_df_to_excel
 
 
@@ -90,7 +91,7 @@ class SpectraResultsMixin:
             map_names = self.store.map_names
 
         if not map_names:
-            self.notify.emit("No loaded spectra to collect results from.")
+            self.notify.emit(tr("No loaded spectra to collect results from."))
             return
 
         dfs = []
@@ -114,7 +115,7 @@ class SpectraResultsMixin:
                 dfs.append(df)
 
         if not dfs:
-            self.notify.emit("No fit results to collect.")
+            self.notify.emit(tr("No fit results to collect."))
             self.df_fit_results = None
             return
 
@@ -166,7 +167,7 @@ class SpectraResultsMixin:
     def split_filename(self):
         """Split the first filename by underscore and emit parts for combobox."""
         if self.df_fit_results is None or self.df_fit_results.empty:
-            self.notify.emit("No fit results available. Collect results first.")
+            self.notify.emit(tr("No fit results available. Collect results first."))
             return
 
         fname = self.df_fit_results.loc[0, "Filename"]
@@ -177,16 +178,19 @@ class SpectraResultsMixin:
     def add_column_from_filename(self, col_name: str, part_index: int):
         """Add a new column to fit results by extracting part from filename."""
         if self.df_fit_results is None or self.df_fit_results.empty:
-            self.notify.emit("No fit results available.")
+            self.notify.emit(tr("No fit results available."))
             return
 
         if not col_name:
-            self.notify.emit("Please enter a column name.")
+            self.notify.emit(tr("Please enter a column name."))
             return
 
         if col_name in self.df_fit_results.columns:
             self.notify.emit(
-                f"Column '{col_name}' already exists. Please choose a different name."
+                tr(
+                    "Column '{name}' already exists. Please choose a different name.",
+                    name=col_name,
+                )
             )
             return
 
@@ -205,27 +209,27 @@ class SpectraResultsMixin:
                 )
 
             self.fit_results_updated.emit(self.df_fit_results)
-            self.notify.emit(f"Added column '{col_name}' in the fit results.")
+            self.notify.emit(tr("Added column '{name}' in the fit results.", name=col_name))
 
         except Exception as e:
-            self.notify.emit(f"Error adding column: {e}")
+            self.notify.emit(tr("Error adding column: {error}", error=e))
 
     def compute_column_from_expression(self, col_name: str, expression: str):
         """Add a new column to fit results by evaluating a mathematical expression."""
         if self.df_fit_results is None or self.df_fit_results.empty:
-            self.notify.emit("No fit results available. Collect results first.")
+            self.notify.emit(tr("No fit results available. Collect results first."))
             return
 
         if not col_name:
-            self.notify.emit("Please enter a column name.")
+            self.notify.emit(tr("Please enter a column name."))
             return
 
         if not expression:
-            self.notify.emit("Please enter a mathematical expression.")
+            self.notify.emit(tr("Please enter a mathematical expression."))
             return
 
         if col_name in self.df_fit_results.columns:
-            self.notify.emit(f"Column '{col_name}' already exists.")
+            self.notify.emit(tr("Column '{name}' already exists.", name=col_name))
             return
 
         try:
@@ -258,32 +262,40 @@ class SpectraResultsMixin:
 
             if warnings:
                 self.notify.emit(
-                    f"Successfully added computed column '{col_name}' (with warnings)."
+                    tr(
+                        "Successfully added computed column '{name}' (with warnings).",
+                        name=col_name,
+                    )
                 )
             else:
-                self.notify.emit(f"Successfully added computed column '{col_name}'.")
+                self.notify.emit(
+                    tr(
+                        "Successfully added computed column '{name}'.",
+                        name=col_name,
+                    )
+                )
 
         except pd.errors.UndefinedVariableError as e:
-            self.notify.emit(f"Invalid column name in expression: {e}")
+            self.notify.emit(tr("Invalid column name in expression: {error}", error=e))
         except SyntaxError as e:
-            self.notify.emit(f"Syntax error in expression: {e}")
+            self.notify.emit(tr("Syntax error in expression: {error}", error=e))
         except ZeroDivisionError:
-            self.notify.emit("Division by zero in expression.")
+            self.notify.emit(tr("Division by zero in expression."))
         except Exception as e:
-            self.notify.emit(f"Error evaluating expression: {e}")
+            self.notify.emit(tr("Error evaluating expression: {error}", error=e))
 
     def save_fit_results(self):
         """Save fit results to Excel or CSV file."""
         if self.df_fit_results is None or self.df_fit_results.empty:
-            self.notify.emit("No fit results to save.")
+            self.notify.emit(tr("No fit results to save."))
             return
 
         last_dir = self.settings.get_last_directory()
         file_path, selected_filter = QFileDialog.getSaveFileName(
             None,
-            "Save Fit Results",
+            tr("Save Fit Results"),
             str(Path(last_dir) / "fit_results.xlsx"),
-            "Excel Files (*.xlsx);;CSV Files (*.csv)",
+            tr("Excel Files (*.xlsx);;CSV Files (*.csv)"),
         )
 
         if file_path:
@@ -293,31 +305,31 @@ class SpectraResultsMixin:
 
                 if ext == ".csv" or "CSV" in selected_filter:
                     self.df_fit_results.to_csv(file_path, index=False, sep=";")
-                    self.notify.emit(f"Fit results saved: {Path(file_path).name}")
+                    self.notify.emit(tr("Fit results saved: {name}", name=Path(file_path).name))
                 else:
                     if not ext:
                         file_path += ".xlsx"
                     success, message = save_df_to_excel(file_path, self.df_fit_results)
                     if success:
-                        self.notify.emit(f"Fit results saved: {Path(file_path).name}")
+                        self.notify.emit(tr("Fit results saved: {name}", name=Path(file_path).name))
                     else:
-                        self.notify.emit(f"Error saving fit results: {message}")
+                        self.notify.emit(tr("Error saving fit results: {error}", error=message))
                         return
 
                 self.settings.set_last_directory(str(Path(file_path).parent))
             except Exception as e:
-                self.notify.emit(f"Error saving fit results: {e}")
+                self.notify.emit(tr("Error saving fit results: {error}", error=e))
             finally:
                 QApplication.restoreOverrideCursor()
 
     def send_results_to_graphs(self, df_name: str, force_replace: bool = False):
         """Send fit results DataFrame to Graphs workspace."""
         if self.df_fit_results is None or self.df_fit_results.empty:
-            self.notify.emit("No fit results to send.")
+            self.notify.emit(tr("No fit results to send."))
             return
 
         if not df_name:
-            self.notify.emit("Please enter a DataFrame name.")
+            self.notify.emit(tr("Please enter a DataFrame name."))
             return
 
         self.send_df_to_graphs.emit(df_name, self.df_fit_results, force_replace)

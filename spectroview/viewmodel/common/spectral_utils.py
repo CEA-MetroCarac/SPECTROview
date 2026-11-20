@@ -5,6 +5,8 @@ from __future__ import annotations
 from copy import deepcopy
 import numpy as np
 
+from spectroview.i18n import tr
+
 
 def closest_index(array, value):
     """Return index of the element in *array* closest to *value* (NaN-safe)."""
@@ -194,11 +196,11 @@ def format_metadata_tooltip(metadata: dict | object | None) -> str:
     """Format primary metadata into a compact HTML tooltip."""
     fields = extract_primary_metadata(metadata)
     lines = [
-        "<b>Metadata</b>",
-        f"• Laser Wavelength: {fields['Laser Wavelength']}",
-        f"• Laser Power: {fields['Laser Power']}",
-        f"• Exposure Time: {fields['Exposure Time']}",
-        f"• Accumulation: {fields['Accumulation']}",
-        f"• Objective: {fields['Objective']}",
+        f"<b>{tr('Metadata')}</b>",
+        f"• {tr('Laser Wavelength')}: {fields['Laser Wavelength']}",
+        f"• {tr('Laser Power')}: {fields['Laser Power']}",
+        f"• {tr('Exposure Time')}: {fields['Exposure Time']}",
+        f"• {tr('Accumulation')}: {fields['Accumulation']}",
+        f"• {tr('Objective')}: {fields['Objective']}",
     ]
     return "<br>".join(lines)

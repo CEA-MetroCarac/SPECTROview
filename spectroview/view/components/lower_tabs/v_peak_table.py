@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPalette, QColor
 
 from spectroview import PEAK_MODELS
+from spectroview.i18n import bind_text
 from spectroview.view.theme import Icons
 from spectroview.viewmodel.common.spectral_utils import fano_display_amplitude, fano_internal_amplitude
 
@@ -175,12 +176,12 @@ class VPeakTable(QWidget):
 
         # ── Headers
         self._add_header(cols["del"], "")
-        self._add_header(cols["label"], "Label")
-        self._add_header(cols["model"], "Model")
+        bind_text(self._add_header(cols["label"], "Label"), "Label")
+        bind_text(self._add_header(cols["model"], "Model"), "Model")
 
         for p, d in param_cols.items():
             self._add_header(d["value"], p)
-            self._add_header(d["vary"], "fix")
+            bind_text(self._add_header(d["vary"], "fix"), "fix")
             if "min" in d:
                 self._add_header(d["min"], "min")
                 self._add_header(d["max"], "max")
@@ -427,6 +428,7 @@ class VPeakTable(QWidget):
         lbl.setAlignment(Qt.AlignCenter)
         lbl.setFixedHeight(ROW_HEIGHT)
         layout.addWidget(lbl)
+        return lbl
 
     def _add_empty(self, d):
         """Add empty labels for alignment."""

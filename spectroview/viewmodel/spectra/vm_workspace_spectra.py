@@ -9,6 +9,7 @@ import numpy as np
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QFileDialog
 
+from spectroview.i18n import tr, tr_plural
 from spectroview.model.io.m_io import (
     load_l6s_spectrum,
     load_ngs_spectrum,
@@ -174,7 +175,7 @@ class VMWorkspaceSpectra(
 
             if path.stem in existing_fnames:
                 self.notify.emit(
-                    f"Spectrum '{path.name}' already loaded (name match), skipping."
+                    tr("Spectrum '{name}' already loaded (name match), skipping.", name=path.name)
                 )
                 continue
 
@@ -215,7 +216,7 @@ class VMWorkspaceSpectra(
                 loaded_files.append(p)
                 last_valid_path = path
             except Exception as e:
-                self.notify.emit(f"Error loading {path.name}: {e}")
+                self.notify.emit(tr("Error loading {name}: {error}", name=path.name, error=e))
 
         if loaded_files:
             self._emit_list_update()
@@ -409,7 +410,7 @@ class VMWorkspaceSpectra(
     def remove_selected_spectra(self):
         """Remove currently selected spectra."""
         if not self.selected_fnames:
-            self.notify.emit("No spectra selected.")
+            self.notify.emit(tr("No spectra selected."))
             return
 
         map_names = self.store.map_names
@@ -464,14 +465,14 @@ class VMWorkspaceSpectra(
         fnames = self._get_selected_spectra()
 
         if not fnames:
-            self.notify.emit("No spectrum selected.")
+            self.notify.emit(tr("No spectrum selected."))
             return
 
         last_dir = self.settings.get_last_directory()
 
         dir_path = QFileDialog.getExistingDirectory(
             parent_widget,
-            "Select Directory to Save Spectra Data",
+            tr("Select Directory to Save Spectra Data"),
             last_dir,
         )
 
@@ -503,8 +504,14 @@ class VMWorkspaceSpectra(
                     np.savetxt(file_path, data, fmt="%.6f", delimiter="\t", comments="")
                     saved_count += 1
             except Exception as e:
-                self.notify.emit(f"Error saving {safe_name}: {e}")
+                self.notify.emit(tr("Error saving {name}: {error}", name=safe_name, error=e))
 
         if saved_count > 0:
-            self.notify.emit(f"Successfully saved {saved_count} spectra.")
+            self.notify.emit(
+                tr_plural(
+                    "Successfully saved {count} spectrum.",
+                    "Successfully saved {count} spectra.",
+                    saved_count,
+                )
+            )
             self.settings.set_last_directory(dir_path)

@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
 
+from spectroview.i18n import bind_text
+
 
 class DataFrameTableModel(QAbstractTableModel):
     """Virtualized Qt table model backed directly by a pandas DataFrame.
@@ -155,7 +157,8 @@ class VDataframeTable(QWidget):
 
         # Enable copy action via context menu
         self.table_view.setContextMenuPolicy(Qt.ActionsContextMenu)
-        copy_action = QAction("Copy", self)
+        copy_action = QAction(self)
+        bind_text(copy_action, "Copy")
         copy_action.triggered.connect(self._copy_data)
         self.table_view.addAction(copy_action)
 

@@ -8,28 +8,47 @@ trigger: model_decision
 
 ## 1. Mandatory Synchronization Policy
 
-Documentation is an essential part of every implementation task, not optional follow-up work. Whenever application code, features, public interfaces, configuration, keyboard shortcuts, or architecture change, Gemini **must** update the corresponding documentation in the same commit.
+Documentation is an essential part of every implementation task, not optional follow-up work. Whenever application code, features, public interfaces, configuration, keyboard shortcuts, or architecture change, Gemini **must** update the corresponding documentation in **both English and French** in the same commit.
 
-Never declare a task complete while documentation remains outdated.
+Never leave one language silently outdated when modifying the other, and never declare a task complete while documentation or translations remain outdated.
 
 ---
 
 ## 2. The Three Documentation Surfaces
 
-`SPECTROview` maintains three distinct documentation surfaces:
+`SPECTROview` maintains three distinct bilingual documentation surfaces configured via `mkdocs-static-i18n` (`docs_structure: suffix`):
 
 | Surface | Location | Audience | Rendered By |
 |---|---|---|---|
-| **Developer Guide** | `docs/developer/*.md` | Maintainers and contributors | MkDocs (`mkdocs.yml`) |
-| **Public API** | `docs/api/*.md` | External Python API users | MkDocs (`mkdocs.yml`) |
-| **User Manual** | `docs/user_manual/*.md` | End users | Online MkDocs (`mkdocs.yml`, `docs_hooks.py`) |
+| **Developer Guide** | `docs/developer/*.md` & `*.fr.md` | Maintainers and contributors | MkDocs (`mkdocs.yml`) |
+| **Public API** | `docs/api/*.md` & `*.fr.md` | External Python API users | MkDocs (`mkdocs.yml`) |
+| **User Manual** | `docs/user_manual/*.md` & `*.fr.md` | End users | Online MkDocs (`mkdocs.yml`, `docs_hooks.py`) |
 
 > [!NOTE]
-> `docs/user_manual/` (along with `docs/user_manual_images/`) is the single source of truth for user-facing documentation, opened directly via the User Manual toolbar button (`https://cea-metrocarac.github.io/SPECTROview/user_manual/`).
+> `docs/user_manual/` (along with `docs/user_manual_images/`) is the single source of truth for user-facing documentation, opened directly via the User Manual toolbar button (`https://cea-metrocarac.github.io/SPECTROview/user_manual/`). Both English and French pages share `docs/assets/` and `docs/user_manual_images/`.
 
 ---
 
-## 3. Which Documentation File to Touch by Area
+## 3. Bilingual Documentation Policy (English & French)
+
+- **Suffix File Convention**: Every navigation page has an English default file (`<page>.md`, served at `/`) and a side-by-side French translation (`<page>.fr.md`, served at `/fr/`). Internal non-nav documents (`docs/log.md`, `docs/roadmaps/*.md`, `docs/developer/theme_design_system.md`) remain English-only and fall back automatically via `fallback_to_default: true`.
+- **Mandatory Bilingual Sync**: Updating or fixing any page requires updating **both** `<page>.md` and `<page>.fr.md` in the same task so both versions stay semantically aligned and technically accurate.
+- **Adding a New Documentation Page**: Create both `<page>.md` and `<page>.fr.md`, register `<page>.md` under `nav:` in `mkdocs.yml`, and add its French label to `plugins.i18n.languages[fr].nav_translations` in `mkdocs.yml`.
+- **Translation & Technical Quality**:
+  - Write natural, professional scientific and software French — never literal or awkward machine translations.
+  - Keep code blocks, API identifiers, class/function/parameter names, CLI commands, config keys, file paths, file extensions, keyboard shortcuts, LaTeX equations, and exact English GUI widget/button labels (e.g., **Open**, **Save**, **Baseline**, **Fit**, **Modern Dark**) unchanged.
+  - Update internal `#anchor` links in `.fr.md` files so they match the generated heading slugs (note: Python-Markdown's `toc` slugifier strips French accents to ASCII in `#anchor` IDs), and keep Mermaid node labels with parentheses/colons quoted cleanly.
+- **Verification Gate**: Before declaring documentation work complete, validate markdown spacing, bilingual parity, links, and strict build:
+  ```powershell
+  $env:SPECTROVIEW_DOCS_NO_STAMP="1"
+  python -m pytest tests/unit/test_markdown_syntax.py tests/unit/test_docs_i18n.py -v
+  python -m mkdocs build --strict -d .tmp_site_check
+  ```
+  (Remove `.tmp_site_check` after verifying; use `SPECTROVIEW_DOCS_NO_STAMP=1` during dry-run checks so tracked timestamps in `docs/user_manual/index*.md` are not dirtied.)
+
+---
+
+## 4. Which Documentation File to Touch by Area
 
 | Area | Developer Guide (`docs/developer/`) | User Manual (`docs/user_manual/`) | Public API (`docs/api/`) |
 |---|---|---|---|
@@ -46,16 +65,16 @@ Never declare a task complete while documentation remains outdated.
 
 ---
 
-## 4. What to Update
+## 5. What to Update
 
-- **New Feature or UI Control**: Describe it in the workspace's user-manual page and the developer guide; add any new keyboard shortcut to `shortcuts.md`.
-- **Structural or Architecture Change**: Update `docs/developer/index.md` project structure and relevant subsystem page.
-- **Changed Behavior or Bug Fix**: Fix existing prose immediately — never leave stale descriptions or parameters.
-- **New Public API Function**: Add signature, docstring, and examples to `docs/api/`.
+- **New Feature or UI Control**: Describe it in the workspace's user-manual page and the developer guide (both `*.md` and `*.fr.md`); add any new keyboard shortcut to `shortcuts.md` and `shortcuts.fr.md`.
+- **Structural or Architecture Change**: Update `docs/developer/index.md` / `index.fr.md` project structure and relevant subsystem pages.
+- **Changed Behavior or Bug Fix**: Fix existing prose in both languages immediately — never leave stale descriptions, parameters, or out-of-sync translations.
+- **New Public API Function**: Add signature, docstring, and examples to `docs/api/*.md` and `*.fr.md`.
 
 ---
 
-## 5. Style & Quality Standards
+## 6. Style & Quality Standards
 
 - **Developer Docs**: MkDocs Material format (Mermaid diagrams, admonitions, and syntax highlighting).
 - **User Manual**: Clean, task-oriented Markdown rendered by MkDocs.
@@ -63,7 +82,7 @@ Never declare a task complete while documentation remains outdated.
 
 ---
 
-## 6. Markdown Formatting Rules for Python-Markdown Compatibility
+## 7. Markdown Formatting Rules for Python-Markdown Compatibility
 
 `SPECTROview` user manual pages and documentation are rendered by **Python-Markdown** (used by MkDocs Material). Python-Markdown enforces John Gruber's standard Markdown specification:
 
@@ -91,7 +110,7 @@ Never declare a task complete while documentation remains outdated.
 
 ---
 
-## 7. Mandatory Screenshots & Visual Assets Synchronization
+## 8. Mandatory Screenshots & Visual Assets Synchronization
 
 Whenever code, styling, or UI changes affect buttons, icons, colors, layouts, dialogs, viewers, tables, or themes, agents **must** update and re-capture the corresponding screenshots and illustrations in `docs/user_manual_images/` alongside Markdown prose:
 

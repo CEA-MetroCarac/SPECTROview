@@ -2,8 +2,8 @@
 
 Step-by-step touch-points for recurring tasks. Always read the named files
 first; these lists are orientation, not a substitute for the code. Every task
-below also ends with **tests + docs**: add/adjust tests, and update the
-developer guide + user manual per [documentation.md](documentation.md).
+below also ends with **tests + bilingual docs**: add/adjust tests, and update both
+English (`*.md`) and French (`*.fr.md`) docs per [documentation.md](documentation.md).
 
 ## Add a keyboard shortcut (a workspace)
 1. In the workspace View's `_setup_keyboard_shortcuts()`, add a `QShortcut` on

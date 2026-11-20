@@ -52,11 +52,11 @@ Follow this procedure to eliminate bugs at their root cause while safeguarding a
 
 ---
 
-## Phase 4: Synchronize Documentation
+## Phase 4: Synchronize Bilingual Documentation
 
 If the bug fix alters documented behavior, parameters, or fixes an error in the manual:
 
-- Update `docs/developer/<area>.md` or `docs/user_manual/<area>.md` per [.agents/rules/documentation.md](../../rules/documentation.md).
+- Update **both** English (`*.md`) and French (`*.fr.md`) counterparts in `docs/developer/`, `docs/api/`, or `docs/user_manual/` per [.agents/rules/documentation.md](../../rules/documentation.md) and verify with `tests/unit/test_docs_i18n.py` and `mkdocs build --strict`.
 
 ---
 

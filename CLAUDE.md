@@ -29,11 +29,12 @@ optional **AI chat** (`ai_agent/`).
    behavior are backward-compatible unless you're told otherwise.
 6. **Test what you change** — add/adjust tests next to the logic; keep the suite
    green; run `pyflakes` on changed files.
-7. **Keep docs in sync** — in the *same* change, update the docstring and, for
-   any new feature or structural change, the **developer guide**
-   (`docs/developer/`) and the **user manual**
-   (`docs/user_manual/`). Never leave docs describing old
-   behavior. Details: [rules/documentation.md](.claude/rules/documentation.md).
+7. **Keep docs in sync (EN + FR)** — in the *same* change, update the
+   docstring and, for any new feature, API, or structural change, **both** the
+   English (`*.md`) and French (`*.fr.md`) files across the **developer guide**
+   (`docs/developer/`), **API docs** (`docs/api/`), and **user manual**
+   (`docs/user_manual/`). Never leave one language outdated. Details:
+   [rules/documentation.md](.claude/rules/documentation.md).
 8. **Pause for the big calls** — explain major architectural changes before
    applying; ask when requirements are ambiguous instead of guessing. Proceed
    without asking on reversible, in-scope work.

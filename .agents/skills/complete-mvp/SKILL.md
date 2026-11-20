@@ -36,13 +36,13 @@ All applicable checks must pass with zero failures, and `.github/workflows/relea
 
 ---
 
-## Phase 3: Confirm Documentation Synchronization
+## Phase 3: Confirm Bilingual Documentation Synchronization
 
-Confirm that all relevant documentation surfaces have been updated to reflect the completed milestone per [.agents/rules/documentation.md](../../rules/documentation.md):
+Confirm that all relevant documentation surfaces have been updated in **both English (`*.md`) and French (`*.fr.md`)** (with passing `test_markdown_syntax.py`, `test_docs_i18n.py`, and `mkdocs build --strict`) per [.agents/rules/documentation.md](../../rules/documentation.md):
 
-- Developer Guide: `docs/developer/*.md`
-- User Manual: `docs/user_manual/*.md`
-- Public API: `docs/api/*.md`
+- Developer Guide: `docs/developer/*.md` & `*.fr.md`
+- User Manual: `docs/user_manual/*.md` & `*.fr.md`
+- Public API: `docs/api/*.md` & `*.fr.md`
 
 ---
 

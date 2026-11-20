@@ -74,15 +74,15 @@ Outline:
 
 ---
 
-## Phase 5: Synchronize Documentation & Visual Assets
+## Phase 5: Synchronize Bilingual Documentation & Visual Assets
 
-Update the authoritative documents and visual assets mapped in [.agents/rules/documentation.md](../../rules/documentation.md):
+Update both English (`*.md`) and French (`*.fr.md`) counterparts (plus `nav_translations` in `mkdocs.yml` for new pages) mapped in [.agents/rules/documentation.md](../../rules/documentation.md), then verify `tests/unit/test_markdown_syntax.py`, `tests/unit/test_docs_i18n.py`, and `mkdocs build --strict`:
 
-- Developer Guide: `docs/developer/<area>.md`
-- User Manual: `docs/user_manual/<area>.md`
+- Developer Guide: `docs/developer/<area>.md` & `<area>.fr.md`
+- User Manual: `docs/user_manual/<area>.md` & `<area>.fr.md`
 - Visual Assets & Screenshots: If the feature alters buttons, icons, menus, dialogs, viewers, or layouts, re-capture and update the related static PNG images in `docs/user_manual_images/` in **Modern Dark mode** using native font rendering (no headless tofu `□□□` boxes) and high-contrast dark button tiles.
-- Public API: `docs/api/<area>.md` (if API surface expanded)
-- Shortcuts: `docs/user_manual/shortcuts.md` (if shortcut added)
+- Public API: `docs/api/<area>.md` & `<area>.fr.md` (if API surface expanded)
+- Shortcuts: `docs/user_manual/shortcuts.md` & `shortcuts.fr.md` (if shortcut added)
 
 ---
 

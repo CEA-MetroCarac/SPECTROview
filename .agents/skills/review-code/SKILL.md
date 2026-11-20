@@ -39,8 +39,9 @@ Evaluate against project rules:
    - Are unit or integration tests present for all new behaviors or bug fixes?
    - Do tests use headless offscreen mode safely without native handle leaks?
    - Are schema sync tests (`TestModelSchemaSync`) green?
-6. **Documentation Synchronization** ([.agents/rules/documentation.md](../../rules/documentation.md)):
-   - Have all three documentation surfaces (Developer Guide, Public API, User Manual) been updated appropriately?
+6. **Bilingual Documentation Synchronization** ([.agents/rules/documentation.md](../../rules/documentation.md)):
+   - Have all affected documentation surfaces (Developer Guide, Public API, User Manual) been updated in **both English (`*.md`) and French (`*.fr.md`)** (plus `nav_translations` in `mkdocs.yml` for new pages)?
+   - Do `test_markdown_syntax.py`, `test_docs_i18n.py`, and `mkdocs build --strict` pass without warnings or broken links?
 7. **Release, CI & Packaging Integrity** ([.agents/rules/pitfalls.md](../../rules/pitfalls.md) & [.agents/rules/workflows.md](../../rules/workflows.md)):
    - Do `.github/workflows/release.yml`, `main.spec`, `packaging/*`, and `pyproject.toml` contain any stale import or asset paths after module moves/renames?
    - Does `spectroview/main.py` avoid PEP 562 lazy-facade entrypoint imports so PyInstaller `ModuleGraph` traces all runtime modules?

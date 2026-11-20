@@ -6,7 +6,7 @@ trigger: model_decision
 
 # Common Development Workflows
 
-Step-by-step implementation touchpoints for recurring tasks. Always read the referenced files first; these lists guide orientation, not replace code investigation. Every task must conclude with tests and documentation synchronization per [.agents/rules/documentation.md](documentation.md).
+Step-by-step implementation touchpoints for recurring tasks. Always read the referenced files first; these lists guide orientation, not replace code investigation. Every task must conclude with tests and **bilingual documentation synchronization** (both English `*.md` and French `*.fr.md`) per [.agents/rules/documentation.md](documentation.md).
 
 ---
 

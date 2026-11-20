@@ -72,12 +72,11 @@ Follow this procedure to restructure and optimize code in SPECTROview while stri
 
 ---
 
-## Phase 5: Synchronize Documentation
+## Phase 5: Synchronize Bilingual Documentation
 
 If classes, functions, or internal module boundaries moved:
 
-- Update `docs/developer/index.md` or the corresponding subsystem developer guide.
-- Check [.agents/rules/documentation.md](../../rules/documentation.md).
+- Update **both** English (`*.md`) and French (`*.fr.md`) counterparts of `docs/developer/index` and the affected subsystem guide per [.agents/rules/documentation.md](../../rules/documentation.md), and verify with `tests/unit/test_docs_i18n.py` / `mkdocs build --strict`.
 
 ---
 

@@ -7,14 +7,14 @@ paths:
 
 # Documentation
 
-**Every new feature or structural change must update the docs in the same PR.**
-Three doc surfaces exist — update each that applies:
+**Every new feature, API, config, or structural change must update docs in BOTH English (`*.md`) and French (`*.fr.md`) in the same PR.** Never silently leave one language outdated.
+Three bilingual doc surfaces exist (`mkdocs-static-i18n`, `docs_structure: suffix`) — update each that applies:
 
 | Surface | Location | Audience | Rendered by |
 |---|---|---|---|
-| Developer guide | `docs/developer/*.md` | maintainers/contributors | mkdocs (`mkdocs.yml`) |
-| Public API | `docs/api/*.md` | API users | mkdocs |
-| User manual | `docs/user_manual/*.md` | end users | mkdocs (`mkdocs.yml`) |
+| Developer guide | `docs/developer/*.md` & `*.fr.md` | maintainers/contributors | mkdocs (`mkdocs.yml`) |
+| Public API | `docs/api/*.md` & `*.fr.md` | API users | mkdocs |
+| User manual | `docs/user_manual/*.md` & `*.fr.md` | end users | mkdocs (`mkdocs.yml`) |
 
 ## Which file to touch (by area)
 
@@ -40,8 +40,14 @@ Three doc surfaces exist — update each that applies:
 - **Structural change** (moved/renamed modules, new layer, changed data flow):
   update `docs/developer/index.md`'s project structure/architecture sections and
   the affected area page.
-- **Changed behavior**: fix the existing prose in place — don't leave stale
-  descriptions or screenshots that no longer match.
+- **New page**: create both `<page>.md` and `<page>.fr.md`, add `<page>.md` to `nav:` in `mkdocs.yml`, and add its French title to `plugins.i18n.languages[fr].nav_translations`.
+- **Changed behavior**: fix the existing prose in **both** English and French in place — don't leave stale descriptions, `#anchor` links, or screenshots that no longer match.
+
+## Bilingual quality & verification
+
+- Write natural, accurate scientific/software French — never literal machine translation. Keep code blocks, API identifiers, CLI commands, config keys, file paths, shortcuts, LaTeX math, and exact English GUI widget labels unchanged.
+- Verify spacing, parity, links, and strict build before finishing:
+  `SPECTROVIEW_DOCS_NO_STAMP=1` + `python -m pytest tests/unit/test_markdown_syntax.py tests/unit/test_docs_i18n.py -v` + `python -m mkdocs build --strict -d .tmp_site_check`.
 
 ## Style
 

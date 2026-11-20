@@ -6,6 +6,7 @@ import ast
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
+import re
 from string import Formatter
 from typing import Any, Iterable, Optional
 
@@ -239,3 +240,108 @@ def validate_catalog(
 
     report.unused_strings = sorted(set(strings_map.keys()) - extracted.strings)
     return report
+
+
+_LEGACY_UNLOCALIZED_FILES = frozenset({
+    "customize_axis.py",
+    "customize_legend.py",
+    "customize_more_options.py",
+    "customize_annotations.py",
+})
+
+_ALLOWED_UI_SYMBOLS = frozenset({
+    "X",
+    "Y",
+    "Z",
+    "X:",
+    "Y:",
+    "X₀:",
+    "Y₀:",
+    "Xmin",
+    "Xmax",
+    "λ=1e5",
+    "R²=0",
+    "PCA",
+    "NMF",
+    "SPECTROview",
+    "https://api.example.com/v1",
+    "model-a, model-b, model-c",
+    "sk-...",
+    "sk-ant-...",
+    "AIzaSy...",
+})
+
+
+def _is_non_translatable_ui_literal(text: str) -> bool:
+    """Return True if *text* is a scientific symbol, identifier, or non-prose placeholder."""
+    stripped = text.strip()
+    if not stripped or not any(ch.isalpha() for ch in stripped):
+        return True
+    if stripped in _ALLOWED_UI_SYMBOLS:
+        return True
+    # Snake/default export identifiers (e.g. "best_fit_results", "MVA_scores", "Profile_1")
+    if "_" in stripped and re.fullmatch(r"[A-Za-z0-9_]+", stripped):
+        return True
+    return False
+
+
+def audit_untranslated_ui_literals(source_root: Optional[Path] = None) -> list[str]:
+    """Scan active UI modules for bare English string literals in Qt widgets/dialogs."""
+    pkg_root = source_root or Path(__file__).resolve().parents[1]
+    targets = (
+        sorted((pkg_root / "view").rglob("*.py"))
+        + sorted((pkg_root / "settings" / "ui").rglob("*.py"))
+        + sorted((pkg_root / "ai_agent").glob("v_*.py"))
+        + ([pkg_root / "main.py"] if (pkg_root / "main.py").is_file() else [])
+    )
+
+    ctors_text0 = {"QLabel", "QCheckBox", "QRadioButton", "QGroupBox", "QMenu"}
+    ctors_text0_or_1 = {"QPushButton", "QAction", "addAction", "addMenu"}
+    setters_0 = {"setText", "setTitle", "setWindowTitle", "setToolTip", "setPlaceholderText"}
+    setters_1 = {"setTabText", "addTab"}
+    msg_dialogs = {"information", "warning", "critical", "question", "about"}
+    input_dialogs = {"getText", "getItem", "getInt", "getDouble"}
+    file_dialogs = {"getOpenFileName", "getOpenFileNames", "getSaveFileName", "getExistingDirectory"}
+
+    findings: list[str] = []
+    for py_file in targets:
+        if "__pycache__" in py_file.parts or py_file.name in _LEGACY_UNLOCALIZED_FILES:
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        rel = py_file.relative_to(pkg_root).as_posix()
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            func = node.func
+            name = _call_name(func)
+            obj_name = func.value.id if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name) else ""
+            candidates: list[Optional[str]] = []
+
+            if name in ctors_text0 and node.args:
+                candidates.append(_str_literal(node.args[0]))
+            elif name in ctors_text0_or_1 and node.args:
+                s0 = _str_literal(node.args[0])
+                if s0 is not None:
+                    candidates.append(s0)
+                elif len(node.args) >= 2:
+                    candidates.append(_str_literal(node.args[1]))
+            elif name in setters_0 and node.args:
+                candidates.append(_str_literal(node.args[0]))
+            elif name in setters_1 and len(node.args) >= 2:
+                candidates.append(_str_literal(node.args[1]))
+            elif obj_name == "QMessageBox" and name in msg_dialogs:
+                for idx in (1, 2):
+                    if len(node.args) > idx:
+                        candidates.append(_str_literal(node.args[idx]))
+            elif obj_name == "QInputDialog" and name in input_dialogs:
+                for idx in (1, 2):
+                    if len(node.args) > idx:
+                        candidates.append(_str_literal(node.args[idx]))
+            elif obj_name == "QFileDialog" and name in file_dialogs and len(node.args) > 1:
+                candidates.append(_str_literal(node.args[1]))
+
+            for lit in candidates:
+                if lit is not None and not _is_non_translatable_ui_literal(lit):
+                    findings.append(f"{rel}:{node.lineno}: {name}({lit!r})")
+
+    return sorted(findings)

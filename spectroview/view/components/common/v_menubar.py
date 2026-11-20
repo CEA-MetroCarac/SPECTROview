@@ -74,7 +74,8 @@ class VMenuBar(QToolBar):
         self.addWidget(self.notification_area)
 
         # ----- SPECTROview AI Agent -----
-        self.actionAIChat = self.addAction(Icons.sparkles(size=22), "SPECTROview AI Agent")
+        self.actionAIChat = self.addAction(Icons.sparkles(size=22), "")
+        bind_text(self.actionAIChat, "SPECTROview AI Agent")
         self.actionAIChat.setShortcut("Ctrl+Shift+A")
         bind_tooltip(
             self.actionAIChat,

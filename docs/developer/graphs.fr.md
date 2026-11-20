@@ -82,7 +82,7 @@ Dataclass pure stockant tout le nécessaire pour recréer un graphique. `save()`
 | Axes en incrustation (zoom) | `inset_enabled`, `inset_bounds`, `inset_xmin`/`xmax`/`ymin`/`ymax`, `inset_show_zoom_indicator` |
 | Export et géométrie de fenêtre | `plot_width`/`height`, `dpi`, `export_width_mm`/`height_mm` |
 
-Remarque : les modèles de style, les recettes de tracé et le dossier de travail ne sont **pas** des champs de `MGraph` — ce sont des systèmes distincts bâtis autour de sous-ensembles de ces champs (voir [Modèles de style et recettes de tracé](#modèles-de-style-et-recettes-de-tracé)).
+Remarque : les modèles de style, les recettes de tracé et le dossier de travail ne sont **pas** des champs de `MGraph` — ce sont des systèmes distincts bâtis autour de sous-ensembles de ces champs (voir [Modèles de style et recettes de tracé](#modeles-de-style-et-recettes-de-trace)).
 
 ### **`graph_control.py` — Contrat partagé d'état et de commande graphique**
 
@@ -115,7 +115,7 @@ Chaque graphique de la zone MDI est une instance de `VGraph`. Il possède une `F
 Deux chemins de rendu existent :
 
 - **`plot(df)`** — redessin complet : efface et reconstruit les axes de zéro. Indispensable dès que les artistes eux-mêmes changent (données des séries, couleurs/marqueurs par point, palette, axes jumeaux secondaires, annotations, incrustations) ou qu'une coupure d'axe est active/basculée.
-- **`restyle()`** — chemin rapide qui repeint sur place des axes déjà tracés (titres/libellés/tailles de police, grille, direction/format des graduations, limites des axes principaux, échelles log/symlog, couleur de fond/bordures/marges, style de la boîte de légende) sans toucher aux données tracées. Avant de basculer un axe vers `"log"`, `GraphAxesStyleMixin` (`v_graph_axes.py`) assainit les bornes automatiques linéaires non positives via `_sanitize_log_axis_limits()` afin que Matplotlib n'émette pas d'avertissement. Retourne `False` (déclenchant un redessin complet) dès qu'une coupure d'axe est active. Voir [Aperçu temps réel et chemin rapide Restyle](#aperçu-temps-réel-et-chemin-rapide-restyle) pour le choix entre les deux chemins.
+- **`restyle()`** — chemin rapide qui repeint sur place des axes déjà tracés (titres/libellés/tailles de police, grille, direction/format des graduations, limites des axes principaux, échelles log/symlog, couleur de fond/bordures/marges, style de la boîte de légende) sans toucher aux données tracées. Avant de basculer un axe vers `"log"`, `GraphAxesStyleMixin` (`v_graph_axes.py`) assainit les bornes automatiques linéaires non positives via `_sanitize_log_axis_limits()` afin que Matplotlib n'émette pas d'avertissement. Retourne `False` (déclenchant un redessin complet) dès qu'une coupure d'axe est active. Voir [Aperçu temps réel et chemin rapide Restyle](#apercu-temps-reel-et-chemin-rapide-restyle) pour le choix entre les deux chemins.
 
 `_set_figure_style()` ré-applique `axes.facecolor`/`figure.facecolor`/`axes.labelcolor`/`text.color`/`xtick.color`/`ytick.color`/`axes.edgecolor` depuis `plt.rcParams` à chaque rendu — indispensable car `ax.clear()` ne repeint pas rétroactivement des axes créés sous un autre style Matplotlib, ce qui laissait autrefois des graduations ou libellés noirs après un passage au thème sombre.
 

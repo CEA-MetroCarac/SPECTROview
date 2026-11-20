@@ -216,7 +216,7 @@ AI:   (creates scatter plot with FWHM > 5 filter applied)
 - **Procédez par étapes simples** — demandez d'abord un tracé de base, puis affinez-le dans les messages suivants.
 - **Plusieurs graphiques à la fois** — demandez plusieurs styles en une seule phrase : *« Create a box and scatter plot of X vs Y »*.
 - **Surveillez la barre d'état** — un voyant rouge 🔴 signale l'absence de connexion. Vérifiez votre clé API dans Settings ou assurez-vous qu'Ollama est démarré.
-- **Un modèle local peine à suivre ?** — consultez la [section 4](#4-optimisation-automatique-pour-les-petits-modèles), limitez vos requêtes à un ou deux graphiques par message et privilégiez les modèles explicitement annoncés comme compatibles avec l'appel d'outils (*tool/function calling*).
+- **Un modèle local peine à suivre ?** — consultez la [section 4](#4-optimisation-automatique-pour-les-petits-modeles), limitez vos requêtes à un ou deux graphiques par message et privilégiez les modèles explicitement annoncés comme compatibles avec l'appel d'outils (*tool/function calling*).
 
 ---
 

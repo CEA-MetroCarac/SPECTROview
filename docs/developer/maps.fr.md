@@ -330,7 +330,7 @@ Les points sélectionnés sont tracés sous forme d'un unique `PatchCollection` 
 
 ## Surcharges de méthodes modèles
 
-L'espace Maps personnalise le pipeline global hérité via trois [méthodes points d'extension](spectra.md#méthodes-modèles-template-method). Les comprendre est essentiel pour déboguer ou étendre les opérations par lots.
+L'espace Maps personnalise le pipeline global hérité via trois [méthodes points d'extension](spectra.md#methodes-modeles-template-method). Les comprendre est essentiel pour déboguer ou étendre les opérations par lots.
 
 ### `_get_target_mds(apply_all)`
 
@@ -522,4 +522,4 @@ Les nouvelles géométries spatiales nécessitent :
 
 - Pour une carte 50×50 (2 500 spectres) de 1 000 nombres d'onde, `MapData.Y0` (`float32`) occupe ~10 Mo ; pour une carte de 25 000 spectres à 1 000 nombres d'onde, `Y0` occupe ~100 Mo, et l'ajustement alloue en plus `Y_bestfit` et un tableau `Y_peaks` par pic. Utilisez `remove_map()` pour libérer les cartes dont vous n'avez plus besoin.
 
-Pour le dépannage lié au modèle de données (prétraitement non appliqué, gestion mémoire), consultez [SpectraStore : Dépannage](spectra_store.md#dépannage).
+Pour le dépannage lié au modèle de données (prétraitement non appliqué, gestion mémoire), consultez [SpectraStore : Dépannage](spectra_store.md#depannage).

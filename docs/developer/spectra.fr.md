@@ -66,7 +66,7 @@ graph LR
 
 ### Comment Spectra utilise `MapData`
 
-Dans l'espace Spectra, chaque spectre chargé est stocké comme un bloc `MapData` indépendant avec **N=1** (une seule ligne). Chaque bloc dispose de son propre axe X, autorisant la coexistence de spectres aux plages spectrales différentes. Voir [Hiérarchie des données](spectra_store.md#hiérarchie-des-données) pour l'agencement tensoriel complet.
+Dans l'espace Spectra, chaque spectre chargé est stocké comme un bloc `MapData` indépendant avec **N=1** (une seule ligne). Chaque bloc dispose de son propre axe X, autorisant la coexistence de spectres aux plages spectrales différentes. Voir [Hiérarchie des données](spectra_store.md#hierarchie-des-donnees) pour l'agencement tensoriel complet.
 
 ---
 
@@ -201,7 +201,7 @@ send_df_to_graphs         = Signal(str, object)   # transmet un DataFrame à Gra
 
 #### Méthodes modèles (Template Method)
 
-Le ViewModel emploie le **patron Template Method** afin de permettre à la [sous-classe Maps](maps.md#surcharges-de-méthodes-modèles) de personnaliser les opérations globales sans dupliquer la logique :
+Le ViewModel emploie le **patron Template Method** afin de permettre à la [sous-classe Maps](maps.md#surcharges-de-methodes-modeles) de personnaliser les opérations globales sans dupliquer la logique :
 
 ```python
 def _get_target_mds(self, apply_all: bool) -> list[MapData]:
@@ -439,4 +439,4 @@ Consultez le [guide dédié au moteur VBF](vbf_engine.md). En résumé :
 
 - N'appelez jamais `_emit_selected_spectra()` depuis un slot connecté à `spectra_selection_changed`. Utilisez `QTimer.singleShot(0, parent_qobject, ...)` pour différer si besoin.
 
-Pour le dépannage lié au modèle de données (prétraitement non appliqué, gestion mémoire), consultez [SpectraStore : Dépannage](spectra_store.md#dépannage).
+Pour le dépannage lié au modèle de données (prétraitement non appliqué, gestion mémoire), consultez [SpectraStore : Dépannage](spectra_store.md#depannage).

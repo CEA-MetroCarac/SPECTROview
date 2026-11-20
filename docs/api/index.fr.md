@@ -6,11 +6,11 @@ Tous les modules sont exposés via le paquet `spectroview.api`.
 
 ## Modules de l'API
 
-- **[`spectroview.api.workspace`](spectra.md#workspaces-à-état-persistant)** — `SpectraWorkspace` / `MapsWorkspace` : sessions à état persistant permettant de charger, prétraiter, ajuster, collecter les résultats et enregistrer/recharger au sein d'un même objet. Les fichiers lus et écrits utilisent *exactement le même format* que le bouton « Save work » de l'interface graphique — un espace créé intégralement par script s'ouvre directement dans l'application, et inversement.
-- **[`spectroview.api.io`](spectra.md#chargement-des-données)** — Lecteurs de fichiers (WDF, SPC, L6S, L6M, NGS, NGC, CSV, TXT, DAT), import de jeux de données, export des résultats et convertisseur Renishaw sans interface graphique.
-- **[`spectroview.api.preprocessing`](spectra.md#prétraitement)** — Fonctions sans état opérant directement sur les tableaux : soustraction de ligne de base, recadrage et normalisation.
+- **[`spectroview.api.workspace`](spectra.md#workspaces-a-etat-persistant)** — `SpectraWorkspace` / `MapsWorkspace` : sessions à état persistant permettant de charger, prétraiter, ajuster, collecter les résultats et enregistrer/recharger au sein d'un même objet. Les fichiers lus et écrits utilisent *exactement le même format* que le bouton « Save work » de l'interface graphique — un espace créé intégralement par script s'ouvre directement dans l'application, et inversement.
+- **[`spectroview.api.io`](spectra.md#chargement-des-donnees)** — Lecteurs de fichiers (WDF, SPC, L6S, L6M, NGS, NGC, CSV, TXT, DAT), import de jeux de données, export des résultats et convertisseur Renishaw sans interface graphique.
+- **[`spectroview.api.preprocessing`](spectra.md#pretraitement)** — Fonctions sans état opérant directement sur les tableaux : soustraction de ligne de base, recadrage et normalisation.
 - **[`spectroview.api.fitting`](spectra.md#ajustement-par-lots)** — Interface vers le moteur Vectorized Batch Fit (VBF) : construction de modèles, ajustement par lots et gestion CRUD des modèles d'ajustement.
-- **[`spectroview.api.analysis`](2dmap.md#analyse-multivariée-mva)** — Analyse multivariée : ACP (PCA) et NMF.
+- **[`spectroview.api.analysis`](2dmap.md#analyse-multivariee-mva)** — Analyse multivariée : ACP (PCA) et NMF.
 - **[`spectroview.api.graphs`](graphs.md)** — Graphiques prêts pour la publication reproduisant au pixel près le rendu de l'interface graphique, pour les 9 styles de tracé pris en charge, ainsi que la gestion des modèles de tracé.
 - **[`spectroview.api.calculators`](calculators.md)** — Calculateurs physiques pour l'optique et les conversions d'unités.
 - **`spectroview.api.settings`** — Accès en lecture/écriture sans interface graphique à la configuration persistante (paramètres d'ajustement par défaut, dossier des modèles, dernier répertoire utilisé).

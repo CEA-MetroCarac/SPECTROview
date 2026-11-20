@@ -48,6 +48,7 @@ theme:
     - content.tabs.link
   icon:
     repo: fontawesome/brands/github
+    alternate: material/web
   logo: assets/icon.png
   favicon: assets/icon.png
 

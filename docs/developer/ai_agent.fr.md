@@ -2,9 +2,9 @@
 
 `AI Data Chat` est un assistant conversationnel IA optionnel et multi-fournisseurs qui permet aux utilisateurs d'interroger, filtrer, tracer et modifier leurs données en langage naturel. Il prend en charge l'inférence locale via **Ollama**, les fournisseurs cloud via le SDK **OpenAI** (OpenAI, DeepSeek, Gemini et tout point d'accès compatible OpenAI), ainsi que les modèles **Anthropic** Claude. L'agent communique avec l'espace `Graphs` pour créer, mettre à jour et supprimer des graphiques en temps réel.
 
-> Le module IA est **facultatif à l'usage** — si Ollama ne tourne pas et qu'aucune clé API cloud n'est renseignée, le panneau affiche un état rouge « not connected » et le reste de SPECTROview fonctionne sans aucune incidence. Les paquets Python dont il dépend (`ollama`, `openai`, `anthropic`, `mcp`) restent toutefois des dépendances d'installation inconditionnelles du projet (voir [Gestion des dépendances optionnelles](#gestion-des-dépendances-optionnelles)).
+> Le module IA est **facultatif à l'usage** — si Ollama ne tourne pas et qu'aucune clé API cloud n'est renseignée, le panneau affiche un état rouge « not connected » et le reste de SPECTROview fonctionne sans aucune incidence. Les paquets Python dont il dépend (`ollama`, `openai`, `anthropic`, `mcp`) restent toutefois des dépendances d'installation inconditionnelles du projet (voir [Gestion des dépendances optionnelles](#gestion-des-dependances-optionnelles)).
 
-Un second axe distinct mérite d'être souligné : **les petits modèles locaux reçoivent un prompt simplifié et une configuration de requête différente des grands modèles cloud** — il s'agit de l'ajout architectural majeur depuis la migration MCP, détaillé dans la section dédiée ci-après ([Prise en charge des petits modèles](#prise-en-charge-des-petits-modèles)).
+Un second axe distinct mérite d'être souligné : **les petits modèles locaux reçoivent un prompt simplifié et une configuration de requête différente des grands modèles cloud** — il s'agit de l'ajout architectural majeur depuis la migration MCP, détaillé dans la section dédiée ci-après ([Prise en charge des petits modèles](#prise-en-charge-des-petits-modeles)).
 
 ---
 
@@ -43,7 +43,7 @@ Un second axe distinct mérite d'être souligné : **les petits modèles locaux 
    ```bash
    ollama pull qwen2.5-coder:7b
    ```
-   Tout modèle Ollama prenant en charge l'appel d'outils (*tool/function calling*) fonctionne — voir [Prise en charge des petits modèles](#prise-en-charge-des-petits-modèles) pour la façon dont SPECTROview adapte son comportement au modèle choisi.
+   Tout modèle Ollama prenant en charge l'appel d'outils (*tool/function calling*) fonctionne — voir [Prise en charge des petits modèles](#prise-en-charge-des-petits-modeles) pour la façon dont SPECTROview adapte son comportement au modèle choisi.
 
 4. **Installer SPECTROview**
    `ollama`, `openai`, `anthropic` et `mcp` font partie des dépendances principales du paquet (sans groupe d'extras séparé) ; une installation normale inclut donc tout le nécessaire :
@@ -303,7 +303,7 @@ Gestionnaire avec mise en cache lisant les sections Markdown sur disque et les c
 | `build_prompt(prompts, rules, knowledge, examples)` | Assemble le prompt système complet ; ignore les fichiers absents avec avertissement |
 | `.model_config` | Contenu analysé de `config/model.yaml` |
 
-> **Le choix des fragments est codé en dur** dans `VMChat._build_system_prompt()` — une liste pour le profil complet, une pour le profil simplifié (voir [Prise en charge des petits modèles](#prise-en-charge-des-petits-modèles)).
+> **Le choix des fragments est codé en dur** dans `VMChat._build_system_prompt()` — une liste pour le profil complet, une pour le profil simplifié (voir [Prise en charge des petits modèles](#prise-en-charge-des-petits-modeles)).
 
 ### **`VMChat` — ViewModel**
 
@@ -393,7 +393,7 @@ Widgets auxiliaires : `_MessageCard` (bulle alignée selon l'interlocuteur) et `
 
 ## **Prompt système et contrat LLM**
 
-Le prompt système est assemblé par `PromptManager` selon deux profils (voir [Prise en charge des petits modèles](#prise-en-charge-des-petits-modèles)) :
+Le prompt système est assemblé par `PromptManager` selon deux profils (voir [Prise en charge des petits modèles](#prise-en-charge-des-petits-modeles)) :
 
 **Profil complet** (par défaut et fournisseurs cloud) :
 
@@ -591,7 +591,7 @@ Avec **MCP Tool Calling**, aucun JSON libre n'est extrait du texte brut :
 |----------------|-------------|
 | **Création de tracés en langage naturel** | Demander l'un des 9 styles pris en charge (`point`, `scatter`, `box`, `bar`, `line`, `trendline`, `histogram`, `wafer`, `2Dmap`) avec colonnes, filtres et options de style |
 | **Génération multi-graphiques** | Une seule requête peut créer plusieurs graphiques simultanément (appels parallèles ou plusieurs tours de boucle) |
-| **Filtrage des données** | Filtrer les DataFrames en langage naturel (traduit en expression pandas validée, voir [Sécurité et validation](#sécurité-et-validation)) |
+| **Filtrage des données** | Filtrer les DataFrames en langage naturel (traduit en expression pandas validée, voir [Sécurité et validation](#securite-et-validation)) |
 | **Statistiques descriptives** | Obtenir les statistiques `describe()` sur des colonnes données |
 | **Modification de graphiques** | Mettre à jour les propriétés existantes (limites d'axes, titre, style, filtres, palette) par ID |
 | **Suppression de graphiques** | Supprimer des graphiques spécifiques ou tous les graphiques |

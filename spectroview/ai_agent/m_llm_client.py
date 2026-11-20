@@ -29,6 +29,7 @@ from typing import Callable, List, Dict, Optional, Any
 
 from PySide6.QtCore import QThread, Signal, QObject
 
+from spectroview.i18n import tr, tr_plural
 from spectroview.model.system.m_tls import ensure_secure_tls, inject_truststore
 
 # ---------------------------------------------------------------------------
@@ -71,6 +72,21 @@ _TRANSIENT_STATUS: Dict[int, str] = {
 }
 
 
+def _transient_status_message(status: Any) -> Optional[str]:
+    """Return the localized user-facing message for a transient HTTP status."""
+    if status == 429:
+        return tr("⏳ Rate limited — too many requests for this model right now.")
+    if status == 500:
+        return tr("⚠ The provider hit an internal error.")
+    if status == 502:
+        return tr("⚠ The provider's gateway returned a bad response.")
+    if status == 503:
+        return tr("⏳ The model is temporarily unavailable (high demand).")
+    if status == 504:
+        return tr("⏳ The provider timed out.")
+    return None
+
+
 def _format_exception(exc: BaseException) -> str:
     """Build an error string that includes the underlying cause chain.
 
@@ -91,17 +107,18 @@ def _format_exception(exc: BaseException) -> str:
             messages.append(entry)
         cur = cur.__cause__ or cur.__context__
 
-    detail = "\n  Caused by: ".join(messages)
+    detail = f"\n  {tr('Caused by:')} ".join(messages)
 
     # A transient provider-side status buried under an SDK traceback reads as
     # "SPECTROview is broken". Say plainly whose problem it is.
     status = getattr(exc, "status_code", None)
-    if status in _TRANSIENT_STATUS:
-        return (
-            f"{_TRANSIENT_STATUS[status]}\n"
-            f"This is on the provider's side, not SPECTROview — retry in a moment, "
-            f"or switch model/provider.\n\n{detail}"
+    status_msg = _transient_status_message(status)
+    if status_msg is not None:
+        notice = tr(
+            "This is on the provider's side, not SPECTROview — retry in a moment, "
+            "or switch model/provider."
         )
+        return f"{status_msg}\n{notice}\n\n{detail}"
     return detail
 
 
@@ -248,8 +265,10 @@ class LLMWorker(QThread):
     def run(self) -> None:                      # executed in worker thread
         if not OLLAMA_AVAILABLE:
             self.error_occurred.emit(
-                "The `ollama` Python package is not installed.\n"
-                "Run:  pip install ollama"
+                tr(
+                    "The `ollama` Python package is not installed.\n"
+                    "Run:  pip install ollama"
+                )
             )
             return
 
@@ -351,14 +370,16 @@ class APIWorker(QThread):
     def run(self) -> None:                      # executed in worker thread
         if not OPENAI_AVAILABLE:
             self.error_occurred.emit(
-                "The `openai` Python package is not installed.\n"
-                "Run:  pip install openai"
+                tr(
+                    "The `openai` Python package is not installed.\n"
+                    "Run:  pip install openai"
+                )
             )
             return
 
         if not self._api_key:
             self.error_occurred.emit(
-                "No API key set. Please enter your API key in the chat panel."
+                tr("No API key set. Please enter your API key in the chat panel.")
             )
             return
 
@@ -561,14 +582,16 @@ class AnthropicWorker(QThread):
     def run(self) -> None:
         if not ANTHROPIC_AVAILABLE:
             self.error_occurred.emit(
-                "The `anthropic` Python package is not installed.\n"
-                "Run:  pip install anthropic"
+                tr(
+                    "The `anthropic` Python package is not installed.\n"
+                    "Run:  pip install anthropic"
+                )
             )
             return
 
         if not self._api_key:
             self.error_occurred.emit(
-                "No API key set. Please enter your API key in the chat panel."
+                tr("No API key set. Please enter your API key in the chat panel.")
             )
             return
 
@@ -942,7 +965,7 @@ def test_provider_connection(
     """
     if provider == "Ollama":
         if not OLLAMA_AVAILABLE:
-            return False, "ollama package missing — pip install ollama"
+            return False, tr("ollama package missing — pip install ollama")
         try:
             mod = _load_ollama()
             if hasattr(mod, "Client"):
@@ -951,15 +974,19 @@ def test_provider_connection(
                 resp = mod.list()
             models_list = getattr(resp, "models", None) or resp.get("models", [])
             count = len(models_list)
-            return True, f"Connected to Ollama ({count} model{'s' if count != 1 else ''} available)"
+            return True, tr_plural(
+                "Connected to Ollama ({count} model available)",
+                "Connected to Ollama ({count} models available)",
+                count,
+            )
         except Exception as exc:
-            return False, f"Ollama not running: {exc}"
+            return False, tr("Ollama not running: {error}", error=exc)
 
     if provider == "Anthropic":
         if not ANTHROPIC_AVAILABLE:
-            return False, "anthropic package missing — pip install anthropic"
+            return False, tr("anthropic package missing — pip install anthropic")
         if not api_key:
-            return False, "Anthropic API key is required"
+            return False, tr("Anthropic API key is required")
         try:
             ensure_secure_tls()
             mod = _load_anthropic()
@@ -975,13 +1002,13 @@ def test_provider_connection(
                 max_tokens=5,
                 messages=[{"role": "user", "content": "Hi"}],
             )
-            return True, f"Connection successful ({target_model})"
+            return True, tr("Connection successful ({model})", model=target_model)
         except Exception as exc:
             return False, _format_exception(exc)
 
     # Cloud OpenAI-compatible providers: Custom, OpenAI, Gemini, DeepSeek, Mistral
     if not OPENAI_AVAILABLE:
-        return False, "openai package missing — pip install openai"
+        return False, tr("openai package missing — pip install openai")
 
     preset = API_PROVIDERS.get(provider, {})
     effective_url = base_url or preset.get("base_url", "")
@@ -989,7 +1016,7 @@ def test_provider_connection(
     target_model = model or default_model
 
     if provider != "Custom" and not api_key:
-        return False, f"{provider} API key is required"
+        return False, tr("{provider} API key is required", provider=provider)
 
     effective_key = api_key or "none"
 
@@ -1010,7 +1037,11 @@ def test_provider_connection(
             data = getattr(models_resp, "data", [])
             if data:
                 count = len(data)
-                return True, f"Connection successful ({count} model{'s' if count != 1 else ''} found)"
+                return True, tr_plural(
+                    "Connection successful ({count} model found)",
+                    "Connection successful ({count} models found)",
+                    count,
+                )
         except Exception:
             # Fall back to testing minimal chat completion
             pass
@@ -1023,7 +1054,7 @@ def test_provider_connection(
             messages=[{"role": "user", "content": "Hi"}],
             max_tokens=2,
         )
-        return True, f"Connection successful ({target_model})"
+        return True, tr("Connection successful ({model})", model=target_model)
 
     except Exception as exc:
         return False, _format_exception(exc)

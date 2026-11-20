@@ -34,6 +34,16 @@ from PySide6.QtGui import QFont, QKeyEvent, QTextCursor
 
 from spectroview.view.theme import Icons, current_tokens
 from spectroview.model.m_settings import MSettings
+from spectroview.i18n import (
+    bind_placeholder,
+    bind_plural_text,
+    bind_text,
+    bind_tooltip,
+    bind_window_title,
+    on_language_changed,
+    tr,
+    tr_plural,
+)
 from spectroview.ai_agent.vm_chat import VMChat, ChatResult
 from spectroview.ai_agent.m_llm_client import (
     API_PROVIDERS, LLMClient, OPENAI_AVAILABLE, OLLAMA_AVAILABLE,
@@ -84,7 +94,13 @@ class _MessageCard(QFrame):
         header_layout = QHBoxLayout()
         header_layout.setContentsMargins(0, 0, 0, 0)
 
-        role_label = QLabel("You" if role == "user" else ("Error" if role == "error" else "SPECTROview AI Agent"))
+        role_label = QLabel()
+        if role == "user":
+            bind_text(role_label, "You")
+        elif role == "error":
+            bind_text(role_label, "Error")
+        else:
+            bind_text(role_label, "SPECTROview AI Agent")
         role_font = QFont()
         role_font.setBold(True)
         role_font.setPointSize(10)
@@ -100,14 +116,16 @@ class _MessageCard(QFrame):
 
         self._btn_reply: Optional[QPushButton] = None
         if role == "assistant":
-            self._btn_reply = QPushButton("Reply")
-            self._btn_reply.setToolTip("Reply to this message")
+            self._btn_reply = QPushButton()
+            bind_text(self._btn_reply, "Reply")
+            bind_tooltip(self._btn_reply, "Reply to this message")
             self._btn_reply.setCursor(Qt.PointingHandCursor)
             self._btn_reply.clicked.connect(lambda: self.reply_clicked.emit(self._raw_text))
             header_layout.addWidget(self._btn_reply)
 
-        self._btn_copy = QPushButton("Copy")
-        self._btn_copy.setToolTip("Copy message text")
+        self._btn_copy = QPushButton()
+        bind_text(self._btn_copy, "Copy")
+        bind_tooltip(self._btn_copy, "Copy message text")
         self._btn_copy.setCursor(Qt.PointingHandCursor)
         self._btn_copy.clicked.connect(lambda: QApplication.clipboard().setText(self._raw_text))
         header_layout.addWidget(self._btn_copy)
@@ -187,17 +205,24 @@ class _ThinkingDots(QLabel):
     """Animated '...' label shown while the LLM is thinking."""
 
     def __init__(self, parent=None) -> None:
-        super().__init__("Thinking .", parent)
+        super().__init__(f"{tr('Thinking')} .", parent)
         self.setObjectName("chatThinkingDots")
         self._dots = 1
-        self._text_prefix = "Thinking"
+        self._use_default_prefix = True
+        self._text_prefix = tr("Thinking")
         self._timer = QTimer(self)
         self._timer.setInterval(400)
         self._timer.timeout.connect(self._tick)
         self.setStyleSheet("font-style: italic; padding: 4px 12px;")
+        on_language_changed(self, self._retranslate_thinking)
 
-    def start(self, text_prefix: str = "Thinking"):
-        self._text_prefix = text_prefix
+    def start(self, text_prefix: Optional[str] = None):
+        if text_prefix is None:
+            self._use_default_prefix = True
+            self._text_prefix = tr("Thinking")
+        else:
+            self._use_default_prefix = False
+            self._text_prefix = text_prefix
         self._dots = 1
         self._timer.start()
         self.show()
@@ -205,6 +230,11 @@ class _ThinkingDots(QLabel):
     def stop(self):
         self._timer.stop()
         self.hide()
+
+    def _retranslate_thinking(self):
+        if self._use_default_prefix:
+            self._text_prefix = tr("Thinking")
+            self.setText(f"{self._text_prefix} {'.' * self._dots}")
 
     def _tick(self):
         self._dots = (self._dots % 3) + 1
@@ -300,8 +330,10 @@ class VoiceWorker(QThread):
     def run(self) -> None:
         if not VOICE_AVAILABLE:
             self.error_occurred.emit(
-                "Voice dictation unavailable.\n"
-                "Install:  pip install SpeechRecognition pyaudio"
+                tr(
+                    "Voice dictation unavailable.\n"
+                    "Install:  pip install SpeechRecognition pyaudio"
+                )
             )
             return
 
@@ -316,10 +348,10 @@ class VoiceWorker(QThread):
                     return
                 audio = recognizer.listen(source, timeout=5, phrase_time_limit=15)
         except OSError as exc:
-            self.error_occurred.emit(f"No microphone found: {exc}")
+            self.error_occurred.emit(tr("No microphone found: {error}", error=exc))
             return
         except Exception as exc:
-            self.error_occurred.emit(f"Recording failed: {exc}")
+            self.error_occurred.emit(tr("Recording failed: {error}", error=exc))
             return
 
         if self._is_cancelled:
@@ -329,11 +361,15 @@ class VoiceWorker(QThread):
             text = recognizer.recognize_google(audio)
             self.text_ready.emit(text)
         except _sr.UnknownValueError:
-            self.error_occurred.emit("Could not understand audio. Please try again.")
+            self.error_occurred.emit(
+                tr("Could not understand audio. Please try again.")
+            )
         except _sr.RequestError as exc:
-            self.error_occurred.emit(f"Speech recognition service error: {exc}")
+            self.error_occurred.emit(
+                tr("Speech recognition service error: {error}", error=exc)
+            )
         except Exception as exc:
-            self.error_occurred.emit(f"Transcription failed: {exc}")
+            self.error_occurred.emit(tr("Transcription failed: {error}", error=exc))
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -387,7 +423,7 @@ class VChatPanel(QWidget):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("SPECTROview AI Agent")
+        bind_window_title(self, "SPECTROview AI Agent")
         self.setMinimumWidth(320)
 
         self.vm = VMChat(self)
@@ -396,6 +432,7 @@ class VChatPanel(QWidget):
         self._reply_to_index: Optional[int] = None
         self._voice_worker: Optional[VoiceWorker] = None
         self._status_worker: Optional[_StatusWorker] = None
+        self._status_state: Optional[tuple] = None
 
         # Streaming re-render throttle: markdown parsing + HTML re-layout
         # is too expensive to redo on every single streamed token, so
@@ -408,6 +445,7 @@ class VChatPanel(QWidget):
         self._build_ui()
         self._connect_signals()
         self._load_settings()          # restore persisted provider/key
+        on_language_changed(self, self._retranslate_panel)
         self._refresh_status()
 
     # ------------------------------------------------------------------
@@ -444,7 +482,7 @@ class VChatPanel(QWidget):
         self.btn_scroll_to_bottom.setObjectName("scrollToBottomBtn")
         self.btn_scroll_to_bottom.setFixedSize(32, 32)
         self.btn_scroll_to_bottom.setCursor(Qt.PointingHandCursor)
-        self.btn_scroll_to_bottom.setToolTip("Scroll to bottom")
+        bind_tooltip(self.btn_scroll_to_bottom, "Scroll to bottom")
         self.btn_scroll_to_bottom.clicked.connect(self._scroll_to_bottom)
         self.btn_scroll_to_bottom.hide()
         self.scroll_area.verticalScrollBar().valueChanged.connect(
@@ -491,7 +529,7 @@ class VChatPanel(QWidget):
         # ── Conversation title (stretches to take available width) ───
         self.edit_title = QLineEdit()
         self.edit_title.setObjectName("chatTitleEdit")
-        self.edit_title.setPlaceholderText("New Conversation")
+        bind_placeholder(self.edit_title, "New Conversation")
         self.edit_title.setStyleSheet("font-size: 13px; font-weight: bold; padding: 2px 6px; border-radius: 4px;")
         self.edit_title.editingFinished.connect(self._on_title_edited)
         main_layout.addWidget(self.edit_title, stretch=1)
@@ -502,28 +540,28 @@ class VChatPanel(QWidget):
         self.btn_history.setIcon(Icons.history(size=18))
         self.btn_history.setIconSize(QSize(18, 18))
         self.btn_history.setFixedSize(30, 30)
-        self.btn_history.setToolTip("Chat History")
+        bind_tooltip(self.btn_history, "Chat History")
 
         self.btn_new_chat = QPushButton("")
         self.btn_new_chat.setObjectName("btn_new_chat")
         self.btn_new_chat.setIcon(Icons.plus(size=18))
         self.btn_new_chat.setIconSize(QSize(18, 18))
         self.btn_new_chat.setFixedSize(30, 30)
-        self.btn_new_chat.setToolTip("New Chat")
+        bind_tooltip(self.btn_new_chat, "New Chat")
 
         self.btn_clear = QPushButton("")
         self.btn_clear.setObjectName("btn_clear")
         self.btn_clear.setIcon(Icons.trash(size=18))
         self.btn_clear.setIconSize(QSize(18, 18))
         self.btn_clear.setFixedSize(30, 30)
-        self.btn_clear.setToolTip("Clear Chat")
+        bind_tooltip(self.btn_clear, "Clear Chat")
 
         self.btn_close = QPushButton("")
         self.btn_close.setObjectName("btn_close_panel")
         self.btn_close.setIcon(Icons.close(size=16))
         self.btn_close.setIconSize(QSize(16, 16))
         self.btn_close.setFixedSize(30, 30)
-        self.btn_close.setToolTip("Close AI Agent panel")
+        bind_tooltip(self.btn_close, "Close AI Agent panel")
         self.btn_close.clicked.connect(self._on_close_clicked)
 
         for btn in (self.btn_history, self.btn_new_chat, self.btn_clear, self.btn_close):
@@ -582,7 +620,7 @@ class VChatPanel(QWidget):
         # Auto-resizing multi-line text input (always enabled so users can compose prompts)
         self.edit_input = _ChatLineEdit()
         self.edit_input.setObjectName("chatComposerInput")
-        self.edit_input.setPlaceholderText("Ask a question about your data…")
+        bind_placeholder(self.edit_input, "Ask a question about your data…")
         self.edit_input.setStyleSheet("""
             QPlainTextEdit, QTextEdit {
                 border: none;
@@ -608,7 +646,7 @@ class VChatPanel(QWidget):
         self.cbb_provider.setMinimumWidth(80)
         self.cbb_provider.setMaximumWidth(125)
         self.cbb_provider.setFixedHeight(23)
-        self.cbb_provider.setToolTip("Select AI provider")
+        bind_tooltip(self.cbb_provider, "Select AI provider")
         self.cbb_provider.setCursor(Qt.PointingHandCursor)
         composer_toolbar.addWidget(self.cbb_provider, 0, Qt.AlignVCenter)
 
@@ -620,7 +658,7 @@ class VChatPanel(QWidget):
         self.cbb_model.setFixedHeight(23)
         self.cbb_model.setEditable(True)
         self.cbb_model.setInsertPolicy(QComboBox.NoInsert)
-        self.cbb_model.setToolTip("Select or type a model name")
+        self.cbb_model.setToolTip(tr("Select or type a model name"))
         self.cbb_model.setCursor(Qt.PointingHandCursor)
         composer_toolbar.addWidget(self.cbb_model, 0, Qt.AlignVCenter)
 
@@ -631,7 +669,7 @@ class VChatPanel(QWidget):
         self.btn_refresh_models.setIconSize(QSize(14, 14))
         self.btn_refresh_models.setFixedSize(23, 23)
         self.btn_refresh_models.setCursor(Qt.PointingHandCursor)
-        self.btn_refresh_models.setToolTip("Refresh model list / re-check connection")
+        bind_tooltip(self.btn_refresh_models, "Refresh model list / re-check connection")
         composer_toolbar.addWidget(self.btn_refresh_models, 0, Qt.AlignVCenter)
 
         # Spacer pushing actions to right
@@ -646,13 +684,16 @@ class VChatPanel(QWidget):
         self.btn_mic.setCursor(Qt.PointingHandCursor)
         self.btn_mic.clicked.connect(self._on_mic_toggle)
         if not VOICE_AVAILABLE:
-            self.btn_mic.setToolTip("Voice dictation unavailable — pip install SpeechRecognition pyaudio")
+            bind_tooltip(
+                self.btn_mic,
+                "Voice dictation unavailable — pip install SpeechRecognition pyaudio",
+            )
         else:
-            self.btn_mic.setToolTip("Click to start voice recording")
+            bind_tooltip(self.btn_mic, "Click to start voice recording")
         composer_toolbar.addWidget(self.btn_mic, 0, Qt.AlignVCenter)
 
         # Send / Stop button
-        self.btn_send = QPushButton("Send")
+        self.btn_send = QPushButton()
         self.btn_send.setIcon(Icons.send(color="#FFFFFF", size=13))
         self.btn_send.setObjectName("btn_send")
         self.btn_send.setFixedHeight(23)
@@ -751,7 +792,7 @@ class VChatPanel(QWidget):
     def _apply_send_button_style(self) -> None:
         """Switch the action button to 'Send' mode."""
         self.btn_send.setIcon(Icons.send(color="#FFFFFF", size=13))
-        self.btn_send.setText("Send")
+        self.btn_send.setText(tr("Send"))
         has_text = bool(self.edit_input.toPlainText().strip()) if hasattr(self, "edit_input") else False
         self.btn_send.setStyleSheet(self._SEND_ACTIVE_STYLE if has_text else self._SEND_STYLE)
         self.btn_send.setEnabled(True)
@@ -759,7 +800,7 @@ class VChatPanel(QWidget):
     def _apply_stop_button_style(self) -> None:
         """Switch the action button to 'Stop' mode (red)."""
         self.btn_send.setIcon(Icons.stop(color="#FFFFFF", size=13))
-        self.btn_send.setText("Stop")
+        self.btn_send.setText(tr("Stop"))
         self.btn_send.setStyleSheet(self._STOP_STYLE)
         self.btn_send.setEnabled(True)
 
@@ -787,7 +828,7 @@ class VChatPanel(QWidget):
         if dfs:
             self.lbl_no_data.clear()
         else:
-            self.lbl_no_data.setText("ⓘ No DataFrames available")
+            self.lbl_no_data.setText(tr("ⓘ No DataFrames available"))
             self.lbl_no_data.setStyleSheet("color: #FFA726; font-size: 11px;")
 
     # ------------------------------------------------------------------
@@ -795,32 +836,35 @@ class VChatPanel(QWidget):
     # ------------------------------------------------------------------
 
     def _get_custom_label(self) -> str:
-        """Return user-configured display label for Custom provider, or 'Custom'."""
+        """Return user-configured display label for Custom provider, or translated 'Custom'."""
         self._settings.settings.sync()
         label = self._settings.get_ai_value("custom_label", "", str).strip()
-        return label if label else "Custom"
+        return label if label else tr("Custom")
 
     def _display_to_provider(self, display_name: str) -> str:
         """Map combo display text to canonical provider key."""
         custom_label = self._get_custom_label()
-        if display_name in (custom_label, "Custom"):
+        if display_name in (custom_label, "Custom", tr("Custom")):
             return "Custom"
+        if display_name in ("Ollama (local)", tr("Ollama (local)"), "Ollama"):
+            return "Ollama"
         return _DISPLAY_TO_PROVIDER.get(display_name, "Ollama")
 
     def _provider_to_display(self, provider_key: str) -> str:
         """Map canonical provider key to combo display text."""
         if provider_key == "Custom":
             return self._get_custom_label()
-        return _PROVIDER_TO_DISPLAY.get(provider_key, "Ollama (local)")
+        if provider_key == "Ollama":
+            return tr("Ollama (local)")
+        return _PROVIDER_TO_DISPLAY.get(provider_key, tr("Ollama (local)"))
 
     def _populate_providers(self) -> None:
         """Fill cbb_provider with display names honoring custom_label."""
         self.cbb_provider.blockSignals(True)
         self.cbb_provider.clear()
-        custom_label = self._get_custom_label()
         for entry in _PROVIDER_ENTRIES:
-            display = custom_label if entry == "Custom" else entry
             canonical_key = "Ollama" if entry == "Ollama (local)" else entry
+            display = self._provider_to_display(canonical_key)
             self.cbb_provider.addItem(display, userData=canonical_key)
         self.cbb_provider.blockSignals(False)
 
@@ -845,8 +889,9 @@ class VChatPanel(QWidget):
         self._populate_providers()
 
         # Restore provider selection
-        target_display = self._provider_to_display(current_key)
-        idx = self.cbb_provider.findText(target_display)
+        idx = self.cbb_provider.findData(current_key)
+        if idx < 0:
+            idx = self.cbb_provider.findText(self._provider_to_display(current_key))
         if idx >= 0:
             self.cbb_provider.blockSignals(True)
             self.cbb_provider.setCurrentIndex(idx)
@@ -893,8 +938,9 @@ class VChatPanel(QWidget):
         self._populate_providers()
         saved_provider = self._settings.get_ai_value("provider", "Ollama (local)", str)
         provider_key = self._display_to_provider(saved_provider)
-        target_display = self._provider_to_display(provider_key)
-        idx = self.cbb_provider.findText(target_display)
+        idx = self.cbb_provider.findData(provider_key)
+        if idx < 0:
+            idx = self.cbb_provider.findText(self._provider_to_display(provider_key))
         if idx >= 0:
             self.cbb_provider.blockSignals(True)
             self.cbb_provider.setCurrentIndex(idx)
@@ -1000,6 +1046,99 @@ class VChatPanel(QWidget):
     # Refresh helpers
     # ------------------------------------------------------------------
 
+    def _retranslate_panel(self) -> None:
+        """Refresh provider labels and status text after a live language switch."""
+        current_data = self.cbb_provider.currentData()
+        current_key = (
+            str(current_data)
+            if current_data
+            else self._display_to_provider(self.cbb_provider.currentText())
+        )
+        self._populate_providers()
+        idx = self.cbb_provider.findData(current_key)
+        if idx >= 0:
+            self.cbb_provider.blockSignals(True)
+            self.cbb_provider.setCurrentIndex(idx)
+            self.cbb_provider.blockSignals(False)
+
+        if self.vm.is_busy():
+            self._apply_stop_button_style()
+        else:
+            self._apply_send_button_style()
+
+        if not self.vm._dfs:
+            self.lbl_no_data.setText(tr("ⓘ No DataFrames available"))
+
+        current_model = self.cbb_model.currentText()
+        if current_model:
+            self.cbb_model.setToolTip(
+                tr("{model}\n\nSelect or type a model name", model=current_model)
+            )
+        else:
+            self.cbb_model.setToolTip(tr("Select or type a model name"))
+
+        self._apply_status_state()
+
+    def _apply_status_state(self) -> None:
+        """Render the current status indicator and send tooltip in active language."""
+        state = self._status_state
+        if not state:
+            return
+        kind = state[0]
+        if kind == "missing_ollama":
+            self.lbl_status.setText(tr("●  ollama package missing — run: pip install ollama"))
+            self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
+            self.btn_send.setToolTip(tr("ollama package missing — run: pip install ollama"))
+        elif kind == "missing_openai":
+            self.lbl_status.setText(tr("●  openai package missing — run: pip install openai"))
+            self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
+            self.btn_send.setToolTip(tr("openai package missing — run: pip install openai"))
+        elif kind == "missing_key":
+            provider_key = state[1]
+            self.lbl_status.setText(
+                tr("○  {provider} — configure API key in Settings (AI Tab)", provider=provider_key)
+            )
+            self.lbl_status.setStyleSheet("color: #FFA726; font-size: 11px;")
+            self.btn_send.setToolTip(
+                tr("{provider} — configure API key in Settings (AI Tab)", provider=provider_key)
+            )
+        elif kind == "checking_ollama":
+            self.lbl_status.setText(tr("●  Checking Ollama connection…"))
+            self.lbl_status.setStyleSheet("color: #FFA726; font-size: 11px;")
+        elif kind == "checking_provider":
+            provider_key = state[1]
+            self.lbl_status.setText(
+                tr("●  Checking {provider} connection…", provider=provider_key)
+            )
+            self.lbl_status.setStyleSheet("color: #FFA726; font-size: 11px;")
+        elif kind == "connected":
+            provider_key, is_small = state[1], state[2]
+            if provider_key == "Ollama":
+                status_text = tr("●  Ollama connected")
+            elif provider_key == "Custom":
+                status_text = tr("●  {provider} API connected", provider=self._get_custom_label())
+            else:
+                status_text = tr("●  {provider} API connected", provider=provider_key)
+            if is_small:
+                status_text += "  ·  " + tr("Simplified prompts")
+            self.lbl_status.setText(status_text)
+            self.lbl_status.setStyleSheet("color: #66BB6A; font-size: 11px;")
+            self.btn_send.setToolTip(tr("Send query (Enter, Shift+Enter for newline)"))
+        elif kind == "error_ollama":
+            self.lbl_status.setText(tr("●  Ollama not running — run: ollama serve"))
+            self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
+            self.btn_send.setToolTip(tr("Ollama not running (run: ollama serve)"))
+        elif kind == "error_provider":
+            provider_key = state[1]
+            self.lbl_status.setText(
+                tr(
+                    "●  {provider} API — could not connect or invalid key",
+                    provider=provider_key,
+                )
+            )
+            self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
+            self.btn_send.setToolTip(tr("Could not connect to {provider}", provider=provider_key))
+
     def _refresh_status(self) -> None:
         """Check availability, update status bar and model list asynchronously."""
         current_data = self.cbb_provider.currentData()
@@ -1012,26 +1151,23 @@ class VChatPanel(QWidget):
 
         # ── Package availability guard ──────────────────────────────────
         if is_ollama and not OLLAMA_AVAILABLE:
-            self.lbl_status.setText("●  ollama package missing — run: pip install ollama")
-            self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
+            self._status_state = ("missing_ollama",)
             self._apply_send_button_style()
-            self.btn_send.setToolTip("ollama package missing — run: pip install ollama")
+            self._apply_status_state()
             return
 
         if not is_ollama and not OPENAI_AVAILABLE:
-            self.lbl_status.setText("●  openai package missing — run: pip install openai")
-            self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
+            self._status_state = ("missing_openai",)
             self._apply_send_button_style()
-            self.btn_send.setToolTip("openai package missing — run: pip install openai")
+            self._apply_status_state()
             return
 
         # ── API key missing ─────────────────────────────────────
         has_key = bool(self._settings.get_ai_value(f"api_key_{provider_key}", "", str))
         if not is_ollama and not has_key:
-            self.lbl_status.setText(f"○  {provider_key} — configure API key in Settings (AI Tab)")
-            self.lbl_status.setStyleSheet("color: #FFA726; font-size: 11px;")
+            self._status_state = ("missing_key", provider_key)
             self._apply_send_button_style()
-            self.btn_send.setToolTip(f"{provider_key} — configure API key in Settings (AI Tab)")
+            self._apply_status_state()
             return
 
         # Cancel any pending worker safely
@@ -1050,11 +1186,10 @@ class VChatPanel(QWidget):
                 pass
 
         # Update status UI immediately to indicate checking without freezing
-        if is_ollama:
-            self.lbl_status.setText("●  Checking Ollama connection…")
-        else:
-            self.lbl_status.setText(f"●  Checking {provider_key} connection…")
-        self.lbl_status.setStyleSheet("color: #FFA726; font-size: 11px;")
+        self._status_state = (
+            ("checking_ollama",) if is_ollama else ("checking_provider", provider_key)
+        )
+        self._apply_status_state()
 
         # Pre-populate model combo with saved or fallback model if currently empty
         if self.cbb_model.count() == 0:
@@ -1127,32 +1262,24 @@ class VChatPanel(QWidget):
             if self.cbb_model.currentText():
                 self.vm.set_model(self.cbb_model.currentText())
                 self.cbb_model.setToolTip(
-                    f"{self.cbb_model.currentText()}\n\nSelect or type a model name")
+                    tr(
+                        "{model}\n\nSelect or type a model name",
+                        model=self.cbb_model.currentText(),
+                    )
+                )
             self.cbb_model.blockSignals(False)
             self._fit_model_popup_width()
 
-            if is_ollama:
-                status_text = "●  Ollama connected"
-            elif provider_key == "Custom":
-                status_text = f"●  {self._get_custom_label()} API connected"
-            else:
-                status_text = f"●  {provider_key} API connected"
-            if self.vm.is_small_model_mode():
-                status_text += "  ·  Simplified prompts"
-            self.lbl_status.setText(status_text)
-            self.lbl_status.setStyleSheet("color: #66BB6A; font-size: 11px;")
-            self.btn_send.setToolTip("Send query (Enter, Shift+Enter for newline)")
+            self._status_state = ("connected", provider_key, self.vm.is_small_model_mode())
             self._apply_send_button_style()
+            self._apply_status_state()
 
         else:
-            if is_ollama:
-                self.lbl_status.setText("●  Ollama not running — run: ollama serve")
-                self.btn_send.setToolTip("Ollama not running (run: ollama serve)")
-            else:
-                self.lbl_status.setText(f"●  {provider_key} API — could not connect or invalid key")
-                self.btn_send.setToolTip(f"Could not connect to {provider_key}")
-            self.lbl_status.setStyleSheet("color: #EF5350; font-size: 11px;")
+            self._status_state = (
+                ("error_ollama",) if is_ollama else ("error_provider", provider_key)
+            )
             self._apply_send_button_style()
+            self._apply_status_state()
 
     def closeEvent(self, event) -> None:
         """Clean up background workers and persist state on close."""
@@ -1193,36 +1320,48 @@ class VChatPanel(QWidget):
 
         if is_ollama and not OLLAMA_AVAILABLE:
             self._on_error(
-                "⚠️ The **ollama** Python package is not installed.\n\n"
-                "Please run `pip install ollama` to use local models."
+                tr(
+                    "⚠️ The **ollama** Python package is not installed.\n\n"
+                    "Please run `pip install ollama` to use local models."
+                )
             )
             return
 
         if not is_ollama and not OPENAI_AVAILABLE:
             self._on_error(
-                "⚠️ The **openai** Python package is not installed.\n\n"
-                "Please run `pip install openai` to use cloud models."
+                tr(
+                    "⚠️ The **openai** Python package is not installed.\n\n"
+                    "Please run `pip install openai` to use cloud models."
+                )
             )
             return
 
         has_key = bool(self._settings.get_ai_value(f"api_key_{provider_key}", "", str))
         if not is_ollama and not has_key:
             self._on_error(
-                f"⚠️ **API key missing for {provider_key}**\n\n"
-                f"Please open **Settings ▸ AI** to configure your API key for {provider_key}."
+                tr(
+                    "⚠️ **API key missing for {provider}**\n\n"
+                    "Please open **Settings ▸ AI** to configure your API key for {provider}.",
+                    provider=provider_key,
+                )
             )
             return
 
         if not self.vm.is_available():
             if is_ollama:
                 self._on_error(
-                    "⚠️ **Ollama is not reachable.**\n\n"
-                    "Make sure Ollama is running (`ollama serve`) or select another provider in the dropdown below."
+                    tr(
+                        "⚠️ **Ollama is not reachable.**\n\n"
+                        "Make sure Ollama is running (`ollama serve`) or select another provider in the dropdown below."
+                    )
                 )
             else:
                 self._on_error(
-                    f"⚠️ **{provider_key} is not reachable or API key is invalid.**\n\n"
-                    f"Please check your API key in **Settings ▸ AI** or verify your network connection."
+                    tr(
+                        "⚠️ **{provider} is not reachable or API key is invalid.**\n\n"
+                        "Please check your API key in **Settings ▸ AI** or verify your network connection.",
+                        provider=provider_key,
+                    )
                 )
             return
 
@@ -1255,7 +1394,9 @@ class VChatPanel(QWidget):
         """Launch the VoiceWorker background thread."""
         if not VOICE_AVAILABLE:
             self.btn_mic.setChecked(False)
-            self._on_voice_error("Voice dictation unavailable.\nInstall:  pip install SpeechRecognition pyaudio")
+            self._on_voice_error(
+                tr("Voice dictation unavailable.\nInstall:  pip install SpeechRecognition pyaudio")
+            )
             return
 
         # Cancel any previous worker
@@ -1339,7 +1480,7 @@ class VChatPanel(QWidget):
             self.vm.rename_conversation(new_title)
 
     def _on_conversation_changed(self, title: str) -> None:
-        self.edit_title.setText(title)
+        self.edit_title.setText("" if title == "New Conversation" else title)
         self._clear_message_cards()
 
         # Rebuild from vm conversation
@@ -1368,7 +1509,7 @@ class VChatPanel(QWidget):
 
     def _on_reply_clicked(self, idx: int, raw_text: str) -> None:
         self._reply_to_index = idx
-        self.lbl_reply_text.setText(f"Replying to: \"{_preview(raw_text)}\"")
+        self.lbl_reply_text.setText(tr('Replying to: "{preview}"', preview=_preview(raw_text)))
         self.reply_preview.show()
         self.edit_input.setFocus()
         
@@ -1376,9 +1517,10 @@ class VChatPanel(QWidget):
         self._reply_to_index = None
         self.reply_preview.hide()
 
-    def _on_thinking_changed(self, is_thinking: bool, status_text: str = "Thinking") -> None:
+    def _on_thinking_changed(self, is_thinking: bool, status_text: Optional[str] = None) -> None:
         if is_thinking:
-            self.thinking_dots.start(status_text)
+            prefix = status_text if status_text and status_text != "Thinking" else None
+            self.thinking_dots.start(prefix)
             self._apply_stop_button_style()
         else:
             self.thinking_dots.stop()
@@ -1426,8 +1568,12 @@ class VChatPanel(QWidget):
             # reusable recipe — not graph update/delete instructions.
             plot_only_cfgs = [c for c in cfgs if "_graph_update" not in c and "_graph_delete" not in c]
             if plot_only_cfgs:
-                btn = QPushButton(
-                    f"Save {len(plot_only_cfgs)} plot{'s' if len(plot_only_cfgs) > 1 else ''} as Recipe"
+                btn = QPushButton()
+                bind_plural_text(
+                    btn,
+                    "Save {count} plot as Recipe",
+                    "Save {count} plots as Recipe",
+                    len(plot_only_cfgs),
                 )
                 btn.setIcon(Icons.save())
                 btn.setObjectName("btnRowPrimary")
@@ -1449,12 +1595,18 @@ class VChatPanel(QWidget):
         if not configs:
             return
         self.vm.refresh_recipe_store()
-        name, ok = QInputDialog.getText(self, "Save Plot Recipe", "Recipe name:")
+        name, ok = QInputDialog.getText(self, tr("Save Plot Recipe"), tr("Recipe name:"))
         if ok and name:
             self.vm.recipe_store.save_recipe(name, configs)
             QMessageBox.information(
-                self, "Recipe Saved",
-                f"Saved '{name}' with {len(configs)} plot{'s' if len(configs) > 1 else ''}."
+                self,
+                tr("Recipe Saved"),
+                tr_plural(
+                    "Saved '{name}' with {count} plot.",
+                    "Saved '{name}' with {count} plots.",
+                    len(configs),
+                    name=name,
+                ),
             )
 
     def _on_error(self, message: str) -> None:
@@ -1472,7 +1624,7 @@ class VChatPanel(QWidget):
         # Surface progress only through the transient "thinking" status.
         # Intermediate tool steps are intentionally NOT rendered as chips in
         # the conversation — they added noise without helping the user.
-        self._on_thinking_changed(True, f"Executed tool '{name}'...")
+        self._on_thinking_changed(True, tr("Executed tool '{name}'...", name=name))
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -1503,7 +1655,11 @@ class VChatPanel(QWidget):
         if reply_to_index is not None:
             replied_content = self.vm.get_message_content(reply_to_index)
             if replied_content is not None:
-                text = f"Replying to:\n\"{_preview(replied_content)}\"\n\n{text}"
+                text = tr(
+                    'Replying to:\n"{preview}"\n\n{message}',
+                    preview=_preview(replied_content),
+                    message=text,
+                )
         return self._add_card(text, "user", timestamp)
 
     def _add_ai_card(self, text: str, timestamp: Optional[str] = None) -> _MessageCard:

@@ -56,6 +56,7 @@ from spectroview.ai_agent.agent.ports import RecordingContext
 from spectroview.ai_agent.utils.plot_utils import expand_all_plot_configs, normalize_plot_config
 from spectroview.ai_agent.utils.df_summary import compact_dataframe_schema
 from spectroview.ai_agent.mcp.hub import MCPHub
+from spectroview.i18n import get_language, tr
 
 
 def _parse_param_size_to_billions(size_str: str) -> Optional[float]:
@@ -400,15 +401,20 @@ class VMChat(QObject):
         if not self._client.is_available():
             if self._provider == "Ollama":
                 self.error_occurred.emit(
-                    "Ollama is not reachable.\n\n"
-                    "Make sure Ollama is running:\n"
-                    "  • macOS / Linux: ollama serve\n"
-                    "  • Then pull a model: ollama pull gemma3:4b"
+                    tr(
+                        "Ollama is not reachable.\n\n"
+                        "Make sure Ollama is running:\n"
+                        "  • macOS / Linux: ollama serve\n"
+                        "  • Then pull a model: ollama pull gemma3:4b"
+                    )
                 )
             else:
                 self.error_occurred.emit(
-                    f"{self._provider} API is not configured.\n\n"
-                    "Please enter your API key in the provider settings above."
+                    tr(
+                        "{provider} API is not configured.\n\n"
+                        "Please enter your API key in the provider settings above.",
+                        provider=self._provider,
+                    )
                 )
             return
 
@@ -425,7 +431,7 @@ class VMChat(QObject):
         # Build the full message list for this request
         messages = self._build_messages()
 
-        self.thinking_changed.emit(True, "Thinking")
+        self.thinking_changed.emit(True, tr("Thinking"))
 
         self._client.chat(
             model    = self._model,
@@ -443,7 +449,7 @@ class VMChat(QObject):
         """Abort any in-progress LLM request."""
         self._client.cancel()
         self._context.drain()
-        self.thinking_changed.emit(False, "Thinking")
+        self.thinking_changed.emit(False, tr("Thinking"))
         self._save_history_to_file()
 
     def clear_history(self) -> None:
@@ -580,12 +586,19 @@ class VMChat(QObject):
             )
 
         # ── 3. Inject dynamic context into the static prompt ──────────────
-        return (
+        prompt = (
             static_prompt
             .replace("{dataframes_section}", dataframes_section)
             .replace("{active_df_info}", active_df_info)
             .replace("{graphs_info}", graphs_info)
         )
+        if get_language() == "fr":
+            prompt += (
+                "\n\nRespond to the user in French (français). Keep scientific "
+                "symbols, units, DataFrame column names, plot style identifiers, "
+                "and tool arguments unchanged."
+            )
+        return prompt
 
     # ------------------------------------------------------------------
     # Worker callbacks (called from the worker QThread via Qt signals)
@@ -606,13 +619,13 @@ class VMChat(QObject):
     def _emit_final_result(self, full_text: str) -> None:
         """End the turn: drain any queued graph commands and emit a ChatResult.
         """
-        self.thinking_changed.emit(False, "Thinking")
+        self.thinking_changed.emit(False, tr("Thinking"))
         commands = self._context.drain()
 
         if commands:
             result = ChatResult(
                 action="plot",
-                explanation=full_text or "Executing graph commands...",
+                explanation=full_text or tr("Executing graph commands..."),
                 plot_config=self._commands_to_configs(commands),
                 text_summary=full_text,
             )
@@ -696,12 +709,15 @@ class VMChat(QObject):
             self._loop_count += 1
             if self._loop_count > self.MAX_AGENT_TURNS:
                 self.error_occurred.emit(
-                    f"Agent loop exceeded maximum turns ({self.MAX_AGENT_TURNS})."
+                    tr(
+                        "Agent loop exceeded maximum turns ({max_turns}).",
+                        max_turns=self.MAX_AGENT_TURNS,
+                    )
                 )
                 self._emit_final_result(full_text)
                 return
 
-            self.thinking_changed.emit(True, "Executing tools...")
+            self.thinking_changed.emit(True, tr("Executing tools..."))
             try:
                 results = [self._run_tool_call(tc) for tc in tool_calls]
 
@@ -732,7 +748,9 @@ class VMChat(QObject):
                 )
             except Exception as e:
                 self._context.drain()
-                self.error_occurred.emit(f"Error calling MCP tools: {e}")
+                self.error_occurred.emit(
+                    tr("Error calling MCP tools: {error}", error=e)
+                )
                 self._emit_final_result(full_text)
             return
 
@@ -743,7 +761,7 @@ class VMChat(QObject):
         # anything queued before this provider/tool error so it cannot be
         # executed by an unrelated future request.
         self._context.drain()
-        self.thinking_changed.emit(False, "Thinking")
+        self.thinking_changed.emit(False, tr("Thinking"))
         self.error_occurred.emit(message)
 
 

@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import List, Optional
+from typing import List
 
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QAction, QFont, QMouseEvent
@@ -20,6 +20,15 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview.ai_agent.m_conversation_store import ConversationSummary, MConversationStore
+from spectroview.i18n import (
+    bind_placeholder,
+    bind_text,
+    bind_tooltip,
+    bind_window_title,
+    on_language_changed,
+    tr,
+    tr_plural,
+)
 from spectroview.view.theme import Icons, current_tokens
 
 
@@ -64,7 +73,7 @@ class _ConversationItemWidget(QWidget):
         if self.pinned:
             lbl_pin = QLabel()
             lbl_pin.setPixmap(Icons.pin(size=14).pixmap(14, 14))
-            lbl_pin.setToolTip("Pinned conversation")
+            bind_tooltip(lbl_pin, "Pinned conversation")
             title_row.addWidget(lbl_pin)
 
         self.lbl_title = QLabel(title)
@@ -79,7 +88,7 @@ class _ConversationItemWidget(QWidget):
         text_layout.addLayout(title_row)
 
         # Timestamp & message count details row
-        formatted_dt = "Unknown"
+        formatted_dt = tr("Unknown")
         if timestamp_str:
             try:
                 dt = datetime.fromisoformat(timestamp_str)
@@ -88,7 +97,7 @@ class _ConversationItemWidget(QWidget):
                 formatted_dt = timestamp_str
 
         tok = current_tokens()
-        msg_label = f"{message_count} message{'s' if message_count != 1 else ''}"
+        msg_label = tr_plural("{count} message", "{count} messages", message_count)
         self.lbl_details = QLabel(f"{formatted_dt}  ·  {msg_label}")
         self.lbl_details.setStyleSheet(f"color: {tok.text_muted}; font-size: 11px;")
         text_layout.addWidget(self.lbl_details)
@@ -116,7 +125,7 @@ class _ConversationItemWidget(QWidget):
         # Pin / Unpin button
         self.btn_pin = QPushButton()
         self.btn_pin.setIcon(Icons.pin(size=14))
-        self.btn_pin.setToolTip("Unpin conversation" if self.pinned else "Pin conversation")
+        bind_tooltip(self.btn_pin, "Unpin conversation" if self.pinned else "Pin conversation")
         self.btn_pin.setFixedSize(28, 28)
         self.btn_pin.setCursor(Qt.PointingHandCursor)
         if self.pinned:
@@ -131,7 +140,7 @@ class _ConversationItemWidget(QWidget):
         # Rename button
         self.btn_rename = QPushButton()
         self.btn_rename.setIcon(Icons.edit(size=14))
-        self.btn_rename.setToolTip("Rename conversation")
+        bind_tooltip(self.btn_rename, "Rename conversation")
         self.btn_rename.setFixedSize(28, 28)
         self.btn_rename.setCursor(Qt.PointingHandCursor)
         self.btn_rename.setStyleSheet(btn_base_style)
@@ -141,7 +150,7 @@ class _ConversationItemWidget(QWidget):
         # Duplicate button
         self.btn_duplicate = QPushButton()
         self.btn_duplicate.setIcon(Icons.copy(size=14))
-        self.btn_duplicate.setToolTip("Duplicate conversation")
+        bind_tooltip(self.btn_duplicate, "Duplicate conversation")
         self.btn_duplicate.setFixedSize(28, 28)
         self.btn_duplicate.setCursor(Qt.PointingHandCursor)
         self.btn_duplicate.setStyleSheet(btn_base_style)
@@ -151,7 +160,7 @@ class _ConversationItemWidget(QWidget):
         # Delete button
         self.btn_delete = QPushButton()
         self.btn_delete.setIcon(Icons.trash(size=14))
-        self.btn_delete.setToolTip("Delete conversation")
+        bind_tooltip(self.btn_delete, "Delete conversation")
         self.btn_delete.setFixedSize(28, 28)
         self.btn_delete.setCursor(Qt.PointingHandCursor)
         self.btn_delete.setObjectName("btnRowDanger")
@@ -173,26 +182,26 @@ class _ConversationItemWidget(QWidget):
     def contextMenuEvent(self, event):
         menu = QMenu(self)
 
-        act_open = QAction(Icons.open(size=14), "Open", menu)
+        act_open = QAction(Icons.open(size=14), tr("Open"), menu)
         act_open.triggered.connect(lambda: self.on_open.emit(self.conv_id))
         menu.addAction(act_open)
 
-        pin_label = "Unpin Conversation" if self.pinned else "Pin Conversation"
+        pin_label = tr("Unpin Conversation") if self.pinned else tr("Pin Conversation")
         act_pin = QAction(Icons.pin(size=14), pin_label, menu)
         act_pin.triggered.connect(lambda: self.on_pin.emit(self.conv_id))
         menu.addAction(act_pin)
 
-        act_rename = QAction(Icons.edit(size=14), "Rename", menu)
+        act_rename = QAction(Icons.edit(size=14), tr("Rename"), menu)
         act_rename.triggered.connect(lambda: self.on_rename.emit(self.conv_id))
         menu.addAction(act_rename)
 
-        act_dup = QAction(Icons.copy(size=14), "Duplicate", menu)
+        act_dup = QAction(Icons.copy(size=14), tr("Duplicate"), menu)
         act_dup.triggered.connect(lambda: self.on_duplicate.emit(self.conv_id))
         menu.addAction(act_dup)
 
         menu.addSeparator()
 
-        act_del = QAction(Icons.trash(size=14), "Delete", menu)
+        act_del = QAction(Icons.trash(size=14), tr("Delete"), menu)
         act_del.triggered.connect(lambda: self.on_delete.emit(self.conv_id))
         menu.addAction(act_del)
 
@@ -209,7 +218,7 @@ class VHistoryDialog(QDialog):
         super().__init__(parent)
         self.store = store
         self._cached_summaries: List[ConversationSummary] = []
-        self.setWindowTitle("Conversation History")
+        bind_window_title(self, "Conversation History")
         self.setMinimumSize(620, 440)
         self.resize(700, 530)
 
@@ -220,7 +229,7 @@ class VHistoryDialog(QDialog):
         # Search box with clear button
         self.search_input = QLineEdit()
         self.search_input.setFixedHeight(30)
-        self.search_input.setPlaceholderText("Search conversations...")
+        bind_placeholder(self.search_input, "Search conversations...")
         self.search_input.setClearButtonEnabled(True)
         self.search_input.textChanged.connect(self._on_search)
         layout.addWidget(self.search_input)
@@ -243,22 +252,28 @@ class VHistoryDialog(QDialog):
         btn_layout.setContentsMargins(0, 0, 0, 0)
         btn_layout.setSpacing(8)
 
-        self.btn_delete_all = QPushButton("Delete All")
+        self.btn_delete_all = QPushButton()
+        bind_text(self.btn_delete_all, "Delete All")
         self.btn_delete_all.setObjectName("btnDeleteAllOutline")
         self.btn_delete_all.setIcon(Icons.trash(size=14))
         self.btn_delete_all.setCursor(Qt.PointingHandCursor)
-        self.btn_delete_all.setToolTip("Delete all unpinned conversations (keeps pinned)")
+        bind_tooltip(self.btn_delete_all, "Delete all unpinned conversations (keeps pinned)")
         self.btn_delete_all.clicked.connect(self._on_delete_all)
         btn_layout.addWidget(self.btn_delete_all)
 
         btn_layout.addStretch()
-        btn_close = QPushButton("Close")
+        btn_close = QPushButton()
+        bind_text(btn_close, "Close")
         btn_close.setIcon(Icons.close(size=14))
         btn_close.clicked.connect(self.accept)
         btn_layout.addWidget(btn_close)
         layout.addLayout(btn_layout)
 
         self._reload_and_render()
+        on_language_changed(self, self._on_language_changed)
+
+    def _on_language_changed(self) -> None:
+        self._render_list(self.search_input.text())
 
     def _reload_and_render(self, filter_text: str = "") -> None:
         """Re-scan the history folder from disk, then render the result."""
@@ -282,6 +297,16 @@ class VHistoryDialog(QDialog):
             return "This Week"
         return "Older"
 
+    @staticmethod
+    def _translate_bucket(bucket: str) -> str:
+        if bucket == "Today":
+            return tr("Today")
+        if bucket == "Yesterday":
+            return tr("Yesterday")
+        if bucket == "This Week":
+            return tr("This Week")
+        return tr("Older")
+
     def _render_list(self, filter_text: str = "") -> None:
         """Render self._cached_summaries into the list widget with Pinned and Date sections."""
         self.list_widget.clear()
@@ -296,7 +321,7 @@ class VHistoryDialog(QDialog):
         self.btn_delete_all.setEnabled(has_unpinned)
 
         if not filtered:
-            item = QListWidgetItem("No conversations found.")
+            item = QListWidgetItem(tr("No conversations found."))
             item.setFlags(Qt.NoItemFlags)
             self.list_widget.addItem(item)
             return
@@ -306,7 +331,7 @@ class VHistoryDialog(QDialog):
         unpinned_list = [s for s in filtered if not s.pinned]
 
         if pinned_list:
-            self._add_section_header("📌 Pinned")
+            self._add_section_header(tr("📌 Pinned"))
             for summary in pinned_list:
                 self._add_row_item(summary)
 
@@ -314,7 +339,7 @@ class VHistoryDialog(QDialog):
         for summary in unpinned_list:
             bucket = self._date_bucket(summary)
             if bucket != last_bucket:
-                self._add_section_header(bucket)
+                self._add_section_header(self._translate_bucket(bucket))
                 last_bucket = bucket
             self._add_row_item(summary)
 
@@ -381,7 +406,7 @@ class VHistoryDialog(QDialog):
             return
 
         new_title, ok = QInputDialog.getText(
-            self, "Rename Conversation", "New title:", text=summary.title
+            self, tr("Rename Conversation"), tr("New title:"), text=summary.title
         )
         if ok and new_title.strip():
             conv = self.store.load_conversation(conv_id)
@@ -400,8 +425,8 @@ class VHistoryDialog(QDialog):
     def _on_delete(self, conv_id: str) -> None:
         reply = QMessageBox.question(
             self,
-            "Delete Conversation",
-            "Permanently delete this conversation?",
+            tr("Delete Conversation"),
+            tr("Permanently delete this conversation?"),
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No,
         )
@@ -415,10 +440,16 @@ class VHistoryDialog(QDialog):
             return
         reply = QMessageBox.question(
             self,
-            "Delete All Conversations",
-            f"Permanently delete all {len(unpinned)} unpinned conversation(s)?\n"
-            "Pinned conversations will be kept.\n\n"
-            "This cannot be undone.",
+            tr("Delete All Conversations"),
+            tr_plural(
+                "Permanently delete {count} unpinned conversation?\n"
+                "Pinned conversations will be kept.\n\n"
+                "This cannot be undone.",
+                "Permanently delete all {count} unpinned conversations?\n"
+                "Pinned conversations will be kept.\n\n"
+                "This cannot be undone.",
+                len(unpinned),
+            ),
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No,
         )

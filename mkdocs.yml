@@ -10,6 +10,7 @@ copyright: Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
 
 theme:
   name: material
+  language: en
   custom_dir: docs/overrides
   font:
     text: Roboto
@@ -36,8 +37,9 @@ theme:
     - navigation.tracking
     - navigation.indexes
     - navigation.footer
-    - navigation.instant
-    - navigation.instant.progress
+    # navigation.instant and navigation.instant.progress are disabled because
+    # mkdocs-static-i18n requires full page loads for locale switching,
+    # alternate links, and per-language search indices.
     - navigation.path
     - toc.integrate
     - search.highlight
@@ -89,6 +91,11 @@ nav:
 hooks:
   - docs/docs_hooks.py
 
+exclude_docs: |
+  docs_hooks.py
+  __pycache__/
+  **/__pycache__/
+
 markdown_extensions:
   - admonition
   - pymdownx.details
@@ -122,6 +129,50 @@ markdown_extensions:
 
 plugins:
   - search
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: fr
+          name: Français
+          build: true
+          site_name: Documentation SPECTROview
+          site_description: Outil interactif de traitement, d'ajustement et de visualisation de données spectroscopiques
+          nav_translations:
+            Home: Accueil
+            Installation: Installation
+            User Manual: Manuel utilisateur
+            Supported Data: Formats pris en charge
+            UI Overview: Aperçu de l'interface
+            Menu Bar: Barre de menus
+            Workspace Spectra & Maps: Espaces Spectra et Maps
+            Workspace Graphs: Espace Graphs
+            Multivariate Analysis (MVA): Analyse multivariée (MVA)
+            Quick Calculators: Calculateurs rapides
+            Settings: Paramètres
+            Save & Load: Sauvegarde et chargement
+            Shortcuts & Tips: Raccourcis et astuces
+            AI Agent: Agent IA
+            Developer Guide: Guide développeur
+            Architecture: Architecture
+            File Loading Pipeline: Pipeline de chargement des fichiers
+            Data Architecture SpectraStore: Architecture de données SpectraStore
+            Workspace Spectra: Espace Spectra
+            Workspace Maps: Espace Maps
+            Vectorized Batch Fit Engine (VBF): Moteur d'ajustement vectorisé par lots (VBF)
+            Local MCP Server: Serveur MCP local
+            API: API
+            Spectra Workspace (load, preprocess, fit): Espace Spectra (chargement, prétraitement, ajustement)
+            Maps Workspace (hyperspectral, heatmaps): Espace Maps (hyperspectral, cartes thermiques)
+            Data Visualization (Graphs): Visualisation de données (Graphs)
+            Extending SPECTROview: Étendre SPECTROview
+            Changelog: Historique des versions
 
 extra:
   analytics:

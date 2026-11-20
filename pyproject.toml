@@ -82,6 +82,7 @@ Homepage = "https://github.com/CEA-MetroCarac/SPECTROview"
 dev = ["pytest>=8.0.0", "pytest-qt>=4.3.0", "black", "flake8"]
 test = ["pytest>=8.0.0", "pytest-qt>=4.3.0"]
 standalone = ["velopack>=1.2.161", "pyinstaller>=6.10.0"]
+docs = ["mkdocs>=1.6.0", "mkdocs-material>=9.6.0", "mkdocs-static-i18n>=1.3.0"]
 
 [tool.setuptools.dynamic]
 version = { attr = "spectroview.VERSION" }

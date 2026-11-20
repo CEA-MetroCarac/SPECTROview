@@ -1,9 +1,43 @@
+import datetime
 import os
+import posixpath
 import re
 import sys
 
 # Track whether we are running in persistent live server mode ('mkdocs serve')
 _is_serve_mode: bool = any(arg in sys.argv for arg in ("serve",))
+
+_EN_MONTHS = (
+    "",
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+)
+_FR_MONTHS = (
+    "",
+    "janvier", "février", "mars", "avril", "mai", "juin",
+    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+)
+
+_INDEX_FILE_RE = re.compile(r'(?:^|/)index(?:\.[a-z]{2}(?:-[A-Z]{2})?)?\.md$')
+_EN_STAMP_RE = re.compile(r"\(Last updated:\s*[^)]+\)", re.IGNORECASE)
+_FR_STAMP_RE = re.compile(r"\(Dernière mise à jour\s*:\s*[^)]+\)", re.IGNORECASE)
+
+
+def _format_timestamp(locale: str, now: datetime.datetime | None = None) -> str:
+    """Format timestamp using locale-independent English or French month names."""
+    if now is None:
+        now = datetime.datetime.now()
+    if locale == "fr":
+        return f"{now.day:02d} {_FR_MONTHS[now.month]} {now.year} à {now.hour:02d}:{now.minute:02d}"
+    return f"{now.day:02d} {_EN_MONTHS[now.month]} {now.year} at {now.hour:02d}:{now.minute:02d}"
+
+
+def _detect_locale(src_path: str) -> str:
+    """Infer locale from a suffix-named Markdown source path."""
+    norm = src_path.replace("\\", "/")
+    if norm.endswith(".fr.md"):
+        return "fr"
+    return "en"
 
 
 def on_startup(command, dirty):
@@ -140,6 +174,23 @@ def ensure_markdown_spacing(text: str) -> str:
     return ''.join(out)
 
 
+def _resolve_user_manual_images_prefix(page, files, is_index: bool) -> str:
+    """Compute the relative prefix to user_manual_images/ from the rendered HTML page."""
+    page_dir = posixpath.dirname((page.file.dest_uri or "").replace("\\", "/"))
+    if files is not None:
+        for f in files:
+            src = (getattr(f, "src_path", "") or "").replace("\\", "/")
+            if src.startswith("user_manual_images/"):
+                dest_uri = (getattr(f, "dest_uri", "") or "").replace("\\", "/")
+                idx = dest_uri.find("user_manual_images/")
+                if idx != -1:
+                    images_root = dest_uri[: idx + len("user_manual_images")]
+                    rel = posixpath.relpath(images_root, page_dir or ".")
+                    return rel.rstrip("/") + "/"
+                break
+    return "../user_manual_images/" if is_index else "../../user_manual_images/"
+
+
 def on_page_content(html, page, config, files):
     """
     Hook to fix raw HTML links in the generated HTML content.
@@ -147,13 +198,14 @@ def on_page_content(html, page, config, files):
     MkDocs normally doesn't rewrite links inside raw HTML <a> tags.
     This hook finds relative href="filename.md" links in the user manual
     and rewrites them to href="filename/" so they match MkDocs'
-    directory-style URL structure.
+    directory-style URL structure, and ensures raw <img> tags pointing
+    to user_manual_images/ resolve accurately across locales.
     """
     src_path = page.file.src_path.replace('\\', '/')
-    if src_path.startswith("user_manual/"):
-        # Determine if we are at the user_manual/ root (index.md)
-        # or in a sub-directory (e.g. user_manual/01_introduction/)
-        is_index = src_path.endswith("index.md")
+    if src_path.startswith("user_manual/") or "/user_manual/" in f"/{src_path}":
+        # Determine if we are at the user_manual/ root (index.md / index.fr.md)
+        # or in a sub-directory (e.g. user_manual/graphs/)
+        is_index = bool(_INDEX_FILE_RE.search(src_path))
         prefix = "" if is_index else "../"
 
         def replace_link(match):
@@ -176,40 +228,44 @@ def on_page_content(html, page, config, files):
         # Fix image src attributes inside HTML tags.
         # MkDocs automatically fixes relative paths for Markdown images ![alt](path),
         # but leaves raw HTML <img src="..."> untouched.
-        # From site/user_manual/index.html (is_index=True), "../user_manual_images/" is correct.
-        # From site/user_manual/page_name/index.html (is_index=False), we need "../../user_manual_images/"
-        if not is_index:
-            html = re.sub(
-                r'src="\.\./user_manual_images/',
-                r'src="../../user_manual_images/',
-                html
-            )
+        img_prefix = _resolve_user_manual_images_prefix(page, files, is_index)
+        html = re.sub(
+            r'src="(?:\.\./)+user_manual_images/',
+            f'src="{img_prefix}',
+            html
+        )
     return html
 
 
 def on_page_markdown(markdown, page, config, files):
     """
-    Hook to dynamically ensure the rendered user manual index.md always has the current date,
-    and guarantee that lists and tables are properly spaced for Python-Markdown.
+    Hook to dynamically ensure the rendered user manual index pages (EN and FR)
+    always carry the current date, and guarantee that lists and tables are
+    properly spaced for Python-Markdown.
     """
     src_path = page.file.src_path.replace('\\', '/')
-    if src_path.endswith("index.md") and "user_manual" in src_path:
-        import datetime
-        timestamp_str = datetime.datetime.now().strftime("%d %B %Y at %H:%M")
-        markdown = re.sub(
-            r"\(Last updated:\s*[^)]+\)",
-            f"(Last updated: {timestamp_str})",
-            markdown,
-            flags=re.IGNORECASE
-        )
+    if _INDEX_FILE_RE.search(src_path) and "user_manual" in src_path:
+        locale = _detect_locale(src_path)
+        timestamp_str = _format_timestamp(locale)
+        if locale == "fr":
+            markdown = _FR_STAMP_RE.sub(
+                f"(Dernière mise à jour : {timestamp_str})",
+                markdown,
+            )
+        else:
+            markdown = _EN_STAMP_RE.sub(
+                f"(Last updated: {timestamp_str})",
+                markdown,
+            )
     return ensure_markdown_spacing(markdown)
 
 
 def on_pre_build(config, **kwargs):
     """
     Hook that runs before the MkDocs build process starts.
-    Updates '(Last updated: DD Month YYYY at HH:MM)' in docs/user_manual/index.md
-    when building or deploying (skipped during 'mkdocs serve' to avoid rebuild loops).
+    Updates timestamps in docs/user_manual/index.md and index.fr.md
+    when building or deploying (skipped during 'mkdocs serve' or when
+    SPECTROVIEW_DOCS_NO_STAMP=1 is set).
     """
     docs_dir = config['docs_dir']
     manual_dir = os.path.join(docs_dir, "user_manual")
@@ -217,26 +273,30 @@ def on_pre_build(config, **kwargs):
 
 
 def _update_last_updated_date(manual_dir: str) -> None:
-    """Automatically update '(Last updated: DD Month YYYY at HH:MM)' in user_manual/index.md."""
-    if _is_serve_mode:
-        return
-    import datetime
-    index_path = os.path.join(manual_dir, "index.md")
-    if not os.path.isfile(index_path):
+    """Automatically update the Last updated timestamp in user_manual/index[.fr].md."""
+    if _is_serve_mode or os.environ.get("SPECTROVIEW_DOCS_NO_STAMP") == "1":
         return
 
-    timestamp_str = datetime.datetime.now().strftime("%d %B %Y at %H:%M")
-    try:
-        with open(index_path, "r", encoding="utf-8") as f:
-            content = f.read()
+    now = datetime.datetime.now()
+    targets = [
+        ("index.md", "en", _EN_STAMP_RE, f"(Last updated: {_format_timestamp('en', now)})"),
+        ("index.fr.md", "fr", _FR_STAMP_RE, f"(Dernière mise à jour : {_format_timestamp('fr', now)})"),
+    ]
+    for filename, locale, pattern, new_text in targets:
+        index_path = os.path.join(manual_dir, filename)
+        if not os.path.isfile(index_path):
+            continue
+        try:
+            with open(index_path, "r", encoding="utf-8") as f:
+                content = f.read()
 
-        pattern = r"\(Last updated:\s*[^)]+\)"
-        new_text = f"(Last updated: {timestamp_str})"
-        new_content, count = re.subn(pattern, new_text, content, flags=re.IGNORECASE)
-
-        if count > 0 and new_content != content:
-            with open(index_path, "w", encoding="utf-8") as f:
-                f.write(new_content)
-            print(f"  [docs_hook] Automatically updated user manual date and time to: {timestamp_str}")
-    except OSError as e:
-        print(f"  [docs_hook] Warning: Could not update last updated date: {e}")
+            new_content, count = pattern.subn(new_text, content)
+            if count > 0 and new_content != content:
+                with open(index_path, "w", encoding="utf-8") as f:
+                    f.write(new_content)
+                print(
+                    f"  [docs_hook] Automatically updated {filename} ({locale}) "
+                    f"date and time to: {_format_timestamp(locale, now)}"
+                )
+        except OSError as e:
+            print(f"  [docs_hook] Warning: Could not update {filename} last updated date: {e}")

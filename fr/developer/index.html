@@ -1707,208 +1707,215 @@ Chaque espace de travail respecte la même séparation des responsabilités en t
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│   ├── dispatch.py         # Frontière d'exécution en file sur le thread principal Qt
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│   └── errors.py           # Codes d'erreur d'intégration stables
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>├── settings/               # Architecture unifiée des paramètres (Model, ViewModel et UI à 2 panneaux)
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│   ├── m_settings.py          # Paramètres persistants et config.json portable
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│   ├── vm_settings.py         # ViewModel des paramètres et testeur de connexion LLM en arrière-plan
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│   ├── secrets.py             # Magasin de secrets obfusqué multiplateforme sous QSettings (_credentials/)
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│   ├── build_info.py          # Résolution double mode des dépendances et capture d'instantané de build
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│   └── ui/                    # Boîte de dialogue des paramètres à deux volets avec recherche instantanée
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│       ├── settings_dialog.py # Fenêtre hôte avec navigation latérale et recherche instantanée
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>│       ├── tab_general.py     # Préférences générales et dossier de travail
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>│       ├── tab_fit.py         # Convergence du solveur d'ajustement et bornes des pics
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>│       ├── tab_ai.py          # Identifiants LLM, tests de connexion et serveur MCP local
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>│       └── tab_about.py       # Détails de l'application, environnement Python et dépendances
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>│
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>├── model/                  # Modèles de données organisés par domaine (aucun widget Qt)
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>│   ├── m_settings.py       # Façade de compatibilité des paramètres persistants (encapsule spectroview.settings)
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>│   ├── io/                 # Chargeurs de fichiers et sérialisation des espaces de travail
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>│   │   ├── m_io.py         # Routage universel et lecteurs texte/CSV
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>│   │   ├── m_wdf.py        # Lecteur binaire Renishaw WiRE WDF
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>│   │   ├── m_spc.py        # Lecteur binaire Galactic SPC
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>│   │   ├── m_l6s.py        # Lecteur binaire HORIBA LabSpec 6 (.l6s / .l6m)
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>│   │   ├── m_ngs.py        # Lecteur binaire HORIBA LabSpec 5 (.ngs / .ngc)
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>│   │   └── workspace_io.py # Sérialisation unifiée pour les espaces de travail
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>│   ├── spectra/            # Magasin tensoriel spectral, métriques et modèles d'ajustement
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>│   │   ├── spectra_store.py       # Structures tensorielles SpectraStore &amp; MapData
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>│   │   ├── spectral_parameters.py # Métriques spectrales brutes vectorisées (Area, Max, Pos_Max, Barycenter, FWHM)
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>│   │   ├── heatmap.py             # Interpolation et triangulation 2D de cartes thermiques en pur NumPy
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>│   │   ├── peak_model.py          # Fonctions utilitaires pour les paramètres de pics
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>│   │   └── m_fit_model_manager.py # Gestion des fichiers de modèles d'ajustement sauvegardés
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>│   ├── graphs/             # Schémas graphiques, recettes et modèles de style
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>│   │   ├── m_graph.py                 # Modèle de configuration de tracé (dataclass MGraph)
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>│   │   ├── graph_control.py           # Contrat de contrôle et validation des graphiques
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>│   │   ├── graph_style.py             # Style graphique et prédicat de restyle sans replot
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>│   │   ├── m_plot_recipe.py           # Dataclass de recette de tracé (+ m_plot_recipe_store.py)
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>│   │   └── m_style_template_store.py  # Persistance des modèles de style graphique
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>│   ├── analysis/           # Moteurs d'analyse numérique et calculateurs
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>│   │   ├── m_mva.py               # Moteur PCA + NMF
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>│   │   └── m_quick_calculators.py # Logique mathématique pure pour les calculateurs scientifiques
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>│   └── system/             # Environnement d'exécution, TLS et services de mise à jour
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>│       ├── m_tls.py              # Validation durcie des certificats TLS (truststore, certifi, pip)
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>│       ├── m_installation.py     # Détection centralisée du mode d'installation (InstallType &amp; InstallationManager)
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>│       ├── m_update_manager.py   # Façade multiplateforme UpdateManager, cache ETag, SHA256SUMS
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>│       ├── m_update_checker.py   # Anciens workers QThread pip/wheel et utilitaire de mise à jour détaché
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>│       └── m_macos_font_patch.py # Correctif de compatibilité pour le rendu des polices sous macOS
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>│
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>├── viewmodel/              # Logique métier et orchestration des données (façade paresseuse PEP 562)
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>│   ├── spectra/            # ViewModel et mixins de l'espace Spectra
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>│   │   ├── vm_workspace_spectra.py     # État principal, sélection et coordination E/S
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>│   │   ├── vm_spectra_preprocessing.py # Corrections X/Y, recadrage ROI, ligne de base et suppression des rayons cosmiques
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>│   │   ├── vm_spectra_fitting.py       # Édition de pics, presse-papiers/JSON de modèle et lancement de VBFthread
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>│   │   ├── vm_spectra_results.py       # Collecte des résultats, colonnes calculées et export Excel/presse-papiers
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>│   │   ├── vm_spectra_persistence.py   # Sauvegarde/chargement ZIP/NPZ et lecteur historique .spectra v1
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>│   │   └── vm_fit_model_builder.py     # Orchestration de gestion des fichiers de modèles d'ajustement
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>│   ├── maps/               # ViewModels de l'espace Maps et de Live Maps
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>│   │   ├── vm_workspace_maps.py        # Espace Maps (étend VMWorkspaceSpectra)
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>│   │   ├── vm_maps_fitting.py          # Ajustement par lots de cartes et post-traitement Zone/Quadrant wafer
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>│   │   ├── vm_maps_persistence.py      # Chargeur JSON historique .maps v1
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>│   │   ├── vm_live_maps.py             # État Live Maps, anti-rebond et évaluation synchrone
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>│   │   └── live_maps_worker.py         # _LiveMapWorker (QRunnable) asynchrone et déchargement par instantané
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>│   ├── graphs/             # ViewModel de l'espace Graphs
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>│   │   ├── vm_workspace_graphs.py      # DataFrames, filtrage, CRUD graphique et persistance
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>│   │   └── graph_undo.py               # Mixin d'annulation/rétablissement par instantané complet et regroupement
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>│   ├── analysis/           # Orchestration de l'analyse numérique
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>│   │   └── vm_mva.py                   # Orchestration de l'analyse multivariée (PCA/NMF)
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>│   ├── common/             # Utilitaires ViewModel partagés
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>│   │   ├── spectral_utils.py           # closest_index, parse_coords_from_fname, Fano et métadonnées
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>│   │   ├── export_utils.py             # Export Excel, presse-papiers et fichiers figure
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>│   │   └── ui_utils.py                 # Adaptateurs de notification, alerte, icône et couleur d'état
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>│   ├── vm_settings.py      # Façade de compatibilité -&gt; spectroview.settings.vm_settings
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>│   └── utils.py            # Façade de ré-export rétrocompatible -&gt; viewmodel.common &amp; v_metadata_tooltip
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>│
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>├── ai_agent/               # Module AI Data Chat (multi-fournisseurs ; optionnel à l'exécution)
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>│   ├── __init__.py              # Docstring uniquement, maintient l'importation protégée
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>│   ├── m_llm_client.py          # Clients LLM multi-fournisseurs (Ollama/OpenAI/Anthropic) + workers QThread
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>│   ├── m_conversation.py        # Modèle de conversation (+ m_conversation_store.py : historique)
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>│   ├── m_prompt_manager.py      # Assemblage du prompt système / règles / connaissances
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>│   ├── mcp/server.py            # Profils partagés FastMCP pour le chat et l'application complète
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>│   ├── mcp/runtime.py           # Cycle de vie optionnel HTTP Streamable sur loopback
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>│   ├── config/, prompts/, rules/, knowledge/, examples/, utils/  # Ressources de prompts et utilitaires (voir ai_agent.md)
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>│   ├── vm_chat.py               # ViewModel du chat (sélection du profil de prompt, boucle agentique)
-<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>│   └── v_chat_panel.py          # Panneau de discussion intégré (+ v_history_dialog.py)
-<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>│
-<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>├── view/                   # Widgets Qt et mise en page UI (façade paresseuse PEP 562)
-<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>│   ├── __init__.py               # Exports paresseux des espaces, composants et thème
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>│   ├── workspaces/               # Paquets View des espaces de premier niveau
-<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>│   │   ├── __init__.py                # Exports paresseux des espaces
-<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>│   │   ├── v_workspace_spectra.py     # View de l'espace Spectra
-<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>│   │   ├── v_workspace_maps.py        # View de l'espace Maps (étend Spectra)
-<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>│   │   └── graphs/                    # Paquet View de l'espace Graphs
-<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>│   │       ├── __init__.py            # Exports du paquet (VWorkspaceGraphs, MdiSubWindow)
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>│   │       ├── v_workspace_graphs.py  # Orchestrateur VWorkspaceGraphs
-<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>│   │       ├── v_mdi_subwindow.py     # MdiSubWindow (redimensionnement/déplacement par contour)
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>│   │       ├── v_graphs_ui.py         # GraphsUIMixin (panneaux, barres d'outils, raccourcis)
-<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>│   │       ├── v_graphs_dataframes.py # GraphsDataFramesMixin (sélection et synchronisation de DF)
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>│   │       ├── v_graphs_mdi.py        # GraphsMdiMixin (création MDI et disposition)
-<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>│   │       └── v_graphs_actions.py    # GraphsActionsMixin (création/mise à jour/export/annulation)
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>│   ├── components/               # Widgets partagés et réutilisables (façade paresseuse PEP 562)
-<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>│   │   ├── __init__.py                # Exports paresseux des sous-paquets + alias des paramètres
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>│   │   ├── v_settings.py              # Boîte de dialogue des paramètres (shim de compatibilité)
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>│   │   ├── common/                    # Coque principale, notifications, calculateurs et widgets partagés
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>│   │   │   ├── __init__.py
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>│   │   │   ├── v_menubar.py           # Barre de menus principale
-<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>│   │   │   ├── v_about.py             # Boîte de dialogue À propos
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>│   │   │   ├── v_update_banner.py     # Bannière de notification de mise à jour
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>│   │   │   ├── v_notification.py      # Badges flottants natifs et gestionnaire
-<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>│   │   │   ├── v_quick_calculators.py # Interface des calculateurs scientifiques
-<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>│   │   │   ├── customized_widgets.py  # Combobox de palette, barre d'outils personnalisée
-<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>│   │   │   └── markdown_utils.py      # Normaliseur d'espacement Markdown pour Python-Markdown
-<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>│   │   ├── lists/                     # Liste de spectres/cartes, tableau DataFrame et infobulles
-<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>│   │   │   ├── __init__.py
-<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>│   │   │   ├── v_spectra_list.py      # Liste des spectres avec cases à cocher
-<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>│   │   │   ├── v_map_list.py          # Panneau des cartes chargées (sélection à deux niveaux)
-<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>│   │   │   ├── v_dataframe_table.py   # Visionneuse générique de DataFrame
-<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>│   │   │   └── v_metadata_tooltip.py  # Constructeur d'infobulles de métadonnées
-<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>│   │   ├── spectra_viewer/            # Paquet du visualiseur de spectres (1D, Heatmap, 3D, interactions)
-<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>│   │   │   ├── __init__.py            # Exports du paquet (VSpectraViewer, FastLine3DCollection, etc.)
-<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a>│   │   │   ├── common.py              # Palettes, cache de styles, jetons de noms et normalisation 1D
-<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>│   │   │   ├── v_spectra_viewer.py    # Widget principal VSpectraViewer, barre d'outils et thème
-<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a>│   │   │   ├── v_spectra_options.py   # SpectraOptionsMenuMixin (menu options, synchro et style)
-<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a>│   │   │   ├── v_plot_1d.py           # SpectraPlot1DMixin (segments 1D, décalages, superpositions d'ajustement)
-<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>│   │   │   ├── v_plot_heatmap.py      # SpectraHeatmapMixin (carte thermique 2D et jetons Y)
-<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>│   │   │   ├── v_plot_3d.py           # FastLine3DCollection &amp; SpectraPlot3DMixin
-<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>│   │   │   ├── v_interactions.py      # SpectraInteractionMixin (zoom, survol, déplacement de pics, gomme)
-<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>│   │   │   └── v_spectra_legend_editor.py  # Dialogue d'édition de légende par lots et mixin
-<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>│   │   ├── lower_tabs/                # Paquet des onglets inférieurs
-<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>│   │   │   ├── __init__.py            # Exports (VFitModelBuilder, VPeakTable, VFitResults, VMVA, VMoreTab)
-<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>│   │   │   ├── v_fit_model_builder.py # Contrôles Baseline + Peak + Fit
-<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>│   │   │   ├── v_peak_table.py        # Tableau interactif des paramètres de pics
-<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>│   │   │   ├── v_fit_results.py       # Tableau DataFrame des résultats d'ajustement
-<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>│   │   │   ├── v_mva.py               # Contrôles PCA/NMF et coordinateur d'onglets
-<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>│   │   │   ├── v_mva_plots.py         # Widget _PlotTab MVA et mixin de tracé Matplotlib
-<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>│   │   │   └── v_moretab.py           # Panneau métadonnées et normalisation
-<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a>│   │   ├── map_viewer/                # Paquet du visualiseur de cartes (2D/wafer, interactions, dialogue)
-<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>│   │   │   ├── __init__.py            # Exports (VMapViewer, VMapViewerDialog, helpers de sélection)
-<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a>│   │   │   ├── map_selection.py       # Géométrie spatiale partagée, résolution de sélection et superposition
-<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>│   │   │   ├── v_map_data.py          # MapDataProcessingMixin (cache griddata, masque, valeurs aberrantes, profil)
-<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>│   │   │   ├── v_map_plot.py          # MapPlotMixin (rendu carte 2D/wafer, statistiques, profil)
-<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a>│   │   │   ├── v_map_interactions.py  # MapInteractionMixin (sélection souris, coordonnées, copie)
-<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a>│   │   │   ├── v_map_viewer.py        # Widget principal VMapViewer, barre d'outils, curseurs et options
-<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a>│   │   │   └── v_map_viewer_dialog.py # Fenêtre détachable VMapViewerDialog
-<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a>│   │   ├── rgb_live_maps/             # Paquet sélecteurs de plages RVB et Live Maps
-<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a>│   │   │   ├── __init__.py            # Exports pour les sélecteurs RVB et Live Maps
-<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a>│   │   │   ├── common.py              # Palettes, thèmes, options et normalisation 1D partagés
-<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a>│   │   │   ├── v_live_maps.py         # Vue multi-panneaux VLiveMaps et menu options
-<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a>│   │   │   ├── v_live_maps_options.py # LiveMapsOptionsMenuMixin (légende et options d'affichage)
-<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a>│   │   │   ├── v_live_map_subpanel.py # Widget conteneur LiveMapSubpanel
-<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a>│   │   │   ├── v_live_map_1d.py       # LiveMap1DMixin (rendu séries 1D et profils)
-<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a>│   │   │   ├── v_live_map_2d.py       # LiveMap2DMixin (rendu carte thermique 2D)
-<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a>│   │   │   ├── v_live_map_selection.py # LiveMapSelectionMixin (sélection point/zone/légende)
-<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a>│   │   │   ├── v_live_maps_legend_editor.py # LiveMapsLegendEditorDialog éditeur libellés et couleurs
-<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>│   │   │   ├── v_range_selector.py    # VRangeSelectorPanel &amp; RangeSelectorManager
-<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a>│   │   │   └── v_range_bracket_mixin.py # SpectraRangeBracketMixin pour VSpectraViewer
-<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a>│   │   ├── graphs/                    # Paquet de tracé, rendu, filtrage et export Graphs
-<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a>│   │   │   ├── __init__.py
-<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>│   │   │   ├── v_graph.py             # Widget orchestrateur VGraph (restyle/replot/actions)
-<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a>│   │   │   ├── v_graph_canvas.py      # _DebouncedFigureCanvas &amp; _FastNavigationToolbar
-<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>│   │   │   ├── v_graph_breaks.py      # GraphBreakInsetMixin (axes coupés et incrustés)
-<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>│   │   │   ├── v_graph_axes.py        # GraphAxesStyleMixin (limites, échelles, graduations, thème)
-<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a>│   │   │   ├── v_graph_annotations.py # GraphAnnotationMixin (8 types d'annotations et glisser sur canevas)
-<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a>│   │   │   ├── v_plot_renderer.py     # Moteur de rendu Matplotlib sans état (PlotRenderer)
-<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a>│   │   │   ├── v_plot_spatial.py      # SpatialPlotMixin &amp; WaferPlot (rendu 2Dmap / wafer)
-<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a>│   │   │   ├── graph_commit.py        # Instantané d'état graphique et moteur de diff annuler/rétablir
-<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a>│   │   │   ├── v_export_dialog.py     # Dialogues d'export unitaire et par lots
-<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a>│   │   │   ├── v_multipanel_dialog.py # Compositeur de figures multi-panneaux pour publication
-<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a>│   │   │   ├── v_plot_recipe_dialog.py    # Gestionnaire de recettes de tracé
-<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a>│   │   │   ├── v_style_template_dialog.py # Gestionnaire de modèles de style graphique
-<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a>│   │   │   └── v_data_filter.py       # Panneau de filtrage dynamique par requête
-<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a>│   │   └── customize_graph/           # Boîte de dialogue Customize Graph (à deux panneaux type Settings)
-<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a>│   │       ├── customize_graph_dialog.py     # CustomizeGraphDialog (hôte à deux volets avec recherche et aperçu)
-<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>│   │       ├── common.py                     # NavItemDelegate et aides de mise en évidence
-<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>│   │       ├── tab_general.py                # Onglet General &amp; Typography
-<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>│   │       ├── tab_axes_limits.py            # Onglet Axes &amp; Limits
-<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a>│   │       ├── tab_ticks_spines.py           # Onglet Ticks &amp; Spines
-<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>│   │       ├── tab_secondary_inset.py        # Onglet Secondary &amp; Inset
-<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>│   │       ├── tab_legend_series.py          # Onglet Legend &amp; Series
-<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a>│   │       ├── tab_plot_styles.py            # Onglet Plot Style &amp; Fitting
-<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a>│   │       ├── tab_annotations.py            # Onglet Annotations
-<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a>│   │       └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
-<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a>│   └── theme/                         # Architecture des thèmes et polices (ThemeManager, jetons, palettes, polices)
-<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a>│       ├── manager.py                 # Propriétaire unique de l'état global du thème
-<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a>│       ├── fonts.py                   # Configuration multiplateforme des polices (macOS/Windows/Linux)
-<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>│       ├── palettes.py                # Constructeurs QPalette pour les 5 thèmes canoniques
-<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a>│       ├── qss_template.py            # Modèle QSS paramétré
-<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>│       └── tokens.py                  # Dataclass ThemeTokens et préréglages
-<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a>│
-<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a>├── fit_engine/             # Ajustement par lots haute performance
-<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a>│   ├── vbf_engine.py            # Orchestrateur (VBFengine)
-<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>│   ├── optimizer.py             # Levenberg-Marquardt vectorisé par lots
-<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a>│   ├── evaluator.py             # Correspondance de paramètres (VBFevaluator)
-<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a>│   ├── models.py                # Fonctions de pics vectorisées + jacobiennes
-<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a>│   ├── scalar_models.py         # Fonctions scalaires de repli + PEAK_MODEL_REGISTRY
-<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>│   ├── vbf_thread.py            # Encapsuleur QThread
-<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a>│   ├── baseline.py              # Algorithmes de ligne de base (arPLS, airPLS, etc.)
-<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>│   ├── noise.py                 # Fonctions d'estimation du bruit
-<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a>│   └── weights.py               # Masque d'ajustement pondéré par région et calcul des poids
-<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a>│
-<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a>├── resources/              # Icônes, polices, schéma build_info, feuilles de style Matplotlib
-<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a>│   ├── icons/
-<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a>│   └── *.mplstyle
-<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a>│
-<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a>packaging/                  # Pipelines de compilation autonomes par plateforme (réutilisant main.spec)
-<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a>├── windows/build_windows.py      # PyInstaller --onedir + Portable ZIP + Velopack vpk pack
-<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a>├── macos/{build_dmg.py,build_dmg.sh,entitlements.plist}
-<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a>└── linux/{build_linux.py,build_appimage.sh,build_deb.sh,spectroview.desktop}
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>├── i18n/                   # Localisation centralisée EN/FR et liaisons Qt dynamiques
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│   ├── __init__.py         # Exports publics tr/tr_plural et liaisons déclaratives bind_*
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│   ├── manager.py          # Singleton TranslationManager, chargeur de catalogues JSON et QTranslator
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│   ├── bindings.py         # Liaisons faiblement référencées (texte, onglet, liste déroulante, en-tête)
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│   └── validator.py        # Extracteur AST de clés, validation de catalogue et audit de littéraux UI
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>├── settings/               # Architecture unifiée des paramètres (Model, ViewModel et UI à 2 panneaux)
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>│   ├── m_settings.py          # Paramètres persistants et config.json portable
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>│   ├── vm_settings.py         # ViewModel des paramètres et testeur de connexion LLM en arrière-plan
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>│   ├── secrets.py             # Magasin de secrets obfusqué multiplateforme sous QSettings (_credentials/)
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>│   ├── build_info.py          # Résolution double mode des dépendances et capture d'instantané de build
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>│   └── ui/                    # Boîte de dialogue des paramètres à deux volets avec recherche instantanée
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>│       ├── settings_dialog.py # Fenêtre hôte avec navigation latérale et recherche instantanée
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>│       ├── tab_general.py     # Préférences générales et dossier de travail
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>│       ├── tab_fit.py         # Convergence du solveur d'ajustement et bornes des pics
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>│       ├── tab_ai.py          # Identifiants LLM, tests de connexion et serveur MCP local
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>│       └── tab_about.py       # Détails de l'application, environnement Python et dépendances
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>│
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>├── model/                  # Modèles de données organisés par domaine (aucun widget Qt)
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>│   ├── m_settings.py       # Façade de compatibilité des paramètres persistants (encapsule spectroview.settings)
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>│   ├── io/                 # Chargeurs de fichiers et sérialisation des espaces de travail
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>│   │   ├── m_io.py         # Routage universel et lecteurs texte/CSV
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>│   │   ├── m_wdf.py        # Lecteur binaire Renishaw WiRE WDF
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>│   │   ├── m_spc.py        # Lecteur binaire Galactic SPC
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>│   │   ├── m_l6s.py        # Lecteur binaire HORIBA LabSpec 6 (.l6s / .l6m)
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>│   │   ├── m_ngs.py        # Lecteur binaire HORIBA LabSpec 5 (.ngs / .ngc)
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>│   │   └── workspace_io.py # Sérialisation unifiée pour les espaces de travail
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>│   ├── spectra/            # Magasin tensoriel spectral, métriques et modèles d'ajustement
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>│   │   ├── spectra_store.py       # Structures tensorielles SpectraStore &amp; MapData
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>│   │   ├── spectral_parameters.py # Métriques spectrales brutes vectorisées (Area, Max, Pos_Max, Barycenter, FWHM)
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>│   │   ├── heatmap.py             # Interpolation et triangulation 2D de cartes thermiques en pur NumPy
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>│   │   ├── peak_model.py          # Fonctions utilitaires pour les paramètres de pics
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>│   │   └── m_fit_model_manager.py # Gestion des fichiers de modèles d'ajustement sauvegardés
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>│   ├── graphs/             # Schémas graphiques, recettes et modèles de style
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>│   │   ├── m_graph.py                 # Modèle de configuration de tracé (dataclass MGraph)
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>│   │   ├── graph_control.py           # Contrat de contrôle et validation des graphiques
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>│   │   ├── graph_style.py             # Style graphique et prédicat de restyle sans replot
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>│   │   ├── m_plot_recipe.py           # Dataclass de recette de tracé (+ m_plot_recipe_store.py)
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>│   │   └── m_style_template_store.py  # Persistance des modèles de style graphique
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>│   ├── analysis/           # Moteurs d'analyse numérique et calculateurs
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>│   │   ├── m_mva.py               # Moteur PCA + NMF
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>│   │   └── m_quick_calculators.py # Logique mathématique pure pour les calculateurs scientifiques
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>│   └── system/             # Environnement d'exécution, TLS et services de mise à jour
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>│       ├── m_tls.py              # Validation durcie des certificats TLS (truststore, certifi, pip)
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>│       ├── m_installation.py     # Détection centralisée du mode d'installation (InstallType &amp; InstallationManager)
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>│       ├── m_update_manager.py   # Façade multiplateforme UpdateManager, cache ETag, SHA256SUMS
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>│       ├── m_update_checker.py   # Anciens workers QThread pip/wheel et utilitaire de mise à jour détaché
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>│       └── m_macos_font_patch.py # Correctif de compatibilité pour le rendu des polices sous macOS
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>│
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>├── viewmodel/              # Logique métier et orchestration des données (façade paresseuse PEP 562)
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>│   ├── spectra/            # ViewModel et mixins de l'espace Spectra
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>│   │   ├── vm_workspace_spectra.py     # État principal, sélection et coordination E/S
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>│   │   ├── vm_spectra_preprocessing.py # Corrections X/Y, recadrage ROI, ligne de base et suppression des rayons cosmiques
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>│   │   ├── vm_spectra_fitting.py       # Édition de pics, presse-papiers/JSON de modèle et lancement de VBFthread
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>│   │   ├── vm_spectra_results.py       # Collecte des résultats, colonnes calculées et export Excel/presse-papiers
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>│   │   ├── vm_spectra_persistence.py   # Sauvegarde/chargement ZIP/NPZ et lecteur historique .spectra v1
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>│   │   └── vm_fit_model_builder.py     # Orchestration de gestion des fichiers de modèles d'ajustement
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>│   ├── maps/               # ViewModels de l'espace Maps et de Live Maps
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>│   │   ├── vm_workspace_maps.py        # Espace Maps (étend VMWorkspaceSpectra)
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>│   │   ├── vm_maps_fitting.py          # Ajustement par lots de cartes et post-traitement Zone/Quadrant wafer
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>│   │   ├── vm_maps_persistence.py      # Chargeur JSON historique .maps v1
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>│   │   ├── vm_live_maps.py             # État Live Maps, anti-rebond et évaluation synchrone
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>│   │   └── live_maps_worker.py         # _LiveMapWorker (QRunnable) asynchrone et déchargement par instantané
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>│   ├── graphs/             # ViewModel de l'espace Graphs
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>│   │   ├── vm_workspace_graphs.py      # DataFrames, filtrage, CRUD graphique et persistance
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>│   │   └── graph_undo.py               # Mixin d'annulation/rétablissement par instantané complet et regroupement
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>│   ├── analysis/           # Orchestration de l'analyse numérique
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>│   │   └── vm_mva.py                   # Orchestration de l'analyse multivariée (PCA/NMF)
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>│   ├── common/             # Utilitaires ViewModel partagés
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>│   │   ├── spectral_utils.py           # closest_index, parse_coords_from_fname, Fano et métadonnées
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>│   │   ├── export_utils.py             # Export Excel, presse-papiers et fichiers figure
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>│   │   └── ui_utils.py                 # Adaptateurs de notification, alerte, icône et couleur d'état
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>│   ├── vm_settings.py      # Façade de compatibilité -&gt; spectroview.settings.vm_settings
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>│   └── utils.py            # Façade de ré-export rétrocompatible -&gt; viewmodel.common &amp; v_metadata_tooltip
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>│
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>├── ai_agent/               # Module AI Data Chat (multi-fournisseurs ; optionnel à l'exécution)
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>│   ├── __init__.py              # Docstring uniquement, maintient l'importation protégée
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>│   ├── m_llm_client.py          # Clients LLM multi-fournisseurs (Ollama/OpenAI/Anthropic) + workers QThread
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>│   ├── m_conversation.py        # Modèle de conversation (+ m_conversation_store.py : historique)
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>│   ├── m_prompt_manager.py      # Assemblage du prompt système / règles / connaissances
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>│   ├── mcp/server.py            # Profils partagés FastMCP pour le chat et l'application complète
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>│   ├── mcp/runtime.py           # Cycle de vie optionnel HTTP Streamable sur loopback
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>│   ├── config/, prompts/, rules/, knowledge/, examples/, utils/  # Ressources de prompts et utilitaires (voir ai_agent.md)
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>│   ├── vm_chat.py               # ViewModel du chat (sélection du profil de prompt, boucle agentique)
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>│   └── v_chat_panel.py          # Panneau de discussion intégré (+ v_history_dialog.py)
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>│
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>├── view/                   # Widgets Qt et mise en page UI (façade paresseuse PEP 562)
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>│   ├── __init__.py               # Exports paresseux des espaces, composants et thème
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>│   ├── workspaces/               # Paquets View des espaces de premier niveau
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>│   │   ├── __init__.py                # Exports paresseux des espaces
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>│   │   ├── v_workspace_spectra.py     # View de l'espace Spectra
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>│   │   ├── v_workspace_maps.py        # View de l'espace Maps (étend Spectra)
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>│   │   └── graphs/                    # Paquet View de l'espace Graphs
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>│   │       ├── __init__.py            # Exports du paquet (VWorkspaceGraphs, MdiSubWindow)
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>│   │       ├── v_workspace_graphs.py  # Orchestrateur VWorkspaceGraphs
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>│   │       ├── v_mdi_subwindow.py     # MdiSubWindow (redimensionnement/déplacement par contour)
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>│   │       ├── v_graphs_ui.py         # GraphsUIMixin (panneaux, barres d'outils, raccourcis)
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>│   │       ├── v_graphs_dataframes.py # GraphsDataFramesMixin (sélection et synchronisation de DF)
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>│   │       ├── v_graphs_mdi.py        # GraphsMdiMixin (création MDI et disposition)
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>│   │       └── v_graphs_actions.py    # GraphsActionsMixin (création/mise à jour/export/annulation)
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>│   ├── components/               # Widgets partagés et réutilisables (façade paresseuse PEP 562)
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>│   │   ├── __init__.py                # Exports paresseux des sous-paquets + alias des paramètres
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>│   │   ├── v_settings.py              # Boîte de dialogue des paramètres (shim de compatibilité)
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>│   │   ├── common/                    # Coque principale, notifications, calculateurs et widgets partagés
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>│   │   │   ├── __init__.py
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>│   │   │   ├── v_menubar.py           # Barre de menus principale
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>│   │   │   ├── v_about.py             # Boîte de dialogue À propos
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>│   │   │   ├── v_update_banner.py     # Bannière de notification de mise à jour
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>│   │   │   ├── v_notification.py      # Badges flottants natifs et gestionnaire
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>│   │   │   ├── v_quick_calculators.py # Interface des calculateurs scientifiques
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>│   │   │   ├── customized_widgets.py  # Combobox de palette, barre d'outils personnalisée
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>│   │   │   └── markdown_utils.py      # Normaliseur d'espacement Markdown pour Python-Markdown
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>│   │   ├── lists/                     # Liste de spectres/cartes, tableau DataFrame et infobulles
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>│   │   │   ├── __init__.py
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a>│   │   │   ├── v_spectra_list.py      # Liste des spectres avec cases à cocher
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>│   │   │   ├── v_map_list.py          # Panneau des cartes chargées (sélection à deux niveaux)
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a>│   │   │   ├── v_dataframe_table.py   # Visionneuse générique de DataFrame
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a>│   │   │   └── v_metadata_tooltip.py  # Constructeur d'infobulles de métadonnées
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>│   │   ├── spectra_viewer/            # Paquet du visualiseur de spectres (1D, Heatmap, 3D, interactions)
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>│   │   │   ├── __init__.py            # Exports du paquet (VSpectraViewer, FastLine3DCollection, etc.)
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>│   │   │   ├── common.py              # Palettes, cache de styles, jetons de noms et normalisation 1D
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>│   │   │   ├── v_spectra_viewer.py    # Widget principal VSpectraViewer, barre d'outils et thème
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>│   │   │   ├── v_spectra_options.py   # SpectraOptionsMenuMixin (menu options, synchro et style)
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>│   │   │   ├── v_plot_1d.py           # SpectraPlot1DMixin (segments 1D, décalages, superpositions d'ajustement)
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>│   │   │   ├── v_plot_heatmap.py      # SpectraHeatmapMixin (carte thermique 2D et jetons Y)
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>│   │   │   ├── v_plot_3d.py           # FastLine3DCollection &amp; SpectraPlot3DMixin
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>│   │   │   ├── v_interactions.py      # SpectraInteractionMixin (zoom, survol, déplacement de pics, gomme)
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>│   │   │   └── v_spectra_legend_editor.py  # Dialogue d'édition de légende par lots et mixin
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>│   │   ├── lower_tabs/                # Paquet des onglets inférieurs
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>│   │   │   ├── __init__.py            # Exports (VFitModelBuilder, VPeakTable, VFitResults, VMVA, VMoreTab)
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a>│   │   │   ├── v_fit_model_builder.py # Contrôles Baseline + Peak + Fit
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>│   │   │   ├── v_peak_table.py        # Tableau interactif des paramètres de pics
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a>│   │   │   ├── v_fit_results.py       # Tableau DataFrame des résultats d'ajustement
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>│   │   │   ├── v_mva.py               # Contrôles PCA/NMF et coordinateur d'onglets
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>│   │   │   ├── v_mva_plots.py         # Widget _PlotTab MVA et mixin de tracé Matplotlib
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a>│   │   │   └── v_moretab.py           # Panneau métadonnées et normalisation
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a>│   │   ├── map_viewer/                # Paquet du visualiseur de cartes (2D/wafer, interactions, dialogue)
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a>│   │   │   ├── __init__.py            # Exports (VMapViewer, VMapViewerDialog, helpers de sélection)
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a>│   │   │   ├── map_selection.py       # Géométrie spatiale partagée, résolution de sélection et superposition
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a>│   │   │   ├── v_map_data.py          # MapDataProcessingMixin (cache griddata, masque, valeurs aberrantes, profil)
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a>│   │   │   ├── v_map_plot.py          # MapPlotMixin (rendu carte 2D/wafer, statistiques, profil)
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a>│   │   │   ├── v_map_interactions.py  # MapInteractionMixin (sélection souris, coordonnées, copie)
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a>│   │   │   ├── v_map_viewer.py        # Widget principal VMapViewer, barre d'outils, curseurs et options
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a>│   │   │   └── v_map_viewer_dialog.py # Fenêtre détachable VMapViewerDialog
+<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a>│   │   ├── rgb_live_maps/             # Paquet sélecteurs de plages RVB et Live Maps
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a>│   │   │   ├── __init__.py            # Exports pour les sélecteurs RVB et Live Maps
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a>│   │   │   ├── common.py              # Palettes, thèmes, options et normalisation 1D partagés
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a>│   │   │   ├── v_live_maps.py         # Vue multi-panneaux VLiveMaps et menu options
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>│   │   │   ├── v_live_maps_options.py # LiveMapsOptionsMenuMixin (légende et options d'affichage)
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a>│   │   │   ├── v_live_map_subpanel.py # Widget conteneur LiveMapSubpanel
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a>│   │   │   ├── v_live_map_1d.py       # LiveMap1DMixin (rendu séries 1D et profils)
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a>│   │   │   ├── v_live_map_2d.py       # LiveMap2DMixin (rendu carte thermique 2D)
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>│   │   │   ├── v_live_map_selection.py # LiveMapSelectionMixin (sélection point/zone/légende)
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a>│   │   │   ├── v_live_maps_legend_editor.py # LiveMapsLegendEditorDialog éditeur libellés et couleurs
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>│   │   │   ├── v_range_selector.py    # VRangeSelectorPanel &amp; RangeSelectorManager
+<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>│   │   │   └── v_range_bracket_mixin.py # SpectraRangeBracketMixin pour VSpectraViewer
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a>│   │   ├── graphs/                    # Paquet de tracé, rendu, filtrage et export Graphs
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a>│   │   │   ├── __init__.py
+<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a>│   │   │   ├── v_graph.py             # Widget orchestrateur VGraph (restyle/replot/actions)
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a>│   │   │   ├── v_graph_canvas.py      # _DebouncedFigureCanvas &amp; _FastNavigationToolbar
+<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a>│   │   │   ├── v_graph_breaks.py      # GraphBreakInsetMixin (axes coupés et incrustés)
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a>│   │   │   ├── v_graph_axes.py        # GraphAxesStyleMixin (limites, échelles, graduations, thème)
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a>│   │   │   ├── v_graph_annotations.py # GraphAnnotationMixin (8 types d'annotations et glisser sur canevas)
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a>│   │   │   ├── v_plot_renderer.py     # Moteur de rendu Matplotlib sans état (PlotRenderer)
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a>│   │   │   ├── v_plot_spatial.py      # SpatialPlotMixin &amp; WaferPlot (rendu 2Dmap / wafer)
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a>│   │   │   ├── graph_commit.py        # Instantané d'état graphique et moteur de diff annuler/rétablir
+<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a>│   │   │   ├── v_export_dialog.py     # Dialogues d'export unitaire et par lots
+<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>│   │   │   ├── v_multipanel_dialog.py # Compositeur de figures multi-panneaux pour publication
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>│   │   │   ├── v_plot_recipe_dialog.py    # Gestionnaire de recettes de tracé
+<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>│   │   │   ├── v_style_template_dialog.py # Gestionnaire de modèles de style graphique
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a>│   │   │   └── v_data_filter.py       # Panneau de filtrage dynamique par requête
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>│   │   └── customize_graph/           # Boîte de dialogue Customize Graph (à deux panneaux type Settings)
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>│   │       ├── customize_graph_dialog.py     # CustomizeGraphDialog (hôte à deux volets avec recherche et aperçu)
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a>│   │       ├── common.py                     # NavItemDelegate et aides de mise en évidence
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a>│   │       ├── tab_general.py                # Onglet General &amp; Typography
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a>│   │       ├── tab_axes_limits.py            # Onglet Axes &amp; Limits
+<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a>│   │       ├── tab_ticks_spines.py           # Onglet Ticks &amp; Spines
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a>│   │       ├── tab_secondary_inset.py        # Onglet Secondary &amp; Inset
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a>│   │       ├── tab_legend_series.py          # Onglet Legend &amp; Series
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>│   │       ├── tab_plot_styles.py            # Onglet Plot Style &amp; Fitting
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a>│   │       ├── tab_annotations.py            # Onglet Annotations
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>│   │       └── customize_annotation_dialogs.py  # EditLineDialog/EditTextDialog/ColorDelegate
+<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a>│   └── theme/                         # Architecture des thèmes et polices (ThemeManager, jetons, palettes, polices)
+<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a>│       ├── manager.py                 # Propriétaire unique de l'état global du thème
+<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a>│       ├── fonts.py                   # Configuration multiplateforme des polices (macOS/Windows/Linux)
+<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>│       ├── palettes.py                # Constructeurs QPalette pour les 5 thèmes canoniques
+<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a>│       ├── qss_template.py            # Modèle QSS paramétré
+<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a>│       └── tokens.py                  # Dataclass ThemeTokens et préréglages
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a>│
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>├── fit_engine/             # Ajustement par lots haute performance
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a>│   ├── vbf_engine.py            # Orchestrateur (VBFengine)
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>│   ├── optimizer.py             # Levenberg-Marquardt vectorisé par lots
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a>│   ├── evaluator.py             # Correspondance de paramètres (VBFevaluator)
+<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a>│   ├── models.py                # Fonctions de pics vectorisées + jacobiennes
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a>│   ├── scalar_models.py         # Fonctions scalaires de repli + PEAK_MODEL_REGISTRY
+<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a>│   ├── vbf_thread.py            # Encapsuleur QThread
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a>│   ├── baseline.py              # Algorithmes de ligne de base (arPLS, airPLS, etc.)
+<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a>│   ├── noise.py                 # Fonctions d'estimation du bruit
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a>│   └── weights.py               # Masque d'ajustement pondéré par région et calcul des poids
+<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a>│
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a>├── resources/              # Icônes, polices, catalogues de localisation, feuilles de style Matplotlib
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a>│   ├── icons/
+<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a>│   ├── i18n/fr.json        # Catalogue de traduction française UI et graphiques (`strings`, `plurals`, `contexts`)
+<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a>│   └── *.mplstyle
+<a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a>│
+<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a>packaging/                  # Pipelines de compilation autonomes par plateforme (réutilisant main.spec)
+<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a>├── windows/build_windows.py      # PyInstaller --onedir + Portable ZIP + Velopack vpk pack
+<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a>├── macos/{build_dmg.py,build_dmg.sh,entitlements.plist}
+<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a>└── linux/{build_linux.py,build_appimage.sh,build_deb.sh,spectroview.desktop}
 </code></pre></div>
 <hr />
 <h2 id="point-dentree-de-lapplication"><strong>Point d'entrée de l'application</strong><a class="headerlink" href="#point-dentree-de-lapplication" title="Permanent link">&para;</a></h2>
@@ -2362,6 +2369,15 @@ Tous les threads émettent des signaux d'avancement que le ViewModel relaie vers
 <li><strong><code>publish-pypi</code></strong> : Pour les versions stables, conserve le mécanisme PyPI Trusted Publisher existant (environnement <code>pypi</code>, <code>id-token: write</code>, <code>pypa/gh-action-pypi-publish@release/v1</code>).</li>
 </ol>
 <p>Avant la première publication PyPI sur un nouveau fork ou dépôt, enregistrez un Trusted Publisher pour <code>CEA-MetroCarac/SPECTROview</code> dans PyPI avec le fichier de workflow <code>release.yml</code> et l'environnement <code>pypi</code>.</p>
+<hr />
+<h2 id="internationalisation-i18n"><strong>Internationalisation (i18n)</strong><a class="headerlink" href="#internationalisation-i18n" title="Permanent link">&para;</a></h2>
+<p><code>SPECTROview</code> prend en charge l'<strong>anglais</strong> (<code>"en"</code>, par défaut) et le <strong>français</strong> (<code>"fr"</code>) avec changement de langue à chaud via <code>spectroview/i18n/</code> :</p>
+<ul>
+<li><strong><code>TranslationManager</code> (<code>manager.py</code>)</strong> : Singleton gérant la langue active (<code>get_language()</code> / <code>set_language()</code>), les catalogues JSON (<code>spectroview/resources/i18n/&lt;lang&gt;.json</code>), les aides <code>tr()</code> / <code>tr_plural()</code> et le <code>QTranslator</code> Qt (<code>qtbase_&lt;lang&gt;.qm</code>) sans modifier <code>QLocale</code> (afin de conserver le point <code>.</code> comme séparateur décimal dans les champs numériques).</li>
+<li><strong>Liaisons dynamiques (<code>bindings.py</code>)</strong> : Aides déclaratives à références faibles (<code>bind_text</code>, <code>bind_tooltip</code>, <code>bind_placeholder</code>, <code>bind_title</code>, <code>bind_window_title</code>, <code>bind_tab_text</code>, <code>bind_header_labels</code>, <code>bind_combo_items</code>, <code>on_language_changed</code>) qui actualisent l'interface lors de <code>set_language()</code> tout en préservant les clés canoniques dans <code>Qt.UserRole</code> (<code>itemData</code>) via <code>combo_data_or_text()</code> et <code>set_combo_by_data_or_text()</code>.</li>
+<li><strong>Validation et audit (<code>validator.py</code>)</strong> : <code>validate_catalog("fr")</code> vérifie l'exhaustivité du catalogue et la cohérence des variables de formatage, tandis que <code>audit_untranslated_ui_literals()</code> inspecte par AST les modules View/Settings/IA (vérifié par <code>tests/unit/test_i18n.py</code>).</li>
+<li><strong>Ajouter une nouvelle langue</strong> : Ajoutez <code>(code, nom_natif)</code> dans <code>SUPPORTED_LANGUAGES</code>, fournissez <code>spectroview/resources/i18n/&lt;code&gt;.json</code> (ainsi que <code>qtbase_&lt;code&gt;.qm</code> si besoin) et adaptez <code>_plural_index()</code> dans <code>manager.py</code> si les règles de pluriel diffèrent.</li>
+</ul>
 <hr />
 <h2 id="documentation-approfondie"><strong>Documentation approfondie</strong><a class="headerlink" href="#documentation-approfondie" title="Permanent link">&para;</a></h2>
 <table>

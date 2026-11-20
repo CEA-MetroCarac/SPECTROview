@@ -930,6 +930,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#langue-de-linterface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Langue de l'interface
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#mises-a-jour-de-lapplication" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1800,9 +1811,9 @@
 <p>Le panneau <code>Settings Panel</code> propose une interface moderne à deux volets avec filtrage instantané par recherche :</p>
 <ul>
 <li><strong>Barre latérale gauche</strong> :</li>
-<li><strong>Barre de recherche</strong> : Saisissez n'importe quel mot-clé (par exemple <code>working folder</code>, <code>theme</code>, <code>tolerance</code>, <code>loss</code>, <code>mcp</code>, <code>python</code>, <code>citation</code>) pour filtrer instantanément la liste de navigation et surligner les options correspondantes sur la page avec défilement automatique.</li>
+<li><strong>Barre de recherche</strong> : Saisissez n'importe quel mot-clé (par exemple <code>working folder</code>, <code>theme</code>, <code>language</code>, <code>langue</code>, <code>tolerance</code>, <code>loss</code>, <code>mcp</code>, <code>python</code>, <code>citation</code>) pour filtrer instantanément la liste de navigation et surligner les options correspondantes sur la page avec défilement automatique.</li>
 <li><strong>Onglets de navigation</strong> :<ol>
-<li><strong>General</strong> — Dossier de travail SPECTROview (<code>Working Folder</code>), thème de l'interface, sauvegarde/restauration portable de la configuration et préférences de mise à jour.</li>
+<li><strong>General</strong> — Dossier de travail SPECTROview (<code>Working Folder</code>), thème de l'interface, langue de l'interface, sauvegarde/restauration portable de la configuration et préférences de mise à jour.</li>
 <li><strong>Fit Settings</strong> — Paramètres de convergence de l'optimiseur, fonction de perte robuste, polarité des pics et limites globales des pics (avec icône dédiée à l'ajustement de courbes).</li>
 <li><strong>AI Settings</strong> — Identifiants des fournisseurs LLM, test de connexion et serveur MCP local.</li>
 <li><strong>About</strong> — Version de l'application, numéro de build, environnement Python, versions des dépendances d'exécution, documentation et citation.</li>
@@ -1863,6 +1874,10 @@
 <h4 id="theme-de-linterface"><strong>Thème de l'interface</strong><a class="headerlink" href="#theme-de-linterface" title="Permanent link">&para;</a></h4>
 <ul>
 <li><strong>Theme</strong> : Choisissez entre <strong>Modern Dark</strong>, <strong>Modern Gray</strong> (par défaut), <strong>Modern Light</strong>, <strong>Classic Dark</strong> ou <strong>Classic Light</strong>. Le choix met immédiatement à jour le thème actif et reste synchronisé avec le bouton de la barre de menus supérieure. Le thème du canevas des graphiques est indépendant du thème de l'interface et utilise par défaut <strong>Light Mode</strong> ; vous pouvez le basculer en <strong>Dark Mode</strong> à tout moment via le sélecteur <strong>Plot theme</strong> dans la barre <code>View Options</code> sous le canevas des spectres (votre choix est conservé entre les sessions).</li>
+</ul>
+<h4 id="langue-de-linterface"><strong>Langue de l'interface</strong><a class="headerlink" href="#langue-de-linterface" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Language</strong> : Choisissez entre <strong>English</strong> (par défaut) et <strong>Français</strong>. Le changement s'applique <strong>instantanément à toute l'application</strong> — menus, espaces de travail, visionneuses, boîtes de dialogue, libellés de graphiques scientifiques et panneau de discussion IA — sans redémarrage. Cliquer sur <strong>Cancel</strong> (<em>Annuler</em>) rétablit automatiquement la langue précédemment enregistrée. Le choix est persisté entre les sessions via <code>QSettings</code> et <code>config.json</code>, et le bouton <strong>Open User Manual</strong> (<em>Ouvrir le manuel utilisateur</em>) ouvre automatiquement la documentation anglaise (<code>/user_manual/</code>) ou française (<code>/fr/user_manual/</code>) correspondante.</li>
 </ul>
 <h4 id="mises-a-jour-de-lapplication"><strong>Mises à jour de l'application</strong><a class="headerlink" href="#mises-a-jour-de-lapplication" title="Permanent link">&para;</a></h4>
 <ul>

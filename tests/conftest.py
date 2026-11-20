@@ -74,7 +74,15 @@ def _isolate_qsettings(tmp_path, monkeypatch):
     monkeypatch.setattr(settings_m_settings, "QSettings", _isolated_qsettings, raising=False)
     monkeypatch.setattr(settings_secrets, "QSettings", _isolated_qsettings, raising=False)
 
+    from spectroview.i18n.manager import TranslationManager
+    from spectroview.i18n.bindings import reset_for_tests
+
+    TranslationManager.instance().set_language("en", persist=False)
+
     yield
+
+    TranslationManager.instance().set_language("en", persist=False)
+    reset_for_tests()
 
 
 @pytest.fixture(scope="session")

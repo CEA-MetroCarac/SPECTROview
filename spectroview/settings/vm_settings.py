@@ -9,6 +9,7 @@ from typing import Optional
 from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtWidgets import QFileDialog
 
+from spectroview.i18n import tr
 from spectroview.settings.m_settings import MSettings
 
 
@@ -65,6 +66,7 @@ class VMSettings(QObject):
         data["check_updates_startup"] = self.settings.get_check_for_updates()
         data["include_prereleases"] = self.settings.get_update_include_prereleases()
         data["theme"] = self.settings.get_theme()
+        data["language"] = self.settings.get_language()
         self.settings_loaded.emit(data)
 
     # ---------- Save ----------
@@ -80,6 +82,9 @@ class VMSettings(QObject):
 
         if "theme" in data:
             self.settings.set_theme(str(data.pop("theme")))
+
+        if "language" in data:
+            self.settings.set_language(str(data.pop("language")))
 
         current_mcp = self.settings.load_mcp_settings()
         mcp_enabled = bool(data.pop("mcp_enabled", current_mcp["mcp_enabled"]))
@@ -105,7 +110,7 @@ class VMSettings(QObject):
     def pick_working_folder(self):
         """Persists immediately and auto-imports config.json if present in the picked folder."""
         folder = QFileDialog.getExistingDirectory(
-            None, "Select SPECTROview Working Folder", ""
+            None, tr("Select SPECTROview Working Folder"), ""
         )
         if folder:
             self.settings.set_working_folder(folder)
@@ -117,7 +122,7 @@ class VMSettings(QObject):
         default_dir = self.settings.get_working_folder() or self.settings.get_last_directory()
         default_file = os.path.join(default_dir, "spectroview_config.json")
         filepath, _ = QFileDialog.getSaveFileName(
-            parent, "Export SPECTROview Settings", default_file, "JSON Files (*.json)"
+            parent, tr("Export SPECTROview Settings"), default_file, tr("JSON Files (*.json)")
         )
         if filepath:
             return self.settings.export_config(filepath)
@@ -126,7 +131,7 @@ class VMSettings(QObject):
     def import_config_dialog(self, parent=None) -> bool:
         default_dir = self.settings.get_working_folder() or self.settings.get_last_directory()
         filepath, _ = QFileDialog.getOpenFileName(
-            parent, "Restore SPECTROview Settings", default_dir, "JSON Files (*.json)"
+            parent, tr("Restore SPECTROview Settings"), default_dir, tr("JSON Files (*.json)")
         )
         if filepath:
             success = self.settings.import_config(filepath)
@@ -148,7 +153,10 @@ class VMSettings(QObject):
 
         # Fast client-side validation
         if provider != "Ollama" and not api_key:
-            self.connection_test_finished.emit(False, f"API key is required to test {provider}.")
+            self.connection_test_finished.emit(
+                False,
+                tr("API key is required to test {provider}.", provider=provider),
+            )
             return
 
         self.connection_test_started.emit()

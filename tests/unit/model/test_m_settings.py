@@ -427,3 +427,31 @@ class TestThemeSettings:
         assert settings.import_config(backup) is True
         assert settings.get_theme() == "gray"
 
+
+class TestLanguageSettings:
+    def test_default_language_is_en_and_normalizes_aliases(self, settings):
+        assert settings.get_language() == "en"
+        assert MSettings().get_language() == "en"
+
+        settings.settings.setValue("language", "")
+        assert settings.get_language() == "en"
+
+        settings.settings.setValue("language", "de")
+        assert settings.get_language() == "en"
+
+        settings.set_language("fr-FR")
+        assert settings.get_language() == "fr"
+        assert MSettings().get_language() == "fr"
+
+    def test_language_config_export_and_import_round_trip(self, settings, tmp_path):
+        settings.set_language("fr")
+        backup = str(tmp_path / "lang_backup.json")
+        assert settings.export_config(backup) == backup
+
+        settings.set_language("en")
+        assert settings.get_language() == "en"
+
+        assert settings.import_config(backup) is True
+        assert settings.get_language() == "fr"
+
+

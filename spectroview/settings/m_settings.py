@@ -341,6 +341,7 @@ class MSettings:
             "live_maps_view_options": self.load_live_maps_view_options(),
             "export_options": self.load_export_options(),
             "theme": self.get_theme(),
+            "language": self.get_language(),
             "default_graph_style": self.get_default_graph_style(),
             "mcp": self.load_mcp_settings(),
             "ai_settings": ai_data,
@@ -367,6 +368,9 @@ class MSettings:
 
             if "theme" in data and isinstance(data["theme"], str):
                 self.set_theme(data["theme"])
+
+            if "language" in data and isinstance(data["language"], str):
+                self.set_language(data["language"])
 
             if "default_graph_style" in data and isinstance(data["default_graph_style"], dict):
                 self.set_default_graph_style(data["default_graph_style"])
@@ -493,6 +497,26 @@ class MSettings:
         """Set theme (dark, gray, light, classic_dark, classic_light)."""
         theme = _normalize_app_theme(theme)
         self.settings.setValue("theme", theme)
+        self.settings.sync()
+        self._auto_export_config()
+
+    # ---------- Language ----------
+    def get_language(self) -> str:
+        """Get current GUI language code (e.g. ``'en'`` or ``'fr'``)."""
+        from spectroview.i18n.manager import normalize_language
+
+        raw = self.settings.value("language", "en", str)
+        val = normalize_language(raw)
+        if raw and val != raw:
+            self.set_language(val)
+        return val
+
+    def set_language(self, language: str) -> None:
+        """Persist GUI language code (e.g. ``'en'`` or ``'fr'``)."""
+        from spectroview.i18n.manager import normalize_language
+
+        norm = normalize_language(language)
+        self.settings.setValue("language", norm)
         self.settings.sync()
         self._auto_export_config()
 

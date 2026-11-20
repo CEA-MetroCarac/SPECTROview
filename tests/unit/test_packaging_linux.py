@@ -42,7 +42,7 @@ def test_filenames_and_debian_version_normalization():
 
 def test_verify_linux_bundle_and_stage_appdir_and_deb(tmp_path):
     dist_dir = tmp_path / "dist" / "SPECTROview"
-    (dist_dir / "_internal" / "spectroview" / "resources").mkdir(parents=True)
+    (dist_dir / "_internal" / "spectroview" / "resources" / "i18n").mkdir(parents=True)
     (dist_dir / "_internal" / "spectroview" / "ai_agent" / "config").mkdir(parents=True)
     (dist_dir / "_internal" / "spectroview" / "ai_agent" / "prompts").mkdir(parents=True)
     (dist_dir / "_internal" / "certifi").mkdir(parents=True)
@@ -52,6 +52,7 @@ def test_verify_linux_bundle_and_stage_appdir_and_deb(tmp_path):
 
     (dist_dir / "SPECTROview").write_bytes(b"\x7fELF")
     (dist_dir / "_internal" / "spectroview" / "resources" / "build_info.json").write_text("{}", encoding="utf-8")
+    (dist_dir / "_internal" / "spectroview" / "resources" / "i18n" / "fr.json").write_text("{}", encoding="utf-8")
     (dist_dir / "_internal" / "spectroview" / "ai_agent" / "config" / "model.yaml").write_text("m: 1", encoding="utf-8")
     (dist_dir / "_internal" / "spectroview" / "ai_agent" / "prompts" / "system.md").write_text("# hi", encoding="utf-8")
     (dist_dir / "_internal" / "certifi" / "cacert.pem").write_text("CERT", encoding="utf-8")

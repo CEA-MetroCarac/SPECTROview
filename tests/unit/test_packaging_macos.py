@@ -52,7 +52,7 @@ def test_verify_app_bundle_and_stage_dmg_contents(tmp_path):
     app_dir = tmp_path / "SPECTROview.app"
     contents = app_dir / "Contents"
     (contents / "MacOS").mkdir(parents=True)
-    (contents / "Frameworks" / "spectroview" / "resources").mkdir(parents=True)
+    (contents / "Frameworks" / "spectroview" / "resources" / "i18n").mkdir(parents=True)
     (contents / "Frameworks" / "spectroview" / "ai_agent" / "config").mkdir(parents=True)
     (contents / "Frameworks" / "spectroview" / "ai_agent" / "prompts").mkdir(parents=True)
     (contents / "Frameworks" / "certifi").mkdir(parents=True)
@@ -63,6 +63,7 @@ def test_verify_app_bundle_and_stage_dmg_contents(tmp_path):
     (contents / "Info.plist").write_text("<plist/>", encoding="utf-8")
     (contents / "MacOS" / "SPECTROview").write_bytes(b"mach-o")
     (contents / "Frameworks" / "spectroview" / "resources" / "build_info.json").write_text("{}", encoding="utf-8")
+    (contents / "Frameworks" / "spectroview" / "resources" / "i18n" / "fr.json").write_text("{}", encoding="utf-8")
     (contents / "Frameworks" / "spectroview" / "ai_agent" / "config" / "model.yaml").write_text("m: 1", encoding="utf-8")
     (contents / "Frameworks" / "spectroview" / "ai_agent" / "prompts" / "system.md").write_text("# hi", encoding="utf-8")
     (contents / "Frameworks" / "certifi" / "cacert.pem").write_text("CERT", encoding="utf-8")

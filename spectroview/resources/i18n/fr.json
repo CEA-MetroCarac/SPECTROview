@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "language": "fr",
+    "name": "Français",
+    "plural_rule": "n in (0, 1) -> 0 else 1"
+  },
+  "strings": {
+    "API key is required to test {provider}.": "Une clé API est requise pour tester {provider}.",
+    "Export SPECTROview Settings": "Exporter les paramètres SPECTROview",
+    "JSON Files (*.json)": "Fichiers JSON (*.json)",
+    "Restore SPECTROview Settings": "Restaurer les paramètres SPECTROview",
+    "Select SPECTROview Working Folder": "Sélectionner le dossier de travail SPECTROview"
+  },
+  "plurals": {},
+  "contexts": {}
+}

@@ -77,6 +77,7 @@ def verify_onedir_bundle(dist_dir: Path) -> None:
     required_paths = [
         dist_dir / "SPECTROview.exe",
         dist_dir / "_internal" / "spectroview" / "resources" / "build_info.json",
+        dist_dir / "_internal" / "spectroview" / "resources" / "i18n" / "fr.json",
         dist_dir / "_internal" / "spectroview" / "ai_agent" / "config" / "model.yaml",
         dist_dir / "_internal" / "spectroview" / "ai_agent" / "prompts" / "system.md",
         dist_dir / "_internal" / "certifi" / "cacert.pem",

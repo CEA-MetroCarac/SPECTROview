@@ -115,6 +115,19 @@ try:
 except Exception as exc:
     print(f"[main.spec] Warning: PyInstaller hook helper issue: {exc}")
 
+# Bundle Qt base translations (e.g. qtbase_fr.qm) so standard QMessageBox/QDialogButtonBox
+# buttons remain localized in frozen builds without shipping all unused QML/designer catalogs.
+try:
+    from PySide6.QtCore import QLibraryInfo
+
+    _qt_tr_dir = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
+    for _qm_name in ("qtbase_fr.qm",):
+        _qm_path = os.path.join(_qt_tr_dir, _qm_name)
+        if os.path.isfile(_qm_path):
+            extra_datas.append((_qm_path, "spectroview/resources/i18n"))
+except Exception as exc:
+    print(f"[main.spec] Warning: Qt translation bundling skipped: {exc}")
+
 # ------------------------------------------------------------
 # Icon & Version Info Handling
 # ------------------------------------------------------------
@@ -144,6 +157,9 @@ hidden_imports = [
     "spectroview.view.components.v_settings",
     "spectroview.viewmodel.utils",
     "spectroview.viewmodel.vm_settings",
+    "spectroview.i18n",
+    "spectroview.i18n.manager",
+    "spectroview.i18n.bindings",
     "spectroview.ai_agent",
     "spectroview.ai_agent.v_chat_panel",
     "spectroview.ai_agent.vm_chat",

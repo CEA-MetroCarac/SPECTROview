@@ -38,7 +38,7 @@ def test_write_win_version_info_contains_version_and_company(tmp_path):
 
 def test_verify_onedir_bundle_and_create_portable_zip(tmp_path):
     dist_dir = tmp_path / "dist" / "SPECTROview"
-    (dist_dir / "_internal" / "spectroview" / "resources").mkdir(parents=True)
+    (dist_dir / "_internal" / "spectroview" / "resources" / "i18n").mkdir(parents=True)
     (dist_dir / "_internal" / "spectroview" / "ai_agent" / "config").mkdir(parents=True)
     (dist_dir / "_internal" / "spectroview" / "ai_agent" / "prompts").mkdir(parents=True)
     (dist_dir / "_internal" / "certifi").mkdir(parents=True)
@@ -49,6 +49,7 @@ def test_verify_onedir_bundle_and_create_portable_zip(tmp_path):
 
     (dist_dir / "SPECTROview.exe").write_bytes(b"MZ")
     (dist_dir / "_internal" / "spectroview" / "resources" / "build_info.json").write_text("{}", encoding="utf-8")
+    (dist_dir / "_internal" / "spectroview" / "resources" / "i18n" / "fr.json").write_text("{}", encoding="utf-8")
     (dist_dir / "_internal" / "spectroview" / "ai_agent" / "config" / "model.yaml").write_text("k: v", encoding="utf-8")
     (dist_dir / "_internal" / "spectroview" / "ai_agent" / "prompts" / "system.md").write_text("# hi", encoding="utf-8")
     (dist_dir / "_internal" / "certifi" / "cacert.pem").write_text("CERT", encoding="utf-8")

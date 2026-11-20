@@ -111,3 +111,16 @@ def set_mcp_settings(enabled: bool, port: int = 8765) -> None:
     starts or its settings are re-applied.
     """
     MSettings().save_mcp_settings(enabled, port)
+
+
+def get_language() -> str:
+    """Return the persisted GUI language code (e.g. ``'en'`` or ``'fr'``)."""
+    return MSettings().get_language()
+
+
+def set_language(language: str) -> None:
+    """Persist and apply the GUI language (e.g. ``'en'`` or ``'fr'``)."""
+    MSettings().set_language(language)
+    from spectroview.i18n.manager import set_language as _apply_language
+
+    _apply_language(language, persist=False)

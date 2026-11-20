@@ -53,7 +53,7 @@ Detailed project rules and procedures are modularized in Antigravity workspace r
 - **[architecture.md](file:///.agents/rules/architecture.md)** `[always_on]`: Module map, MVVM boundaries, workspaces, and data backbone.
 - **[git-workflow.md](file:///.agents/rules/git-workflow.md)** `[always_on]`: Conventional Commits, milestone commits, atomic staging, and repository safety.
 - **[coding-standards.md](file:///.agents/rules/coding-standards.md)** `[model_decision]`: Qt idioms, PySide6 conventions, vectorization, docstrings, and style mechanics.
-- **[i18n.md](file:///.agents/rules/i18n.md)** `[model_decision]`: Mandatory EN/FR GUI localization (`spectroview.i18n`, `fr.json`, canonical `itemData`, catalog/UI literal audits).
+- **[i18n.md](file:///.agents/rules/i18n.md)** `[model_decision]`: Mandatory multilingual GUI localization (EN, FR, ZH, DE, RU catalogs, canonical `itemData`, catalog/UI literal audits).
 - **[testing.md](file:///.agents/rules/testing.md)** `[model_decision]`: Test execution, headless Qt (`offscreen`), fixtures (`qapp`, `_isolate_qsettings`), and visual checks.
 - **[documentation.md](file:///.agents/rules/documentation.md)** `[model_decision]`: Mandatory synchronization across Developer Guide, Public API, and User Manual.
 - **[pitfalls.md](file:///.agents/rules/pitfalls.md)** `[model_decision]`: Hard-won gotchas (QTimer parentage, headless surface budgets, QSettings isolation, twinx coordinates).
@@ -87,7 +87,7 @@ For every task, execute these steps proportionally:
    - Keep planning proportional: deep for architectural shifts, concise for small fixes.
 3. **Implement**:
    - Make the smallest complete change that satisfies the requirements.
-   - Follow MVVM boundaries, PySide6 idioms, vectorization, and EN/FR i18n localization rules ([.agents/rules/i18n.md](file:///.agents/rules/i18n.md), updating `spectroview/resources/i18n/fr.json` alongside new UI strings).
+   - Follow MVVM boundaries, PySide6 idioms, vectorization, and multilingual GUI localization rules ([.agents/rules/i18n.md](file:///.agents/rules/i18n.md), updating `spectroview/resources/i18n/{fr,zh,de,ru}.json` alongside new UI strings).
    - Author corresponding unit or integration tests alongside the feature code in the same session.
    - Preserve existing public API signatures and backward compatibility.
 4. **Test & Verify**:

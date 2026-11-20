@@ -111,4 +111,4 @@ Hard-won gotchas that have bitten this codebase. The guards described below are 
   2. Calling `tr("...{peak}...cm$^{-1}$...", peak=p)` fails formatting (`{-1}` `KeyError`) unless literal braces are escaped as `cm$^{{-1}}$`.
   3. Reading `combo.currentText()` on a translated `QComboBox` returns `"Mode clair"` instead of `"Light Mode"`, breaking model/renderer switches in French.
   4. Setting `QLocale.setDefault(QLocale("fr_FR"))` globally flips `QDoubleSpinBox` decimal separators to `,`.
-- **Rule**: Follow [.agents/rules/i18n.md](i18n.md): omit redundant `count=` in `tr_plural`, escape literal LaTeX braces, always use `bind_combo_items` + `combo_data_or_text`/`set_combo_by_data_or_text` with canonical `itemData`, and rely solely on `QTranslator` (`qtbase_fr.qm`) without mutating `QLocale`.
+- **Rule**: Follow [.agents/rules/i18n.md](i18n.md): omit redundant `count=` in `tr_plural`, escape literal LaTeX braces, always use `bind_combo_items` + `combo_data_or_text`/`set_combo_by_data_or_text` with canonical `itemData`, and rely solely on `QTranslator` (`qtbase_fr.qm`, `qtbase_zh_CN.qm`, `qtbase_de.qm`, `qtbase_ru.qm`) without mutating `QLocale`.

@@ -52,7 +52,7 @@ Définissez un dossier racine unique pour l'ensemble des modèles, recettes, sty
 
 #### **Langue de l'interface**
 
-- **Language** : Choisissez entre **English** (par défaut) et **Français**. Le changement s'applique **instantanément à toute l'application** — menus, espaces de travail, visionneuses, boîtes de dialogue, libellés de graphiques scientifiques et panneau de discussion IA — sans redémarrage. Cliquer sur **Cancel** (*Annuler*) rétablit automatiquement la langue précédemment enregistrée. Le choix est persisté entre les sessions via `QSettings` et `config.json`, et le bouton **Open User Manual** (*Ouvrir le manuel utilisateur*) ouvre automatiquement la documentation anglaise (`/user_manual/`) ou française (`/fr/user_manual/`) correspondante.
+- **Language** : Choisissez entre **English** (par défaut), **Français**, **简体中文** (chinois simplifié), **Deutsch** (allemand) et **Русский** (russe). Le changement s'applique **instantanément à toute l'application** — menus, espaces de travail, visionneuses, boîtes de dialogue, libellés de graphiques scientifiques et panneau de discussion IA — sans redémarrage. Cliquer sur **Cancel** (*Annuler*) rétablit automatiquement la langue précédemment enregistrée. Le choix est persisté entre les sessions via `QSettings` et `config.json`, et le bouton **Open User Manual** (*Ouvrir le manuel utilisateur*) ouvre la documentation anglaise (`/user_manual/`) ou française (`/fr/user_manual/`) correspondante (avec repli sur l'anglais pour les langues sans manuel web dédié).
 
 #### **Mises à jour de l'application**
 

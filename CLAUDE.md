@@ -35,10 +35,10 @@ optional **AI chat** (`ai_agent/`).
    (`docs/developer/`), **API docs** (`docs/api/`), and **user manual**
    (`docs/user_manual/`). Never leave one language outdated. Details:
    [rules/documentation.md](.claude/rules/documentation.md).
-8. **Keep UI strings localized (EN + FR)** — wrap every user-facing GUI /
+8. **Keep UI strings localized (EN/FR/ZH/DE/RU)** — wrap every user-facing GUI /
    ViewModel string via `spectroview.i18n` (`tr`, `tr_plural`, `bind_*`) and
-   update `spectroview/resources/i18n/fr.json` in the same commit. Details:
-   [rules/i18n.md](.claude/rules/i18n.md).
+   update `spectroview/resources/i18n/{fr,zh,de,ru}.json` in the same commit.
+   Details: [rules/i18n.md](.claude/rules/i18n.md).
 9. **Pause for the big calls** — explain major architectural changes before
    applying; ask when requirements are ambiguous instead of guessing. Proceed
    without asking on reversible, in-scope work.
@@ -72,7 +72,7 @@ past-tense (`spectra_list_changed`). Tests: `tests/**/test_*.py`, `Test*`,
 |---|---|
 | Layers, module map, cross-workspace wiring | [architecture.md](.claude/rules/architecture.md) |
 | Naming, style, Qt idioms, docstrings, full coding rules | [coding-standards.md](.claude/rules/coding-standards.md) |
-| Multilingual GUI (EN/FR strings, `bind_*`, `fr.json` sync) | [i18n.md](.claude/rules/i18n.md) |
+| Multilingual GUI (EN/FR/ZH/DE/RU, `bind_*`, catalog sync) | [i18n.md](.claude/rules/i18n.md) |
 | Run/add tests, headless Qt, fixtures, visual checks | [testing.md](.claude/rules/testing.md) |
 | Step-by-step common tasks (plot style, customize option, shortcut, loader…) | [workflows.md](.claude/rules/workflows.md) |
 | Graphs workspace internals | [graphs-workspace.md](.claude/rules/graphs-workspace.md) |

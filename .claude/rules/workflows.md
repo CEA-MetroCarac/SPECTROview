@@ -2,7 +2,7 @@
 
 Step-by-step touch-points for recurring tasks. Always read the named files
 first; these lists are orientation, not a substitute for the code. Every task
-below also ends with **i18n sync (`fr.json`) + tests + bilingual docs**: wrap new UI
+below also ends with **i18n sync (`fr`/`zh`/`de`/`ru`) + tests + bilingual docs**: wrap new UI
 strings per [i18n.md](i18n.md), add/adjust tests, and update both English (`*.md`)
 and French (`*.fr.md`) docs per [documentation.md](documentation.md).
 

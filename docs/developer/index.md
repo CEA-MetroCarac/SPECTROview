@@ -69,7 +69,7 @@ spectroview/
 │   ├── dispatch.py         # Queued Qt main-thread execution boundary
 │   └── errors.py           # Stable integration error codes
 │
-├── i18n/                   # Centralized EN/FR localization & live Qt bindings
+├── i18n/                   # Centralized multilingual localization & live Qt bindings
 │   ├── __init__.py         # Public tr/tr_plural & declarative bind_* exports
 │   ├── manager.py          # TranslationManager singleton, JSON catalog loader & QTranslator lifecycle
 │   ├── bindings.py         # Weak-ref widget/tab/combo/header live retranslation bindings
@@ -271,7 +271,7 @@ spectroview/
 │
 ├── resources/              # Icons, fonts, localization catalogs, Matplotlib stylesheets
 │   ├── icons/
-│   ├── i18n/fr.json        # French UI & plot translation catalog (`strings`, `plurals`, `contexts`)
+│   ├── i18n/{fr,zh,de,ru}.json  # Translation catalogs (`strings`, `plurals`, `contexts`)
 │   └── *.mplstyle
 │
 packaging/                  # Standalone platform build pipelines (reusing root main.spec)
@@ -570,12 +570,12 @@ Before the first PyPI release on a new fork/repository, register a Trusted Publi
 
 ## **Internationalization (i18n)**
 
-`SPECTROview` provides live **English** (`"en"`, default) and **French** (`"fr"`) localization via `spectroview/i18n/`:
+`SPECTROview` provides live multilingual GUI localization across **English** (`"en"`, default), **French** (`"fr"`), **Simplified Chinese** (`"zh"`, `zh_CN`), **German** (`"de"`, `de_DE`), and **Russian** (`"ru"`, `ru_RU`) via `spectroview/i18n/`:
 
-- **`TranslationManager` (`manager.py`)**: Singleton holding the active language (`get_language()` / `set_language()`), JSON catalogs (`spectroview/resources/i18n/<lang>.json`), locale-aware `tr()` / `tr_plural()`, and Qt's `QTranslator` (`qtbase_<lang>.qm`) without mutating `QLocale` (keeping dot `.` decimal parsing intact in scientific spinboxes).
+- **`TranslationManager` (`manager.py`)**: Singleton holding the active language (`get_language()` / `set_language()`), JSON catalogs (`spectroview/resources/i18n/<lang>.json`), locale-aware `tr()` / `tr_plural()` (including Chinese 1-form, French/German 2-form, and Russian 3-form Slavic pluralization), and Qt's `QTranslator` (`qtbase_fr.qm`, `qtbase_zh_CN.qm`, `qtbase_de.qm`, `qtbase_ru.qm`) without mutating `QLocale` (keeping dot `.` decimal parsing intact in scientific spinboxes).
 - **Live Bindings (`bindings.py`)**: Weak-referenced declarative helpers (`bind_text`, `bind_tooltip`, `bind_placeholder`, `bind_title`, `bind_window_title`, `bind_tab_text`, `bind_header_labels`, `bind_combo_items`, `on_language_changed`) re-apply labels on `set_language()` while preserving canonical keys in `Qt.UserRole` (`itemData`) via `combo_data_or_text()` / `set_combo_by_data_or_text()`.
-- **Validation & Audit (`validator.py`)**: `validate_catalog("fr")` verifies catalog completeness and placeholder parity, and `audit_untranslated_ui_literals()` scans active View/Settings/AI UI modules via AST (enforced in `tests/unit/test_i18n.py`).
-- **Extending to a New Language**: Register `(code, native_name)` in `SUPPORTED_LANGUAGES`, add `spectroview/resources/i18n/<code>.json` (plus optional `qtbase_<code>.qm`), and update `_plural_index()` in `manager.py` if plural rules differ.
+- **Validation & Audit (`validator.py`)**: `validate_catalog(...)` verifies catalog completeness, per-language plural form counts (`expected_plural_forms()`), and placeholder parity across `"fr"`, `"zh"`, `"de"`, and `"ru"`, while `audit_untranslated_ui_literals()` scans active View/Settings/AI UI modules via AST (enforced in `tests/unit/test_i18n.py`).
+- **Extending to a New Language**: Register `(code, native_name)` in `SUPPORTED_LANGUAGES`, add `spectroview/resources/i18n/<code>.json` (plus optional `qtbase_*.qm` candidates), and update `_plural_index()` / `expected_plural_forms()` if plural rules differ.
 
 ---
 

@@ -47,7 +47,7 @@ The fundamental principles are in [AGENTS.md](../../AGENTS.md) (reuse-first, sim
   - Icons that are colorful/theme-independent are set once and must **not** be tinted.
   - Monochrome icons are tinted per theme via `get_tinted_icon(...)` inside `apply_theme()`. Do not add tinting to colorful icons.
 - **Internationalization (i18n)**:
-  - Wrap all user-facing GUI and ViewModel strings with `spectroview.i18n` helpers (`tr`, `tr_plural`, `bind_*`, `on_language_changed`), preserve canonical `Qt.UserRole` keys on translated `QComboBox` items, and update `spectroview/resources/i18n/fr.json` in the same commit per [.agents/rules/i18n.md](i18n.md).
+  - Wrap all user-facing GUI and ViewModel strings with `spectroview.i18n` helpers (`tr`, `tr_plural`, `bind_*`, `on_language_changed`), preserve canonical `Qt.UserRole` keys on translated `QComboBox` items, and update `spectroview/resources/i18n/{fr,zh,de,ru}.json` in the same commit per [.agents/rules/i18n.md](i18n.md).
 
 ---
 

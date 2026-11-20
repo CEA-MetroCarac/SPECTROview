@@ -14,7 +14,7 @@ Follow this procedure to finalize, validate, and commit a development milestone 
 
 1. Check that all agreed requirements and acceptance criteria have been satisfied.
 2. Confirm that no temporary debug prints, test hardcoded values, or unfinished `TODO` placeholders remain.
-3. Review MVVM boundaries, PySide6 safety rules, and EN/FR i18n coverage ([.agents/rules/i18n.md](../../rules/i18n.md)).
+3. Review MVVM boundaries, PySide6 safety rules, and multilingual i18n coverage ([.agents/rules/i18n.md](../../rules/i18n.md)).
 
 ---
 

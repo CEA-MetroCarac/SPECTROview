@@ -59,7 +59,7 @@ theme-sensitive rendering.
 Never pass `count=` as a keyword arg to `tr_plural()`, always escape literal
 braces (`cm$^{{-1}}$`) in formatted templates, preserve canonical keys in
 `QComboBox` `Qt.UserRole` via `bind_combo_items`/`combo_data_or_text`, and never
-call `QLocale.setDefault(QLocale("fr_FR"))` globally (spinboxes must keep `.`). See
+call `QLocale.setDefault(...)` globally (spinboxes must keep `.`). See
 [i18n.md](i18n.md).
 
 ## matplotlib version is pinned

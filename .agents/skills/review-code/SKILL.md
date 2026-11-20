@@ -40,7 +40,7 @@ Evaluate against project rules:
    - Do tests use headless offscreen mode safely without native handle leaks?
    - Are schema sync tests (`TestModelSchemaSync`) green?
 6. **Internationalization (i18n) Parity** ([.agents/rules/i18n.md](../../rules/i18n.md)):
-   - Do all new/modified GUI and ViewModel user strings use `spectroview.i18n` (`tr`, `tr_plural`, `bind_*`) with matching keys in `spectroview/resources/i18n/fr.json`?
+   - Do all new/modified GUI and ViewModel user strings use `spectroview.i18n` (`tr`, `tr_plural`, `bind_*`) with matching keys across `spectroview/resources/i18n/{fr,zh,de,ru}.json`?
    - Are translated `QComboBox` items backed by canonical `Qt.UserRole` `itemData` (`combo_data_or_text` / `set_combo_by_data_or_text`)?
 7. **Bilingual Documentation Synchronization** ([.agents/rules/documentation.md](../../rules/documentation.md)):
    - Have all affected documentation surfaces (Developer Guide, Public API, User Manual) been updated in **both English (`*.md`) and French (`*.fr.md`)** (plus `nav_translations` in `mkdocs.yml` for new pages)?

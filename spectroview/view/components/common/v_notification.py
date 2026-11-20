@@ -49,6 +49,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.i18n import bind_tooltip
 from spectroview.view.theme import ThemeManager, current_tokens, is_dark_theme_key
 from spectroview.view.theme.icons_svg import svg_pixmap
 
@@ -88,7 +89,10 @@ class NotificationType(str, Enum):
         msg_lower = message.lower()
 
         # Error patterns
-        if any(w in msg_lower for w in ("error", "failed", "failure", "rejected", "invalid", "cannot", "exception")):
+        if any(w in msg_lower for w in (
+            "error", "failed", "failure", "rejected", "invalid", "cannot", "exception",
+            "erreur", "échec", "echou", "rejeté", "invalide", "impossible",
+        )):
             return cls.ERROR
 
         # Negative / warning patterns (must precede success so e.g. "No fit model copied" is a warning)
@@ -98,10 +102,19 @@ class NotificationType(str, Enum):
             or msg_lower.startswith("nothing")
             or msg_lower.startswith("missing")
             or msg_lower.startswith("please ")
+            or msg_lower.startswith("aucun")
+            or msg_lower.startswith("pas de ")
+            or msg_lower.startswith("rien ")
+            or msg_lower.startswith("manquant")
+            or msg_lower.startswith("veuillez ")
+            or msg_lower.startswith("merci de ")
             or any(w in msg_lower for w in (
                 "warning", "skipping", "skip", "no spectrum", "no map", "no data",
                 "no peak", "no baseline", "no model", "no fit", "already",
-                "please wait", "not found", "nothing to", "missing"
+                "please wait", "not found", "nothing to", "missing",
+                "avertissement", "ignoré", "déjà", "introuvable", "veuillez patienter",
+                "aucun spectre", "aucune carte", "aucune donnée", "aucun pic",
+                "aucune ligne de base", "aucun modèle",
             ))
         ):
             return cls.WARNING
@@ -110,7 +123,10 @@ class NotificationType(str, Enum):
         if any(w in msg_lower for w in (
             "saved", "loaded successfully", "refreshed successfully",
             "created", "sent", "validated and saved", "undid", "redid",
-            "copied", "done", "complete", "finished", "success", "successfully"
+            "copied", "done", "complete", "finished", "success", "successfully",
+            "enregistré", "chargé avec succès", "actualisé avec succès",
+            "créé", "envoyé", "validé", "annulé", "rétabli",
+            "copié", "terminé", "succès", "réussi", "remplacé",
         )):
             return cls.SUCCESS
 
@@ -253,6 +269,7 @@ class VNotificationBadge(QFrame):
         self._close_btn.setFixedSize(14, 14)
         self._close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._close_btn.setAutoRaise(True)
+        bind_tooltip(self._close_btn, "Dismiss notification")
         self._close_btn.clicked.connect(self.dismiss)
         layout.addWidget(self._close_btn)
 

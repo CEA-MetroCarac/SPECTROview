@@ -210,7 +210,15 @@ class SpectroviewApplicationAPI:
         def read():
             tabs = self._application.tabWidget
             index = tabs.currentIndex()
-            name = tabs.tabText(index).strip().lower() if index >= 0 else ""
+            current_widget = tabs.currentWidget() if hasattr(tabs, "currentWidget") else None
+            if current_widget is getattr(self._application, "v_spectra_workspace", None):
+                name = "spectra"
+            elif current_widget is getattr(self._application, "v_maps_workspace", None):
+                name = "maps"
+            elif current_widget is getattr(self._application, "v_graphs_workspace", None):
+                name = "graphs"
+            else:
+                name = tabs.tabText(index).strip().lower() if index >= 0 else ""
             return {"name": name, "index": index}
 
         return self._call(read)

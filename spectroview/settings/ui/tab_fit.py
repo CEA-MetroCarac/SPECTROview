@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.i18n import bind_text, bind_title, bind_tooltip, tr
 from spectroview.view.theme import Icons
 
 
@@ -54,10 +55,11 @@ class FitSettingsTabPage(QWidget):
     """The Fit Settings tab: solver convergence parameters, peak bounds, and options."""
 
     KEYWORDS = [
-        "fit", "fitting", "solver", "convergence", "negative", "absorption",
-        "iterations", "tolerance", "xtol", "ftol", "noise", "threshold",
-        "loss", "scale", "f_scale", "bounds", "limits", "fwhm", "shift",
-        "reset", "default", "defaults"
+        "fit", "fitting", "ajustement", "solver", "solveur", "convergence", "negative", "négatif",
+        "absorption", "iterations", "itérations", "tolerance", "tolérance", "xtol", "ftol",
+        "noise", "bruit", "threshold", "seuil", "loss", "perte", "scale", "échelle", "f_scale",
+        "bounds", "bornes", "limits", "limites", "fwhm", "shift", "décalage",
+        "reset", "réinitialiser", "default", "defaults", "défaut",
     ]
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -81,43 +83,48 @@ class FitSettingsTabPage(QWidget):
         # ───── Reset to Defaults Action ─────
         top_bar = QHBoxLayout()
         top_bar.addStretch()
-        self.btn_reset_defaults = QPushButton("Reset all fit settings to default")
+        self.btn_reset_defaults = QPushButton()
+        bind_text(self.btn_reset_defaults, "Reset all fit settings to default")
         self.btn_reset_defaults.setIcon(Icons.refresh())
         self.btn_reset_defaults.setCursor(Qt.PointingHandCursor)
-        self.btn_reset_defaults.setToolTip("Reset all fit parameters and peak limits to default values")
+        bind_tooltip(self.btn_reset_defaults, "Reset all fit parameters and peak limits to default values")
         self.btn_reset_defaults.clicked.connect(self.reset_to_defaults)
         top_bar.addWidget(self.btn_reset_defaults)
         layout.addLayout(top_bar)
 
         # ───── Negative Peak Fitting ─────
-        self.grp_neg = QGroupBox("Peak Polarity")
+        self.grp_neg = QGroupBox()
+        bind_title(self.grp_neg, "Peak Polarity")
         neg_layout = QVBoxLayout(self.grp_neg)
         neg_layout.setContentsMargins(8, 8, 8, 8)
         neg_layout.setSpacing(6)
 
-        self.chk_fit_negative = QCheckBox("Fit Negative Peaks (absorption/dips)")
-        self.chk_fit_negative.setToolTip("Allow peak fitting models to fit inverted/negative peak profiles")
+        self.chk_fit_negative = QCheckBox()
+        bind_text(self.chk_fit_negative, "Fit Negative Peaks (absorption/dips)")
+        bind_tooltip(self.chk_fit_negative, "Allow peak fitting models to fit inverted/negative peak profiles")
         neg_layout.addWidget(self.chk_fit_negative)
         layout.addWidget(self.grp_neg)
 
         # ───── Solver Convergence ─────
-        self.grp_solver = QGroupBox("Fitting Convergence")
+        self.grp_solver = QGroupBox()
+        bind_title(self.grp_solver, "Fitting Convergence")
         solver_layout = QVBoxLayout(self.grp_solver)
         solver_layout.setContentsMargins(8, 8, 8, 8)
         solver_layout.setSpacing(6)
 
         def add_row(lbl_text: str, widget: QWidget, tooltip: str = "", keywords: list[str] | None = None) -> QLabel:
             row = QHBoxLayout()
-            lbl = QLabel(lbl_text)
+            lbl = QLabel()
+            bind_text(lbl, lbl_text)
             lbl.setMinimumWidth(180)
             lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
             if tooltip:
-                lbl.setToolTip(tooltip)
-                widget.setToolTip(tooltip)
+                bind_tooltip(lbl, tooltip)
+                bind_tooltip(widget, tooltip)
             row.addWidget(lbl)
             row.addWidget(widget, 1)
             solver_layout.addLayout(row)
-            terms = [lbl_text.lower(), tooltip.lower()]
+            terms = [lbl_text.lower(), tr(lbl_text).lower(), tooltip.lower(), tr(tooltip).lower()]
             if keywords:
                 terms.extend(keywords)
             self._searchable_rows.append((terms, lbl, self.grp_solver))
@@ -126,54 +133,56 @@ class FitSettingsTabPage(QWidget):
         self.spin_max_iter = QSpinBox()
         self.spin_max_iter.setRange(10, 10000)
         self.spin_max_iter.setSingleStep(50)
-        add_row("Max iterations:", self.spin_max_iter, "Maximum number of Levenberg-Marquardt optimizer iterations", ["max_ite", "iterations"])
+        add_row("Max iterations:", self.spin_max_iter, "Maximum number of Levenberg-Marquardt optimizer iterations", ["max_ite", "iterations", "itérations"])
 
         self.spin_x_tol = QDoubleSpinBox()
         self.spin_x_tol.setRange(1e-10, 1.0)
         self.spin_x_tol.setDecimals(6)
-        add_row("X tolerance (xtol):", self.spin_x_tol, "Relative error desired in the approximate solution", ["xtol", "tolerance"])
+        add_row("X tolerance (xtol):", self.spin_x_tol, "Relative error desired in the approximate solution", ["xtol", "tolerance", "tolérance"])
 
         self.spin_f_tol = QDoubleSpinBox()
         self.spin_f_tol.setRange(1e-10, 1.0)
         self.spin_f_tol.setDecimals(6)
-        add_row("Function tolerance (ftol):", self.spin_f_tol, "Relative error desired in the sum of squares", ["ftol", "tolerance"])
+        add_row("Function tolerance (ftol):", self.spin_f_tol, "Relative error desired in the sum of squares", ["ftol", "tolerance", "tolérance"])
 
         self.spin_coef_noise = QDoubleSpinBox()
         self.spin_coef_noise.setRange(0.0, 10.0)
         self.spin_coef_noise.setSingleStep(0.5)
         self.spin_coef_noise.setDecimals(2)
-        add_row("Noise threshold (× noise):", self.spin_coef_noise, "Residual weight factor relative to baseline noise", ["noise", "threshold", "coef_noise"])
+        add_row("Noise threshold (× noise):", self.spin_coef_noise, "Residual weight factor relative to baseline noise", ["noise", "bruit", "threshold", "seuil", "coef_noise"])
 
         self.combo_loss = QComboBox()
         self.combo_loss.addItems(["linear", "soft_l1", "huber", "cauchy", "arctan"])
-        add_row("Loss function:", self.combo_loss, "Robust loss function used for outlier rejection", ["loss", "robust", "huber", "cauchy"])
+        add_row("Loss function:", self.combo_loss, "Robust loss function used for outlier rejection", ["loss", "perte", "robust", "huber", "cauchy"])
 
         self.spin_f_scale = QDoubleSpinBox()
         self.spin_f_scale.setRange(0.01, 100.0)
         self.spin_f_scale.setSingleStep(0.1)
         self.spin_f_scale.setDecimals(3)
-        add_row("Loss scale (f_scale):", self.spin_f_scale, "Soft margin between inlier and outlier residuals", ["f_scale", "scale"])
+        add_row("Loss scale (f_scale):", self.spin_f_scale, "Soft margin between inlier and outlier residuals", ["f_scale", "scale", "échelle"])
 
         layout.addWidget(self.grp_solver)
 
         # ───── Global Peak Limits ─────
-        self.grp_bounds = QGroupBox("Global Peak Limits")
+        self.grp_bounds = QGroupBox()
+        bind_title(self.grp_bounds, "Global Peak Limits")
         bounds_layout = QVBoxLayout(self.grp_bounds)
         bounds_layout.setContentsMargins(8, 8, 8, 8)
         bounds_layout.setSpacing(6)
 
         def add_bounds_row(lbl_text: str, widget: QWidget, tooltip: str = "", keywords: list[str] | None = None) -> QLabel:
             row = QHBoxLayout()
-            lbl = QLabel(lbl_text)
+            lbl = QLabel()
+            bind_text(lbl, lbl_text)
             lbl.setMinimumWidth(180)
             lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
             if tooltip:
-                lbl.setToolTip(tooltip)
-                widget.setToolTip(tooltip)
+                bind_tooltip(lbl, tooltip)
+                bind_tooltip(widget, tooltip)
             row.addWidget(lbl)
             row.addWidget(widget, 1)
             bounds_layout.addLayout(row)
-            terms = [lbl_text.lower(), tooltip.lower()]
+            terms = [lbl_text.lower(), tr(lbl_text).lower(), tooltip.lower(), tr(tooltip).lower()]
             if keywords:
                 terms.extend(keywords)
             self._searchable_rows.append((terms, lbl, self.grp_bounds))
@@ -183,19 +192,19 @@ class FitSettingsTabPage(QWidget):
         self.spin_maxshift.setRange(0, 100)
         self.spin_maxshift.setSingleStep(5)
         self.spin_maxshift.setDecimals(2)
-        add_bounds_row("Max peak shift:", self.spin_maxshift, "Maximum allowable center position shift during fit", ["shift", "maxshift", "position"])
+        add_bounds_row("Max peak shift:", self.spin_maxshift, "Maximum allowable center position shift during fit", ["shift", "décalage", "maxshift", "position"])
 
         self.spin_minfwhm = QDoubleSpinBox()
         self.spin_minfwhm.setRange(0.01, 500)
         self.spin_minfwhm.setSingleStep(1)
         self.spin_minfwhm.setDecimals(2)
-        add_bounds_row("Min peak FWHM:", self.spin_minfwhm, "Minimum allowable full-width at half-maximum", ["fwhm", "minfwhm", "width"])
+        add_bounds_row("Min peak FWHM:", self.spin_minfwhm, "Minimum allowable full-width at half-maximum", ["fwhm", "minfwhm", "width", "largeur"])
 
         self.spin_maxfwhm = QDoubleSpinBox()
         self.spin_maxfwhm.setRange(1, 1000)
         self.spin_maxfwhm.setSingleStep(20)
         self.spin_maxfwhm.setDecimals(2)
-        add_bounds_row("Max peak FWHM:", self.spin_maxfwhm, "Maximum allowable full-width at half-maximum", ["fwhm", "maxfwhm", "width"])
+        add_bounds_row("Max peak FWHM:", self.spin_maxfwhm, "Maximum allowable full-width at half-maximum", ["fwhm", "maxfwhm", "width", "largeur"])
 
         layout.addWidget(self.grp_bounds)
 
@@ -257,11 +266,11 @@ class FitSettingsTabPage(QWidget):
 
         first_match: Optional[QWidget] = None
 
-        if "reset" in q or "default" in q:
+        if any(k in q for k in ("reset", "default", "réinitialiser", "défaut")):
             self.btn_reset_defaults.setStyleSheet("border: 1.5px solid #3B82F6; font-weight: bold;")
             first_match = self.btn_reset_defaults
 
-        if "negative" in q or "polarity" in q or "absorption" in q or "dip" in q:
+        if any(k in q for k in ("negative", "négatif", "polarity", "polarité", "absorption", "dip")):
             self.grp_neg.setStyleSheet(_highlight_group_style())
             if first_match is None:
                 first_match = self.grp_neg

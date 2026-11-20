@@ -3,6 +3,7 @@
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
+from spectroview.i18n import bind_text, bind_tooltip
 from spectroview.view.theme import Icons
 
 
@@ -163,7 +164,8 @@ class VUpdateBanner(QWidget):
         icon_label.setPixmap(Icons.pixmap("bell", size=18, color="#64B5F6"))
         layout.addWidget(icon_label)
 
-        text_label = QLabel("A new version of SPECTROview is available:")
+        text_label = QLabel()
+        bind_text(text_label, "A new version of SPECTROview is available:")
         text_label.setObjectName("banner_text")
         layout.addWidget(text_label)
 
@@ -178,36 +180,43 @@ class VUpdateBanner(QWidget):
         layout.addWidget(version_label)
         layout.addStretch(1)
 
-        self.btn_update = QPushButton(self._action_label)
+        self.btn_update = QPushButton()
+        bind_text(self.btn_update, self._action_label)
         self.btn_update.setObjectName("btn_update")
         self.btn_update.setIcon(Icons.download(color="#FFFFFF"))
         self.btn_update.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_update.setToolTip(
-            self._action_tooltip or "Download, install, and apply this release."
-        )
         self.btn_update.clicked.connect(self._request_update)
         self.btn_update.setEnabled(bool(self._wheel_url and self._on_update))
         if not self.btn_update.isEnabled():
-            self.btn_update.setToolTip(
-                self._action_tooltip or "No automatic update asset is attached to this release."
-            )
+            if self._action_tooltip:
+                self.btn_update.setToolTip(self._action_tooltip)
+            else:
+                bind_tooltip(self.btn_update, "No automatic update asset is attached to this release.")
+        else:
+            if self._action_tooltip:
+                self.btn_update.setToolTip(self._action_tooltip)
+            else:
+                bind_tooltip(self.btn_update, "Download, install, and apply this release.")
         layout.addWidget(self.btn_update)
 
-        self.btn_download = QPushButton("Show changelog")
+        self.btn_download = QPushButton()
+        bind_text(self.btn_download, "Show changelog")
         self.btn_download.setObjectName("btn_download")
         self.btn_download.setIcon(Icons.search(color="#E3F2FD"))
         self.btn_download.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_download.clicked.connect(self._open_release_page)
         layout.addWidget(self.btn_download)
 
-        self.btn_dismiss = QPushButton("Update later")
+        self.btn_dismiss = QPushButton()
+        bind_text(self.btn_dismiss, "Update later")
         self.btn_dismiss.setObjectName("btn_dismiss")
         self.btn_dismiss.setIcon(Icons.history(color="#90A4AE"))
         self.btn_dismiss.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_dismiss.clicked.connect(self._dismiss)
         layout.addWidget(self.btn_dismiss)
 
-        self.btn_skip = QPushButton("Skip this version")
+        self.btn_skip = QPushButton()
+        bind_text(self.btn_skip, "Skip this version")
         self.btn_skip.setObjectName("btn_skip")
         self.btn_skip.setIcon(Icons.close(color="#90A4AE"))
         self.btn_skip.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -231,12 +240,15 @@ class VUpdateBanner(QWidget):
         """Show automatic-update download progress and prevent duplicate requests."""
         self.btn_update.setEnabled(False)
         self.btn_update.setIcon(Icons.download(color="#FFFFFF"))
-        self.btn_update.setText("Downloading…" if percent < 0 else f"Downloading… {percent}%")
+        if percent < 0:
+            bind_text(self.btn_update, "Downloading…")
+        else:
+            bind_text(self.btn_update, "Downloading… {percent}%", percent=percent)
 
     def set_update_error(self) -> None:
         """Restore the update control after a recoverable download failure."""
         self.btn_update.setIcon(Icons.refresh(color="#FFFFFF"))
-        self.btn_update.setText("Retry update")
+        bind_text(self.btn_update, "Retry update")
         self.btn_update.setEnabled(bool(self._wheel_url and self._on_update))
 
     def _request_update(self) -> None:

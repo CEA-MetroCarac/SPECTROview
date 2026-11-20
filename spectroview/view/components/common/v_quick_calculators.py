@@ -1,52 +1,76 @@
 import math
 import os
+
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap, QPainter
+from PySide6.QtGui import QPainter, QPixmap
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QDoubleSpinBox, 
-    QGroupBox, QLineEdit, QLabel, QSizePolicy
+    QDialog,
+    QDoubleSpinBox,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QSizePolicy,
+    QVBoxLayout,
 )
+
 from spectroview import ICON_DIR
-from spectroview.model.analysis.m_quick_calculators import calc_spot_size, calc_penetration_depth, convert_absolute_units, convert_relative_units
+from spectroview.i18n import (
+    bind_form_row,
+    bind_text,
+    bind_title,
+    bind_tooltip,
+    bind_window_title,
+    tr,
+)
+from spectroview.model.analysis.m_quick_calculators import (
+    calc_penetration_depth,
+    calc_spot_size,
+    convert_absolute_units,
+    convert_relative_units,
+)
 
 
 class MQuickCalc(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Quick Calculators")
+        bind_window_title(self, "Quick Calculators")
         self.resize(850, 650)
-        
+
         dialog_layout = QVBoxLayout(self)
-        
+
         # Instantiate the separated calculators
         self.spot_size_calc = SpotSizeCalculator(self)
         self.penetration_depth_calc = PenetrationDepthCalculator(self)
         self.converter_calc = UnitConverterCalculator(self)
-        
+
         bottom_layout = QHBoxLayout()
         bottom_layout.addWidget(self.penetration_depth_calc)
         bottom_layout.addWidget(self.converter_calc)
-        
+
         dialog_layout.addWidget(self.spot_size_calc)
         dialog_layout.addLayout(bottom_layout)
 
 
 class SpotSizeCalculator(QGroupBox):
     def __init__(self, parent=None):
-        super().__init__("1. Calculation of laser spot size, DOF and power density", parent)
+        super().__init__(parent)
+        bind_title(self, "1. Calculation of laser spot size, DOF and power density")
         self._create_ui()
         self._connect_signals()
         self._update_calculations()
 
     def _create_ui(self):
         frame_layout = QVBoxLayout(self)
-        
+
         main_layout = QHBoxLayout()
         left_layout = QVBoxLayout()
 
         # Inputs
-        group_inputs = QGroupBox("Inputs")
-        group_inputs.setFixedWidth(260)
+        group_inputs = QGroupBox()
+        bind_title(group_inputs, "Inputs")
+        group_inputs.setFixedWidth(280)
         form_inputs = QFormLayout(group_inputs)
 
         self.spin_wave = QDoubleSpinBox()
@@ -79,28 +103,29 @@ class SpotSizeCalculator(QGroupBox):
         self.spin_power.setValue(1.00)
         self.spin_power.setSuffix(" mW")
 
-        self.spin_wave.setToolTip("Laser Wavelength (λ)")
-        self.spin_na.setToolTip("Objective Numerical Aperture (NA) = n × sin(θ)")
-        self.spin_wd.setToolTip("Working Distance (WD)")
-        self.spin_index.setToolTip("Refractive Index (n)")
-        self.spin_power.setToolTip("Laser Power")
+        bind_tooltip(self.spin_wave, "Laser Wavelength (λ)")
+        bind_tooltip(self.spin_na, "Objective Numerical Aperture (NA) = n × sin(θ)")
+        bind_tooltip(self.spin_wd, "Working Distance (WD)")
+        bind_tooltip(self.spin_index, "Refractive Index (n)")
+        bind_tooltip(self.spin_power, "Laser Power")
 
-        form_inputs.addRow("Laser Wavelength:", self.spin_wave)
-        form_inputs.addRow("Objective NA:", self.spin_na)
-        form_inputs.addRow("Working Distance (WD):", self.spin_wd)
-        form_inputs.addRow("Refractive Index:", self.spin_index)
-        form_inputs.addRow("Laser Power:", self.spin_power)
+        bind_form_row(form_inputs, "Laser Wavelength:", self.spin_wave)
+        bind_form_row(form_inputs, "Objective NA:", self.spin_na)
+        bind_form_row(form_inputs, "Working Distance (WD):", self.spin_wd)
+        bind_form_row(form_inputs, "Refractive Index:", self.spin_index)
+        bind_form_row(form_inputs, "Laser Power:", self.spin_power)
 
         left_layout.addWidget(group_inputs)
 
         # Outputs
-        group_outputs = QGroupBox("Outputs")
-        group_outputs.setFixedWidth(260)
+        group_outputs = QGroupBox()
+        bind_title(group_outputs, "Outputs")
+        group_outputs.setFixedWidth(280)
         form_outputs = QFormLayout(group_outputs)
 
         self.out_spot = QLineEdit()
         self.out_spot.setReadOnly(True)
-        
+
         self.out_depth = QLineEdit()
         self.out_depth.setReadOnly(True)
 
@@ -119,25 +144,27 @@ class SpotSizeCalculator(QGroupBox):
         self.out_pd_w_m2 = QLineEdit()
         self.out_pd_w_m2.setReadOnly(True)
 
-        self.out_spot.setToolTip("Diffraction-Limited Spot Size = 1.22 × λ / NA")
-        self.out_depth.setToolTip("Depth of Focus (DOF) = 4 × n × λ / NA²")
-        self.out_angle.setToolTip("Angle of View (2θ) = 2 × arcsin(NA)")
-        self.out_lens_dia.setToolTip("Lens Diameter = 2 × WD × tan(arcsin(NA))")
-        self.out_pd_kw_cm2.setToolTip("Power Density = Power / Area")
-        self.out_pd_mw_um2.setToolTip("Power Density = Power / Area")
-        self.out_pd_w_m2.setToolTip("Power Density = Power / Area")
+        bind_tooltip(self.out_spot, "Diffraction-Limited Spot Size = 1.22 × λ / NA")
+        bind_tooltip(self.out_depth, "Depth of Focus (DOF) = 4 × n × λ / NA²")
+        bind_tooltip(self.out_angle, "Angle of View (2θ) = 2 × arcsin(NA)")
+        bind_tooltip(self.out_lens_dia, "Lens Diameter = 2 × WD × tan(arcsin(NA))")
+        bind_tooltip(self.out_pd_kw_cm2, "Power Density = Power / Area")
+        bind_tooltip(self.out_pd_mw_um2, "Power Density = Power / Area")
+        bind_tooltip(self.out_pd_w_m2, "Power Density = Power / Area")
 
-        form_outputs.addRow("Focused Spot Size (μm):", self.out_spot)
-        form_outputs.addRow("Depth of Focus (μm):", self.out_depth)
-        form_outputs.addRow("Angle of View (°):", self.out_angle)
-        form_outputs.addRow("Lens Diameter (mm):", self.out_lens_dia)
-        form_outputs.addRow("Power Density (kW/cm²):", self.out_pd_kw_cm2)
-        form_outputs.addRow("Power Density (mW/μm²):", self.out_pd_mw_um2)
-        form_outputs.addRow("Power Density (W/m²):", self.out_pd_w_m2)
+        bind_form_row(form_outputs, "Focused Spot Size (μm):", self.out_spot)
+        bind_form_row(form_outputs, "Depth of Focus (μm):", self.out_depth)
+        bind_form_row(form_outputs, "Angle of View (°):", self.out_angle)
+        bind_form_row(form_outputs, "Lens Diameter (mm):", self.out_lens_dia)
+        bind_form_row(form_outputs, "Power Density (kW/cm²):", self.out_pd_kw_cm2)
+        bind_form_row(form_outputs, "Power Density (mW/μm²):", self.out_pd_mw_um2)
+        bind_form_row(form_outputs, "Power Density (W/m²):", self.out_pd_w_m2)
 
-        for widget in [self.spin_wave, self.spin_na, self.spin_wd, self.spin_index, self.spin_power,
-                       self.out_spot, self.out_depth, self.out_angle, self.out_lens_dia, 
-                       self.out_pd_kw_cm2, self.out_pd_mw_um2, self.out_pd_w_m2]:
+        for widget in [
+            self.spin_wave, self.spin_na, self.spin_wd, self.spin_index, self.spin_power,
+            self.out_spot, self.out_depth, self.out_angle, self.out_lens_dia,
+            self.out_pd_kw_cm2, self.out_pd_mw_um2, self.out_pd_w_m2,
+        ]:
             widget.setFixedWidth(100)
 
         left_layout.addWidget(group_outputs)
@@ -172,8 +199,8 @@ class SpotSizeCalculator(QGroupBox):
         self.out_depth.setText(f"{res['dof_um']:.4f}")
 
         if math.isnan(res['angle_deg']):
-            self.out_angle.setText("N/A")
-            self.out_lens_dia.setText("N/A")
+            self.out_angle.setText(tr("N/A"))
+            self.out_lens_dia.setText(tr("N/A"))
         else:
             self.out_angle.setText(f"{res['angle_deg']:.2f}")
             self.out_lens_dia.setText(f"{res['lens_diameter_mm']:.4f}")
@@ -182,59 +209,65 @@ class SpotSizeCalculator(QGroupBox):
         self.out_pd_kw_cm2.setText(f"{res['power_density_kw_cm2']:.4f}")
         self.out_pd_w_m2.setText(f"{res['power_density_w_m2']:.2f}")
 
+
 class PenetrationDepthCalculator(QGroupBox):
     def __init__(self, parent=None):
-        super().__init__("2. Calculation of penetration depth", parent)
+        super().__init__(parent)
+        bind_title(self, "2. Calculation of penetration depth")
         self._create_ui()
         self._connect_signals()
         self._update_calculations()
 
     def _create_ui(self):
         depth_layout = QVBoxLayout(self)
-        
+
         depth_main_layout = QHBoxLayout()
         depth_form = QFormLayout()
-        
+
         self.spin_wave = QDoubleSpinBox()
         self.spin_wave.setRange(0.1, 10000)
         self.spin_wave.setDecimals(1)
         self.spin_wave.setValue(363.0)
         self.spin_wave.setSuffix(" nm")
-        self.spin_wave.setToolTip("Laser Wavelength (λ)")
+        bind_tooltip(self.spin_wave, "Laser Wavelength (λ)")
 
         self.spin_k = QDoubleSpinBox()
         self.spin_k.setRange(0.0, 100.0)
         self.spin_k.setDecimals(5)
         self.spin_k.setSingleStep(0.01)
         self.spin_k.setValue(2.842)
-        self.spin_k.setToolTip("Extinction Coefficient (k)")
-        
-        depth_form.addRow("Laser Wavelength (λ):", self.spin_wave)
-        depth_form.addRow("Extinction Coefficient (k):", self.spin_k)
-        
+        bind_tooltip(self.spin_k, "Extinction Coefficient (k)")
+
+        bind_form_row(depth_form, "Laser Wavelength (λ):", self.spin_wave)
+        bind_form_row(depth_form, "Extinction Coefficient (k):", self.spin_k)
+
         self.out_alpha = QLineEdit()
         self.out_alpha.setReadOnly(True)
-        self.out_alpha.setToolTip("Absorption Coefficient α = 4πk / (λ × 10⁻⁷)")
-        
+        bind_tooltip(self.out_alpha, "Absorption Coefficient α = 4πk / (λ × 10⁻⁷)")
+
         self.out_penetration_depth = QLineEdit()
         self.out_penetration_depth.setReadOnly(True)
-        self.out_penetration_depth.setToolTip("Penetration Depth d = λ / (4πk)")
-        
-        depth_form.addRow("Absorption Coeff α (cm⁻¹):", self.out_alpha)
-        depth_form.addRow("Penetration Depth d (nm):", self.out_penetration_depth)
-        
+        bind_tooltip(self.out_penetration_depth, "Penetration Depth d = λ / (4πk)")
+
+        bind_form_row(depth_form, "Absorption Coeff α (cm⁻¹):", self.out_alpha)
+        bind_form_row(depth_form, "Penetration Depth d (nm):", self.out_penetration_depth)
+
         for widget in [self.spin_wave, self.spin_k, self.out_alpha, self.out_penetration_depth]:
             widget.setFixedWidth(100)
-            
-        lbl_link = QLabel('<a href="https://refractiveindex.info/?shelf=main&book=Si&page=Franta-300K">Find n and k on refractiveindex.info</a>')
+
+        lbl_link = QLabel()
+        bind_text(
+            lbl_link,
+            '<a href="https://refractiveindex.info/?shelf=main&book=Si&page=Franta-300K">Find n and k on refractiveindex.info</a>',
+        )
         lbl_link.setOpenExternalLinks(True)
         depth_form.addRow(lbl_link)
-        
+
         depth_main_layout.addLayout(depth_form)
-        
+
         self.lbl_eq_image = ResizableImageLabel(os.path.join(ICON_DIR, "penetration_eq.png"))
         depth_main_layout.addWidget(self.lbl_eq_image)
-        
+
         depth_layout.addLayout(depth_main_layout)
 
     def _connect_signals(self):
@@ -244,102 +277,107 @@ class PenetrationDepthCalculator(QGroupBox):
     def _update_calculations(self):
         wave = self.spin_wave.value()
         k_val = self.spin_k.value()
-        
+
         res = calc_penetration_depth(wave, k_val)
-        
+
         if k_val > 0:
             self.out_alpha.setText(f"{res['absorption_coeff_cm1']:.2f}")
             self.out_penetration_depth.setText(f"{res['penetration_depth_nm']:.2f}")
         else:
             self.out_alpha.setText("0.00")
-            self.out_penetration_depth.setText("Infinite")
+            self.out_penetration_depth.setText(tr("Infinite"))
+
 
 class UnitConverterCalculator(QGroupBox):
     def __init__(self, parent=None):
-        super().__init__("3. Unit Converter", parent)
+        super().__init__(parent)
+        bind_title(self, "3. Unit Converter")
         self._create_ui()
         self._connect_signals()
 
     def _create_ui(self):
         main_vbox = QVBoxLayout(self)
-        
+
         # Absolute Conversion
         form_abs = QFormLayout()
-        
+
         self.spin_wave = QDoubleSpinBox()
         self.spin_wave.setRange(0.1, 100000)
         self.spin_wave.setDecimals(2)
         self.spin_wave.setValue(532.0)
         self.spin_wave.setSuffix(" nm")
-        self.spin_wave.setToolTip("Wavelength (nm) = 1239.84193 / E(eV) = 10⁷ / Wavenumber(cm⁻¹)")
-        
+        bind_tooltip(self.spin_wave, "Wavelength (nm) = 1239.84193 / E(eV) = 10⁷ / Wavenumber(cm⁻¹)")
+
         self.spin_energy = QDoubleSpinBox()
         self.spin_energy.setRange(0.0001, 100000)
         self.spin_energy.setDecimals(4)
         self.spin_energy.setValue(1239.84193 / 532.0)
         self.spin_energy.setSuffix(" eV")
-        self.spin_energy.setToolTip("Energy (eV) = 1239.84193 / λ(nm)")
-        
+        bind_tooltip(self.spin_energy, "Energy (eV) = 1239.84193 / λ(nm)")
+
         self.spin_wavenumber = QDoubleSpinBox()
         self.spin_wavenumber.setRange(0.1, 1000000)
         self.spin_wavenumber.setDecimals(2)
         self.spin_wavenumber.setValue(1e7 / 532.0)
         self.spin_wavenumber.setSuffix(" cm⁻¹")
-        self.spin_wavenumber.setToolTip("Wavenumber (cm⁻¹) = 10⁷ / λ(nm)")
-        
-        form_abs.addRow("Absolute Wavelength:", self.spin_wave)
-        form_abs.addRow("Energy:", self.spin_energy)
-        form_abs.addRow("Absolute Wavenumber:", self.spin_wavenumber)
-        
+        bind_tooltip(self.spin_wavenumber, "Wavenumber (cm⁻¹) = 10⁷ / λ(nm)")
+
+        bind_form_row(form_abs, "Absolute Wavelength:", self.spin_wave)
+        bind_form_row(form_abs, "Energy:", self.spin_energy)
+        bind_form_row(form_abs, "Absolute Wavenumber:", self.spin_wavenumber)
+
         # Relative Conversion (Raman Shift)
         form_rel = QFormLayout()
-        
+
         self.spin_laser_wave = QDoubleSpinBox()
         self.spin_laser_wave.setRange(0.1, 100000)
         self.spin_laser_wave.setDecimals(2)
         self.spin_laser_wave.setValue(532.0)
         self.spin_laser_wave.setSuffix(" nm")
-        self.spin_laser_wave.setToolTip("Laser Wavelength λ₀ (nm)")
-        
+        bind_tooltip(self.spin_laser_wave, "Laser Wavelength λ₀ (nm)")
+
         self.spin_shift = QDoubleSpinBox()
         self.spin_shift.setRange(-10000, 10000)
         self.spin_shift.setDecimals(2)
         self.spin_shift.setValue(0.0)
         self.spin_shift.setSuffix(" cm⁻¹")
-        self.spin_shift.setToolTip("Raman Shift Δw (cm⁻¹) = 10⁷ / λ₀(nm) - 10⁷ / λ(nm)")
-        
+        bind_tooltip(self.spin_shift, "Raman Shift Δw (cm⁻¹) = 10⁷ / λ₀(nm) - 10⁷ / λ(nm)")
+
         self.spin_scattered_wave = QDoubleSpinBox()
         self.spin_scattered_wave.setRange(0.1, 100000)
         self.spin_scattered_wave.setDecimals(2)
         self.spin_scattered_wave.setValue(532.0)
         self.spin_scattered_wave.setSuffix(" nm")
-        self.spin_scattered_wave.setToolTip("Scattered Wavelength λ (nm) = 10⁷ / (10⁷ / λ₀(nm) - Δw(cm⁻¹))")
-        
-        form_rel.addRow("Laser Wavelength (λ₀):", self.spin_laser_wave)
-        form_rel.addRow("Raman Shift (Δw):", self.spin_shift)
-        form_rel.addRow("Scattered Wavelength (λ):", self.spin_scattered_wave)
-        
-        for w in [self.spin_wave, self.spin_energy, self.spin_wavenumber, 
-                  self.spin_laser_wave, self.spin_shift, self.spin_scattered_wave]:
+        bind_tooltip(self.spin_scattered_wave, "Scattered Wavelength λ (nm) = 10⁷ / (10⁷ / λ₀(nm) - Δw(cm⁻¹))")
+
+        bind_form_row(form_rel, "Laser Wavelength (λ₀):", self.spin_laser_wave)
+        bind_form_row(form_rel, "Raman Shift (Δw):", self.spin_shift)
+        bind_form_row(form_rel, "Scattered Wavelength (λ):", self.spin_scattered_wave)
+
+        for w in [
+            self.spin_wave, self.spin_energy, self.spin_wavenumber,
+            self.spin_laser_wave, self.spin_shift, self.spin_scattered_wave,
+        ]:
             w.setFixedWidth(100)
-            
+
         main_vbox.addLayout(form_abs)
         main_vbox.addSpacing(10)
         main_vbox.addLayout(form_rel)
-        
+
         main_vbox.addStretch()
 
     def _connect_signals(self):
         self.spin_wave.valueChanged.connect(self._on_wave_changed)
         self.spin_energy.valueChanged.connect(self._on_energy_changed)
         self.spin_wavenumber.valueChanged.connect(self._on_wavenumber_changed)
-        
+
         self.spin_laser_wave.valueChanged.connect(self._on_relative_changed)
         self.spin_shift.valueChanged.connect(self._on_shift_changed)
         self.spin_scattered_wave.valueChanged.connect(self._on_scattered_changed)
 
     def _on_wave_changed(self, val):
-        if val <= 0: return
+        if val <= 0:
+            return
         self.spin_energy.blockSignals(True)
         self.spin_wavenumber.blockSignals(True)
         res = convert_absolute_units(val, 'nm')
@@ -347,9 +385,10 @@ class UnitConverterCalculator(QGroupBox):
         self.spin_wavenumber.setValue(res['wavenumber_cm1'])
         self.spin_energy.blockSignals(False)
         self.spin_wavenumber.blockSignals(False)
-        
+
     def _on_energy_changed(self, val):
-        if val <= 0: return
+        if val <= 0:
+            return
         self.spin_wave.blockSignals(True)
         self.spin_wavenumber.blockSignals(True)
         res = convert_absolute_units(val, 'eV')
@@ -357,9 +396,10 @@ class UnitConverterCalculator(QGroupBox):
         self.spin_wavenumber.setValue(res['wavenumber_cm1'])
         self.spin_wave.blockSignals(False)
         self.spin_wavenumber.blockSignals(False)
-        
+
     def _on_wavenumber_changed(self, val):
-        if val <= 0: return
+        if val <= 0:
+            return
         self.spin_wave.blockSignals(True)
         self.spin_energy.blockSignals(True)
         res = convert_absolute_units(val, 'cm-1')
@@ -367,28 +407,29 @@ class UnitConverterCalculator(QGroupBox):
         self.spin_energy.setValue(res['energy_ev'])
         self.spin_wave.blockSignals(False)
         self.spin_energy.blockSignals(False)
-        
+
     def _on_relative_changed(self):
         self._on_shift_changed(self.spin_shift.value())
-        
+
     def _on_shift_changed(self, shift):
         laser = self.spin_laser_wave.value()
-        if laser <= 0: return
-        
+        if laser <= 0:
+            return
+
         self.spin_scattered_wave.blockSignals(True)
         res = convert_relative_units(laser_wavelength_nm=laser, shift_cm1=shift)
         self.spin_scattered_wave.setValue(res['scattered_wavelength_nm'])
         self.spin_scattered_wave.blockSignals(False)
-        
+
     def _on_scattered_changed(self, scattered):
         laser = self.spin_laser_wave.value()
-        if laser <= 0 or scattered <= 0: return
-        
+        if laser <= 0 or scattered <= 0:
+            return
+
         self.spin_shift.blockSignals(True)
         res = convert_relative_units(laser_wavelength_nm=laser, scattered_wavelength_nm=scattered)
         self.spin_shift.setValue(res['shift_cm1'])
         self.spin_shift.blockSignals(False)
-
 
 
 class ResizableImageLabel(QLabel):

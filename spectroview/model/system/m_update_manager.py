@@ -45,6 +45,7 @@ from urllib.request import Request, urlopen
 from PySide6.QtCore import QThread, Signal
 
 from spectroview import VERSION as _CURRENT_VERSION
+from spectroview.i18n import tr
 from spectroview.model.system.m_installation import (
     InstallType,
     InstallationInfo,
@@ -555,7 +556,7 @@ class PythonUpdater(BaseUpdater):
             success=True,
             restart_required=True,
             artifact_path=str(downloaded_path),
-            message="Wheel downloaded and verified. SPECTROview will close to complete the upgrade.",
+            message=tr("Wheel downloaded and verified. SPECTROview will close to complete the upgrade."),
         )
 
 
@@ -704,9 +705,10 @@ class WindowsVelopackUpdater(BaseUpdater):
                 success=True,
                 requires_manual_action=True,
                 artifact_path=str(downloaded_path),
-                instructions=(
-                    f"The verified Windows installer was downloaded to:\n{downloaded_path}\n\n"
-                    "Run Setup.exe to update SPECTROview. Your settings and workspace folders will be preserved."
+                instructions=tr(
+                    "The verified Windows installer was downloaded to:\n{path}\n\n"
+                    "Run Setup.exe to update SPECTROview. Your settings and workspace folders will be preserved.",
+                    path=downloaded_path,
                 ),
             )
         return InstallResult(
@@ -714,7 +716,7 @@ class WindowsVelopackUpdater(BaseUpdater):
             success=True,
             restart_required=True,
             artifact_path=str(downloaded_path),
-            message="Update staged cleanly via Velopack. SPECTROview will restart to finish applying it.",
+            message=tr("Update staged cleanly via Velopack. SPECTROview will restart to finish applying it."),
         )
 
     def restart_application(self) -> bool:
@@ -775,11 +777,12 @@ class WindowsPortableUpdater(BaseUpdater):
             requires_manual_action=True,
             artifact_path=str(downloaded_path),
             can_extract_zip=True,
-            instructions=(
-                f"Verified Portable ZIP saved to:\n{downloaded_path}\n\n"
+            instructions=tr(
+                "Verified Portable ZIP saved to:\n{path}\n\n"
                 "Portable builds do not overwrite a running directory automatically.\n"
                 "You can extract it into a fresh folder right now or open it in Explorer.\n"
-                "Your preferences and Working Folder settings remain preserved."
+                "Your preferences and Working Folder settings remain preserved.",
+                path=downloaded_path,
             ),
         )
 
@@ -825,13 +828,14 @@ class MacOSUpdater(BaseUpdater):
             success=True,
             requires_manual_action=True,
             artifact_path=str(downloaded_path),
-            instructions=(
-                f"Verified macOS disk image saved to:\n{downloaded_path}\n\n"
+            instructions=tr(
+                "Verified macOS disk image saved to:\n{path}\n\n"
                 "To update SPECTROview:\n"
                 "1. Open the downloaded .dmg and drag SPECTROview.app into Applications (replace existing).\n"
                 "2. Unsigned build note: on first launch, Control-click SPECTROview.app -> Open "
                 "(or allow it in System Settings -> Privacy & Security).\n\n"
-                "Your preferences and Working Folder are preserved automatically."
+                "Your preferences and Working Folder are preserved automatically.",
+                path=downloaded_path,
             ),
         )
 
@@ -913,7 +917,7 @@ class LinuxAppImageUpdater(BaseUpdater):
                 success=True,
                 restart_required=True,
                 artifact_path=str(downloaded_path),
-                message="Verified AppImage ready. SPECTROview will replace the AppImage on exit and relaunch.",
+                message=tr("Verified AppImage ready. SPECTROview will replace the AppImage on exit and relaunch."),
             )
 
         return InstallResult(
@@ -922,9 +926,10 @@ class LinuxAppImageUpdater(BaseUpdater):
             requires_manual_action=True,
             artifact_path=str(downloaded_path),
             command=f'chmod +x "{downloaded_path}" && "{downloaded_path}"',
-            instructions=(
-                f"Verified AppImage saved and marked executable at:\n{downloaded_path}\n\n"
-                "The current AppImage location is read-only, so replace or launch the new AppImage directly."
+            instructions=tr(
+                "Verified AppImage saved and marked executable at:\n{path}\n\n"
+                "The current AppImage location is read-only, so replace or launch the new AppImage directly.",
+                path=downloaded_path,
             ),
         )
 
@@ -978,11 +983,13 @@ class LinuxDebUpdater(BaseUpdater):
             requires_manual_action=True,
             artifact_path=str(downloaded_path),
             command=cmd,
-            instructions=(
-                f"Verified Debian package saved to:\n{downloaded_path}\n\n"
+            instructions=tr(
+                "Verified Debian package saved to:\n{path}\n\n"
                 "Installing system-wide .deb packages requires administrator privileges.\n"
-                f"Run in a terminal:\n{cmd}\n\n"
-                "Your preferences (~/.config/CEA-Leti/) and Working Folder are preserved."
+                "Run in a terminal:\n{cmd}\n\n"
+                "Your preferences (~/.config/CEA-Leti/) and Working Folder are preserved.",
+                path=downloaded_path,
+                cmd=cmd,
             ),
         )
 
@@ -998,9 +1005,10 @@ class UnsupportedUpdater(BaseUpdater):
             status=UpdateStatus.UNSUPPORTED,
             success=False,
             requires_manual_action=True,
-            instructions=(
-                f"SPECTROview is running as {self.info.label}. "
-                "Automatic in-app installation is disabled to avoid modifying your development environment."
+            instructions=tr(
+                "SPECTROview is running as {label}. "
+                "Automatic in-app installation is disabled to avoid modifying your development environment.",
+                label=self.info.label,
             ),
         )
 
@@ -1095,14 +1103,14 @@ class UpdateManager:
         asset = self._backend.select_asset(release)
         can_auto = self._backend.can_auto_install(release)
 
-        action_label = self._backend.action_label
-        action_tooltip = self._backend.action_tooltip
-        message = "" if asset is not None else "No matching binary asset attached; open GitHub Releases."
+        action_label = tr(self._backend.action_label)
+        action_tooltip = tr(self._backend.action_tooltip)
+        message = "" if asset is not None else tr("No matching binary asset attached; open GitHub Releases.")
         if isinstance(self._backend, WindowsVelopackUpdater) and not can_auto and asset is not None:
-            action_label = "Download Installer"
-            action_tooltip = "Download verified Windows Setup.exe installer."
+            action_label = tr("Download Installer")
+            action_tooltip = tr("Download verified Windows Setup.exe installer.")
         elif isinstance(self._backend, MacOSUpdater) and asset is None and self._info.architecture != "arm64":
-            message = "Intel macOS builds are no longer supported (Apple Silicon arm64 only); open GitHub Releases."
+            message = tr("Intel macOS builds are no longer supported (Apple Silicon arm64 only); open GitHub Releases.")
             action_tooltip = message
 
         status = UpdateStatus.UPDATE_AVAILABLE if newer else UpdateStatus.UP_TO_DATE

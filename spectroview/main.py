@@ -51,6 +51,14 @@ def _configure_matplotlib_qt_backend() -> None:
 
 _configure_matplotlib_qt_backend()
 
+from spectroview.i18n import (
+    TranslationManager,
+    bind_tab_text,
+    bind_window_title,
+    combo_data_or_text,
+    get_language,
+    tr,
+)
 from spectroview.model.io.m_io import detect_file_type
 from spectroview.settings import MSettings, VMSettings, VSettingsDialog
 from spectroview.model.system.m_update_manager import (
@@ -87,6 +95,9 @@ class Main(QMainWindow):
         self.settings = MSettings()
         # Restore configuration from working folder if config.json exists
         self.settings.import_config()
+        self.i18n_mgr = TranslationManager.instance()
+        self.i18n_mgr.bind_settings(self.settings)
+        self.i18n_mgr.set_language(self.settings.get_language(), persist=False)
         self.theme_mgr = ThemeManager(self.settings)
 
         # Apply global application style BEFORE creating widgets to avoid expensive unpolish/polish
@@ -117,8 +128,9 @@ class Main(QMainWindow):
 
 
     def init_ui(self):
-        self.setWindowTitle(
-            "SPECTROview (Tool for Spectroscopic Data Processing and Visualization)"
+        bind_window_title(
+            self,
+            "SPECTROview (Tool for Spectroscopic Data Processing and Visualization)",
         )
         self.setGeometry(100, 100, 1400, 930)
         self.setWindowIcon(get_app_icon())
@@ -148,9 +160,12 @@ class Main(QMainWindow):
         self.v_graphs_workspace = VWorkspaceGraphs()
         self.v_maps_workspace = VWorkspaceMaps()
 
-        self.tabWidget.addTab(self.v_spectra_workspace, "Spectra")
-        self.tabWidget.addTab(self.v_maps_workspace, "Maps")
-        self.tabWidget.addTab(self.v_graphs_workspace, "Graphs")
+        self.tabWidget.addTab(self.v_spectra_workspace, tr("Spectra"))
+        self.tabWidget.addTab(self.v_maps_workspace, tr("Maps"))
+        self.tabWidget.addTab(self.v_graphs_workspace, tr("Graphs"))
+        bind_tab_text(self.tabWidget, self.v_spectra_workspace, "Spectra")
+        bind_tab_text(self.tabWidget, self.v_maps_workspace, "Maps")
+        bind_tab_text(self.tabWidget, self.v_graphs_workspace, "Graphs")
         
         self.workspace_splitter.addWidget(self.tabWidget)
 
@@ -195,7 +210,7 @@ class Main(QMainWindow):
         
         # Synchronize plot style between SpectraViewer and MapViewer
         def update_map_viewers():
-            style_name = self.v_maps_workspace.v_spectra_viewer.cbb_theme.currentText()
+            style_name = combo_data_or_text(self.v_maps_workspace.v_spectra_viewer.cbb_theme)
             self.v_maps_workspace.v_map_viewer.apply_plot_style(style_name)
             for dialog in getattr(self.v_maps_workspace, 'viewer_dialogs', []):
                 if hasattr(dialog, 'map_viewer'):
@@ -291,9 +306,9 @@ class Main(QMainWindow):
         last_dir = self.settings.get_last_directory()
         paths, _ = QFileDialog.getOpenFileNames(
             None,
-            "Open file(s)",
+            tr("Open file(s)"),
             last_dir,
-            "SPECTROview formats (*.csv *.txt *.dat *.wdf *.spc *.l6s *.l6m *.ngs *.ngc *.spectra *.maps *.graphs *.xlsx *.xls *.json)"
+            tr("SPECTROview formats (*.csv *.txt *.dat *.wdf *.spc *.l6s *.l6m *.ngs *.ngc *.spectra *.maps *.graphs *.xlsx *.xls *.json)")
         )
         
         if not paths:
@@ -327,7 +342,11 @@ class Main(QMainWindow):
             try:
                 file_kind = detect_file_type(path)
             except Exception as e:
-                QMessageBox.warning(self, "File Load Error", f"Failed to read {path.name}: {e}")
+                QMessageBox.warning(
+                    self,
+                    tr("File Load Error"),
+                    tr("Failed to read {filename}: {error}", filename=path.name, error=e),
+                )
                 continue
 
             if file_kind == "spectra":
@@ -394,7 +413,11 @@ class Main(QMainWindow):
         elif current_tab == self.v_graphs_workspace:
             self.v_graphs_workspace.save_workspace()
         else:
-            QMessageBox.warning(self, "No Tab Selected", "No valid tab is selected for saving.")
+            QMessageBox.warning(
+                self,
+                tr("No Tab Selected"),
+                tr("No valid tab is selected for saving."),
+            )
 
     def clear_workspace(self):
         """Clear current workspace based on active tab without confirmation."""
@@ -407,7 +430,7 @@ class Main(QMainWindow):
         elif current_tab == self.v_graphs_workspace:
             self.v_graphs_workspace.clear_workspace()
         else:
-            QMessageBox.warning(self, "No Tab Selected", "Nothing to clear.")
+            QMessageBox.warning(self, tr("No Tab Selected"), tr("Nothing to clear."))
 
     def _open_settings(self, section: str = "general"):
         """Open settings dialog, optionally selecting a specific section."""
@@ -418,7 +441,9 @@ class Main(QMainWindow):
         dlg.select_section(section)
         dlg.check_updates_requested.connect(self._manual_update_check)
         dlg.theme_selected.connect(self.toggle_theme)
+        dlg.language_selected.connect(self.set_language)
         initial_theme = self.settings.get_theme()
+        initial_language = self.settings.get_language()
         if dlg.exec():
             # Refresh viewers to reflect settings changes (e.g. coef_noise)
             if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'v_spectra_viewer'):
@@ -431,6 +456,8 @@ class Main(QMainWindow):
         else:
             if self.settings.get_theme() != initial_theme:
                 self.toggle_theme(initial_theme)
+            if self.settings.get_language() != initial_language:
+                self.set_language(initial_language)
 
     def _sync_mcp_runtime(self):
         """Apply the opt-in localhost MCP setting without restarting the app."""
@@ -462,11 +489,15 @@ class Main(QMainWindow):
             self._mcp_runtime = runtime
             self._mcp_error = ""
             self.statusBar().showMessage(
-                f"Local MCP server enabled: {runtime.endpoint}", 8000
+                tr("Local MCP server enabled: {endpoint}", endpoint=runtime.endpoint),
+                8000,
             )
         except Exception as exc:
             self._mcp_error = str(exc)
-            self.statusBar().showMessage(f"Local MCP server failed: {exc}", 15000)
+            self.statusBar().showMessage(
+                tr("Local MCP server failed: {error}", error=exc),
+                15000,
+            )
 
     def quick_calc(self):
         """Open quick calculation dialog."""
@@ -541,11 +572,14 @@ class Main(QMainWindow):
         if not self._ensure_chat_panel():
             QMessageBox.information(
                 self,
-                "SPECTROview AI Agent — Not Available",
-                f"The AI Chat module could not be imported.\nError: {LLM_ERROR_MSG}\n\n"
-                "Please install the optional dependencies:\n"
-                "    pip install ollama mcp\n\n"
-                "Then restart SPECTROview.",
+                tr("SPECTROview AI Agent — Not Available"),
+                tr(
+                    "The AI Chat module could not be imported.\nError: {error}\n\n"
+                    "Please install the optional dependencies:\n"
+                    "    pip install ollama mcp\n\n"
+                    "Then restart SPECTROview.",
+                    error=LLM_ERROR_MSG,
+                ),
             )
             return
 
@@ -605,13 +639,15 @@ class Main(QMainWindow):
         try:
             self.application_api.create_graph(cfg)
         except Exception as exc:
-            ws.vm.notify.emit(f"AI graph creation failed: {exc}")
+            ws.vm.notify.emit(tr("AI graph creation failed: {error}", error=exc))
             return
 
         # Update the sidebar combo boxes to reflect last plot config
         def _set_combo(cbb, value):
             if value:
-                idx = cbb.findText(str(value))
+                idx = cbb.findData(value)
+                if idx < 0:
+                    idx = cbb.findText(str(value))
                 if idx >= 0:
                     cbb.setCurrentIndex(idx)
 
@@ -636,7 +672,7 @@ class Main(QMainWindow):
         try:
             self.application_api.update_graph(graph_id, properties)
         except Exception as exc:
-            ws.vm.notify.emit(f"AI graph update failed: {exc}")
+            ws.vm.notify.emit(tr("AI graph update failed: {error}", error=exc))
             return
 
         # Switch to Graphs tab to show the result
@@ -649,7 +685,9 @@ class Main(QMainWindow):
         try:
             self.application_api.delete_graphs(delete_all, target_ids)
         except Exception as exc:
-            self.v_graphs_workspace.vm.notify.emit(f"AI graph deletion failed: {exc}")
+            self.v_graphs_workspace.vm.notify.emit(
+                tr("AI graph deletion failed: {error}", error=exc)
+            )
 
     def about(self):
         """Show About section within the Settings dialog."""
@@ -657,8 +695,13 @@ class Main(QMainWindow):
 
     def manual(self):
         """Open online User Manual web documentation."""
-        url = QUrl("https://cea-metrocarac.github.io/SPECTROview/user_manual/")
-        QDesktopServices.openUrl(url)
+        lang = get_language()
+        url_str = (
+            "https://cea-metrocarac.github.io/SPECTROview/fr/user_manual/"
+            if lang == "fr"
+            else "https://cea-metrocarac.github.io/SPECTROview/user_manual/"
+        )
+        QDesktopServices.openUrl(QUrl(url_str))
 
     def open_github_repo(self):
         """Open the project's GitHub repository."""
@@ -669,6 +712,39 @@ class Main(QMainWindow):
         """Open the project's releases page."""
         url = QUrl("https://github.com/CEA-MetroCarac/SPECTROview/releases")
         QDesktopServices.openUrl(url)
+
+    def set_language(self, language: str):
+        """Apply and persist the active GUI language across all live components."""
+        norm = self.i18n_mgr.set_language(language, persist=True)
+        self._propagate_language(norm)
+
+    def _propagate_language(self, _language: str):
+        """Refresh active matplotlib viewers and canvases whose rendered text depends on language."""
+        for ws in (
+            getattr(self, "v_spectra_workspace", None),
+            getattr(self, "v_maps_workspace", None),
+        ):
+            if ws is None:
+                continue
+            sv = getattr(ws, "v_spectra_viewer", None)
+            if sv is not None and hasattr(sv, "_plot"):
+                try:
+                    sv._plot()
+                except Exception:
+                    pass
+            mv = getattr(ws, "v_map_viewer", None)
+            if mv is not None and hasattr(mv, "_do_plot_heatmap") and getattr(mv, "map_df", None) is not None:
+                try:
+                    mv._do_plot_heatmap()
+                except Exception:
+                    pass
+            for dlg in getattr(ws, "viewer_dialogs", []) or []:
+                dmv = getattr(dlg, "map_viewer", None)
+                if dmv is not None and hasattr(dmv, "_do_plot_heatmap") and getattr(dmv, "map_df", None) is not None:
+                    try:
+                        dmv._do_plot_heatmap()
+                    except Exception:
+                        pass
 
     def toggle_theme(self, theme=None):
         if theme is None:
@@ -868,8 +944,8 @@ class Main(QMainWindow):
         if self._pending_release is None:
             QMessageBox.warning(
                 self,
-                "Update unavailable",
-                "Release metadata is no longer available. Please run Check for updates again.",
+                tr("Update unavailable"),
+                tr("Release metadata is no longer available. Please run Check for updates again."),
             )
             return
 
@@ -917,13 +993,13 @@ class Main(QMainWindow):
         if install_result.requires_manual_action:
             self._show_guided_update_dialog(install_result)
         elif install_result.message:
-            QMessageBox.information(self, "SPECTROview Update", install_result.message)
+            QMessageBox.information(self, tr("SPECTROview Update"), install_result.message)
 
     def _show_guided_update_dialog(self, install_result) -> None:
         """Present platform-specific instructions and convenience actions for guided updates."""
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Information)
-        box.setWindowTitle("SPECTROview Update Ready")
+        box.setWindowTitle(tr("SPECTROview Update Ready"))
         box.setText(install_result.instructions or install_result.message)
 
         artifact = Path(install_result.artifact_path) if install_result.artifact_path else None
@@ -934,12 +1010,12 @@ class Main(QMainWindow):
 
         if artifact is not None and artifact.exists():
             if artifact.suffix.lower() in (".exe", ".dmg"):
-                open_file_btn = box.addButton("Open Installer", QMessageBox.AcceptRole)
-            open_folder_btn = box.addButton("Open Folder", QMessageBox.ActionRole)
+                open_file_btn = box.addButton(tr("Open Installer"), QMessageBox.AcceptRole)
+            open_folder_btn = box.addButton(tr("Open Folder"), QMessageBox.ActionRole)
         if getattr(install_result, "can_extract_zip", False) and artifact is not None:
-            extract_btn = box.addButton("Extract to Folder...", QMessageBox.ActionRole)
+            extract_btn = box.addButton(tr("Extract to Folder..."), QMessageBox.ActionRole)
         if getattr(install_result, "command", ""):
-            copy_cmd_btn = box.addButton("Copy Command", QMessageBox.ActionRole)
+            copy_cmd_btn = box.addButton(tr("Copy Command"), QMessageBox.ActionRole)
         box.addButton(QMessageBox.Close)
         box.exec()
 
@@ -953,7 +1029,7 @@ class Main(QMainWindow):
         elif clicked is extract_btn and artifact is not None:
             dest = QFileDialog.getExistingDirectory(
                 self,
-                "Choose Folder to Extract Portable SPECTROview",
+                tr("Choose Folder to Extract Portable SPECTROview"),
                 str(artifact.parent),
             )
             if dest:
@@ -963,18 +1039,21 @@ class Main(QMainWindow):
                     )
                     QMessageBox.information(
                         self,
-                        "Extraction Complete",
-                        f"SPECTROview was extracted to:\n{extracted_root}\n\n"
-                        "You can close this instance and launch the new SPECTROview.exe directly.",
+                        tr("Extraction Complete"),
+                        tr(
+                            "SPECTROview was extracted to:\n{path}\n\n"
+                            "You can close this instance and launch the new SPECTROview.exe directly.",
+                            path=extracted_root,
+                        ),
                     )
                     QDesktopServices.openUrl(QUrl.fromLocalFile(str(extracted_root)))
                 except Exception as exc:
-                    QMessageBox.warning(self, "Extraction Failed", str(exc))
+                    QMessageBox.warning(self, tr("Extraction Failed"), str(exc))
         elif clicked is copy_cmd_btn and install_result.command:
             cb = QApplication.clipboard()
             if cb is not None:
                 cb.setText(install_result.command)
-                self.show_notification("Update command copied to clipboard.", notification_type="info")
+                self.show_notification(tr("Update command copied to clipboard."), notification_type="info")
 
     def _on_update_download_failed(self, error: str) -> None:
         self._release_update_download_worker()
@@ -997,8 +1076,11 @@ class Main(QMainWindow):
             self._update_banner.set_update_error()
         QMessageBox.warning(
             self,
-            "Update download failed",
-            f"SPECTROview could not download the update. Please try again or install it manually.\n\n{error}",
+            tr("Update download failed"),
+            tr(
+                "SPECTROview could not download the update. Please try again or install it manually.\n\n{error}",
+                error=error,
+            ),
         )
 
     def _on_manual_check_done(self):
@@ -1008,14 +1090,20 @@ class Main(QMainWindow):
         if self._manual_check_error:
             QMessageBox.warning(
                 self,
-                "Update Check Failed",
-                f"SPECTROview could not check for updates:\n\n{self._manual_check_error}",
+                tr("Update Check Failed"),
+                tr(
+                    "SPECTROview could not check for updates:\n\n{error}",
+                    error=self._manual_check_error,
+                ),
             )
         elif not self._manual_check_found_update:
             QMessageBox.information(
                 self,
-                "No Update Available",
-                f"You are already using the latest version of SPECTROview (v{VERSION}).",
+                tr("No Update Available"),
+                tr(
+                    "You are already using the latest version of SPECTROview (v{version}).",
+                    version=VERSION,
+                ),
             )
 
     def showEvent(self, event):

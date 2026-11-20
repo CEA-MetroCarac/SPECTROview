@@ -104,6 +104,22 @@ def extract_keys_from_sources(source_root: Path) -> ExtractedCatalog:
                 src = _str_literal(node.args[1])
                 if src:
                     extracted.add_string(src, ctx)
+            elif name in ("add_row", "add_bounds_row") and node.args:
+                lbl = _str_literal(node.args[0])
+                if lbl:
+                    extracted.add_string(lbl, ctx)
+                if len(node.args) >= 3:
+                    tip = _str_literal(node.args[2])
+                    if tip:
+                        extracted.add_string(tip, ctx)
+            elif name == "add_api_row" and len(node.args) >= 2:
+                lbl = _str_literal(node.args[1])
+                if lbl:
+                    extracted.add_string(lbl, ctx)
+                if len(node.args) >= 4:
+                    tip = _str_literal(node.args[3])
+                    if tip:
+                        extracted.add_string(tip, ctx)
             elif name == "bind_tab_text" and len(node.args) >= 3:
                 src = _str_literal(node.args[2])
                 if src:

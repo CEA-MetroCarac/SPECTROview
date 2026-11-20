@@ -24,6 +24,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from spectroview.i18n import (
+    bind_combo_items,
+    bind_placeholder,
+    bind_text,
+    bind_title,
+    bind_tooltip,
+    on_language_changed,
+    tr,
+)
 from spectroview.view.theme import current_tokens
 
 
@@ -42,10 +51,10 @@ class AISettingsTabPage(QWidget):
     """The AI Settings tab: provider credentials, model selection, and local MCP server."""
 
     KEYWORDS = [
-        "ai", "chat", "llm", "agent", "assistant", "openai", "anthropic",
-        "gemini", "deepseek", "mistral", "ollama", "custom", "api", "key",
-        "url", "base url", "model", "models", "test", "test connection",
-        "mcp", "server", "port", "endpoint"
+        "ai", "ia", "chat", "llm", "agent", "assistant", "openai", "anthropic",
+        "gemini", "deepseek", "mistral", "ollama", "custom", "personnalisé", "api", "key", "clé",
+        "url", "base url", "model", "models", "modèle", "test", "test connection", "connexion",
+        "mcp", "server", "serveur", "port", "endpoint", "point de terminaison",
     ]
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -67,12 +76,17 @@ class AISettingsTabPage(QWidget):
         layout.setSpacing(8)
 
         # ───── API Keys ─────
-        self.grp_api = QGroupBox("LLM Provider Configuration")
+        self.grp_api = QGroupBox()
+        bind_title(self.grp_api, "LLM Provider Configuration")
         api_layout = QVBoxLayout(self.grp_api)
         api_layout.setContentsMargins(8, 8, 8, 8)
         api_layout.setSpacing(6)
 
-        self._lbl_vault_note = QLabel("🔒 API keys are securely stored in the system credential vault and excluded from config backups.")
+        self._lbl_vault_note = QLabel()
+        bind_text(
+            self._lbl_vault_note,
+            "🔒 API keys are securely stored in the system credential vault and excluded from config backups.",
+        )
         self._lbl_vault_note.setStyleSheet(
             f"color: {current_tokens().text_muted}; font-size: 11px; font-style: italic; margin-bottom: 4px;"
         )
@@ -87,16 +101,17 @@ class AISettingsTabPage(QWidget):
             keywords: list[str] | None = None,
         ) -> QLabel:
             row = QHBoxLayout()
-            lbl = QLabel(label)
+            lbl = QLabel()
+            bind_text(lbl, label)
             lbl.setFixedWidth(130)
             lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
             if tooltip:
-                lbl.setToolTip(tooltip)
-                widget.setToolTip(tooltip)
+                bind_tooltip(lbl, tooltip)
+                bind_tooltip(widget, tooltip)
             row.addWidget(lbl)
             row.addWidget(widget, 1)
             box_layout.addLayout(row)
-            terms = [label.lower(), tooltip.lower()]
+            terms = [label.lower(), tr(label).lower(), tooltip.lower(), tr(tooltip).lower()]
             if keywords:
                 terms.extend(keywords)
             self._searchable_rows.append((terms, lbl, is_preset))
@@ -104,8 +119,11 @@ class AISettingsTabPage(QWidget):
 
         self.edit_custom = QLineEdit()
         self.edit_custom.setEchoMode(QLineEdit.Password)
-        self.edit_custom.setPlaceholderText("Enter custom API key or leave blank if self-hosted / not needed")
-        add_api_row(api_layout, "Custom API Key:", self.edit_custom, keywords=["custom", "key", "api"])
+        bind_placeholder(
+            self.edit_custom,
+            "Enter custom API key or leave blank if self-hosted / not needed",
+        )
+        add_api_row(api_layout, "Custom API Key:", self.edit_custom, keywords=["custom", "personnalisé", "key", "clé", "api"])
 
         self.edit_custom_url = QLineEdit()
         self.edit_custom_url.setPlaceholderText("https://api.example.com/v1")
@@ -118,26 +136,27 @@ class AISettingsTabPage(QWidget):
             "Model Name(s):",
             self.edit_custom_models,
             "Comma-separated list of model names for the custom provider dropdown",
-            keywords=["model", "models"],
+            keywords=["model", "models", "modèle"],
         )
 
         self.edit_custom_label = QLineEdit()
-        self.edit_custom_label.setPlaceholderText("e.g. Lab LLM, Internal Mistral (default: Custom)")
+        bind_placeholder(self.edit_custom_label, "e.g. Lab LLM, Internal Mistral (default: Custom)")
         add_api_row(
             api_layout,
             "Display Label:",
             self.edit_custom_label,
             "Display label shown for this provider in the AI chat panel",
-            keywords=["label", "display"],
+            keywords=["label", "display", "libellé"],
         )
 
         # ───── Collapsible "Other cloud providers" ─────
         self.btn_toggle_providers = QToolButton()
         self.btn_toggle_providers.setCheckable(True)
         self.btn_toggle_providers.setChecked(False)
-        self.btn_toggle_providers.setText("▸ Other cloud providers:")
+        self._update_toggle_providers_text()
         self.btn_toggle_providers.setCursor(Qt.PointingHandCursor)
         self.btn_toggle_providers.toggled.connect(self._on_toggle_providers)
+        on_language_changed(self, self._update_toggle_providers_text, slot_key="toggle_providers")
         api_layout.addWidget(self.btn_toggle_providers, alignment=Qt.AlignLeft)
 
         self.frame_provider_presets = QFrame()
@@ -179,19 +198,32 @@ class AISettingsTabPage(QWidget):
         test_row.setContentsMargins(0, 4, 0, 0)
         test_row.setSpacing(8)
 
-        lbl_test = QLabel("Test:")
+        lbl_test = QLabel()
+        bind_text(lbl_test, "Test:")
         lbl_test.setFixedWidth(130)
         lbl_test.setTextInteractionFlags(Qt.TextSelectableByMouse)
         test_row.addWidget(lbl_test)
 
         self.cbb_test_provider = QComboBox()
         self.cbb_test_provider.setObjectName("cbb_test_provider")
-        self.cbb_test_provider.addItems(["Custom", "OpenAI", "Anthropic", "Gemini", "DeepSeek", "Mistral", "Ollama"])
-        self.cbb_test_provider.setToolTip("Select provider to test")
-        self.cbb_test_provider.setFixedWidth(110)
+        bind_combo_items(
+            self.cbb_test_provider,
+            [
+                ("Custom", "Custom"),
+                ("OpenAI", "OpenAI"),
+                ("Anthropic", "Anthropic"),
+                ("Gemini", "Gemini"),
+                ("DeepSeek", "DeepSeek"),
+                ("Mistral", "Mistral"),
+                ("Ollama", "Ollama"),
+            ],
+        )
+        bind_tooltip(self.cbb_test_provider, "Select provider to test")
+        self.cbb_test_provider.setFixedWidth(115)
         test_row.addWidget(self.cbb_test_provider)
 
-        self.btn_test_connection = QPushButton("Test Connection")
+        self.btn_test_connection = QPushButton()
+        bind_text(self.btn_test_connection, "Test Connection")
         self.btn_test_connection.setObjectName("btn_test_connection")
         self.btn_test_connection.setCursor(Qt.PointingHandCursor)
         test_row.addWidget(self.btn_test_connection)
@@ -207,19 +239,24 @@ class AISettingsTabPage(QWidget):
         layout.addWidget(self.grp_api)
 
         # ───── Local MCP Server ─────
-        self.grp_mcp = QGroupBox("Local MCP Server")
+        self.grp_mcp = QGroupBox()
+        bind_title(self.grp_mcp, "Local MCP Server")
         mcp_layout = QVBoxLayout(self.grp_mcp)
         mcp_layout.setContentsMargins(8, 8, 8, 8)
         mcp_layout.setSpacing(6)
 
-        self.chk_mcp_enabled = QCheckBox("Enable local Model Context Protocol (MCP) endpoint")
-        self.chk_mcp_enabled.setToolTip(
-            "Expose the running SPECTROview session to MCP clients on this computer only."
+        self.chk_mcp_enabled = QCheckBox()
+        bind_text(self.chk_mcp_enabled, "Enable local Model Context Protocol (MCP) endpoint")
+        bind_tooltip(
+            self.chk_mcp_enabled,
+            "Expose the running SPECTROview session to MCP clients on this computer only.",
         )
         mcp_layout.addWidget(self.chk_mcp_enabled)
 
         mcp_row = QHBoxLayout()
-        mcp_row.addWidget(QLabel("Port:"))
+        lbl_port = QLabel()
+        bind_text(lbl_port, "Port:")
+        mcp_row.addWidget(lbl_port)
         self.spin_mcp_port = QSpinBox()
         self.spin_mcp_port.setRange(1024, 65535)
         self.spin_mcp_port.setValue(8765)
@@ -227,13 +264,15 @@ class AISettingsTabPage(QWidget):
         mcp_row.addStretch()
         mcp_layout.addLayout(mcp_row)
 
-        self.lbl_mcp_endpoint = QLabel("Endpoint: http://127.0.0.1:8765/mcp")
+        self.lbl_mcp_endpoint = QLabel()
+        self._update_mcp_endpoint_label(self.spin_mcp_port.value())
         self.lbl_mcp_endpoint.setStyleSheet(f"color: {current_tokens().text_muted}; font-size: 11px;")
         self.lbl_mcp_endpoint.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.spin_mcp_port.valueChanged.connect(
-            lambda port: self.lbl_mcp_endpoint.setText(
-                f"Endpoint: http://127.0.0.1:{port}/mcp"
-            )
+        self.spin_mcp_port.valueChanged.connect(self._update_mcp_endpoint_label)
+        on_language_changed(
+            self,
+            lambda: self._update_mcp_endpoint_label(self.spin_mcp_port.value()),
+            slot_key="mcp_endpoint",
         )
         mcp_layout.addWidget(self.lbl_mcp_endpoint)
         layout.addWidget(self.grp_mcp)
@@ -243,10 +282,21 @@ class AISettingsTabPage(QWidget):
         self._scroll.setWidget(container)
         outer_layout.addWidget(self._scroll)
 
+    def _update_mcp_endpoint_label(self, port: int) -> None:
+        self.lbl_mcp_endpoint.setText(
+            tr("Endpoint: {url}", url=f"http://127.0.0.1:{port}/mcp")
+        )
+
+    def _update_toggle_providers_text(self) -> None:
+        checked = self.btn_toggle_providers.isChecked()
+        arrow = "▾" if checked else "▸"
+        self.btn_toggle_providers.setText(
+            f"{arrow} {tr('Other cloud providers:')}"
+        )
+
     def _on_toggle_providers(self, checked: bool) -> None:
         self.frame_provider_presets.setVisible(checked)
-        arrow = "▾" if checked else "▸"
-        self.btn_toggle_providers.setText(f"{arrow} Other cloud providers:")
+        self._update_toggle_providers_text()
 
     def apply_settings(self, data: dict) -> None:
         self.edit_openai.setText(data.get("api_key_OpenAI", ""))
@@ -293,7 +343,7 @@ class AISettingsTabPage(QWidget):
         first_match: Optional[QWidget] = None
 
         # Check MCP server
-        mcp_terms = ["mcp", "server", "port", "endpoint", "protocol"]
+        mcp_terms = ["mcp", "server", "serveur", "port", "endpoint", "protocol", "protocole"]
         if any(term in q or q in term for term in mcp_terms):
             self.grp_mcp.setStyleSheet(_highlight_group_style())
             first_match = self.grp_mcp

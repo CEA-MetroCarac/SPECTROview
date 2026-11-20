@@ -35,6 +35,13 @@ from PySide6.QtWidgets import (
 )
 
 from spectroview import VERSION
+from spectroview.i18n import (
+    bind_placeholder,
+    bind_window_title,
+    combo_data_or_text,
+    on_language_changed,
+    tr,
+)
 from spectroview.settings.ui.tab_about import AboutTabPage
 from spectroview.settings.ui.tab_ai import AISettingsTabPage
 from spectroview.settings.ui.tab_fit import FitSettingsTabPage
@@ -174,6 +181,7 @@ class SettingsDialog(QDialog):
     """Modern two-panel Settings dialog with search filtering and modular section pages."""
 
     theme_selected = Signal(str)
+    language_selected = Signal(str)
     check_updates_requested = Signal()
 
     def __init__(self, vm: VMSettings, parent: Optional[QWidget] = None):
@@ -181,7 +189,7 @@ class SettingsDialog(QDialog):
         self.vm = vm
         self._refreshing_theme = False
 
-        self.setWindowTitle("Settings")
+        bind_window_title(self, "Settings")
         self.resize(820, 640)
         self.setMinimumSize(720, 520)
 
@@ -211,7 +219,7 @@ class SettingsDialog(QDialog):
 
         # Top Search Bar
         self._search_edit = QLineEdit()
-        self._search_edit.setPlaceholderText("Search settings...")
+        bind_placeholder(self._search_edit, "Search settings...")
         self._search_edit.setClearButtonEnabled(True)
         self._search_edit.textChanged.connect(self._on_search_text_changed)
         self._search_edit.returnPressed.connect(self._on_search_return_pressed)
@@ -303,8 +311,10 @@ class SettingsDialog(QDialog):
 
         for page, title, icon, _kw in self._sections:
             self._stack.addWidget(page)
-            item = QListWidgetItem(icon, title)
+            item = QListWidgetItem(icon, tr(title))
             self._nav_list.addItem(item)
+
+        on_language_changed(self, self._retranslate_sections, slot_key="sections")
 
         # Select first tab initially
         self._nav_list.setCurrentRow(0)
@@ -321,12 +331,14 @@ class SettingsDialog(QDialog):
         self.btn_import_config.clicked.connect(self._on_import_config)
         self.btn_test_connection.clicked.connect(self._on_test_connection)
         self._tab_general.theme_changed.connect(self.theme_selected.emit)
+        self._tab_general.language_changed.connect(self.language_selected.emit)
         self._tab_about.check_updates_requested.connect(self.check_updates_requested.emit)
 
     def _bind_compat_properties(self) -> None:
         """Bind widget attributes directly on dialog for test suite and caller backward compatibility."""
         # General tab
         self.cbb_theme = self._tab_general.cbb_theme
+        self.cbb_language = self._tab_general.cbb_language
         self.le_working_folder = self._tab_general.le_working_folder
         self.btn_working_folder = self._tab_general.btn_working_folder
         self.btn_open_working_folder = self._tab_general.btn_open_working_folder
@@ -409,7 +421,13 @@ class SettingsDialog(QDialog):
             item = self._nav_list.item(idx)
             if not item:
                 continue
-            matches = not q or q in title.lower() or any(q in kw.lower() for kw in keywords)
+            translated_title = tr(title)
+            matches = (
+                not q
+                or q in title.lower()
+                or q in translated_title.lower()
+                or any(q in kw.lower() for kw in keywords)
+            )
             item.setHidden(not matches)
             if matches:
                 if first_visible < 0:
@@ -495,13 +513,25 @@ class SettingsDialog(QDialog):
                     pass
             QDesktopServices.openUrl(QUrl.fromLocalFile(folder))
 
+    def _retranslate_sections(self) -> None:
+        for idx, (_page, title, _icon, _kw) in enumerate(self._sections):
+            item = self._nav_list.item(idx)
+            if item is not None:
+                item.setText(tr(title))
+        curr_item = self._nav_list.currentItem()
+        if curr_item is not None:
+            self._content_title.setText(curr_item.text())
+        curr_page = self._stack.currentWidget()
+        if hasattr(curr_page, "highlight_search"):
+            curr_page.highlight_search(self._search_edit.text())
+
     def _on_export_config(self) -> None:
         filepath = self.vm.export_config_dialog(self)
         if filepath:
             QMessageBox.information(
                 self,
-                "Config Exported",
-                f"Configuration successfully exported to:\n{filepath}",
+                tr("Config Exported"),
+                tr("Configuration successfully exported to:\n{filepath}", filepath=filepath),
             )
 
     def _on_import_config(self) -> None:
@@ -509,18 +539,18 @@ class SettingsDialog(QDialog):
         if success:
             QMessageBox.information(
                 self,
-                "Config Restored",
-                "Configuration restored successfully from JSON file.",
+                tr("Config Restored"),
+                tr("Configuration restored successfully from JSON file."),
             )
         else:
             QMessageBox.warning(
                 self,
-                "Restore Failed",
-                "Could not restore configuration from the selected file.",
+                tr("Restore Failed"),
+                tr("Could not restore configuration from the selected file."),
             )
 
     def _on_test_connection(self) -> None:
-        provider = self.cbb_test_provider.currentText()
+        provider = combo_data_or_text(self.cbb_test_provider)
         if provider == "Custom":
             api_key = self.edit_custom.text().strip()
             base_url = self.edit_custom_url.text().strip()
@@ -547,7 +577,7 @@ class SettingsDialog(QDialog):
             api_key, base_url, model = "", "", ""
 
         self.btn_test_connection.setEnabled(False)
-        self.lbl_test_status.setText("Testing connection…")
+        self.lbl_test_status.setText(tr("Testing connection…"))
         self.lbl_test_status.setStyleSheet("color: #FFA726; font-size: 11px;")
         self.lbl_test_status.setToolTip("")
         self.vm.test_connection(provider, api_key, base_url, model)
@@ -559,7 +589,7 @@ class SettingsDialog(QDialog):
             self.lbl_test_status.setStyleSheet("color: #1E9E5A; font-size: 11px; font-weight: bold;")
             self.lbl_test_status.setToolTip(message)
         else:
-            first_line = message.splitlines()[0] if message else "Failed"
+            first_line = message.splitlines()[0] if message else tr("Failed")
             self.lbl_test_status.setText(f"✕ {first_line}")
             self.lbl_test_status.setStyleSheet("color: #D14343; font-size: 11px;")
             self.lbl_test_status.setToolTip(message)

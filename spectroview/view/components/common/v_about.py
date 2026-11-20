@@ -2,18 +2,19 @@
 import os
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QTextBrowser
 from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QDialog, QLabel, QTextBrowser, QVBoxLayout
 
-from spectroview import VERSION, BUILD_NUMBER, ICON_DIR
+from spectroview import BUILD_NUMBER, ICON_DIR, VERSION
+from spectroview.i18n import bind_window_title, get_language, on_language_changed, tr
 
 
 class VAboutDialog(QDialog):
     """About dialog displaying application information."""
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("About SPECTROview")
+        bind_window_title(self, "About SPECTROview")
         self.setMinimumSize(600, 600)
         self.init_ui()
 
@@ -28,36 +29,43 @@ class VAboutDialog(QDialog):
         logo_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(logo_label)
 
-        # About text
+        self.info_browser = QTextBrowser()
+        self.info_browser.setOpenExternalLinks(True)
+        self.info_browser.setAlignment(Qt.AlignCenter)
+        self.info_browser.setFrameStyle(QTextBrowser.NoFrame)
+        self._refresh_html()
+        on_language_changed(self, self._refresh_html, slot_key="about_html")
+        layout.addWidget(self.info_browser)
+
+    def _refresh_html(self) -> None:
+        docs_url = (
+            "https://CEA-MetroCarac.github.io/SPECTROview/fr/"
+            if get_language() == "fr"
+            else "https://CEA-MetroCarac.github.io/SPECTROview"
+        )
         info = f"""
         <div style="text-align: center;">
             <h2>SPECTROview</h2>
-            <p><i>(Tool for Spectroscopic Data Processing and Visualization)</i></p>
-            <p style="margin: 0; padding: 0;"><b>Version {VERSION}</b></p>
-            <p style="margin-top: 3px; font-size: 11px; color: #8e8e93;">Build: {BUILD_NUMBER}</p>
+            <p><i>({tr("Tool for Spectroscopic Data Processing and Visualization")})</i></p>
+            <p style="margin: 0; padding: 0;"><b>{tr("Version {version}", version=VERSION)}</b></p>
+            <p style="margin-top: 3px; font-size: 11px; color: #8e8e93;">{tr("Build: {build}", build=BUILD_NUMBER)}</p>
         </div>
         <hr>
-        <h3>Features:</h3>
+        <h3>{tr("Features:")}</h3>
         <ul>
-            <li>Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps).</li>
-            <li>Ability to fit multiple spectra or 2Dmaps using predefined models or by creating custom fit models.</li>
-            <li>Collect all best-fit results with one click.</li>
-            <li>Dedicated module for effortless, fast, and easy data visualization.</li>
+            <li>{tr("Supports processing of spectral data (1D) and hyperspectral data (2D maps or wafer maps).")}</li>
+            <li>{tr("Ability to fit multiple spectra or 2Dmaps using predefined models or by creating custom fit models.")}</li>
+            <li>{tr("Collect all best-fit results with one click.")}</li>
+            <li>{tr("Dedicated module for effortless, fast, and easy data visualization.")}</li>
         </ul>
         <p style="text-align:left;">
-            Full documentation is available at <a href="https://CEA-MetroCarac.github.io/SPECTROview">https://CEA-MetroCarac.github.io/SPECTROview</a>
+            {tr("Full documentation is available at")} <a href="{docs_url}">{docs_url}</a>
         </p>
         <hr>
-        <h3>Citation:</h3>
+        <h3>{tr("Citation:")}</h3>
         <p style="text-align:left;">
             Le, Van Hoan. "SPECTROview: An Open-Source Application for Interactive Spectroscopic Data Processing, Fitting, and Visualization." <i>SoftwareX</i> 35 (September 2026): 102862.
             <br><a href="https://doi.org/10.1016/j.softx.2026.102862">https://doi.org/10.1016/j.softx.2026.102862</a>
         </p>
         """
-
-        info_browser = QTextBrowser()
-        info_browser.setHtml(info)
-        info_browser.setOpenExternalLinks(True)
-        info_browser.setAlignment(Qt.AlignCenter)
-        info_browser.setFrameStyle(QTextBrowser.NoFrame)
-        layout.addWidget(info_browser)
+        self.info_browser.setHtml(info)

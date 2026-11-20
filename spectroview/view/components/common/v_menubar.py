@@ -1,10 +1,11 @@
-#view/toolbar.py
-from PySide6.QtWidgets import QToolBar, QSizePolicy, QLabel, QMenu
-from PySide6.QtCore import QSize, Signal, Qt
+# view/toolbar.py
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtWidgets import QLabel, QMenu, QSizePolicy, QToolBar
 
 from spectroview import VERSION
-from spectroview.view.theme import Icons, current_tokens, is_dark_theme_key, normalize_theme_key
+from spectroview.i18n import bind_text, bind_tooltip, tr
 from spectroview.view.components.common.v_notification import VNotificationArea
+from spectroview.view.theme import Icons, current_tokens, is_dark_theme_key, normalize_theme_key
 
 # Available themes: internal key → display label
 THEME_OPTIONS = [
@@ -31,37 +32,42 @@ class VMenuBar(QToolBar):
     about_requested = Signal()
     version_requested = Signal()
     check_update_requested = Signal()
-    
+
     def __init__(self):
         super().__init__()
         self._current_theme = "gray"
         self._default_icons = {}
         self.init_ui()
-        
+
     def init_ui(self):
         self.setMovable(False)
         self.setFloatable(False)
         self.setIconSize(QSize(22, 22))
-        
-        self.actionOpen = self.addAction(Icons.open(size=22), "Open")
+
+        self.actionOpen = self.addAction(Icons.open(size=22), "")
+        bind_text(self.actionOpen, "Open")
         self.actionOpen.triggered.connect(self.open_requested.emit)
 
-        self.actionSave = self.addAction(Icons.save(size=22), "Save")
+        self.actionSave = self.addAction(Icons.save(size=22), "")
+        bind_text(self.actionSave, "Save")
         self.actionSave.triggered.connect(self.save_requested.emit)
 
-        self.actionClearWS= self.addAction(Icons.clear(size=22), "Clear current workspace")
+        self.actionClearWS = self.addAction(Icons.clear(size=22), "")
+        bind_text(self.actionClearWS, "Clear current workspace")
         self.actionClearWS.triggered.connect(self.clear_requested.emit)
 
         self.addSeparator()
-        self.actionCalc = self.addAction(Icons.calc(size=22), "Quick Calculators")
+        self.actionCalc = self.addAction(Icons.calc(size=22), "")
+        bind_text(self.actionCalc, "Quick Calculators")
         self.actionCalc.setShortcut("Ctrl+Shift+C")
         self.actionCalc.triggered.connect(self.calc_requested.emit)
 
         self.addSeparator()
-        self.actionSettings= self.addAction(Icons.settings(size=22), "Settings")
+        self.actionSettings = self.addAction(Icons.settings(size=22), "")
+        bind_text(self.actionSettings, "Settings")
         self.actionSettings.setShortcut("Ctrl+Shift+S")
         self.actionSettings.triggered.connect(self.settings_requested.emit)
-        
+
         # ----- Floating Notification Area (expanding blank space) -----
         self.notification_area = VNotificationArea(self)
         self.notification_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -70,35 +76,44 @@ class VMenuBar(QToolBar):
         # ----- SPECTROview AI Agent -----
         self.actionAIChat = self.addAction(Icons.sparkles(size=22), "SPECTROview AI Agent")
         self.actionAIChat.setShortcut("Ctrl+Shift+A")
-        self.actionAIChat.setToolTip(
+        bind_tooltip(
+            self.actionAIChat,
             "Toggle SPECTROview AI Agent (Ctrl+Shift+A)\n"
-            "Query your fit results using natural language and get instant answers.\n"
+            "Query your fit results using natural language and get instant answers.\n",
         )
         self.actionAIChat.triggered.connect(self.ai_chat_requested.emit)
 
         # ----- Check for updates -----
-        self.actionCheckUpdate = self.addAction(Icons.check_update(size=22), "Check for updates")
+        self.actionCheckUpdate = self.addAction(Icons.check_update(size=22), "")
+        bind_text(self.actionCheckUpdate, "Check for updates")
         self.actionCheckUpdate.triggered.connect(self.check_update_requested.emit)
-        
+
         # ----- Theme dropdown button -----
-        self.actionTheme = self.addAction(Icons.theme(self._current_theme, size=22), "Select Theme")
-        self.actionTheme.setToolTip("Select Theme (Modern Dark / Modern Gray / Modern Light / Classic)")
+        self.actionTheme = self.addAction(Icons.theme(self._current_theme, size=22), "")
+        bind_text(self.actionTheme, "Select Theme")
+        bind_tooltip(
+            self.actionTheme,
+            "Select Theme (Modern Dark / Modern Gray / Modern Light / Classic)",
+        )
         self.actionTheme.triggered.connect(self._show_theme_menu)
 
-        self.actionManual= self.addAction(Icons.manual(size=22), "Open User Manual")
+        self.actionManual = self.addAction(Icons.manual(size=22), "")
+        bind_text(self.actionManual, "Open User Manual")
         self.actionManual.setShortcut("Ctrl+Shift+M")
-        self.actionManual.setToolTip("Open Online User Manual (Ctrl+Shift+M)")
+        bind_tooltip(self.actionManual, "Open Online User Manual (Ctrl+Shift+M)")
         self.actionManual.triggered.connect(self.manual_requested.emit)
 
-        self.actionGithub= self.addAction(Icons.github(size=22), "Open Github repository")
+        self.actionGithub = self.addAction(Icons.github(size=22), "")
+        bind_text(self.actionGithub, "Open Github repository")
         self.actionGithub.triggered.connect(self.github_requested.emit)
 
-        self.actionAbout= self.addAction(Icons.about(size=22), "About SPECTROview")
+        self.actionAbout = self.addAction(Icons.about(size=22), "")
+        bind_text(self.actionAbout, "About SPECTROview")
         self.actionAbout.triggered.connect(self.about_requested.emit)
         self.addSeparator()
 
         self.version_label = QLabel(f" v{VERSION} ")
-        self.version_label.setToolTip("Click to view lastest release notes")
+        bind_tooltip(self.version_label, "Click to view lastest release notes")
         self.version_label.setStyleSheet(
             f"color: {current_tokens().text_muted}; font-size: 11px; padding-right: 5px;"
         )
@@ -156,12 +171,12 @@ class VMenuBar(QToolBar):
             if key == "---":
                 menu.addSeparator()
                 continue
-            action = menu.addAction(label)
+            action = menu.addAction(tr(label))
             action.setCheckable(True)
             action.setChecked(key == self._current_theme)
             # Capture `key` in the lambda default argument
             action.triggered.connect(lambda checked=False, k=key: self._on_theme_chosen(k))
-        
+
         # Position the menu just below the toolbar button
         btn = self.widgetForAction(self.actionTheme)
         if btn:
@@ -173,5 +188,3 @@ class VMenuBar(QToolBar):
     def _on_theme_chosen(self, theme_key: str):
         self.set_current_theme(theme_key)
         self.theme_selected.emit(theme_key)
-
-    

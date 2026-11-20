@@ -23,6 +23,7 @@ Before writing or rewriting release notes, perform a complete audit of the repos
 2. **Verify final shipped state**:
    - When a feature evolved, was refactored, or superseded by a later commit inside `<prev_tag>..HEAD` (e.g., an experimental theme superseded by a unified design system), document the **final shipped behavior** in the highlight sections rather than listing intermediate prototypes as still shipping.
    - Verify exact class names, module paths, CLI flags, asset filenames (`.github/workflows/release.yml`), version strings (`spectroview/__init__.py`), and verified test counts directly against the working codebase.
+   - Confirm the pre-tag CI/packaging verification suite passes cleanly before creating or pushing a release tag: `python -m pytest tests/unit/test_release_workflow.py tests/unit/test_packaging_windows.py tests/unit/test_packaging_macos.py tests/unit/test_packaging_linux.py tests/performance/test_startup_imports.py -v`.
 
 ---
 

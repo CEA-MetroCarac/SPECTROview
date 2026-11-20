@@ -41,6 +41,9 @@ Evaluate against project rules:
    - Are schema sync tests (`TestModelSchemaSync`) green?
 6. **Documentation Synchronization** ([.agents/rules/documentation.md](../../rules/documentation.md)):
    - Have all three documentation surfaces (Developer Guide, Public API, User Manual) been updated appropriately?
+7. **Release, CI & Packaging Integrity** ([.agents/rules/pitfalls.md](../../rules/pitfalls.md) & [.agents/rules/workflows.md](../../rules/workflows.md)):
+   - Do `.github/workflows/release.yml`, `main.spec`, `packaging/*`, and `pyproject.toml` contain any stale import or asset paths after module moves/renames?
+   - Does `spectroview/main.py` avoid PEP 562 lazy-facade entrypoint imports so PyInstaller `ModuleGraph` traces all runtime modules?
 
 ---
 
@@ -53,6 +56,9 @@ python -m pytest tests/ -m "not slow" -q
 
 # 2. Static check on modified files
 python -m pyflakes spectroview/<modified_file>.py
+
+# 3. Release, packaging & startup-import checks (when modules, imports, entry points, or packaging files changed)
+python -m pytest tests/unit/test_release_workflow.py tests/unit/test_packaging_windows.py tests/unit/test_packaging_macos.py tests/unit/test_packaging_linux.py tests/performance/test_startup_imports.py -v
 ```
 
 ---
@@ -61,7 +67,7 @@ python -m pyflakes spectroview/<modified_file>.py
 
 Produce a structured review report:
 
-- **Critical (Blockers)**: Segfault traps (unparented QTimers), MVVM violations, thread safety breaches, broken public APIs.
+- **Critical (Blockers)**: Segfault traps (unparented QTimers), MVVM violations, thread safety breaches, broken public APIs, stale CI/packaging imports, broken PyInstaller static reachability.
 - **Warnings**: Unvectorized loops on large arrays, unparented helper objects, missing edge-case tests, stale docstrings.
 - **Suggestions**: Code readability, dictionary dispatch refactoring, naming improvements.
 - **Recommended Actions**: Clear steps required prior to final commit.

@@ -38,6 +38,10 @@ The application strictly enforces Model-View-ViewModel separation across all wor
    - Event filters installed on `QApplication` must cleanly auto-deregister when their target widget is destroyed to prevent $O(N \times M)$ event-loop slowdowns.
 4. **Heavy Import Deferral**: Keep heavy third-party packages (`scipy.*`, LLM SDKs `anthropic`/`openai`/`ollama`/`mcp`) off startup import graph. Import inside functions or prewarm on background threads (`Main._prewarm_heavy_imports()`).
 5. **Mandatory Synchronous Testing**: Every new feature, UI widget, ViewModel method, API endpoint, or data processing routine MUST include corresponding unit/integration tests authored in the exact same task. No feature code is complete or committable without passing test coverage.
+6. **Release & Packaging Parity**:
+   - Whenever moving, renaming, or reorganizing modules or data assets under `spectroview/`, audit and update every non-source release and packaging consumer: `.github/workflows/release.yml`, `main.spec`, `packaging/*`, and `pyproject.toml`.
+   - Keep `spectroview/main.py` importing concrete workspace modules directly (never exclusively via a PEP 562 `__getattr__` lazy facade, which PyInstaller's static `ModuleGraph` cannot trace) and mirror lazy/compatibility shims in `main.spec`'s `hidden_imports`.
+   - Verify with `python -m pytest tests/unit/test_release_workflow.py tests/unit/test_packaging_windows.py tests/unit/test_packaging_macos.py tests/unit/test_packaging_linux.py tests/performance/test_startup_imports.py -v`.
 
 ---
 

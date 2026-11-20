@@ -32,6 +32,8 @@ Follow this procedure to restructure and optimize code in SPECTROview while stri
    - Confirm public APIs in `spectroview/api/` remain 100% backward-compatible.
    - Verify `MGraph` schema sync invariants (`TestModelSchemaSync`).
    - Verify zero widget references in `model/`.
+   - Preserve release/packaging parity across `.github/workflows/release.yml`, `main.spec`, `packaging/*`, and `pyproject.toml`.
+   - Maintain PyInstaller static reachability (`spectroview/main.py` must import concrete modules directly, not through PEP 562 `__getattr__` lazy facades).
 
 ---
 
@@ -41,6 +43,7 @@ Follow this procedure to restructure and optimize code in SPECTROview while stri
 2. Keep methods focused on a single responsibility.
 3. Remove unused variables, dead code, and redundant allocations.
 4. Maintain surrounding code formatting and conventions.
+5. Whenever moving or renaming modules or assets, run `git grep` across `.github/`, `main.spec`, `packaging/`, and `pyproject.toml` to update every reference, and mirror any newly introduced compatibility shims or lazy facades in `main.spec`'s `hidden_imports`.
 
 ---
 
@@ -61,6 +64,10 @@ Follow this procedure to restructure and optimize code in SPECTROview while stri
 4. If startup imports were affected, verify with:
    ```powershell
    python -m pytest tests/performance/test_startup_imports.py -v
+   ```
+5. Run the release, packaging, and startup-import checks whenever modules moved/renamed or imports/lazy facades changed:
+   ```powershell
+   python -m pytest tests/unit/test_release_workflow.py tests/unit/test_packaging_windows.py tests/unit/test_packaging_macos.py tests/unit/test_packaging_linux.py tests/performance/test_startup_imports.py -v
    ```
 
 ---

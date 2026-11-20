@@ -88,3 +88,17 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 1. Determine the previous release tag (`<prev_tag>`) and inspect **every** commit in `<prev_tag>..HEAD` (`git rev-list --count <prev_tag>..HEAD`, full subjects + bodies).
 2. Cross-check evolving commits against the final code on `main` and `.github/workflows/release.yml` artifact names.
 3. Author the release notes strictly following the structure, headings, bullet style, and public-safe commit-log convention in [.agents/rules/release-notes.md](release-notes.md).
+
+---
+
+## 10. Move/Rename Modules or Prepare a Release (CI & Packaging Checklist)
+
+Whenever modules, packages, data assets, or entry points move/rename — and before tagging a release — inspect and update all non-source consumers:
+
+1. `.github/workflows/release.yml` (inline Python checks, `VERSION`/tag parity, clean wheel verification imports, artifact filenames, `pip`/`certifi` minimums).
+2. `main.spec` (top-level imports, `hidden_imports`, `datas`, `runtime_hooks`, `excludes`).
+3. `packaging/` (`windows/build_windows.py`, `macos/build_dmg.py`, `macos/pyinstaller_runtime_hook.py`, `linux/build_linux.py`, `linux/spectroview.desktop`).
+4. `pyproject.toml` (`[project.scripts]`, `[tool.setuptools.package-data]`, `[tool.setuptools.packages.find]`, `dependencies`).
+5. `spectroview/main.py` (keep concrete module imports rather than PEP 562 `__getattr__` lazy facades so PyInstaller `ModuleGraph` statically traverses all workspaces, ViewModels, and components).
+6. Run the release & packaging gate (and verify PyInstaller `ModuleGraph` coverage whenever entry points or lazy facades change):
+   `python -m pytest tests/unit/test_release_workflow.py tests/unit/test_packaging_windows.py tests/unit/test_packaging_macos.py tests/unit/test_packaging_linux.py tests/performance/test_startup_imports.py -v`

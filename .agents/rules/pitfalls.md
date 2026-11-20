@@ -89,3 +89,15 @@ Hard-won gotchas that have bitten this codebase. The guards described below are 
 
 - **Trap**: On modern Apple Silicon macOS (Sonoma, Sequoia), `matplotlib.font_manager._get_macos_fonts()` executes `system_profiler -xml SPFontsDataType` and unconditionally accesses `d['_items']`. `system_profiler` takes 10+ seconds and returns a dictionary without `_items`, throwing an unhandled `KeyError: '_items'` that crashes any application or frozen bundle importing matplotlib on any machine without a pre-existing font cache.
 - **Rule**: `spectroview/model/system/m_macos_font_patch.py::apply_macos_font_cache_fix` intercepts `subprocess.check_output` calls targeting `system_profiler ... SPFontsDataType` and raises `subprocess.CalledProcessError`. Matplotlib's existing `try/except` catches this and cleanly falls back to scanning `OSXFontDirectories` (`/System/Library/Fonts`, `/Library/Fonts`, `~/Library/Fonts`), discovering all 600+ system fonts in < 0.1s without freezing or crashing. This patch is applied in `spectroview/__init__.py`, `spectroview/main.py`, and PyInstaller's `packaging/macos/pyinstaller_runtime_hook.py`.
+
+---
+
+## 10. Release Pipeline Stale Imports & PEP 562 Lazy Facades Breaking PyInstaller
+
+- **Trap**:
+  1. Moving or renaming modules under `spectroview/` (for example, `model/m_tls.py` $\rightarrow$ `model/system/m_tls.py`) can leave stale import paths in `.github/workflows/release.yml`, `main.spec`, `packaging/*`, or `pyproject.toml`, causing tag-triggered GitHub Actions releases to fail even when local unit tests pass.
+  2. Importing core application entrypoints in `spectroview/main.py` through a package `__init__.py` that uses PEP 562 `def __getattr__` + `importlib.import_module` prevents PyInstaller's static `ModuleGraph` from discovering the subpackage tree, silently omitting workspaces, ViewModels, and UI components from frozen Windows, macOS, and Linux bundles.
+- **Rule**:
+  1. Always run `git grep` across `.github/`, `main.spec`, `packaging/`, and `pyproject.toml` after any module move/rename or asset path change.
+  2. Never route core entrypoint imports in `spectroview/main.py` through PEP 562 lazy facades; import concrete submodules directly and mirror compatibility shims in `main.spec`'s `hidden_imports`.
+  3. Keep `tests/unit/test_release_workflow.py` (`test_release_workflow_spectroview_imports_resolve` and `test_main_entrypoint_and_spec_imports_are_pyinstaller_traceable`) green on every refactoring and before every release tag.

@@ -73,7 +73,7 @@ jobs:
               tag = f"v{pkg_version}"
               is_pre = True
 
-          from spectroview.model.m_tls import assert_safe_build_tls
+          from spectroview.model.system.m_tls import assert_safe_build_tls
           report = assert_safe_build_tls(require_pip=True)
           print(f"Verified TLS: certifi={report['certifi_version']}, pip={report['pip_version']}")
 
@@ -113,7 +113,7 @@ jobs:
           python -m venv /tmp/venv-wheel-check
           /tmp/venv-wheel-check/bin/pip install --upgrade "pip>=26.2.2" "certifi>=2026.10.23"
           /tmp/venv-wheel-check/bin/pip install dist/*.whl
-          (cd /tmp && /tmp/venv-wheel-check/bin/python -c "import spectroview; from spectroview.model.m_installation import InstallType, InstallationManager; info = InstallationManager.detect(); assert info.install_type == InstallType.PIP_WHEEL, info")
+          (cd /tmp && /tmp/venv-wheel-check/bin/python -c "import spectroview; from spectroview.model.system.m_installation import InstallType, InstallationManager; info = InstallationManager.detect(); assert info.install_type == InstallType.PIP_WHEEL, info")
 
       - uses: actions/upload-artifact@v4
         with:

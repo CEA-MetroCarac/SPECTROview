@@ -28,8 +28,11 @@ python -m pytest tests/ -m "not slow" -q
 
 # 2. Static syntax and import check on modified files
 python -m pyflakes spectroview/<modified_file>.py
+
+# 3. Release, packaging & startup-import gate (when modules moved/renamed, entry points/dependencies changed, or preparing a release)
+python -m pytest tests/unit/test_release_workflow.py tests/unit/test_packaging_windows.py tests/unit/test_packaging_macos.py tests/unit/test_packaging_linux.py tests/performance/test_startup_imports.py -v
 ```
-Both must pass with zero failures.
+All applicable checks must pass with zero failures, and `.github/workflows/release.yml`, `main.spec`, `packaging/*`, and `pyproject.toml` must contain zero stale module or asset paths.
 
 ---
 

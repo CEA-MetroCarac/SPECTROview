@@ -66,11 +66,9 @@ from spectroview.view.components.common.v_update_banner import VUpdateBanner
 from spectroview.view.components.common.v_quick_calculators import MQuickCalc
 from spectroview.view.components.common.v_menubar import VMenuBar
 from spectroview.view.components.common.v_notification import NotificationManager
-from spectroview.view.workspaces import (
-    VWorkspaceSpectra,
-    VWorkspaceMaps,
-    VWorkspaceGraphs,
-)
+from spectroview.view.workspaces.v_workspace_spectra import VWorkspaceSpectra
+from spectroview.view.workspaces.v_workspace_maps import VWorkspaceMaps
+from spectroview.view.workspaces.graphs.v_workspace_graphs import VWorkspaceGraphs
 from spectroview.view.theme import ThemeManager, setup_application_font
 
 from spectroview import get_app_icon
@@ -674,7 +672,7 @@ class Main(QMainWindow):
 
     def toggle_theme(self, theme=None):
         if theme is None:
-            theme = "light" if self.theme_mgr.is_dark else "dark"
+            theme = "light" if self.theme_mgr.is_dark else "gray"
 
         # Apply palette + QSS + Fusion refresh via the manager
         self.theme_mgr.apply(theme)

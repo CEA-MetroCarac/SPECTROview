@@ -2031,7 +2031,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <h2 id="theme-typography-system"><strong>Theme &amp; Typography System</strong><a class="headerlink" href="#theme-typography-system" title="Permanent link">&para;</a></h2>
 <p>SPECTROview uses a centralised theme and typography architecture (<code>spectroview/view/theme/</code>):</p>
 <ul>
-<li><strong><code>ThemeManager</code> (<code>manager.py</code>)</strong>: Owns the canonical active theme state (<code>dark</code>, <code>light</code>, <code>classic_dark</code>, <code>classic_light</code>), applies QPalette and parameterized stylesheets (<code>qss_template.py</code>), and manages runtime switching.</li>
+<li><strong><code>ThemeManager</code> (<code>manager.py</code>)</strong>: Owns the canonical active theme state (<code>dark</code>, <code>gray</code>, <code>light</code>, <code>classic_dark</code>, <code>classic_light</code>), applies QPalette and parameterized stylesheets (<code>qss_template.py</code>), and manages runtime switching.</li>
 <li><strong>Vector SVG Icon Architecture (<code>icons_svg.py</code> &amp; <code>icons.py</code>)</strong>: Real-time vector rendering engine (<code>_SvgIconEngine(QIconEngine)</code>) replacing pre-rasterized PNGs with crisp vector rendering at 1:1 physical device pixels, dynamic paint-time color tinting to theme tokens, and a unified <code>Icons</code> facade.</li>
 <li><strong>Cross-Platform Fonts (<code>fonts.py</code>)</strong>: <code>setup_application_font(app)</code> applies the platform-appropriate default font to <code>QApplication</code>:</li>
 <li><strong>Windows</strong>: <code>Segoe UI</code> at 10pt (standard 96-DPI Windows desktop font, ~13.3px).</li>

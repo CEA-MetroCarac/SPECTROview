@@ -37,6 +37,10 @@ over any general preference here.
 - Theme: icons that are **colorful/theme-independent** are set once and need no
   tinting; monochrome icons are tinted per theme via `get_tinted_icon(...)` in
   `apply_theme()`. Don't add tinting for a colorful icon.
+- **Internationalization (i18n)**: wrap user-facing strings with
+  `spectroview.i18n` (`tr`, `tr_plural`, `bind_*`), keep canonical `itemData` on
+  translated comboboxes, and update `spectroview/resources/i18n/fr.json` in the
+  same commit per [i18n.md](i18n.md).
 
 ## Docstrings & comments
 

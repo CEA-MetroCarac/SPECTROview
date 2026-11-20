@@ -69,6 +69,12 @@ spectroview/
 │   ├── dispatch.py         # Queued Qt main-thread execution boundary
 │   └── errors.py           # Stable integration error codes
 │
+├── i18n/                   # Centralized EN/FR localization & live Qt bindings
+│   ├── __init__.py         # Public tr/tr_plural & declarative bind_* exports
+│   ├── manager.py          # TranslationManager singleton, JSON catalog loader & QTranslator lifecycle
+│   ├── bindings.py         # Weak-ref widget/tab/combo/header live retranslation bindings
+│   └── validator.py        # AST key extractor, catalog validator & untranslated UI literal audit
+│
 ├── settings/               # Unified settings architecture (Model, ViewModel, & 2-panel Settings UI)
 │   ├── m_settings.py          # Persistent app settings & portable config.json
 │   ├── vm_settings.py         # Settings ViewModel & background LLM connection tester
@@ -263,8 +269,9 @@ spectroview/
 │   ├── noise.py                 # Noise estimation functions
 │   └── weights.py               # Region-weighted fitting mask & weight computation
 │
-├── resources/              # Icons, fonts, build_info schema, Matplotlib stylesheets
+├── resources/              # Icons, fonts, localization catalogs, Matplotlib stylesheets
 │   ├── icons/
+│   ├── i18n/fr.json        # French UI & plot translation catalog (`strings`, `plurals`, `contexts`)
 │   └── *.mplstyle
 │
 packaging/                  # Standalone platform build pipelines (reusing root main.spec)
@@ -558,6 +565,17 @@ Pushing a release tag (`vMAJOR.MINOR.PATCH` or `vMAJOR.MINOR.PATCH-rc.N` matchin
 4. **`publish-pypi`**: On stable releases, preserves the existing PyPI Trusted Publisher (`pypi` environment, `id-token: write`, `pypa/gh-action-pypi-publish@release/v1`).
 
 Before the first PyPI release on a new fork/repository, register a Trusted Publisher for `CEA-MetroCarac/SPECTROview` in PyPI with workflow filename `release.yml` and environment `pypi`.
+
+---
+
+## **Internationalization (i18n)**
+
+`SPECTROview` provides live **English** (`"en"`, default) and **French** (`"fr"`) localization via `spectroview/i18n/`:
+
+- **`TranslationManager` (`manager.py`)**: Singleton holding the active language (`get_language()` / `set_language()`), JSON catalogs (`spectroview/resources/i18n/<lang>.json`), locale-aware `tr()` / `tr_plural()`, and Qt's `QTranslator` (`qtbase_<lang>.qm`) without mutating `QLocale` (keeping dot `.` decimal parsing intact in scientific spinboxes).
+- **Live Bindings (`bindings.py`)**: Weak-referenced declarative helpers (`bind_text`, `bind_tooltip`, `bind_placeholder`, `bind_title`, `bind_window_title`, `bind_tab_text`, `bind_header_labels`, `bind_combo_items`, `on_language_changed`) re-apply labels on `set_language()` while preserving canonical keys in `Qt.UserRole` (`itemData`) via `combo_data_or_text()` / `set_combo_by_data_or_text()`.
+- **Validation & Audit (`validator.py`)**: `validate_catalog("fr")` verifies catalog completeness and placeholder parity, and `audit_untranslated_ui_literals()` scans active View/Settings/AI UI modules via AST (enforced in `tests/unit/test_i18n.py`).
+- **Extending to a New Language**: Register `(code, native_name)` in `SUPPORTED_LANGUAGES`, add `spectroview/resources/i18n/<code>.json` (plus optional `qtbase_<code>.qm`), and update `_plural_index()` in `manager.py` if plural rules differ.
 
 ---
 

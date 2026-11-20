@@ -11,9 +11,9 @@ Ouvrez le menu **Settings** via l'icône d'engrenage dans la barre d'outils prin
 Le panneau `Settings Panel` propose une interface moderne à deux volets avec filtrage instantané par recherche :
 
 - **Barre latérale gauche** :
-  - **Barre de recherche** : Saisissez n'importe quel mot-clé (par exemple `working folder`, `theme`, `tolerance`, `loss`, `mcp`, `python`, `citation`) pour filtrer instantanément la liste de navigation et surligner les options correspondantes sur la page avec défilement automatique.
+  - **Barre de recherche** : Saisissez n'importe quel mot-clé (par exemple `working folder`, `theme`, `language`, `langue`, `tolerance`, `loss`, `mcp`, `python`, `citation`) pour filtrer instantanément la liste de navigation et surligner les options correspondantes sur la page avec défilement automatique.
   - **Onglets de navigation** :
-    1. **General** — Dossier de travail SPECTROview (`Working Folder`), thème de l'interface, sauvegarde/restauration portable de la configuration et préférences de mise à jour.
+    1. **General** — Dossier de travail SPECTROview (`Working Folder`), thème de l'interface, langue de l'interface, sauvegarde/restauration portable de la configuration et préférences de mise à jour.
     2. **Fit Settings** — Paramètres de convergence de l'optimiseur, fonction de perte robuste, polarité des pics et limites globales des pics (avec icône dédiée à l'ajustement de courbes).
     3. **AI Settings** — Identifiants des fournisseurs LLM, test de connexion et serveur MCP local.
     4. **About** — Version de l'application, numéro de build, environnement Python, versions des dépendances d'exécution, documentation et citation.
@@ -49,6 +49,10 @@ Définissez un dossier racine unique pour l'ensemble des modèles, recettes, sty
 #### **Thème de l'interface**
 
 - **Theme** : Choisissez entre **Modern Dark**, **Modern Gray** (par défaut), **Modern Light**, **Classic Dark** ou **Classic Light**. Le choix met immédiatement à jour le thème actif et reste synchronisé avec le bouton de la barre de menus supérieure. Le thème du canevas des graphiques est indépendant du thème de l'interface et utilise par défaut **Light Mode** ; vous pouvez le basculer en **Dark Mode** à tout moment via le sélecteur **Plot theme** dans la barre `View Options` sous le canevas des spectres (votre choix est conservé entre les sessions).
+
+#### **Langue de l'interface**
+
+- **Language** : Choisissez entre **English** (par défaut) et **Français**. Le changement s'applique **instantanément à toute l'application** — menus, espaces de travail, visionneuses, boîtes de dialogue, libellés de graphiques scientifiques et panneau de discussion IA — sans redémarrage. Cliquer sur **Cancel** (*Annuler*) rétablit automatiquement la langue précédemment enregistrée. Le choix est persisté entre les sessions via `QSettings` et `config.json`, et le bouton **Open User Manual** (*Ouvrir le manuel utilisateur*) ouvre automatiquement la documentation anglaise (`/user_manual/`) ou française (`/fr/user_manual/`) correspondante.
 
 #### **Mises à jour de l'application**
 

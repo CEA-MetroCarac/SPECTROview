@@ -13,7 +13,7 @@ All modules are exposed through the `spectroview.api` package.
 - **[`spectroview.api.analysis`](2dmap.md#multivariate-analysis-mva)** — Multivariate analysis: PCA and NMF.
 - **[`spectroview.api.graphs`](graphs.md)** — Publication-quality plots that pixel-for-pixel match the GUI's own rendering, for all 9 supported plot styles, plus plot-template CRUD.
 - **[`spectroview.api.calculators`](calculators.md)** — Physical calculators for optics and unit conversions.
-- **`spectroview.api.settings`** — Headless read/write access to persistent configuration (fit defaults, model folder, last directory).
+- **`spectroview.api.settings`** — Headless read/write access to persistent configuration (fit defaults, model folder, last directory, interface language via `get_language()` / `set_language()`).
 - **`spectroview.api.exceptions`** — The `SpectroviewError` hierarchy raised across this package (`LoadError`, `FitModelError`, `FitError`, `WorkspaceError`, `TemplateError`).
 
 ## Exploring the API

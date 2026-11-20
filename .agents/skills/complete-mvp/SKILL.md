@@ -14,7 +14,7 @@ Follow this procedure to finalize, validate, and commit a development milestone 
 
 1. Check that all agreed requirements and acceptance criteria have been satisfied.
 2. Confirm that no temporary debug prints, test hardcoded values, or unfinished `TODO` placeholders remain.
-3. Review MVVM boundaries and PySide6 safety rules.
+3. Review MVVM boundaries, PySide6 safety rules, and EN/FR i18n coverage ([.agents/rules/i18n.md](../../rules/i18n.md)).
 
 ---
 
@@ -23,7 +23,7 @@ Follow this procedure to finalize, validate, and commit a development milestone 
 Execute all verification checks:
 
 ```powershell
-# 1. Fast test suite
+# 1. Fast test suite (includes test_i18n.py catalog and UI literal audits)
 python -m pytest tests/ -m "not slow" -q
 
 # 2. Static syntax and import check on modified files

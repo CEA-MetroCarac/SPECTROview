@@ -11,9 +11,9 @@ Access the **Settings** menu via the gear icon in the main toolbar (or press `Ct
 The `Settings Panel` features a modern two-panel interface with real-time search filtering:
 
 - **Left Sidebar**:
-  - **Search Bar**: Type any keyword (e.g. `working folder`, `theme`, `tolerance`, `loss`, `mcp`, `python`, `citation`) to instantly filter the navigation list and highlight matching options directly on the page with automatic scroll-to-view.
+  - **Search Bar**: Type any keyword (e.g. `working folder`, `theme`, `language`, `tolerance`, `loss`, `mcp`, `python`, `citation`) to instantly filter the navigation list and highlight matching options directly on the page with automatic scroll-to-view.
   - **Navigation Tabs**:
-    1. **General** — SPECTROview Working Folder, Interface Theme, portable configuration backup/restore, and update preferences.
+    1. **General** — SPECTROview Working Folder, Interface Theme, Interface Language, portable configuration backup/restore, and update preferences.
     2. **Fit Settings** — Optimizer convergence parameters, robust loss function, peak polarity, and global peak limits (with dedicated curve-fitting icon).
     3. **AI Settings** — LLM provider credentials, connection testing, and local MCP server.
     4. **About** — Application version, build number, Python environment, runtime dependency versions, documentation, and citation.
@@ -49,6 +49,10 @@ Specify a single universal root folder for all of SPECTROview's templates, recip
 #### **Interface Theme**
 
 - **Theme**: Select between **Modern Dark**, **Modern Gray** (default), **Modern Light**, **Classic Dark**, or **Classic Light**. Selection updates the active theme immediately and keeps the top menu bar theme button in perfect synchronization. The plot canvas theme is independent of the interface theme, defaulting to **Light Mode**; you can switch it to **Dark Mode** at any time via the **Plot theme** selector in the `View Options` toolbar under the spectrum canvas (your selection persists across sessions).
+
+#### **Interface Language**
+
+- **Language**: Select between **English** (default) and **Français**. Changes apply **live across the entire application** — menus, workspaces, viewers, dialogs, scientific plot labels, and the AI Chat panel — without restarting. Clicking **Cancel** rolls back any live previewed language change to the previously saved setting. The selected language persists across sessions via `QSettings` and `config.json`, and clicking **Open User Manual** automatically opens the matching English (`/user_manual/`) or French (`/fr/user_manual/`) documentation.
 
 #### **Application Updates**
 

@@ -6,7 +6,7 @@ trigger: model_decision
 
 # Common Development Workflows
 
-Step-by-step implementation touchpoints for recurring tasks. Always read the referenced files first; these lists guide orientation, not replace code investigation. Every task must conclude with tests and **bilingual documentation synchronization** (both English `*.md` and French `*.fr.md`) per [.agents/rules/documentation.md](documentation.md).
+Step-by-step implementation touchpoints for recurring tasks. Always read the referenced files first; these lists guide orientation, not replace code investigation. Every task must conclude with localization sync ([.agents/rules/i18n.md](i18n.md) + `fr.json`), tests, and **bilingual documentation synchronization** (both English `*.md` and French `*.fr.md`) per [.agents/rules/documentation.md](documentation.md).
 
 ---
 
@@ -76,10 +76,10 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 
 ## 8. Persist a New Application Setting
 
-1. Add getter and setter methods to `MSettings` (`spectroview/model/m_settings.py`).
-2. Add control to `spectroview/view/components/v_settings.py` and wire in `vm_settings.py`.
-3. Add unit test in `tests/unit/model/test_m_settings.py`.
-4. Update `docs/user_manual/settings.md`.
+1. Add getter and setter methods to `MSettings` (`spectroview/settings/m_settings.py`, mirrored via `model/m_settings.py`).
+2. Add localized control (`spectroview.i18n` + `fr.json`) to the appropriate tab under `spectroview/settings/ui/` and wire in `vm_settings.py`.
+3. Add unit test in `tests/unit/model/test_m_settings.py` (and `tests/unit/test_i18n.py` if user-facing).
+4. Update `docs/user_manual/settings.md` and `settings.fr.md`.
 
 ---
 

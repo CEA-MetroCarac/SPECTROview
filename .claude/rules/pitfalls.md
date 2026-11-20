@@ -55,6 +55,13 @@ label/tick/spine colors; they must be re-applied from `plt.rcParams` inside the
 plot's style context (see `_set_figure_style`). Watch for this when adding dark-
 theme-sensitive rendering.
 
+## i18n live-switching traps
+Never pass `count=` as a keyword arg to `tr_plural()`, always escape literal
+braces (`cm$^{{-1}}$`) in formatted templates, preserve canonical keys in
+`QComboBox` `Qt.UserRole` via `bind_combo_items`/`combo_data_or_text`, and never
+call `QLocale.setDefault(QLocale("fr_FR"))` globally (spinboxes must keep `.`). See
+[i18n.md](i18n.md).
+
 ## matplotlib version is pinned
 `matplotlib>=3.6.2,<3.10.9`. Some artist return types differ across versions
 (e.g. `axvspan` returns a `Rectangle` here). Verify artist APIs empirically

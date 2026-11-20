@@ -31,7 +31,7 @@ Follow this procedure to eliminate bugs at their root cause while safeguarding a
 
 1. Apply the smallest complete fix that resolves the issue at the source without unnecessary refactoring.
 2. Ensure backward compatibility and preserve adjacent features.
-3. Adhere to [.agents/rules/coding-standards.md](../../rules/coding-standards.md) and MVVM separation.
+3. Adhere to [.agents/rules/coding-standards.md](../../rules/coding-standards.md), [.agents/rules/i18n.md](../../rules/i18n.md) (updating `fr.json` if any UI/error text changed), and MVVM separation.
 
 ---
 

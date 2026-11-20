@@ -13,7 +13,7 @@ Tous les modules sont exposés via le paquet `spectroview.api`.
 - **[`spectroview.api.analysis`](2dmap.md#analyse-multivariee-mva)** — Analyse multivariée : ACP (PCA) et NMF.
 - **[`spectroview.api.graphs`](graphs.md)** — Graphiques prêts pour la publication reproduisant au pixel près le rendu de l'interface graphique, pour les 9 styles de tracé pris en charge, ainsi que la gestion des modèles de tracé.
 - **[`spectroview.api.calculators`](calculators.md)** — Calculateurs physiques pour l'optique et les conversions d'unités.
-- **`spectroview.api.settings`** — Accès en lecture/écriture sans interface graphique à la configuration persistante (paramètres d'ajustement par défaut, dossier des modèles, dernier répertoire utilisé).
+- **`spectroview.api.settings`** — Accès en lecture/écriture sans interface graphique à la configuration persistante (paramètres d'ajustement par défaut, dossier des modèles, dernier répertoire utilisé, langue de l'interface via `get_language()` / `set_language()`).
 - **`spectroview.api.exceptions`** — La hiérarchie `SpectroviewError` levée dans l'ensemble du paquet (`LoadError`, `FitModelError`, `FitError`, `WorkspaceError`, `TemplateError`).
 
 ## Explorer l'API

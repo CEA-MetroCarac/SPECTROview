@@ -101,3 +101,14 @@ Hard-won gotchas that have bitten this codebase. The guards described below are 
   1. Always run `git grep` across `.github/`, `main.spec`, `packaging/`, and `pyproject.toml` after any module move/rename or asset path change.
   2. Never route core entrypoint imports in `spectroview/main.py` through PEP 562 lazy facades; import concrete submodules directly and mirror compatibility shims in `main.spec`'s `hidden_imports`.
   3. Keep `tests/unit/test_release_workflow.py` (`test_release_workflow_spectroview_imports_resolve` and `test_main_entrypoint_and_spec_imports_are_pyinstaller_traceable`) green on every refactoring and before every release tag.
+
+---
+
+## 11. i18n Plural, Format & `QComboBox` Traps
+
+- **Trap**:
+  1. Passing `count=...` as a keyword argument to `tr_plural(singular, plural, count, ...)` raises `TypeError: tr_plural() got multiple values for argument 'count'`.
+  2. Calling `tr("...{peak}...cm$^{-1}$...", peak=p)` fails formatting (`{-1}` `KeyError`) unless literal braces are escaped as `cm$^{{-1}}$`.
+  3. Reading `combo.currentText()` on a translated `QComboBox` returns `"Mode clair"` instead of `"Light Mode"`, breaking model/renderer switches in French.
+  4. Setting `QLocale.setDefault(QLocale("fr_FR"))` globally flips `QDoubleSpinBox` decimal separators to `,`.
+- **Rule**: Follow [.agents/rules/i18n.md](i18n.md): omit redundant `count=` in `tr_plural`, escape literal LaTeX braces, always use `bind_combo_items` + `combo_data_or_text`/`set_combo_by_data_or_text` with canonical `itemData`, and rely solely on `QTranslator` (`qtbase_fr.qm`) without mutating `QLocale`.

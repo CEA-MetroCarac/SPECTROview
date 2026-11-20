@@ -53,6 +53,7 @@ Detailed project rules and procedures are modularized in Antigravity workspace r
 - **[architecture.md](file:///.agents/rules/architecture.md)** `[always_on]`: Module map, MVVM boundaries, workspaces, and data backbone.
 - **[git-workflow.md](file:///.agents/rules/git-workflow.md)** `[always_on]`: Conventional Commits, milestone commits, atomic staging, and repository safety.
 - **[coding-standards.md](file:///.agents/rules/coding-standards.md)** `[model_decision]`: Qt idioms, PySide6 conventions, vectorization, docstrings, and style mechanics.
+- **[i18n.md](file:///.agents/rules/i18n.md)** `[model_decision]`: Mandatory EN/FR GUI localization (`spectroview.i18n`, `fr.json`, canonical `itemData`, catalog/UI literal audits).
 - **[testing.md](file:///.agents/rules/testing.md)** `[model_decision]`: Test execution, headless Qt (`offscreen`), fixtures (`qapp`, `_isolate_qsettings`), and visual checks.
 - **[documentation.md](file:///.agents/rules/documentation.md)** `[model_decision]`: Mandatory synchronization across Developer Guide, Public API, and User Manual.
 - **[pitfalls.md](file:///.agents/rules/pitfalls.md)** `[model_decision]`: Hard-won gotchas (QTimer parentage, headless surface budgets, QSettings isolation, twinx coordinates).
@@ -86,11 +87,11 @@ For every task, execute these steps proportionally:
    - Keep planning proportional: deep for architectural shifts, concise for small fixes.
 3. **Implement**:
    - Make the smallest complete change that satisfies the requirements.
-   - Follow MVVM boundaries, PySide6 idioms, and vectorization practices.
+   - Follow MVVM boundaries, PySide6 idioms, vectorization, and EN/FR i18n localization rules ([.agents/rules/i18n.md](file:///.agents/rules/i18n.md), updating `spectroview/resources/i18n/fr.json` alongside new UI strings).
    - Author corresponding unit or integration tests alongside the feature code in the same session.
    - Preserve existing public API signatures and backward compatibility.
 4. **Test & Verify**:
-   - Run newly authored tests and relevant unit/integration suites with headless Qt enabled.
+   - Run newly authored tests, `python -m pytest tests/unit/test_i18n.py -v` (when UI/ViewModel strings change), and relevant unit/integration suites with headless Qt enabled.
    - Ensure tests execute cleanly without event loop exceptions (`RuntimeError: Internal C++ object already deleted`).
    - Run static check on changed files (`python -m pyflakes spectroview/<file>.py`).
    - Review git diff to ensure no unintended edits, leftover debug prints, or unwanted files.
@@ -160,7 +161,7 @@ python -m spectroview.main
 
 A task is complete only when:
 1. The implementation satisfies all acceptance criteria without breaking contracts or introducing regressions.
-2. New or updated unit/integration tests cover the new feature and pass cleanly without event loop warnings or memory leaks.
+2. New or updated unit/integration tests cover the new feature and pass cleanly without event loop warnings or memory leaks (`test_i18n.py` catalog & UI literal audits pass when GUI/ViewModel strings change).
 3. Relevant documentation across the three doc surfaces has been synchronized in both English and French (with passing docs build/parity checks) in the same task.
 4. The final diff has been inspected and contains no unrelated changes.
 5. Completed milestones are committed with a meaningful Conventional Commit.

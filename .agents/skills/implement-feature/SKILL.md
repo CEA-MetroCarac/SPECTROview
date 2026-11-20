@@ -44,6 +44,7 @@ Outline:
 1. **Write Clean, Idiomatic Code**:
    - Keep heavy packages (`scipy.*`, LLMs) off startup imports.
    - Use theme variables and ensure dark-theme compatibility.
+   - Wrap all user-facing GUI and ViewModel strings via `spectroview.i18n` (`tr`, `tr_plural`, `bind_*`, `on_language_changed`), keep canonical `itemData` on translated comboboxes, and add French translations in `spectroview/resources/i18n/fr.json` per [.agents/rules/i18n.md](../../rules/i18n.md).
    - Connect View $\leftrightarrow$ ViewModel strictly via Qt signals.
    - For bulk operations, implement the `_apply_with_ctrl(fn)` pattern.
    - **Qt Lifetime**: Always parent `QTimer`, event filters, and helpers. For single-shot timers, ALWAYS use `QTimer.singleShot(msec, context, slot)`; never use 2-arg lambdas referencing widgets.
@@ -67,6 +68,9 @@ Outline:
    ```powershell
    # Run the newly authored test
    python -m pytest tests/unit/view/test_<new_feature>.py -v
+
+   # Run i18n catalog & UI literal audits when UI/ViewModel strings changed
+   python -m pytest tests/unit/test_i18n.py -v
 
    # Run fast test suite to ensure zero regressions
    python -m pytest tests/ -m "not slow" -q

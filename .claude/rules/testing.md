@@ -59,6 +59,10 @@ Key fixtures (all in `conftest.py`):
   (`TestModelSchemaSync` keeps `VGraph` seeded defaults in lockstep with
   `MGraph`; save-key lists in `test_m_graph.py`). If you add an `MGraph` field or
   a persisted key, update those.
+- **Localization (`tests/unit/test_i18n.py`)**: whenever UI or ViewModel user
+  strings change, run `python -m pytest tests/unit/test_i18n.py -v` to enforce
+  `validate_catalog("fr")`, `audit_untranslated_ui_literals()`, and live EN↔FR
+  switching.
 
 ## Static check
 

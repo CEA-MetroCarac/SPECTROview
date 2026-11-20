@@ -10,6 +10,7 @@ from spectroview.view.components.lists.v_metadata_tooltip import (
     MetadataTooltipPopup,
 )
 from spectroview.view.components.lists.v_spectra_list import (
+    SpectraListModel,
     SpectrumItemDelegate,
     VSpectraList,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "DataFrameTableModel",
     "MetadataTooltipManager",
     "MetadataTooltipPopup",
+    "SpectraListModel",
     "SpectrumItemDelegate",
     "VDataframeTable",
     "VMapsList",

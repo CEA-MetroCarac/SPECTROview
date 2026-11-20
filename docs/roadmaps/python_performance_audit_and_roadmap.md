@@ -70,7 +70,9 @@ Re-profiling under idle CPU (`1.6%–15.5%`) revealed that the previous high-CPU
 
 ## 3. Detailed Strategy A Workstreams (`P1`–`P6`)
 
-### `P1` — Virtualize `VSpectraList` (`QListView` + `QAbstractListModel`)
+### `P1` — Virtualize `VSpectraList` (`QListView` + `QAbstractListModel`) `[Implemented & Verified]`
+
+> **Implementation Status (`P1`)**: Virtualized `VSpectraList(QListView)` backed by `SpectraListModel(QAbstractListModel)` and `_VirtualSpectrumItem` compatibility proxy in `spectroview/view/components/lists/v_spectra_list.py`, plus $O(1)$ `set_all_checked()` batching in `VWorkspaceSpectra._on_check_all_toggled`. Verified with `tests/unit/view/test_v_spectra_list.py`, `tests/unit/view/test_v_metadata_tooltip.py`, and integration tests.
 
 #### Problem & Verified Evidence
 
@@ -96,7 +98,9 @@ Re-profiling under idle CPU (`1.6%–15.5%`) revealed that the previous high-CPU
 
 ---
 
-### `P2` — C-Contiguous Map Extraction & Hyperspectral Map Memory De-Duplication
+### `P2` — C-Contiguous Map Extraction & Hyperspectral Map Memory De-Duplication `[Implemented & Verified]`
+
+> **Implementation Status (`P2`)**: Enforced `C_CONTIGUOUS` `float32` `Y0` in `m_io.extract_map_arrays` and `SpectraStore.add_map` (`P2.1`), eliminated the duplicate `VMWorkspaceMaps.maps[name]` `float64` matrix by sharing `md.Y0`'s `float32` buffer (`P2.2`), preserved `float32` across `eval_baseline_batch` / preprocessing / `VBFthread` `Y_bestfit` without allocating blank `Y_baseline` arrays (`P2.3`), and replaced eager 3D `Y_peaks` arrays with on-demand `LazyPeakArray` views (`P2.4`).
 
 #### Problem & Verified Evidence
 
@@ -293,15 +297,15 @@ When ready to implement Strategy A, execute the workstreams in three self-contai
 ### Milestone 1 — Memory Layout, OpenBLAS Thread Guard & Map RAM De-Duplication (`P2` + `P4.1` + `P4.3`)
 
 - [ ] Set default `OPENBLAS_NUM_THREADS=2` / `OMP_NUM_THREADS=2` in `spectroview/__init__.py` (before `numpy` import) when not overridden by the user's environment.
-- [ ] Enforce `np.ascontiguousarray(..., dtype=np.float32)` on `Y0` in `m_io.extract_map_arrays` (`m_io.py:309–312`).
+- [x] Enforce `np.ascontiguousarray(..., dtype=np.float32)` on `Y0` in `m_io.extract_map_arrays` (`m_io.py:309–312`).
 - [ ] Preserve `float32` in `moving_average_5` and replace full `np.sum(y)` in `_array_2d_fingerprint` with strided sub-sampling (`noise.py`).
-- [ ] Eliminate duplicate `VMWorkspaceMaps.maps[name]` `float64` DataFrame, keep `md.Y` and `md.Y_bestfit` in `float32`, and make `md.Y_peaks` lazy on demand.
+- [x] Eliminate duplicate `VMWorkspaceMaps.maps[name]` `float64` DataFrame, keep `md.Y` and `md.Y_bestfit` in `float32`, and make `md.Y_peaks` lazy on demand.
 - **Verification Gate**: `python -m pytest tests/unit/model tests/unit/viewmodel tests/unit/fit_engine -q` + verify `Y0.flags["C_CONTIGUOUS"] is True` on `.txt`, `.csv`, `.wdf`, `.spc`, and `.l6m` maps.
 
-### Milestone 2 — `VSpectraList` Virtualization (`P1`)
+### Milestone 2 — `VSpectraList` Virtualization (`P1`) `[Completed]`
 
-- [ ] Refactor `VSpectraList` (`spectroview/view/components/lists/v_spectra_list.py`) to use `QListView` (`setUniformItemSizes(True)`) + `SpectraListModel(QAbstractListModel)`, following the proven pattern in `VDataframeTable` (`v_dataframe_table.py`).
-- **Verification Gate**: `python -m pytest tests/unit/view -q` + benchmark assertion that `set_spectra_names` for `16,384` items completes in `< 25 ms`.
+- [x] Refactor `VSpectraList` (`spectroview/view/components/lists/v_spectra_list.py`) to use `QListView` (`setUniformItemSizes(True)`) + `SpectraListModel(QAbstractListModel)`, following the proven pattern in `VDataframeTable` (`v_dataframe_table.py`).
+- **Verification Gate**: `python -m pytest tests/unit/view/test_v_spectra_list.py tests/unit/view/test_v_metadata_tooltip.py -v` + benchmark assertion that `set_spectra_names` for `16,384` items completes well below the `< 25 ms` target.
 
 ### Milestone 3 — Fast PCA/NMF, Closed-Form $3 \times 3$ VBF Solver & Vectorized `SNIP` / Background Workers (`P3` + `P4.2` + `P5` + `P6`)
 

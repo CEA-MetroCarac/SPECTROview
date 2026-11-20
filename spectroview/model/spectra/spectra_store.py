@@ -210,9 +210,9 @@ class SpectraStore:
 
         self._maps[name] = MapData(
             name=name,
-            x0=x0.astype(np.float64, copy=False),
-            Y0=Y0.astype(np.float32, copy=False),
-            coords=coords.astype(np.float64, copy=False),
+            x0=np.ascontiguousarray(x0, dtype=np.float64),
+            Y0=np.ascontiguousarray(Y0, dtype=np.float32),
+            coords=np.ascontiguousarray(coords, dtype=np.float64),
             is_active=is_active.copy(),
             fnames=list(fnames),
             colors=list(colors),
@@ -334,7 +334,7 @@ class SpectraStore:
                     pass
                 
         md.x = x_proc
-        md.Y = Y_proc
+        md.Y = np.ascontiguousarray(Y_proc, dtype=np.float32)
 
     # ── Fit result accessors ──────────────────────────────────────────────
 
@@ -533,9 +533,10 @@ class SpectraStore:
             result[f'{pfx}_Y_bestfit'] = md.Y_bestfit
             if md.Y_baseline is not None:
                 result[f'{pfx}_Y_baseline'] = md.Y_baseline
-            if md.Y_peaks is not None:
+            if md.Y_peaks is not None and md.peak_params is None:
                 for i, p_arr in enumerate(md.Y_peaks):
-                    result[f'{pfx}_Y_peak_{i}'] = p_arr
+                    if isinstance(p_arr, np.ndarray):
+                        result[f'{pfx}_Y_peak_{i}'] = p_arr
 
         return result
 
@@ -642,7 +643,7 @@ class SpectraStore:
             if f'{pfx}_Y_baseline' in arrays:
                 md.Y_baseline = arrays[f'{pfx}_Y_baseline']
             
-            # Reconstruct Y_peaks
+            # Reconstruct Y_peaks (lazy on-demand for fitted maps to avoid huge 3D allocations)
             peak_arrays = []
             i = 0
             while f'{pfx}_Y_peak_{i}' in arrays:
@@ -650,6 +651,11 @@ class SpectraStore:
                 i += 1
             if peak_arrays:
                 md.Y_peaks = peak_arrays
+            elif md.fit_model and md.fit_model.get("peak_models"):
+                md.Y_peaks = [
+                    LazyPeakArray(md, idx)
+                    for idx in range(len(md.fit_model["peak_models"]))
+                ]
 
         return store
 
@@ -794,6 +800,105 @@ class SpectraStore:
             area_cols[area_name] = area.round(decimals)
 
         return area_cols
+
+
+class LazyPeakArray:
+    """On-demand 2D view representing a single peak's (N, M) fitted/seed curves.
+
+    Avoids materializing full (N, P, M) tensors for large hyperspectral maps while
+    preserving ``p[idx]`` and ``p[indices]`` slicing and ``np.asarray(p)`` conversion.
+    """
+
+    def __init__(self, md: MapData, peak_idx: int):
+        self._md = md
+        self._peak_idx = peak_idx
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        x_axis = self._md.x_axis
+        m_cols = len(x_axis) if x_axis is not None else 0
+        return (self._md.n_spectra, m_cols)
+
+    @property
+    def dtype(self) -> np.dtype:
+        return np.dtype(np.float32)
+
+    @property
+    def ndim(self) -> int:
+        return 2
+
+    def __len__(self) -> int:
+        return self._md.n_spectra
+
+    def __setitem__(self, key, value):
+        # No-op: lazy evaluation reads directly from md.peak_params / md.fit_model.
+        return
+
+    def __array__(self, dtype=None, copy=None) -> np.ndarray:
+        arr = self[:]
+        if dtype is not None and arr.dtype != np.dtype(dtype):
+            return arr.astype(dtype)
+        return arr
+
+    def _get_cached_evaluator(self):
+        fm = self._md.fit_model
+        if not fm or not fm.get("peak_models"):
+            return None
+        from spectroview.fit_engine.evaluator import VBFevaluator
+
+        cache = getattr(self._md, "_lazy_peak_eval_cache", None)
+        sig = (id(fm), len(fm.get("peak_models", {})), tuple(self._md.param_names or ()))
+        if cache is not None and cache[0] == sig:
+            return cache[1]
+        ev = VBFevaluator.from_fit_model(fm)
+        object.__setattr__(self._md, "_lazy_peak_eval_cache", (sig, ev))
+        return ev
+
+    def __getitem__(self, key) -> np.ndarray:
+        from spectroview.fit_engine.evaluator import eval_peak_initial
+
+        x_axis = self._md.x_axis
+        if x_axis is None or len(x_axis) == 0:
+            return np.empty(0, dtype=np.float32)
+        m_cols = len(x_axis)
+        is_scalar = isinstance(key, (int, np.integer))
+
+        fm = self._md.fit_model
+        peak_models_dict = fm.get("peak_models") if isinstance(fm, dict) else None
+        if not peak_models_dict or self._peak_idx >= len(peak_models_dict):
+            if is_scalar:
+                return np.zeros(m_cols, dtype=np.float32)
+            n_sel = np.empty(self._md.n_spectra, dtype=np.int8)[key].shape[0]
+            return np.zeros((n_sel, m_cols), dtype=np.float32)
+
+        peak_models_list = list(peak_models_dict.values())
+        peak_model = peak_models_list[self._peak_idx]
+
+        pp = self._md.peak_params
+        if pp is not None and self._md.has_fit_results():
+            ev = self._get_cached_evaluator()
+            if (
+                ev is not None
+                and self._peak_idx < len(ev._peaks)
+                and pp.shape[1] == ev._n_total
+            ):
+                _, slc, eval_fn, _, _ = ev._peaks[self._peak_idx]
+                sub_params = pp[key]
+                if sub_params.ndim == 1:
+                    if np.any(sub_params != 0.0):
+                        return eval_fn(x_axis, sub_params[None, slc])[0].astype(np.float32)
+                    return eval_peak_initial(x_axis, peak_model).astype(np.float32)
+                out = eval_fn(x_axis, sub_params[:, slc]).astype(np.float32)
+                zero_rows = ~np.any(sub_params != 0.0, axis=1)
+                if np.any(zero_rows):
+                    out[zero_rows] = eval_peak_initial(x_axis, peak_model).astype(np.float32)
+                return out
+
+        y_curve = eval_peak_initial(x_axis, peak_model).astype(np.float32)
+        if is_scalar:
+            return y_curve
+        n_sel = np.empty(self._md.n_spectra, dtype=np.int8)[key].shape[0]
+        return np.tile(y_curve, (n_sel, 1))
 
 
 class BaselineProxy:

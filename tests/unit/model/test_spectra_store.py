@@ -39,12 +39,28 @@ class TestAddMap:
     def test_x0_and_y0_are_copied_and_dtype_cast(self):
         store = SpectraStore()
         x0 = np.linspace(0, 1, 10).astype(np.float32)  # deliberately wrong dtype
-        Y0 = np.ones((2, 10), dtype=np.float64)
+        Y0 = np.asfortranarray(np.ones((2, 10), dtype=np.float64))
         coords = np.zeros((2, 2))
         store.add_map("m", x0, Y0, coords, ["a", "b"])
         md = store.get_map_data("m")
         assert md.x0.dtype == np.float64
         assert md.Y0.dtype == np.float32
+        assert md.Y0.flags["C_CONTIGUOUS"]
+
+    def test_extract_map_arrays_enforces_c_contiguous_float32(self):
+        import pandas as pd
+        from spectroview.model.io.m_io import extract_map_arrays
+
+        f_mat = np.asfortranarray(np.arange(12, dtype=np.float64).reshape(4, 3))
+        df = pd.DataFrame(f_mat, columns=["500.0", "510.0", "520.0"], copy=False)
+        df.insert(0, "Y", [0.0, 0.0, 1.0, 1.0])
+        df.insert(0, "X", [0.0, 1.0, 0.0, 1.0])
+        assert df.iloc[:, 2:].to_numpy().flags["F_CONTIGUOUS"]
+
+        x0, Y0, coords, fnames = extract_map_arrays("m", df)
+        assert Y0.dtype == np.float32
+        assert Y0.flags["C_CONTIGUOUS"]
+        np.testing.assert_allclose(Y0, f_mat.astype(np.float32))
 
     def test_custom_is_active_colors_labels(self):
         store = SpectraStore()

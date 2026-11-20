@@ -19,7 +19,7 @@ graph LR
         SLE["SpectraLegendEditorDialog<br/>(batch legend editor)"]
         FMB["VFitModelBuilder<br/>(controls panel)"]
         PT["VPeakTable<br/>(parameter table)"]
-        SL["VSpectraList<br/>(QListWidget)"]
+        SL["VSpectraList<br/>(QListView)"]
         FR["VFitResults<br/>(results table)"]
         MVA["VMVA<br/>(PCA/NMF panel)"]
     end

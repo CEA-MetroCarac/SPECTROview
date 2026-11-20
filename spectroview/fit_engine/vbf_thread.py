@@ -194,6 +194,7 @@ class VBFthread(QThread):
         return engine.fit_spectra(
             x=x, Y=Y_sub, fit_model=fit_model, weights=weights, fit_params=fit_model.get("fit_params", {}),
             progress_callback=on_progress, cancel_check=lambda: self._is_cancelled,
+            return_peaks=False,
         )
 
     def _write_results(self, md, map_name, indices, p_full, success, rsquared, best_fits, Y_peaks, param_names, fit_model):
@@ -206,16 +207,16 @@ class VBFthread(QThread):
         )
 
         y_full = md.Y if md.Y is not None else md.Y0
-        if md.Y_bestfit is None:
-            md.Y_bestfit = np.zeros_like(y_full)
-        if md.Y_baseline is None:
-            md.Y_baseline = np.zeros_like(y_full)
-        md.Y_bestfit[indices] = best_fits
+        if md.Y_bestfit is None or md.Y_bestfit.shape != y_full.shape:
+            md.Y_bestfit = np.zeros(y_full.shape, dtype=np.float32)
+        md.Y_bestfit[indices] = np.asarray(best_fits, dtype=np.float32)
 
-        if Y_peaks:
-            if md.Y_peaks is None or len(md.Y_peaks) != len(Y_peaks):
-                md.Y_peaks = [np.zeros_like(y_full) for _ in Y_peaks]
-            for p_idx, p_arr in enumerate(Y_peaks):
-                md.Y_peaks[p_idx][indices] = p_arr
+        peak_models = fit_model.get("peak_models") if isinstance(fit_model, dict) else None
+        if peak_models:
+            from spectroview.model.spectra.spectra_store import LazyPeakArray
+
+            md.Y_peaks = [LazyPeakArray(md, i) for i in range(len(peak_models))]
+        else:
+            md.Y_peaks = None
 
    

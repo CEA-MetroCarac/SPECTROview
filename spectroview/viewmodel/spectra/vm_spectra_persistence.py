@@ -22,9 +22,9 @@ class SpectraPersistenceMixin:
 
     @staticmethod
     def _build_map_df_from_md(md) -> pd.DataFrame:
-        """Build a legacy [X, Y, <wavenumbers...>] DataFrame from a MapData object."""
+        """Build a [X, Y, <wavenumbers...>] DataFrame sharing md.Y0's float32 buffer."""
         col_names = list(map(str, md.x0))
-        df = pd.DataFrame(md.Y0, columns=col_names)
+        df = pd.DataFrame(md.Y0, columns=col_names, copy=False)
         coords = (
             md.coords
             if md.coords is not None
@@ -70,10 +70,12 @@ class SpectraPersistenceMixin:
             if isinstance(is_sub, np.ndarray):
                 sub_indices = np.where(is_sub)[0]
                 if len(sub_indices) > 0:
-                    md.Y[sub_indices] = md.Y[sub_indices] - md.Y_baseline[sub_indices]
+                    md.Y[sub_indices] = (md.Y[sub_indices] - md.Y_baseline[sub_indices]).astype(
+                        np.float32, copy=False
+                    )
                     md.Y_baseline[sub_indices] = 0.0
             else:
-                md.Y = md.Y - md.Y_baseline
+                md.Y = (md.Y - md.Y_baseline).astype(np.float32, copy=False)
                 md.Y_baseline = None
 
         # 6. Reconstruct Y_peaks and Y_bestfit
@@ -280,7 +282,7 @@ class SpectraPersistenceMixin:
                     )
 
                 if md.is_baseline_subtracted and md.Y_baseline is not None:
-                    md.Y = md.Y - md.Y_baseline
+                    md.Y = (md.Y - md.Y_baseline).astype(np.float32, copy=False)
                     md.Y_baseline = None
 
                 legacy_peaks = sdata.get("peak_models")

@@ -82,8 +82,11 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
                 else:
                     map_df = load_map_file(path)
                     self.maps_metadata[map_name] = {}
-                self.maps[map_name] = map_df
                 self._extract_spectra_from_map(map_name, map_df)
+                md = self.store.get_map_data(map_name)
+                self.maps[map_name] = (
+                    self._build_map_df_from_md(md) if md is not None else map_df
+                )
                 loaded_maps.append(map_name)
                 last_valid_path = path
             except Exception as e:
@@ -312,9 +315,11 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
         if not self.current_map_name or self.current_map_name not in self.maps:
             return None
 
-        df = self.maps[self.current_map_name]
-
         md = self.store.get_map_data(self.current_map_name)
+        df = self.maps[self.current_map_name]
+        if df is None and md is not None:
+            df = self._build_map_df_from_md(md)
+            self.maps[self.current_map_name] = df
         if md is None or not hasattr(md, "is_active") or md.is_active is None:
             return df
 

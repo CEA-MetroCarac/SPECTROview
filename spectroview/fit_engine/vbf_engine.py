@@ -31,6 +31,7 @@ class VBFengine:
         progress_callback=None,
         cancel_check=None,
         print_benchmark: bool = False,  # Set to True for debugging/benchmarking
+        return_peaks: bool = True,
     ):
         """Fit all spectra simultaneously using the VBF engine.
 
@@ -129,7 +130,7 @@ class VBFengine:
         # ─── 5. Write back results (batch-optimized) ───
         t0 = time.perf_counter()
         p_full, success, rsquared, best_fits, Y_peaks = evaluator.build_results_batch(
-            p_opt, x, Y, success, weights, shared_x
+            p_opt, x, Y, success, weights, shared_x, return_peaks=return_peaks
         )
         t_step5 = time.perf_counter() - t0
         self.timings["Step 5 - write_back"] = f"{t_step5:.3f}s"

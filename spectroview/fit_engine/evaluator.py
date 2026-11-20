@@ -514,7 +514,16 @@ class VBFevaluator:
 
     # ── Result construction ──────────────────────────────────────────────
 
-    def build_results_batch(self, p_opt, x, Y_data, success, weights, shared_x):
+    def build_results_batch(
+        self,
+        p_opt,
+        x,
+        Y_data,
+        success,
+        weights,
+        shared_x,
+        return_peaks: bool = True,
+    ):
         """Build FitResults for all spectra in one vectorized pass.
 
         Args:
@@ -524,13 +533,16 @@ class VBFevaluator:
             success: (N,) bool
             weights: (N, M) or None
             shared_x: bool — whether all spectra share the same x-axis
+            return_peaks: If False, accumulate best_fits in-place via a single
+                reused scratch buffer and return an empty Y_peaks list to avoid
+                allocating (N, P, M) tensors for large maps.
             
         Returns:
             p_full: (N, K_total) full parameters
             success: (N,) bool array
             rsquared: (N,) r2 array
             best_fits: (N, M) best fit array
-            Y_peaks: list of (N, M) for each peak model
+            Y_peaks: list of (N, M) for each peak model (or [] when return_peaks=False)
         """
         N = p_opt.shape[0]
 
@@ -540,15 +552,28 @@ class VBFevaluator:
         # ── Evaluate each peak once; best_fit is their sum (avoids a second
         #    pass over every peak that a separate evaluate() call would cost) ──
         M = x.shape[-1] if hasattr(x, "shape") else len(x)
-        Y_peaks = [eval_fn(x, p_full[:, slc]) for _, slc, eval_fn, _, _ in self._peaks]
-        if not Y_peaks:
+        if not return_peaks:
+            Y_peaks = []
             best_fits = np.zeros((N, M), dtype=np.float64)
-        elif len(Y_peaks) == 1:
-            best_fits = Y_peaks[0].copy()
+            scratch = None
+            for (_, slc, eval_fn, _, _), (eval_out, _) in zip(self._peaks, self._peak_out_flags):
+                if eval_out:
+                    if scratch is None:
+                        scratch = np.empty((N, M), dtype=np.float64)
+                    eval_fn(x, p_full[:, slc], out=scratch)
+                    best_fits += scratch
+                else:
+                    best_fits += eval_fn(x, p_full[:, slc])
         else:
-            best_fits = Y_peaks[0].copy()
-            for Y_p in Y_peaks[1:]:
-                best_fits += Y_p
+            Y_peaks = [eval_fn(x, p_full[:, slc]) for _, slc, eval_fn, _, _ in self._peaks]
+            if not Y_peaks:
+                best_fits = np.zeros((N, M), dtype=np.float64)
+            elif len(Y_peaks) == 1:
+                best_fits = Y_peaks[0].copy()
+            else:
+                best_fits = Y_peaks[0].copy()
+                for Y_p in Y_peaks[1:]:
+                    best_fits += Y_p
 
         # ── Vectorized R² (single scratch buffer) ──
         diff = Y_data - best_fits

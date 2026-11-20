@@ -61,10 +61,12 @@ class SpectraFittingMixin:
                     print(f"Error updating parameter {p_name} from fit: {e}")
 
     def _reconstruct_y_peaks(self, md, indices=None, include_bestfit: bool = False):
-        """Reconstruct md.Y_peaks (and optionally md.Y_bestfit) from current fit_model."""
+        """Reconstruct md.Y_peaks lazily (and optionally md.Y_bestfit) from current fit_model."""
         if not md or not md.fit_model or not md.fit_model.get("peak_models"):
             md.Y_peaks = None
             return
+
+        from spectroview.model.spectra.spectra_store import LazyPeakArray
 
         x_arr = md.x_axis
         n_rows = md.y_matrix.shape[0]
@@ -73,31 +75,24 @@ class SpectraFittingMixin:
         peak_models = list(md.fit_model["peak_models"].values())
         num_peaks = len(peak_models)
 
-        if indices is None:
-            md.Y_peaks = []
-            total_peaks = np.zeros((n_rows, m_cols), dtype=np.float32) if include_bestfit else None
-            for p_model in peak_models:
-                y_curve = eval_peak_initial(x_arr, p_model)
-                y_curve_batch = np.tile(y_curve, (n_rows, 1)).astype(np.float32)
-                md.Y_peaks.append(y_curve_batch)
-                if include_bestfit:
-                    total_peaks += y_curve_batch
-            if include_bestfit:
-                is_sub = md.is_baseline_subtracted
-                is_sub_all = is_sub.all() if isinstance(is_sub, np.ndarray) else bool(is_sub)
-                if not is_sub_all and md.Y_baseline is not None:
-                    md.Y_bestfit = (total_peaks + md.Y_baseline).astype(np.float32)
-                else:
-                    md.Y_bestfit = total_peaks.astype(np.float32)
-        else:
-            if md.Y_peaks is None or len(md.Y_peaks) != num_peaks:
-                md.Y_peaks = [
-                    np.zeros((n_rows, m_cols), dtype=np.float32)
-                    for _ in range(num_peaks)
-                ]
-            for p_idx, p_model in enumerate(peak_models):
-                y_curve = eval_peak_initial(x_arr, p_model)
-                md.Y_peaks[p_idx][indices] = y_curve
+        md.Y_peaks = [LazyPeakArray(md, i) for i in range(num_peaks)]
+
+        if include_bestfit:
+            if md.peak_params is not None and md.has_fit_results():
+                total_peaks = np.zeros((n_rows, m_cols), dtype=np.float32)
+                for p_lazy in md.Y_peaks:
+                    total_peaks += p_lazy[:]
+            else:
+                total_curve = np.zeros(m_cols, dtype=np.float32)
+                for p_model in peak_models:
+                    total_curve += eval_peak_initial(x_arr, p_model).astype(np.float32)
+                total_peaks = np.tile(total_curve, (n_rows, 1))
+            is_sub = md.is_baseline_subtracted
+            is_sub_all = is_sub.all() if isinstance(is_sub, np.ndarray) else bool(is_sub)
+            if not is_sub_all and md.Y_baseline is not None:
+                md.Y_bestfit = (total_peaks + md.Y_baseline).astype(np.float32)
+            else:
+                md.Y_bestfit = total_peaks.astype(np.float32)
 
     def _reindex_fit_model(self, md):
         """Re-index all peak models to consecutive keys and update default labels accordingly."""
@@ -211,15 +206,11 @@ class SpectraFittingMixin:
 
         md.fit_model["peak_models"][peak_idx] = {peak_shape: peak_model}
 
-        # Quickly evaluate and append to Y_peaks for instant preview
-        x_arr = md.x_axis
-        y_curve = eval_peak_initial(x_arr, {peak_shape: peak_model})
+        # Expose lazy per-peak evaluator for instant preview without full-map tiling
+        from spectroview.model.spectra.spectra_store import LazyPeakArray
 
-        if md.Y_peaks is None:
-            md.Y_peaks = []
-
-        n_rows = md.y_matrix.shape[0]
-        md.Y_peaks.append(np.tile(y_curve, (n_rows, 1)))
+        n_peaks = len(md.fit_model["peak_models"])
+        md.Y_peaks = [LazyPeakArray(md, i) for i in range(n_peaks)]
 
         self._emit_selected_spectra()
 
@@ -396,7 +387,7 @@ class SpectraFittingMixin:
                 md.Y_baseline = eval_baseline_batch(x_arr, y_arr, md.baseline_config)
 
                 if bl_info.get("is_subtracted", False):
-                    md.Y = md.Y - md.Y_baseline
+                    md.Y = (md.Y - md.Y_baseline).astype(np.float32, copy=False)
                     md.Y_baseline = None
                     md.is_baseline_subtracted = True
             else:
@@ -408,7 +399,9 @@ class SpectraFittingMixin:
                 md.Y_baseline[indices] = y_baseline_sel
 
                 if bl_info.get("is_subtracted", False):
-                    md.Y[indices] = md.Y[indices] - md.Y_baseline[indices]
+                    md.Y[indices] = (md.Y[indices] - md.Y_baseline[indices]).astype(
+                        np.float32, copy=False
+                    )
                     md.Y_baseline[indices] = 0.0
                     md.is_baseline_subtracted[indices] = True
 

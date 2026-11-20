@@ -540,3 +540,54 @@ class TestTwoTierMultiSelectionAndBatchDelete:
         assert "0" in md2.fit_model["peak_models"]
         assert len(md2.fit_model["peak_labels"]) == 1
 
+    def test_vm_maps_shares_y0_buffer_and_preserves_float32_across_preprocessing_and_fit(self, vm, tmp_path):
+        import pandas as pd
+        from spectroview.fit_engine.vbf_thread import VBFthread
+        from spectroview.model.spectra.spectra_store import LazyPeakArray
+
+        x = np.linspace(450.0, 550.0, 101)
+        peak = 100.0 / (1.0 + 4.0 * ((x - 500.0) / 6.0) ** 2)
+        rows = np.vstack([peak + 10.0 for _ in range(4)])
+        df = pd.DataFrame(rows, columns=[str(v) for v in x])
+        df.insert(0, "Y", [0.0, 0.0, 1.0, 1.0])
+        df.insert(0, "X", [0.0, 1.0, 0.0, 1.0])
+
+        txt_path = tmp_path / "c_contig_map.csv"
+        with open(txt_path, "w", encoding="utf-8") as f:
+            f.write("Header\n")
+        df.to_csv(txt_path, sep=";", index=False, mode="a")
+
+        vm.load_map_files([str(txt_path)])
+        md = vm.store.get_map_data("c_contig_map")
+        assert md.Y0.dtype == np.float32
+        assert md.Y0.flags["C_CONTIGUOUS"]
+        # vm.maps[name] must share md.Y0 float32 buffer instead of holding a float64 copy
+        assert np.shares_memory(vm.maps["c_contig_map"].iloc[:, 2:].to_numpy(), md.Y0)
+
+        # Preprocessing & baseline subtraction keep md.Y in float32
+        md.baseline_config = {
+            "mode": "Linear",
+            "attached": True,
+            "sigma": 0,
+            "points": [[450.0, 550.0], [0.0, 0.0]],
+        }
+        vm._on_map_data_changed(md, "subtract_baseline")
+        vm.subtract_baseline(apply_all=False)
+        assert md.Y is not None and md.Y.dtype == np.float32
+
+        # VBFthread stores float32 Y_bestfit, avoids blank Y_baseline alloc, and uses LazyPeakArray
+        md.Y_baseline = None
+        fit_model = _lorentzian_fit_model(ampli=100.0, fwhm=6.0, x0=500.0)
+        tasks = [{"map_name": "c_contig_map", "indices": np.arange(4), "fit_model": fit_model}]
+        VBFthread(vm.store, tasks).run()
+
+        assert md.Y_bestfit is not None and md.Y_bestfit.dtype == np.float32
+        assert md.Y_baseline is None
+        assert md.Y_peaks is not None and len(md.Y_peaks) == 1
+        assert isinstance(md.Y_peaks[0], LazyPeakArray)
+        sliced = md.Y_peaks[0][np.array([0, 2])]
+        assert sliced.dtype == np.float32 and sliced.shape == (2, 101)
+        single = md.Y_peaks[0][1]
+        assert single.dtype == np.float32 and single.shape == (101,)
+        np.testing.assert_allclose(md.Y_bestfit[1], single, rtol=1e-5, atol=1e-5)
+

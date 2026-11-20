@@ -219,17 +219,17 @@ class SpectraPreprocessingMixin:
                 and getattr(md, "intensity_norm_factor", 1.0) != 0
             ):
                 if md.Y is not None:
-                    md.Y = md.Y * md.intensity_norm_factor
+                    md.Y = (md.Y * md.intensity_norm_factor).astype(np.float32, copy=False)
                 if md.Y0 is not None:
-                    md.Y0 = md.Y0 * md.intensity_norm_factor
+                    md.Y0 = (md.Y0 * md.intensity_norm_factor).astype(np.float32, copy=False)
 
             # Apply new normalization (divide by factor)
             md.intensity_norm_factor = norm_factor
             if norm_factor != 0:
                 if md.Y is not None:
-                    md.Y = md.Y / norm_factor
+                    md.Y = (md.Y / norm_factor).astype(np.float32, copy=False)
                 if md.Y0 is not None:
-                    md.Y0 = md.Y0 / norm_factor
+                    md.Y0 = (md.Y0 / norm_factor).astype(np.float32, copy=False)
 
         self._emit_selected_spectra()
 
@@ -245,9 +245,9 @@ class SpectraPreprocessingMixin:
                 and getattr(md, "intensity_norm_factor", 1.0) != 0
             ):
                 if md.Y is not None:
-                    md.Y = md.Y * md.intensity_norm_factor
+                    md.Y = (md.Y * md.intensity_norm_factor).astype(np.float32, copy=False)
                 if md.Y0 is not None:
-                    md.Y0 = md.Y0 * md.intensity_norm_factor
+                    md.Y0 = (md.Y0 * md.intensity_norm_factor).astype(np.float32, copy=False)
                 md.intensity_norm_factor = 1.0
 
         self._emit_selected_spectra()
@@ -371,7 +371,7 @@ class SpectraPreprocessingMixin:
                             md.x = md.x0.copy()
                         md.Y[indices_to_sub] = (
                             md.Y[indices_to_sub] - md.Y_baseline[indices_to_sub]
-                        )
+                        ).astype(np.float32, copy=False)
                         md.Y_baseline[indices_to_sub] = 0.0
                         md.is_baseline_subtracted[indices_to_sub] = True
                         subtracted_any = True
@@ -382,7 +382,7 @@ class SpectraPreprocessingMixin:
                             md.Y = md.Y0.copy()
                         if md.x is None:
                             md.x = md.x0.copy()
-                        md.Y = md.Y - md.Y_baseline
+                        md.Y = (md.Y - md.Y_baseline).astype(np.float32, copy=False)
                         md.Y_baseline = None
                         md.is_baseline_subtracted = True
                         subtracted_any = True

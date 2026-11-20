@@ -108,9 +108,9 @@ class MapData:
 
 | Field | Shape | Purpose |
 |-------|-------|---------|
-| `Y_bestfit` | `[N, M_proc]` | Composite model curve (sum of all peaks + baseline) |
-| `Y_baseline` | `[N, M_proc]` | Evaluated baseline curve |
-| `Y_peaks` | list of `[N, M_proc]` | One array per peak (for individual peak rendering) |
+| `Y_bestfit` | `[N, M_proc]` | Composite model curve (`float32`, sum of all peaks + baseline) |
+| `Y_baseline` | `[N, M_proc]` | Evaluated baseline curve (`float32` when evaluated in batch) |
+| `Y_peaks` | list of `[N, M_proc]` | Per-peak `LazyPeakArray` views evaluated on demand per sliced row(s) |
 
 ---
 

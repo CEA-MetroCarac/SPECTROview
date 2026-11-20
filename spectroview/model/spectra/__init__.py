@@ -5,6 +5,7 @@ from spectroview.model.spectra.m_fit_model_manager import MFitModelManager
 from spectroview.model.spectra.peak_model import initialize_peak_params
 from spectroview.model.spectra.spectra_store import (
     BaselineProxy,
+    LazyPeakArray,
     MapData,
     SpectraStore,
     SpectrumProxy,
@@ -42,6 +43,7 @@ from spectroview.model.spectra.spectral_parameters import (
 __all__ = [
     "BaselineProxy",
     "FIT_PARAMETERS",
+    "LazyPeakArray",
     "MFitModelManager",
     "MapData",
     "MapGeometry",

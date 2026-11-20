@@ -217,11 +217,7 @@ class VWorkspaceSpectra(QWidget):
 
     def _on_check_all_toggled(self, checked: bool):
         """Handle check all checkbox toggle."""
-        # Block signals to avoid triggering per-item checkbox handlers
-        self.v_spectra_list.blockSignals(True)
-        for i in range(self.v_spectra_list.count()):
-            self.v_spectra_list.item(i).setCheckState(Qt.Checked if checked else Qt.Unchecked)
-        self.v_spectra_list.blockSignals(False)
+        self.v_spectra_list.set_all_checked(checked)
         self.vm.set_all_spectra_active(checked)
         self._on_selection_changed_for_live_maps(None)
 

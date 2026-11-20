@@ -19,7 +19,7 @@ graph LR
         SLE["SpectraLegendEditorDialog<br/>(Éditeur de légende par lots)"]
         FMB["VFitModelBuilder<br/>(Panneau de contrôles)"]
         PT["VPeakTable<br/>(Tableau de paramètres)"]
-        SL["VSpectraList<br/>(QListWidget)"]
+        SL["VSpectraList<br/>(QListView)"]
         FR["VFitResults<br/>(Tableau de résultats)"]
         MVA["VMVA<br/>(Panneau PCA/NMF)"]
     end

@@ -304,12 +304,13 @@ def extract_map_arrays(
     y_positions = map_df["Y"].to_numpy(dtype=np.float64, copy=False)
     coords = np.column_stack((x_positions, y_positions))
 
-    # Fast positional slice without forcing a strided Fortran->C transpose on large blocks
+    # Force C-contiguous float32 layout (pd.read_csv blocks are F-contiguous)
+    # so downstream row-wise operations avoid large cache-line strides.
     n_total_cols = map_df.shape[1]
     if col_indices and col_indices[0] == 2 and col_indices[-1] == n_total_cols - 1 and len(col_indices) == n_total_cols - 2:
-        Y0 = map_df.iloc[:, 2:].to_numpy().astype(np.float32, copy=False)
+        Y0 = np.ascontiguousarray(map_df.iloc[:, 2:].to_numpy(), dtype=np.float32)
     else:
-        Y0 = map_df.iloc[:, col_indices].to_numpy().astype(np.float32, copy=False)
+        Y0 = np.ascontiguousarray(map_df.iloc[:, col_indices].to_numpy(), dtype=np.float32)
 
     # Build pixel fnames in C-backed Python float lists; disambiguate duplicate (X, Y) sites
     x_list = x_positions.tolist()

@@ -108,9 +108,9 @@ class MapData:
 
 | Champ | Forme | Rôle |
 |-------|-------|------|
-| `Y_bestfit` | `[N, M_proc]` | Courbe composite du modèle (somme des pics + ligne de base) |
-| `Y_baseline` | `[N, M_proc]` | Courbe de ligne de base évaluée |
-| `Y_peaks` | liste de `[N, M_proc]` | Un tableau par pic (pour l'affichage individuel de chaque pic) |
+| `Y_bestfit` | `[N, M_proc]` | Courbe composite du modèle (`float32`, somme des pics + ligne de base) |
+| `Y_baseline` | `[N, M_proc]` | Courbe de ligne de base évaluée (`float32` en traitement par lots) |
+| `Y_peaks` | liste de `[N, M_proc]` | Vues `LazyPeakArray` évaluées à la demande par ligne sélectionnée |
 
 ---
 

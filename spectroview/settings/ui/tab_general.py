@@ -202,7 +202,7 @@ class GeneralTabPage(QWidget):
         if not theme_key:
             from spectroview.view.theme import ThemeManager
             mgr = ThemeManager.instance()
-            theme_key = mgr.current_theme if mgr else "dark"
+            theme_key = mgr.current_theme if mgr else "gray"
         theme_key = normalize_theme_key(theme_key)
 
         idx = self.cbb_theme.findData(theme_key)
@@ -216,7 +216,7 @@ class GeneralTabPage(QWidget):
             "working_folder": self.le_working_folder.text().strip(),
             "check_updates_startup": self.chk_check_updates_startup.isChecked(),
             "include_prereleases": self.chk_include_prereleases.isChecked(),
-            "theme": self.cbb_theme.currentData() or "dark",
+            "theme": self.cbb_theme.currentData() or "gray",
         }
 
     # ───── Search Highlighting & Scrolling ─────

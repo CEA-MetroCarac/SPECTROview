@@ -48,7 +48,7 @@ Specify a single universal root folder for all of SPECTROview's templates, recip
 
 #### **Interface Theme**
 
-- **Theme**: Select between **Modern Dark**, **Modern Gray**, **Modern Light**, **Classic Dark**, or **Classic Light**. Selection updates the active theme immediately and keeps the top menu bar theme button in perfect synchronization. The plot canvas theme is independent of the interface theme, defaulting to **Light Mode**; you can switch it to **Dark Mode** at any time via the **Plot theme** selector in the `View Options` toolbar under the spectrum canvas (your selection persists across sessions).
+- **Theme**: Select between **Modern Dark**, **Modern Gray** (default), **Modern Light**, **Classic Dark**, or **Classic Light**. Selection updates the active theme immediately and keeps the top menu bar theme button in perfect synchronization. The plot canvas theme is independent of the interface theme, defaulting to **Light Mode**; you can switch it to **Dark Mode** at any time via the **Plot theme** selector in the `View Options` toolbar under the spectrum canvas (your selection persists across sessions).
 
 #### **Application Updates**
 

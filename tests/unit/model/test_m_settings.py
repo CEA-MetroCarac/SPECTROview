@@ -394,6 +394,16 @@ class TestLiveMapsViewOptions:
 
 
 class TestThemeSettings:
+    def test_default_theme_is_modern_gray(self, settings):
+        assert settings.get_theme() == "gray"
+        assert MSettings().get_theme() == "gray"
+
+        settings.settings.setValue("theme", "")
+        assert settings.get_theme() == "gray"
+
+        settings.settings.setValue("theme", "unknown_theme")
+        assert settings.get_theme() == "gray"
+
     def test_modern_gray_persistence_and_alias_normalization(self, settings):
         settings.set_theme("gray")
         assert settings.get_theme() == "gray"

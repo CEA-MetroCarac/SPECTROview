@@ -215,6 +215,11 @@ class TestTwoPanelNavigationAndSearch:
 
 
 class TestThemeSelectionAndSynchronization:
+    def test_default_theme_selection_is_modern_gray(self, qapp):
+        dialog = _dialog(qapp)
+        assert dialog.cbb_theme.currentData() == "gray"
+        assert dialog.cbb_theme.currentText() == "Modern Gray"
+
     def test_theme_combobox_items(self, qapp):
         dialog = _dialog(qapp)
         assert hasattr(dialog, "cbb_theme")

@@ -34,7 +34,7 @@ class VMenuBar(QToolBar):
     
     def __init__(self):
         super().__init__()
-        self._current_theme = "dark"
+        self._current_theme = "gray"
         self._default_icons = {}
         self.init_ui()
         

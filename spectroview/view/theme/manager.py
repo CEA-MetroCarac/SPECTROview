@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtWidgets import QApplication, QWidget
 
-from .tokens import ThemeTokens, THEME_TOKENS, DARK_TOKENS, normalize_theme_key
+from .tokens import ThemeTokens, THEME_TOKENS, DEFAULT_THEME, GRAY_TOKENS, normalize_theme_key
 from .palettes import build_palette
 from .qss_template import build_stylesheet
 
@@ -147,7 +147,7 @@ class ThemeManager:
     def __init__(self, settings: "MSettings") -> None:
         ThemeManager._instance = self
         self._settings = settings
-        raw = settings.get_theme() or "dark"
+        raw = settings.get_theme() or DEFAULT_THEME
         canonical = normalize_theme_key(raw)
         if canonical != raw:
             settings.set_theme(canonical)
@@ -158,7 +158,7 @@ class ThemeManager:
 
     @property
     def current_theme(self) -> str:
-        """Return the current theme key (e.g. ``"dark"``)."""
+        """Return the current theme key (e.g. ``"gray"``)."""
         return self._current
 
     @property
@@ -169,7 +169,7 @@ class ThemeManager:
     @property
     def tokens(self) -> ThemeTokens:
         """Return the active ``ThemeTokens``."""
-        return THEME_TOKENS.get(self._current, THEME_TOKENS["dark"])
+        return THEME_TOKENS.get(self._current, GRAY_TOKENS)
 
     @property
     def icon_color(self) -> str:
@@ -195,11 +195,11 @@ class ThemeManager:
             return
 
         if theme_key is None:
-            theme_key = self._settings.get_theme() or "dark"
+            theme_key = self._settings.get_theme() or DEFAULT_THEME
         theme_key = normalize_theme_key(theme_key)
 
         self._current = theme_key
-        tokens = THEME_TOKENS.get(theme_key, THEME_TOKENS["dark"])
+        tokens = THEME_TOKENS.get(theme_key, GRAY_TOKENS)
 
         # 1) Qt ColorScheme hint
         try:
@@ -241,8 +241,8 @@ class ThemeManager:
 
 
 def current_tokens() -> ThemeTokens:
-    """Return the active theme tokens, falling back to DARK_TOKENS."""
+    """Return the active theme tokens, falling back to GRAY_TOKENS."""
     mgr = ThemeManager.instance()
     if mgr is not None:
         return mgr.tokens
-    return DARK_TOKENS
+    return GRAY_TOKENS

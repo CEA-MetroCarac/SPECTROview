@@ -151,7 +151,7 @@ class VUpdateBanner(QWidget):
         self.setObjectName("UpdateBanner")
         self.setFixedHeight(36)
         self._build_ui()
-        self.apply_theme("dark")
+        self.apply_theme("gray")
 
     def _build_ui(self) -> None:
         layout = QHBoxLayout(self)

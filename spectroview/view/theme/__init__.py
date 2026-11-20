@@ -8,6 +8,7 @@ Public API
 - ``current_tokens``             — returns active ThemeTokens.
 - ``apply_window_title_bar_theme`` — apply native Windows 11 DWM theme to top-level window.
 - ``ThemeTokens``                — frozen colour-token dataclass.
+- ``DEFAULT_THEME``              — default theme key for new installations (``"gray"``).
 - ``DARK_TOKENS``, ``GRAY_TOKENS``, ``LIGHT_TOKENS`` — preset token instances.
 - ``CLASSIC_DARK_TOKENS``, ``CLASSIC_LIGHT_TOKENS`` — classic preset instances.
 - ``THEME_TOKENS``               — dict mapping theme key → tokens.
@@ -30,6 +31,7 @@ Public API
 from .manager import ThemeManager, current_tokens, apply_window_title_bar_theme
 from .tokens import (
     ThemeTokens,
+    DEFAULT_THEME,
     DARK_TOKENS,
     GRAY_TOKENS,
     LIGHT_TOKENS,
@@ -77,6 +79,7 @@ __all__ = [
     "current_tokens",
     "apply_window_title_bar_theme",
     "ThemeTokens",
+    "DEFAULT_THEME",
     "DARK_TOKENS",
     "GRAY_TOKENS",
     "LIGHT_TOKENS",

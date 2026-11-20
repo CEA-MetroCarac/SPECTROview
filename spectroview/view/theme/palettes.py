@@ -175,5 +175,5 @@ _PALETTE_BUILDERS = {
 def build_palette(theme_key: str) -> QPalette:
     """Return a QPalette for the given *theme_key*."""
     canonical = normalize_theme_key(theme_key)
-    builder = _PALETTE_BUILDERS.get(canonical, modern_dark_palette)
+    builder = _PALETTE_BUILDERS.get(canonical, modern_gray_palette)
     return builder()

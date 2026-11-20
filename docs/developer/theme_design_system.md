@@ -54,15 +54,16 @@ flowchart TD
     Migrate --> ModernLight
 ```
 
-### 1. Modern Dark (`"dark"`) — Default Flagship
+### 1. Modern Dark (`"dark"`) — Flagship Deep Dark
 
 - **Surfaces**: Neutral layered charcoal tones (`#1B1B1B` canvas, `#161616` sidebars, `#232323` cards).
 - **Accents**: Electric cobalt (`#5B8CFF`), subtle selection tint (`rgba(91, 140, 255, 68)`).
 - **Styling**: Complete global QSS, 6px control radius, 8px container radius, visible 5px splitters with grip SVGs.
 - **OS Integration**: Native Windows 11 immersive dark title bar (`DWMWA_USE_IMMERSIVE_DARK_MODE = True`).
 
-### 2. Modern Gray (`"gray"`) — Soft Office Dark Gray
+### 2. Modern Gray (`"gray"`) — Default Flagship (Soft Office Dark Gray)
 
+- **Default Theme**: Selected by default (`DEFAULT_THEME = "gray"`) on new installations and fresh settings profiles.
 - **Surfaces**: Softer neutral medium-dark gray surfaces inspired by Microsoft Word and Outlook dark-gray mode (`#2B2B2B` rail, `#333333` chrome, `#3C3C3C` canvas, `#454545` cards, `#4E4E4E` elevated controls, `#5A5A5A` hover).
 - **Typography & Borders**: Soft off-white primary text (`#ECECEE`) and medium-gray dividers (`#5C5C5C` / `#6A6A6A`) to prevent pure-white glare during prolonged sessions while retaining WCAG contrast.
 - **Accents**: Calm Office/Fluent-inspired cobalt blue (`#5290F2`) and translucent selection tint (`rgba(82, 144, 242, 82)`).

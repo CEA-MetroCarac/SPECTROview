@@ -10,13 +10,16 @@ from typing import Optional
 from PySide6.QtCore import QSettings
 
 
+_DEFAULT_THEME = "gray"
 _VALID_THEMES = ("dark", "gray", "light", "classic_dark", "classic_light")
 
 
 def _normalize_app_theme(theme: Optional[str]) -> str:
     """Normalize legacy/alias application theme names to canonical keys."""
     raw = str(theme or "").strip().lower()
-    if not raw or raw == "soft_dark":
+    if not raw:
+        return _DEFAULT_THEME
+    if raw == "soft_dark":
         return "dark"
     if raw in ("modern_warm", "warm"):
         return "light"
@@ -24,7 +27,7 @@ def _normalize_app_theme(theme: Optional[str]) -> str:
         return "gray"
     if raw in _VALID_THEMES:
         return raw
-    return "dark"
+    return _DEFAULT_THEME
 
 
 LIVE_MAPS_VIEW_OPTION_DEFAULTS = {
@@ -480,7 +483,7 @@ class MSettings:
     # ---------- Theme ----------
     def get_theme(self) -> str:
         """Get current theme (dark, gray, light, classic_dark, classic_light)."""
-        raw = self.settings.value("theme", "dark", str)
+        raw = self.settings.value("theme", _DEFAULT_THEME, str)
         val = _normalize_app_theme(raw)
         if val != raw:
             self.set_theme(val)

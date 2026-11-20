@@ -91,7 +91,7 @@ class ThemeTokens:
 
 
 # ═══════════════════════════════════════════════════════════════
-#  MODERN DARK THEME (Flagship Default)
+#  MODERN DARK THEME (Flagship Deep Dark)
 # ═══════════════════════════════════════════════════════════════
 DARK_TOKENS = ThemeTokens(
     background="#1B1B1B",
@@ -139,7 +139,7 @@ DARK_TOKENS = ThemeTokens(
 
 
 # ═══════════════════════════════════════════════════════════════
-#  MODERN GRAY THEME (Soft Office Dark Gray)
+#  MODERN GRAY THEME (Default Flagship — Soft Office Dark Gray)
 # ═══════════════════════════════════════════════════════════════
 GRAY_TOKENS = ThemeTokens(
     background="#3C3C3C",
@@ -241,6 +241,8 @@ CLASSIC_DARK_TOKENS = DARK_TOKENS
 CLASSIC_LIGHT_TOKENS = LIGHT_TOKENS
 
 
+DEFAULT_THEME = "gray"
+
 # ── Canonical Dictionary ─────────────────────────────────────
 THEME_TOKENS: dict[str, ThemeTokens] = {
     "dark": DARK_TOKENS,
@@ -254,7 +256,9 @@ THEME_TOKENS: dict[str, ThemeTokens] = {
 def normalize_theme_key(theme_key: str | None) -> str:
     """Normalize legacy or alias theme identifiers to a canonical theme key."""
     raw = str(theme_key or "").strip().lower()
-    if not raw or raw == "soft_dark":
+    if not raw:
+        return DEFAULT_THEME
+    if raw == "soft_dark":
         return "dark"
     if raw in ("modern_warm", "warm"):
         return "light"
@@ -262,7 +266,7 @@ def normalize_theme_key(theme_key: str | None) -> str:
         return "gray"
     if raw in THEME_TOKENS:
         return raw
-    return "dark"
+    return DEFAULT_THEME
 
 
 def is_dark_theme_key(theme_key: str | None) -> bool:

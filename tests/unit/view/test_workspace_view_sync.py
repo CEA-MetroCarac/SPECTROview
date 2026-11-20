@@ -56,6 +56,13 @@ def main_window(_shared_main_window):
     return _shared_main_window
 
 
+def test_fresh_main_window_defaults_to_modern_gray(main_window):
+    """Confirm a fresh Main instance initializes with Modern Gray by default."""
+    assert main_window.theme_mgr.current_theme == "gray"
+    assert main_window.settings.get_theme() == "gray"
+    assert main_window.menu_bar._current_theme == "gray"
+
+
 def test_maps_workspace_view_options_saved_to_settings(main_window):
     """Confirm changes in Maps workspace spectra viewer are saved to settings and synced."""
     maps_viewer = main_window.v_maps_workspace.v_spectra_viewer
@@ -213,5 +220,10 @@ def test_runtime_theme_switch_across_dark_gray_light_preserves_plot_theme(main_w
     main_window.toggle_theme()
     assert main_window.theme_mgr.current_theme == "light"
     assert main_window.settings.get_theme() == "light"
+
+    # Default toggle from light switches back to Modern Gray
+    main_window.toggle_theme()
+    assert main_window.theme_mgr.current_theme == "gray"
+    assert main_window.settings.get_theme() == "gray"
 
 

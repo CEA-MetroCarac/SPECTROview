@@ -617,3 +617,38 @@ def test_canvas_card_and_graph_coordinate_theme_sync(qtbot):
     assert GRAY_TOKENS.text_secondary in vg.lbl_coordinates.styleSheet()
 
 
+def test_default_theme_is_modern_gray():
+    """Verify new installations and unknown fallbacks default to Modern Gray ('gray')."""
+    from spectroview.view.theme import (
+        DEFAULT_THEME,
+        build_palette,
+        current_tokens,
+        modern_gray_palette,
+        normalize_theme_key,
+    )
+
+    assert DEFAULT_THEME == "gray"
+    assert normalize_theme_key("") == "gray"
+    assert normalize_theme_key(None) == "gray"
+    assert normalize_theme_key("unknown_theme") == "gray"
+    assert normalize_theme_key("soft_dark") == "dark"
+
+    settings = MSettings()
+    mgr = ThemeManager(settings)
+    assert mgr.current_theme == "gray"
+    assert mgr.is_dark is True
+    assert mgr.tokens == GRAY_TOKENS
+
+    unknown_pal = build_palette("unknown_theme")
+    assert unknown_pal.color(unknown_pal.ColorRole.Window) == modern_gray_palette().color(
+        unknown_pal.ColorRole.Window
+    )
+
+    prev_instance = ThemeManager._instance
+    ThemeManager._instance = None
+    try:
+        assert current_tokens() == GRAY_TOKENS
+    finally:
+        ThemeManager._instance = prev_instance
+
+

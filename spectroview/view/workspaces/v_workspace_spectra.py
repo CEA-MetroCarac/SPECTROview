@@ -359,7 +359,7 @@ class VWorkspaceSpectra(QWidget):
 
         # Sync sidebar icons with theme changes
         # Called externally by main.py via apply_theme()
-        self.apply_theme("dark")  # Default initial call, updated by main.py soon after
+        self.apply_theme("gray")  # Default initial call, updated by main.py soon after
 
     def apply_theme(self, theme: str):
         """Called by main.py to update icons based on the global theme."""

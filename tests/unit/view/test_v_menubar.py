@@ -36,7 +36,8 @@ def test_v_menubar_theme_icon_switching(qtbot):
     menubar = VMenuBar()
     qtbot.addWidget(menubar)
 
-    # Initial default is dark -> moon icon
+    # Initial default is gray -> moon icon
+    assert menubar._current_theme == "gray"
     assert menubar.actionTheme.icon().name() == "moon"
 
     # Switching to light -> sun icon

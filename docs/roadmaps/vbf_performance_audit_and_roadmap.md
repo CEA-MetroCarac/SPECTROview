@@ -1,11 +1,24 @@
 # Performance Audit & Optimization Roadmap: SPECTROview VBF Fitting Engine
 
-**Document Status**: Audited, Empirically Benchmarked & Phased Roadmap  
+**Document Status**: Audited, Empirically Benchmarked & Phased Roadmap (**Phase 1, Phase 2 `P2.1`, and Phase 3 `P3.3` Implemented & Shipped in `v26.48.1`**)  
 **Primary Modules Covered**:
 
 - `spectroview/fit_engine/optimizer.py`, `spectroview/fit_engine/evaluator.py`, `spectroview/fit_engine/models.py`
-- `spectroview/fit_engine/vbf_engine.py`, `spectroview/fit_engine/vbf_thread.py`, `spectroview/fit_engine/baseline.py`
+- `spectroview/fit_engine/vbf_engine.py`, `spectroview/fit_engine/vbf_thread.py`, `spectroview/fit_engine/baseline.py`, `spectroview/fit_engine/noise.py`
 - `spectroview/main.py` (background prewarming)
+
+**Implementation & Release Audit Summary (Verified Against Codebase & Git History)**:
+
+| Roadmap Item | Implementation Status | Commit Hash(es) | Shipped Release | Summary of Shipped Changes vs. Remaining Work |
+| :--- | :--- | :--- | :--- | :--- |
+| **Phase 1: `P1.1`–`P1.5`** | **Fully Completed & Shipped** | `38e66c4` | `v26.48.1` (`v26.47.1` bump) | Post-clip `dp_actual` convergence check & uniform-weight fast path (`P1.1`), unified `np.linalg.solve` primary solver (`P1.2`), fused `PseudoVoigt` & `out=` buffers (`P1.3`), zero-copy `_all_free_identity` `VBFevaluator` fast path (`P1.4`), and $O(N)$ noise-threshold lookup + pure-NumPy `_interp_linear_extrap` linear baseline (`P1.5`). |
+| **Phase 2: `P2.1`** (L3 Batch Chunking, Contiguous Jacobian & In-Place Kernels) | **Partially Completed & Shipped** (Core chunking + memory layout shipped; intra-chunk active-row compaction pending) | `9250ae9` | `v26.48.1` | **Shipped**: Adaptive L3-cache sub-batch chunking (`_choose_chunk_size(N, M, K)` targeting 12 MiB in `[256, 2048]`) with monotonic weighted `progress_callback`, physical `(K, N, M)` Jacobian buffer transposed to `(N, M, K)` for C-contiguous parameter slices and unit-stride BLAS `dgemm`, in-place `d/dw = ((x - x0)/w) * d/dx0` analytical derivatives in `models.py`, zero-copy `all_active = (n_active == N)` fast path, and 2D noise/moving-average memoization in `noise.py`. **Remaining**: Intra-chunk active-row sub-array compaction when `1 <= n_diverged < N_chunk`. |
+| **Phase 2: `P2.2`** (Bound-Pinned Peak & Stagnation Early Exit) | **Pending** | — | — | Diagonal Tikhonov zero-column safeguarding, plateau early exit, and Nielsen gain-ratio damping update remain planned. |
+| **Phase 2: `P2.3`** (Safe Support-Windowed Peak Evaluation) | **Pending** | — | — | Exact machine-epsilon windowing (`|dx/w| <= 4.5`) for Gaussian models and chunk ROI tight-mask prefiltering remain planned. |
+| **Phase 2: `P2.4`** (BLAS Thread Control & Persistent Worker Pool) | **Pending** (Validated in controlled re-audit) | — | — | Controlled re-profiling on `v26.48.2` confirmed that `OPENBLAS_NUM_THREADS=2` reduces `1_CL_map.json` (`16,384 × 302`) fit time from `3,433.74 ms` (default 8 threads) to **`1,434.02 ms` (`2.40×` speedup)**. Tracked in `python_performance_audit_and_roadmap.md` (`P3.3`/`P4.3`). |
+| **Phase 3: `P3.1`** (Optional Native C++/OpenMP L1-Resident Kernel) | **Deferred / Not Required** | — | — | Deferred per Strategy A decision (`python_performance_audit_and_roadmap.md`). |
+| **Phase 3: `P3.2`** (Variable Projection VarPro & Spatial Warm-Start) | **Pending** | — | — | Long-term algorithmic enhancement for multi-peak overlaps. |
+| **Phase 3: `P3.3`** (Vectorized Forward-Mode Dual-Number AD for `_exprs`) | **Fully Completed & Shipped** | `9250ae9` | `v26.48.1` | Implemented topological expression bytecode compilation (`_compiled_expr_ops`) and vectorized forward-mode dual-number automatic differentiation (`_DualVar`, `_DUAL_SAFE_NAMESPACE`) with batched `np.matmul` chain-rule combination in `spectroview/fit_engine/evaluator.py` (`2.97×` speedup over finite-difference chain-rule loops). |
 
 **Benchmark Datasets & Configs Audited**:
 
@@ -46,9 +59,9 @@ An empirical audit and profiling study of SPECTROview's **Vectorized Batch Fit (
 
 | Phase | Scope | Expected Cumulative Gains | Platform Risk | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **Phase 1 (`P1.1`–`P1.5`)** | Post-clip `dp` convergence fix, uniform `np.linalg.solve` primary path, fused `PseudoVoigt`, zero-copy free-param `VBFevaluator`, pure-NumPy linear baseline & O(N) threshold index | **1.53×–4.58×** real map fits; **1.60×–4.36×** per-iter kernels; **854×** cold 2-pt baseline (`scipy`-free) | Minimal (Pure NumPy/Python, verified `R²` parity) | **Implemented & Verified** |
-| **Phase 2 (`P2.1`–`P2.4`)** | L3-cache batch chunking + `active_idx` compaction, inactive/bound-pinned peak convergence handling, safe support-window slicing, BLAS thread caps & warm worker pool | **1.7×–2.0×** additional pure-Python cache/parallel gain + up to **3×–10×** on localized multi-peak bands | Low–Moderate (cross-platform Python/NumPy) | Planned Future Milestone |
-| **Phase 3 (`P3.1`–`P3.3`)** | Optional C++/OpenMP L1-resident single-spectrum LM kernel (prebuilt wheels + NumPy fallback), Variable Projection (VarPro) / spatial warm-start, vectorized dual-number AD for `_exprs` | **10×–30×+** approach toward LabSpec-class interactive sub-second 20k-spectrum fitting | Higher build/packaging complexity (native wheels) | Planned Long-Term Architecture |
+| **Phase 1 (`P1.1`–`P1.5`)** | Post-clip `dp` convergence fix, uniform `np.linalg.solve` primary path, fused `PseudoVoigt`, zero-copy free-param `VBFevaluator`, pure-NumPy linear baseline & O(N) threshold index | **1.53×–4.58×** real map fits; **1.60×–4.36×** per-iter kernels; **854×** cold 2-pt baseline (`scipy`-free) | Minimal (Pure NumPy/Python, verified `R²` parity) | **Completed & Shipped (`38e66c4`, `v26.48.1`)** |
+| **Phase 2 (`P2.1`–`P2.4`)** | L3-cache batch chunking + `(K, N, M)` layout + `active_idx` compaction (`P2.1`), inactive/bound-pinned peak convergence handling (`P2.2`), safe support-window slicing (`P2.3`), BLAS thread caps & warm worker pool (`P2.4`) | **1.7×–2.4×** additional pure-Python cache/parallel gain + up to **3×–10×** on localized multi-peak bands | Low–Moderate (cross-platform Python/NumPy) | **`P2.1` Shipped (`9250ae9`, `v26.48.1`); `P2.2`–`P2.4` Pending** |
+| **Phase 3 (`P3.1`–`P3.3`)** | Optional C++/OpenMP L1-resident single-spectrum LM kernel (`P3.1`), Variable Projection (VarPro) / spatial warm-start (`P3.2`), vectorized dual-number AD for `_exprs` (`P3.3`) | **2.97×** expression chain-rule speedup (`P3.3`); **10×–30×+** long-term native/VarPro ceiling | Low for `P3.3` (pure NumPy); higher for `P3.1` | **`P3.3` Shipped (`9250ae9`, `v26.48.1`); `P3.1` Deferred; `P3.2` Pending** |
 
 ---
 
@@ -207,7 +220,9 @@ Notice that on `1_CL_map.txt / 1_CL_map_3lorentzian`, `14.1k/16.4k` (`86.1%`) co
 
 Phase 2 targets memory hierarchy efficiency, stalled-peak termination, localized spatial sparsity, and multi-core CPU scaling — all purely in Python/NumPy without native compiler toolchains.
 
-### `P2.1` — L3-Cache-Sized Batch Chunking & Active-Row Compaction
+### `P2.1` — L3-Cache-Sized Batch Chunking & Active-Row Compaction `[Partially Completed & Shipped in v26.48.1 — commit 9250ae9]`
+
+> **Implementation Status (`9250ae9`, `v26.48.1`)**: Adaptive L3-cache batch chunking (`_choose_chunk_size(N, M, K)` in `optimizer.py:21–42`, chunked outer loop in `optimizer.py:263–320` with monotonic weighted `progress_callback`), physical `(K, N, M)` Jacobian buffer transposed to `(N, M, K)` for unit-stride BLAS `dgemm`, in-place analytical derivatives in `models.py`, zero-copy `all_active = (n_active == N)` full-batch fast path, and 2D noise/moving-average memoization in `noise.py` are **completed and shipped**. Under controlled idle-CPU re-benchmarking (`v26.48.2`), `WDF 3_3721map.json` (`3,721 × 70, K=3`) improved from `157.6 ms` (Phase 1) to **`70.81 ms`** (`63.67 ms` with `OPENBLAS_NUM_THREADS=2`), and `CL 1_CL_map.json` (`16,384 × 302, K=3`) improved from `3,802.1 ms` (Phase 1) to **`3,433.74 ms`** (**`1,434.02 ms`** with `OPENBLAS_NUM_THREADS=2`). Only intra-chunk active-row sub-array compaction when `1 <= n_diverged < N_chunk` remains open.
 
 #### Problem & Evidence
 
@@ -377,7 +392,9 @@ $$\mathbf{y} \approx \sum_{p=1}^{P} a_p \phi_p(\mathbf{x}; \theta_p) = \Phi(\the
 
 ---
 
-### `P3.3` — Vectorized Forward-Mode Dual-Number AD for Linked Expressions (`_exprs`)
+### `P3.3` — Vectorized Forward-Mode Dual-Number AD for Linked Expressions (`_exprs`) `[Completed & Shipped in v26.48.1 — commit 9250ae9]`
+
+> **Implementation Status (`9250ae9`, `v26.48.1`)**: **Fully completed and shipped** in `spectroview/fit_engine/evaluator.py` via `_DualVar`, `_DUAL_SAFE_NAMESPACE`, topological expression bytecode compilation (`_compiled_expr_ops`), and batched `np.matmul` chain-rule combination (`2.97×` speedup over finite-difference chain-rule loops), verified by unit tests in `tests/unit/fit_engine/test_evaluator.py`.
 
 #### Problem & Evidence
 

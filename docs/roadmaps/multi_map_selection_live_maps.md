@@ -1,14 +1,31 @@
 # Technically Validated Specification & Implementation Roadmap: Multi-Map Selection & Live Maps
 
-**Document Status**: Audited, Performance-Validated & Implementation-Ready Specification  
+**Document Status**: Fully Implemented & Shipped in `v26.48.1` (Phases 0–6 + Post-Implementation Refinements & Modularization)  
 **Supersedes**: Draft Roadmap (`34431df`, initial Phases 1–4 proposal)  
-**Primary Modules Affected**:
+**Primary Modules Affected (Updated for Current `v26.48.1+` Package Structure)**:
 
-- `spectroview/model/spectra_store.py`, `spectroview/model/spectral_parameters.py`
-- `spectroview/viewmodel/vm_workspace_maps.py`, `spectroview/viewmodel/vm_workspace_spectra.py`, `spectroview/viewmodel/vm_live_maps.py`
-- `spectroview/view/components/v_map_list.py`, `spectroview/view/components/v_live_maps.py`, `spectroview/view/v_workspace_maps.py`, `spectroview/view/v_workspace_spectra.py`
+- `spectroview/model/spectra/spectra_store.py`, `spectroview/model/spectra/spectral_parameters.py`
+- `spectroview/viewmodel/maps/vm_workspace_maps.py`, `spectroview/viewmodel/spectra/vm_workspace_spectra.py`, `spectroview/viewmodel/maps/vm_live_maps.py`
+- `spectroview/view/components/lists/v_map_list.py`, `spectroview/view/components/rgb_live_maps/` (`v_live_maps.py`, `v_live_map_subpanel.py`, `v_live_map_1d.py`, `v_live_map_2d.py`, `v_live_map_selection.py`, `v_live_maps_options.py`, `v_live_maps_legend_editor.py`, `v_range_selector.py`, `v_range_bracket_mixin.py`, `common.py`)
+- `spectroview/view/workspaces/v_workspace_maps.py`, `spectroview/view/workspaces/v_workspace_spectra.py`
 
-**Related Features**: Multi-Map Selection, RGB Spectral Range Brackets (`VSpectraViewer` / `RangeSelectorManager`), Adaptive 1D/2D Live Maps, Green Red/Blue (`R/B`) Ratio, Vectorized Parameter Caching
+**Related Features**: Multi-Map Selection, RGB Spectral Range Brackets (`VSpectraViewer` / `RangeSelectorManager`), Adaptive 1D/2D Live Maps, Green Red/Blue (`R/B`) Ratio, Vectorized Parameter Caching, Async Worker Offload, Interactive Live Maps View Options
+
+---
+
+## 0. Implementation & Release Audit Summary (Verified Against Codebase & Git History)
+
+All phases of this specification (`Phase 0` through `Phase 5`), plus an additional `Phase 6` (Interactive Live Maps View Options & Draggable Legend Editor) and subsequent UX, rendering, and package-modularization refinements, have been **fully implemented, verified by automated tests, and shipped in release `v26.48.1`**:
+
+| Phase / Milestone | Status | Commit Hash(es) | Shipped Release | Verification & Post-Implementation Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Phase 0**: Baseline Hygiene, `MapData.data_version`, Slice-First `float64` Cast, Cached Delaunay `MapGridder`, Signal Separation & Tab-Visibility Gate | **Fully Completed & Shipped** | `850512b`, `138bb55` | `v26.48.1` | Implemented `MapData.data_version` + `touch()`, slice-first `compute_spectral_parameter`, `~md.is_active` `NaN` masking, `MapGridder` (`build_map_gridder` / `evaluate_map_grid` with cached Delaunay barycentric weights and `cKDTree` `QhullError` fallback), hidden-tab dirty gating, and workspace-clear reset. Commit `138bb55` added cached $O(1)$ `fname_to_index_map` / `get_fname_index` on `MapData`. |
+| **Phase 1**: `VMapsList` `ExtendedSelection` & Placeholder-Safe Selection Model | **Fully Completed & Shipped** | `850512b`, `bac32d0` | `v26.48.1` | Enabled `ExtendedSelection`, added `maps_selection_changed = Signal(list, object)`, primary reconciliation on `Ctrl+Click` deselection, and name-preserving `set_maps_names()`. Commit `bac32d0` added drag-and-drop map reordering in `VMapsList`. |
+| **Phase 2**: Two-Tier Workspace Coordination (`VMWorkspaceMaps` & `VWorkspaceMaps`) | **Fully Completed & Shipped** | `850512b` | `v26.48.1` | Added `selected_map_names`, `select_maps(map_names, primary_name)`, `live_maps_selection_changed`, and batch `delete_selected_maps()` with confirmation dialog while keeping all preprocessing, baseline, fitting, and MVA tools strictly bound to the Primary Active Map. |
+| **Phase 3**: Multi-Map `VMLiveMaps` Engine, Data-Versioned LRU Cache & `R/B` Ratio | **Fully Completed & Shipped** | `850512b` | `v26.48.1` | Added `set_map_datas()`, Primary-precedence dimensionality classification, active-only 2D evaluation (`set_active_2d_map`), 64-entry versioned `_intensity_cache`, `multi_profile_data_ready`, `map_2d_candidates_changed`, `live_maps_cleared`, and adaptive `60–250 ms` debounce timer. |
+| **Phase 4**: `VLiveMaps` / `LiveMapSubpanel` Multi-Profile Visualization, `Line2D` Pool & 2D Switcher | **Fully Completed & Shipped** (Evolved in `5313933` & `7b3ce50`) | `850512b`, `5313933`, `7b3ce50` | `v26.48.1` | Shipped in `850512b` with `Line2D` artist pooling, aspect-ratio reset (`set_aspect("auto")`), and tab-level 2D switcher. In `5313933`, the multi-1D header chip strip was retired in favor of the toggleable on-canvas draggable Legend box with dark-mode contrast fixes and configurable `Text size` (DPI raised from 70 to 96). In `7b3ce50`, multi-profile curves were standardized to uniform line thickness. |
+| **Phase 5**: Thresholded Async `QThreadPool` Worker (`>= 25,000` spectra) & Doc Sync | **Fully Completed & Shipped** | `6cc1bce` | `v26.48.1` | Added `ASYNC_SPECTRUM_THRESHOLD = 25_000`, `_LiveMapWorker(QRunnable)` on a dedicated single-worker `QThreadPool`, parented `_LiveMapWorkerBridge(QObject)`, monotonic `_generation_id` cancellation, and `Main.closeEvent()` worker drain. Verified by `tests/unit/viewmodel/test_vm_live_maps_async.py`. |
+| **Phase 6 & Follow-Up Enhancements**: View Options Menu, Plot Theme, Interactive Selection, 1D Normalization, Blitted Bracket Dragging & Package Modularization | **Fully Completed & Shipped** | `6cc1bce`, `3aa87f7`, `65b2912`, `98e721a`, `173e8d8`, `ebf397f`, `7aba5ce`, `ce22850`, `41a8ef0`, `6ed1f15`, `c32dd65`, `e92ea75` | `v26.48.1` | Added top-right `[Show Legend \| More view options]` toolbar & `LiveMapsLegendEditorDialog` (`6cc1bce`), persistent `Plot theme` (`Light Mode` / `Dark Mode`) & per-subpanel `Rescale`/`Pan`/`Zoom` tools (`3aa87f7`), fixed copied figure size/theme & 2-column options menu (`98e721a`), `Show figure label` (`173e8d8`), interactive spectrum selection from RGB Live Maps (`ebf397f`), 1D curve normalization toolbar (`7aba5ce`), Agg background blitting during bracket drag + `flush_pending()` on release (`ce22850`), `Ctrl+Click` copy plot data (`41a8ef0`), auto-hiding Green bracket on `R/B ratio` + consolidation into `spectroview/view/components/rgb_live_maps/` (`6ed1f15`, `e92ea75`), and auto-switching bottom tab to Live Maps on bracket activation (`c32dd65`). |
 
 ---
 
@@ -352,7 +369,7 @@ flowchart LR
 
 ---
 
-### Phase 0: Baseline Hygiene, Memory/Interpolation Fixes & Lifecycle Bugs
+### Phase 0: Baseline Hygiene, Memory/Interpolation Fixes & Lifecycle Bugs `[Completed & Shipped in v26.48.1 — commits 850512b, 138bb55]`
 
 #### A. Objective
 Eliminate existing duplicate computations, `947.5 MB` memory spikes, `14.5 s` scattered-interpolation freezes, hidden-tab CPU waste, and workspace-clear memory leaks **before** multi-selection multiplies these flaws by $N$ selected maps.
@@ -416,7 +433,7 @@ None (independent prerequisite phase).
 
 ---
 
-### Phase 1: `VMapsList` ExtendedSelection & Robust Selection Model
+### Phase 1: `VMapsList` ExtendedSelection & Robust Selection Model `[Completed & Shipped in v26.48.1 — commits 850512b, bac32d0]`
 
 #### A. Objective
 Enable standard Qt `ExtendedSelection` (`Click`, `Ctrl+Click`, `Shift+Click`, `Ctrl+A`) in `VMapsList` while preserving placeholder safety, deterministic map ordering, Primary-vs-Selected consistency, and backward compatibility with `map_selection_changed(int)`.
@@ -470,7 +487,7 @@ None strictly, though coordinated with Phase 2 before activating multi-selection
 
 ---
 
-### Phase 2: Two-Tier Workspace Coordination (`VMWorkspaceMaps` & `VWorkspaceMaps`)
+### Phase 2: Two-Tier Workspace Coordination (`VMWorkspaceMaps` & `VWorkspaceMaps`) `[Completed & Shipped in v26.48.1 — commit 850512b]`
 
 #### A. Objective
 Implement the Two-Tier Selection Model inside `VMWorkspaceMaps` and `VWorkspaceMaps` cleanly: route the **Primary Active Map** exclusively to all single-map viewers/tools/MVA/services while routing the **Selected Maps Group** cleanly to `VMLiveMaps` (respecting the Phase 0 tab-visibility gate).
@@ -529,7 +546,7 @@ Requires **Phase 0** (signal separation + visibility gate + clear fix) and **Pha
 
 ---
 
-### Phase 3: Multi-Map `VMLiveMaps` Engine, Data-Versioned Cache & `R/B` Ratio
+### Phase 3: Multi-Map `VMLiveMaps` Engine, Data-Versioned Cache & `R/B` Ratio `[Completed & Shipped in v26.48.1 — commit 850512b]`
 
 #### A. Objective
 Upgrade `VMLiveMaps` to manage multiple `MapData` instances cleanly, apply the **Primary-Precedence Dimensionality Policy**, maintain cross-batch intensity caches keyed by `md.data_version`, handle heterogeneous X-axes & out-of-range `R/B` ratios safely, and expose structured multi-map payloads for both 1D multi-profile and 2D switcher modes.
@@ -618,7 +635,7 @@ Requires **Phase 0** and **Phase 2**.
 
 ---
 
-### Phase 4: `VLiveMaps` / `LiveMapSubpanel` Multi-Profile Visualization & 2D Switcher
+### Phase 4: `VLiveMaps` / `LiveMapSubpanel` Multi-Profile Visualization & 2D Switcher `[Completed & Shipped in v26.48.1 — commits 850512b, 5313933, 7b3ce50]`
 
 #### A. Objective
 Render multi-profile comparisons clearly without crowding compact Matplotlib axes, preserve smooth interactive drag updates by pooling `Line2D` artists, eliminate aspect-ratio glitches across 2D $\leftrightarrow$ 1D switching, and provide a shared 2D map switcher header bar.

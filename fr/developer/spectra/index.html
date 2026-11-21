@@ -26,10 +26,16 @@
         
           <link rel="alternate" href="./" hreflang="fr">
         
+          <link rel="alternate" href="../../../de/developer/spectra/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/developer/spectra/" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/developer/spectra/" hreflang="zh">
+        
       
       
       <link rel="icon" href="../../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -37,10 +43,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -206,6 +212,36 @@
               class="md-select__link" aria-current="true"
             >
               Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/developer/spectra/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/developer/spectra/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/developer/spectra/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
             </a>
           </li>
         
@@ -2080,7 +2116,7 @@ Cette page couvre les couches View et ViewModel propres à <code>Spectra</code>.
         SLE["SpectraLegendEditorDialog&lt;br/&gt;(Éditeur de légende par lots)"]
         FMB["VFitModelBuilder&lt;br/&gt;(Panneau de contrôles)"]
         PT["VPeakTable&lt;br/&gt;(Tableau de paramètres)"]
-        SL["VSpectraList&lt;br/&gt;(QListWidget)"]
+        SL["VSpectraList&lt;br/&gt;(QListView)"]
         FR["VFitResults&lt;br/&gt;(Tableau de résultats)"]
         MVA["VMVA&lt;br/&gt;(Panneau PCA/NMF)"]
     end
@@ -2201,7 +2237,7 @@ Cette page couvre les couches View et ViewModel propres à <code>Spectra</code>.
 </ol>
 <p>La mise en page repose sur un séparateur horizontal : <strong>à gauche</strong> (<code>SpectraViewer</code> en haut, onglets de contrôle en bas) et <strong>à droite</strong> (barre latérale de la liste des spectres).</p>
 <p><strong>Patron clé — Actions modifiées par <code>Ctrl</code> :</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">_apply_with_ctrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">def</span> <span class="nf">_apply_with_ctrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">apply_all</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">QApplication</span><span class="o">.</span><span class="n">keyboardModifiers</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">ControlModifier</span><span class="p">)</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">fn</span><span class="p">(</span><span class="n">apply_all</span><span class="p">)</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
@@ -2276,7 +2312,7 @@ Cette page couvre les couches View et ViewModel propres à <code>Spectra</code>.
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">count_changed</span>             <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>           <span class="c1"># libellé du nombre total de spectres</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">show_xcorrection_value</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>         <span class="c1"># synchronise le champ de correction X</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">spectral_range_changed</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>  <span class="c1"># synchronise les bornes de plage</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">fit_in_progress</span>           <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>          <span class="c1"># active/désactive les boutons d'ajustement</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">fit_in_progress</span>           <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>          <span class="c1"># active/désactive les boutons d&#39;ajustement</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">fit_progress_updated</span>      <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>  <span class="c1"># barre de progression</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">fit_results_updated</span>       <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>        <span class="c1"># pd.DataFrame → tableau de résultats</span>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">notify</span>                    <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>           <span class="c1"># message de notification flottante</span>
@@ -2339,18 +2375,18 @@ Cette page couvre les couches View et ViewModel propres à <code>Spectra</code>.
 </table>
 <h4 id="methodes-modeles-template-method">Méthodes modèles (Template Method)<a class="headerlink" href="#methodes-modeles-template-method" title="Permanent link">&para;</a></h4>
 <p>Le ViewModel emploie le <strong>patron Template Method</strong> afin de permettre à la <a href="../maps/#surcharges-de-methodes-modeles">sous-classe Maps</a> de personnaliser les opérations globales sans dupliquer la logique :</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">_get_target_mds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_all</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">MapData</span><span class="p">]:</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">"""Quels blocs MapData cibler."""</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span> <span class="nf">_get_target_mds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_all</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">MapData</span><span class="p">]:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Quels blocs MapData cibler.&quot;&quot;&quot;</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="c1"># Espace Spectra : spectres sélectionnés → leurs objets MapData</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="c1"># Espace Maps (surcharge) : carte active, ou toutes les cartes</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">_on_map_data_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">md</span><span class="p">:</span> <span class="n">MapData</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="sd">"""Hook appelé après modification de chaque MapData individuel."""</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">def</span> <span class="nf">_on_map_data_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">md</span><span class="p">:</span> <span class="n">MapData</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Hook appelé après modification de chaque MapData individuel.&quot;&quot;&quot;</span>
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="c1"># Espace Spectra : sans effet</span>
 <a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="c1"># Espace Maps (surcharge) : vide le cache de carte thermique, relance batch_preprocess</span>
 <a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">_post_bulk_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_all</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="sd">"""Hook appelé après traitement de tous les MapData ciblés."""</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="k">def</span> <span class="nf">_post_bulk_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_all</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Hook appelé après traitement de tous les MapData ciblés.&quot;&quot;&quot;</span>
 <a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="c1"># Espace Spectra : ré-émet liste et sélection</span>
 <a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    <span class="c1"># Espace Maps (surcharge) : rafraîchit aussi les résultats et la vue de carte</span>
 </code></pre></div>
@@ -2476,9 +2512,9 @@ Cette page couvre les couches View et ViewModel propres à <code>Spectra</code>.
 </ol>
 <p>Le module <code>m_io</code> détecte automatiquement le format à partir du fichier. Chaque chargeur retourne un dictionnaire uniforme :</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"spectra"</span><span class="p">,</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="s2">"items"</span><span class="p">:</span> <span class="p">[</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">"x0"</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="s2">"y0"</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">},</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;spectra&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;x0&quot;</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="s2">&quot;y0&quot;</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">},</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        <span class="o">...</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="p">]</span>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
@@ -2716,10 +2752,10 @@ Cette page couvre les couches View et ViewModel propres à <code>Spectra</code>.
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../../../javascripts/mathjax.js"></script>
       

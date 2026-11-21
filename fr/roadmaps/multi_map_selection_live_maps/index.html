@@ -22,10 +22,16 @@
         
           <link rel="alternate" href="./" hreflang="fr">
         
+          <link rel="alternate" href="../../../de/roadmaps/multi_map_selection_live_maps/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/roadmaps/multi_map_selection_live_maps/" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/roadmaps/multi_map_selection_live_maps/" hreflang="zh">
+        
       
       
       <link rel="icon" href="../../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -33,10 +39,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -202,6 +208,36 @@
               class="md-select__link" aria-current="true"
             >
               Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/roadmaps/multi_map_selection_live_maps/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/roadmaps/multi_map_selection_live_maps/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/roadmaps/multi_map_selection_live_maps/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
             </a>
           </li>
         
@@ -1564,15 +1600,81 @@
 
 
 <h1 id="technically-validated-specification-implementation-roadmap-multi-map-selection-live-maps">Technically Validated Specification &amp; Implementation Roadmap: Multi-Map Selection &amp; Live Maps<a class="headerlink" href="#technically-validated-specification-implementation-roadmap-multi-map-selection-live-maps" title="Permanent link">&para;</a></h1>
-<p><strong>Document Status</strong>: Audited, Performance-Validated &amp; Implementation-Ready Specification<br />
+<p><strong>Document Status</strong>: Fully Implemented &amp; Shipped in <code>v26.48.1</code> (Phases 0–6 + Post-Implementation Refinements &amp; Modularization)<br />
 <strong>Supersedes</strong>: Draft Roadmap (<code>34431df</code>, initial Phases 1–4 proposal)<br />
-<strong>Primary Modules Affected</strong>:</p>
+<strong>Primary Modules Affected (Updated for Current <code>v26.48.1+</code> Package Structure)</strong>:</p>
 <ul>
-<li><code>spectroview/model/spectra_store.py</code>, <code>spectroview/model/spectral_parameters.py</code></li>
-<li><code>spectroview/viewmodel/vm_workspace_maps.py</code>, <code>spectroview/viewmodel/vm_workspace_spectra.py</code>, <code>spectroview/viewmodel/vm_live_maps.py</code></li>
-<li><code>spectroview/view/components/v_map_list.py</code>, <code>spectroview/view/components/v_live_maps.py</code>, <code>spectroview/view/v_workspace_maps.py</code>, <code>spectroview/view/v_workspace_spectra.py</code></li>
+<li><code>spectroview/model/spectra/spectra_store.py</code>, <code>spectroview/model/spectra/spectral_parameters.py</code></li>
+<li><code>spectroview/viewmodel/maps/vm_workspace_maps.py</code>, <code>spectroview/viewmodel/spectra/vm_workspace_spectra.py</code>, <code>spectroview/viewmodel/maps/vm_live_maps.py</code></li>
+<li><code>spectroview/view/components/lists/v_map_list.py</code>, <code>spectroview/view/components/rgb_live_maps/</code> (<code>v_live_maps.py</code>, <code>v_live_map_subpanel.py</code>, <code>v_live_map_1d.py</code>, <code>v_live_map_2d.py</code>, <code>v_live_map_selection.py</code>, <code>v_live_maps_options.py</code>, <code>v_live_maps_legend_editor.py</code>, <code>v_range_selector.py</code>, <code>v_range_bracket_mixin.py</code>, <code>common.py</code>)</li>
+<li><code>spectroview/view/workspaces/v_workspace_maps.py</code>, <code>spectroview/view/workspaces/v_workspace_spectra.py</code></li>
 </ul>
-<p><strong>Related Features</strong>: Multi-Map Selection, RGB Spectral Range Brackets (<code>VSpectraViewer</code> / <code>RangeSelectorManager</code>), Adaptive 1D/2D Live Maps, Green Red/Blue (<code>R/B</code>) Ratio, Vectorized Parameter Caching</p>
+<p><strong>Related Features</strong>: Multi-Map Selection, RGB Spectral Range Brackets (<code>VSpectraViewer</code> / <code>RangeSelectorManager</code>), Adaptive 1D/2D Live Maps, Green Red/Blue (<code>R/B</code>) Ratio, Vectorized Parameter Caching, Async Worker Offload, Interactive Live Maps View Options</p>
+<hr />
+<h2 id="0-implementation-release-audit-summary-verified-against-codebase-git-history">0. Implementation &amp; Release Audit Summary (Verified Against Codebase &amp; Git History)<a class="headerlink" href="#0-implementation-release-audit-summary-verified-against-codebase-git-history" title="Permanent link">&para;</a></h2>
+<p>All phases of this specification (<code>Phase 0</code> through <code>Phase 5</code>), plus an additional <code>Phase 6</code> (Interactive Live Maps View Options &amp; Draggable Legend Editor) and subsequent UX, rendering, and package-modularization refinements, have been <strong>fully implemented, verified by automated tests, and shipped in release <code>v26.48.1</code></strong>:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Phase / Milestone</th>
+<th style="text-align: left;">Status</th>
+<th style="text-align: left;">Commit Hash(es)</th>
+<th style="text-align: left;">Shipped Release</th>
+<th style="text-align: left;">Verification &amp; Post-Implementation Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Phase 0</strong>: Baseline Hygiene, <code>MapData.data_version</code>, Slice-First <code>float64</code> Cast, Cached Delaunay <code>MapGridder</code>, Signal Separation &amp; Tab-Visibility Gate</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>850512b</code>, <code>138bb55</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Implemented <code>MapData.data_version</code> + <code>touch()</code>, slice-first <code>compute_spectral_parameter</code>, <code>~md.is_active</code> <code>NaN</code> masking, <code>MapGridder</code> (<code>build_map_gridder</code> / <code>evaluate_map_grid</code> with cached Delaunay barycentric weights and <code>cKDTree</code> <code>QhullError</code> fallback), hidden-tab dirty gating, and workspace-clear reset. Commit <code>138bb55</code> added cached <span class="arithmatex">\(O(1)\)</span> <code>fname_to_index_map</code> / <code>get_fname_index</code> on <code>MapData</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 1</strong>: <code>VMapsList</code> <code>ExtendedSelection</code> &amp; Placeholder-Safe Selection Model</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>850512b</code>, <code>bac32d0</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Enabled <code>ExtendedSelection</code>, added <code>maps_selection_changed = Signal(list, object)</code>, primary reconciliation on <code>Ctrl+Click</code> deselection, and name-preserving <code>set_maps_names()</code>. Commit <code>bac32d0</code> added drag-and-drop map reordering in <code>VMapsList</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 2</strong>: Two-Tier Workspace Coordination (<code>VMWorkspaceMaps</code> &amp; <code>VWorkspaceMaps</code>)</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>850512b</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Added <code>selected_map_names</code>, <code>select_maps(map_names, primary_name)</code>, <code>live_maps_selection_changed</code>, and batch <code>delete_selected_maps()</code> with confirmation dialog while keeping all preprocessing, baseline, fitting, and MVA tools strictly bound to the Primary Active Map.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 3</strong>: Multi-Map <code>VMLiveMaps</code> Engine, Data-Versioned LRU Cache &amp; <code>R/B</code> Ratio</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>850512b</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Added <code>set_map_datas()</code>, Primary-precedence dimensionality classification, active-only 2D evaluation (<code>set_active_2d_map</code>), 64-entry versioned <code>_intensity_cache</code>, <code>multi_profile_data_ready</code>, <code>map_2d_candidates_changed</code>, <code>live_maps_cleared</code>, and adaptive <code>60–250 ms</code> debounce timer.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 4</strong>: <code>VLiveMaps</code> / <code>LiveMapSubpanel</code> Multi-Profile Visualization, <code>Line2D</code> Pool &amp; 2D Switcher</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong> (Evolved in <code>5313933</code> &amp; <code>7b3ce50</code>)</td>
+<td style="text-align: left;"><code>850512b</code>, <code>5313933</code>, <code>7b3ce50</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Shipped in <code>850512b</code> with <code>Line2D</code> artist pooling, aspect-ratio reset (<code>set_aspect("auto")</code>), and tab-level 2D switcher. In <code>5313933</code>, the multi-1D header chip strip was retired in favor of the toggleable on-canvas draggable Legend box with dark-mode contrast fixes and configurable <code>Text size</code> (DPI raised from 70 to 96). In <code>7b3ce50</code>, multi-profile curves were standardized to uniform line thickness.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 5</strong>: Thresholded Async <code>QThreadPool</code> Worker (<code>&gt;= 25,000</code> spectra) &amp; Doc Sync</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>6cc1bce</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Added <code>ASYNC_SPECTRUM_THRESHOLD = 25_000</code>, <code>_LiveMapWorker(QRunnable)</code> on a dedicated single-worker <code>QThreadPool</code>, parented <code>_LiveMapWorkerBridge(QObject)</code>, monotonic <code>_generation_id</code> cancellation, and <code>Main.closeEvent()</code> worker drain. Verified by <code>tests/unit/viewmodel/test_vm_live_maps_async.py</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 6 &amp; Follow-Up Enhancements</strong>: View Options Menu, Plot Theme, Interactive Selection, 1D Normalization, Blitted Bracket Dragging &amp; Package Modularization</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>6cc1bce</code>, <code>3aa87f7</code>, <code>65b2912</code>, <code>98e721a</code>, <code>173e8d8</code>, <code>ebf397f</code>, <code>7aba5ce</code>, <code>ce22850</code>, <code>41a8ef0</code>, <code>6ed1f15</code>, <code>c32dd65</code>, <code>e92ea75</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Added top-right <code>[Show Legend \| More view options]</code> toolbar &amp; <code>LiveMapsLegendEditorDialog</code> (<code>6cc1bce</code>), persistent <code>Plot theme</code> (<code>Light Mode</code> / <code>Dark Mode</code>) &amp; per-subpanel <code>Rescale</code>/<code>Pan</code>/<code>Zoom</code> tools (<code>3aa87f7</code>), fixed copied figure size/theme &amp; 2-column options menu (<code>98e721a</code>), <code>Show figure label</code> (<code>173e8d8</code>), interactive spectrum selection from RGB Live Maps (<code>ebf397f</code>), 1D curve normalization toolbar (<code>7aba5ce</code>), Agg background blitting during bracket drag + <code>flush_pending()</code> on release (<code>ce22850</code>), <code>Ctrl+Click</code> copy plot data (<code>41a8ef0</code>), auto-hiding Green bracket on <code>R/B ratio</code> + consolidation into <code>spectroview/view/components/rgb_live_maps/</code> (<code>6ed1f15</code>, <code>e92ea75</code>), and auto-switching bottom tab to Live Maps on bracket activation (<code>c32dd65</code>).</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 id="1-executive-summary">1. Executive Summary<a class="headerlink" href="#1-executive-summary" title="Permanent link">&para;</a></h2>
 <p>This document presents a comprehensive technical re-audit and implementation-ready specification for adding <strong>multi-map selection</strong> in the Maps workspace while hardening the <strong>RGB Live Brackets</strong>, <strong>Adaptive 1D/2D Live Maps</strong>, and <strong>Green R/B Ratio</strong> subsystems for large hyperspectral workloads.</p>
@@ -2141,7 +2243,7 @@
     P3 --&gt; P4["Phase 4: VLiveMaps Multi-Profile&lt;br/&gt;Legend, Line Pool &amp; 2D Switcher"]
     P4 --&gt; P5["Phase 5: Thresholded Async Worker&lt;br/&gt;&amp; Mandatory Doc Sync"]</code></pre>
 <hr />
-<h3 id="phase-0-baseline-hygiene-memoryinterpolation-fixes-lifecycle-bugs">Phase 0: Baseline Hygiene, Memory/Interpolation Fixes &amp; Lifecycle Bugs<a class="headerlink" href="#phase-0-baseline-hygiene-memoryinterpolation-fixes-lifecycle-bugs" title="Permanent link">&para;</a></h3>
+<h3 id="phase-0-baseline-hygiene-memoryinterpolation-fixes-lifecycle-bugs-completed-shipped-in-v26481-commits-850512b-138bb55">Phase 0: Baseline Hygiene, Memory/Interpolation Fixes &amp; Lifecycle Bugs <code>[Completed &amp; Shipped in v26.48.1 — commits 850512b, 138bb55]</code><a class="headerlink" href="#phase-0-baseline-hygiene-memoryinterpolation-fixes-lifecycle-bugs-completed-shipped-in-v26481-commits-850512b-138bb55" title="Permanent link">&para;</a></h3>
 <h4 id="a-objective">A. Objective<a class="headerlink" href="#a-objective" title="Permanent link">&para;</a></h4>
 <p>Eliminate existing duplicate computations, <code>947.5 MB</code> memory spikes, <code>14.5 s</code> scattered-interpolation freezes, hidden-tab CPU waste, and workspace-clear memory leaks <strong>before</strong> multi-selection multiplies these flaws by <span class="arithmatex">\(N\)</span> selected maps.</p>
 <h4 id="b-files-and-components">B. Files and Components<a class="headerlink" href="#b-files-and-components" title="Permanent link">&para;</a></h4>
@@ -2208,7 +2310,7 @@
 <li>Scattered <code>N = 2,401</code> and <code>160,000</code> drag ticks run in <span class="arithmatex">\(&lt; 5\text{ ms}\)</span> post-init.</li>
 </ul>
 <hr />
-<h3 id="phase-1-vmapslist-extendedselection-robust-selection-model">Phase 1: <code>VMapsList</code> ExtendedSelection &amp; Robust Selection Model<a class="headerlink" href="#phase-1-vmapslist-extendedselection-robust-selection-model" title="Permanent link">&para;</a></h3>
+<h3 id="phase-1-vmapslist-extendedselection-robust-selection-model-completed-shipped-in-v26481-commits-850512b-bac32d0">Phase 1: <code>VMapsList</code> ExtendedSelection &amp; Robust Selection Model <code>[Completed &amp; Shipped in v26.48.1 — commits 850512b, bac32d0]</code><a class="headerlink" href="#phase-1-vmapslist-extendedselection-robust-selection-model-completed-shipped-in-v26481-commits-850512b-bac32d0" title="Permanent link">&para;</a></h3>
 <h4 id="a-objective_1">A. Objective<a class="headerlink" href="#a-objective_1" title="Permanent link">&para;</a></h4>
 <p>Enable standard Qt <code>ExtendedSelection</code> (<code>Click</code>, <code>Ctrl+Click</code>, <code>Shift+Click</code>, <code>Ctrl+A</code>) in <code>VMapsList</code> while preserving placeholder safety, deterministic map ordering, Primary-vs-Selected consistency, and backward compatibility with <code>map_selection_changed(int)</code>.</p>
 <h4 id="b-files-and-components_1">B. Files and Components<a class="headerlink" href="#b-files-and-components_1" title="Permanent link">&para;</a></h4>
@@ -2266,7 +2368,7 @@
 <li><code>VMapsList</code> supports <code>ExtendedSelection</code>, passes all existing <code>test_v_maps_list.py</code> tests plus new multi-selection tests, and never returns placeholder items or wipes multi-selection on <code>set_maps_names</code>.</li>
 </ul>
 <hr />
-<h3 id="phase-2-two-tier-workspace-coordination-vmworkspacemaps-vworkspacemaps">Phase 2: Two-Tier Workspace Coordination (<code>VMWorkspaceMaps</code> &amp; <code>VWorkspaceMaps</code>)<a class="headerlink" href="#phase-2-two-tier-workspace-coordination-vmworkspacemaps-vworkspacemaps" title="Permanent link">&para;</a></h3>
+<h3 id="phase-2-two-tier-workspace-coordination-vmworkspacemaps-vworkspacemaps-completed-shipped-in-v26481-commit-850512b">Phase 2: Two-Tier Workspace Coordination (<code>VMWorkspaceMaps</code> &amp; <code>VWorkspaceMaps</code>) <code>[Completed &amp; Shipped in v26.48.1 — commit 850512b]</code><a class="headerlink" href="#phase-2-two-tier-workspace-coordination-vmworkspacemaps-vworkspacemaps-completed-shipped-in-v26481-commit-850512b" title="Permanent link">&para;</a></h3>
 <h4 id="a-objective_2">A. Objective<a class="headerlink" href="#a-objective_2" title="Permanent link">&para;</a></h4>
 <p>Implement the Two-Tier Selection Model inside <code>VMWorkspaceMaps</code> and <code>VWorkspaceMaps</code> cleanly: route the <strong>Primary Active Map</strong> exclusively to all single-map viewers/tools/MVA/services while routing the <strong>Selected Maps Group</strong> cleanly to <code>VMLiveMaps</code> (respecting the Phase 0 tab-visibility gate).</p>
 <h4 id="b-files-and-components_2">B. Files and Components<a class="headerlink" href="#b-files-and-components_2" title="Permanent link">&para;</a></h4>
@@ -2329,7 +2431,7 @@
 <li>Multi-selection tracks <code>selected_map_names</code> and <code>current_map_name</code> without duplicating data or resetting <code>VMapViewer</code> / <code>VSpectraViewer</code> on comparison toggles.</li>
 </ul>
 <hr />
-<h3 id="phase-3-multi-map-vmlivemaps-engine-data-versioned-cache-rb-ratio">Phase 3: Multi-Map <code>VMLiveMaps</code> Engine, Data-Versioned Cache &amp; <code>R/B</code> Ratio<a class="headerlink" href="#phase-3-multi-map-vmlivemaps-engine-data-versioned-cache-rb-ratio" title="Permanent link">&para;</a></h3>
+<h3 id="phase-3-multi-map-vmlivemaps-engine-data-versioned-cache-rb-ratio-completed-shipped-in-v26481-commit-850512b">Phase 3: Multi-Map <code>VMLiveMaps</code> Engine, Data-Versioned Cache &amp; <code>R/B</code> Ratio <code>[Completed &amp; Shipped in v26.48.1 — commit 850512b]</code><a class="headerlink" href="#phase-3-multi-map-vmlivemaps-engine-data-versioned-cache-rb-ratio-completed-shipped-in-v26481-commit-850512b" title="Permanent link">&para;</a></h3>
 <h4 id="a-objective_3">A. Objective<a class="headerlink" href="#a-objective_3" title="Permanent link">&para;</a></h4>
 <p>Upgrade <code>VMLiveMaps</code> to manage multiple <code>MapData</code> instances cleanly, apply the <strong>Primary-Precedence Dimensionality Policy</strong>, maintain cross-batch intensity caches keyed by <code>md.data_version</code>, handle heterogeneous X-axes &amp; out-of-range <code>R/B</code> ratios safely, and expose structured multi-map payloads for both 1D multi-profile and 2D switcher modes.</p>
 <h4 id="b-files-and-components_3">B. Files and Components<a class="headerlink" href="#b-files-and-components_3" title="Permanent link">&para;</a></h4>
@@ -2381,8 +2483,8 @@
 <li><strong>Typed Multi-Profile Payload (<code>multi_profile_data_ready</code>)</strong>:</li>
 <li><strong>Proposed signals</strong>: Introduce a structured multi-profile payload signal (while preserving <code>profile_data_ready</code> for single-profile backward compatibility):
      <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Payload list of dicts/dataclasses per profile:</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># {"name": str, "positions": np.ndarray, "values": np.ndarray,</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1">#  "axis_label": str, "is_primary": bool, "out_of_range": bool}</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># {&quot;name&quot;: str, &quot;positions&quot;: np.ndarray, &quot;values&quot;: np.ndarray,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1">#  &quot;axis_label&quot;: str, &quot;is_primary&quot;: bool, &quot;out_of_range&quot;: bool}</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">multi_profile_data_ready</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># (color_id, entries, shared_x_label, status_msg)</span>
 </code></pre></div></li>
@@ -2424,7 +2526,7 @@
 <li>Data-versioned caching prevents recomputing untouched maps; 2D mode evaluates only the active switcher target.</li>
 </ul>
 <hr />
-<h3 id="phase-4-vlivemaps-livemapsubpanel-multi-profile-visualization-2d-switcher">Phase 4: <code>VLiveMaps</code> / <code>LiveMapSubpanel</code> Multi-Profile Visualization &amp; 2D Switcher<a class="headerlink" href="#phase-4-vlivemaps-livemapsubpanel-multi-profile-visualization-2d-switcher" title="Permanent link">&para;</a></h3>
+<h3 id="phase-4-vlivemaps-livemapsubpanel-multi-profile-visualization-2d-switcher-completed-shipped-in-v26481-commits-850512b-5313933-7b3ce50">Phase 4: <code>VLiveMaps</code> / <code>LiveMapSubpanel</code> Multi-Profile Visualization &amp; 2D Switcher <code>[Completed &amp; Shipped in v26.48.1 — commits 850512b, 5313933, 7b3ce50]</code><a class="headerlink" href="#phase-4-vlivemaps-livemapsubpanel-multi-profile-visualization-2d-switcher-completed-shipped-in-v26481-commits-850512b-5313933-7b3ce50" title="Permanent link">&para;</a></h3>
 <h4 id="a-objective_4">A. Objective<a class="headerlink" href="#a-objective_4" title="Permanent link">&para;</a></h4>
 <p>Render multi-profile comparisons clearly without crowding compact Matplotlib axes, preserve smooth interactive drag updates by pooling <code>Line2D</code> artists, eliminate aspect-ratio glitches across 2D <span class="arithmatex">\(\leftrightarrow\)</span> 1D switching, and provide a shared 2D map switcher header bar.</p>
 <h4 id="b-files-and-components_4">B. Files and Components<a class="headerlink" href="#b-files-and-components_4" title="Permanent link">&para;</a></h4>
@@ -2735,10 +2837,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../../../javascripts/mathjax.js"></script>
       

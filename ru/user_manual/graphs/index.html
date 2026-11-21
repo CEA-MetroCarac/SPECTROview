@@ -1,0 +1,2649 @@
+
+<!doctype html>
+<html lang="ru" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Интерактивный инструмент для обработки, аппроксимации и визуализации спектроскопических данных">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/ru/user_manual/graphs/">
+      
+      
+        <link rel="prev" href="../spectra_maps/">
+      
+      
+        <link rel="next" href="../mva/">
+      
+      
+        
+          <link rel="alternate" href="../../../user_manual/graphs/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/user_manual/graphs/" hreflang="fr">
+        
+          <link rel="alternate" href="../../../de/user_manual/graphs/" hreflang="de">
+        
+          <link rel="alternate" href="./" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/user_manual/graphs/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Рабочая область «Графики» - Документация SPECTROview</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#workspace-graphs" class="md-skip">
+          Перейти к содержанию
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Верхний колонтитул">
+    <a href="../../" title="Документация SPECTROview" class="md-header__button md-logo" aria-label="Документация SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Документация SPECTROview
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Рабочая область «Графики»
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Выберите язык"
+      title="Выберите язык"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">RU</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../user_manual/graphs/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/user_manual/graphs/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/user_manual/graphs/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="ru"
+              class="md-select__link" aria-current="true"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/user_manual/graphs/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Поиск" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Поиск">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистить" aria-label="Очистить" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Инициализация поиска
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Главная
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Установка
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Руководство пользователя
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  ИИ-агент
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../developer/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Руководство разработчика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  История изменений
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+    <style>
+      /* Hide the default H1 title injected by MkDocs */
+      .md-content h1 { display: none !important; }
+    </style>
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Навигация" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="Документация SPECTROview" class="md-nav__button md-logo" aria-label="Документация SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    Документация SPECTROview
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Главная
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Установка
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство пользователя
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство пользователя
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Поддерживаемые форматы данных
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Обзор интерфейса
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Строка меню
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочие области «Спектры» и «Карты»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Содержание">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Содержание
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#workspace-graphs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Рабочая область: Графики
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Рабочая область: Графики">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-loading-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Загрузка данных
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-add-or-update-a-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Добавление или обновление графика
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-the-shared-graph-toolbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Общая панель инструментов графиков
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-customizing-a-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Настройка графика
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Настройка графика">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-axes-limits-ticks-spines-and-secondary-inset-axes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 «Оси и пределы», Ticks &amp; Spines и «Вторые оси и врезка»
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-legend-series" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Legend &amp; Series
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-annotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Annotations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-general-typography-and-plot-style-fitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 «Общие и типографика» и «Стиль графиков и аппроксимация»
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-data-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Фильтрация данных
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-statistical-calculations-fitting-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Статистические расчёты и детали аппроксимации
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Статистические расчёты и детали аппроксимации">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-point-and-bar-plots" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Точечные и столбчатые графики
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-box-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Ящик с усами
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-trendline-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Оценка линии тренда
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-trendline-confidence-intervals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Доверительные интервалы линии тренда
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Многомерный анализ (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Калькуляторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Настройки
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сохранение и загрузка
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Горячие клавиши и советы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство разработчика
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство разработчика
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Конвейер загрузки файлов
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архитектура данных SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Спектры»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Векторизованный движок пакетной аппроксимации (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Многомерный анализ (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Локальный MCP-сервер
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Спектры» (загрузка, предобработка, аппроксимация)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты» (гиперспектральные данные, тепловые карты)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Визуализация данных («Графики»)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Калькуляторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Расширение SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    История изменений
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навигация" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Главная
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Руководство пользователя
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>Рабочая область «Графики»</h1>
+
+<h2 id="workspace-graphs"><strong>Рабочая область: Графики</strong><a class="headerlink" href="#workspace-graphs" title="Permanent link">&para;</a></h2>
+<p>Рабочая область <strong>Графики</strong> (<code>Graphs</code>) полностью посвящена визуализации данных и разработана с особым акцентом на простоту, быстродействие и гибкость настройки.</p>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/ui_graph.gif" alt="Интерфейс рабочей области Графики" width="900"><br>
+  <i>Обзор интерфейса рабочей области «Графики».</i>
+</div>
+<p><br></p>
+<hr />
+<h3 id="1-loading-data"><strong>1. Загрузка данных</strong><a class="headerlink" href="#1-loading-data" title="Permanent link">&para;</a></h3>
+<p>Наборы данных можно передавать напрямую из рабочих областей <strong>Спектры</strong> (<code>Spectra</code>) и <strong>Карты</strong> (<code>Maps</code>) или импортировать из внешних файлов Excel/CSV. Все доступные наборы данных динамически отслеживаются и отображаются в виджете списка наборов данных.</p>
+<p><img alt="Список наборов данных" src="../../../user_manual_images/Graphs/df_list.png" /><br>
+Четыре доступные служебные кнопки позволяют:</p>
+<ul>
+<li><strong>View</strong>: просмотреть таблицу данных во встроенном окне.</li>
+<li><strong>Удалить</strong> (Delete): удалить набор данных из рабочей области.</li>
+<li><strong>Сохранить</strong> (Save): экспортировать набор данных в формат Excel или CSV.</li>
+<li><strong>Refresh</strong>: динамически перезагрузить файл CSV/Excel, если он был изменён извне.</li>
+</ul>
+<hr />
+<h3 id="2-add-or-update-a-plot"><strong>2. Добавление или обновление графика</strong><a class="headerlink" href="#2-add-or-update-a-plot" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Выберите целевой набор данных в списке.</li>
+<li>Укажите подходящие столбцы для осей X, Y и Z с помощью выпадающих списков.</li>
+<li>Выберите нужный тип графика (доступные типы: <strong>рассеяние</strong> (<code>scatter</code>), <strong>точки</strong> (<code>point</code>), <strong>столбцы</strong> (<code>bar</code>), <strong>ящик с усами</strong> (<code>box</code>), <strong>линия</strong> (<code>line</code>), <strong>линия тренда</strong> (<code>trendline</code>), <strong>гистограмма</strong> (<code>histogram</code>), <strong>2D-карта</strong> (<code>2Dmap</code>), <strong>пластина</strong> (<code>wafer</code>)).</li>
+<li>Задайте подписи графика, пределы осей и диаметр пластины (если применимо).</li>
+<li>Нажмите <strong>Добавить график</strong> (Add plot), чтобы построить визуализацию.</li>
+</ol>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/add_plot.gif" alt="Добавление графика" width="800"><br>
+  <i>Демонстрация добавления нового графика или обновления существующего.</i>
+</div>
+
+<hr />
+<h3 id="3-the-shared-graph-toolbar"><strong>3. Общая панель инструментов графиков</strong><a class="headerlink" href="#3-the-shared-graph-toolbar" title="Permanent link">&para;</a></h3>
+<p>На нижней панели рабочей области собраны все глобальные элементы управления и одна общая панель инструментов графика, которая всегда действует на текущее активное окно графика. Чтобы сделать график активным, нажмите на него или выберите его в выпадающем списке <strong>Активный график</strong> (Active plot) на боковой панели (сразу над кнопками <strong>Добавить график</strong> / <strong>Обновить график</strong> (Update plot)).</p>
+<table>
+<thead>
+<tr>
+<th>Элемент управления</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Удалить все</strong> (Delete all)</td>
+<td>Удаляет все графики из рабочей области.</td>
+</tr>
+<tr>
+<td><strong>Свернуть все</strong> (Minimize all)</td>
+<td>Сворачивает все окна графиков.</td>
+</tr>
+<tr>
+<td><strong>Отменить</strong> (Undo) / <strong>Redo</strong></td>
+<td>Перемещает назад/вперёд по истории изменений рабочей области (<code>Ctrl+Z</code> / <code>Ctrl+Shift+Z</code>).</td>
+</tr>
+<tr>
+<td><strong>Compose Figure</strong></td>
+<td>Объединяет несколько открытых графиков в один многопанельный рисунок для экспорта.</td>
+</tr>
+<tr>
+<td><strong>Home / Pan / Zoom / Subplots</strong></td>
+<td>Стандартная навигация Matplotlib: возврат к исходному виду, панорамирование, масштабирование прямоугольником или настройка полей подграфиков.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Совет:</strong> При изменении размера или перемещении окна графика перетаскиванием его границы или строки заголовка сначала отображается контур. График перерисовывается один раз — уже в новом размере — после отпускания кнопки мыши. Это обеспечивает плавность работы даже с крупными графиками. Аналогично, во время панорамирования поля вокруг осей остаются фиксированными и пересчитываются после отпускания кнопки мыши.</p>
+</blockquote>
+<p>Вертикальный разделитель отделяет элементы управления самого активного графика — они всегда выровнены по правому краю окна:</p>
+<table>
+<thead>
+<tr>
+<th>Элемент управления</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Replicate</strong></td>
+<td>Создаёт дубликат активного графика.</td>
+</tr>
+<tr>
+<td><strong>Customize</strong></td>
+<td>Открывает диалоговое окно Customize Graph Dialog для активного графика (<code>Ctrl+E</code>, см. ниже).</td>
+</tr>
+<tr>
+<td><strong>Копировать</strong> (Copy)</td>
+<td>Копирует рисунок активного графика в буфер обмена как изображение (<code>Ctrl+C</code>).</td>
+</tr>
+<tr>
+<td><strong>Export</strong></td>
+<td>Нажмите для экспорта активного графика в файл. <strong>Удерживайте Ctrl + клик</strong>, чтобы экспортировать сразу все открытые графики.</td>
+</tr>
+<tr>
+<td><strong>Style menu (🎨)</strong></td>
+<td>Сохранение и применение стиля, копирование и вставка стиля (<code>Ctrl+V</code> для вставки), сброс к исходному виду или назначение текущего стиля стилем по умолчанию для новых графиков.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Примечание</strong>: перечисленные выше сочетания клавиш <code>Ctrl+Z</code>, <code>Ctrl+Shift+Z</code>, <code>Ctrl+C</code>, <code>Ctrl+V</code> и <code>Ctrl+E</code> работают только тогда, когда активна вкладка <strong>Графики</strong> — они не мешают выполнению тех же комбинаций в других частях приложения (например, при вводе текста в полях).</p>
+</blockquote>
+<hr />
+<h3 id="4-customizing-a-plot"><strong>4. Настройка графика</strong><a class="headerlink" href="#4-customizing-a-plot" title="Permanent link">&para;</a></h3>
+<p>Вы можете быстро изменить <strong>подписи</strong> осей и <strong>заголовок</strong> графика через боковую панель (<code>Right Panel</code>). Нажмите кнопку <strong>Обновить график</strong>, чтобы мгновенно применить изменения:</p>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/labels.png" alt="Настройка подписей" width="400"><br>
+  <i>Настройка выбранного графика через Right Panel. Нажмите кнопку Обновить график, чтобы применить изменения.</i>
+</div>
+
+<p><br></p>
+<p>Для расширенной настройки нажмите кнопку <strong>Customize</strong> (⚙), чтобы открыть диалоговое окно <strong>Customize Graph Dialog</strong> (<code>Ctrl + E</code>). Оно выполнено в современном двухпанельном интерфейсе по образцу «Настроек» и оснащено глобальным поиском по всем параметрам в реальном времени, адаптивной навигацией по категориям слева, а также подсветкой и автоматической прокруткой к найденному параметру внутри семи модульных категорий:</p>
+<ul>
+<li><strong>Общие и типографика</strong> (General &amp; Typography): тема рисунка (светлая/тёмная), линии сетки, поворот подписей оси X, размеры шрифта (заголовок, подпись оси, подписи делений, цветовая шкала) и интеллектуальная сортировка данных.</li>
+<li><strong>Оси и пределы</strong> (Axes &amp; Limits): пределы осей с интерактивными ползунками диапазона (вверху), масштабы основных осей X/Y/Z (линейный, логарифмический, Symlog, центрированный), числовой и категориальный типы данных, инверсия осей и диапазоны разрыва осей.</li>
+<li><strong>Ticks &amp; Spines</strong>: направление делений, предустановленные форматы подписей делений, дополнительные деления (сверху, снизу, слева, справа) и видимость линий рамки осей.</li>
+<li><strong>Legend &amp; Series</strong>: размещение блока легенды (внутри/снаружи), рамка, число столбцов, заголовок, размер шрифта, прозрачность альфа, положение, общий стиль маркеров и выровненная по левому краю таблица оформления по сериям.</li>
+<li><strong>Стиль графиков и аппроксимация</strong> (Plot Style &amp; Fitting): специализированные параметры типов графиков (соединение точек, разнесение совпадающих точек, статистика пластины), унифицированные настройки планок ошибок (отображение, тип статистики, ширина засечек), полиномиальная аппроксимация линии тренда с опорными точками и таблицами уравнений в реальном времени, а также интервалы гистограммы и кривые KDE.</li>
+<li><strong>Annotations</strong>: визуальные аннотации на графике (вертикальные и горизонтальные линии, текст, стрелки, вертикальные и горизонтальные полосы, прямоугольники, выноски) с интерактивным перетаскиванием по холсту и модальным редактированием.</li>
+<li><strong>Вторые оси и врезка</strong> (Secondary &amp; Inset Axes): дополнительные спаренные оси (Y2, Y3, X2 с отдельными подписями, пределами, логарифмической шкалой, цветами и маркерами) и увеличенная врезка с соединительными линиями.</li>
+</ul>
+<p>Все изменения на всех вкладках применяются одновременно единой кнопкой <strong>Применить</strong> (Apply) в нижней части диалогового окна или отменяются кнопкой <strong>Отмена</strong> (Cancel).</p>
+<hr />
+<h4 id="41-axes-limits-ticks-spines-and-secondary-inset-axes">4.1 «Оси и пределы», Ticks &amp; Spines и «Вторые оси и врезка»<a class="headerlink" href="#41-axes-limits-ticks-spines-and-secondary-inset-axes" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/Customize_Axis.png" alt="Категории настройки осей" width="600"><br>
+  <i>Настройка осей в диалоговом окне Customize Graph Dialog.</i>
+</div>
+
+<p>Категории <strong>Оси и пределы</strong>, <strong>Ticks &amp; Spines</strong> и <strong>Вторые оси и врезка</strong> управляют масштабированием осей, типами данных, пределами, оформлением делений и рамки, разрывами осей, врезками (увеличенными областями) и дополнительными спаренными осями. Размеры шрифта для заголовков, подписей и делений находятся в категории <strong>Общие и типографика</strong>.</p>
+<h5 id="axis-properties-axes-limits">Свойства осей (Оси и пределы)<a class="headerlink" href="#axis-properties-axes-limits" title="Permanent link">&para;</a></h5>
+<p>Настройте <strong>масштаб</strong> и <strong>тип данных</strong> для каждой оси независимо с помощью выпадающих меню:</p>
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Варианты</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>X / Y axis Scale</strong></td>
+<td><strong>Линейный</strong> (<code>Linear</code>), <strong>Логарифмическая</strong> (<code>Logarithmic</code>), <code>Symlog</code></td>
+<td>Переключает ось между линейной, логарифмической и симметричной логарифмической шкалами. Логарифмическая шкала применяется только в том случае, если исходные данные являются числовыми.</td>
+</tr>
+<tr>
+<td><strong>X / Y axis Data type</strong></td>
+<td><strong>Авто</strong> (<code>Auto</code>), <strong>Категория</strong> (<code>Category</code>), <strong>Числовые</strong> (<code>Numerical</code>)</td>
+<td>Определяет интерпретацию значений по оси. <strong>Авто</strong> (по умолчанию): приложение автоматически определяет оптимальный тип — числовой, если 100 % данных составляют числа, иначе категориальный. <strong>Категория</strong>: принудительно использует категориальную индексацию. <strong>Числовые</strong>: принудительно задаёт непрерывную числовую шкалу.</td>
+</tr>
+<tr>
+<td><strong>Z axis Scale</strong> <em>(только для типов «пластина» / «2D-карта»)</em></td>
+<td><strong>Линейный</strong>, <strong>Логарифмическая</strong>, <strong>Центрированная</strong> (<code>Centered</code>)</td>
+<td>Задаёт нормализацию <strong>цветовой шкалы</strong> тепловой карты. <strong>Логарифмическая</strong> сжимает широкий диапазон значений (возвращается к линейной, если данные не строго положительны). <strong>Центрированная</strong> привязывает среднюю точку цветовой палитры к введённому значению <strong>Центр</strong> (Center value) — идеально подходит для расходящихся данных, например механических напряжений или деформаций вокруг 0.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Примечание</strong>: при использовании типа данных <strong>Числовые</strong> ось принимает истинную математическую шкалу, в которой интервалы отражают реальные значения данных. При использовании <strong>Категория</strong> каждое уникальное значение располагается равномерно независимо от его числовой величины.</p>
+</blockquote>
+<h5 id="set-axis-limits-axes-limits">Задание пределов осей (Оси и пределы)<a class="headerlink" href="#set-axis-limits-axes-limits" title="Permanent link">&para;</a></h5>
+<p>Задайте видимый диапазон каждой оси (X, Y, Z) вручную, указав значения <strong>min</strong> и <strong>max</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Элемент управления</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>X / Y / Z axis limits</strong></td>
+<td>Введите минимальное и максимальное значения, чтобы ограничить видимый диапазон. Оставьте поле счётчика незаполненным (в нём отображается текущее реальное значение графика серым цветом), чтобы сохранить автоматический расчёт этой границы.</td>
+</tr>
+<tr>
+<td><strong>Считать пределы с графика</strong> (Get current limits from plot)</td>
+<td>Считывает текущие видимые пределы с графика и заполняет поля. Удобно использовать как отправную точку перед тонкой настройкой.</td>
+</tr>
+<tr>
+<td><strong>Clear limits</strong></td>
+<td>Сбрасывает все пределы осей обратно в автоматический режим (без ограничений).</td>
+</tr>
+</tbody>
+</table>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/adjust_axis_limits.gif" alt="Настройка пределов осей" width="650"><br>
+  <i>Настройка пределов осей выбранного графика.</i>
+</div>
+
+<h5 id="axis-appearance-ticks-spines">Внешний вид осей (Ticks &amp; Spines)<a class="headerlink" href="#axis-appearance-ticks-spines" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Элемент управления</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Minor ticks</strong> (X <strong>Снизу</strong> (Bottom)/<strong>Сверху</strong> (Top), Y <strong>Слева</strong> (Left)/<strong>Справа</strong> (Right))</td>
+<td>Независимо включает дополнительные деления на каждой из четырёх границ графика. По умолчанию дополнительные деления автоматически включены только для осей, представляющих числовые значения (например, X и Y для графиков <strong>рассеяние</strong>, <strong>линия</strong> и <strong>гистограмма</strong>, Y для <strong>столбцы</strong>, <strong>ящик с усами</strong> и <strong>точки</strong>), и скрыты на категориальных осях или картах. Пользователи могут включать или отключать их для любой оси отдельно.</td>
+</tr>
+<tr>
+<td><strong>Show spines</strong> (<strong>Сверху</strong>/<strong>Справа</strong>/<strong>Снизу</strong>/<strong>Слева</strong>)</td>
+<td>Независимо переключает видимость каждой из четырёх линий рамки графика.</td>
+</tr>
+<tr>
+<td><strong>Направление делений</strong> (Tick direction)</td>
+<td><strong>По умолчанию</strong> (<code>Default</code>), <strong>Внутрь</strong> (<code>In</code>), <strong>Наружу</strong> (<code>Out</code>) или <strong>Обе стороны</strong> (<code>In &amp; Out</code>).</td>
+</tr>
+<tr>
+<td><strong>Формат подписей делений</strong> (Tick label format)</td>
+<td><strong>Авто</strong>, <code>Integer</code>, <code>1-decimal</code>, <code>2-decimal</code> или <code>Scientific</code>.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="broken-axis-axes-limits-beta">Разрыв оси (Оси и пределы — бета)<a class="headerlink" href="#broken-axis-axes-limits-beta" title="Permanent link">&para;</a></h5>
+<p>Создаёт визуальный разрыв на оси, чтобы пропустить неинформативный интервал и сосредоточиться на значимых областях данных:</p>
+<table>
+<thead>
+<tr>
+<th>Элемент управления</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Разрыв оси X</strong> (X-axis break)</td>
+<td>Включает разрыв и задаёт диапазон <code>from</code> / <code>to</code> для пропуска по оси X.</td>
+</tr>
+<tr>
+<td><strong>Разрыв оси Y</strong> (Y-axis break)</td>
+<td>Включает разрыв и задаёт диапазон <code>from</code> / <code>to</code> для пропуска по оси Y.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Примечание</strong>: эта функция находится в стадии бета-тестирования. Разрывы осей лучше всего работают с линейными шкалами.</p>
+</blockquote>
+<h5 id="inset-zoom-axes-secondary-inset-axes">Оси врезки / увеличения (Вторые оси и врезка)<a class="headerlink" href="#inset-zoom-axes-secondary-inset-axes" title="Permanent link">&para;</a></h5>
+<p>Отрисовывает небольшую увеличенную область графика внутри основного поля построения:</p>
+<table>
+<thead>
+<tr>
+<th>Элемент управления</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Enable inset axes</strong></td>
+<td>Включает или отключает отображение врезки.</td>
+</tr>
+<tr>
+<td><strong>Position (x0, y0) / Size (w, h)</strong></td>
+<td>Положение и размер рамки врезки в долях области построения (0–1).</td>
+</tr>
+<tr>
+<td><strong>X / Y limits</strong></td>
+<td>Диапазон данных, приближаемый во врезке. Оставьте серые значения по умолчанию для автоматического подбора границ.</td>
+</tr>
+<tr>
+<td><strong>Show zoom indicator</strong></td>
+<td>Рисует соединительные линии от рамки врезки к увеличенной области на основном графике.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Примечание</strong>: оси врезки и разрыв оси взаимоисключающие — включение одной функции отключает другую.</p>
+</blockquote>
+<h5 id="secondary-axes-secondary-inset-axes">Вторые оси (Вторые оси и врезка)<a class="headerlink" href="#secondary-axes-secondary-inset-axes" title="Permanent link">&para;</a></h5>
+<p>Позволяет построить дополнительные столбцы по оси Y (или второй столбец по оси X) с независимыми шкалами — по одной строке на ось (<strong>Y2</strong>, <strong>Y3</strong>, <strong>X2</strong>). Строка активируется, как только этой оси назначен столбец, и позволяет задать <strong>Подпись</strong> (Label), пределы <strong>Мин/Макс</strong> (Min/Max), переключатель <strong>Лог. шкала</strong> (Log scale), <strong>Цвет</strong> (Color) и <strong>Маркер</strong> (Marker).</p>
+<hr />
+<h4 id="42-legend-series">4.2 Legend &amp; Series<a class="headerlink" href="#42-legend-series" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/Customize_LegendBox.png" alt="Legend & Series" width="650"><br>
+  <i>Категория Legend & Series в диалоговом окне Customize Graph Dialog.</i>
+</div>
+
+<p>Категория <strong>Legend &amp; Series</strong> позволяет настроить внешний вид и расположение легенды графика, а также цвета, маркеры, прозрачность и толщину линий для каждой серии данных.</p>
+<h5 id="legend-box-series-styling">Блок легенды и оформление серий<a class="headerlink" href="#legend-box-series-styling" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Элемент управления</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Put legend box outside</strong></td>
+<td>Перемещает рамку легенды правее области построения, чтобы она не перекрывала данные. Снимите флажок, чтобы разместить легенду внутри графика.</td>
+</tr>
+<tr>
+<td><strong>Unify marker size / edge color</strong></td>
+<td>Включено по умолчанию: один элемент управления размером маркера и цветом контура в верхней части применяется ко всем сериям сразу. Снимите флажок, чтобы открыть столбцы индивидуального размера маркера и цвета контура в таблице ниже (для графиков <strong>рассеяние</strong>, <strong>точки</strong> и <strong>линия тренда</strong>), позволяя настроить каждую серию отдельно.</td>
+</tr>
+<tr>
+<td><strong>Подпись</strong></td>
+<td>Изменяет отображаемое имя каждой серии данных в легенде.</td>
+</tr>
+<tr>
+<td><strong>Маркер</strong></td>
+<td>Выбирает символ маркера для каждой серии (доступно для графиков <strong>точки</strong> и <strong>рассеяние</strong>).</td>
+</tr>
+<tr>
+<td><strong>Цвет</strong></td>
+<td>Выбирает цвет для каждой серии из предопределённой палитры.</td>
+</tr>
+<tr>
+<td><strong>Прозрачность</strong> (Alpha) / <strong>Толщина</strong> (Line width)</td>
+<td>Непрозрачность для каждой серии и толщина линии для типов графиков, отображающих кривую (<strong>линия</strong>, <strong>линия тренда</strong> или <strong>точки</strong> с включённым соединением точек).</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Совет</strong>: блок легенды можно <strong>перетаскивать</strong> мышью в любое место прямо на холсте графика.</p>
+</blockquote>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/adjust_legends.gif" alt="Настройка легенды" width="650"><br>
+  <i>Настройка легенды и цветов выбранного графика.</i>
+</div>
+
+<h5 id="legend-style">Стиль легенды<a class="headerlink" href="#legend-style" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Элемент управления</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Столбцы</strong> (Columns) / <strong>Frame</strong> / <strong>Заголовок</strong> (Title) / <strong>Размер шрифта</strong> (Font size) / <strong>Прозрачность</strong> / <strong>Позиция</strong> (Position)</td>
+<td>Компоновка и внешний вид самой рамки легенды.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4 id="43-annotations">4.3 Annotations<a class="headerlink" href="#43-annotations" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/Customize_Annotation.png" alt="Annotations" width="650"><br>
+  <i>Категория Annotations в диалоговом окне Customize Graph Dialog.</i>
+</div>
+
+<p>Категория <strong>Annotations</strong> позволяет накладывать на график опорные линии, фигуры и текстовые подписи.</p>
+<h5 id="adding-annotations">Добавление аннотаций<a class="headerlink" href="#adding-annotations" title="Permanent link">&para;</a></h5>
+<p>Нажмите одну из кнопок в верхней части, чтобы добавить аннотацию в центр текущей области просмотра:</p>
+<table>
+<thead>
+<tr>
+<th>Кнопка</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Верт. линия</strong> (V-Line) / <strong>Гориз. линия</strong> (H-Line)</td>
+<td>Добавляет вертикальную или горизонтальную опорную линию (по умолчанию: красная/синяя, штриховая).</td>
+</tr>
+<tr>
+<td><strong>Текст</strong> (Text)</td>
+<td>Добавляет текстовую подпись со скруглённым фоновым блоком (по умолчанию: жёлтый фон).</td>
+</tr>
+<tr>
+<td><strong>Стрелка</strong> (Arrow)</td>
+<td>Добавляет стрелку, соединяющую две точки.</td>
+</tr>
+<tr>
+<td><strong>Верт. полоса</strong> (V-Span) / <strong>Гориз. полоса</strong> (H-Span)</td>
+<td>Добавляет закрашенную вертикальную или горизонтальную полосу между двумя значениями.</td>
+</tr>
+<tr>
+<td><strong>Прямоугольник</strong> (Box)</td>
+<td>Добавляет закрашенный или контурный прямоугольник.</td>
+</tr>
+<tr>
+<td><strong>Выноска</strong> (Callout)</td>
+<td>Добавляет текстовую подпись со стрелкой-указателем к конкретной точке данных.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="managing-annotations">Управление аннотациями<a class="headerlink" href="#managing-annotations" title="Permanent link">&para;</a></h5>
+<p>Все текущие аннотации перечислены в списке под кнопками. Выберите нужную аннотацию, чтобы нажать <strong>Edit</strong> или <strong>Удалить</strong>. Диалог редактирования каждого типа аннотации предоставляет соответствующие свойства: цвет, стиль и толщину линии/полосы/прямоугольника; текст, размер шрифта, цвет и фон; координаты концов стрелки и точку привязки выноски.</p>
+<blockquote>
+<p><strong>Совет</strong>: аннотации можно <strong>перетаскивать</strong> мышью прямо на холсте графика. Их положение сохраняется при сохранении рабочей области. Двойной щелчок по аннотации на холсте также открывает окно её редактирования.</p>
+</blockquote>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/adjust_annotation.gif" alt="Настройка аннотаций" width="600"><br>
+  <i>Настройка положения и внешнего вида аннотаций на выбранном графике.</i>
+</div>
+
+<hr />
+<h4 id="44-general-typography-and-plot-style-fitting">4.4 «Общие и типографика» и «Стиль графиков и аппроксимация»<a class="headerlink" href="#44-general-typography-and-plot-style-fitting" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/Customize_MoreOptions.png" alt="Общие параметры и настройки стиля графика" width="450"><br>
+  <i>Типографика, сортировка и параметры, специфичные для типа графика, в Customize Graph Dialog.</i>
+</div>
+
+<p>Категории <strong>Общие и типографика</strong> и <strong>Стиль графиков и аппроксимация</strong> объединяют общие настройки типографики, темы и сортировки данных со специальными элементами управления для конкретных типов графиков (планки ошибок, линии тренда и гистограммы).</p>
+<h5 id="plot-style-options-error-bars-plot-style-fitting">Параметры стиля графика и планки ошибок (Стиль графиков и аппроксимация)<a class="headerlink" href="#plot-style-options-error-bars-plot-style-fitting" title="Permanent link">&para;</a></h5>
+<p>Эти элементы управления адаптируются к активному типу графика:</p>
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Применимый тип</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Join data points</strong></td>
+<td><strong>точки</strong></td>
+<td>Соединяет средние значения между категориями отрезками линий.</td>
+</tr>
+<tr>
+<td><strong>Dodge overlapping points</strong></td>
+<td><strong>точки</strong></td>
+<td>Смещает перекрывающиеся цветовые группы по горизонтали во избежание наложения.</td>
+</tr>
+<tr>
+<td><strong>Dodge overlapping points</strong></td>
+<td><strong>рассеяние</strong></td>
+<td>Смещает перекрывающиеся цветовые группы по горизонтали на диаграммах рассеяния.</td>
+</tr>
+<tr>
+<td><strong>Show statistics summary</strong></td>
+<td><strong>пластина</strong></td>
+<td>Накладывает сводку статистики (среднее, СКО, мин., макс., однородность) на карту пластины.</td>
+</tr>
+<tr>
+<td><strong>Show error bars</strong></td>
+<td><strong>столбцы</strong></td>
+<td>Отображает планки ошибок над каждым столбцом.</td>
+</tr>
+<tr>
+<td><strong>Error bar type</strong></td>
+<td><strong>точки</strong>, <strong>линия</strong>, <strong>столбцы</strong></td>
+<td><strong>СКО</strong> (<code>Std. Dev.</code>), <strong>Ст. ошибка</strong> (<code>Std. Error</code>), <strong>95% ДИ</strong> (<code>95% CI</code>) или <strong>Нет</strong> (<code>None</code>) (набор вариантов зависит от типа графика).</td>
+</tr>
+<tr>
+<td><strong>Ширина засечек</strong> (Cap size)</td>
+<td><strong>точки</strong>, <strong>линия</strong>, <strong>столбцы</strong></td>
+<td>Ширина горизонтальных засечек на концах планок ошибок.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="display-grid-font-sizes-general-typography">Отображение, сетка и размеры шрифта (Общие и типографика)<a class="headerlink" href="#display-grid-font-sizes-general-typography" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Применимый тип</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Тема рисунка</strong> (Figure theme)</td>
+<td>все типы</td>
+<td>Цветовая схема рисунка: <strong>Светлая</strong> (<code>Light</code>) или <strong>Тёмная</strong> (<code>Dark</code>).</td>
+</tr>
+<tr>
+<td><strong>Поворот подписей X</strong> (X label rotation)</td>
+<td>все типы</td>
+<td>Поворачивает подписи делений оси X (0–90°).</td>
+</tr>
+<tr>
+<td><strong>Линии сетки</strong> (Show grid lines)</td>
+<td>все типы</td>
+<td>Включает или отключает фоновые линии сетки на графике.</td>
+</tr>
+</tbody>
+</table>
+<p>Задайте размер шрифта в пунктах независимо для параметров <strong>Заголовок</strong>, <strong>Подпись оси</strong> (Axis label), <strong>Деления</strong> (Tick label) и <strong>Цветовая шкала</strong> (Colorbar) (по умолчанию: 12/12/9/10). Параметр <strong>Цветовая шкала</strong> управляет размером текста делений на цветовых шкалах графиков <strong>пластина</strong> и <strong>2D-карта</strong>. Для подзаголовка отдельной настройки размера нет — он всегда отображается на 2 pt меньше заголовка; его <em>текст</em> редактируется на боковой панели, а не здесь.</p>
+<h5 id="data-sorting-general-typography">Сортировка данных (Общие и типографика)<a class="headerlink" href="#data-sorting-general-typography" title="Permanent link">&para;</a></h5>
+<p>Управляет порядком отображения категорий и элементов легенды:</p>
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Включить интеллектуальную сортировку данных</strong> (Enable intelligent data sorting)</td>
+<td>Если флажок установлен, исходный набор данных детерминированно сортируется перед построением графика (рекомендуется). Если флажок снят, график строго сохраняет исходный порядок строк набора данных.</td>
+</tr>
+<tr>
+<td><strong>Сортировать по</strong> (Sort by)</td>
+<td>Когда сортировка включена, выберите целевую ось сортировки:<br>- <strong>Z (цветовые значения)</strong> (Z (hue values)): сортирует категории в первую очередь по группе легенды (по умолчанию).<br>- <strong>Значения X</strong> (X values): сортирует категории по оси X.<br>- <strong>Значения Y</strong> (Y values): сортирует данные по возрастанию метрики Y.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Примечание</strong>: отключение интеллектуальной сортировки полезно, если ваш набор данных уже предварительно отсортирован и вы хотите явно сохранить эту последовательность. При изменении настроек сортировки цвета легенды автоматически сбрасываются к последовательности палитры по умолчанию для сохранения согласованной цветовой схемы.</p>
+</blockquote>
+<h5 id="trendline-settings-plot-style-fitting">Параметры линии тренда (Стиль графиков и аппроксимация)<a class="headerlink" href="#trendline-settings-plot-style-fitting" title="Permanent link">&para;</a></h5>
+<p>Отображаются только при выборе типа графика <strong>линия тренда</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Порядок полинома</strong> (Polynomial order)</td>
+<td>Задаёт степень аппроксимирующего полинома (1 = линейная, 2 = квадратичная, …, до 10).</td>
+</tr>
+<tr>
+<td><strong>Опорная точка</strong> (Anchor point)</td>
+<td>Фиксирует прохождение аппроксимирующей кривой через заданную точку. Выберите <strong>Origin (0, 0)</strong> или введите <strong>custom (X₀, Y₀)</strong>.</td>
+</tr>
+<tr>
+<td><strong>Уравнения</strong> (Fit equation(s))</td>
+<td>Отображает вычисленное уравнение и значение R² для каждой цветовой группы в таблице. Нажмите <strong>Копировать</strong>, чтобы экспортировать таблицу в формате с разделителями-табуляциями (удобно вставлять прямо в Excel).</td>
+</tr>
+</tbody>
+</table>
+<h5 id="histogram-settings-plot-style-fitting">Параметры гистограммы (Стиль графиков и аппроксимация)<a class="headerlink" href="#histogram-settings-plot-style-fitting" title="Permanent link">&para;</a></h5>
+<p>Отображаются только при выборе типа графика <strong>гистограмма</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bins</strong></td>
+<td>Число интервалов гистограммы (2–500, по умолчанию: 20).</td>
+</tr>
+<tr>
+<td><strong>Overlay KDE curve</strong></td>
+<td>Налагает сглаженную кривую ядерной оценки плотности (KDE) поверх гистограммы.</td>
+</tr>
+<tr>
+<td><strong>Стиль заливки</strong> (Fill style)</td>
+<td>Выберите <strong>Сплошная</strong> (Filled) для закрашенных столбцов (по умолчанию) или <strong>Step</strong> (только контур).</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Шкала цветовой палитры (пластина / 2D-карта)</strong>: нормализация цветовой шкалы (<strong>Линейный</strong> / <strong>Логарифмическая</strong> / <strong>Центрированная</strong>) находится в категории <strong>Оси и пределы</strong> под названием <strong>Z axis Scale</strong>.</p>
+</blockquote>
+<p><br></p>
+<hr />
+<h3 id="5-data-filtering"><strong>5. Фильтрация данных</strong><a class="headerlink" href="#5-data-filtering" title="Permanent link">&para;</a></h3>
+<p>Вы можете динамически фильтровать отображаемые данные, применяя булевы логические выражения в поле <strong>Filter</strong> в формате: <code>(column_name) (operator) (value)</code>.</p>
+<blockquote>
+<p><strong>Примечание</strong>: строковые значения должны быть заключены в двойные кавычки (<code>"text"</code>). Названия столбцов, содержащие пробелы, необходимо заключать в обратные кавычки (<code>`column name`</code>).</p>
+</blockquote>
+<div align="center">
+  <img src="../../../user_manual_images/Graphs/data_filter.png" alt="Фильтр данных" width="350"><br>
+  <i>Пример динамического применения фильтров к набору данных.</i>
+</div>
+<p><br></p>
+<table>
+<thead>
+<tr>
+<th>Выражение фильтра</th>
+<th>Результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Confocal != "high"</code></td>
+<td>Исключает все точки данных, где значение столбца «Confocal» равно «high».</td>
+</tr>
+<tr>
+<td><code>Thickness == "1ML" or Thickness == "3ML"</code></td>
+<td>Оставляет только те точки данных, где значение столбца «Thickness» в точности равно «1ML» или «3ML».</td>
+</tr>
+<tr>
+<td><code>`Laser Power` &lt;= 5</code></td>
+<td>Оставляет точки данных, для которых значение столбца «Laser Power» меньше или равно 5.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="6-statistical-calculations-fitting-details"><strong>6. Статистические расчёты и детали аппроксимации</strong><a class="headerlink" href="#6-statistical-calculations-fitting-details" title="Permanent link">&para;</a></h3>
+<p>Для статистических типов графиков (<strong>точки</strong>, <strong>столбцы</strong>, <strong>ящик с усами</strong> и <strong>линия тренда</strong>) SPECTROview автоматически вычисляет ключевые метрики и визуализирует распределение ваших данных.</p>
+<h4 id="61-point-and-bar-plots">6.1 <strong>Точечные и столбчатые графики</strong><a class="headerlink" href="#61-point-and-bar-plots" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Центральное значение (среднее):</strong> основная точка данных (круглый маркер на графике <strong>точки</strong> или верхний край столбца на графике <strong>столбцы</strong>) представляет собой <strong>среднее арифметическое</strong> всех значений Y для заданной категории X.</li>
+<li><strong>Планки ошибок (95% ДИ):</strong> планки ошибок, отходящие от среднего значения, представляют <strong>95%-й доверительный интервал</strong> среднего. Он вычисляется через стандартную ошибку среднего (SEM):
+  <code>Error Bar = ± (1.96 × SEM)</code>
+  где <code>SEM = Standard Deviation / sqrt(N)</code>.</li>
+</ul>
+<h4 id="62-box-plot">6.2 <strong>Ящик с усами</strong><a class="headerlink" href="#62-box-plot" title="Permanent link">&para;</a></h4>
+<p>График типа <strong>ящик с усами</strong> наглядно отображает статистическое распределение набора данных на основе стандартной пятичисловой сводки:</p>
+<ul>
+<li><strong>Границы ящика (от Q1 до Q3):</strong> основное тело прямоугольника охватывает диапазон от первого квартиля (25-й процентиль) до третьего квартиля (75-й процентиль), известный как межквартильный размах (IQR).</li>
+<li><strong>Линия медианы:</strong> горизонтальная линия внутри ящика отмечает <strong>медиану</strong> (50-й процентиль).</li>
+<li><strong>Усы:</strong> «усы» простираются до самых удалённых точек данных, которые всё ещё находятся в пределах <code>1.5 × IQR</code> от границ ящика.</li>
+<li><strong>Выбросы (Fliers):</strong> любые точки данных, выходящие за пределы усов, отображаются отдельно как индивидуальные выбросы.</li>
+</ul>
+<h4 id="63-trendline-estimation">6.3 <strong>Оценка линии тренда</strong><a class="headerlink" href="#63-trendline-estimation" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>Стандартная аппроксимация (без опорной точки):</strong> линия тренда рассчитывается методом линейной регрессии обычных наименьших квадратов (OLS) для полинома заданной степени:
+  <code>y = p₀·xᵈ + p₁·xᵈ⁻¹ + ... + p_d</code>
+  где <code>d</code> — порядок полинома.</p>
+</li>
+<li>
+<p><strong>Аппроксимация с опорной точкой (принудительно через точку (x₀, y₀)):</strong> система координат сдвигается так, чтобы опорная точка стала началом координат (<code>x' = x - x₀</code>, <code>y' = y - y₀</code>). Затем к сдвинутым переменным подбирается полином без свободного члена (с нулевым пересечением):</p>
+</li>
+<li><strong>Для линейного порядка (1):</strong> наклон <code>m</code> вычисляется напрямую по формуле:
+    <code>m = sum(x'_i * y'_i) / sum((x'_i)²)</code></li>
+<li><strong>Для более высоких порядков (&gt;1):</strong> сдвинутые данные аппроксимируются полиномом без свободного члена с помощью линейного решателя метода наименьших квадратов.
+  После этого аппроксимированная кривая переносится обратно в исходное координатное пространство.</li>
+</ul>
+<h4 id="64-trendline-confidence-intervals">6.4 <strong>Доверительные интервалы линии тренда</strong><a class="headerlink" href="#64-trendline-confidence-intervals" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Доверительный уровень:</strong> затенённая полоса вокруг стандартных линий тренда представляет собой <strong>95%-й доверительный интервал</strong> для аппроксимированного среднего отклика.</li>
+<li><strong>Метод оценки:</strong> интервал вычисляется <strong>аналитически</strong> по невязкам регрессии: стандартная ошибка оценки <code>SE = sqrt(Σ(yᵢ − ŷᵢ)² / (N − 2))</code> комбинируется со стандартной формулой среднего отклика <code>± 1.96 · SE · sqrt(1/N + (x − x̄)² / Σ(xᵢ − x̄)²)</code>, поэтому полоса расширяется при удалении от центра данных. (Это заменяет прежнюю бутстреп-оценку на основе Seaborn; рабочая область «Графики» больше не использует Seaborn.)</li>
+<li><strong>Аппроксимации с опорной точкой:</strong> доверительные интервалы вычисляются и отображаются только для стандартных аппроксимаций без ограничений. Если задана опорная точка, полоса доверительного интервала не строится.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  К началу
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Нижний колонтитул" >
+        
+          
+          <a href="../spectra_maps/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Рабочие области «Спектры» и «Карты»">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Рабочие области «Спектры» и «Карты»
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../mva/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Многомерный анализ (MVA)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Многомерный анализ (MVA)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

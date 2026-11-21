@@ -1,0 +1,2991 @@
+
+<!doctype html>
+<html lang="ru" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Интерактивный инструмент для обработки, аппроксимации и визуализации спектроскопических данных">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/ru/developer/graphs/">
+      
+      
+        <link rel="prev" href="../maps/">
+      
+      
+        <link rel="next" href="../vbf_engine/">
+      
+      
+        
+          <link rel="alternate" href="../../../developer/graphs/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/developer/graphs/" hreflang="fr">
+        
+          <link rel="alternate" href="../../../de/developer/graphs/" hreflang="de">
+        
+          <link rel="alternate" href="./" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/developer/graphs/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Рабочая область «Графики» - Документация SPECTROview</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#workspace-graphs" class="md-skip">
+          Перейти к содержанию
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Верхний колонтитул">
+    <a href="../../" title="Документация SPECTROview" class="md-header__button md-logo" aria-label="Документация SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Документация SPECTROview
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Рабочая область «Графики»
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Выберите язык"
+      title="Выберите язык"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">RU</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../developer/graphs/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/developer/graphs/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/developer/graphs/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="ru"
+              class="md-select__link" aria-current="true"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/developer/graphs/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Поиск" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Поиск">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистить" aria-label="Очистить" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Инициализация поиска
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Главная
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Установка
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Руководство пользователя
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  ИИ-агент
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Руководство разработчика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  История изменений
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Навигация" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="Документация SPECTROview" class="md-nav__button md-logo" aria-label="Документация SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    Документация SPECTROview
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Главная
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Установка
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство пользователя
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство пользователя
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Поддерживаемые форматы данных
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Обзор интерфейса
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Строка меню
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочие области «Спектры» и «Карты»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Многомерный анализ (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Калькуляторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Настройки
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сохранение и загрузка
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Горячие клавиши и советы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство разработчика
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство разработчика
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Конвейер загрузки файлов
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архитектура данных SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Спектры»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Содержание">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Содержание
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Обзор архитектуры
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ключевые классы
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ключевые классы">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vmworkspacegraphs-the-viewmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMWorkspaceGraphs — ViewModel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VMWorkspaceGraphs — ViewModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Сигналы
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mgraph-the-plot-configuration-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MGraph — модель конфигурации графика
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph_controlpy-shared-graph-statecommand-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_control.py — общий контракт состояния и команд графика
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vworkspacegraphs-the-view-orchestrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VWorkspaceGraphs — оркестратор уровня View
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vgraph-the-rendering-widget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VGraph — виджет отрисовки
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plotrenderer-the-plotting-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PlotRenderer — движок построения графиков
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PlotRenderer — движок построения графиков">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#colormap-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Нормализация цветовой палитры
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow-creating-a-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Поток данных: создание графика
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Поток данных: создание графика">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-flow-aimcp-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Поток данных: обновление через ИИ/MCP
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plot-styles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Стили графиков
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Стили графиков">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multi-axis-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Поддержка нескольких осей
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dataframe-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Управление DataFrame
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Управление DataFrame">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Загрузка
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#source-tracking-and-refresh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Отслеживание источника и обновление
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#programmatic-injection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Программная передача данных
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filter-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Система фильтрации
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Система фильтрации">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multi-wafer-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Работа с несколькими пластинами (Multi-Wafer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#graph-customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Настройка графиков
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Настройка графиков">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#customizegraphdialog-singleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CustomizeGraphDialog (синглтон)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#live-preview-restyle-fast-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Предпросмотр в реальном времени и быстрый путь перерисовки (restyle)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph_stylepy-the-styledata-field-partition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_style.py — разделение полей стиля и данных
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph_commitpy-change-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_commit.py — отслеживание изменений
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#undoredo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Отмена и повтор (Undo/Redo)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keyboard-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Горячие клавиши
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-typography-tabgeneral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Общие и типографика (TabGeneral)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#axes-limits-tabaxeslimits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Оси и пределы (TabAxesLimits)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ticks-spines-tabticksspines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ticks &amp; Spines (TabTicksSpines)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#legend-series-tablegendseries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legend &amp; Series (TabLegendSeries)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plot-style-fitting-tabplotstyles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Стиль графиков и аппроксимация (TabPlotStyles)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotations-tabannotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations (TabAnnotations)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secondary-inset-axes-tabsecondaryinset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Вторые оси и врезка (TabSecondaryInset)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#style-templates-plot-recipes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Шаблоны стилей и рецепты графиков
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#export-multi-panel-composer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Экспорт и компоновщик многопанельных рисунков
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mdi-area-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Управление областью MDI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Управление областью MDI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#graph-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Хранение графиков
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Сохранение состояния
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Сохранение состояния">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spectroview-working-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Рабочая папка SPECTROview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save-format-graphs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Формат сохранения (.graphs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plot-replication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Дублирование графиков
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Векторизованный движок пакетной аппроксимации (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Многомерный анализ (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Локальный MCP-сервер
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Спектры» (загрузка, предобработка, аппроксимация)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты» (гиперспектральные данные, тепловые карты)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Визуализация данных («Графики»)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Калькуляторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Расширение SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    История изменений
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навигация" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Главная
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Руководство разработчика
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="workspace-graphs"><strong>Рабочая область: Графики</strong><a class="headerlink" href="#workspace-graphs" title="Permanent link">&para;</a></h1>
+<p>Рабочая область <code>Graphs</code> представляет собой автономную среду для статистического построения графиков. Она управляет таблицами DataFrame (загруженными из файлов или переданными из других рабочих областей), применяет динамические фильтры и создаёт графики публикационного качества на чистом <code>Matplotlib</code> (с использованием <code>scipy</code> для статистических расчётов) внутри области MDI (Multiple Document Interface). Она больше не зависит от Seaborn — каждый стиль графика отрисовывается напрямую графическими примитивами Matplotlib в <code>PlotRenderer</code>.</p>
+<hr />
+<h2 id="architecture-overview"><strong>Обзор архитектуры</strong><a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>graph TD
+    GUI["Боковая панель / диалог настройки"] --&gt; GCL["graph_control: GraphPatch + валидация"]
+    AI["Типизированные команды ИИ / MCP"] --&gt; GCL
+    GCL --&gt; VMWG["VMWorkspaceGraphs"]
+    VWG["VWorkspaceGraphs"] --&gt; MDI["QMdiArea"]
+    MDI --&gt; VG["VGraph"]
+    VG --&gt; PR["PlotRenderer"]
+    VWG --&gt; DF["DataFilter"]
+    VWG --&gt; CGD["CustomizeGraphDialog"]
+    CGD --&gt; GC["graph_commit (снимок/сравнение)"]
+    CGD --&gt; GS["graph_style (разделение style/restyle)"]
+
+    VWG --&gt; RS["MPlotRecipeStore"]
+    VWG --&gt; STS["MStyleTemplateStore"]
+    VWG --&gt; EXP["VExportDialog / VBatchExportDialog"]
+    VWG --&gt; MP["VMultiPanelDialog"]
+
+    VWG --&gt;|"вызывает"| GCL
+    VMWG --&gt;|"сигналы"| VWG
+    VMWG --&gt; MG["MGraph"]
+    VMWG --&gt; UNDO["Стеки отмены/повтора"]</code></pre>
+<hr />
+<h2 id="key-classes"><strong>Ключевые классы</strong><a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
+<h3 id="vmworkspacegraphs-the-viewmodel"><strong><code>VMWorkspaceGraphs</code> — ViewModel</strong><a class="headerlink" href="#vmworkspacegraphs-the-viewmodel" title="Permanent link">&para;</a></h3>
+<p><strong>Файл</strong>: <code>spectroview/viewmodel/graphs/vm_workspace_graphs.py</code> (логика отмены и повтора вынесена в <code>spectroview/viewmodel/graphs/graph_undo.py</code>)</p>
+<p>Управляет объектами DataFrame, моделями графиков и историей отмены/повтора рабочей области. В отличие от ViewModel для <code>Spectra</code>/<code>Maps</code>, данный ViewModel остаётся сравнительно лёгким — основная логика отрисовки сосредоточена в виджете <code>VGraph</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Зона ответственности</th>
+<th>Методы</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Загрузка DataFrame</strong></td>
+<td><code>load_dataframes(paths)</code> — поддерживает <code>.xlsx</code>, <code>.xls</code>, <code>.csv</code></td>
+</tr>
+<tr>
+<td><strong>Управление DataFrame</strong></td>
+<td><code>add_dataframe()</code>, <code>remove_dataframe()</code>, <code>select_dataframe()</code>, <code>refresh_dataframe()</code></td>
+</tr>
+<tr>
+<td><strong>CRUD-операции с графиками</strong></td>
+<td><code>create_graph()</code>, <code>get_graph()</code>, <code>update_graph()</code>, <code>delete_graph()</code></td>
+</tr>
+<tr>
+<td><strong>Фильтрация</strong></td>
+<td><code>apply_filters(df_name, filters)</code> — на основе <code>pd.DataFrame.query()</code></td>
+</tr>
+<tr>
+<td><strong>Мульти-пластины (Multi-wafer)</strong></td>
+<td><code>create_multi_wafer_graphs()</code> — пакетно создаёт по одной карте пластины на каждый слот</td>
+</tr>
+<tr>
+<td><strong>Отмена и повтор (Undo/redo)</strong></td>
+<td><code>undo()</code>, <code>redo()</code>, <code>begin_undo_batch()</code>/<code>end_undo_batch()</code>, <code>can_undo</code>/<code>can_redo</code></td>
+</tr>
+<tr>
+<td><strong>Сохранение состояния</strong></td>
+<td><code>save_workspace()</code>, <code>load_workspace()</code>, <code>clear_workspace()</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="signals"><strong>Сигналы</strong><a class="headerlink" href="#signals" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">dataframes_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>           <span class="c1"># List of DataFrame names updated</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">dataframe_columns_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>    <span class="c1"># Column names of selected DataFrame</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">graphs_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>               <span class="c1"># List of graph IDs updated</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">graph_state_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>              <span class="c1"># Any persisted graph property changed (AI context sync)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">undo_state_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>               <span class="c1"># can_undo/can_redo changed -- sync toolbar buttons</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">notify</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>                        <span class="c1"># Floating notification</span>
+</code></pre></div>
+<h3 id="mgraph-the-plot-configuration-model"><strong><code>MGraph</code> — модель конфигурации графика</strong><a class="headerlink" href="#mgraph-the-plot-configuration-model" title="Permanent link">&para;</a></h3>
+<p><strong>Файл</strong>: <code>spectroview/model/graphs/m_graph.py</code></p>
+<p>Чистый dataclass, хранящий все данные, необходимые для воссоздания графика. Методы <code>save()</code>/<code>load(data)</code> обеспечивают полную сериализацию; <code>get_display_name()</code> формирует заголовок подокна MDI. Чтобы не поддерживать здесь дублирующийся список или счётчик полей (исчерпывающий и актуальный перечень см. в <code>m_graph.py</code>), поля можно сгруппировать по следующим категориям:</p>
+<table>
+<thead>
+<tr>
+<th>Категория</th>
+<th>Примеры</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Идентификация / источник данных</td>
+<td><code>graph_id</code>, <code>df_name</code>, <code>plot_style</code>, <code>x</code>/<code>y</code>/<code>z</code>, <code>filters</code></td>
+</tr>
+<tr>
+<td>Пределы основных осей</td>
+<td><code>xmin</code>/<code>xmax</code>, <code>ymin</code>/<code>ymax</code>, <code>zmin</code>/<code>zmax</code></td>
+</tr>
+<tr>
+<td>Масштаб и ориентация осей</td>
+<td><code>xlogscale</code>/<code>ylogscale</code>, <code>xscale_mode</code>/<code>yscale_mode</code>, <code>x_inverted</code>/<code>y_inverted</code></td>
+</tr>
+<tr>
+<td>Дополнительные оси (Y2/Y3/X2)</td>
+<td>столбец для каждой оси, <code>color</code>, <code>marker</code>, <code>min</code>/<code>max</code>, <code>logscale</code>, <code>label</code></td>
+</tr>
+<tr>
+<td>Подписи и заголовки</td>
+<td><code>plot_title</code>, <code>plot_subtitle</code>, <code>xlabel</code>/<code>ylabel</code>/<code>zlabel</code></td>
+</tr>
+<tr>
+<td>Стиль и оформление</td>
+<td><code>grid</code>, <code>tick_direction</code>, <code>tick_label_format</code>, размеры шрифтов, <code>figure_facecolor</code>, <code>figure_margins</code>, <code>spines_visible</code>, <code>figure_theme</code>, переключатели промежуточных делений</td>
+</tr>
+<tr>
+<td>Легенда</td>
+<td><code>legend_visible</code>, <code>legend_outside</code>, <code>legend_properties</code>, <code>legend_bbox</code>, <code>legend_ncol</code>, <code>legend_frame</code>, <code>legend_title</code>, <code>legend_fontsize</code>, <code>legend_alpha</code>, <code>legend_loc</code></td>
+</tr>
+<tr>
+<td>Специфичные для стиля графика</td>
+<td>цветовая палитра для wafer/2Dmap (<code>color_palette</code>, <code>colormap_norm</code>, <code>colormap_center</code>), аппроксимация/привязка линии тренда, планки ошибок, параметры точечных графиков (<code>scatter_size</code>, <code>scatter_edgecolor</code>, <code>unify_marker_style</code>), гистограмма, порядок сортировки</td>
+</tr>
+<tr>
+<td>Аннотации</td>
+<td><code>annotations</code> (список типизированных словарей, см. <a href="#annotations-tabannotations">Annotations (<code>TabAnnotations</code>)</a>)</td>
+</tr>
+<tr>
+<td>Разрыв оси</td>
+<td><code>axis_breaks</code></td>
+</tr>
+<tr>
+<td>Оси врезки (масштабирования)</td>
+<td><code>inset_enabled</code>, <code>inset_bounds</code>, <code>inset_xmin</code>/<code>xmax</code>/<code>ymin</code>/<code>ymax</code>, <code>inset_show_zoom_indicator</code></td>
+</tr>
+<tr>
+<td>Геометрия экспорта и окна</td>
+<td><code>plot_width</code>/<code>height</code>, <code>dpi</code>, <code>export_width_mm</code>/<code>height_mm</code></td>
+</tr>
+</tbody>
+</table>
+<p>Примечание: шаблоны стилей, рецепты графиков и настройка рабочей папки <strong>не</strong> являются полями <code>MGraph</code> — это отдельные подсистемы, построенные вокруг подмножеств этих полей (см. <a href="#style-templates-plot-recipes">Шаблоны стилей и рецепты графиков</a>).</p>
+<h3 id="graph_controlpy-shared-graph-statecommand-contract"><strong><code>graph_control.py</code> — общий контракт состояния и команд графика</strong><a class="headerlink" href="#graph_controlpy-shared-graph-statecommand-contract" title="Permanent link">&para;</a></h3>
+<p><strong>Файл</strong>: <code>spectroview/model/graphs/graph_control.py</code></p>
+<p>Все изменения из графического интерфейса, ИИ и MCP сходятся в этом независимом от Qt слое до того, как затронут <code>MGraph</code>. Схема <code>GraphPatch</code> генерируется на основе полей dataclass, поэтому схема MCP автоматически раскрывает все изменяемые параметры графика. Значимые вложенные структуры (фильтры, стили отдельных серий, границы осей, разрывы осей и все восемь типов аннотаций) имеют собственные строгие схемы.</p>
+<p>Функция <code>normalize_graph_patch()</code> проверяет патч относительно объединённого текущего состояния без его модификации: совместно проверяются неизвестные ключи, допустимость <code>null</code>, диапазоны, значения перечислений, столбцы, пределы, геометрия врезки, структура аннотаций и взаимная исключительность разрывов осей. Затем <code>apply_graph_patch()</code> атомарно фиксирует уже проверенный патч. Пропущенные поля сохраняются без изменений; явное значение <code>null</code> очищает только свойства, допускающие <code>null</code>. Изменение идентификации данных или серий сбрасывает производное поле <code>legend_properties</code>, если вызывающая сторона не передала заменяющий список.</p>
+<p>Этот контракт намеренно не зависит от движка отрисовки. Слой View по-прежнему отвечает за создание фигуры и холста Matplotlib, выборку отфильтрованных данных, повторную отрисовку, геометрию окна и обновление открытого диалога настройки.</p>
+<h3 id="vworkspacegraphs-the-view-orchestrator"><strong><code>VWorkspaceGraphs</code> — оркестратор уровня View</strong><a class="headerlink" href="#vworkspacegraphs-the-view-orchestrator" title="Permanent link">&para;</a></h3>
+<p><strong>Пакет</strong>: <code>spectroview/view/workspaces/graphs/</code> (<code>v_workspace_graphs.py</code>, <code>v_mdi_subwindow.py</code>, <code>v_graphs_ui.py</code>, <code>v_graphs_dataframes.py</code>, <code>v_graphs_mdi.py</code>, <code>v_graphs_actions.py</code>)</p>
+<p><code>VWorkspaceGraphs</code> объединяет интерфейс рабочей области <code>Graphs</code> (<code>GraphsUIMixin</code>), панель выбора и фильтрации DataFrame (<code>GraphsDataFramesMixin</code>), управление компоновкой/раскладкой плиткой/каскадом окон MDI и синхронизацией активной панели инструментов (<code>GraphsMdiMixin</code>), а также действия создания/обновления/экспорта/отмены/шаблонов (<code>GraphsActionsMixin</code>), оборачивая каждый виджет <code>VGraph</code> в <code>MdiSubWindow</code>.</p>
+<h3 id="vgraph-the-rendering-widget"><strong><code>VGraph</code> — виджет отрисовки</strong><a class="headerlink" href="#vgraph-the-rendering-widget" title="Permanent link">&para;</a></h3>
+<p><strong>Пакет</strong>: <code>spectroview/view/components/graphs/</code> (<code>v_graph.py</code> совместно с <code>v_graph_canvas.py</code>, <code>v_graph_breaks.py</code>, <code>v_graph_axes.py</code>, <code>v_graph_annotations.py</code>)</p>
+<p>Каждый график в области MDI представляет собой экземпляр <code>VGraph</code>. Он содержит объекты Matplotlib <code>Figure</code> + <code>FigureCanvas</code> и выступает обёрткой пользовательского интерфейса. Он управляет взаимодействием, контекстными меню и действиями панели инструментов (меню Style, Export, Replicate), но делегирует сами алгоритмы рисования классу <code>PlotRenderer</code>. Метод <code>create_plot_widget()</code> по-прежнему создаёт для каждого <code>VGraph</code> собственную панель навигации Matplotlib + строку кнопок действий (<code>self.toolbar_container</code>), но не добавляет её в компоновку самого графика — о том, где она фактически отображается, см. в разделе о <a href="#mdi-area-management">нижней панели инструментов</a>.</p>
+<p><strong>Производительность при интерактивном изменении размера и панорамировании.</strong> Каждая фигура использует <code>layout="compressed"</code>, и каждая перерисовка бэкендом Agg повторно запускает движок constrained layout, что занимает сотни миллисекунд. Отзывчивость интерфейса обеспечивают три механизма:</p>
+<ul>
+<li><code>MdiSubWindow</code> включает режимы <code>RubberBandResize</code>/<code>RubberBandMove</code>. При перетаскивании границы подокна перемещается лишь лёгкий контур, а размер холста изменяется и перерисовывается <strong>один раз</strong> — при отпускании кнопки мыши.</li>
+<li><code>VGraph.canvas</code> представляет собой <code>_DebouncedFigureCanvas</code>. Первое событие <code>resizeEvent</code> в серии применяется немедленно; любые последующие события в пределах <code>RESIZE_DEBOUNCE_MS</code> (60 мс) объединяются в одно завершающее изменение до конечного размера. Это охватывает изменения размера, не проходящие через контурную рамку (раскладка плиткой, разворачивание на весь экран, перетаскивание разделителя). Таймер антидребезга привязан к холсту как дочерний объект (<code>parent</code>).</li>
+<li><code>VGraph.toolbar</code> представляет собой <code>_FastNavigationToolbar</code> — скрытый вспомогательный класс на базе <code>NavigationToolbar2QT</code>, управляющий кнопками Pan/Zoom. Он приостанавливает движок компоновки фигуры от <code>press_pan</code> до <code>release_pan</code> (во время перетаскивания меняются только пределы осей), ограничивает частоту перерисовок при перетаскивании примерно до 30 FPS (<code>PAN_FRAME_S</code>) и восстанавливает движок с одной полной перерисовкой при отпускании кнопки. Само нажатие кнопки Pan практически мгновенно (~1 мс); задержки, которые ранее замечали пользователи, возникали из-за полной перерисовки компоновки на каждое движение мыши во время перетаскивания.</li>
+</ul>
+<p>Существуют два пути отрисовки:</p>
+<ul>
+<li><strong><code>plot(df)</code></strong> — полная перерисовка: очищает и заново строит объект <code>Axes</code> с нуля. Необходима всякий раз, когда меняются сами графические объекты (данные серий, цвета/маркеры для отдельных точек, цветовая палитра, дополнительные/спаренные оси, аннотации, врезки) либо активен/переключается разрыв оси.</li>
+<li><strong><code>restyle()</code></strong> — быстрый путь, перекрашивающий уже отрисованные <code>Axes</code> на месте (заголовки/подписи/размеры шрифтов, сетка, направление и формат делений, пределы основных осей, логарифмический/symlog-масштаб, цвет фона фигуры, границы осей и отступы, оформление рамки легенды) без затрагивания построенных данных. Перед переключением оси на масштаб <code>"log"</code> примесь <code>GraphAxesStyleMixin</code> (<code>v_graph_axes.py</code>) очищает устаревшие неположительные линейные автопределы с помощью <code>_sanitize_log_axis_limits()</code>, чтобы Matplotlib не выдавал предупреждений о неположительных логарифмических пределах. Метод возвращает <code>False</code> (принудительно запуская полную перерисовку) всякий раз, когда активен разрыв оси. Подробнее о том, как диалог настройки выбирает путь отрисовки, см. в разделе <a href="#live-preview-restyle-fast-path">Предпросмотр в реальном времени и быстрый путь перерисовки (<code>restyle</code>)</a>.</li>
+</ul>
+<p>Метод <code>_set_figure_style()</code> повторно применяет параметры <code>axes.facecolor</code>/<code>figure.facecolor</code>/<code>axes.labelcolor</code>/<code>text.color</code>/<code>xtick.color</code>/<code>ytick.color</code>/<code>axes.edgecolor</code> из <code>plt.rcParams</code> при каждой отрисовке — это необходимо, поскольку <code>ax.clear()</code> не перекрашивает задним числом оси <code>Axes</code>, созданные в другом контексте стиля/темы Matplotlib, из-за чего ранее после переключения на тёмную тему цвета делений, подписей и рамки оставались чёрными.</p>
+<h3 id="plotrenderer-the-plotting-engine"><strong><code>PlotRenderer</code> — движок построения графиков</strong><a class="headerlink" href="#plotrenderer-the-plotting-engine" title="Permanent link">&para;</a></h3>
+<p><strong>Файлы</strong>: <code>spectroview/view/components/graphs/v_plot_renderer.py</code> (скомпонован с <code>SpatialPlotMixin</code> и <code>WaferPlot</code> из <code>v_plot_spatial.py</code>)</p>
+<p>Выделен из <code>VGraph</code> для удобства сопровождения и инкапсулирует чистую логику отрисовки Matplotlib для всех стилей графиков (например, <code>_plot_scatter</code>, <code>_plot_histogram</code> и класс <code>WaferPlot</code>). Он получает ссылку на экземпляр <code>VGraph</code> (<code>self.vg</code>) для доступа к состоянию конфигурации (<code>self.vg.x</code>, <code>self.vg.plot_style</code> и т.д.) и рисует непосредственно на <code>Axes</code> Matplotlib.</p>
+<h4 id="colormap-normalization">Нормализация цветовой палитры<a class="headerlink" href="#colormap-normalization" title="Permanent link">&para;</a></h4>
+<p><code>_build_color_norm(vmin, vmax, norm_kind, center)</code> формирует отображение цветовой шкалы для тепловых карт пластин (<code>wafer</code>) и 2D-карт (<code>2Dmap</code>) на основе <code>MGraph.colormap_norm</code> (<code>"linear"</code>/<code>"log"</code>/<code>"centered"</code>) и <code>MGraph.colormap_center</code>, доступных для редактирования на вкладке <strong>Оси и пределы</strong> (Axes &amp; Limits) в разделе масштаба <strong>Z axis</strong> (отображается только для <code>wafer</code>/<code>2Dmap</code>). Режим <code>"log"</code> использует <code>LogNorm</code>, <code>"centered"</code> использует <code>CenteredNorm</code> (удобно для знакопеременных данных вроде механических напряжений/деформаций с центром в 0); оба режима корректно откатываются к обычной линейной шкале <code>vmin</code>/<code>vmax</code>, если запрошенная нормализация недопустима для фактического диапазона данных (например, логарифмическая нормализация на неположительных данных).</p>
+<p>Оба метода <code>_plot_wafer</code> и <code>_plot_2dmap</code> предварительно пропускают <code>vmin</code>/<code>vmax</code> через <code>_clear_degenerate_zlim(zmin, zmax)</code>, которая трактует явно заданные равные пределы <code>zmin == zmax</code> как незаданные и возвращает диапазон, вычисленный по данным. В ряде старых сохранённых файлов <code>.graphs</code> явно записано <code>zmin == zmax == 0.0</code> (из-за прежнего, уже исправленного значения по умолчанию) — буквальное применение этих границ схлопывает <code>matplotlib.colors.Normalize(vmin=0, vmax=0)</code>, отображая все значения одним цветом; именно это, а не сама функция нормализации цветовой шкалы, нарушало отображение цветов при повторном открытии таких файлов.</p>
+<p>Функции <code>_resolve_marker_size(style, fallback)</code> / <code>_resolve_edge_color(style, fallback)</code> централизуют логику «Unify Marker size / Edge color» (см. <a href="#legend-series-tablegendseries">Legend &amp; Series (<code>TabLegendSeries</code>)</a>): когда <code>VGraph.unify_marker_style</code> равно <code>True</code>, каждая серия использует общие для графика значения <code>scatter_size</code>/<code>scatter_edgecolor</code>; при <code>False</code> приоритет имеет индивидуальное переопределение серии в <code>legend_properties[i]</code> (если оно задано).</p>
+<hr />
+<h2 id="data-flow-creating-a-plot"><strong>Поток данных: создание графика</strong><a class="headerlink" href="#data-flow-creating-a-plot" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Действие пользователя</strong>: пользователь выбирает DataFrame, настраивает оси X/Y/Z и нажимает кнопку <strong>Добавить график</strong> (Add plot) в интерфейсе <code>VWorkspaceGraphs</code>.</li>
+<li><strong>Сбор конфигурации</strong>: View вызывает <code>_collect_plot_config()</code>, чтобы собрать все настройки интерфейса в словарь конфигурации, затем через <code>_apply_default_style_to_config()</code> подмешивает туда <code>MSettings.get_default_graph_style()</code> — базовый стиль пользователя, сохранённый через <strong>Сделать стилем по умолчанию</strong> (Set as Default Style), если он задан (см. <a href="#style-templates-plot-recipes">Шаблоны стилей и рецепты графиков</a>). Поля идентификации данных из собранной конфигурации (<code>x</code>/<code>y</code>/<code>z</code>/<code>df_name</code>/<code>plot_style</code>) всегда имеют приоритет над стилем по умолчанию, поскольку стиль по умолчанию содержит только поля внешнего вида.</li>
+<li><strong>Создание модели</strong>: View вызывает <code>vm.create_graph(plot_config)</code>. ViewModel проверяет полную конфигурацию через <code>graph_control</code>, создаёт и атомарно обновляет <code>MGraph(graph_id)</code>, записывает шаг в историю отмены и возвращает модель.</li>
+<li><strong>Инициализация виджета</strong>: View создаёт виджет <code>VGraph(graph_id)</code> и вызывает <code>create_plot_widget(dpi)</code> для настройки холста Matplotlib.</li>
+<li><strong>Фильтрация данных</strong>: View запрашивает <code>filtered_df</code> у ViewModel, вызывая <code>vm.apply_filters(df_name, filters)</code>.</li>
+<li><strong>Отрисовка</strong>: View вызывает <code>VGraph.plot(filtered_df)</code>.</li>
+<li><strong>Выполнение построения</strong>: <code>VGraph</code> вызывает <code>_plot_primary_axis()</code>, который создаёт <code>PlotRenderer(self)</code> и делегирует логику рисования (например, <code>self.renderer._plot_scatter()</code>), затем применяет пределы, подписи и легенды, после чего возвращает отрисованный холст.</li>
+<li><strong>Интеграция в интерфейс</strong>: View оборачивает новый виджет <code>VGraph</code> в <code>QMdiSubWindow</code> и добавляет его в область MDI.</li>
+</ol>
+<p>То же слияние со стилем по умолчанию применяется в <code>_on_plot_multi_wafer()</code>; оно намеренно <strong>не</strong> выполняется при применении рецепта графиков или дублировании существующего графика, поскольку они уже содержат полностью заданный и осознанный стиль.</p>
+<h3 id="data-flow-aimcp-update"><strong>Поток данных: обновление через ИИ/MCP</strong><a class="headerlink" href="#data-flow-aimcp-update" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>update_graph</code> проверяет типизированный <code>GraphPatch</code> для каждого целевого графика и DataFrame. Значение <code>graph_id="all"</code> раскрывается до начала любых изменений.</li>
+<li>MCP-сервер ставит в очередь одну типизированную команду <code>UpdatePlot</code>; он никогда не импортирует Qt и не изменяет виджеты напрямую.</li>
+<li><code>VMChat</code> преобразует поставленные в очередь команды в конфигурации приложения, а <code>main.py</code> маршрутизирует обновление в <code>VWorkspaceGraphs.update_graphs_from_config()</code>.</li>
+<li>Рабочая область предварительно проверяет все цели, открывает один пакет отмены, обновляет каждый <code>MGraph</code>, перестраивает/перерисовывает каждый виджет, применяет явную геометрию размеров и перезагружает открытый диалог настройки. При ошибке отрисовки восстанавливаются все снимки моделей и виджетов, так что пакет не может примениться частично.</li>
+<li>Сигнал <code>graph_state_changed</code> обновляет полный сериализованный контекст графиков для ИИ после редактирования через GUI, правок ИИ, отмены/повтора, загрузки и синхронизации стиля, производного от рендерера.</li>
+</ol>
+<hr />
+<h2 id="plot-styles"><strong>Стили графиков</strong><a class="headerlink" href="#plot-styles" title="Permanent link">&para;</a></h2>
+<p>Каждый стиль графика соответствует методу <code>PlotRenderer._plot_*</code>, который рисует напрямую графическими примитивами Matplotlib (без Seaborn):</p>
+<table>
+<thead>
+<tr>
+<th>Стиль</th>
+<th>Примитив Matplotlib</th>
+<th>Поддержка группировки <code>hue</code></th>
+<th>Примечания</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>point</code></td>
+<td><code>ax.errorbar()</code></td>
+<td>✓ Столбец Z</td>
+<td>Строит средние по категориям с планками ошибок; переключатель «Join» соединяет их линией; единственный стиль со столбцом <strong>Маркер</strong> (Marker) для каждой серии</td>
+</tr>
+<tr>
+<td><code>scatter</code></td>
+<td><code>ax.scatter()</code></td>
+<td>✓ Столбец Z</td>
+<td>Размер и цвет контура маркеров по умолчанию унифицированы для всех серий (см. флажок Unify)</td>
+</tr>
+<tr>
+<td><code>box</code></td>
+<td><code>ax.boxplot()</code></td>
+<td>✓ Столбец Z</td>
+<td>Поддержка палитры; ширина ящика вычисляется из интервала между категориями</td>
+</tr>
+<tr>
+<td><code>bar</code></td>
+<td><code>ax.bar()</code></td>
+<td>✓ Столбец Z</td>
+<td>Необязательные планки ошибок (СКО / 95% ДИ)</td>
+</tr>
+<tr>
+<td><code>line</code></td>
+<td><code>ax.plot()</code></td>
+<td>✓ Столбец Z</td>
+<td>Стандартный линейный график</td>
+</tr>
+<tr>
+<td><code>trendline</code></td>
+<td>аппроксимация <code>np.poly1d</code> + <code>ax.scatter()</code> / <code>ax.plot()</code> / <code>ax.fill_between()</code></td>
+<td>✓ Столбец Z</td>
+<td>Полиномиальная регрессия с настраиваемой привязкой к нулю или точке, аналитической полосой 95% ДИ и экспортом таблицы уравнений</td>
+</tr>
+<tr>
+<td><code>histogram</code></td>
+<td><code>ax.hist()</code> (+ <code>scipy.stats.gaussian_kde</code>)</td>
+<td>✓ Столбец Z</td>
+<td>Настройка числа интервалов, опциональное наложение KDE, ступенчатый контур или сплошные столбцы</td>
+</tr>
+<tr>
+<td><code>wafer</code></td>
+<td>Пользовательский <code>WaferPlot</code> (<code>ax.scatter()</code>)</td>
+<td>—</td>
+<td>Круговая визуализация пластины с позициями кристаллов (die sites); нормализация цветовой палитры (линейная/логарифмическая/центрированная)</td>
+</tr>
+<tr>
+<td><code>2Dmap</code></td>
+<td><code>ax.imshow()</code></td>
+<td>—</td>
+<td>Прямоугольная тепловая карта через <code>pivot()</code>; те же параметры нормализации палитры, что и для пластины</td>
+</tr>
+</tbody>
+</table>
+<h3 id="multi-axis-support"><strong>Поддержка нескольких осей</strong><a class="headerlink" href="#multi-axis-support" title="Permanent link">&para;</a></h3>
+<p><code>VGraph</code> поддерживает до <strong>3 осей Y</strong> и одну дополнительную ось X:</p>
+<ul>
+<li><strong>Основная Y</strong> (<code>self.ax</code>): стандартная левая ось</li>
+<li><strong>Вторичная Y</strong> (<code>self.ax2</code>): правая ось, создаваемая через <code>ax.twinx()</code></li>
+<li><strong>Третичная Y</strong> (<code>self.ax3</code>): крайняя правая ось, смещённая наружу</li>
+<li><strong>Вторичная X</strong> (<code>x2</code>): создаётся через <code>ax.twiny()</code></li>
+</ul>
+<p>Каждая дополнительная ось может использовать отдельный столбец и имеет собственные подпись, пределы min/max, переключатель логарифмической шкалы, цвет и маркер — все они редактируются на вкладке <strong>Вторые оси и врезка</strong> (Secondary &amp; Inset Axes) диалога настройки (<code>TabSecondaryInset</code>, ранее задавались только через скрипт или жёстко в коде). Строка параметров оси активируется только после назначения столбца этой оси.</p>
+<hr />
+<h2 id="dataframe-management"><strong>Управление DataFrame</strong><a class="headerlink" href="#dataframe-management" title="Permanent link">&para;</a></h2>
+<h3 id="loading"><strong>Загрузка</strong><a class="headerlink" href="#loading" title="Permanent link">&para;</a></h3>
+<p><code>VMWorkspaceGraphs.load_dataframes()</code> использует <code>m_io.load_dataframe_file()</code>:</p>
+<ul>
+<li><strong>Excel</strong> (<code>.xlsx</code>/<code>.xls</code>): один лист → <code>{filename: df}</code>. Несколько листов → <code>{filename_sheetname: df}</code> для каждого листа.</li>
+<li><strong>CSV</strong>: автоматическое определение разделителя (точка с запятой или запятая).</li>
+</ul>
+<h3 id="source-tracking-and-refresh"><strong>Отслеживание источника и обновление</strong><a class="headerlink" href="#source-tracking-and-refresh" title="Permanent link">&para;</a></h3>
+<p>Путь к исходному файлу каждого загруженного DataFrame хранится в <code>self.dataframe_sources</code>. Кнопка «Refresh» перечитывает файл с диска, обеспечивая итеративный рабочий процесс, когда внешние инструменты модифицируют данные.</p>
+<h3 id="programmatic-injection"><strong>Программная передача данных</strong><a class="headerlink" href="#programmatic-injection" title="Permanent link">&para;</a></h3>
+<p>Другие рабочие области могут напрямую передавать DataFrame:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># From Maps workspace:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">graphs_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">add_dataframe</span><span class="p">(</span><span class="n">profile_name</span><span class="p">,</span> <span class="n">profile_df</span><span class="p">)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># From Spectra/Maps fit results:</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="bp">self</span><span class="o">.</span><span class="n">graphs_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">add_dataframe</span><span class="p">(</span><span class="s2">&quot;fit_results&quot;</span><span class="p">,</span> <span class="n">df_fit_results</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="filter-system"><strong>Система фильтрации</strong><a class="headerlink" href="#filter-system" title="Permanent link">&para;</a></h2>
+<p>Виджет <code>VDataFilter</code> предоставляет динамический конструктор запросов:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Each filter is a dict:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="s2">&quot;expression&quot;</span><span class="p">:</span> <span class="s2">&quot;Slot == 5&quot;</span><span class="p">,</span>    <span class="c1"># Pandas query expression</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="kc">True</span>                  <span class="c1"># Active/inactive toggle</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
+</code></pre></div>
+<p>Фильтры применяются с помощью <code>pd.DataFrame.query()</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span> <span class="nf">apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df_name</span><span class="p">,</span> <span class="n">filters</span><span class="p">):</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframes</span><span class="p">[</span><span class="n">df_name</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">for</span> <span class="n">filter_data</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">:</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="k">if</span> <span class="n">filter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">filter_data</span><span class="p">[</span><span class="s2">&quot;expression&quot;</span><span class="p">])</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="k">return</span> <span class="n">df</span>
+</code></pre></div>
+<p>Фильтры <strong>сохраняются отдельно для каждого графика</strong> в <code>MGraph.filters</code>, поэтому у каждого графика может быть собственный набор активных фильтров.</p>
+<h3 id="multi-wafer-workflow"><strong>Работа с несколькими пластинами (Multi-Wafer)</strong><a class="headerlink" href="#multi-wafer-workflow" title="Permanent link">&para;</a></h3>
+<p>Если DataFrame содержит столбец <code>Slot</code> (типично для полупроводниковых наборов данных):</p>
+<ol>
+<li>View отображает флажки слотов и кнопку <strong>Добавить пластины</strong> (Add Multi-Wafer).</li>
+<li>Пользователь выбирает нужные слоты (например, 1, 3, 5, 7).</li>
+<li><code>create_multi_wafer_graphs()</code> создаёт по одной карте пластины на каждый слот, объединяя фильтр <code>Slot == N</code> с базовыми фильтрами.</li>
+<li>Все карты пластин одновременно появляются в области MDI.</li>
+</ol>
+<hr />
+<h2 id="graph-customization"><strong>Настройка графиков</strong><a class="headerlink" href="#graph-customization" title="Permanent link">&para;</a></h2>
+<h3 id="customizegraphdialog-singleton"><strong><code>CustomizeGraphDialog</code> (синглтон)</strong><a class="headerlink" href="#customizegraphdialog-singleton" title="Permanent link">&para;</a></h3>
+<p><strong>Пакет</strong>: <code>spectroview/view/components/customize_graph/</code> — <code>CustomizeGraphDialog</code> (в <code>customize_graph_dialog.py</code>) использует современный двухпанельный макет в стиле «Параметров»: адаптивную левую боковую панель навигации с поиском по ключевым словам в реальном времени, стилизованный делегат элементов с капсулой выделения и левым акцентным индикатором, а также модульные прокручиваемые страницы вкладок с подсветкой групп параметров (<code>QGroupBox</code>) и автоматической прокруткой к элементу:</p>
+<table>
+<thead>
+<tr>
+<th>Категория</th>
+<th>Класс</th>
+<th>Модуль</th>
+<th>Область охвата</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Общие и типографика</strong> (General &amp; Typography)</td>
+<td><code>TabGeneral</code></td>
+<td><code>tab_general.py</code></td>
+<td>Тема рисунка (<strong>Светлая</strong> (Light) / <strong>Тёмная</strong> (Dark)), сетка, поворот подписей X, размеры шрифтов (заголовок/ось/деления/цветовая шкала), сортировка данных</td>
+</tr>
+<tr>
+<td><strong>Оси и пределы</strong></td>
+<td><code>TabAxesLimits</code></td>
+<td><code>tab_axes_limits.py</code></td>
+<td>Пределы осей с ползунками диапазона (сверху), шкалы X/Y (<strong>Линейный</strong> (Linear)/Log/Symlog), типы данных, инверсия, цветовая шкала Z, разрыв оси</td>
+</tr>
+<tr>
+<td>Ticks &amp; Spines</td>
+<td><code>TabTicksSpines</code></td>
+<td><code>tab_ticks_spines.py</code></td>
+<td>Направление делений, предустановки формата подписей, промежуточные деления (верх/право/низ/лево), границы осей / рамка (верх/право/низ/лево)</td>
+</tr>
+<tr>
+<td>Legend &amp; Series</td>
+<td><code>TabLegendSeries</code></td>
+<td><code>tab_legend_series.py</code></td>
+<td>Компоновка/шрифт/непрозрачность/положение рамки легенды, унификация стиля маркеров, выровненная по левому краю таблица стилей для каждой серии</td>
+</tr>
+<tr>
+<td><strong>Стиль графиков и аппроксимация</strong> (Plot Style &amp; Fitting)</td>
+<td><code>TabPlotStyles</code></td>
+<td><code>tab_plot_styles.py</code></td>
+<td>Параметры стиля (<code>point</code>/<code>scatter</code>/<code>wafer</code>), унифицированные планки ошибок, полином/привязка/уравнения линии тренда, гистограмма</td>
+</tr>
+<tr>
+<td>Annotations</td>
+<td><code>TabAnnotations</code></td>
+<td><code>tab_annotations.py</code></td>
+<td>Визуальные аннотации (<strong>Верт. линия</strong> (V-Line), <strong>Гориз. линия</strong> (H-Line), <strong>Текст</strong> (Text), <strong>Стрелка</strong> (Arrow), <strong>Верт. полоса</strong> (V-Span), <strong>Гориз. полоса</strong> (H-Span), <strong>Прямоугольник</strong> (Box), <strong>Выноска</strong> (Callout)) и модальные диалоги редактирования</td>
+</tr>
+<tr>
+<td><strong>Вторые оси и врезка</strong></td>
+<td><code>TabSecondaryInset</code></td>
+<td><code>tab_secondary_inset.py</code></td>
+<td>Вторые спаренные оси (<code>Y2</code>/<code>Y3</code>/<code>X2</code> с подписью/min/max/log/цветом/маркером), оси врезки (увеличения)</td>
+</tr>
+</tbody>
+</table>
+<p>Это диалоговое окно-синглтон уровня рабочей области, которое автоматически переключает контекст при активации пользователем другого подокна MDI (<code>switch_graph(graph_widget, graph_id)</code>). Содержит <code>_TabsCompatibilityProxy</code> и обратно совместимые фасады свойств (<code>legend_widget</code>, <code>axis_widget</code>, <code>more_options_widget</code>, <code>annotations_widget</code>).</p>
+<h3 id="live-preview-restyle-fast-path"><strong>Предпросмотр в реальном времени и быстрый путь перерисовки (<code>restyle</code>)</strong><a class="headerlink" href="#live-preview-restyle-fast-path" title="Permanent link">&para;</a></h3>
+<p>Каждый элемент управления на любой вкладке при изменении перезапускает единый таймер антидребезга <code>QTimer</code> на 400 мс. По срабатывании таймера метод применения каждой вкладки выполняется с параметром <code>replot=False</code> для живого виджета, а <code>graph_commit.snapshot()</code>/<code>diff()</code> (см. ниже) точно определяют, какие поля изменились. Если изменённые поля являются подмножеством <code>graph_style.RESTYLE_SAFE_FIELDS</code>, диалог вызывает <code>VGraph.restyle()</code> (быстрая перерисовка на месте); в противном случае выполняется полная перерисовка <code>VGraph.plot(df)</code>. Такой предпросмотр никогда не затрагивает стек отмены и не вызывает <code>vm.update_graph()</code> — изменения носят чисто визуальный характер до тех пор, пока пользователь не нажмёт <strong>Применить</strong> (Apply), что оборачивает изменения всех вкладок в единую пару <code>vm.begin_undo_batch()</code>/<code>end_undo_batch()</code> (один шаг отмены на одно нажатие <strong>Применить</strong>, независимо от того, сколько вкладок было отредактировано). Кнопка <strong>Отмена</strong> (Cancel) откатывает виджет к снимку состояния, снятому при открытии диалога, так ни разу и не затронув ViewModel.</p>
+<h3 id="graph_stylepy-the-styledata-field-partition"><strong><code>graph_style.py</code> — разделение полей стиля и данных</strong><a class="headerlink" href="#graph_stylepy-the-styledata-field-partition" title="Permanent link">&para;</a></h3>
+<p><strong>Файл</strong>: <code>spectroview/model/graphs/graph_style.py</code></p>
+<ul>
+<li><strong><code>STYLE_FIELD_NAMES</code></strong> — все поля <code>MGraph</code>, <em>за исключением</em> столбцов идентификации и данных, пределов в координатах данных, аннотаций и геометрии окна/экспорта (вычисляется исключением <code>_NON_STYLE_FIELDS</code>). Описывает «внешний вид графика», переносимый с одного графика на другой независимо от его данных.</li>
+<li><strong><code>RESTYLE_SAFE_FIELDS</code></strong> — более узкое подмножество <code>STYLE_FIELD_NAMES</code>: поля, безопасные для быстрого пути перерисовки <code>VGraph.restyle()</code> (заголовки/подписи/размеры шрифтов, сетка, направление и формат делений, пределы основных осей, логарифмический/symlog-масштаб, цвет фона фигуры, границы осей и отступы, оформление рамки легенды). Исключает всё, что требует пересоздания графических объектов (цвета/маркеры/размеры для отдельных серий, цветовая палитра, дополнительные оси, аннотации, врезки).</li>
+<li><strong><code>extract_style(source_dict)</code></strong> / <strong><code>apply_style_dict(graph_widget, style_dict)</code></strong> / <strong><code>default_style()</code></strong> — соответственно извлекают подмножество полей стиля из графика, записывают словарь стилей в виджет (сбрасывая <code>legend_properties</code>, чтобы цвета серий пересчитались заново) и возвращают жёстко заданный заводской стиль по умолчанию.</li>
+<li><strong><code>can_restyle_without_replot(changed_fields)</code></strong> — возвращает <code>True</code> тогда и только тогда, когда каждое изменённое поле входит в <code>RESTYLE_SAFE_FIELDS</code>.</li>
+</ul>
+<h3 id="graph_commitpy-change-tracking"><strong><code>graph_commit.py</code> — отслеживание изменений</strong><a class="headerlink" href="#graph_commitpy-change-tracking" title="Permanent link">&para;</a></h3>
+<p><strong>Файл</strong>: <code>spectroview/view/components/graphs/graph_commit.py</code></p>
+<p><code>snapshot(gw)</code> делает глубокую копию каждого поля <code>MGraph</code> (кроме <code>graph_id</code>) с живого виджета <code>VGraph</code>; <code>diff(gw, before)</code> возвращает словарь-патч только с теми полями, которые отличаются от предыдущего снимка. Используется как в цикле предпросмотра в реальном времени диалога настройки (для выбора между <code>restyle</code> и полной перерисовкой <code>replot</code>), так и при редактировании на уровне панели инструментов или холста (например, для синхронизации перетащенного положения легенды или изменённого размера подокна в модель перед <code>save_workspace()</code>) — в обоих случаях полученный патч проходит через <code>properties_changed.emit()</code> → <code>vm.update_graph()</code>, который и записывает шаг отмены.</p>
+<h3 id="undoredo"><strong>Отмена и повтор (Undo/Redo)</strong><a class="headerlink" href="#undoredo" title="Permanent link">&para;</a></h3>
+<p>Стеки отмены и повтора находятся в <code>VMWorkspaceGraphs</code>, а не во View: <code>_undo_stack</code>/<code>_redo_stack</code> хранят снимки состояния всей рабочей области (<code>{graph_id: MGraph.save()-dict}</code>), ограниченные 50 записями. Каждый вызов <code>create_graph()</code>/<code>update_graph()</code>/<code>delete_graph()</code> записывает один шаг отмены, если только он не выполняется внутри пары <code>begin_undo_batch()</code>/<code>end_undo_batch()</code>, когда весь пакет схлопывается в один шаг — это используется кнопкой <strong>Применить</strong> диалога настройки (один шаг для всех отредактированных вкладок) и применением рецепта графиков (один шаг на весь рецепт, а не по одному на каждый график). Сигнал <code>undo_state_changed</code> синхронизирует кнопки <strong>Отменить</strong> (Undo) и Redo на панели инструментов через свойства <code>can_undo</code>/<code>can_redo</code>.</p>
+<h3 id="keyboard-shortcuts"><strong>Горячие клавиши</strong><a class="headerlink" href="#keyboard-shortcuts" title="Permanent link">&para;</a></h3>
+<p>Зарегистрированы на <code>self.mdi_area</code> (а не на всём виджете рабочей области, чтобы при вводе текста не перекрывать штатные сочетания клавиш полей <code>QLineEdit</code> боковой панели) и действуют на график активного подокна MDI. Контекст <code>WidgetWithChildrenShortcut</code> также гарантирует, что они неявно ограничены самой вкладкой <code>Graphs</code>: пока открыта другая вкладка, <code>self.mdi_area</code> (и всё её содержимое) не входит в цепочку фокуса, поэтому горячие клавиши попросту не срабатывают.</p>
+<table>
+<thead>
+<tr>
+<th>Горячая клавиша</th>
+<th>Действие</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Ctrl+Z</code></td>
+<td>Отменить действие</td>
+</tr>
+<tr>
+<td><code>Ctrl+Shift+Z</code></td>
+<td>Повторить отменённое действие</td>
+</tr>
+<tr>
+<td><code>Ctrl+C</code></td>
+<td>Копирует <em>фигуру</em> активного графика в буфер обмена (<code>VGraph.copy_to_clipboard()</code>, аналогично кнопке <strong>Копировать</strong> (Copy) на панели инструментов)</td>
+</tr>
+<tr>
+<td><code>Ctrl+V</code></td>
+<td>Вставляет скопированный <em>стиль</em> в активный график</td>
+</tr>
+<tr>
+<td><code>Ctrl+E</code></td>
+<td>Открывает диалог настройки графика (Customize Graph Dialog) для активного графика (аналогично кнопке Customize на панели инструментов)</td>
+</tr>
+</tbody>
+</table>
+<p>Копирование стиля больше не имеет отдельного сочетания <code>Ctrl+C</code> (<code>_on_copy_style_shortcut()</code> удалён) — вместо этого <code>Ctrl+C</code> копирует сам рисунок графика, поскольку это действие требуется гораздо чаще. Копирование стиля по-прежнему доступно в один клик через пункт <strong>Копировать стиль</strong> (Copy Style) меню Style; <code>Ctrl+V</code> по-прежнему вставляет последний скопированный таким способом стиль.</p>
+<h3 id="general-typography-tabgeneral"><strong>Общие и типографика (<code>TabGeneral</code>)</strong><a class="headerlink" href="#general-typography-tabgeneral" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Display &amp; Grid</strong>: селектор <strong>Figure theme</strong> (<strong>Светлая</strong> / <strong>Тёмная</strong> — при каждой отрисовке повторно применяет цвета <code>axes.facecolor</code>/подписей/делений/рамки из <code>plt.rcParams</code>, чтобы переключение темы не оставляло старый чёрный текст или линии рамки), флажок <strong>Линии сетки</strong> (Show grid lines) (<code>MGraph.grid</code>) и числовое поле <strong>X label rotation</strong> (<code>MGraph.x_rot</code>).</li>
+<li><strong>Typography &amp; Font Sizes (pt)</strong>: числовые поля Title, Axis label, Tick label и <strong>Colorbar</strong> в одной строке (значения по умолчанию 12/12/9/10, соответствующие активному стилю Matplotlib). Размер <strong>Colorbar</strong> (<code>MGraph.colorbar_fontsize</code>) задаёт размер шрифта подписей делений на цветовой шкале карт пластин и 2D-карт — <code>PlotRenderer._apply_colorbar_fontsize()</code> применяет его после каждого создания или пересоздания цветовой шкалы, поэтому его изменение запускает полную перерисовку (это поле намеренно исключено из <code>RESTYLE_SAFE_FIELDS</code>). <strong>Подзаголовок</strong> не имеет отдельного регулятора размера — он всегда отображается на 2 pt меньше заголовка (<code>title_fontsize − 2</code> в <code>_set_figure_style</code>); его <em>текст</em> редактируется на боковой панели рабочей области (<code>VWorkspaceGraphs</code>). Настройки цвета фона и отступов по-прежнему учитываются, если заданы программно через <code>MGraph.figure_facecolor</code>/<code>figure_margins</code>.</li>
+<li><strong>Data Sorting</strong>: переключатель интеллектуальной сортировки категориальных данных (<code>MGraph.intelligent_sorting</code>).</li>
+</ul>
+<h3 id="axes-limits-tabaxeslimits"><strong>Оси и пределы (<code>TabAxesLimits</code>)</strong><a class="headerlink" href="#axes-limits-tabaxeslimits" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Set Axis Limits</strong>: по одной строке со счётчиками и ползунком для осей X/Y/Z (X/Y скрыты для <code>wafer</code>/<code>2Dmap</code>, где вместо них Z управляет цветовой шкалой). Каждая пара счётчиков min/max связана с двойным ползунком диапазона, границы перетаскивания которого вычисляются из фактического диапазона данных (с запасом 10%). Если предел не задан, счётчик отображает серым цветом реальное текущее отрисованное значение на графике — а не условный заполнитель вроде «default», — поэтому отображаемое число всегда информативно; этот же шаблон подсказки с реальным значением применяется ко всем необязательным числовым полям в данном диалоге (пределы врезки, индивидуальные переопределения легенды для серий).</li>
+<li><strong>Axis Scales &amp; Data Types</strong>: масштаб по каждой оси (X/Y) (<strong>Линейный</strong> / <strong>Логарифмическая</strong> (Logarithmic) / Symlog), тип данных (<strong>Авто</strong> (Auto) / <strong>Категория</strong> (Category) / <strong>Числовые</strong> (Numerical)) и переключатель Inverted. Для <code>wafer</code>/<code>2Dmap</code> появляется дополнительная строка масштаба <strong>Z axis</strong> (<strong>Линейный</strong> / <strong>Логарифмическая</strong> / <strong>Центрированная</strong> (Centered), плюс Center value для <strong>Центрированная</strong>) — нормализация цветовой палитры для <code>MGraph.colormap_norm</code>/<code>colormap_center</code>; см. <a href="#colormap-normalization">Нормализация цветовой палитры</a>.</li>
+<li><strong>Broken axis</strong>: разрывы осей X и Y взаимно исключают друг друга (включение одного отключает другой, так как движок отрисовки поддерживает только одну ось с разрывом за раз). При отрисовке <code>Axes</code> разделяются на две панели через <code>gridspec</code> — рядом друг с другом с общей осью Y для разрыва по X либо друг над другом с общей осью X для разрыва по Y — причём каждая панель обрезается до своей половины диапазона, обращённые друг к другу границы рамки скрываются, а на реальных границах осей рисуются стандартные диагональные знаки разрыва <code>//</code>. Разрыв оси всегда требует полной перерисовки (<code>VGraph.restyle()</code> возвращает <code>False</code>, пока разрыв активен) и взаимно исключает использование осей врезки.</li>
+</ul>
+<h3 id="ticks-spines-tabticksspines"><strong>Ticks &amp; Spines (<code>TabTicksSpines</code>)</strong><a class="headerlink" href="#ticks-spines-tabticksspines" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Tick Appearance</strong>: направление делений (<strong>По умолчанию</strong> (Default) / <strong>Внутрь</strong> (In) / <strong>Наружу</strong> (Out) / <strong>Обе стороны</strong> (In &amp; Out)) и формат подписей делений (<strong>Авто</strong> / Integer / 1-decimal / 2-decimal / Scientific).</li>
+<li><strong>Minor Ticks &amp; Spines</strong>: промежуточные деления (независимо для X-Bottom/X-Top/Y-Left/Y-Right, с разумными значениями по умолчанию, которые автоматически включают промежуточные деления на числовых осях и скрывают их на категориальных осях и картах) и <strong>Show Spines / Frame Borders</strong> (<strong>Сверху</strong> (Top) / <strong>Справа</strong> (Right) / <strong>Снизу</strong> (Bottom) / <strong>Слева</strong> (Left)).</li>
+</ul>
+<h3 id="legend-series-tablegendseries"><strong>Legend &amp; Series (<code>TabLegendSeries</code>)</strong><a class="headerlink" href="#legend-series-tablegendseries" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Legend Box Styling</strong>: число столбцов, рамка, заголовок, размер шрифта, прозрачность (alpha) и расположение.</li>
+<li><strong>Series Styling</strong>: необязательный флажок <strong>"Unify marker size / edge color"</strong> (включён по умолчанию). Пока он установлен, единая строка Marker size / Edge color в верхней части блока применяется ко всем сериям, а столбцы Marker size/Edge color в таблице для отдельных серий скрыты. Снятие флажка раскрывает эти столбцы для каждой серии (только для стилей семейства <code>point</code>/<code>scatter</code>), позволяя каждой серии независимо переопределять размер маркера и цвет контура — резервную логику реализуют <code>PlotRenderer._resolve_marker_size()</code>/<code>_resolve_edge_color()</code>. Параметры <strong>Подпись</strong> (Label), <strong>Цвет</strong> (Color) и <strong>Прозрачность</strong> (Alpha) всегда редактируются индивидуально для каждой серии; <strong>Маркер</strong> доступен только для стиля <code>point</code>, а <strong>Толщина</strong> (Line width) отображается только для стилей, которые действительно рисуют линию (<code>line</code>/<code>trendline</code> или <code>point</code> с включённым <code>"Join"</code>) — у обычного графика рассеяния, ящика с усами или столбчатой диаграммы нет линии, для которой имела бы смысл толщина. Незаданные числовые поля толщины линии или прозрачности серии отображают серым цветом фактическое значение, которое будет использовано (например, <code>"1.50"</code>), вместо обезличенной подсказки.</li>
+</ul>
+<h3 id="plot-style-fitting-tabplotstyles"><strong>Стиль графиков и аппроксимация (<code>TabPlotStyles</code>)</strong><a class="headerlink" href="#plot-style-fitting-tabplotstyles" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Plot Style Options</strong>: зависящие от типа графика флажки (<strong>Соединять точки (точечный график)</strong> (Join data points (point plot)), <strong>Разнести совпадающие точки (точечный)</strong> (Dodge overlapping points (point plot)), <strong>Разнести совпадающие точки (рассеяние)</strong> (Dodge overlapping points (scatter plot)), <strong>Статистическая сводка (карта пластины)</strong> (Show statistics summary (wafer plot))).</li>
+<li><strong>Error Bars (Unified)</strong>: видимость планок ошибок, тип (<strong>95% ДИ</strong> (95% CI) / <strong>СКО</strong> (Std. Dev.) / <strong>Ст. ошибка</strong> (Std. Error) / <strong>Нет</strong> (None) — набор вариантов зависит от типа графика) и ширина засечек для графиков <code>point</code>, <code>line</code> и <code>bar</code>.</li>
+<li><strong>Trendline &amp; Histogram Controls</strong>: степень полинома, опорная точка привязки (<span class="arithmatex">\(x_0, y_0\)</span>), таблица только для чтения с подобранными уравнениями + <span class="arithmatex">\(R^2\)</span> и кнопкой копирования, а также число интервалов гистограммы, режим отображения (<strong>Сплошная</strong> (Filled) / Step) и переключатели наложения кривой KDE.</li>
+</ul>
+<h3 id="annotations-tabannotations"><strong>Annotations (<code>TabAnnotations</code>)</strong><a class="headerlink" href="#annotations-tabannotations" title="Permanent link">&para;</a></h3>
+<p>Восемь типов аннотаций, каждому из которых соответствует кнопка <strong>Добавить</strong> (Add) и собственный диалог редактирования в <code>customize_annotation_dialogs.py</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Тип</th>
+<th>Назначение</th>
+<th>Диалог редактирования</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vline</code> / <code>hline</code></td>
+<td>Вертикальная/горизонтальная опорная линия</td>
+<td><code>EditLineDialog</code></td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td>Свободная текстовая подпись с опциональной фоновой подложкой</td>
+<td><code>EditTextDialog</code></td>
+</tr>
+<tr>
+<td><code>arrow</code></td>
+<td>Стрелка от точки к точке</td>
+<td><code>EditArrowDialog</code></td>
+</tr>
+<tr>
+<td><code>vspan</code> / <code>hspan</code></td>
+<td>Закрашенная вертикальная/горизонтальная полоса</td>
+<td><code>EditSpanDialog</code></td>
+</tr>
+<tr>
+<td><code>box</code></td>
+<td>Заполненный или контурный прямоугольник</td>
+<td><code>EditBoxDialog</code></td>
+</tr>
+<tr>
+<td><code>callout</code></td>
+<td>Текстовая выноска со стрелкой к точке данных</td>
+<td><code>EditCalloutDialog</code></td>
+</tr>
+</tbody>
+</table>
+<p>Все аннотации хранятся в виде типизированных словарей в <code>MGraph.annotations</code>. Каждый тип поддерживает <strong>интерактивное перетаскивание</strong> — нажатие и перетаскивание мышью обновляет положение в реальном времени и испускает сигнал <code>annotation_position_changed</code>, что реализовано в <code>GraphAnnotationMixin._on_annotation_click()</code>/<code>_on_annotation_drag()</code>/<code>_on_annotation_release()</code> в <code>graphs/v_graph_annotations.py</code>. Проверка попадания курсора (hit-testing) выполняется вручную (<code>self.ax.findobj()</code> + <code>artist.contains(event)</code>), а не через <code>pick_event</code> Matplotlib: метод <code>Figure.pick()</code> доставляет событие выбора графическому объекту только тогда, когда <code>event.inaxes</code> совпадает с собственным объектом <code>Axes</code> этого элемента — чего для аннотации на основной оси <code>Axes</code> незаметно никогда не происходит при наличии дополнительной оси Y (она полностью перекрывает основную <code>Axes</code> и имеет более высокий z-order, поэтому <code>event.inaxes</code> разрешается в неё). Раньше это делало абсолютно неперетаскиваемыми любые аннотации на графике с настроенными <code>y2</code>/<code>y3</code>. Метод <code>VGraph._ax_data_coords(event)</code> вычисляет координаты при перетаскивании напрямую из пиксельных координат события через <code>self.ax.transData</code>, обходя ту же неоднозначность <code>event.inaxes</code> и при определении позиции.</p>
+<h3 id="secondary-inset-axes-tabsecondaryinset"><strong>Вторые оси и врезка (<code>TabSecondaryInset</code>)</strong><a class="headerlink" href="#secondary-inset-axes-tabsecondaryinset" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Secondary Twin Axes</strong>: по одной строке для каждой оси Y2/Y3/X2 (неактивна, пока оси не назначен столбец) с полями <strong>Подпись</strong>, <strong>Мин</strong> (Min) / <strong>Макс</strong> (Max), переключателем <strong>Log</strong>, <strong>Цвет</strong> и <strong>Маркер</strong> — см. <a href="#multi-axis-support">Поддержка нескольких осей</a>.</li>
+<li><strong>Inset (Zoom) Axes</strong>: включаемая группа с полями <strong>Позиция</strong> (Position) (x0, y0) и <strong>Размер</strong> (Size) (w, h) в относительных координатах осей (долях от 0 до 1), независимыми пределами X/Y и переключателем <code>"Show zoom indicator"</code>, который рисует соединительные линии от рамки врезки к увеличенной области на основном графике (<code>ax.indicate_inset_zoom()</code>). Сами оси врезки никогда не сохраняются как объект — они перестраиваются при каждой отрисовке из <code>MGraph.inset_bounds</code>. Взаимно исключают разрыв оси.</li>
+</ul>
+<hr />
+<h2 id="style-templates-plot-recipes"><strong>Шаблоны стилей и рецепты графиков</strong><a class="headerlink" href="#style-templates-plot-recipes" title="Permanent link">&para;</a></h2>
+<p>Две концептуально различные функции, которые ранее смешивались воедино:</p>
+<ul>
+<li><strong>Рецепты графиков</strong> (Plot Recipes) (<code>Plot Recipe</code>, <code>MPlotRecipeStore</code> / <code>VPlotRecipeDialog</code>, папка: <code>&lt;working folder&gt;/plot_recipe/</code>) — сохранённый <strong>набор полных конфигураций графиков</strong> (привязки к данным <em>и</em> стиль: <code>df_name</code>, <code>x</code>/<code>y</code>/<code>z</code>, <code>filters</code>, а также все поля стиля), один JSON-файл на рецепт. Применение рецепта <strong>создаёт новые графики</strong>: <code>_on_recipe_applied()</code> перенацеливает <code>df_name</code> каждой сохранённой конфигурации на <em>текущий выбранный</em> DataFrame (а не на исходно сохранённый DataFrame каждого графика), пропуская с уведомлением любой график, для которого отсутствуют нужные столбцы, вместо того чтобы прерывать весь пакет. Весь рецепт применяется как один шаг отмены. Диалог поддерживает просмотр, поиск, применение, переименование, <strong>дублирование</strong> (кнопка <strong>Дублировать</strong> (duplicate)) и удаление.</li>
+<li><strong>Шаблоны стилей</strong> (Style Templates) (<code>Style Template</code>, <code>MStyleTemplateStore</code> / <code>VStyleTemplateDialog</code>, папка: <code>&lt;working folder&gt;/plot_style/</code>) — сохранённый словарь <strong>исключительно внешнего вида</strong> (<code>graph_style.extract_style()</code>), один JSON-файл на шаблон. Применение шаблона (<code>_apply_style_to_graph()</code>) записывает его в <strong>существующий</strong> график через <code>graph_style.apply_style_dict()</code> — привязки к данным никогда не затрагиваются. Облегчённый аналог <code>VPlotRecipeDialog</code>: без счётчика графиков и кнопки дублирования, так как шаблон стиля всегда представляет ровно один словарь стиля.</li>
+</ul>
+<p>Оба хранилища намеренно <strong>пересоздаются из текущей настройки рабочей папки в момент использования</strong> (<code>VWorkspaceGraphs._refresh_recipe_and_style_stores()</code>, вызывается в начале каждого обработчика применения и сохранения, включая собственный сценарий сохранения рецептов на панели ИИ-чата через <code>VMChat.refresh_recipe_store()</code>), вместо того чтобы создаваться один раз при запуске — это устранило ошибку, при которой изменение рабочей папки после создания вкладки рабочей области незаметно не вступало в силу до перезапуска приложения.</p>
+<p>Меню <strong>Style</strong> на панели инструментов каждого <code>VGraph</code> связывает все эти возможности воедино: <strong>Сохранить стиль…</strong> (Save Style…) / <strong>Применить стиль…</strong> (Apply Style…) (открывают соответствующий диалог), <strong>Копировать стиль</strong> / <strong>Вставить стиль</strong> (Paste Style) (в памяти, <code>Ctrl+C</code>/<code>Ctrl+V</code>), <strong>Сбросить по умолчанию</strong> (Reset to Default) (всегда жёстко заданный заводской стиль <code>graph_style.default_style()</code>) и <strong>Сделать стилем по умолчанию</strong> (сохраняет стиль текущего графика через <code>MSettings.set_default_graph_style()</code> как базовый стиль для новых графиков — см. <a href="#data-flow-creating-a-plot">Поток данных: создание графика</a>). Это два независимых, не пересекающихся понятия: <strong>Сбросить по умолчанию</strong> всегда восстанавливает заводской стиль независимо от того, какой стиль назначен по умолчанию; <strong>Сделать стилем по умолчанию</strong> изменяет только стартовый стиль <em>вновь создаваемых</em> графиков, сохраняется между перезапусками и никогда не влияет ни на существующие графики, ни на поведение <strong>Сбросить по умолчанию</strong>.</p>
+<hr />
+<h2 id="export-multi-panel-composer"><strong>Экспорт и компоновщик многопанельных рисунков</strong><a class="headerlink" href="#export-multi-panel-composer" title="Permanent link">&para;</a></h2>
+<p><strong>Файл</strong>: <code>spectroview/view/components/graphs/v_export_dialog.py</code></p>
+<ul>
+<li><strong><code>VExportDialog(graph_widget, parent=None)</code></strong> — экспортирует отдельный график в PNG/TIFF/SVG/PDF/EPS с настройками формата, DPI, прозрачности, переопределения темы на время экспорта, а также разделом физических размеров (журнальные шаблоны, переключение мм/дюймы, пустое поле = текущий размер на экране), которые сохраняются обратно в поля <code>export_width_mm</code>/<code>export_height_mm</code> графика.</li>
+<li><strong><code>VBatchExportDialog(graph_widgets: dict, parent=None)</code></strong> — экспортирует все открытые в данный момент графики в выбранную папку за один проход, каждый со своим уже сохранённым физическим размером, выводя отчёт о сбоях по отдельным графикам в итоговом диалоге.</li>
+</ul>
+<p><strong>Файл</strong>: <code>spectroview/view/components/graphs/v_multipanel_dialog.py</code></p>
+<ul>
+<li><strong><code>VMultiPanelDialog(graph_widgets: dict, parent=None)</code></strong> — компонует несколько отмеченных и упорядоченных открытых графиков в единую временную сетку <code>matplotlib.figure.Figure</code> (автоматический подбор числа строк и столбцов, компоновка constrained layout, скрытие дублирующихся подписей общих осей на внутренних панелях, буквенные или числовые метки панелей). Каждая панель отрисовывается путём временного перенаправления <code>.ax</code>/<code>.figure</code> исходного <code>VGraph</code> на подграфик составной фигуры и вызова его обычного пути отрисовки с последующим восстановлением исходного виджета, поэтому живая рабочая область никогда не изменяется. Графики с активным разрывом оси отрисовываются в составной фигуре по упрощённому однопанельному пути (документированное ограничение).</li>
+</ul>
+<p>ИИ и MCP предоставляют доступ к сохраняемому физическому размеру экспорта каждого графика (<code>export_width_mm</code> / <code>export_height_mm</code>) и экранной геометрии/DPI через <code>GraphPatch</code>. Сами действия экспорта, пакетного экспорта и компоновки многопанельного рисунка остаются рабочими процессами GUI: формат, путь сохранения, прозрачность, тема при экспорте, выбор/порядок графиков и сетка панелей — это разовые параметры файла или композиции, а не состояние <code>MGraph</code>.</p>
+<hr />
+<h2 id="mdi-area-management"><strong>Управление областью MDI</strong><a class="headerlink" href="#mdi-area-management" title="Permanent link">&para;</a></h2>
+<p>Рабочая область <code>Graphs</code> использует <code>QMdiArea</code> для одновременного отображения нескольких графиков:</p>
+<pre class="mermaid"><code>graph LR
+    MDI["QMdiArea"] --&gt; SW1["Подокно 1"]
+    MDI --&gt; SW2["Подокно 2"]
+    MDI --&gt; SW3["Подокно 3"]
+    SW1 --&gt; VG1["VGraph"]
+    SW2 --&gt; VG2["VGraph"]
+    SW3 --&gt; VG3["VGraph"]</code></pre>
+<ul>
+<li>Каждый график обёрнут в <code>QMdiSubWindow</code> для независимого изменения размера, сворачивания и упорядочивания. Штатная рамка подокна в стиле Fusion довольно толстая и сильно скошенная; <code>self.mdi_area.setStyleSheet(...)</code> добавляет правило <code>QMdiSubWindow { border: 1px solid ... }</code>, делая её тонкой линией в 1 px (задание любого свойства <code>border</code> через QSS переводит виджет со штатной отрисовки рамки на CSS-отрисовку).</li>
+<li>Нижняя панель инструментов содержит общие элементы управления: сворачивание / удаление всех графиков, Отмена/Повтор, Compose Figure (кнопки только со значками, перенесённые сюда с боковой панели, поскольку они глобальны для рабочей области и используются чаще оставшихся там кнопок рецептов) и один общий <strong>слот панели инструментов графика</strong> (<code>self.graph_toolbar_slot</code> / <code>self._graph_toolbar_slot_layout</code> с коэффициентом растяжения <code>1</code>, чтобы он занимал всю оставшуюся ширину). Каждый <code>VGraph</code> в <code>create_plot_widget()</code> строит собственную панель навигации Matplotlib (Home/Pan/Zoom/Subplots) + разделитель <code>QFrame.VLine</code> + строку кнопок действий (Replicate/Customize/Copy/Export/меню Style, прижатые к правому краю через <code>QHBoxLayout.addStretch()</code> между разделителем и кнопками), но оставляет её без родителя и скрытой (<code>self.toolbar_container</code>), вместо того чтобы показывать внутри собственного окна MDI — каждое окно MDI отображает только холст графика. Кнопка Export выполняет двойную функцию (<code>VGraph._on_export_clicked()</code>, аналогично кнопке Копировать в <code>VSpectraViewer</code>): обычный клик испускает <code>export_requested(graph_id)</code> (диалог экспорта одного графика); <code>Ctrl+Click</code> (проверяется через <code>QApplication.keyboardModifiers() &amp; Qt.ControlModifier</code> внутри обработчика нажатия) вместо этого испускает <code>export_all_requested</code>, подключённый к тому же <code>VWorkspaceGraphs._on_export_all_clicked()</code>, который раньше вызывала кнопка <code>"Export All"</code> на боковой панели — старая кнопка была полностью удалена, как только стала избыточной. Каждая иконка кнопки действия представляет собой фиксированный цветной значок, задаваемый один раз при создании; метод <code>VGraph.update_icon_colors()</code> и перекрашивание под тему в <code>VWorkspaceGraphs</code> были удалены, поскольку элементам графика больше не нужно отслеживать тему приложения. Метод <code>VWorkspaceGraphs._sync_active_graph_toolbar()</code> переназначает родителя для <code>toolbar_container</code> текущего активного подокна MDI в общий слот (предварительно отсоединяя предыдущий контейнер), так что все графики визуально делят одну общую панель инструментов вместо хранения идентичной копии на каждом окне. Он вызывается изо всех мест, где может смениться активный график или перестроиться панель инструментов графика: <code>_on_subwindow_activated</code> (охватывает клики по подокнам, выпадающий список графиков и случай <code>None</code>, когда подокон не осталось), <code>_build_graph_widget</code> (новый график), <code>_on_update_plot</code>/путь обновления графика ИИ-агентом в <code>main.py</code> (<code>create_plot_widget()</code> перестраивает <code>toolbar_container</code> с нуля, поэтому слот должен синхронизироваться с новым экземпляром) и <code>_on_graph_closed</code>/<code>_on_delete_all</code>/<code>clear_workspace</code>/<code>_rebuild_all_graph_widgets</code> (пути очистки/перестройки, чтобы слот никогда не хранил висячую ссылку на удалённый виджет). Поворот подписей X и переключатель сетки раньше тоже находились на этой панели — они перенесены на вкладку <strong>Общие и типографика</strong> (<code>TabGeneral</code>, рядом с Figure theme) диалога настройки, поскольку это параметры стиля отдельного графика, а не всей рабочей области, и элементы на панели инструментов всё равно применялись лишь как разовые настройки по умолчанию для новых графиков без предпросмотра в реальном времени. (Раньше здесь также находилось числовое поле DPI — оно удалено: оно лишь задавало <em>DPI по умолчанию</em> для следующего нового графика и молча ничего не делало при изменении при выбранном существующем графике, хотя визуально синхронизировалось с его DPI и создавало иллюзию живого редактирования. По умолчанию <code>MGraph.dpi</code> по-прежнему равно 100 и может задаваться через скрипт или ИИ-агента; разрешение экранной отрисовки не требует повседневной ручной настройки, а для разрешения экспорта предусмотрен явный элемент управления в <code>VExportDialog</code>.)</li>
+<li>Выпадающий список выбора графика (<strong>Активный график:</strong> (Active plot:)) и текстовая метка текущего размера графика перенесены с нижней панели инструментов: теперь список выбора располагается на боковой панели прямо над кнопками <strong>Добавить график</strong> / <strong>Обновить график</strong> (Update plot) (<code>VWorkspaceGraphs._setup_action_buttons()</code>), а метка размера графика полностью удалена (вместе с параметром <code>figsize_label</code> класса <code>MdiSubWindow</code> и его ставшим бессмысленным переопределением <code>resizeEvent</code>).</li>
+<li>Кнопка <strong>Свернуть все</strong> (Minimize All) сворачивает все окна для наведения порядка в рабочей области.</li>
+<li>Выбор графика в выпадающем списке активирует соответствующее подокно и синхронизирует элементы управления на правой панели.</li>
+</ul>
+<h3 id="graph-storage"><strong>Хранение графиков</strong><a class="headerlink" href="#graph-storage" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># VWorkspaceGraphs maintains a lookup:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">graph_widgets</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">graph_id</span><span class="p">:</span> <span class="p">(</span><span class="n">VGraph</span><span class="p">,</span> <span class="n">QDialog</span><span class="p">,</span> <span class="n">QMdiSubWindow</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>Когда график выбирается через выпадающий список или кликом по его подокну:</p>
+<ol>
+<li><code>_on_subwindow_activated()</code> определяет <code>graph_id</code>.</li>
+<li>Из ViewModel загружается соответствующий <code>MGraph</code>.</li>
+<li>Элементы управления на правой панели (выпадающие списки X/Y/Z, подписи, стиль) синхронизируются с моделью.</li>
+</ol>
+<hr />
+<h2 id="persistence"><strong>Сохранение состояния</strong><a class="headerlink" href="#persistence" title="Permanent link">&para;</a></h2>
+<h3 id="spectroview-working-folder"><strong>Рабочая папка SPECTROview</strong><a class="headerlink" href="#spectroview-working-folder" title="Permanent link">&para;</a></h3>
+<p>Единая универсальная корневая папка, настраиваемая пользователем (в панели настроек), внутри которой при первой настройке автоматически создаются пять подпапок и переносимый файл конфигурации (<code>os.makedirs(..., exist_ok=True)</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Подпапка / Файл</th>
+<th>Назначение</th>
+<th>Метод чтения <code>MSettings</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fit_model/</code></td>
+<td>JSON-шаблоны моделей аппроксимации (рабочие области <code>Spectra</code>/<code>Maps</code>)</td>
+<td><code>get_fit_model_folder()</code></td>
+</tr>
+<tr>
+<td><code>plot_recipe/</code></td>
+<td>Рецепты графиков</td>
+<td><code>get_plot_recipe_folder()</code></td>
+</tr>
+<tr>
+<td><code>plot_style/</code></td>
+<td>Шаблоны стилей</td>
+<td><code>get_plot_style_folder()</code></td>
+</tr>
+<tr>
+<td><code>ai_chat_history/</code></td>
+<td>История диалогов с ИИ-ассистентом</td>
+<td><code>get_history_folder()</code> / <code>get_ai_history_folder()</code></td>
+</tr>
+<tr>
+<td><code>template/</code></td>
+<td>Пользовательские шаблоны и пресеты</td>
+<td><code>get_template_folder()</code></td>
+</tr>
+<tr>
+<td><code>config.json</code></td>
+<td>Переносимая резервная копия конфигурации</td>
+<td><code>export_config()</code> / <code>import_config()</code></td>
+</tr>
+</tbody>
+</table>
+<p>Метод <code>get_working_folder()</code> однократно выполняет миграцию из прежних раздельных настроек <code>"Fit model folder"</code> / <code>"Plot template folder"</code>, если какая-либо из них была настроена ранее, чтобы существующие конфигурации не потерялись. Отдельная настройка <code>get_default_graph_style()</code>/<code>set_default_graph_style()</code> хранит базовый стиль, заданный через <strong>Сделать стилем по умолчанию</strong> (см. <a href="#style-templates-plot-recipes">Шаблоны стилей и рецепты графиков</a>) — она не связана с настройкой <strong>Рабочая папка SPECTROview</strong> (SPECTROview Working Folder), но сохраняется тем же способом (<code>QSettings</code>, на диске, переживает перезапуск).</p>
+<h3 id="save-format-graphs"><strong>Формат сохранения (<code>.graphs</code>)</strong><a class="headerlink" href="#save-format-graphs" title="Permanent link">&para;</a></h3>
+<p>Текущий формат (<code>format_version: 4</code>) представляет собой <strong>ZIP-архив</strong>, записываемый методом <code>WorkspaceIO.save_workspace()</code>. Версия 4 сохраняет <code>x_as_numeric=False</code> как явный выбор режима <strong>Категория</strong>; более ранние версии сохраняют прежнюю миграцию <code>False</code> в <strong>Авто</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>metadata.json                          # {&quot;format_version&quot;: 4, &quot;plots&quot;: {...}, &quot;dataframe_sources&quot;: {...}}
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>dataframes/&lt;name&gt;.parquet              # one Parquet file per DataFrame, streamed directly into the zip
+</code></pre></div>
+<p>Каждая запись в <code>metadata["plots"]</code> представляет собой полный словарь <code>MGraph.save()</code>, индексированный по <code>graph_id</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="nt">&quot;plots&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">        </span><span class="nt">&quot;1&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">            </span><span class="nt">&quot;graph_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">            </span><span class="nt">&quot;df_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fit_results&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">            </span><span class="nt">&quot;plot_style&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;point&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">            </span><span class="nt">&quot;x&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Slot&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">            </span><span class="nt">&quot;y&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Si_center&quot;</span><span class="p">],</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">            </span><span class="nt">&quot;z&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Zone&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">            </span><span class="nt">&quot;filters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;expression&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;R² &gt; 0.95&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}],</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">            </span><span class="nt">&quot;legend_properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">            </span><span class="nt">&quot;annotations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">            </span><span class="nt">&quot;plot_width&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">480</span><span class="p">,</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">            </span><span class="nt">&quot;plot_height&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">400</span><span class="p">,</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">            </span><span class="nt">&quot;dpi&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">    </span><span class="nt">&quot;dataframe_sources&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">        </span><span class="nt">&quot;fit_results&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/path/to/original.xlsx&quot;</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="p">}</span>
+</code></pre></div>
+<p>Метод <code>WorkspaceIO.load_workspace()</code> проверяет сигнатуру (magic number) ZIP; файлы, созданные в более ранних форматах (чистый JSON, где таблицы DataFrame встроены как сжатые gzip строки CSV в шестнадцатеричной кодировке под ключом <code>original_dfs</code>), распознаются как устаревшие и загружаются через отдельный резервный путь — он оставлен только для открытия старых файлов и никогда не используется для сохранения.</p>
+<hr />
+<h2 id="plot-replication"><strong>Дублирование графиков</strong><a class="headerlink" href="#plot-replication" title="Permanent link">&para;</a></h2>
+<p>Кнопка «Replicate» (на общей панели инструментов графика, действует на текущий активный график) создаёт глубокую копию графика:</p>
+<ol>
+<li>Сериализует текущий <code>MGraph</code> через <code>save()</code>.</li>
+<li>Удаляет <code>graph_id</code> (ViewModel присваивает новый идентификатор).</li>
+<li>Фиксирует текущий размер подокна для создаваемой копии.</li>
+<li>Вызывает <code>_create_and_display_plot()</code> с клонированной конфигурацией.</li>
+</ol>
+<p>Это позволяет быстро проводить A/B-сравнение одних и тех же данных с разными настройками оформления. В отличие от вновь создаваемых графиков (<strong>Добавить график</strong> / <strong>Добавить пластины</strong>), стиль дублированного графика <strong>не</strong> перезаписывается базовым стилем, заданным через <strong>Сделать стилем по умолчанию</strong>, так как он уже содержит полностью заданный и осознанный стиль.</p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  К началу
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Нижний колонтитул" >
+        
+          
+          <a href="../maps/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Рабочая область «Карты»">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Рабочая область «Карты»
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../vbf_engine/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Векторизованный движок пакетной аппроксимации (VBF)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Векторизованный движок пакетной аппроксимации (VBF)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

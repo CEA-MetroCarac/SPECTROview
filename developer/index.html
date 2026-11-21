@@ -26,10 +26,16 @@
         
           <link rel="alternate" href="../fr/developer/" hreflang="fr">
         
+          <link rel="alternate" href="../de/developer/" hreflang="de">
+        
+          <link rel="alternate" href="../ru/developer/" hreflang="ru">
+        
+          <link rel="alternate" href="../zh/developer/" hreflang="zh">
+        
       
       
       <link rel="icon" href="../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -37,10 +43,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -206,6 +212,36 @@
               class="md-select__link"
             >
               Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../de/developer/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../ru/developer/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../zh/developer/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
             </a>
           </li>
         
@@ -1687,13 +1723,13 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <h3 id="signalslot-communication"><strong>Signal/Slot Communication</strong><a class="headerlink" href="#signalslot-communication" title="Permanent link">&para;</a></h3>
 <p>Views and ViewModels communicate <strong>exclusively via Qt signals and slots</strong>. A ViewModel must never call View methods directly, and a View must never modify Model state without going through its ViewModel.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># ── ViewModel defines signals ──</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">VMWorkspaceSpectra</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">class</span> <span class="nc">VMWorkspaceSpectra</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">spectra_list_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>       <span class="c1"># ViewModel → View</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">fit_progress_updated</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># ── View connects in __init__ ──</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">class</span><span class="w"> </span><span class="nc">VWorkspaceSpectra</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">class</span> <span class="nc">VWorkspaceSpectra</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">spectra_list_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_list</span><span class="p">)</span>
 </code></pre></div>
 <hr />
@@ -1707,7 +1743,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│   ├── dispatch.py         # Queued Qt main-thread execution boundary
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│   └── errors.py           # Stable integration error codes
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>├── i18n/                   # Centralized EN/FR localization &amp; live Qt bindings
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>├── i18n/                   # Centralized multilingual localization &amp; live Qt bindings
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│   ├── __init__.py         # Public tr/tr_plural &amp; declarative bind_* exports
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│   ├── manager.py          # TranslationManager singleton, JSON catalog loader &amp; QTranslator lifecycle
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│   ├── bindings.py         # Weak-ref widget/tab/combo/header live retranslation bindings
@@ -1909,7 +1945,7 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a>│
 <a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a>├── resources/              # Icons, fonts, localization catalogs, Matplotlib stylesheets
 <a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a>│   ├── icons/
-<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a>│   ├── i18n/fr.json        # French UI &amp; plot translation catalog (`strings`, `plurals`, `contexts`)
+<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a>│   ├── i18n/{fr,zh,de,ru}.json  # Translation catalogs (`strings`, `plurals`, `contexts`)
 <a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a>│   └── *.mplstyle
 <a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a>│
 <a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a>packaging/                  # Standalone platform build pipelines (reusing root main.spec)
@@ -2133,14 +2169,14 @@ Every workspace follows the same three-layer separation of concerns:</p>
 <h3 id="spectrum-serialization-flow"><strong>Spectrum Serialization Flow</strong><a class="headerlink" href="#spectrum-serialization-flow" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Save (format_version 2): SpectraStore → ZIP archive (metadata.json + NPZ arrays)</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="s2">"format_version"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="s2">"store_meta"</span><span class="p">:</span> <span class="p">{</span>                 <span class="c1"># keyed by map name (== fname for single spectra)</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="s2">"sample_001"</span><span class="p">:</span> <span class="p">{</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>            <span class="s2">"fnames"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"sample_001"</span><span class="p">],</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>            <span class="s2">"is_active"</span><span class="p">:</span> <span class="p">[</span><span class="kc">True</span><span class="p">],</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>            <span class="s2">"baseline_config"</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>            <span class="s2">"peak_params"</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>            <span class="s2">"range_min"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"range_max"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="s2">&quot;format_version&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="s2">&quot;store_meta&quot;</span><span class="p">:</span> <span class="p">{</span>                 <span class="c1"># keyed by map name (== fname for single spectra)</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="s2">&quot;sample_001&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>            <span class="s2">&quot;fnames&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sample_001&quot;</span><span class="p">],</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>            <span class="s2">&quot;is_active&quot;</span><span class="p">:</span> <span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>            <span class="s2">&quot;baseline_config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>            <span class="s2">&quot;peak_params&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>            <span class="s2">&quot;range_min&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;range_max&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>            <span class="c1"># ...</span>
 <a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>        <span class="p">}</span>
 <a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="p">}</span>
@@ -2371,12 +2407,12 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 <p>Before the first PyPI release on a new fork/repository, register a Trusted Publisher for <code>CEA-MetroCarac/SPECTROview</code> in PyPI with workflow filename <code>release.yml</code> and environment <code>pypi</code>.</p>
 <hr />
 <h2 id="internationalization-i18n"><strong>Internationalization (i18n)</strong><a class="headerlink" href="#internationalization-i18n" title="Permanent link">&para;</a></h2>
-<p><code>SPECTROview</code> provides live <strong>English</strong> (<code>"en"</code>, default) and <strong>French</strong> (<code>"fr"</code>) localization via <code>spectroview/i18n/</code>:</p>
+<p><code>SPECTROview</code> provides live multilingual GUI localization across <strong>English</strong> (<code>"en"</code>, default), <strong>French</strong> (<code>"fr"</code>), <strong>Simplified Chinese</strong> (<code>"zh"</code>, <code>zh_CN</code>), <strong>German</strong> (<code>"de"</code>, <code>de_DE</code>), and <strong>Russian</strong> (<code>"ru"</code>, <code>ru_RU</code>) via <code>spectroview/i18n/</code>:</p>
 <ul>
-<li><strong><code>TranslationManager</code> (<code>manager.py</code>)</strong>: Singleton holding the active language (<code>get_language()</code> / <code>set_language()</code>), JSON catalogs (<code>spectroview/resources/i18n/&lt;lang&gt;.json</code>), locale-aware <code>tr()</code> / <code>tr_plural()</code>, and Qt's <code>QTranslator</code> (<code>qtbase_&lt;lang&gt;.qm</code>) without mutating <code>QLocale</code> (keeping dot <code>.</code> decimal parsing intact in scientific spinboxes).</li>
+<li><strong><code>TranslationManager</code> (<code>manager.py</code>)</strong>: Singleton holding the active language (<code>get_language()</code> / <code>set_language()</code>), JSON catalogs (<code>spectroview/resources/i18n/&lt;lang&gt;.json</code>), locale-aware <code>tr()</code> / <code>tr_plural()</code> (including Chinese 1-form, French/German 2-form, and Russian 3-form Slavic pluralization), and Qt's <code>QTranslator</code> (<code>qtbase_fr.qm</code>, <code>qtbase_zh_CN.qm</code>, <code>qtbase_de.qm</code>, <code>qtbase_ru.qm</code>) without mutating <code>QLocale</code> (keeping dot <code>.</code> decimal parsing intact in scientific spinboxes).</li>
 <li><strong>Live Bindings (<code>bindings.py</code>)</strong>: Weak-referenced declarative helpers (<code>bind_text</code>, <code>bind_tooltip</code>, <code>bind_placeholder</code>, <code>bind_title</code>, <code>bind_window_title</code>, <code>bind_tab_text</code>, <code>bind_header_labels</code>, <code>bind_combo_items</code>, <code>on_language_changed</code>) re-apply labels on <code>set_language()</code> while preserving canonical keys in <code>Qt.UserRole</code> (<code>itemData</code>) via <code>combo_data_or_text()</code> / <code>set_combo_by_data_or_text()</code>.</li>
-<li><strong>Validation &amp; Audit (<code>validator.py</code>)</strong>: <code>validate_catalog("fr")</code> verifies catalog completeness and placeholder parity, and <code>audit_untranslated_ui_literals()</code> scans active View/Settings/AI UI modules via AST (enforced in <code>tests/unit/test_i18n.py</code>).</li>
-<li><strong>Extending to a New Language</strong>: Register <code>(code, native_name)</code> in <code>SUPPORTED_LANGUAGES</code>, add <code>spectroview/resources/i18n/&lt;code&gt;.json</code> (plus optional <code>qtbase_&lt;code&gt;.qm</code>), and update <code>_plural_index()</code> in <code>manager.py</code> if plural rules differ.</li>
+<li><strong>Validation &amp; Audit (<code>validator.py</code>)</strong>: <code>validate_catalog(...)</code> verifies catalog completeness, per-language plural form counts (<code>expected_plural_forms()</code>), and placeholder parity across <code>"fr"</code>, <code>"zh"</code>, <code>"de"</code>, and <code>"ru"</code>, while <code>audit_untranslated_ui_literals()</code> scans active View/Settings/AI UI modules via AST (enforced in <code>tests/unit/test_i18n.py</code>).</li>
+<li><strong>Extending to a New Language</strong>: Register <code>(code, native_name)</code> in <code>SUPPORTED_LANGUAGES</code>, add <code>spectroview/resources/i18n/&lt;code&gt;.json</code> (plus optional <code>qtbase_*.qm</code> candidates), and update <code>_plural_index()</code> / <code>expected_plural_forms()</code> if plural rules differ.</li>
 </ul>
 <hr />
 <h2 id="deep-dive-documentation"><strong>Deep-Dive Documentation</strong><a class="headerlink" href="#deep-dive-documentation" title="Permanent link">&para;</a></h2>
@@ -2432,10 +2468,10 @@ All threads emit progress signals that the ViewModel relays to the View's progre
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>python<span class="w"> </span>-m<span class="w"> </span>spectroview.main
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Install in editable mode with dev dependencies</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[dev]"</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Run fast test suite (skips slow real-data benchmarks; headless offscreen auto-configured)</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not slow"</span><span class="w"> </span>-q
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not slow&quot;</span><span class="w"> </span>-q
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1"># Run full test suite (including real benchmark datasets; ~7-8 min)</span>
 <a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>pytest<span class="w"> </span>tests/<span class="w"> </span>-q
@@ -2638,10 +2674,10 @@ For detailed developer and pair programming guidelines, refer to the <a href="ht
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../javascripts/mathjax.js"></script>
       

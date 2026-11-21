@@ -26,10 +26,16 @@
         
           <link rel="alternate" href="./" hreflang="fr">
         
+          <link rel="alternate" href="../../../de/api/extending/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/api/extending/" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/api/extending/" hreflang="zh">
+        
       
       
       <link rel="icon" href="../../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -37,10 +43,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -206,6 +212,36 @@
               class="md-select__link" aria-current="true"
             >
               Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/api/extending/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/api/extending/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/api/extending/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
             </a>
           </li>
         
@@ -1697,27 +1733,27 @@
 <hr />
 <h2 id="methodes-de-ligne-de-base-personnalisees">Méthodes de ligne de base personnalisées<a class="headerlink" href="#methodes-de-ligne-de-base-personnalisees" title="Permanent link">&para;</a></h2>
 <p>L'évaluation de ligne de base (<code>spectroview.api.preprocessing.subtract_baseline</code>, ainsi que <code>set_baseline</code> sur chaque espace de travail) aiguille selon le nom de méthode passé dans <code>config["mode"]</code>. Au-delà des modes intégrés <code>None</code>, <code>"Linear"</code>, <code>"Polynomial"</code> et <code>"arpls"</code>, <strong>n'importe quelle méthode <code>Baseline</code> de <a href="https://pybaselines.readthedocs.io/">pybaselines</a> fonctionne directement</strong>, sans étape d'enregistrement :</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">preprocessing</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">preprocessing</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># "asls", "airpls", "modpoly", "snip", ... n'importe quel nom de méthode pybaselines.Baseline</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">Y_corrected</span><span class="p">,</span> <span class="n">Y_baseline</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">subtract_baseline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="p">{</span><span class="s2">"mode"</span><span class="p">:</span> <span class="s2">"asls"</span><span class="p">,</span> <span class="s2">"lam"</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">})</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># &quot;asls&quot;, &quot;airpls&quot;, &quot;modpoly&quot;, &quot;snip&quot;, ... n&#39;importe quel nom de méthode pybaselines.Baseline</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">Y_corrected</span><span class="p">,</span> <span class="n">Y_baseline</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">subtract_baseline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;asls&quot;</span><span class="p">,</span> <span class="s2">&quot;lam&quot;</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">})</span>
 </code></pre></div>
 <p>Si <code>pybaselines</code> ajoute une nouvelle méthode dans une version future, elle devient immédiatement disponible dans SPECTROview sans modification de code de part et d'autre.</p>
 <hr />
 <h2 id="modeles-dajustement-et-modeles-de-graphiques">Modèles d'ajustement et modèles de graphiques<a class="headerlink" href="#modeles-dajustement-et-modeles-de-graphiques" title="Permanent link">&para;</a></h2>
 <p>Les modèles d'ajustement comme les configurations de graphiques sont de simples fichiers JSON placés dans un dossier que vous contrôlez — SPECTROview (interface ou API) se contente de scanner ce dossier. Ainsi, n'importe quel outil externe, script ou dépôt versionné de modèles peut les alimenter :</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">fitting</span><span class="p">,</span> <span class="n">graphs</span><span class="p">,</span> <span class="n">settings</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">fitting</span><span class="p">,</span> <span class="n">graphs</span><span class="p">,</span> <span class="n">settings</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Les modèles d'ajustement résident dans le dossier de travail SPECTROview. Pointez-le vers un</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Les modèles d&#39;ajustement résident dans le dossier de travail SPECTROview. Pointez-le vers un</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># emplacement partagé — set_working_folder() crée les sous-dossiers</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># fit_model/plot_recipe/plot_style/ai_chat_history/template et config.json :</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">settings</span><span class="o">.</span><span class="n">set_working_folder</span><span class="p">(</span><span class="s2">"./shared_spectroview"</span><span class="p">)</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># ...tout fichier *.json déposé dans fit_model (via cette API, l'interface ou écrit à la main)</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">settings</span><span class="o">.</span><span class="n">set_working_folder</span><span class="p">(</span><span class="s2">&quot;./shared_spectroview&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># ...tout fichier *.json déposé dans fit_model (via cette API, l&#39;interface ou écrit à la main)</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="c1"># devient immédiatement visible :</span>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">names</span> <span class="o">=</span> <span class="n">fitting</span><span class="o">.</span><span class="n">list_fit_model_templates</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">get_fit_model_folder</span><span class="p">())</span>
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1"># Les recettes de tracé fonctionnent de la même façon via un dossier dédié :</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">graphs</span><span class="o">.</span><span class="n">save_plot_recipe</span><span class="p">(</span><span class="s2">"./shared_spectroview/plot_recipe"</span><span class="p">,</span> <span class="s2">"QC Dashboard"</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">])</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">graphs</span><span class="o">.</span><span class="n">save_plot_recipe</span><span class="p">(</span><span class="s2">&quot;./shared_spectroview/plot_recipe&quot;</span><span class="p">,</span> <span class="s2">&quot;QC Dashboard&quot;</span><span class="p">,</span> <span class="n">configs</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">])</span>
 </code></pre></div>
 <p>La structure JSON d'un modèle d'ajustement est <code>{"0": {"peak_labels": [...], "peak_models": {...}, "baseline": {...}, "range_min": ..., "range_max": ..., "fit_params": {...}}}</code> — générez-en un directement si vous produisez des modèles depuis un système externe, ou créez-en un avec <code>fitting.build_fit_model()</code> / <code>fitting.save_fit_model_template()</code> pour inspecter le format produit.</p>
 <hr />
@@ -1853,10 +1889,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../../../javascripts/mathjax.js"></script>
       

@@ -1,0 +1,2774 @@
+
+<!doctype html>
+<html lang="de" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Interaktives Werkzeug zur Verarbeitung, Anpassung und Visualisierung spektroskopischer Daten">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/de/developer/spectra/">
+      
+      
+        <link rel="prev" href="../spectra_store/">
+      
+      
+        <link rel="next" href="../maps/">
+      
+      
+        
+          <link rel="alternate" href="../../../developer/spectra/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/developer/spectra/" hreflang="fr">
+        
+          <link rel="alternate" href="./" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/developer/spectra/" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/developer/spectra/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Arbeitsbereich Spektren - SPECTROview-Dokumentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#workspace-spectra" class="md-skip">
+          Zum Inhalt
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Kopfzeile">
+    <a href="../../" title="SPECTROview-Dokumentation" class="md-header__button md-logo" aria-label="SPECTROview-Dokumentation" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SPECTROview-Dokumentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Arbeitsbereich Spektren
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Sprache wechseln"
+      title="Sprache wechseln"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">DE</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../developer/spectra/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/developer/spectra/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="de"
+              class="md-select__link" aria-current="true"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/developer/spectra/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/developer/spectra/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Suche" placeholder="Suche" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Suche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Zurücksetzen" aria-label="Zurücksetzen" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Suche wird initialisiert
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Hauptnavigation" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Startseite
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Benutzerhandbuch
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  KI-Agent
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Entwicklerhandbuch
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Änderungsprotokoll
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="SPECTROview-Dokumentation" class="md-nav__button md-logo" aria-label="SPECTROview-Dokumentation" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    SPECTROview-Dokumentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startseite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benutzerhandbuch
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Benutzerhandbuch
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unterstützte Datenformate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Überblick über die Benutzeroberfläche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Menüleiste
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereiche Spektren & Karten
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Diagramme
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multivariate Analyse (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schnellrechner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Einstellungen
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Speichern & Laden
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tastenkürzel & Tipps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KI-Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Entwicklerhandbuch
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Entwicklerhandbuch
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline zum Laden von Dateien
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datenarchitektur SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Spektren
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Spektren
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Inhaltsverzeichnis">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Inhaltsverzeichnis
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architekturübersicht
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architekturübersicht">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#component-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zuständigkeiten der Komponenten
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-spectra-uses-mapdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wie Spectra MapData verwendet
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#workspace-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arbeitsbereich-Komponenten
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Arbeitsbereich-Komponenten">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vworkspacespectra-the-view-coordinator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VWorkspaceSpectra — Der View-Koordinator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vspectraviewer-2d-heatmap-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VSpectraViewer — 2D-Heatmap-Modus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vspectraviewer-interactive-3d-view-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VSpectraViewer — Interaktiver 3D-Ansichtsmodus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interactive-spectral-mapping-live-maps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interaktive Spektralkartierung &amp; Live-Karten
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vmworkspacespectra-the-viewmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMWorkspaceSpectra — Das ViewModel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VMWorkspaceSpectra — Das ViewModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#signals-viewmodel-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signale (ViewModel → View)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#method-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Methodenreferenz
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#template-method-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Template-Method-Hooks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vspectraviewer-the-plot-canvas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VSpectraViewer — Der Plot-Canvas
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VSpectraViewer — Der Plot-Canvas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#batch-legend-editing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stapel-Legendenbearbeitung
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#view-options-synchronization-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Synchronisation &amp; Persistenz der Ansichtsoptionen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heatmap-signal-processing-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimierungen bei Heatmap &amp; Signalverarbeitung
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vfitmodelbuilder-the-controls-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VFitModelBuilder — Das Steuerungs-Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vpeaktable-the-parameter-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VPeakTable — Die Parametertabelle
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Datenfluss
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Datenfluss">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loading-spectra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Laden von Spektren
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#selecting-spectra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auswählen von Spektren
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fitting-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fit-Workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#baseline-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basislinien-Workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#peak-editing-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Peak-Bearbeitungs-Workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fit-results-collection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sammeln der Fit-Ergebnisse
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persistenz
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Persistenz">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modern-format-v2-zip-backed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modernes Format (v2+, ZIP-basiert)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#legacy-loader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy-Loader
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extension-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Erweiterungsleitfaden
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Erweiterungsleitfaden">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-new-preprocessing-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Neues Vorverarbeitungswerkzeug hinzufügen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-new-peak-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Neues Peak-Modell hinzufügen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-new-viewer-rendering-feature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Neue Rendering-Funktion im Viewer hinzufügen
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fehlerbehebung
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Karten
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Diagramme
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vektorisierte Batch-Fit-Engine (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multivariate Analyse (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KI-Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lokaler MCP-Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Spektren (Laden, Vorverarbeitung, Fit)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Karten (hyperspektral, Heatmaps)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datenvisualisierung (Diagramme)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schnellrechner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SPECTROview erweitern
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Änderungsprotokoll
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Startseite
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Entwicklerhandbuch
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="workspace-spectra"><strong>Arbeitsbereich: Spectra</strong><a class="headerlink" href="#workspace-spectra" title="Permanent link">&para;</a></h1>
+<p>Der Arbeitsbereich <code>Spectra</code> ist die zentrale Analyseumgebung zur Verwaltung einzelner Spektren. Er übernimmt das Laden, die Vorverarbeitung, die Peak-Modellierung, das Fitting sowie den Export spektraler Daten. Darüber hinaus dient er als <strong>Basisklasse</strong>, die der <a href="../maps/">Arbeitsbereich Maps</a> per Vererbung erweitert.</p>
+<blockquote>
+<p>[!NOTE]
+Diese Seite behandelt die Spectra-spezifischen Schichten View und ViewModel. Informationen zum gemeinsamen Datenmodell (<code>SpectraStore</code>, <code>MapData</code>, <code>MapInfo</code>, Proxys) finden Sie auf der zugehörigen Seite <a href="../spectra_store/">Datenarchitektur: SpectraStore</a>.</p>
+</blockquote>
+<hr />
+<h2 id="architecture-overview">Architekturübersicht<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
+<p>Der Arbeitsbereich folgt einer strikten <strong>MVVM</strong>-Trennung (Model-View-ViewModel). Keine Schicht darf ihre Grenze in die falsche Richtung überschreiten.</p>
+<pre class="mermaid"><code>graph LR
+    subgraph View ["View-Schicht (v_*)"]
+        VWS["VWorkspaceSpectra&lt;br/&gt;(QWidget)"]
+        SV["VSpectraViewer&lt;br/&gt;(Matplotlib-Canvas)"]
+        SLE["SpectraLegendEditorDialog&lt;br/&gt;(Stapel-Legendeneditor)"]
+        FMB["VFitModelBuilder&lt;br/&gt;(Steuerungs-Panel)"]
+        PT["VPeakTable&lt;br/&gt;(Parametertabelle)"]
+        SL["VSpectraList&lt;br/&gt;(QListView)"]
+        FR["VFitResults&lt;br/&gt;(Ergebnistabelle)"]
+        MVA["VMVA&lt;br/&gt;(PCA/NMF-Panel)"]
+    end
+
+    subgraph VM ["ViewModel-Schicht (vm_*)"]
+        VMWS["VMWorkspaceSpectra&lt;br/&gt;(QObject)"]
+        VMFMB["VMFitModelBuilder"]
+        VMMVA["VMMVA"]
+    end
+
+    subgraph Model ["Model-Schicht"]
+        SS["SpectraStore"]
+        IO["m_io&lt;br/&gt;(Datei-Loader)"]
+        VBF["VBFthread&lt;br/&gt;(Fit-Engine)"]
+        WIO["WorkspaceIO&lt;br/&gt;(Serialisierung)"]
+    end
+
+    VWS --&gt; SV &amp; FMB &amp; SL &amp; FR &amp; MVA
+    SV --&gt; SLE
+    VWS --&gt;|"Methodenaufrufe"| VMWS
+    VMWS --&gt;|"Qt-Signale"| VWS
+    VMWS --&gt; SS &amp; IO &amp; VBF &amp; WIO
+    VMWS --&gt; VMFMB &amp; VMMVA</code></pre>
+<h3 id="component-responsibilities">Zuständigkeiten der Komponenten<a class="headerlink" href="#component-responsibilities" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Schicht</th>
+<th>Klasse</th>
+<th>Zuständigkeit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>View</strong></td>
+<td><code>VWorkspaceSpectra</code></td>
+<td>Stellt UI-Widgets zusammen, verbindet Signale/Slots und delegiert sämtliche Logik an das ViewModel</td>
+</tr>
+<tr>
+<td><strong>View</strong></td>
+<td><code>VSpectraViewer</code></td>
+<td>Matplotlib-Canvas — rendert 1D-Spektren, Basislinien, Peaks, Best-Fit-Kurven, Residuen, 2D-Heatmaps, interaktive 3D-Ansichten und Bereichswähler</td>
+</tr>
+<tr>
+<td><strong>View</strong></td>
+<td><code>VRangeSelectorPanel</code></td>
+<td>Vertikales rechtes Panel mit roten, blauen und grünen Umschaltflächen für Spektralintervalle</td>
+</tr>
+<tr>
+<td><strong>View</strong></td>
+<td><code>RangeSelectorManager</code></td>
+<td>Canvas-Overlay zur Verwaltung ziehbarer Klammermarkierungen und schattierter Bereiche für aktive Wähler</td>
+</tr>
+<tr>
+<td><strong>View</strong></td>
+<td><code>VLiveMaps</code></td>
+<td>Tab <strong>Live-Karten</strong> (Live Maps), der drei synchronisierte 2D-Heatmap-Unterpanels (Rot, Blau, Grün) bereitstellt</td>
+</tr>
+<tr>
+<td><strong>View</strong></td>
+<td><code>SpectraLegendEditorDialog</code></td>
+<td>Transaktionaler Editor für Farbpalette, Legendenlimit, Beschriftungen und Farben der ausgewählten Spektren</td>
+</tr>
+<tr>
+<td><strong>View</strong></td>
+<td><code>VFitModelBuilder</code></td>
+<td>Steuerungs-Panel für X-Korrektur, Spektralbereich, Basislinie und Fitting</td>
+</tr>
+<tr>
+<td><strong>View</strong></td>
+<td><code>VPeakTable</code></td>
+<td>Editierbare Tabelle der Peak-Parameter mit Modellauswahl pro Zeile</td>
+</tr>
+<tr>
+<td><strong>View</strong></td>
+<td><code>VSpectraList</code></td>
+<td>Kontrollkästchen-Liste mit Farbregeln, Drag-and-Drop-Sortierung und Mehrfachauswahl</td>
+</tr>
+<tr>
+<td><strong>ViewModel</strong></td>
+<td><code>VMWorkspaceSpectra</code></td>
+<td>Geschäftslogik: orchestriert Laden, Vorverarbeitung, Fitting und Persistenz</td>
+</tr>
+<tr>
+<td><strong>ViewModel</strong></td>
+<td><code>VMLiveMaps</code></td>
+<td>Berechnet 2D-Raumparameter-Arrays aus <code>MapData</code> bei Aktualisierungen von Intervallen oder Parametern</td>
+</tr>
+<tr>
+<td><strong>Model</strong></td>
+<td><code>spectral_parameters</code></td>
+<td>Vektorisierte Berechnungen für integrierte/mittlere/maximale Intensität sowie Peak-Position, -Höhe und -Fläche</td>
+</tr>
+<tr>
+<td><strong>Model</strong></td>
+<td><code>SpectraStore</code></td>
+<td>Tensorzentrierter In-Memory-Speicher — siehe <a href="../spectra_store/">spectra_store.md</a></td>
+</tr>
+<tr>
+<td><strong>Model</strong></td>
+<td><code>VBFthread</code></td>
+<td><code>QThread</code>, der die vektorisierte Batch-Fit-Engine außerhalb des Hauptthreads ausführt</td>
+</tr>
+</tbody>
+</table>
+<h3 id="how-spectra-uses-mapdata">Wie Spectra MapData verwendet<a class="headerlink" href="#how-spectra-uses-mapdata" title="Permanent link">&para;</a></h3>
+<p>Im Arbeitsbereich Spectra wird jedes geladene Spektrum als eigenständiger <code>MapData</code>-Block mit <strong>N=1</strong> (eine Zeile) gespeichert. Jeder Block besitzt eine eigene X-Achse, sodass Spektren mit unterschiedlichen Wellenzahlbereichen koexistieren können. Den vollständigen Tensoraufbau finden Sie unter <a href="../spectra_store/#data-hierarchy">Datenhierarchie</a>.</p>
+<hr />
+<h2 id="workspace-components">Arbeitsbereich-Komponenten<a class="headerlink" href="#workspace-components" title="Permanent link">&para;</a></h2>
+<h3 id="vworkspacespectra-the-view-coordinator"><code>VWorkspaceSpectra</code> — Der View-Koordinator<a class="headerlink" href="#vworkspacespectra-the-view-coordinator" title="Permanent link">&para;</a></h3>
+<p><strong>Datei</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/workspaces/v_workspace_spectra.py"><code>v_workspace_spectra.py</code></a></p>
+<p><code>VWorkspaceSpectra</code> ist eine reine UI-Assembler-Klasse. Sie:</p>
+<ol>
+<li>Instanziiert alle untergeordneten Widgets sowie das ViewModel in <code>__init__</code>.</li>
+<li>Verdrahtet sämtliche Signal-Slot-Verbindungen in <code>setup_connections()</code>.</li>
+<li>Delegiert jede Benutzeraktion an das ViewModel (greift niemals direkt auf Daten zu).</li>
+<li>Aktualisiert die Benutzeroberfläche als Reaktion auf ViewModel-Signale.</li>
+</ol>
+<p>Das Layout besteht aus einem horizontalen Splitter: <strong>links</strong> (<code>VSpectraViewer</code> oben, Steuerungstabs unten) und <strong>rechts</strong> (Seitenleiste mit der Spektrenliste).</p>
+<p><strong>Zentrales Muster — Strg-modifizierte Aktionen:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">def</span> <span class="nf">_apply_with_ctrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">apply_all</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">QApplication</span><span class="o">.</span><span class="n">keyboardModifiers</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">ControlModifier</span><span class="p">)</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">fn</span><span class="p">(</span><span class="n">apply_all</span><span class="p">)</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Usage:</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="bp">self</span><span class="o">.</span><span class="n">btn_reinit</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_with_ctrl</span><span class="p">(</span><span class="n">vm</span><span class="o">.</span><span class="n">reinit_spectra</span><span class="p">))</span>
+</code></pre></div>
+<p>Alle Sammelaktionen (Basislinienabzug, Peak-Einfügen, Zurücksetzen, Fitting) folgen diesem Muster. Ein normaler Klick wirkt auf die ausgewählten Spektren; Strg+Klick wirkt auf alle Spektren im Speicher.</p>
+<h3 id="vspectraviewer-2d-heatmap-mode"><code>VSpectraViewer</code> — 2D-Heatmap-Modus<a class="headerlink" href="#vspectraviewer-2d-heatmap-mode" title="Permanent link">&para;</a></h3>
+<p><strong>Paket</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/spectra_viewer/__init__.py"><code>spectra_viewer/</code></a> (<code>v_plot_heatmap.py</code>)</p>
+<p><code>VSpectraViewer</code> ist das zentrale Spektren-Canvas-Widget. Neben der mehrlinigen 1D-Spektrendarstellung bietet es einen nativen <strong>2D-Heatmap-Modus</strong> (<code>btn_heatmap</code>, platziert neben <code>btn_3d</code> auf der rechten Seite der Symbolleiste unmittelbar links neben <code>btn_options</code> / <code>btn_copy</code>) zur Visualisierung von Messreihen (z. B. Temperaturvariationen, Kinetiken, Linienscans):</p>
+<ul>
+<li><strong>Datenausrichtung &amp; Interpolation unregelmäßiger Matrizen</strong>: Wenn ausgewählte Spektren unterschiedliche oder unregelmäßige Wellenzahlraster besitzen, richtet <code>_plot_heatmap()</code> alle Zeilen über <code>scipy.interpolate.interp1d</code> auf einen gemeinsamen Spektralbereich aus.</li>
+<li><strong>Y-Achsen-Token-Extraktion</strong>: Liest numerische Parameter, die in Dateinamen eingebettet sind (z. B. <code>_100C_</code>, <code>_250K_</code>), automatisch per Regex-Tokenisierung aus oder fällt auf eine indexbasierte Sortierung (<code>0..N-1</code>) zurück.</li>
+<li><strong>Glatte vertikale Interpolation</strong>: Unterstützt eine kubische/lineare 1D-Interpolation entlang der vertikalen Achse, wenn <code>spin_heatmap_interp &gt; 0</code> gesetzt ist (Standard: 300 Punkte).</li>
+<li><strong>Dynamische Anpassung der Symbolleiste</strong>: Das Aktivieren des Heatmap-Modus schaltet den Zustand der Symbolleiste um: Standard-1D-Werkzeuge (<code>btn_peak</code>, <code>btn_baseline</code>, <code>btn_eraser</code>, <code>btn_norm</code>, <code>btn_bestfit</code> und <code>shift_panel</code>) werden über <code>setVisible(False)</code> ausgeblendet, während die heatmap-spezifischen Steuerelemente (<code>cbb_heatmap_yaxis</code>, <code>le_heatmap_ylabel</code>, <code>spin_heatmap_interp</code>) sichtbar werden. Durch Deaktivieren des Modus werden die 1D-Werkzeuge sofort wiederhergestellt.</li>
+</ul>
+<h3 id="vspectraviewer-interactive-3d-view-mode"><code>VSpectraViewer</code> — Interaktiver 3D-Ansichtsmodus<a class="headerlink" href="#vspectraviewer-interactive-3d-view-mode" title="Permanent link">&para;</a></h3>
+<p><code>VSpectraViewer</code> stellt eine interaktive <strong>3D-Ansicht</strong> (<code>btn_3d</code>, <code>_3d_mode</code>) bereit, die direkt auf Matplotlibs <code>mpl_toolkits.mplot3d.Axes3D</code> (<code>_plot_3d()</code>) aufbaut. Sie kommt ohne zusätzliche externe Abhängigkeiten aus und teilt sich das Styling <code>PLOT_POLICY_LIGHT</code>/<code>PLOT_POLICY_DARK</code>, den Zwischenablage-Export von Abbildungen sowie die Synchronisation der Arbeitsbereichsoptionen (<code>view_3d</code> in <code>get_options_state()</code>/<code>set_options_state()</code>):</p>
+<ul>
+<li><strong>Projektionswechsel &amp; Callback-Bereinigung (<code>_ensure_axes_projection</code>)</strong>: Schaltet <code>self.ax</code> nur beim Wechsel in den oder aus dem 3D-Modus zwischen geradlinigen 2D-Achsen und <code>Axes3D</code> um, trennt zuvor die Canvas-Callbacks von <code>Axes3D</code> und deaktiviert die 3D-Mausbindungen vor <code>figure.delaxes()</code>, um eine Anhäufung von Callbacks über mehrere Moduswechsel hinweg zu verhindern.</li>
+<li><strong>Vektorisiertes 3D-Rendering (<code>FastLine3DCollection</code>)</strong>: Leitet von <code>Line3DCollection</code> ab, um alle 3D-Punkte über gleichförmige <code>(N, M, 3)</code>-Tensoren oder unregelmäßige <code>tensor_list</code>-Auswahlen hinweg in einem einzigen vektorisierten <code>proj3d._proj_trans_points()</code>-Durchlauf zu projizieren, und aktualisiert <code>Path._vertices</code> während der interaktiven Kameradrehung direkt an Ort und Stelle (in-place). Unterstützt die Plot-Typen <code>"line"</code> und <code>"dot"</code>, Normierung, Rohdaten-Überlagerungen, Best-Fit-Kurven, logarithmische Z-Skalierung sowie Legenden- und Farbskalenmodi.</li>
+<li><strong>Mausrotation &amp; Modusexklusivität (<code>_sync_mode_toolbar_state</code>)</strong>: <code>btn_3d</code> und <code>btn_heatmap</code> schließen sich gegenseitig aus. Das Aktivieren des 3D-Modus schaltet den 2D-Zoom <code>NoDoubleClickZoomToolbar</code> automatisch ab (<code>_set_zoom_tool_active(False)</code>), blendet inkompatible 1D-Werkzeuge (<code>btn_zoom</code>, <code>btn_peak</code>, <code>btn_baseline</code>, <code>btn_eraser</code>, <code>shift_panel</code>) aus und nutzt gemeinsam <code>cbb_heatmap_yaxis</code> / <code>le_heatmap_ylabel</code> für die Y-Achsen-Positionierung aus Dateinamen-Tokens. Ziehen mit der linken Maustaste dreht <code>(elev, azim)</code>, Ziehen mit der mittleren Maustaste verschiebt die Ansicht, Ziehen mit der rechten Maustaste oder Scrollen skaliert Z, und <code>Rescale</code> (<code>Ctrl+R</code>) setzt Kamerawinkel (<code>25°</code>, <code>-60°</code>) sowie Datengrenzen zurück.</li>
+</ul>
+<h3 id="interactive-spectral-mapping-live-maps">Interaktive Spektralkartierung &amp; Live-Karten<a class="headerlink" href="#interactive-spectral-mapping-live-maps" title="Permanent link">&para;</a></h3>
+<p>Das Subsystem für die interaktive Spektralkartierung ermöglicht es, bis zu drei unabhängige Spektralbereiche im 1D-Spektren-Viewer auszuwählen und live aktualisierte Parametervisualisierungen in Echtzeit zu betrachten:</p>
+<ul>
+<li><strong>Arbeitsbereich <code>Spectra</code> (<code>mode="spectra"</code>)</strong>: Rendert bis zu drei farbcodierte (Rot, Blau, Grün) 1D-Verlaufskurven (<strong>Spektrum Nr.</strong> (Spectrum #) vs. Parameterwert) über die <strong>aktuell ausgewählten Spektren</strong> in <code>VSpectraList</code>.</li>
+<li><strong>Arbeitsbereich <code>Maps</code> (<code>mode="map"</code>)</strong>: Passt sich automatisch an die Dimensionalität der ausgewählten Karte an: rendert räumliche 2D-Parameter-Heatmaps für 2D-Karten oder 1D-Linienplots entlang der räumlichen Koordinate (<code>X (mm)</code>, <code>Y (mm)</code> oder <code>Distance (mm)</code>) für 1D-Profilkarten (Linienscans).</li>
+<li><strong>Rot/Blau-Verhältnis</strong> (<strong>R/B-Verhältnis</strong> (R/B ratio)): Im Unterpanel des grünen Kanals in beiden Arbeitsbereichen verfügbar; berechnet elementweise das Verhältnis der integrierten Intensitäten <span class="arithmatex">\(I_{\mathrm{Red}} / I_{\mathrm{Blue}}\)</span> mit <code>NaN</code>-Maskierung für Blau-Intensitäten nahe oder gleich null und aktualisiert sich automatisch beim Verschieben der roten oder blauen Klammern. Solange <strong>R/B-Verhältnis</strong> ausgewählt ist, wird die grüne Klammer in <code>VSpectraViewer</code> ausgeblendet, sodass nur die rote und die blaue Klammer sichtbar bleiben, die das Verhältnis bestimmen.</li>
+</ul>
+<pre class="mermaid"><code>graph TD
+    subgraph Spectra Viewer
+        RP["VRangeSelectorPanel&lt;br/&gt;(Umschaltflächen Rot, Blau, Grün)"]
+        RSM["RangeSelectorManager&lt;br/&gt;(Interaktive Klammern &amp; schattierte Bereiche)"]
+    end
+
+    subgraph ViewModel
+        VMLM["VMLiveMaps&lt;br/&gt;(60-ms-Debounce-Timer, mode='spectra' | 'map')"]
+    end
+
+    subgraph Model
+        SP["spectral_parameters.py&lt;br/&gt;(Vektorisierte NumPy-Parameterberechnung)"]
+    end
+
+    subgraph Live Maps Tab
+        VLM["VLiveMaps&lt;br/&gt;(Tab unmittelbar vor Mehr)"]
+        Sub["LiveMapSubpanel x 3&lt;br/&gt;(1D-Serienkurve in Spectra / 2D-Heatmap in Maps)"]
+    end
+
+    RP --&gt;|"range_toggled(key, active)"| RSM &amp; VMLM
+    RSM --&gt;|"range_changed(key, xmin, xmax)"| VMLM
+    VMLM --&gt;|"compute_spectral_parameter() /&lt;br/&gt;compute_series_spectral_parameter()"| SP
+    VMLM --&gt;|"series_data_ready / map_data_ready"| VLM
+    VLM --&gt; Sub</code></pre>
+<ul>
+<li><strong><code>VRangeSelectorPanel</code> &amp; <code>SpectraRangeBracketMixin</code></strong> (<a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/rgb_live_maps/v_range_selector.py"><code>rgb_live_maps/v_range_selector.py</code></a>, <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/rgb_live_maps/v_range_bracket_mixin.py"><code>v_range_bracket_mixin.py</code></a>): <code>VRangeSelectorPanel</code> ist als dediziertes vertikales Panel am rechten Rand von <code>VSpectraViewer</code> mit Umschaltflächen in Rot (<code>#e74c3c</code>), Blau (<code>#3498db</code>) und Grün (<code>#2ecc71</code>) positioniert. <code>SpectraRangeBracketMixin</code> integriert das Panel, die Intervall-Initialisierung/-Begrenzung, das Hover-Cursor-Feedback sowie das Agg-Hintergrund-Blitting direkt in <code>VSpectraViewer</code>.</li>
+<li><strong><code>RangeSelectorManager</code></strong>: Verwaltet interaktive vertikale Begrenzungslinien, nach innen gerichtete Klammer-Annotationen sowie transparente Bereiche für jeden Wähler, wobei vorhandene Artists über Ziehbewegungen hinweg direkt wiederverwendet werden und <code>set_animated(True)</code> / <code>active_artists()</code> unterstützt wird. Verfolgt die Parameterauswahl pro Kanal über <code>set_parameter()</code> / <code>is_bracket_visible()</code> und blendet die grüne Klammer inklusive Hit-Testing aus, sobald das zugehörige <strong>Live-Karten</strong>-Panel <strong>R/B-Verhältnis</strong> anzeigt (und stellt sie bei Auswahl eines anderen Spektralparameters sofort wieder her). Das Ziehen einer Begrenzungslinie oder des mittleren Bereichs verschiebt oder skaliert das Intervall mittels Agg-Hintergrund-Blitting (temporäres Aussetzen von <code>layout_engine</code>, Umgehen des Peak-Hovers während des Ziehens sowie X-Begrenzung außerhalb der vertikalen Achsenränder) und emittiert beim Loslassen der Maustaste <code>range_drag_finished</code>. Das Hit-Testing arbeitet mit einer Pixeltoleranz samt Koordinatenumrechnung aus Matplotlib-Transformationen.</li>
+<li><strong><code>VMLiveMaps</code></strong>: Hält Wählerintervalle, Parameterauswahlen, Farbpaletten und <code>mode</code> (<code>"spectra"</code> oder <code>"map"</code>). Nutzt während des kontinuierlichen Ziehens einen adaptiven Debounce-Timer (Basiswert 60 ms, bei sehr großen Karten bis auf 250 ms skalierend), verarbeitet ausstehende Bereiche beim Loslassen sofort via <code>flush_pending()</code> und lagert Karten-Batches mit <code>&gt;= 25,000</code> Spektren (<code>ASYNC_SPECTRUM_THRESHOLD</code>) automatisch auf ein <code>QRunnable</code> im <code>QThreadPool</code> (<code>_LiveMapWorker</code>) aus — abgesichert durch eine monoton steigende <code>_generation_id</code> zum Verwerfen veralteter Aufgaben und einen sauberen <code>shutdown()</code>. Im Modus <code>"spectra"</code> bewahrt <code>set_series_data(mds)</code> benutzerdefinierte Klammerpositionen über Wechsel der Spektrenauswahl hinweg, sofern sie innerhalb der Achsengrenzen liegen, emittiert <code>spatial_sites_changed(None)</code> und anschließend <code>series_data_ready</code>. Im Modus <code>"map"</code> erzwingt <code>set_map_datas(mds, primary_name)</code> Signatur-Deduplizierung sowie LRU-Ergebnis-Caching anhand von <code>MapData.data_version</code>, schließt inaktive Spektren (<code>~is_active</code>) aus, cached reguläre bzw. <code>Delaunay</code>-<code>MapGridder</code>-Geometrien, emittiert <code>spatial_sites_changed</code> mit den geordneten aktiven Koordinaten/Profilpositionen für die interaktive Auswahl und emittiert je nach Datentyp <code>map_data_ready</code>, <code>profile_data_ready</code>, <code>multi_profile_data_ready</code>, <code>map_2d_candidates_changed</code> oder <code>live_maps_cleared</code>. Beide Arbeitsbereiche überspringen die <strong>Live-Karten</strong>-Berechnung, solange der Tab <strong>Live-Karten</strong> ausgeblendet ist (<code>_live_maps_dirty</code>), und holen sie beim Öffnen des Tabs einmalig nach.</li>
+<li>
+<p><strong><code>spectral_parameters.py</code></strong>: Modellseitige vektorisierte Auswertung über Slice-before-Cast-Ansichten <code>MapData.y_matrix[:, mask]</code> mittels <code>compute_spectral_parameter()</code> (mit optionalem <code>active_mask</code>), über diskrete ausgewählte Spektren (<code>list[MapData]</code>) mittels <code>compute_series_spectral_parameter()</code>, Erkennung der Kartendimensionalität via <code>analyze_map_geometry()</code>, wiederverwendbares reguläres bzw. baryzentrisches <code>Delaunay</code>-Gridding via <code>build_map_gridder()</code> + <code>compute_map_grid()</code> sowie sichere elementweise Verhältnisberechnung mit relativer Epsilon-<code>NaN</code>-Maskierung via <code>compute_intensity_ratio()</code>. Berechnet:</p>
+</li>
+<li>
+<p><em>Direkt</em>: <strong>Integrierte Intensität</strong> (Integrated intensity), <strong>Mittlere Intensität</strong> (Mean intensity), <strong>Maximale Intensität</strong> (Maximum intensity), <strong>Peak-Position</strong> (Peak position), <strong>Peak-Höhe</strong> (Peak height) (basislinienkorrigiert).</p>
+</li>
+<li><em>Abgeleitet (grüner Kanal)</em>: <strong>R/B-Verhältnis</strong> (<span class="arithmatex">\(I_{\mathrm{Red}} / I_{\mathrm{Blue}}\)</span>).</li>
+<li>
+<p><em>Gefittet</em>: <strong>Peak-Position (Fit)</strong> (Peak position (fit)), <strong>Peak-Höhe (Fit)</strong> (Peak height (fit)), <strong>Peak-Fläche (Fit)</strong> (Peak area (fit)) anhand gefitteter Peak-Parameter, sofern verfügbar.</p>
+</li>
+<li>
+<p><strong><code>VLiveMaps</code> &amp; <code>LiveMapSubpanel</code></strong> (<a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/rgb_live_maps/__init__.py"><code>rgb_live_maps/</code></a>): <code>QWidget</code>-Tab in <code>bottom_tabs</code> (zwischen <strong>Fit-Ergebnisse</strong> (Fit Results) und <code>MVA</code>, wobei <strong>Mehr</strong> (More) am Ende der Tab-Leiste platziert ist). Beherbergt eine obere Symbolleistenzeile, die links einen kontextbezogenen Bereich (<code>[◀ | ComboBox | ▶]</code>-2D-Kartenumschalter sowie Diagnosehinweise — bei Nichtgebrauch ausgeblendet) mit persistent rechts ausgerichteten Steuerelementen <strong>Show Legend</strong> und dem kompakten zweispaltigen Menü <strong>Weitere Ansichtsoptionen</strong> (More view options) (<code>btn_legend</code>, <code>btn_options</code>, Zeilenränder <code>(2, 2, 2, 2)</code> analog zu <code>VSpectraViewer</code>) kombiniert, sowie drei unabhängige Unterpanels (<code>LiveMapSubpanel</code> in <code>v_live_map_subpanel.py</code>, 96 DPI Basisauflösung). Diese bieten pro Panel die Schaltflächen <strong>Rescale</strong>, <strong>Pan</strong> und <strong>Zoom</strong> — synchronisiert mit <code>NoDoubleClickZoomToolbar</code> (wobei die Legendenbearbeitung per Doppelklick erhalten bleibt) —, größeninvariante Abbildungs-Zwischenablagekopie (<code>Copied figure size</code> standardmäßig <code>5.5 × 4.0</code> in &amp; <code>Copied figure theme</code>) sowie TSV-Datenkopie per <code>Ctrl + Click</code> via <code>copy_data_requested(color_id)</code> / <code>copy_df_to_clb()</code> (kopiert Spektrumsindex/-beschriftungen + Parameterwerte im Modus <code>"spectra"</code>, 1D-/Multi-Profil-Tabellen oder 2D-<code>(X, Y, Value)</code>-Messpunktdaten über <code>VMLiveMaps.get_2d_copy_points()</code>). Im Modus <code>"map"</code> nutzt <code>LiveMapSubpanel</code> die gemeinsamen Hilfsfunktionen aus <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/map_viewer/map_selection.py"><code>map_selection.py</code></a> (<code>MapCanvasSelector</code>, <code>resolve_xy_selection()</code>, <code>resolve_1d_profile_selection()</code>), um Spektrenauswahl per Klick, Strg+Klick und Auswahlrechteck auf den R/B/G-Plots bereitzustellen, solange Pan/Zoom und Legenden-Treffer inaktiv sind; dabei wird <code>VLiveMaps.spectra_selected</code> zurück an <code>VWorkspaceMaps</code> emittiert, während die interaktive XY-Auswahl im Modus <code>"spectra"</code> deaktiviert bleibt. Die Ansichtsoptionen sind standardmäßig auf <code>plot_theme="Light Mode"</code> (unabhängig vom Qt-UI-Theme über <code>apply_global_theme()</code>), <code>plot_style="line"</code>, <code>line_width=1.5</code>, <code>dot_size=1.5</code>, <code>show_figure_label=False</code> und <code>show_grid=False</code> gesetzt, werden sitzungsübergreifend in <code>MSettings</code> (<code>live_maps_view_options/*</code>, synchronisiert zwischen den Arbeitsbereichen Spectra und Maps) gespeichert und nutzen <code>apply_view_options_fast()</code>, mit <code>@lru_cache</code> zwischengespeicherte <code>mplstyle</code>-Dictionaries (<code>_get_cached_style_dict</code>), das Einfrieren stabilisierter Layouts (<code>_on_canvas_draw</code>) sowie am Eltern-Widget verankerte 35-ms-Redraw-Timer für ruckelfreie Aktualisierungen von X/Y/Z-Skala, Stil, Textgröße (<code>6–24 pt</code>), Abbildungstitel, Gitterlinien, geteilter Y-Achse, Heatmap-Glättung, Farbskala und des Legendeneditors (gestützt durch <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/rgb_live_maps/v_live_maps_legend_editor.py"><code>v_live_maps_legend_editor.py</code></a>).</p>
+</li>
+<li><strong>Koordination von Zoom &amp; Bereichswählern</strong>: Sobald ein Bereichswähler aktiviert wird, schaltet sich <code>btn_zoom</code> automatisch ab, sodass sich die Klammern ohne gleichzeitiges Auslösen von Zoom-Rechtecken anpassen lassen, und <code>VWorkspaceSpectra._on_range_selector_toggled()</code> wechselt <code>bottom_tabs</code> automatisch auf <code>self.v_live_maps</code> (wobei eine etwaige aufgeschobene <code>_live_maps_dirty</code>-Auswahl vor Berechnung des aktivierten Kanals nachgeholt wird; das Deaktivieren eines Wählers lässt den aktiven Tab unverändert). Die Zoom-Schaltfläche lässt sich auch durch erneutes Klicken deaktivieren; solange Zoom aktiv ist, bewirkt ein Klick innerhalb des schattierten Bereichs einen Zoomvorgang statt des Verschiebens des Bereichskörpers.</li>
+</ul>
+<h3 id="vmworkspacespectra-the-viewmodel"><code>VMWorkspaceSpectra</code> — Das ViewModel<a class="headerlink" href="#vmworkspacespectra-the-viewmodel" title="Permanent link">&para;</a></h3>
+<p><strong>Datei</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/viewmodel/spectra/vm_workspace_spectra.py"><code>vm_workspace_spectra.py</code></a> (zusammengesetzt aus <code>vm_spectra_preprocessing.py</code>, <code>vm_spectra_fitting.py</code>, <code>vm_spectra_results.py</code> und <code>vm_spectra_persistence.py</code>)</p>
+<p>Dies ist die größte und wichtigste Klasse der Anwendung. Sie besitzt den <code>SpectraStore</code> und orchestriert jede Operation.</p>
+<h4 id="signals-viewmodel-view">Signale (ViewModel → View)<a class="headerlink" href="#signals-viewmodel-view" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">spectra_list_changed</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>          <span class="c1"># list[dict] — refresh the spectra list</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">spectra_selection_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>      <span class="c1"># dict payload for VSpectraViewer</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">count_changed</span>           <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>           <span class="c1"># total spectrum count label</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">show_xcorrection_value</span>  <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>         <span class="c1"># sync X-correction spinbox</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">spectral_range_changed</span>  <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>  <span class="c1"># sync range controls</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">fit_in_progress</span>         <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>          <span class="c1"># enable/disable fit buttons</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">fit_progress_updated</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>  <span class="c1"># progress bar</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">fit_results_updated</span>     <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>        <span class="c1"># pd.DataFrame → results table</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">notify</span>                  <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>           <span class="c1"># floating notification message</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">send_df_to_graphs</span>       <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">)</span>   <span class="c1"># forward DataFrame to Graphs</span>
+</code></pre></div>
+<h4 id="method-reference">Methodenreferenz<a class="headerlink" href="#method-reference" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Kategorie</th>
+<th>Methoden</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Laden</strong></td>
+<td><code>load_files(paths)</code></td>
+</tr>
+<tr>
+<td><strong>Auswahl</strong></td>
+<td><code>set_selected_fnames()</code>, <code>set_selected_indices()</code>, <code>_get_selected_spectra()</code>, <code>_get_active_spectra()</code></td>
+</tr>
+<tr>
+<td><strong>Vorverarbeitung</strong></td>
+<td><code>apply_spectral_range()</code>, <code>apply_x_correction()</code>, <code>undo_x_correction()</code>, <code>apply_y_normalization()</code></td>
+</tr>
+<tr>
+<td><strong>Basislinie</strong></td>
+<td><code>set_baseline_settings()</code>, <code>preview_baseline()</code>, <code>add_baseline_point()</code>, <code>remove_baseline_point()</code>, <code>subtract_baseline()</code>, <code>delete_baseline()</code>, <code>copy_baseline()</code>, <code>paste_baseline()</code></td>
+</tr>
+<tr>
+<td><strong>Peaks</strong></td>
+<td><code>add_peak_at()</code>, <code>remove_peak_at()</code>, <code>update_peak_label()</code>, <code>update_peak_model()</code>, <code>update_peak_param()</code>, <code>delete_peak()</code>, <code>copy_peaks()</code>, <code>paste_peaks()</code>, <code>delete_peaks()</code></td>
+</tr>
+<tr>
+<td><strong>Fitting</strong></td>
+<td><code>fit()</code>, <code>stop_fit()</code>, <code>_run_fit_thread()</code>, <code>_on_fit_finished()</code></td>
+</tr>
+<tr>
+<td><strong>Ergebnisse</strong></td>
+<td><code>collect_fit_results()</code>, <code>save_fit_results()</code>, <code>split_filename()</code>, <code>add_column_from_filename()</code>, <code>compute_column_from_expression()</code></td>
+</tr>
+<tr>
+<td><strong>Fit-Modell</strong></td>
+<td><code>copy_fit_model()</code>, <code>paste_fit_model()</code>, <code>save_fit_model()</code>, <code>apply_fit_model()</code></td>
+</tr>
+<tr>
+<td><strong>Arbeitsbereich</strong></td>
+<td><code>reinit_spectra()</code>, <code>remove_selected_spectra()</code>, <code>reorder_spectra()</code>, <code>clear_workspace()</code></td>
+</tr>
+<tr>
+<td><strong>Persistenz</strong></td>
+<td><code>save_work()</code>, <code>load_work()</code>, <code>_load_legacy_spectra()</code></td>
+</tr>
+<tr>
+<td><strong>Anzeige</strong></td>
+<td><code>save_spectra_data()</code>, <code>copy_spectrum_data_to_clipboard()</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="template-method-hooks">Template-Method-Hooks<a class="headerlink" href="#template-method-hooks" title="Permanent link">&para;</a></h4>
+<p>Das ViewModel verwendet das <strong>Template-Method-Muster</strong>, damit die <a href="../maps/#template-method-overrides">Maps-Unterklasse</a> Sammeloperationen anpassen kann, ohne die Operationslogik zu duplizieren:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span> <span class="nf">_get_target_mds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_all</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">MapData</span><span class="p">]:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Which MapData blocks to operate on.&quot;&quot;&quot;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="c1"># Spectra workspace: selected spectra → their MapData objects</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="c1"># Maps workspace (override): the current map, or all maps</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">def</span> <span class="nf">_on_map_data_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">md</span><span class="p">:</span> <span class="n">MapData</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Hook after each individual MapData is modified.&quot;&quot;&quot;</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="c1"># Spectra workspace: no-op</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="c1"># Maps workspace (override): clears heatmap cache, re-runs batch_preprocess</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="k">def</span> <span class="nf">_post_bulk_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_all</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Hook after all target MapData objects have been processed.&quot;&quot;&quot;</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="c1"># Spectra workspace: re-emits list and selection</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    <span class="c1"># Maps workspace (override): also refreshes fit results and map view</span>
+</code></pre></div>
+<h3 id="vspectraviewer-the-plot-canvas"><code>VSpectraViewer</code> — Der Plot-Canvas<a class="headerlink" href="#vspectraviewer-the-plot-canvas" title="Permanent link">&para;</a></h3>
+<p><strong>Paket</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/spectra_viewer/__init__.py"><code>spectra_viewer/</code></a> (<code>v_spectra_viewer.py</code>, <code>v_spectra_options.py</code>, <code>v_plot_1d.py</code>, <code>v_plot_heatmap.py</code>, <code>v_plot_3d.py</code>, <code>v_interactions.py</code>, <code>v_spectra_legend_editor.py</code>, <code>common.py</code>)</p>
+<p><code>VSpectraViewer</code> setzt spezialisierte Mixins auf <code>QWidget</code> auf (<code>SpectraOptionsMenuMixin</code>, <code>SpectraPlot1DMixin</code>, <code>SpectraHeatmapMixin</code>, <code>SpectraPlot3DMixin</code>, <code>SpectraLegendMixin</code>, <code>SpectraInteractionMixin</code> und <code>SpectraRangeBracketMixin</code>) und trennt so das zweispaltige Optionsmenü samt Zustandssynchronisation, das 1D-/Heatmap-/3D-Rendering, Maus-/Peak-/Radierer-Interaktionen sowie die Legenden-/Farbskalenverwaltung, während gemeinsame Hilfsfunktionen in <code>common.py</code> verbleiben.</p>
+<p>Der Matplotlib-Canvas zeichnet alles im Spektralplot Sichtbare. Er erhält ein Daten-Dictionary von <code>VMWorkspaceSpectra.spectra_selection_changed</code> und zeichnet entsprechend neu.</p>
+<p><strong>Gerenderte Elemente:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Quelldatenschlüssel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Spektrenlinien</td>
+<td><code>data["y"]</code> (verarbeitet)</td>
+</tr>
+<tr>
+<td>Rohdaten-Überlagerung (optional)</td>
+<td><code>data["y0"]</code> (Rohdaten)</td>
+</tr>
+<tr>
+<td>Basislinienkurve</td>
+<td><code>data["y_baseline"]</code></td>
+</tr>
+<tr>
+<td>Basislinien-Ankerpunkte</td>
+<td><code>data["baseline_config"]["points"]</code></td>
+</tr>
+<tr>
+<td>Einzelne Peak-Kurven</td>
+<td><code>data["y_peaks"]</code> (Liste von Arrays)</td>
+</tr>
+<tr>
+<td>Best-Fit-Einhüllende</td>
+<td><code>data["y_bestfit"]</code></td>
+</tr>
+<tr>
+<td>Residuen</td>
+<td><code>data["y"] - data["y_bestfit"]</code></td>
+</tr>
+<tr>
+<td>R²-Annotation</td>
+<td><code>data["fit_r2"][0]</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interaktionsmodi (gegenseitig exklusive Optionsschaltflächen):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Modus</th>
+<th>Linksklick</th>
+<th>Rechtsklick</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Zoom</strong></td>
+<td>Standard-Matplotlib-Zoom/-Pan</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Basislinie</strong> (Baseline)</td>
+<td>Ankerpunkt bei x hinzufügen</td>
+<td>Nächstgelegenen Anker entfernen</td>
+</tr>
+<tr>
+<td><strong>Peak</strong></td>
+<td>Peak bei x hinzufügen</td>
+<td>Nächstgelegenen Peak entfernen</td>
+</tr>
+</tbody>
+</table>
+<p>Peaks lassen sich ebenfalls per Maus ziehen. Der Viewer emittiert während des Ziehens <code>peak_dragged(x, y)</code> und beim Loslassen <code>peak_drag_finished()</code>, was das ViewModel in Aufrufe von <code>update_dragged_peak()</code> + <code>finalize_peak_drag()</code> übersetzt.</p>
+<h4 id="batch-legend-editing">Stapel-Legendenbearbeitung<a class="headerlink" href="#batch-legend-editing" title="Permanent link">&para;</a></h4>
+<p><code>VSpectraViewer</code> speichert nach dem Rendern die vollständige Bounding-Box der Legende im Cache. Ein Doppelklick an beliebiger Stelle innerhalb dieses Rahmens öffnet <code>SpectraLegendEditorDialog</code> aus <code>spectra_viewer/v_spectra_legend_editor.py</code>; einzelne Legendensymbole und Textobjekte öffnen keine separaten Editoren mehr.</p>
+<p>Der Dialog arbeitet transaktional: Palettenauswahl, Drehfeld für das Legendenlimit, Beschriftungsfelder und Farb-Comboboxes halten temporäre Werte, bis der Benutzer bestätigt. <strong>Abbrechen</strong> (Cancel) führt daher zu keinerlei Änderung. Bei <strong>OK</strong> führt <code>VSpectraViewer._apply_legend_editor_values()</code> Folgendes aus:</p>
+<ol>
+<li>Aktualisiert die gemeinsamen Ansichtsoptionen <code>color_palette</code> und <code>max_legend_items</code>.</li>
+<li>Schreibt geänderte Beschriftungen und explizite Farben in die aktuelle Tensor-Nutzlast.</li>
+<li>Schreibt dieselben Werte über jeden <code>SpectrumProxy</code> und aktualisiert die Quell-Arrays <code>MapData.labels</code> und <code>MapData.colors</code>.</li>
+<li>Emittiert <code>spectrumCustomized</code>, wodurch das ViewModel die Auswahlnutzlast neu aufbaut und die Spektrenliste aktualisiert.</li>
+</ol>
+<p>Ein Farbwert von <code>None</code> steht für <strong>Automatisch</strong> (Automatic) und wird beim Rendern aus der aktiven Palette aufgelöst. Explizite Farben pro Spektrum behalten bei einem Palettenwechsel weiterhin Vorrang. Kontinuierliche Paletten werden über die gesamte Auswahl abgetastet; der Editor bietet eine begrenzte Auswahl repräsentativer Farbfelder.</p>
+<p>Beide Arbeitsbereiche erzwingen <code>LEGEND_EDITOR_MAX_ROWS = 100</code>. Es werden ausschließlich diese Editor-Zeilen instanziiert, damit große Karten- oder Spektrenauswahlen nicht Tausende von Qt-Widgets erzeugen. Der Dialog erhält die vollständige Anzahl ausgewählter Elemente, sodass automatische Farbverlaufsvorschauen weiterhin zu ihren geplotteten Spektrumspositionen passen. Werte außerhalb des aktuellen Stapels bleiben unberührt.</p>
+<h4 id="view-options-synchronization-persistence">Synchronisation &amp; Persistenz der Ansichtsoptionen<a class="headerlink" href="#view-options-synchronization-persistence" title="Permanent link">&para;</a></h4>
+<p>Das Menü View Options und die untere Symbolleiste stellen benutzerkonfigurierbare Darstellungsoptionen in einem kompakten zweispaltigen <code>QWidgetAction</code>-Panel bereit (arbeitsbereichsübergreifend synchronisiert und sitzungsübergreifend gespeichert):</p>
+<ul>
+<li><strong>Plot Theme (<code>cbb_theme</code>)</strong>: Konfiguriert das Theme des Matplotlib-Canvas (<code>"Dark Mode"</code> oder <code>"Light Mode"</code>), synchronisiert über den Arbeitsbereich Spectra, den Arbeitsbereich Maps sowie sekundäre 2D-Karten-Viewer-Dialoge. Standardmäßig ist das Plot-Theme immer auf <code>"Light Mode"</code> eingestellt, sofern der Benutzer nicht explizit auf <code>"Dark Mode"</code> umschaltet. Es ist vollständig unabhängig vom globalen UI-Theme der Anwendung, und die explizite Auswahl des Benutzers wird sitzungsübergreifend unter <code>view_options/theme</code> gespeichert.</li>
+<li><strong>Legendenpositionierung &amp; Außenoption (<code>act_legend_outside</code>)</strong>: Ist diese Option aktiviert, platziert <code>VSpectraViewer</code> die Legende außerhalb der Hauptachsen über <code>loc="center left"</code> und <code>bbox_to_anchor=(1.02, 0.5)</code>. Das <code>compressed</code>-Layout der Abbildung passt die Plotränder dynamisch an, sodass die Legende sauber Platz findet, ohne Spektrenkurven zu verdecken. Diese Einstellung wird zwischen den Arbeitsbereichen Spectra und Maps synchronisiert und sitzungsübergreifend unter <code>view_options/legend_outside</code> gespeichert. Die Erkennung des Doppelklickbereichs der Legende aktualisiert die Fenstergrenzen dynamisch direkt vom zugrunde liegenden Legenden-Artist, um unabhängig von der Layout-Komprimierung ein präzises Hit-Testing zu gewährleisten.</li>
+<li><strong>Farbskalen-Legendenmodus (<code>act_legend_colorbar</code>, <code>cbb_colorbar_param</code>, <code>le_colorbar_label</code>)</strong>: Ist diese Option aktiviert (und <code>btn_legend</code> eingeschaltet), ersetzt <code>VSpectraViewer</code> das diskrete per-Spektrum-Legendenfeld durch eine rechtsseitige Matplotlib-Farbskala, die vom gemeinsamen Extraktor numerischer Dateinamen-Tokens (<code>_extract_filename_tokens()</code> / <code>_extract_series_parameter_values()</code>, gemeinsam genutzt mit dem 2D-Heatmap-Modus) oder vom Spektrum-<code>Index</code> gesteuert wird. Die Zeilen <code>row_colorbar_param</code> und <code>row_colorbar_label</code> im zweispaltigen Optionsmenü werden nur angezeigt, wenn <code>act_legend_colorbar</code> / <code>chk_legend_colorbar</code> aktiviert ist (<code>_update_colorbar_options_visibility()</code>). Parameterauswahlen werden sitzungsübergreifend anhand von Unterstrich-Token-Position und normalisiertem Einheitenmuster verfolgt (<code>_refresh_token_combobox()</code>), sodass der gewählte Parameter auch dann erhalten bleibt, wenn unterschiedliche Spektrenteilmengen ausgewählt werden, deren erster Dateiname einen anderen numerischen Wert trägt. Bei Verlaufs-Paletten wird die automatische Farbe jedes Spektrums über <code>_resolve_colorbar_cmap_and_norm()</code> direkt aus seinem extrahierten Parameterwert abgeleitet (benutzerdefinierte Einzelfarben pro Spektrum behalten weiterhin Vorrang). Die Einstellungen werden sitzungsübergreifend unter <code>view_options/legend_colorbar</code>, <code>view_options/colorbar_param</code> und <code>view_options/colorbar_label</code> gespeichert und zwischen den Arbeitsbereichen Spectra und Maps synchronisiert.</li>
+</ul>
+<h4 id="heatmap-signal-processing-optimizations">Optimierungen bei Heatmap &amp; Signalverarbeitung<a class="headerlink" href="#heatmap-signal-processing-optimizations" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Vektorisierte Heatmap-Matrix-Interpolation</strong>: Im 2D-Heatmap-Modus verarbeitet die kubische/lineare Y-Achsen-Interpolation die gesamte Intensitätsmatrix gleichzeitig (<code>scipy.interpolate.interp1d(..., axis=0)</code>), anstatt spaltenweise zu iterieren, wodurch sich die Heatmap-Renderzeiten bei großen Stapeln um mehr als das Vierfache verkürzen.</li>
+<li><strong>Schnelle Rauschschätzung für kosmische Spitzen / Radierer</strong>: Ersetzt iterative gleitende Polynomfits durch den Median Absolute Deviation der ersten Differenzen (<span class="arithmatex">\(MAD / (0.6745 \sqrt{2})\)</span>) und liefert eine robuste Basislinien-Rauschschätzung in vektorisierter NumPy-Zeit <span class="arithmatex">\(O(N)\)</span>.</li>
+<li><strong>Vorfilterung beim Hover-Hit-Testing</strong>: <code>_on_hover</code> nutzt eine Vorfilterung nach dem X-Bereich, um aufwendige <code>contains(event)</code>-Linienberechnungen für irrelevante Peak-Marker zu überspringen.</li>
+</ul>
+<h3 id="vfitmodelbuilder-the-controls-panel"><code>VFitModelBuilder</code> — Das Steuerungs-Panel<a class="headerlink" href="#vfitmodelbuilder-the-controls-panel" title="Permanent link">&para;</a></h3>
+<p><strong>Datei</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/lower_tabs/v_fit_model_builder.py"><code>v_fit_model_builder.py</code></a></p>
+<p>Ein Splitter-Panel, das die vollständige Oberfläche für Vorverarbeitung und Fit-Steuerung enthält:</p>
+<ul>
+<li><strong>Linker Bereich</strong>: X-Korrektur, Spektralbereich, Modusauswahl für die Basislinie, Schaltflächen für Basislinienaktionen.</li>
+<li><strong>Rechter Bereich</strong>: <code>VPeakTable</code> (editierbare Parameterzeilen) + Fit-Aktionsschaltflächen (<strong>Anpassen</strong> (Fit), Copy model, Paste model, Save model, Apply model).</li>
+<li><strong>Laden von Modellen per Drag-and-Drop</strong>: Akzeptiert per Drag-and-Drop abgelegte <code>.json</code>-Fit-Modelldateien direkt auf dem Panel oder über den übergeordneten Arbeitsbereich. Beim Ablegen löst <code>fit_model_dropped(path)</code> die Methode <code>load_fit_model_file()</code> aus, die an <code>VMFitModelBuilder.load_model_file()</code> delegiert. Dies lädt das externe Modell in den Speicher, aktualisiert die Modell-Dropdown-Liste, wählt es aus, aktiviert den Tab <strong>Fit-Modell-Editor</strong> (Fit Model Builder) und zeigt eine schwebende Benachrichtigung an. Sowohl der Arbeitsbereich Spectra als auch Maps erben und unterstützen diese Funktionalität.</li>
+</ul>
+<h3 id="vpeaktable-the-parameter-table"><code>VPeakTable</code> — Die Parametertabelle<a class="headerlink" href="#vpeaktable-the-parameter-table" title="Permanent link">&para;</a></h3>
+<p><strong>Datei</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/lower_tabs/v_peak_table.py"><code>v_peak_table.py</code></a></p>
+<p>Eine interaktive Tabelle, in der jede Zeile einen Peak darstellt. Die Spalten zeigen Beschriftung, Modellprofil, Zentrum (x₀), FWHM, Amplitude und Grenzwert-Umschalter. Das Bearbeiten einer beliebigen Zelle emittiert ein Signal an <code>VMWorkspaceSpectra</code>, das <code>md.fit_model</code> aktualisiert und umgehend die Vorschau <code>Y_peaks</code> neu berechnet.</p>
+<hr />
+<h2 id="data-flow">Datenfluss<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h2>
+<h3 id="loading-spectra">Laden von Spektren<a class="headerlink" href="#loading-spectra" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Benutzeraktion</strong>: Der Benutzer zieht Dateien per Drag-and-Drop in die UI von <code>VWorkspaceSpectra</code>.</li>
+<li><strong>View → ViewModel</strong>: Die View ruft <code>vm.load_files(paths)</code> auf.</li>
+<li><strong>Datei-Parsing</strong>: Für jede Datei delegiert das ViewModel an das Modul <code>m_io</code> (<code>load_spectrum_file</code>, <code>load_wdf_spectrum</code> usw.). Das IO-Modul gibt ein Dictionary mit Roh-Arrays (<code>x0</code>, <code>y0</code>) und Metadaten zurück.</li>
+<li><strong>Datenspeicherung</strong>: Das ViewModel registriert die Daten im <code>SpectraStore</code> über <code>add_map(name, x0, Y0, coords, fnames)</code>. Ein neuer <code>MapData</code>-Block wird erstellt, wobei <code>x</code> und <code>Y</code> auf <code>None</code> gesetzt sind (nur Rohdaten).</li>
+<li><strong>UI-Aktualisierung</strong>: Das ViewModel emittiert das Signal <code>spectra_list_changed</code>. Die View fängt es ab und aktualisiert die Seitenleiste <code>VSpectraList</code>.</li>
+</ol>
+<p>Das Modul <code>m_io</code> erkennt das Format automatisch anhand der Dateierweiterung. Jeder Loader gibt ein einheitliches Dictionary zurück:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;spectra&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;x0&quot;</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="s2">&quot;y0&quot;</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">},</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        <span class="o">...</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="p">]</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
+</code></pre></div>
+<p>WDF-Dateien können mehrere Elemente zurückgeben (Zeitreihen). Alle Elemente werden als separate <code>MapData</code>-Blöcke registriert.</p>
+<h3 id="selecting-spectra">Auswählen von Spektren<a class="headerlink" href="#selecting-spectra" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Benutzeraktion</strong>: Der Benutzer klickt auf ein Spektrum in <code>VSpectraList</code>.</li>
+<li><strong>View → ViewModel</strong>: Das Listen-Widget emittiert ein Auswahlsignal, das <code>vm.set_selected_indices()</code> aufruft.</li>
+<li><strong>Zustandsaktualisierung</strong>: Das ViewModel löst die Indizes in eindeutige <code>fnames</code> auf und speichert die aktive Auswahl.</li>
+<li><strong>Aufbau der Nutzlast</strong>: Das ViewModel ruft <code>_emit_selected_spectra()</code> auf, was <code>SpectraStore</code> abfragt, um eine Nutzlast mit <code>"type": "tensor_list"</code> zu erstellen, die die Arrays aller ausgewählten Spektren enthält.</li>
+<li><strong>UI-Aktualisierung</strong>: Das ViewModel emittiert <code>spectra_selection_changed(data_dict)</code>. <code>VSpectraViewer</code> empfängt das Signal, ruft <code>set_plot_data()</code> auf und zeichnet den Matplotlib-Canvas neu.</li>
+</ol>
+<p>Die Auswahlnutzlast (<code>data_dict</code>) enthält vorab extrahierte Arrays unter <code>"type": "tensor_list"</code> für den Arbeitsbereich Spectra (Liste unabhängiger Arrays, jeweils potenziell mit eigener X-Achse). Der Arbeitsbereich Maps <a href="../maps/#_emit_selected_spectra-override">überschreibt dieses Verhalten</a>, um <code>"type": "tensor"</code> (Matrix mit gemeinsamer X-Achse) zu emittieren.</p>
+<h3 id="fitting-workflow">Fit-Workflow<a class="headerlink" href="#fitting-workflow" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Benutzeraktion</strong>: Der Benutzer klickt auf <strong>Anpassen</strong> in <code>VFitModelBuilder</code>.</li>
+<li><strong>Aufgabenerstellung</strong>: Das ViewModel erstellt eine Liste von Aufgaben (eine pro Karte/Spektrum) mit <code>indices</code> und dem Dictionary <code>fit_model</code>.</li>
+<li><strong>Thread-Start</strong>: Das ViewModel instanziiert <code>VBFthread(store, tasks)</code> und startet ihn. Die UI-Schaltflächen werden über das Signal <code>fit_in_progress(True)</code> deaktiviert.</li>
+<li><strong>Engine-Ausführung (Hintergrund)</strong>: Für jede Aufgabe ruft der Thread <code>VBFengine.fit_spectra(x, Y_sub, fit_model, weights)</code> auf.</li>
+<li><strong>Ergebnisspeicherung (Hintergrund)</strong>: Sobald Fits abgeschlossen sind, schreibt der Thread die Ergebnisse über <code>set_fit_results()</code> direkt in den <code>SpectraStore</code> und aktualisiert die Arrays <code>Y_bestfit</code> und <code>Y_peaks</code> am <code>MapData</code>-Objekt.</li>
+<li><strong>Fortschrittsmeldungen</strong>: Der Thread emittiert Fortschrittssignale, die das ViewModel an den Fortschrittsbalken der View weiterleitet.</li>
+<li><strong>Abschluss</strong>: Der Thread emittiert <code>finished()</code>. Das ViewModel fängt das Signal ab, ruft <code>_on_fit_finished()</code> auf, aktiviert die UI wieder und löst ein Neuzeichnen des Canvas aus.</li>
+</ol>
+<blockquote>
+<p>[!NOTE]
+<code>VBFthread</code> ruft <code>store.set_fit_results()</code> direkt aus dem Worker-Thread auf. Dies ist sicher, da PySide6 Schreibzugriffe auf reine Python-/NumPy-Objekte aus Nicht-GUI-Threads zulässt, solange keine Qt-Widget-Operationen stattfinden. Das Signal <code>finished()</code> löst anschließend die UI-Aktualisierungen im Hauptthread aus.</p>
+</blockquote>
+<h3 id="baseline-workflow">Basislinien-Workflow<a class="headerlink" href="#baseline-workflow" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Der Benutzer wählt den Modus in <code>VFitModelBuilder</code> → <code>set_baseline_settings()</code> speichert die Konfiguration in <code>md.baseline_config</code>.</li>
+<li>Der Benutzer klickt auf das Spektrum → <code>add_baseline_point(x)</code> fügt einen Ankerpunkt zu <code>md.baseline_config["points"]</code> hinzu.</li>
+<li><code>preview_baseline()</code> berechnet und speichert <code>md.Y_baseline</code> zur Darstellung (ohne Subtraktion).</li>
+<li><code>subtract_baseline()</code> führt <code>batch_preprocess()</code> auf der Karte aus — subtrahiert <code>Y_baseline</code> von <code>Y</code> und setzt <code>md.is_baseline_subtracted = True</code>.</li>
+<li><code>delete_baseline()</code> stellt <code>Y</code> wieder her, indem <code>batch_preprocess()</code> mit einer leeren Basislinienkonfiguration (nur Zuschnitt) ausgeführt wird, und setzt <code>is_baseline_subtracted</code> zurück.</li>
+</ol>
+<h3 id="peak-editing-workflow">Peak-Bearbeitungs-Workflow<a class="headerlink" href="#peak-editing-workflow" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Der Benutzer klickt per Strg+Klick im Peak-Modus auf den Viewer → <code>VSpectraViewer.peak_add_requested(x)</code> → <code>add_peak_at(x)</code>.</li>
+<li>Das ViewModel liest den Y-Wert bei x aus <code>md.Y[spec_idx, idx]</code> und initialisiert das <code>peak_model</code>-Dictionary mit automatisch geschätzten Werten für <code>x0</code>, <code>ampli</code>, <code>fwhm</code> und <code>bounds</code>.</li>
+<li>Das Peak-Dictionary wird unter dem nächsten ganzzahligen Schlüssel an <code>md.fit_model["peak_models"]</code> angehängt.</li>
+<li><code>eval_peak_initial()</code> wertet die Modellkurve aus und hängt sie an <code>md.Y_peaks</code> an.</li>
+<li><code>_emit_selected_spectra()</code> löst ein Neuzeichnen des Viewers aus und zeigt die neue Peak-Kurve sofort an.</li>
+</ol>
+<h3 id="fit-results-collection">Sammeln der Fit-Ergebnisse<a class="headerlink" href="#fit-results-collection" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># VMWorkspaceSpectra.collect_fit_results()</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1">#   → SpectraStore.build_fit_results_df()</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1">#   → returns pd.DataFrame with columns:</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1">#      Filename, [x0_Peak1, fwhm_Peak1, ampli_Peak1, area_Peak1, ...], R2</span>
+</code></pre></div>
+<p><code>build_fit_results_df()</code> ist vollständig vektorisiert — die Funktion liest <code>md.peak_params</code> direkt aus (keine Python-Schleife über Spektren), wendet benutzerdefinierte Peak-Beschriftungen an, berechnet Flächenspalten, hängt die spektrumspezifische Spalte <strong><code>R2</code></strong> (Bestimmtheitsmaß, direkt aus <code>md.fit_r2</code> gelesen — derselbe Wert, den der SpectraViewer für das ausgewählte Spektrum anzeigt) an und gibt ein <code>pd.DataFrame</code> zurück. <code>R2</code> ist ein einzelner Skalar pro Spektrum (nicht pro Peak), sodass die Spaltensortierung von <code>collect_fit_results()</code> sie am Ende des DataFrames belässt. Im Arbeitsbereich Spectra werden die Spalten <code>X</code> und <code>Y</code> vor dem Senden an die Ergebnistabelle entfernt.</p>
+<p>Die <strong>Dezimalgenauigkeit</strong> wird über <code>build_fit_results_df(..., decimals=…)</code> festgelegt, was jede numerische Fit-Spalte (Parameter, Flächen, R²) rundet, während die Koordinaten <code>X</code>/<code>Y</code> in voller Genauigkeit verbleiben — es ist die einzige Rundungsinstanz, sodass <code>collect_fit_results()</code> nachträglich nicht mehr rundet. <code>VMWorkspaceSpectra.results_decimals</code> (Standard: 3) liefert diesen Wert; das Drehfeld <em>"Fit results decimals"</em> im Tab <strong>Fit-Ergebnisse</strong> (über der Schaltfläche Collect) setzt ihn über <code>set_results_decimals()</code> (wirksam beim nächsten Sammelvorgang). <code>compute_column_from_expression()</code> rundet seine berechnete Spalte auf dieselbe <code>results_decimals</code>-Stellenzahl. Die Methode <code>build_fit_results_df</code> der öffentlichen API behält ihren eigenen Standardwert von 4 bei.</p>
+<hr />
+<h2 id="persistence">Persistenz<a class="headerlink" href="#persistence" title="Permanent link">&para;</a></h2>
+<h3 id="modern-format-v2-zip-backed">Modernes Format (v2+, ZIP-basiert)<a class="headerlink" href="#modern-format-v2-zip-backed" title="Permanent link">&para;</a></h3>
+<p>Arbeitsbereichsdateien (<code>.spectra</code>) nutzen das in <a href="../spectra_store/#persistence">SpectraStore: Persistenz</a> beschriebene ZIP-basierte Format. <code>metadata.json</code> speichert die Konfiguration pro Spektrum, und <code>arrays.npz</code> speichert die umfangreichen numerischen Arrays.</p>
+<h3 id="legacy-loader">Legacy-Loader<a class="headerlink" href="#legacy-loader" title="Permanent link">&para;</a></h3>
+<p><code>_load_legacy_spectra()</code> verarbeitet <code>.spectra</code>-Dateien aus älteren SPECTROview-Versionen (rohes JSON mit Base64+zlib-komprimierten Arrays). Sie:</p>
+<ol>
+<li>Dekodiert und dekomprimiert die Arrays <code>x0</code>/<code>y0</code>.</li>
+<li>Rekonstruiert <code>baseline_config</code> und wertet <code>md.Y_baseline</code> aus.</li>
+<li>Wertet Peak-Kurven erneut aus, um <code>md.Y_peaks</code> und <code>md.Y_bestfit</code> zu füllen.</li>
+</ol>
+<p>Eine Migration ist nicht erforderlich — das Legacy-Format wird zur Laufzeit transparent geladen.</p>
+<hr />
+<h2 id="extension-guide">Erweiterungsleitfaden<a class="headerlink" href="#extension-guide" title="Permanent link">&para;</a></h2>
+<h3 id="adding-a-new-preprocessing-tool">Neues Vorverarbeitungswerkzeug hinzufügen<a class="headerlink" href="#adding-a-new-preprocessing-tool" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>ViewModel</strong>: Fügen Sie eine Methode hinzu (z. B. <code>apply_smoothing(window, apply_all)</code>), die <code>_get_target_mds(apply_all)</code> aufruft, <code>md.Y</code> modifiziert und anschließend <code>_post_bulk_action()</code> aufruft.</li>
+<li><strong>Model</strong> (falls erforderlich): Fügen Sie eine Funktion für den Algorithmus in <code>fit_engine/baseline.py</code> oder in einer neuen Datei hinzu.</li>
+<li><strong>View</strong>: Fügen Sie eine Schaltfläche bzw. ein Steuerelement zu <code>VFitModelBuilder</code> hinzu. Emittieren Sie ein neues Signal und verbinden Sie es in <code>VWorkspaceSpectra.setup_connections()</code>.</li>
+<li><strong>Persistenz</strong>: Erzeugt das Werkzeug einen Zustand, der Speichern/Laden überdauern muss, ergänzen Sie ihn in <code>SpectraStore.to_metadata_dict()</code> und stellen Sie ihn in <code>load_map_from_npz()</code> wieder her.</li>
+</ol>
+<h3 id="adding-a-new-peak-model">Neues Peak-Modell hinzufügen<a class="headerlink" href="#adding-a-new-peak-model" title="Permanent link">&para;</a></h3>
+<p>Siehe den zugehörigen <a href="../vbf_engine/">Leitfaden zur VBF-Engine</a>. Kurz zusammengefasst:</p>
+<ol>
+<li>Fügen Sie die Modellfunktion und die analytische Jacobi-Matrix in <code>fit_engine/models.py</code> hinzu.</li>
+<li>Registrieren Sie den Modellnamen in <code>spectroview/__init__.py</code> → <code>PEAK_MODELS</code>.</li>
+<li>Fügen Sie die Initialisierungslogik in <code>VMWorkspaceSpectra._initialize_peak_params()</code> hinzu.</li>
+<li><code>VPeakTable</code> und <code>VFitModelBuilder</code> übernehmen das neue Modell automatisch in ihre Dropdown-Listen.</li>
+</ol>
+<h3 id="adding-a-new-viewer-rendering-feature">Neue Rendering-Funktion im Viewer hinzufügen<a class="headerlink" href="#adding-a-new-viewer-rendering-feature" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Fügen Sie die Rendering-Logik zu <code>VSpectraViewer.set_plot_data()</code> oder einer dedizierten privaten Methode hinzu.</li>
+<li>Ergänzen Sie die benötigten Daten im von <code>VMWorkspaceSpectra._emit_selected_spectra()</code> emittierten Nutzlast-Dictionary.</li>
+<li>Erfordert die Funktion einen UI-Umschalter, fügen Sie eine <code>QCheckBox</code> oder eine Menüaktion in <code>VSpectraViewer</code> hinzu und verbinden Sie diese mit einem Neuzeichnen-Aufruf.</li>
+</ol>
+<hr />
+<h2 id="troubleshooting">Fehlerbehebung<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<p><strong>Spektrum erscheint nach dem Laden nicht</strong></p>
+<ul>
+<li>Prüfen Sie <code>md.is_active[0]</code> — das Laden setzt diesen Wert standardmäßig auf <code>True</code>, ein fehlgeschlagener Ladevorgang kann den Eintrag jedoch in einem inkonsistenten Zustand zurücklassen.</li>
+<li>Stellen Sie sicher, dass <code>_emit_list_update()</code> nach <code>store.add_map()</code> aufgerufen wird.</li>
+</ul>
+<p><strong>Peak-Tabelle bleibt nach dem Fit leer</strong></p>
+<ul>
+<li><code>_emit_selected_spectra()</code> muss nach <code>_on_fit_finished()</code> aufgerufen werden. Prüfen Sie, ob <code>store.set_fit_results()</code> das Feld <code>md.param_names</code> befüllt hat.</li>
+</ul>
+<p><strong>R² zeigt trotz erfolgreichem Fit 0.0</strong></p>
+<ul>
+<li>Die Fit-Engine setzt <code>rsquared = 0</code>, wenn <code>fit_success</code> gleich <code>False</code> ist. Prüfen Sie <code>md.fit_success[idx]</code> für das betreffende Spektrum.</li>
+</ul>
+<p><strong><code>_emit_selected_spectra()</code> verursacht eine Qt-Signalschleife</strong></p>
+<ul>
+<li>Rufen Sie <code>_emit_selected_spectra()</code> niemals innerhalb eines Slots auf, der mit <code>spectra_selection_changed</code> verbunden ist. Nutzen Sie bei Bedarf <code>QTimer.singleShot(0, ...)</code>, um den Aufruf aufzuschieben.</li>
+</ul>
+<p>Informationen zur Fehlerbehebung im Datenmodell (Vorverarbeitung nicht angewendet, Speicherprobleme) finden Sie unter <a href="../spectra_store/#troubleshooting">SpectraStore: Fehlerbehebung</a>.</p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Zurück zum Seitenanfang
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Fußzeile" >
+        
+          
+          <a href="../spectra_store/" class="md-footer__link md-footer__link--prev" aria-label="Zurück: Datenarchitektur SpectraStore">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Zurück
+              </span>
+              <div class="md-ellipsis">
+                Datenarchitektur SpectraStore
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../maps/" class="md-footer__link md-footer__link--next" aria-label="Weiter: Arbeitsbereich Karten">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Weiter
+              </span>
+              <div class="md-ellipsis">
+                Arbeitsbereich Karten
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

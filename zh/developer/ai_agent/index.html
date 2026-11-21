@@ -1,0 +1,3275 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="用于光谱数据处理、拟合与可视化的交互式工具">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/zh/developer/ai_agent/">
+      
+      
+        <link rel="prev" href="../mva/">
+      
+      
+        <link rel="next" href="../mcp_server/">
+      
+      
+        
+          <link rel="alternate" href="../../../developer/ai_agent/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/developer/ai_agent/" hreflang="fr">
+        
+          <link rel="alternate" href="../../../de/developer/ai_agent/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/developer/ai_agent/" hreflang="ru">
+        
+          <link rel="alternate" href="./" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>AI 智能体 - SPECTROview 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ai-data-chat" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../" title="SPECTROview 文档" class="md-header__button md-logo" aria-label="SPECTROview 文档" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SPECTROview 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              AI 智能体
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="选择当前语言"
+      title="选择当前语言"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">ZH</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../developer/ai_agent/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/developer/ai_agent/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/developer/ai_agent/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/developer/ai_agent/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="zh"
+              class="md-select__link" aria-current="true"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  安装
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  用户手册
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI 智能体
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  开发者指南
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  更新日志
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="SPECTROview 文档" class="md-nav__button md-logo" aria-label="SPECTROview 文档" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    SPECTROview 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    安装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    用户手册
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    用户手册
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    支持的数据格式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    界面概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    菜单栏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱与二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多元分析 (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷计算器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    设置
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    保存与加载
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷键与技巧
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    开发者指南
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    开发者指南
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    文件加载流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据架构 SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    向量化批量拟合引擎 (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多元分析 (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites-for-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        用户前置准备
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="用户前置准备">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-1-macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        方案 1：macOS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-2-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        方案 2：Windows
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-steps-both-platforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        通用步骤（双平台适用）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        架构概览
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="架构概览">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-appcontext-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AppContext 边界
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#complete-graph-customization-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        完整的图表自定义契约
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mcphub-one-loop-many-servers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCPHub —— 单循环管理多服务器
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pushed-vs-pulled-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        推送上下文 vs 按需拉取上下文
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模块结构
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="模块结构">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        文件职责
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#small-model-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小模型支持
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="小模型支持">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        检测机制
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#persisted-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        持久化设置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-changes-in-simplified-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        简化模式下的变更内容
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema-level-accommodations-help-every-model-not-just-small-ones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema 级适配（惠及所有模型，而非仅限小模型）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#case-study-qwen38b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        案例研究：qwen3:8b
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心类
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="核心类">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#llmworker-apiworker-anthropicworker-background-threads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LLMWorker / APIWorker / AnthropicWorker —— 后台线程
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llmclient-connection-facade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LLMClient —— 连接门面
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#promptmanager-prompt-assembly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PromptManager —— 提示词组装
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vmchat-viewmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMChat —— ViewModel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VMChat —— ViewModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#public-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        公共 API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-agentic-tool-calling-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        智能体工具调用循环
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        请求选项
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conversation-history-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        对话历史与持久化
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chatresult-parsed-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ChatResult —— 解析后的响应
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vchatpanel-embedded-chat-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VChatPanel —— 嵌入式对话面板
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-prompt-llm-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        系统提示词与 LLM 契约
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="系统提示词与 LLM 契约">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#safety-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        安全性与校验
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow-end-to-end" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        端到端数据流
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-graphs-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        与图表工作区的集成
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="与图表工作区的集成">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lazy-initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延迟初始化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dataframe-synchronization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DataFrame 同步
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plot-config-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        绘图配置归一化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph-update-delete-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        图表更新与删除流程
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#toolbar-entry-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        工具栏入口
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-dependency-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        可选依赖管理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="可选依赖管理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#import-guard-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        导入保护模式
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#response-parsing-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        响应解析与错误处理
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-features-graph-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        当前功能（图表工作区）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connecting-another-mcp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        接入其他 MCP 服务器
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    本地 MCP 服务器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱工作区（加载、预处理、拟合）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区（高光谱、热图）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据可视化（图表）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷计算器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    扩展 SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    更新日志
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="导航栏" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    首页
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    开发者指南
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="ai-data-chat"><strong>AI 数据对话</strong><a class="headerlink" href="#ai-data-chat" title="Permanent link">&para;</a></h1>
+<p><code>AI Data Chat</code> 是一个可选的多服务商 AI 对话助手，支持用户通过自然语言查询、筛选、绘制并修改数据。它支持通过 <strong>Ollama</strong> 进行本地推理、通过 <strong>OpenAI</strong> SDK 接入云端服务商（OpenAI、DeepSeek、Gemini 及任何兼容 OpenAI 的服务端点），以及 <strong>Anthropic</strong> Claude 模型。该智能体可与 <code>Graphs</code> 工作区通信，实现图表的实时创建、更新与删除。</p>
+<blockquote>
+<p>AI 模块在<strong>使用上是可选的</strong>——如果 Ollama 未运行且未配置任何云端 API 密钥，对话面板会显示红色的 "not connected" 状态提示，而 SPECTROview 的其余功能完全不受影响。不过，它所依赖的 Python 包（<code>ollama</code>、<code>openai</code>、<code>anthropic</code>、<code>mcp</code>）属于本项目的无条件安装依赖（参见<a href="#optional-dependency-management">可选依赖管理</a>）。</p>
+</blockquote>
+<p>这里还有另一个独立维度上的“可选性”同样重要：<strong>本地小模型所获得的提示词和请求配置，与大型模型/云端模型相比有所不同且更为精简</strong>——这是自 MCP 迁移以来最大的一项架构新增特性，下文专门设有一节进行说明（<a href="#small-model-support">小模型支持</a>）。</p>
+<hr />
+<h2 id="prerequisites-for-users"><strong>用户前置准备</strong><a class="headerlink" href="#prerequisites-for-users" title="Permanent link">&para;</a></h2>
+<h3 id="option-1-macos"><strong>方案 1：macOS</strong><a class="headerlink" href="#option-1-macos" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>安装 Ollama</strong>
+   使用 Homebrew（推荐）：</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>brew<span class="w"> </span>install<span class="w"> </span>ollama
+</code></pre></div>
+<p><em>(或者，也可以直接从 <a href="https://ollama.com/download/mac">Ollama 官方网站</a>下载 macOS 应用程序。)</em></p>
+<ol>
+<li><strong>启动 Ollama 服务</strong>
+   如果通过 Homebrew 安装，可将 Ollama 作为后台服务启动：</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>brew<span class="w"> </span>services<span class="w"> </span>start<span class="w"> </span>ollama
+</code></pre></div>
+<p><em>(如果您安装的是 Mac 桌面应用，只需从“应用程序”文件夹中打开 Ollama 即可，随后可在菜单栏中看到其图标。)</em></p>
+<h3 id="option-2-windows"><strong>方案 2：Windows</strong><a class="headerlink" href="#option-2-windows" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>安装 Ollama</strong>
+   从 <a href="https://ollama.com/download/windows">Ollama 官方网站</a>下载 Windows 安装程序并运行。</p>
+</li>
+<li>
+<p><strong>启动 Ollama 服务</strong>
+   安装完成后 Ollama 通常会自动启动。如果没有自动启动，请在“开始”菜单中搜索“Ollama”并打开它，随后在系统托盘（右下角）中即可看到 Ollama 图标。</p>
+</li>
+</ol>
+<hr />
+<h3 id="common-steps-both-platforms"><strong>通用步骤（双平台适用）</strong><a class="headerlink" href="#common-steps-both-platforms" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>下载 AI 模型</strong>
+   SPECTROview 默认使用 <code>qwen2.5-coder:7b</code>。打开终端（Windows 上为命令提示符或 PowerShell）并拉取该模型：</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ollama<span class="w"> </span>pull<span class="w"> </span>qwen2.5-coder:7b
+</code></pre></div>
+<p>任何支持工具/函数调用的 Ollama 模型均可使用——关于 SPECTROview 如何根据所选模型自适应调整行为，请参阅<a href="#small-model-support">小模型支持</a>。</p>
+<ol>
+<li><strong>安装 SPECTROview</strong>
+   <code>ollama</code>、<code>openai</code>、<code>anthropic</code> 和 <code>mcp</code> 均为软件包的必选核心依赖（并非单独的 extras 分组），因此常规安装已包含 AI 功能所需的全部依赖：</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</code></pre></div>
+<ol>
+<li><strong>运行 SPECTROview</strong>
+   启动应用程序：</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>-m<span class="w"> </span>spectroview.main
+</code></pre></div>
+<p>点击顶部工具栏中的 <strong>AI Data Chat</strong> 按钮。对话面板随即打开，状态栏应显示 <strong>🟢 Ollama connected</strong>。</p>
+<hr />
+<h2 id="architecture-overview"><strong>架构概览</strong><a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
+<p>AI 功能与应用程序其余部分一样遵循严格的 <strong>MVVM</strong> 模式。所有 AI 相关代码均位于 <code>spectroview/ai_agent/</code> 包中，与核心工作区保持隔离。</p>
+<pre class="mermaid"><code>graph TD
+    TB["VMenuBar (工具栏按钮)"] --&gt;|"ai_chat_requested"| Main["main.py"]
+    Main --&gt;|"惰性创建"| VCP["VChatPanel (View)"]
+    VCP --&gt;|"方法调用"| VMC["VMChat (ViewModel)"]
+    VMC --&gt;|"检测是否为小模型？"| DET["ollama show + 名称模式"]
+    DET --&gt;|"层级判定"| VMC
+    VMC --&gt;|"构建提示词（依层级而定）"| PM["PromptManager"]
+    PM --&gt;|"加载 .md"| FS["文件系统 (prompts/, rules/, ...)"]
+    VMC --&gt;|"chat(..., request_options)"| LLC["LLMClient (Model)"]
+    LLC --&gt;|"启动（含 MCP 工具与选项）"| LLW["LLMWorker (QThread)"]
+    LLW --&gt;|"HTTP 流式传输"| OLL["Ollama/OpenAI/Anthropic（本地/云端）"]
+    OLL --&gt;|"工具调用 / 文本分片"| LLW
+    LLW --&gt;|"信号"| LLC
+    LLC --&gt;|"信号"| VMC
+    VMC --&gt;|"call_tool / read_resource"| HUB["MCPHub (mcp/hub.py)"]
+    HUB --&gt;|"持久会话"| SRV["SPECTROview 服务器 + 任意外部 MCP 服务器"]
+    SRV --&gt;|"读取数据 / 提交命令"| CTX["AppContext (agent/ports.py)"]
+    CTX --&gt;|"排队中的 AgentCommands"| VMC
+    VMC --&gt;|"result_ready (ChatResult)"| VCP
+    VCP --&gt;|"plot_requested"| Main
+    Main --&gt;|"创建 / 更新 / 删除"| VWG["VWorkspaceGraphs"]
+    VWG --&gt; GCL["graph_control.py：经校验的 GraphPatch"]
+    GCL --&gt; MG["MGraph"]
+    MG --&gt; RENDER["VGraph / PlotRenderer / 画布刷新"]</code></pre>
+<h3 id="the-appcontext-boundary"><strong>AppContext 边界</strong><a class="headerlink" href="#the-appcontext-boundary" title="Permanent link">&para;</a></h3>
+<p>MCP 服务器<strong>不会</strong>导入 <code>VMChat</code>。它接收一个 <code>AppContext</code>（<code>agent/ports.py</code>）——这是一个包含五个方法的协议：列出 DataFrame、获取单个 DataFrame、获取当前活动名称、列出图表以及提交命令。<code>VMChat</code> 提供了 <code>VMChatContext</code> 适配器；测试则提供 <code>RecordingContext</code>。</p>
+<p>正是这种设计使工具层可以独立测试（无需 Qt、无需 LLM、无需完整应用），同时也让同一个服务器能够以独立进程方式运行。工具从不直接修改 ViewModel；它们提交带类型的命令（<code>agent/commands.py</code>：<code>CreatePlot</code>、<code>UpdatePlot</code>、<code>DeletePlots</code>）。绘图与更新输入在入队前会通过共享契约 <code>spectroview.model.graphs.graph_control</code> 进行校验，而图表工作区在真正执行状态变更的边界处还会再次应用同一契约。</p>
+<p>SPECTROview 还提供了一套完整的外部桌面端 MCP 配置文件。它复用了同一个 FastMCP 模块，但作用于 <code>SpectroviewApplicationAPI</code>——一个由排队式 Qt 主线程调度器保护的实时会话门面。内置对话助手则保留本文档介绍的五工具精简配置文件，以确保小模型的可靠性。有关端点地址、完整工具目录及扩展流程，请参阅<a href="../mcp_server/">本地 MCP 服务器</a>。</p>
+<h3 id="complete-graph-customization-contract"><strong>完整的图表自定义契约</strong><a class="headerlink" href="#complete-graph-customization-contract" title="Permanent link">&para;</a></h3>
+<p>为了保证小模型的调用可靠性，MCP 工具保留了少数几个常用的顶层参数，同时通过 <code>other_properties: GraphPatch</code> 开放了完备的配置集合。<code>GraphPatch</code> 由 <code>MGraph</code> 数据类的每一个可变字段自动生成，并设置了 <code>extra="forbid"</code>；其中嵌套的筛选器、系列样式、坐标轴边框线、断轴以及标注记录也均具有强类型约束。这避免了手动维护的白名单随 GUI 演进产生漂移，并使单次连贯调用即可同步更新对数刻度、字体、图例位置、线宽、标注、副坐标轴、局部放大插图及其他任何图表状态。</p>
+<p>省略字段即表示保持原值。显式传入 <code>null</code> 仅适用于可空字段。服务器会在将单个原子命令入队之前，先针对目标 DataFrame 校验筛选条件，并在使用 <code>graph_id="all"</code> 时针对所有已打开图表逐一校验。工具返回结果刻意表述为 <code>"validated and queued"</code>（已校验并入队），因为只有 GUI 线程才能如实确认最终渲染是否成功。</p>
+<h3 id="mcphub-one-loop-many-servers"><strong>MCPHub —— 单循环管理多服务器</strong><a class="headerlink" href="#mcphub-one-loop-many-servers" title="Permanent link">&para;</a></h3>
+<p><code>MCPHub</code>（<code>mcp/hub.py</code>）在后台线程中持有唯一的 <code>asyncio</code> 事件循环，并为 <code>config/servers.yaml</code> 中列出的每一个服务器（支持 <code>in-process</code>、<code>stdio</code> 或 <code>http</code>）维持一个已初始化的持久会话。Qt 线程中的调用方只需使用普通的同步方法；hub 会将每次调用调度到其事件循环中执行。</p>
+<p>此前，ViewModel 直接在 GUI 线程上调用 <code>asyncio.run()</code>，并在每次工具调用批次时重新构建服务器会话——这不仅会阻塞界面，而且仅在单服务器且为进程内（in-process）运行时才勉强可行。</p>
+<p>只要工具名称在各服务器之间不冲突，就保持无前缀的原名（从而保证 <code>plot_graph</code> 在所有文档示例中都能直接使用）；若两个服务器提供了同名工具，则两者的名称都会变为 <code>&lt;server_id&gt;__&lt;tool&gt;</code>。每个服务器的 <code>tools:</code> 白名单可将暴露的工具集合控制在较小规模——因为工具 Schema 在每一轮对话中都会消耗提示词 Token，而本地小模型在工具数量超过大约十几个后性能便会迅速下降。</p>
+<h3 id="pushed-vs-pulled-context"><strong>推送上下文 vs 按需拉取上下文</strong><a class="headerlink" href="#pushed-vs-pulled-context" title="Permanent link">&para;</a></h3>
+<p>系统提示词始终包含所有 DataFrame 的名称、形状、每一列的名称及其 dtype，以及每个已打开图表的紧凑摘要。样本数值、行预览以及完整实际的 <code>MGraph.save()</code> 配置体积较大且很少具有决定性作用，因此它们被放在 MCP <strong>资源（resources）</strong>背后（<code>spectroview://dataframes/detail</code>、<code>spectroview://graphs/detail</code>）。</p>
+<p>由于目前没有任何 LLM API 原生支持 MCP 资源概念，hub 将读取资源暴露为一个合成工具 <code>get_context(uri)</code>，其 <code>uri</code> 枚举精确列出当前可用的所有资源——这也同时将受语法约束引导的本地模型限定在真实有效的 URI 范围内。任何服务器新增的资源都会自动出现在这里，无需修改客户端代码。</p>
+<hr />
+<h2 id="module-structure"><strong>模块结构</strong><a class="headerlink" href="#module-structure" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>spectroview/ai_agent/
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>├── __init__.py              # Docstring only — keeps the module optional
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>├── config/                  # YAML configuration (model.yaml, settings.yaml, servers.yaml)
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>├── examples/                # Few-shot conversation examples (Markdown)
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>│   ├── plotting_examples.md #   Full-tier: 13 examples, tool-call style
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>│   └── examples_small.md    #   Simplified-tier: ~8 tight examples covering all 5 tools
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>├── knowledge/                # Static domain facts (Markdown; full tier only)
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>├── prompts/                  # Core identity + per-topic instructions (Markdown)
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>│   ├── system.md, chat.md, plotting.md   # Full tier (default; also used by cloud providers)
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>│   └── system_small.md      #   Simplified tier — single consolidated file for detected small models
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>├── rules/                   # Behavioural constraints (Markdown)
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>├── agent/                   # Qt-free core
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>│   ├── commands.py          #   CreatePlot / UpdatePlot / DeletePlots dataclasses
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>│   └── ports.py             #   AppContext protocol + RecordingContext (the test fake)
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>├── utils/
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>│   ├── plot_utils.py        # normalize_plot_config / expand_comma_styles — type coercion for plot configs
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>│   ├── safe_eval.py         # evaluate_pandas_expression() — df.query() first, sandboxed eval() fallback
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>│   └── df_summary.py        # compact_dataframe_schema() for the prompt; summarize_dataframe_columns() for the resource
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>├── m_llm_client.py          # Model layer: LLM connections + QThread workers
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>│                            #   - LLMWorker (Ollama)
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>│                            #   - APIWorker (OpenAI-compatible)
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>│                            #   - AnthropicWorker (Anthropic SDK)
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>│                            #   - anthropic_tools()/anthropic_messages() — protocol translation
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>│                            #   - LLMClient (unified facade)
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>│                            #   - get_ollama_model_info() — `ollama show` wrapper for size detection
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>├── m_conversation.py        # Data model: single conversation (messages, save/load JSON)
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>├── m_conversation_store.py  # Conversation store: scan/list/load saved conversations
+<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>├── mcp/
+<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>│   ├── server.py            # SPECTROview&#39;s FastMCP server: 5 tools + 2 resources
+<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>│   ├── hub.py               # MCP client: one loop thread, one session per server
+<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>│   └── config.py            # servers.yaml -&gt; validated ServerSpec list
+<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>├── m_prompt_manager.py      # Prompt caching and assembly: loads and merges the Markdown fragments
+<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>├── vm_chat.py               # ViewModel: prompt-tier selection, small-model detection, request tuning, agentic loop
+<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>├── v_chat_panel.py          # View: embedded chat panel (QWidget) beside workspace tabs
+<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>└── v_history_dialog.py      # View: history browser dialog (QDialog) with timestamps, pinning, search, and batch delete
+</code></pre></div>
+<h3 id="file-roles"><strong>文件职责</strong><a class="headerlink" href="#file-roles" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>层级</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>m_prompt_manager.py</code></td>
+<td><strong>Model</strong></td>
+<td>根据传入的 <code>prompts=</code>/<code>rules=</code>/<code>knowledge=</code>/<code>examples=</code> 列表加载、缓存 Markdown 文件并组装为系统提示词。同时负责解析 <code>config/model.yaml</code>/<code>config/settings.yaml</code>（<code>.model_config</code>）。</td>
+</tr>
+<tr>
+<td><code>m_llm_client.py</code></td>
+<td><strong>Model</strong></td>
+<td>封装 Ollama、OpenAI SDK 与 Anthropic SDK。检查服务可用性、列出模型、查询模型参数量（<code>get_ollama_model_info</code>）、将 OpenAI 工具调用格式转换为 Anthropic 格式，并根据所选服务商启动三种后台 <code>QThread</code> 工作线程之一。</td>
+</tr>
+<tr>
+<td><code>m_conversation.py</code></td>
+<td><strong>Model</strong></td>
+<td>表示单个对话：添加消息（含 <code>tool_calls</code>/<code>tool_call_id</code>）、自动生成标题、JSON 保存/加载，并在截断保留最近 N 条消息时<strong>绝不拆分工具调用与其返回结果</strong>。空对话会跳过保存。</td>
+</tr>
+<tr>
+<td><code>m_conversation_store.py</code></td>
+<td><strong>Model</strong></td>
+<td>扫描历史目录，将已保存对话以轻量摘要形式列出，并按 ID 加载完整对话。</td>
+</tr>
+<tr>
+<td><code>agent/ports.py</code></td>
+<td><strong>Model</strong></td>
+<td><code>AppContext</code> —— MCP 工具了解应用程序的唯一接口。<code>RecordingContext</code> 是所有工具测试使用的内存实现。</td>
+</tr>
+<tr>
+<td><code>agent/commands.py</code></td>
+<td><strong>Model</strong></td>
+<td><code>CreatePlot</code>/<code>UpdatePlot</code>/<code>DeletePlots</code> —— 工具向应用程序发起的带类型命令，取代过去以 <code>_graph_update</code>/<code>_graph_delete</code> 为键的原始字典。</td>
+</tr>
+<tr>
+<td><code>mcp/server.py</code></td>
+<td><strong>Model</strong></td>
+<td>FastMCP 服务器，对外暴露 SPECTROview 的 5 个工具和 2 个资源，并在请求时执行筛选条件与图表样式校验。仅依赖于 <code>AppContext</code>。</td>
+</tr>
+<tr>
+<td><code>mcp/hub.py</code></td>
+<td><strong>Model</strong></td>
+<td>MCP 客户端：后台事件循环、每个已配置服务器一个持久会话、工具名称限定前缀处理、白名单过滤以及合成的 <code>get_context</code> 资源访问工具。</td>
+</tr>
+<tr>
+<td><code>mcp/config.py</code></td>
+<td><strong>Model</strong></td>
+<td>解析并校验 <code>config/servers.yaml</code>；遇到格式错误、已禁用或 ID 重复的条目时跳过（并记录警告）。</td>
+</tr>
+<tr>
+<td><code>utils/safe_eval.py</code></td>
+<td><strong>Model</strong></td>
+<td>共享的沙箱化 pandas 表达式求值器，同时供 <code>query_dataframe</code> 以及 <code>plot_graph</code>/<code>update_graph</code> 中的筛选条件校验步骤使用。</td>
+</tr>
+<tr>
+<td><code>utils/df_summary.py</code></td>
+<td><strong>Model</strong></td>
+<td><code>compact_dataframe_schema()</code> 构建始终推送的名称+数据类型块；<code>summarize_dataframe_columns()</code> 生成由 <code>dataframes/detail</code> 资源提供的详细列清单，在列数超过 <code>column_detail_threshold</code> 时按前缀折叠分组，同时绝不隐藏任何列名。</td>
+</tr>
+<tr>
+<td><code>utils/plot_utils.py</code></td>
+<td><strong>Model</strong></td>
+<td><code>normalize_plot_config()</code>/<code>expand_comma_styles()</code> —— 在累计的绘图配置送入<strong>图表</strong> (Graphs) 工作区之前执行后处理（类型强制转换、逗号分隔多样式展开）。</td>
+</tr>
+<tr>
+<td><code>vm_chat.py</code></td>
+<td><strong>ViewModel</strong></td>
+<td>检测小模型与完整模型层级、构建对应层级的系统提示词、组装 Ollama/超时/最大 Token 请求选项、管理对话历史，并运行工具调用智能体循环（最多 5 轮）。</td>
+</tr>
+<tr>
+<td><code>v_chat_panel.py</code></td>
+<td><strong>View</strong></td>
+<td>嵌入式 <code>QWidget</code> 面板，包含对话气泡、服务商/模型选择器、时间戳显示、紧凑的 42px 标题栏以及多行输入卡片。当 AI 创建/更新/删除图表时发射 <code>plot_requested(dict)</code>。模型选择器是一个<strong>可编辑</strong>的 <code>QComboBox</code>（可直接输入模型名称）；对于<strong>自定义</strong> (Custom) 服务商，其列表通过 <code>_custom_model_names()</code> 从逗号分隔的 <code>custom_models</code> 设置（<strong>设置</strong> (Settings) ▸ AI）填充，从而使不提供模型列表 API 的端点也能够正常使用。</td>
+</tr>
+<tr>
+<td><code>v_history_dialog.py</code></td>
+<td><strong>View</strong></td>
+<td>可浏览的已保存对话列表，按最近时间倒序排列。支持打开、重命名、复制副本及删除。</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="small-model-support"><strong>小模型支持</strong><a class="headerlink" href="#small-model-support" title="Permanent link">&para;</a></h2>
+<p>参数量较小的本地模型（大致在 100 亿参数以下）所获得的提示词、上下文预算和请求配置，与大型模型/云端模型有着本质区别——而不仅仅是把原版简短化。这是因为信息过于密集的大型提示词加上未加限制的上下文窗口，本身就足以让原本具备能力的模型在工具调用上彻底失败（参见本节末尾的案例研究）。</p>
+<h3 id="detection">检测机制<a class="headerlink" href="#detection" title="Permanent link">&para;</a></h3>
+<p><code>VMChat._auto_detect_small_model()</code> 按以下顺序确定层级：</p>
+<ol>
+<li><strong>手动覆盖</strong> —— <code>VMChat.set_small_model_mode(True | False | None)</code>。<code>None</code>（默认值）表示“继续自动检测”，并通过 <code>MSettings</code> 持久化。</li>
+<li><strong>参数量检查</strong>（仅限 Ollama）—— <code>get_ollama_model_info(model)</code> 调用 <code>ollama show &lt;model&gt;</code>，通过 <code>_parse_param_size_to_billions()</code> 解析 <code>details.parameter_size</code>（例如 <code>"8.2B"</code>），并将其与 <code>config/model.yaml</code> 中的 <code>small_model_param_threshold_b</code>（默认 <strong>10.0</strong>）进行比较。结果会按模型名称缓存，并在当前 <code>VMChat</code> 实例生命周期内有效。</li>
+<li><strong>名称模式回退</strong> —— 如果无法确定参数量（例如云端模型或 <code>ollama show</code> 失败），则将模型名称与 <code>VMChat._SMALL_MODEL_PATTERNS</code> 匹配，其中包含已知小模型标签列表（<code>qwen3:8b</code>、<code>gemma3:4b</code>、<code>phi3:mini</code>、<code>deepseek-r1:8b</code> 等）。</li>
+<li><strong>默认：完整层级（Full tier）。</strong> 如果以上均未匹配，则按大模型处理。让未识别的模型获取完整提示词，比错误地限制一个未识别的<em>大型</em>模型更安全。</li>
+</ol>
+<p>第 2–3 步的检测严格限定于 <code>provider == "Ollama"</code> —— 除非手动覆盖，否则云端服务商始终解析为完整层级。检测会在 <code>set_model()</code>/<code>set_provider()</code> 时重新运行，绝不会在 <code>__init__</code> 中执行（避免对象构造时发生 <code>ollama show</code> 网络调用竞态）。</p>
+<h3 id="persisted-settings"><strong>持久化设置</strong><a class="headerlink" href="#persisted-settings" title="Permanent link">&para;</a></h3>
+<p>智能体存储的所有状态——服务商、各服务商下所选模型、提示词层级以及对话历史目录——均保存在单一应用程序配置存储的 <code>ai_chat/</code> 前缀下，通过 <code>MSettings.get_ai_value()</code> / <code>set_ai_value()</code> 访问。AI 模块自身不会单独导入任何 <code>QSettings</code>。</p>
+<p>过去曾使用过独立的 <code>QSettings("SPECTROview", "AIChat")</code> 存储对。这不仅使智能体配置对应用其余部分不可见，更糟糕的是会绕过测试夹具 <code>_isolate_qsettings</code> —— 导致任何构造 <code>VMChat</code> 的测试都会读取开发者本机的真实配置，并将测试对话历史写入真实历史目录。<code>MSettings._migrate_legacy_ai_settings()</code> 会在标记键的保护下一次性迁移旧值（绝不覆盖较新值），并保留旧存储以兼容旧版本运行。</p>
+<blockquote>
+<p><strong>密钥管理（<code>spectroview/settings/secrets.py</code>）</strong>：API 密钥（<code>OpenAI</code>、<code>Anthropic</code>、<code>Mistral</code>、<code>Gemini</code>、<code>DeepSeek</code>、<code>Custom</code>）通过 <code>SecretStore</code> 存储在按操作系统用户隔离的配置存储中（位于 <code>QSettings("CEA-Leti", "SPECTROview")</code> 经过混淆的 <code>_credentials/</code> 命名空间下），并严格排除在导出的 <code>config.json</code> 文件之外，以防凭据泄露或误提交。<code>config/servers.yaml</code> <strong>会</strong>提交到版本库：切勿在其中写入明文令牌，请改用 <code>${VAR}</code>（由 <code>mcp/config.py</code> 展开）。</p>
+</blockquote>
+<h3 id="what-changes-in-simplified-mode">简化模式下的变更内容<a class="headerlink" href="#what-changes-in-simplified-mode" title="Permanent link">&para;</a></h3>
+<p>以下各项均在 <code>vm_chat.py</code> 中计算并从 <code>config/model.yaml</code> 读取：</p>
+<table>
+<thead>
+<tr>
+<th>方面</th>
+<th>完整层级</th>
+<th>简化层级</th>
+<th>配置键</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>系统提示词</td>
+<td><code>system.md</code>+<code>chat.md</code>+<code>plotting.md</code> + <code>rules/general,plotting,spectroview</code> + <code>knowledge/features</code> + <code>examples/plotting_examples</code>（约 27K 字符）</td>
+<td><code>system_small.md</code> + <code>rules/general</code> + <code>examples/examples_small</code>（约 9K 字符）</td>
+<td>不适用（在 <code>_build_system_prompt()</code> 中硬编码的列表）</td>
+</tr>
+<tr>
+<td>对话历史</td>
+<td>无限制</td>
+<td>最近 6 条消息</td>
+<td><code>max_context_messages</code> / <code>max_context_messages_small</code></td>
+</tr>
+<tr>
+<td>Ollama <code>num_ctx</code></td>
+<td>16384</td>
+<td>8192</td>
+<td><code>ollama_num_ctx_full</code> / <code>ollama_num_ctx_small</code></td>
+</tr>
+<tr>
+<td>最大输出 Token 数</td>
+<td>81920</td>
+<td>4096</td>
+<td><code>max_tokens</code> / <code>max_tokens_small</code></td>
+</tr>
+<tr>
+<td>Ollama <code>think</code></td>
+<td>未设置（遵循模型/Ollama 默认值）</td>
+<td><code>false</code></td>
+<td><code>ollama_think</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>rules/general.md</code> 由两个层级共享（体积小且具有普适正确性）；<code>rules/plotting.md</code>、<code>rules/spectroview.md</code> 和 <code>knowledge/features.md</code> 仅用于完整层级——它们的核心要点（如筛选表达式加引号、空间图坐标轴映射）已直接整合进 <code>system_small.md</code>。</p>
+<p><code>num_ctx</code> 和 <code>think</code> 仅属于 Ollama 的 <code>options</code> 参数：<code>LLMClient.chat()</code> 的 <code>request_options</code> 字典会按服务商转换，这两个键绝不会转发给 <code>APIWorker</code>/<code>AnthropicWorker</code> —— 无论当前处于哪个层级，从结构上都不可能影响 DeepSeek/OpenAI/Anthropic/Gemini。</p>
+<h3 id="schema-level-accommodations-help-every-model-not-just-small-ones">Schema 级适配（惠及所有模型，而非仅限小模型）<a class="headerlink" href="#schema-level-accommodations-help-every-model-not-just-small-ones" title="Permanent link">&para;</a></h3>
+<p><code>mcp/server.py</code> 中的两项改动降低了<em>所有</em>模型的歧义性，且与提示词层级无关：</p>
+<ul>
+<li><code>plot_style</code> 使用 <code>Literal[...]</code>（为 9 种有效样式生成真正的 JSON-Schema <code>enum</code>），而非裸 <code>str</code>。</li>
+<li>最常用的 <code>other_properties</code> 键（<code>grid</code>、<code>plot_title</code>、<code>xlabel</code>、<code>ylabel</code>、<code>zlabel</code>、坐标轴范围、<code>color_palette</code>、对数刻度标志等）除了保留在 <code>other_properties</code> 兜底字典中之外，还作为显式的、强类型的命名参数直接暴露在 <code>plot_graph</code>/<code>update_graph</code> 上。即便模型将 <code>grid=true</code> 放在调用的顶层参数（而不是正确嵌套在 <code>other_properties</code> 内），该值也不会再丢失——两种形式会合并到最终配置中，且发生冲突时以命名参数优先。</li>
+</ul>
+<h3 id="case-study-qwen38b">案例研究：qwen3:8b<a class="headerlink" href="#case-study-qwen38b" title="Permanent link">&para;</a></h3>
+<p>面对完全相同的 3 图表绘制请求，大型云端模型（DeepSeek）一轮即可成功；而在本机制实现之前，<code>qwen3:8b</code> 在两次尝试中以两种不同方式失败：</p>
+<ul>
+<li><strong>尝试 A</strong>：未发出任何工具调用——反而输出了 2,237 个字符的散文式说明，用 ```python 代码块描述了一个从未真正执行的伪代码计划。</li>
+<li><strong>尝试 B</strong>：发出了合法的工具调用，但把 <code>grid: true</code> 作为顶层参数传入（而当时真实签名仅在 <code>other_properties</code> 内部识别该参数）——导致其被 MCP/Pydantic 静默丢弃，既无报错也未重试。</li>
+</ul>
+<p>经过上述修复后：<strong>3 次回放测试全部成功（3/3）</strong>，每次都准确生成了 3 个格式正确的 <code>plot_graph</code> 调用（且 <code>grid</code> 被正确保留）并附带结束摘要；总耗时平均约 19 秒，而此前<em>单次失败轮次</em>就需要 42–100 秒。</p>
+<hr />
+<h2 id="key-classes"><strong>核心类</strong><a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
+<h3 id="llmworker-apiworker-anthropicworker-background-threads"><strong><code>LLMWorker</code> / <code>APIWorker</code> / <code>AnthropicWorker</code> —— 后台线程</strong><a class="headerlink" href="#llmworker-apiworker-anthropicworker-background-threads" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<code>spectroview/ai_agent/m_llm_client.py</code></p>
+<p>三个 <code>QThread</code> 子类，分别对应一种后端。每个子类负责执行单次流式（或者对于带工具调用的 Anthropic，则为非流式）对话请求。</p>
+<table>
+<thead>
+<tr>
+<th>类</th>
+<th>后端</th>
+<th>所需软件包</th>
+<th>额外构造参数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LLMWorker</code></td>
+<td>Ollama（本地）</td>
+<td><code>ollama</code></td>
+<td><code>options</code>（字典：<code>num_ctx</code>、<code>num_predict</code>）、<code>think</code>（<code>bool</code>|<code>"low"</code>|<code>"medium"</code>|<code>"high"</code>|<code>None</code>）、<code>timeout</code></td>
+</tr>
+<tr>
+<td><code>APIWorker</code></td>
+<td>OpenAI、DeepSeek、Gemini、Custom</td>
+<td><code>openai</code></td>
+<td><code>timeout</code>、<code>max_tokens</code></td>
+</tr>
+<tr>
+<td><code>AnthropicWorker</code></td>
+<td>Anthropic Claude</td>
+<td><code>anthropic</code></td>
+<td><code>timeout</code>、<code>max_tokens</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>LLMWorker</code> 仅在确实设置了超时时间时才构造 <code>ollama.Client(timeout=...)</code>；否则直接调用模块级的便捷函数 <code>ollama.chat()</code>。Ollama 返回的工具调用是 Pydantic 模型对象（<code>ollama._types.Message.ToolCall</code>）而非普通字典——<code>LLMWorker.run()</code> 会在发射信号前通过 <code>.model_dump()</code> 对每个对象进行归一化，从而避免 <code>MConversation.save()</code>（普通的 <code>json.dump</code>）因遇到不可序列化对象而报错。</p>
+<table>
+<thead>
+<tr>
+<th>信号</th>
+<th>载荷</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chunk_received</code></td>
+<td><code>str</code></td>
+<td>每个流式接收到的 Token 片段</td>
+</tr>
+<tr>
+<td><code>response_ready</code></td>
+<td><code>(str, list)</code></td>
+<td>完整组装的响应文本 + 累计的工具调用列表</td>
+</tr>
+<tr>
+<td><code>error_occurred</code></td>
+<td><code>str</code></td>
+<td>当后端不可达时的错误消息</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>错误消息会揭示根本原因。</strong> 三个工作线程都会将捕获的异常传给 <code>_format_exception()</code>，沿着 <code>__cause__</code>/<code>__context__</code> 链向下遍历。<code>openai</code>/<code>anthropic</code> SDK 会将底层的 TLS/Socket 故障折叠成一句简短的 <code>APIConnectionError("Connection error.")</code>；若不沿异常链向下追踪，企业自签 CA 导致的 <code>CERTIFICATE_VERIFY_FAILED</code>、DNS 解析失败 <code>getaddrinfo failed</code> 或连接被拒绝都会呈现完全相同且无法排查的报错。</p>
+<p><strong>企业 / 内部 CA 的 TLS 校验。</strong> <code>openai</code>/<code>anthropic</code> 通过 <code>httpx</code> 对照 <code>certifi</code> 证书束验证 TLS，而该证书束不包含私有企业 CA —— 因此本地部署的服务端点会因上述不透明的 "Connection error." 而失败。<code>m_llm_client</code> 在导入时处理了这一问题：若环境变量 <code>SSL_CERT_FILE</code>/<code>REQUESTS_CA_BUNDLE</code> 指定了 PEM 文件，则将其作为 <code>httpx</code> 的 <code>verify</code> 参数传入（由 <code>_make_http_client()</code> 构造，并作为 <code>http_client=</code> 传入每个 SDK 客户端）；否则调用 <code>truststore.inject_into_ssl()</code>，将校验路由至操作系统信任存储（如 Windows 证书存储区），这类 CA 通常已安装在那里。<code>truststore</code> 是核心依赖，但导入仍受保护，因此在缺失该包的任何环境中只会静默回退到默认的 <code>certifi</code>。</p>
+<p>Ollama 的 <code>message["thinking"]</code> 字段（启用 <code>think</code> 时混合推理模型的隐藏草稿通道）被刻意<strong>绝不</strong>追加到 <code>chunk_received</code> 或响应文本中——将隐藏推理通道混入可见回答正是导致前文 qwen3 “尝试 A” 失败的原因。UI 中曾存在一个“Show model reasoning”开关（可选地强制覆盖 <code>think=True</code> 并在每条消息气泡下增加可折叠的推理区块），现已<strong>完全移除</strong>——应用不再显式请求 <code>think=True</code>，因此 <code>think</code> 仅保持各层级的默认值（完整层级不设置，小模型层级为 <code>false</code>；参见<a href="#small-model-support">小模型支持</a>表格）。即便移除该开关，通道分离机制依然保留：即使模型在未经请求的情况下自发输出 <code>thinking</code> 内容，<code>LLMWorker</code> 的 <code>thinking_chunk_received</code> 信号（以及如今仅丢弃片段而不予展示的 <code>VMChat._on_thinking_chunk</code>）也会将其隔离在回答通道之外。</p>
+</blockquote>
+<h3 id="llmclient-connection-facade"><strong><code>LLMClient</code> —— 连接门面</strong><a class="headerlink" href="#llmclient-connection-facade" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<code>spectroview/ai_agent/m_llm_client.py</code></p>
+<p>一个轻量的、不依赖 Qt 的门面类，负责管理服务商选择、API 密钥存储以及工作线程生命周期。</p>
+<p><strong>已知服务商</strong>（定义在 <code>API_PROVIDERS</code> 字典中）：</p>
+<ul>
+<li><code>Ollama</code> → <code>LLMWorker</code></li>
+<li><code>OpenAI</code>、<code>DeepSeek</code>、<code>Gemini</code>、<code>Custom</code> → <code>APIWorker</code></li>
+<li><code>Anthropic</code> → <code>AnthropicWorker</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>is_available()</code></td>
+<td>若当前服务商对应软件包已安装，且（对于 Ollama）守护进程有响应或（对于云端）已设置 API 密钥，则返回 <code>True</code></td>
+</tr>
+<tr>
+<td><code>get_models()</code></td>
+<td>返回当前服务商可用模型名称的已排序列表</td>
+</tr>
+<tr>
+<td><code>chat(model, messages, on_chunk, on_done, on_error, tools=None, parent=None, request_options=None)</code></td>
+<td>为当前服务商启动相应的后台工作线程；会先取消任何正在进行的请求。<code>request_options</code>（<code>num_ctx</code>/<code>think</code>/<code>timeout</code>/<code>max_tokens</code>）会按服务商转换——跨服务商隔离保证详见<a href="#small-model-support">小模型支持</a>。</td>
+</tr>
+<tr>
+<td><code>cancel()</code></td>
+<td>终止当前正在运行的工作线程</td>
+</tr>
+<tr>
+<td><code>is_busy()</code></td>
+<td>当工作线程正在运行时返回 <code>True</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>模块级辅助函数</strong>：<code>get_ollama_model_info(model) -&gt; Optional[ollama.ShowResponse]</code> —— 尽力而为地调用 <code>ollama.show()</code>，任何失败均返回 <code>None</code>；绝不抛出异常。供 <code>VMChat</code> 的小模型检测使用。</p>
+<p><strong>默认模型</strong>：<code>qwen2.5-coder:7b</code>（可通过 UI 下拉框配置；<code>LLMClient.DEFAULT_MODEL</code>）。</p>
+<h3 id="promptmanager-prompt-assembly"><strong><code>PromptManager</code> —— 提示词组装</strong><a class="headerlink" href="#promptmanager-prompt-assembly" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<code>spectroview/ai_agent/m_prompt_manager.py</code></p>
+<p>一个带缓存的管理器，从磁盘读取 Markdown 片段并按给定的 <code>prompts=</code>/<code>rules=</code>/<code>knowledge=</code>/<code>examples=</code> 列表拼接为系统提示词。</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>load_prompt(name)</code> / <code>load_rule(name)</code> / <code>load_knowledge(name)</code> / <code>load_example(name)</code></td>
+<td>按文件主干名加载单个 Markdown 文件并缓存在内存中（若 <code>auto_reload: true</code>，在 mtime 变化时自动失效）</td>
+</tr>
+<tr>
+<td><code>build_prompt(prompts, rules, knowledge, examples)</code></td>
+<td>从指定片段组装完整的系统提示词。缺失文件会记录警告并跳过，不会抛出异常。</td>
+</tr>
+<tr>
+<td><code>.model_config</code></td>
+<td>已解析为字典的 <code>config/model.yaml</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>加载哪些片段是在代码中决定的</strong>，具体由 <code>VMChat._build_system_prompt()</code> 控制——完整层级对应一套列表，简化层级对应另一套列表（参见<a href="#small-model-support">小模型支持</a>）。目前不存在意图路由器。早期曾有一个基于关键词的路由器（<code>_detect_intent()</code>、<code>_INTENT_DEFAULTS</code>、<code>enable_intent_detection</code>），但实际上一直处于休眠状态——显式列表总是将其短路——因此该路由器连同仅由其加载的五个提示词片段（<code>prompts/fitting.md</code>、<code>prompts/coding.md</code>、<code>rules/fitting.md</code>、<code>rules/python.md</code>、<code>examples/filtering_examples.md</code>）已一并移除。如果日后要真正构建意图路由，可从 git 历史中恢复它们。</p>
+</blockquote>
+<h3 id="vmchat-viewmodel"><strong><code>VMChat</code> —— ViewModel</strong><a class="headerlink" href="#vmchat-viewmodel" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<code>spectroview/ai_agent/vm_chat.py</code></p>
+<p>管理与已加载 DataFrame 关联的单个对话会话。遵循 MVVM 契约：View 调用公共方法；ViewModel 完全通过信号进行响应。</p>
+<table>
+<thead>
+<tr>
+<th>信号</th>
+<th>载荷</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>thinking_changed</code></td>
+<td><code>(bool, str)</code></td>
+<td>在 LLM/工具循环处理期间为 <code>True</code>，并附带状态标签（<code>"Thinking"</code> / <code>"Executing tools..."</code>）</td>
+</tr>
+<tr>
+<td><code>chunk_received</code></td>
+<td><code>str</code></td>
+<td>用于打字动画的流式 Token 片段</td>
+</tr>
+<tr>
+<td><code>result_ready</code></td>
+<td><code>ChatResult</code></td>
+<td>智能体循环停止发起工具调用后的最终结果</td>
+</tr>
+<tr>
+<td><code>error_occurred</code></td>
+<td><code>str</code></td>
+<td>人类可读的错误消息</td>
+</tr>
+<tr>
+<td><code>tool_execution_received</code></td>
+<td><code>(str, str)</code></td>
+<td>工具名称 + 其结果文本，在循环中的每次工具调用（包括中间步骤）时发射。View 仅用它来更新短暂的“思考中”状态——中间工具步骤不再作为标签气泡渲染在对话中</td>
+</tr>
+<tr>
+<td><code>conversation_changed</code></td>
+<td><code>str</code></td>
+<td>新建或加载的对话标题</td>
+</tr>
+</tbody>
+</table>
+<h4 id="public-api"><strong>公共 API</strong><a class="headerlink" href="#public-api" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>set_dataframes(dfs, active_name)</code></td>
+<td>更新可用的 DataFrame</td>
+</tr>
+<tr>
+<td><code>update_active_df_name(name)</code></td>
+<td>在不清空历史的情况下切换当前活动 DataFrame</td>
+</tr>
+<tr>
+<td><code>set_graphs(graphs)</code></td>
+<td>更新已知的已打开图表列表（会包含在系统提示词中以提供上下文）</td>
+</tr>
+<tr>
+<td><code>set_model(model)</code></td>
+<td>切换模型；重新运行小模型自动检测</td>
+</tr>
+<tr>
+<td><code>set_provider(provider, api_key, base_url, model)</code></td>
+<td>切换后端；重新运行自动检测；开启新对话</td>
+</tr>
+<tr>
+<td><code>set_small_model_mode(enabled)</code></td>
+<td>传入 <code>True</code>/<code>False</code> 强制指定层级，传入 <code>None</code> 恢复自动检测</td>
+</tr>
+<tr>
+<td><code>is_small_model_mode()</code></td>
+<td>若当前处于简化层级则返回 <code>True</code></td>
+</tr>
+<tr>
+<td><code>process_query(user_text)</code></td>
+<td>向 LLM 发送用户提问</td>
+</tr>
+<tr>
+<td><code>cancel()</code></td>
+<td>中止正在进行的请求</td>
+</tr>
+<tr>
+<td><code>clear_history()</code></td>
+<td>重置对话历史（与 <strong>+ 新建对话</strong> (+ New Chat) 相同）</td>
+</tr>
+</tbody>
+</table>
+<h4 id="the-agentic-tool-calling-loop"><strong>智能体工具调用循环</strong><a class="headerlink" href="#the-agentic-tool-calling-loop" title="Permanent link">&para;</a></h4>
+<p><code>process_query()</code> → <code>LLMClient.chat()</code> → <code>_on_done(full_text, tool_calls)</code>：</p>
+<ul>
+<li>若 <code>tool_calls</code> 非空：每个调用的 <code>arguments</code>（若以 JSON 字符串形式到达则先解析；解析失败时会生成一条可操作的“please retry with valid JSON”工具结果消息，而不是静默替换为 <code>{}</code>）都会通过 <code>MCPHub.call_tool(name, args)</code> 分发，并路由到拥有该工具的服务器。每一条工具结果——无论是成功、校验错误还是未知工具提示——都会作为 <code>role="tool"</code> 消息追加到对话历史中，随后 <code>_on_done</code> 使用更新后的历史再次调用 <code>LLMClient.chat()</code>。循环次数上限为 <code>VMChat.MAX_AGENT_TURNS</code>（<strong>5</strong>）。</li>
+<li>若 <code>tool_calls</code> 为空：本轮通过 <code>_emit_final_result()</code> 结束。</li>
+</ul>
+<p><code>_emit_final_result()</code> 会排空本轮期间在上下文中入队的命令，将其渲染为配置（在 <code>_commands_to_configs</code> 中统一归一化一次），然后发射 <code>ChatResult(action="plot", plot_config=[...])</code>——或者在未入队任何命令时发射 <code>ChatResult(action="answer", text_summary=...)</code>。</p>
+<p>它会在<strong>每一条</strong>终止路径上执行，包括达到轮次上限和工具执行异常。此前这两条路径会提前返回，导致当某个模型先入队三个图表、接着持续调用工具直到触发轮次上限时，用户在被告知图表已创建之后，最终却只收到一个错误而没有任何图表。</p>
+<p><strong><code>ChatResult.action</code> 永远只会取 <code>"plot"</code> 或 <code>"answer"</code>。</strong> MCP 之前的 JSON 协议值（<code>"filter"</code>/<code>"statistics"</code>/<code>"update"</code>/<code>"delete"</code>/<code>"query"</code>）已不存在代码路径；<code>query_dataframe</code>/<code>get_statistics</code> 的结果会作为模型最终的自然语言文本回复呈现给用户，而非单独的结构化结果。遗留的 <code>dataframe</code>/<code>raw_response</code>/<code>query</code>/<code>target_dataframe</code> 字段以及专为其渲染的 <code>_DataFramePreview</code> 控件均已被移除。</p>
+<h4 id="request-options"><strong>请求选项</strong><a class="headerlink" href="#request-options" title="Permanent link">&para;</a></h4>
+<p><code>_build_request_options()</code> 读取 <code>config/model.yaml</code>，并返回作为 <code>request_options=</code> 传给每次 <code>LLMClient.chat()</code> 调用的 <code>num_ctx</code>/<code>think</code>/<code>timeout</code>/<code>max_tokens</code> 字典——完整层级与简化层级的完整参数对比表参见<a href="#small-model-support">小模型支持</a>。</p>
+<h4 id="conversation-history-persistence"><strong>对话历史与持久化</strong><a class="headerlink" href="#conversation-history-persistence" title="Permanent link">&para;</a></h4>
+<p>对话会自动以 JSON 文件形式保存在用户配置的历史目录中（<strong>设置</strong> → <strong>AI 设置</strong> (AI Settings) 标签页）。<code>MConversation</code> 的行为如下：</p>
+<ul>
+<li>累计保存带 ISO 时间戳的消息（包括工具调用轮次的 <code>tool_calls</code>/<code>tool_call_id</code>）。</li>
+<li>根据第一条用户消息自动生成标题（最多 60 个字符）。</li>
+<li>在每次助手回复轮次以及每批工具结果之后持久化到磁盘。</li>
+<li>当用户加载新的工作区文件或切换 DataFrame 时<strong>不会清空</strong>——仅点击 <strong>+ 新建对话</strong>才会重置它。</li>
+</ul>
+<p>实际发送给 LLM 的上下文会通过 <code>max_context_messages</code> 限制长度——完整层级不限制，简化层级仅保留最近 6 条消息（参见<a href="#small-model-support">小模型支持</a>；这取代了过去存在但从未实际接入任何逻辑的 <code>MAX_HISTORY_PAIRS = 6</code> 类常量）。</p>
+<p><code>to_llm_messages()</code> 在窗口边界处会<strong>向前扩展</strong>而非盲目截断：因为 <code>role="tool"</code> 消息只有紧跟在携带对应 <code>tool_calls</code> 的助手消息之后才合法，所以如果截断线恰好落在这两者之间，窗口就会向后（更早期方向）扩展，直到整对消息完整保留。在两者之间直接切片会导致服务商拒绝请求——而且由于该限制仅在简化模式下启用，这恰好会击中最难以从 API 错误中恢复的本地小模型。</p>
+<h3 id="chatresult-parsed-response"><strong><code>ChatResult</code> —— 解析后的响应</strong><a class="headerlink" href="#chatresult-parsed-response" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<code>spectroview/ai_agent/vm_chat.py</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span> <span class="nc">ChatResult</span><span class="p">:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="s2">&quot;explanation&quot;</span><span class="p">,</span> <span class="s2">&quot;text_summary&quot;</span><span class="p">,</span> <span class="s2">&quot;plot_config&quot;</span><span class="p">)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>action</code></td>
+<td><code>str</code></td>
+<td><code>"plot"</code> 或 <code>"answer"</code> —— 仅有的两个取值（见上文）</td>
+</tr>
+<tr>
+<td><code>explanation</code></td>
+<td><code>str</code></td>
+<td>当运行了图表命令时显示在消息卡片上的说明文本</td>
+</tr>
+<tr>
+<td><code>text_summary</code></td>
+<td><code>str</code></td>
+<td>LLM 最终生成的自然语言文本</td>
+</tr>
+<tr>
+<td><code>plot_config</code></td>
+<td><code>list[dict]</code> | <code>None</code></td>
+<td>为图表工作区累计生成的创建/更新/删除配置列表</td>
+</tr>
+</tbody>
+</table>
+<h3 id="vchatpanel-embedded-chat-panel"><strong><code>VChatPanel</code> —— 嵌入式对话面板</strong><a class="headerlink" href="#vchatpanel-embedded-chat-panel" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<code>spectroview/ai_agent/v_chat_panel.py</code></p>
+<p>一个嵌入式 <code>QWidget</code> 面板，位于 <code>Main.workspace_splitter</code> 最右侧，采用受现代 AI 输入器启发的卡片化界面风格。</p>
+<p><strong>标题栏（<code>chatHeader</code>）</strong>：紧凑的单行布局（固定高度 42px）：</p>
+<ul>
+<li><strong>对话标题（<code>edit_title</code>）</strong>：可编辑的 <code>QLineEdit</code>，横向占满标题栏可用宽度。</li>
+<li><strong>操作按钮</strong>：30×30 的图标按钮，分别对应<strong>对话历史</strong> (Chat History)（<code>btn_history</code>）、<strong>新建对话</strong>（<code>btn_new_chat</code>）、<strong>清空对话</strong> (Clear Chat)（<code>btn_clear</code>）以及 Close Panel（<code>btn_close</code>）。（内部的 <code>lbl_status</code> 和 <code>lbl_no_data</code> 属性仍被保留，以便兼容信号连接而不使标题栏界面显得杂乱。）</li>
+</ul>
+<p><strong>输入器（<code>chatComposerFrame</code>）</strong>：</p>
+<ul>
+<li>位于面板底部的带细边框圆角（8px）卡片容器。</li>
+<li><strong>顶部</strong>：可自动调整高度的多行文本输入框（<code>_ChatLineEdit</code>），无边框且背景透明。</li>
+<li><strong>嵌入式工具栏</strong>：位于输入器卡片底部的内嵌栏：</li>
+<li>AI 服务商下拉选择框（<code>cbb_provider</code>）</li>
+<li>模型下拉选择框（<code>cbb_model</code>，可编辑）</li>
+<li>连接/模型列表刷新按钮（<code>btn_refresh_models</code>）</li>
+<li>弹性占位空白（Stretch）</li>
+<li>语音听写麦克风按钮（<code>btn_mic</code>）</li>
+<li>现代风格的操作按钮（<code>btn_send</code>）：在蓝色的<strong>发送</strong> (Send) 与红色的<strong>停止</strong> (Stop) 状态之间切换，并带有动态悬停/激活样式。</li>
+</ul>
+<p>此前用于手动选择提示词层级的下拉框（<code>cbb_prompt_tier</code>：<strong>自动</strong> (Auto) / Full / Small）已被移除；小模型检测现已完全基于模型参数量自动运行。</p>
+<p>辅助控件：</p>
+<ul>
+<li><strong><code>_MessageCard</code></strong>：带样式的消息气泡；<code>_add_card(text, role, timestamp)</code> 会根据发言角色将其缩进对齐至对应一侧。</li>
+<li><strong><code>_ChatLineEdit</code></strong> / 输入区域：按下 Enter 键时发射 <code>send_requested</code>。</li>
+</ul>
+<hr />
+<h2 id="system-prompt-llm-contract"><strong>系统提示词与 LLM 契约</strong><a class="headerlink" href="#system-prompt-llm-contract" title="Permanent link">&para;</a></h2>
+<p>系统提示词采用模块化设计并由 <code>PromptManager</code> 管理，根据当前活动模型由两套不同粒度的 Markdown 文件组装而成（参见<a href="#small-model-support">小模型支持</a>）：</p>
+<p><strong>完整层级</strong>（默认；也用于所有云端服务商）：</p>
+<ol>
+<li><strong>核心提示词</strong>（<code>prompts/system.md</code>、<code>chat.md</code>、<code>plotting.md</code>）：身份定位、工具使用契约与绘图指令。</li>
+<li><strong>动态上下文</strong>（由 <code>VMChat</code> 注入）：DataFrame Schema 与样本值（当列数超过 <code>column_detail_threshold</code> 时通过 <code>utils/df_summary.py</code> 压缩）、当前活动 DataFrame 名称、已打开图表摘要。</li>
+<li><strong>规则约束</strong>（<code>rules/general.md</code>、<code>plotting.md</code>、<code>spectroview.md</code>）：行为约束条件。</li>
+<li><strong>领域知识</strong>（<code>knowledge/features.md</code>）：关于软件特性的静态事实知识。</li>
+<li><strong>示例</strong>（<code>examples/plotting_examples.md</code>）：13 个少样本（few-shot）工具调用示例。</li>
+</ol>
+<p><strong>简化层级</strong>：<code>prompts/system_small.md</code>（自包含单文件：身份定位、关键规则、动态上下文占位符、工具列表、常用 <code>plot_graph</code> 选项、空间图轴映射、多轮引导——全部集成于一个文件中） + <code>rules/general.md</code> + <code>examples/examples_small.md</code>（约 8 个覆盖全部 5 个工具的示例）。</p>
+<p>智能体通过 <strong>Model Context Protocol (MCP)</strong> 使用<strong>原生工具/函数调用（Tool/Function Calling）</strong>——完全不需要解析自由文本 JSON。LLM 会获得每个工具严格且带类型的 Schema（位于 <code>mcp/server.py</code>，基于 <code>FastMCP</code> 构建）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">query_dataframe</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">get_statistics</span><span class="p">(</span><span class="n">columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">plot_graph</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">plot_style</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">9</span> <span class="n">styles</span><span class="p">],</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>           <span class="n">filters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>           <span class="n">grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zlabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>           <span class="n">xmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ymin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ymax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>           <span class="n">color_palette</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xlogscale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ylogscale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>           <span class="n">scatter_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hist_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trendline_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>           <span class="n">other_properties</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">update_graph</span><span class="p">(</span><span class="n">graph_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>   <span class="c1"># same optional fields as plot_graph, all Optional</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">delete_graph</span><span class="p">(</span><span class="n">delete_all</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">graph_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</code></pre></div>
+<p><code>plot_graph</code>/<code>update_graph</code> 的命名可选参数（<code>grid</code>、<code>plot_title</code>、坐标轴范围等）与 <code>other_properties</code> 属于叠加互补关系——两种传参形式都有效，如果同一个键同时出现在 <code>other_properties</code> 中，则命名参数优先。这正是针对前文 qwen3 案例研究的直接解决方案：模型不再需要去猜测未明写的嵌套规则，也能让 <code>grid</code> 等常用属性生效。</p>
+<p><code>LLMClient</code> 会拦截工具调用并将其分发至进程内 MCP 客户端会话；执行结果（包括校验错误信息）会回传至对话历史中，供模型继续决策。</p>
+<h3 id="safety-validation"><strong>安全性与校验</strong><a class="headerlink" href="#safety-validation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>筛选/查询表达式</strong>由 <code>utils/safe_eval.py::evaluate_pandas_expression()</code> 求值：优先尝试 <code>DataFrame.query()</code>（pandas 自带的受限语法，能够安全处理各类提示词中教授的裸列名语法，例如 <code>"FWHM_Si &gt; 5"</code>），对于 <code>.query()</code> 无法表达的语法（例如 <code>"df.groupby('Slot')['x'].mean().idxmax()"</code>），则回退至命名空间受限的 <code>eval()</code>（<code>{"__builtins__": {}}</code>，仅绑定 <code>df</code>/<code>pd</code>/<code>np</code> 与各列）。这是原有纯 <code>eval()</code> 行为的严格超集——此前能正常工作的表达式全部保持可用，同时没有引入任何新的代码执行面。</li>
+<li><strong><code>plot_graph</code>/<code>update_graph</code> 会先对每个筛选条件执行试运行（dry-run）</strong>，对照真实的目标 DataFrame 校验通过后<em>才</em>接受该图表请求。无效的筛选条件（最常见的是字符串值未加引号）会返回可操作的错误——图表<strong>不会</strong>被创建——而不是无论是否正确都一律返回笼统的成功提示。</li>
+<li><strong><code>plot_style</code> 通过 Schema 校验</strong>（<code>enum</code>），并在 Python 侧进行二次检查，作为纵深防御以应对不对工具参数做语法约束的服务商。</li>
+<li><strong>格式错误的 JSON 工具调用参数</strong>（较为罕见；主要出现在 OpenAI 兼容服务商中，其 <code>arguments</code> 以待解析字符串形式流式返回）会生成一条触发重试的错误消息，而不是静默替换为 <code>{}</code>。</li>
+</ul>
+<hr />
+<h2 id="data-flow-end-to-end"><strong>端到端数据流</strong><a class="headerlink" href="#data-flow-end-to-end" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>sequenceDiagram
+    participant User as 用户
+    participant VCP as VChatPanel (View)
+    participant VMC as VMChat (ViewModel)
+    participant LLC as LLMClient (Model)
+    participant Worker as LLMWorker (QThread)
+    participant Backend as Ollama/OpenAI/Anthropic
+    participant MCPS as MCP 服务器（工具）
+    participant Main as main.py
+    participant VWG as VWorkspaceGraphs
+
+    User-&gt;&gt;VCP: 输入问题 + Enter
+    VCP-&gt;&gt;VMC: process_query(text)
+    VMC-&gt;&gt;VMC: _build_system_prompt()（依层级而定）
+    VMC-&gt;&gt;VMC: _build_request_options() (num_ctx/think/timeout/max_tokens)
+    VMC--&gt;&gt;VCP: thinking_changed(True, "Thinking")
+    VMC-&gt;&gt;LLC: chat(model, messages, tools, request_options)
+    LLC-&gt;&gt;Worker: start()
+    Worker-&gt;&gt;Backend: chat(stream=True, options=..., think=...)
+
+    loop 每个 Token / 工具调用增量
+        Backend--&gt;&gt;Worker: chunk
+        Worker--&gt;&gt;VMC: chunk_received(fragment)
+        VMC--&gt;&gt;VCP: chunk_received(fragment)
+    end
+
+    Worker--&gt;&gt;VMC: response_ready(text, tool_calls)
+
+    alt tool_calls 非空（智能体循环，最多 5 轮）
+        VMC--&gt;&gt;VCP: thinking_changed(True, "Executing tools...")
+        VMC-&gt;&gt;MCPS: 对每次调用执行 MCPHub.call_tool(name, args)
+        MCPS--&gt;&gt;VMC: 结果文本（经校验，筛选/样式无效则返回错误）
+        VMC--&gt;&gt;VCP: tool_execution_received(name, result)
+        VMC-&gt;&gt;LLC: 使用更新后的历史再次调用 chat(...)
+        Note over VMC,LLC: 循环直到不再有 tool_calls 或达到 5 轮上限
+    else 无 tool_calls
+        VMC-&gt;&gt;VMC: _emit_final_result() — 排空队列中的 AgentCommands
+        VMC--&gt;&gt;VCP: result_ready(ChatResult)
+        VMC--&gt;&gt;VCP: thinking_changed(False, "Thinking")
+    end
+
+    alt action == "plot"（包含更新/删除配置）
+        VCP--&gt;&gt;Main: 逐项发射 plot_requested(cfg)
+        Main-&gt;&gt;Main: _on_chat_plot_requested / _apply_graph_update / _apply_graph_delete
+        Main-&gt;&gt;VWG: 创建 / 更新 / 关闭图表
+    else action == "answer"
+        VCP-&gt;&gt;VCP: 在 AI 消息气泡中显示 text_summary
+    end</code></pre>
+<hr />
+<h2 id="integration-with-graphs-workspace"><strong>与图表工作区的集成</strong><a class="headerlink" href="#integration-with-graphs-workspace" title="Permanent link">&para;</a></h2>
+<h3 id="lazy-initialization"><strong>延迟初始化</strong><a class="headerlink" href="#lazy-initialization" title="Permanent link">&para;</a></h3>
+<p><strong>模块导入</strong>与 <strong>Widget 实例化</strong>均被推迟到 <code>Main.open_ai_chat()</code> 时才执行。各服务商 SDK 的导入耗时约 4.5 秒，因此 <code>main.py</code> 在启动时仅探测模块是否存在（通过 <code>importlib.util.find_spec</code>，不执行任何模块代码），直到用户首次打开对话面板时才执行真正的导入。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># main.py — module level: probe only, nothing is executed</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">LLM_AVAILABLE</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;spectroview.ai_agent.v_chat_panel&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># main.py — inside open_ai_chat()</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="kn">from</span> <span class="nn">spectroview.ai_agent.v_chat_panel</span> <span class="kn">import</span> <span class="n">VChatPanel</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span> <span class="o">=</span> <span class="n">VChatPanel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span><span class="o">.</span><span class="n">plot_requested</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_chat_plot_requested</span><span class="p">)</span>
+</code></pre></div>
+<p>下一层级也遵循相同原则：<code>mcp</code> 是在 <code>MCPHub._open_session()</code> 内部导入，而不是在 <code>hub.py</code> 模块顶层导入。</p>
+<h3 id="dataframe-synchronization"><strong>DataFrame 同步</strong><a class="headerlink" href="#dataframe-synchronization" title="Permanent link">&para;</a></h3>
+<p>对话面板通过在 <code>main.py</code> 中建立的三个信号连接，与图表工作区保持实时同步：</p>
+<table>
+<thead>
+<tr>
+<th>信号</th>
+<th>处理函数</th>
+<th>触发时机</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vm.dataframes_changed</code></td>
+<td><code>sync_chat_dfs_full</code></td>
+<td>添加/移除 DataFrame —— 刷新所有 DataFrame 与图表信息</td>
+</tr>
+<tr>
+<td><code>vm.dataframe_columns_changed</code></td>
+<td><code>sync_chat_active</code></td>
+<td>切换当前活动 DataFrame —— 保留对话历史</td>
+</tr>
+<tr>
+<td><code>vm.graphs_changed</code></td>
+<td><code>sync_chat_graphs</code></td>
+<td>创建/更新/删除图表 —— 刷新系统提示词中的图表 ID</td>
+</tr>
+</tbody>
+</table>
+<p>每次显示对话面板时，还会强制执行一次同步，以确保当前可用数据处于最新状态。</p>
+<h3 id="plot-config-normalization"><strong>绘图配置归一化</strong><a class="headerlink" href="#plot-config-normalization" title="Permanent link">&para;</a></h3>
+<p>队列中的命令在发射到 <code>main.py</code> 之前，会在 <code>VMChat._commands_to_configs()</code> 中统一归一化<strong>一次</strong>。（此前 <code>VMChat</code> 和 <code>main.py</code> 曾对同一字典重复归一化；<code>main.py</code> 中的那一步已被移除。）</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>归一化规则</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>y</code></td>
+<td><code>str</code> → <code>[str]</code>，<code>None</code> → <code>[]</code></td>
+</tr>
+<tr>
+<td>范围字段（<code>xmin</code>、<code>ymin</code> 等）</td>
+<td><code>str</code>/<code>int</code>/<code>"null"</code> → <code>float</code> 或 <code>None</code></td>
+</tr>
+<tr>
+<td>整数字段（<code>x_rot</code>、<code>scatter_size</code> 等）</td>
+<td>强制转换为 <code>int</code>，转换失败则移除</td>
+</tr>
+<tr>
+<td><code>filters</code></td>
+<td><code>["expr1", "expr2"]</code> → <code>[{"expression": "expr1", "state": True}, ...]</code></td>
+</tr>
+<tr>
+<td><code>plot_style</code></td>
+<td>逗号分隔值（<code>"box, scatter"</code>）→ 按每种样式拆分为单独配置</td>
+</tr>
+</tbody>
+</table>
+<p><code>utils/plot_utils.py</code> 从 <code>spectroview.PLOT_STYLES</code>/<code>PALETTE</code> 派生其有效图表样式与调色板，<code>mcp/server.py</code> 的校验器亦然。工具 Schema 的 <code>Literal</code> 必须保持可静态分析，因此显式拼写列出——如果这些列表日后发生漂移，<code>test_ai_agent_schema.py::TestPlotStyleSingleSourceOfTruth</code> 将会捕获失败。</p>
+<h3 id="graph-update-delete-flow"><strong>图表更新与删除流程</strong><a class="headerlink" href="#graph-update-delete-flow" title="Permanent link">&para;</a></h3>
+<p><code>UpdatePlot</code>/<code>DeletePlots</code> 命令会渲染为 <code>{"_graph_update": {...}}</code> / <code>{"_graph_delete": {...}}</code> 条目，并通过现有的 <code>plot_requested</code> 信号发送，随后 <code>main.py</code> 会：</p>
+<ol>
+<li>按 ID 获取现有的 <code>MGraph</code> 模型（或解析 <code>"all"</code>）。</li>
+<li>调用 <code>vm.update_graph(...)</code> 或关闭对应的 <code>QMdiSubWindow</code> 子窗口。</li>
+</ol>
+<hr />
+<h2 id="toolbar-entry-point"><strong>工具栏入口</strong><a class="headerlink" href="#toolbar-entry-point" title="Permanent link">&para;</a></h2>
+<p>AI 对话切换动作被添加到 <code>VMenuBar</code> 主工具栏的右侧，紧邻检查更新按钮之前：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># v_menubar.py</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">actionAIChat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">Icons</span><span class="o">.</span><span class="n">sparkles</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">22</span><span class="p">),</span> <span class="s2">&quot;SPECTROview AI Agent&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="bp">self</span><span class="o">.</span><span class="n">actionAIChat</span><span class="o">.</span><span class="n">setShortcut</span><span class="p">(</span><span class="s2">&quot;Ctrl+Shift+A&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="bp">self</span><span class="o">.</span><span class="n">actionAIChat</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ai_chat_requested</span><span class="o">.</span><span class="n">emit</span><span class="p">)</span>
+</code></pre></div>
+<p><code>ai_chat_requested</code> 信号在 <code>setup_connections()</code> 中连接到 <code>Main.open_ai_chat()</code>，用于切换直接嵌入在主工作区标签栏最右侧 <code>Main.workspace_splitter</code> 中的 <code>VChatPanel</code> 的可见性。</p>
+<hr />
+<h2 id="optional-dependency-management"><strong>可选依赖管理</strong><a class="headerlink" href="#optional-dependency-management" title="Permanent link">&para;</a></h2>
+<p><code>ollama</code>、<code>openai</code>、<code>anthropic</code> 和 <code>mcp</code> 在 <code>pyproject.toml</code> 中属于<strong>无条件核心依赖</strong>——并没有单独的 <code>[ai]</code> 可选附加分组；常规执行 <code>pip install -e .</code> 便已安装好 AI 功能所需的全部软件包。真正“可选”的是在运行时是否<em>使用</em>该功能：</p>
+<h3 id="import-guard-pattern"><strong>导入保护模式</strong><a class="headerlink" href="#import-guard-pattern" title="Permanent link">&para;</a></h3>
+<p>可用性探测<strong>不会真正执行导入</strong>——<code>find_spec</code> 仅定位软件包而不执行其代码——真正的导入发生在首次使用时，并缓存到模块全局变量中：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># m_llm_client.py — each SDK is probed and loaded independently</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">OLLAMA_AVAILABLE</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">_ollama</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">def</span> <span class="nf">_load_ollama</span><span class="p">():</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the `ollama` module (imported on first use), or None.&quot;&quot;&quot;</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="k">global</span> <span class="n">_ollama</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="k">if</span> <span class="n">_ollama</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">OLLAMA_AVAILABLE</span><span class="p">:</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>        <span class="kn">import</span> <span class="nn">ollama</span> <span class="k">as</span> <span class="nn">_mod</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>        <span class="n">_ollama</span> <span class="o">=</span> <span class="n">_mod</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>    <span class="k">return</span> <span class="n">_ollama</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="c1"># ... same pattern for openai (_load_openai), anthropic (_load_anthropic)</span>
+</code></pre></div>
+<p>由于加载器在模块全局变量已存在时会直接返回它，测试代码依然可以通过 <code>patch.object(m_llm_client, "_ollama", fake)</code> 注入替身对象。</p>
+<p>如果某个软件包确实缺失（例如精简环境中）或 Ollama 未运行 / 未配置 API 密钥：</p>
+<ul>
+<li>对应服务商通过 <code>LLMClient.is_available()</code> 报告不可用，并在界面上显示红色状态消息及可操作的安装指引。</li>
+<li>应用启动时不会抛出任何错误；其余功能完全不受影响。</li>
+</ul>
+<hr />
+<h2 id="response-parsing-error-handling"><strong>响应解析与错误处理</strong><a class="headerlink" href="#response-parsing-error-handling" title="Permanent link">&para;</a></h2>
+<p>采用 <strong>MCP 工具调用（MCP Tool Calling）</strong> 后，响应解析过程完全不再需要解析自由文本 JSON：</p>
+<ol>
+<li><strong>工具执行</strong>：LLM 通过各服务商原生的函数调用协议输出结构化工具调用。</li>
+<li><strong>工具边界校验</strong>：<code>mcp/server.py</code> 在接受绘图/更新请求前，会校验 <code>plot_style</code>（Schema 枚举）并对每个筛选条件执行试运行（<code>utils/safe_eval.py</code>）——无效输入会生成一条可操作的错误信息反馈给模型，而不是静默假装成功或被直接丢弃。</li>
+<li><strong>参数格式错误</strong>：无法解析（或解析结果不是对象）的 JSON 字符串 <code>arguments</code> 载荷会生成一条促使模型重试的工具结果消息，而非静默替换为 <code>{}</code>。</li>
+<li><strong>纯文本回退</strong>：如果 LLM 仅回复纯文本而未发起工具调用，该文本会成为 <code>ChatResult(action="answer", text_summary=...)</code>——即使没有执行数据操作，用户也总能看到有价值的回复。</li>
+<li><strong>未指定目标 DataFrame</strong>：当 <code>df_name</code> 为空时，MCP 工具会自动将其解析为当前活动 DataFrame。</li>
+<li><strong>不可序列化的工具调用对象</strong>：Ollama 返回的 <code>tool_calls</code> 是 Pydantic 模型对象；<code>LLMWorker.run()</code> 会在将其加入对话历史前通过 <code>.model_dump()</code> 统一转为普通字典，从而确保 <code>MConversation.save()</code> 中的标准 <code>json.dump()</code> 不会失败。</li>
+</ol>
+<hr />
+<h2 id="current-features-graph-workspace"><strong>当前功能（图表工作区）</strong><a class="headerlink" href="#current-features-graph-workspace" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>自然语言创建图表</strong></td>
+<td>支持通过自然语言请求绘制全部 9 种受支持的图表样式（point、scatter、box、bar、line、trendline、histogram、wafer、2Dmap），并指定数据列、筛选条件与样式选项</td>
+</tr>
+<tr>
+<td><strong>多图表批量生成</strong></td>
+<td>单次请求可同时生成多个图表（通过并行工具调用或多轮智能体循环）</td>
+</tr>
+<tr>
+<td><strong>数据筛选</strong></td>
+<td>使用自然语言筛选 DataFrame（自动转换为经过校验的 pandas 表达式，参见<a href="#safety-validation">安全性与校验</a>）</td>
+</tr>
+<tr>
+<td><strong>描述性统计</strong></td>
+<td>请求计算指定列的 <code>describe()</code> 统计指标</td>
+</tr>
+<tr>
+<td><strong>图表修改</strong></td>
+<td>按图表 ID 更新已有图表的属性（坐标轴范围、标题、样式、筛选条件、调色板）</td>
+</tr>
+<tr>
+<td><strong>图表删除</strong></td>
+<td>通过自然语言指令删除指定图表或全部图表</td>
+</tr>
+<tr>
+<td><strong>多 DataFrame 支持</strong></td>
+<td>在多个已加载的 DataFrame 之间自由切换；AI 始终感知当前活动数据集</td>
+</tr>
+<tr>
+<td><strong>小模型自适应</strong></td>
+<td>自动检测本地小模型（按参数量或名称模式），自动切换至精简提示词、截断历史以及经过调优的 Ollama 请求选项（<code>VMChat.set_small_model_mode()</code>）。参见<a href="#small-model-support">小模型支持</a>。</td>
+</tr>
+<tr>
+<td><strong>自纠错工具调用</strong></td>
+<td>无效的筛选条件或图表样式会在生效<em>前</em>被拒绝并返回可操作的错误，使模型有机会在同一轮次/循环内自行修正并重试</td>
+</tr>
+<tr>
+<td><strong>对话记忆</strong></td>
+<td>支持多轮连续对话；大模型/云端模型保留完整历史，检测为小模型时保留最近 6 条消息</td>
+</tr>
+<tr>
+<td><strong>对话状态保持</strong></td>
+<td>在加载新文件或切换工作区标签页时对话不会丢失。只有点击 <strong>+ 新建对话</strong> 才会重置历史</td>
+</tr>
+<tr>
+<td><strong>对话历史浏览器</strong></td>
+<td>通过对话历史对话框浏览、搜索、打开、重命名、复制副本及删除过往对话</td>
+</tr>
+<tr>
+<td><strong>流式响应输出</strong></td>
+<td>所有服务商均支持逐 Token 实时打字动画显示（包括带工具调用的 Anthropic）</td>
+</tr>
+<tr>
+<td><strong>模型与服务商切换</strong></td>
+<td>直接在输入器工具栏中切换本地已下载的 Ollama 模型或云端服务商</td>
+</tr>
+<tr>
+<td><strong>上下文感知提示词</strong></td>
+<td>系统提示词始终携带 DataFrame 名称、形状及全部列名与 dtype；样本值、行预览及完整图表配置则通过 <code>get_context</code> 按需拉取</td>
+</tr>
+<tr>
+<td><strong>外部 MCP 服务器</strong></td>
+<td>在 <code>config/servers.yaml</code> 中列出的任何 <code>stdio</code> 或 <code>http</code> MCP 服务器均会在启动时自动连接，并将其工具提供给模型调用，同时支持按服务器配置工具白名单</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="connecting-another-mcp-server"><strong>接入其他 MCP 服务器</strong><a class="headerlink" href="#connecting-another-mcp-server" title="Permanent link">&para;</a></h2>
+<p>只需在 <code>spectroview/ai_agent/config/servers.yaml</code> 中添加一段配置并重启应用即可：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">servers</span><span class="p">:</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spectroview</span><span class="w">          </span><span class="c1"># SPECTROview&#39;s own tools — keep this one</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">in-process</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="nt">factory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spectroview.ai_agent.mcp.server:create_mcp_server</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">filesystem</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stdio</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">npx</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-y</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;@modelcontextprotocol/server-filesystem&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;~/data&quot;</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">    </span><span class="nt">tools</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">read_file</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">list_directory</span><span class="p p-Indicator">]</span><span class="w">     </span><span class="c1"># optional allowlist</span>
+</code></pre></div>
+<p><code>command</code>、<code>env</code> 和 <code>url</code> 中的 <code>${VARS}</code> 与 <code>~</code> 会自动展开。如果某个服务器启动失败，系统会记录日志并跳过它——其余已连接的服务器与对话功能仍可正常工作。</p>
+<p>需要注意以下两点：</p>
+<ul>
+<li><strong>工具数量会消耗上下文预算。</strong> 每个工具的 Schema 在每一轮对话中都会被放入提示词，而本地小模型在工具总数超过大约十几个之后准确率会迅速下降。请使用 <code>tools:</code> 仅暴露真正需要的工具。</li>
+<li><strong>外部服务器的工具描述属于不可信文本</strong>，它们由第三方编写并会被原封不动地传入模型上下文。请仅启用您信任的服务器，并对任何具有写操作能力的工具优先配置白名单。</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../mva/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 多元分析 (MVA)">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                多元分析 (MVA)
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../mcp_server/" class="md-footer__link md-footer__link--next" aria-label="下一页: 本地 MCP 服务器">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                本地 MCP 服务器
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

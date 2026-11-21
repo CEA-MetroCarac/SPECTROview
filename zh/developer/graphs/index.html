@@ -1,0 +1,2991 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="用于光谱数据处理、拟合与可视化的交互式工具">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/zh/developer/graphs/">
+      
+      
+        <link rel="prev" href="../maps/">
+      
+      
+        <link rel="next" href="../vbf_engine/">
+      
+      
+        
+          <link rel="alternate" href="../../../developer/graphs/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/developer/graphs/" hreflang="fr">
+        
+          <link rel="alternate" href="../../../de/developer/graphs/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/developer/graphs/" hreflang="ru">
+        
+          <link rel="alternate" href="./" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>图表工作区 - SPECTROview 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#workspace-graphs" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../" title="SPECTROview 文档" class="md-header__button md-logo" aria-label="SPECTROview 文档" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SPECTROview 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              图表工作区
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="选择当前语言"
+      title="选择当前语言"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">ZH</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../developer/graphs/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/developer/graphs/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/developer/graphs/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/developer/graphs/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="zh"
+              class="md-select__link" aria-current="true"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  安装
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  用户手册
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI 智能体
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  开发者指南
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  更新日志
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="SPECTROview 文档" class="md-nav__button md-logo" aria-label="SPECTROview 文档" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    SPECTROview 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    安装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    用户手册
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    用户手册
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    支持的数据格式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    界面概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    菜单栏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱与二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多元分析 (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷计算器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    设置
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    保存与加载
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷键与技巧
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    开发者指南
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    开发者指南
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    文件加载流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据架构 SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        架构概览
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心类
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="核心类">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vmworkspacegraphs-the-viewmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMWorkspaceGraphs — 视图模型 (ViewModel)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VMWorkspaceGraphs — 视图模型 (ViewModel)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        信号
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mgraph-the-plot-configuration-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MGraph — 图表配置模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph_controlpy-shared-graph-statecommand-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_control.py — 共享图表状态与命令契约
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vworkspacegraphs-the-view-orchestrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VWorkspaceGraphs — 视图编排器
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vgraph-the-rendering-widget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VGraph — 渲染控件
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plotrenderer-the-plotting-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PlotRenderer — 绘图引擎
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PlotRenderer — 绘图引擎">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#colormap-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        色标归一化
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow-creating-a-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据流：创建图表
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="数据流：创建图表">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-flow-aimcp-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据流：AI/MCP 更新
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plot-styles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        图表样式
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="图表样式">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multi-axis-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        多坐标轴支持
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dataframe-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DataFrame 管理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DataFrame 管理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        加载
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#source-tracking-and-refresh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        源路径追踪与刷新
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#programmatic-injection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        编程式注入
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filter-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        筛选系统
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="筛选系统">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multi-wafer-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        多晶圆工作流
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#graph-customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        图表自定义
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="图表自定义">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#customizegraphdialog-singleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CustomizeGraphDialog（单例）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#live-preview-restyle-fast-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        实时预览与 Restyle 快速路径
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph_stylepy-the-styledata-field-partition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_style.py — 样式与数据字段分区
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph_commitpy-change-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        graph_commit.py — 变更追踪
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#undoredo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        撤销/重做
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keyboard-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        键盘快捷键
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-typography-tabgeneral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        常规与字体排版 (TabGeneral)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#axes-limits-tabaxeslimits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        坐标轴与范围 (TabAxesLimits)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ticks-spines-tabticksspines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ticks &amp; Spines (TabTicksSpines)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#legend-series-tablegendseries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legend &amp; Series (TabLegendSeries)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plot-style-fitting-tabplotstyles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        图表样式与拟合 (TabPlotStyles)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotations-tabannotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations (TabAnnotations)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secondary-inset-axes-tabsecondaryinset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        副坐标轴与放大插图 (TabSecondaryInset)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#style-templates-plot-recipes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        样式模板与绘图配方
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#export-multi-panel-composer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        导出与多子图组合器
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mdi-area-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MDI 区域管理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MDI 区域管理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#graph-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        图表存储
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        持久化
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="持久化">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spectroview-working-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SPECTROview 工作目录
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save-format-graphs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        保存格式 (.graphs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plot-replication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        图表复制
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    向量化批量拟合引擎 (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多元分析 (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    本地 MCP 服务器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱工作区（加载、预处理、拟合）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区（高光谱、热图）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据可视化（图表）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷计算器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    扩展 SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    更新日志
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="导航栏" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    首页
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    开发者指南
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="workspace-graphs"><strong>工作区：图表</strong><a class="headerlink" href="#workspace-graphs" title="Permanent link">&para;</a></h1>
+<p><code>Graphs</code> 工作区是一个独立的统计绘图环境。它负责管理 DataFrame（来自文件导入或跨工作区注入），应用动态筛选条件，并在 MDI（多文档界面，Multiple Document Interface）区域内使用纯 <code>Matplotlib</code>（配合 <code>scipy</code> 进行统计计算）生成达到学术发表质量的图表。该工作区已不再依赖 Seaborn——所有图表样式均直接在 <code>PlotRenderer</code> 中使用 Matplotlib 原语绘制。</p>
+<hr />
+<h2 id="architecture-overview"><strong>架构概览</strong><a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>graph TD
+    GUI["侧边栏 / 自定义对话框"] --&gt; GCL["graph_control：GraphPatch + 校验"]
+    AI["AI / MCP 类型化命令"] --&gt; GCL
+    GCL --&gt; VMWG["VMWorkspaceGraphs"]
+    VWG["VWorkspaceGraphs"] --&gt; MDI["QMdiArea"]
+    MDI --&gt; VG["VGraph"]
+    VG --&gt; PR["PlotRenderer"]
+    VWG --&gt; DF["DataFilter"]
+    VWG --&gt; CGD["CustomizeGraphDialog"]
+    CGD --&gt; GC["graph_commit（快照/差异）"]
+    CGD --&gt; GS["graph_style（样式/重绘分区）"]
+
+    VWG --&gt; RS["MPlotRecipeStore"]
+    VWG --&gt; STS["MStyleTemplateStore"]
+    VWG --&gt; EXP["VExportDialog / VBatchExportDialog"]
+    VWG --&gt; MP["VMultiPanelDialog"]
+
+    VWG --&gt;|"调用"| GCL
+    VMWG --&gt;|"信号"| VWG
+    VMWG --&gt; MG["MGraph"]
+    VMWG --&gt; UNDO["撤销/重做栈"]</code></pre>
+<hr />
+<h2 id="key-classes"><strong>核心类</strong><a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
+<h3 id="vmworkspacegraphs-the-viewmodel"><strong><code>VMWorkspaceGraphs</code> — 视图模型 (ViewModel)</strong><a class="headerlink" href="#vmworkspacegraphs-the-viewmodel" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<code>spectroview/viewmodel/graphs/vm_workspace_graphs.py</code>（撤销/重做逻辑位于 <code>spectroview/viewmodel/graphs/graph_undo.py</code>）</p>
+<p>负责管理 DataFrame、图表模型以及工作区的撤销/重做历史。与 <code>Spectra</code>/<code>Maps</code> 的 ViewModel 不同，该 ViewModel 相对轻量——繁重的渲染逻辑均由 <code>VGraph</code> 控件承担。</p>
+<table>
+<thead>
+<tr>
+<th>职责</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DataFrame 加载</strong></td>
+<td><code>load_dataframes(paths)</code> — 支持 <code>.xlsx</code>、<code>.xls</code>、<code>.csv</code></td>
+</tr>
+<tr>
+<td><strong>DataFrame 管理</strong></td>
+<td><code>add_dataframe()</code>、<code>remove_dataframe()</code>、<code>select_dataframe()</code>、<code>refresh_dataframe()</code></td>
+</tr>
+<tr>
+<td><strong>图表增删改查 (CRUD)</strong></td>
+<td><code>create_graph()</code>、<code>get_graph()</code>、<code>update_graph()</code>、<code>delete_graph()</code></td>
+</tr>
+<tr>
+<td><strong>数据筛选</strong></td>
+<td><code>apply_filters(df_name, filters)</code> — 基于 <code>pd.DataFrame.query()</code></td>
+</tr>
+<tr>
+<td><strong>多晶圆绘图</strong></td>
+<td><code>create_multi_wafer_graphs()</code> — 按槽位（slot）批量创建晶圆图</td>
+</tr>
+<tr>
+<td><strong>撤销/重做</strong></td>
+<td><code>undo()</code>、<code>redo()</code>、<code>begin_undo_batch()</code>/<code>end_undo_batch()</code>、<code>can_undo</code>/<code>can_redo</code></td>
+</tr>
+<tr>
+<td><strong>持久化</strong></td>
+<td><code>save_workspace()</code>、<code>load_workspace()</code>、<code>clear_workspace()</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="signals"><strong>信号</strong><a class="headerlink" href="#signals" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">dataframes_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>           <span class="c1"># List of DataFrame names updated</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">dataframe_columns_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>    <span class="c1"># Column names of selected DataFrame</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">graphs_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>               <span class="c1"># List of graph IDs updated</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">graph_state_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>              <span class="c1"># Any persisted graph property changed (AI context sync)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">undo_state_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>               <span class="c1"># can_undo/can_redo changed -- sync toolbar buttons</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">notify</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>                        <span class="c1"># Floating notification</span>
+</code></pre></div>
+<h3 id="mgraph-the-plot-configuration-model"><strong><code>MGraph</code> — 图表配置模型</strong><a class="headerlink" href="#mgraph-the-plot-configuration-model" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<code>spectroview/model/graphs/m_graph.py</code></p>
+<p>一个纯 dataclass，用于存储重建图表所需的全部信息。<code>save()</code>/<code>load(data)</code> 提供完整的序列化能力；<code>get_display_name()</code> 负责构造 MDI 子窗口标题。为了避免在此维护可能产生分歧的第二份字段计数或完整清单（详尽且权威的定义请参见 <code>m_graph.py</code>），其字段按功能归纳如下：</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>示例字段</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>标识 / 数据源</td>
+<td><code>graph_id</code>、<code>df_name</code>、<code>plot_style</code>、<code>x</code>/<code>y</code>/<code>z</code>、<code>filters</code></td>
+</tr>
+<tr>
+<td>主坐标轴范围</td>
+<td><code>xmin</code>/<code>xmax</code>、<code>ymin</code>/<code>ymax</code>、<code>zmin</code>/<code>zmax</code></td>
+</tr>
+<tr>
+<td>坐标轴刻度与方向</td>
+<td><code>xlogscale</code>/<code>ylogscale</code>、<code>xscale_mode</code>/<code>yscale_mode</code>、<code>x_inverted</code>/<code>y_inverted</code></td>
+</tr>
+<tr>
+<td>副坐标轴（Y2/Y3/X2）</td>
+<td>各轴对应数据列、<code>color</code>、<code>marker</code>、<code>min</code>/<code>max</code>、<code>logscale</code>、<code>label</code></td>
+</tr>
+<tr>
+<td>标签与标题</td>
+<td><code>plot_title</code>、<code>plot_subtitle</code>、<code>xlabel</code>/<code>ylabel</code>/<code>zlabel</code></td>
+</tr>
+<tr>
+<td>样式与外观</td>
+<td><code>grid</code>、<code>tick_direction</code>、<code>tick_label_format</code>、字体大小、<code>figure_facecolor</code>、<code>figure_margins</code>、<code>spines_visible</code>、<code>figure_theme</code>、次刻度开关</td>
+</tr>
+<tr>
+<td>图例</td>
+<td><code>legend_visible</code>、<code>legend_outside</code>、<code>legend_properties</code>、<code>legend_bbox</code>、<code>legend_ncol</code>、<code>legend_frame</code>、<code>legend_title</code>、<code>legend_fontsize</code>、<code>legend_alpha</code>、<code>legend_loc</code></td>
+</tr>
+<tr>
+<td>特定图表类型字段</td>
+<td>晶圆/二维图谱色标（<code>color_palette</code>、<code>colormap_norm</code>、<code>colormap_center</code>）、趋势线拟合/锚点、误差棒、点图/散点图（<code>scatter_size</code>、<code>scatter_edgecolor</code>、<code>unify_marker_style</code>）、直方图、排序方式</td>
+</tr>
+<tr>
+<td>标注</td>
+<td><code>annotations</code>（类型化字典列表，参见 <a href="#annotations-tabannotations">Annotations (<code>TabAnnotations</code>)</a>）</td>
+</tr>
+<tr>
+<td>断轴</td>
+<td><code>axis_breaks</code></td>
+</tr>
+<tr>
+<td>局部放大插图坐标轴</td>
+<td><code>inset_enabled</code>、<code>inset_bounds</code>、<code>inset_xmin</code>/<code>xmax</code>/<code>ymin</code>/<code>ymax</code>、<code>inset_show_zoom_indicator</code></td>
+</tr>
+<tr>
+<td>导出与窗口几何尺寸</td>
+<td><code>plot_width</code>/<code>height</code>、<code>dpi</code>、<code>export_width_mm</code>/<code>height_mm</code></td>
+</tr>
+</tbody>
+</table>
+<p>注意：样式模板、绘图配方以及工作目录设置<strong>并不属于</strong> <code>MGraph</code> 字段——它们是围绕这些字段子集构建的独立系统（参见 <a href="#style-templates-plot-recipes">样式模板与绘图配方</a>）。</p>
+<h3 id="graph_controlpy-shared-graph-statecommand-contract"><strong><code>graph_control.py</code> — 共享图表状态与命令契约</strong><a class="headerlink" href="#graph_controlpy-shared-graph-statecommand-contract" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<code>spectroview/model/graphs/graph_control.py</code></p>
+<p>所有 GUI、AI 及 MCP 修改操作在触及 <code>MGraph</code> 之前，都会先汇聚到这一不依赖 Qt 的中间层。<code>GraphPatch</code> 直接依据 dataclass 字段自动生成，因此 MCP 模式能够自动暴露每一项可变的图表能力。重要的嵌套结构（筛选条件、逐系列样式、坐标轴边框线、断轴以及全部八种标注类型）各自均设有严格的 schema 校验规则。</p>
+<p><code>normalize_graph_patch()</code> 会在不实际修改状态的前提下，针对合并后的当前状态对补丁进行整体校验：统一检查未知键、可空性、取值范围、枚举值、数据列存在性、坐标上下限、插图几何位置、标注结构以及互斥的断轴设置。随后，<code>apply_graph_patch()</code> 会以原子方式提交已通过校验的补丁。未提及的字段保持不变；显式传入 <code>null</code> 仅清除可空属性。只要数据或系列标识发生变化，就会重置派生出的 <code>legend_properties</code>（除非调用方同时提供了替换列表）。</p>
+<p>该契约在设计上保持渲染器无关性。View 层仍负责创建 Matplotlib Figure/Canvas、查询过滤后的数据、重新渲染、调整窗口几何尺寸以及刷新当前已打开的 Customize 对话框。</p>
+<h3 id="vworkspacegraphs-the-view-orchestrator"><strong><code>VWorkspaceGraphs</code> — 视图编排器</strong><a class="headerlink" href="#vworkspacegraphs-the-view-orchestrator" title="Permanent link">&para;</a></h3>
+<p><strong>包路径</strong>：<code>spectroview/view/workspaces/graphs/</code>（<code>v_workspace_graphs.py</code>、<code>v_mdi_subwindow.py</code>、<code>v_graphs_ui.py</code>、<code>v_graphs_dataframes.py</code>、<code>v_graphs_mdi.py</code>、<code>v_graphs_actions.py</code>）</p>
+<p><code>VWorkspaceGraphs</code> 组合了图表工作区界面（<code>GraphsUIMixin</code>）、DataFrame 选择与筛选面板（<code>GraphsDataFramesMixin</code>）、MDI 窗口布局/平铺/层叠与活动工具栏同步（<code>GraphsMdiMixin</code>），以及图表创建/更新/导出/撤销/模板操作（<code>GraphsActionsMixin</code>），并将每个 <code>VGraph</code> 控件封装在 <code>MdiSubWindow</code> 中。</p>
+<h3 id="vgraph-the-rendering-widget"><strong><code>VGraph</code> — 渲染控件</strong><a class="headerlink" href="#vgraph-the-rendering-widget" title="Permanent link">&para;</a></h3>
+<p><strong>包路径</strong>：<code>spectroview/view/components/graphs/</code>（<code>v_graph.py</code> 及其辅助模块 <code>v_graph_canvas.py</code>、<code>v_graph_breaks.py</code>、<code>v_graph_axes.py</code>、<code>v_graph_annotations.py</code>）</p>
+<p>MDI 区域中的每个图表都是一个 <code>VGraph</code> 实例。它持有一个 Matplotlib <code>Figure</code> + <code>FigureCanvas</code> 并充当 UI 外壳。它负责管理交互操作、右键菜单和工具栏动作（Style 菜单、Export、Replicate），但将实际绘制算法委托给 <code>PlotRenderer</code>。<code>create_plot_widget()</code> 仍会为每个 <code>VGraph</code> 构建其专属的 Matplotlib 导航工具栏和动作按钮行（<code>self.toolbar_container</code>），但不会将其添加到图表自身的布局中——其实际承载位置参见<a href="#mdi-area-management">底部工具栏</a>。</p>
+<p><strong>交互式调整大小与平移性能。</strong> 每个 figure 都启用了 <code>layout="compressed"</code>，而每次 Agg 重绘都会重新执行约束布局计算，耗时可达数百毫秒。以下三项机制保证了交互响应的流畅性：</p>
+<ul>
+<li><code>MdiSubWindow</code> 启用了 <code>RubberBandResize</code>/<code>RubberBandMove</code>。拖拽子窗口边缘或标题栏时仅移动一个轻量级轮廓框；待鼠标松开时，画布才按最终尺寸重新调整并重绘<strong>一次</strong>。</li>
+<li><code>VGraph.canvas</code> 使用 <code>_DebouncedFigureCanvas</code>。连续事件流中的首个 <code>resizeEvent</code> 会立即应用；在 <code>RESIZE_DEBOUNCE_MS</code>（60 ms）内到达的后续事件会合并为一次以最终尺寸执行的尾部重绘。这覆盖了不经过橡皮筋轮廓的尺寸变化，例如窗口平铺、最大化或拖动分隔条（splitter）。防抖定时器以画布为父对象。</li>
+<li><code>VGraph.toolbar</code> 使用 <code>_FastNavigationToolbar</code>，即驱动 Pan/Zoom 按钮的隐藏版 <code>NavigationToolbar2QT</code> 辅助组件。它在 <code>press_pan</code> 到 <code>release_pan</code> 期间暂停 figure 的布局引擎（拖拽过程中仅坐标轴范围发生变化），将拖拽重绘帧率节流至约 30 FPS（<code>PAN_FRAME_S</code>），并在松开鼠标时恢复布局引擎并执行一次完整重绘。点击 Pan 按钮本身开销极低（约 1 ms）；此前用户感知到的卡顿源于拖拽期间每次鼠标移动都会触发完整布局重绘。</li>
+</ul>
+<p>提供两条渲染路径：</p>
+<ul>
+<li><strong><code>plot(df)</code></strong> — 全量重绘：清空并从零重建坐标轴。每当图形艺术家（artist）本身发生变更（系列数据、逐点颜色/标记、色标、副坐标轴/孪生轴、标注、放大插图）或启用/切换断轴时必须执行此路径。</li>
+<li><strong><code>restyle()</code></strong> — 快速路径：在不触碰已绘制数据的情况下，原地重绘已渲染的坐标轴（标题/轴标签/字号、网格、刻度方向与格式、主坐标轴范围、对数/对称对数刻度、背景色/边框线/边距、图例框样式）。在将坐标轴切换为 <code>"log"</code> 刻度之前，<code>GraphAxesStyleMixin</code>（<code>v_graph_axes.py</code>）会通过 <code>_sanitize_log_axis_limits()</code> 清理残余的非正线性自动范围，避免 Matplotlib 发出非正对数范围警告。只要当前激活了断轴，该方法便会返回 <code>False</code>（从而回退为全量重绘）。关于 Customize 对话框如何判定选用哪条路径，参见<a href="#live-preview-restyle-fast-path">实时预览与 Restyle 快速路径</a>。</li>
+</ul>
+<p><code>_set_figure_style()</code> 会在每次渲染时重新从 <code>plt.rcParams</code> 应用 <code>axes.facecolor</code>/<code>figure.facecolor</code>/<code>axes.labelcolor</code>/<code>text.color</code>/<code>xtick.color</code>/<code>ytick.color</code>/<code>axes.edgecolor</code>——这是必需的，因为 <code>ax.clear()</code> 并不会回溯重绘在另一套 Matplotlib 样式/主题上下文中创建的坐标轴，过去这曾导致切换到深色主题后刻度、标签和边框仍停留在黑色。</p>
+<h3 id="plotrenderer-the-plotting-engine"><strong><code>PlotRenderer</code> — 绘图引擎</strong><a class="headerlink" href="#plotrenderer-the-plotting-engine" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<code>spectroview/view/components/graphs/v_plot_renderer.py</code>（与 <code>v_plot_spatial.py</code> 中的 <code>SpatialPlotMixin</code> 和 <code>WaferPlot</code> 组合使用）</p>
+<p>出于可维护性考虑从 <code>VGraph</code> 中拆分独立，该类封装了所有图表样式的纯 Matplotlib 渲染逻辑（例如 <code>_plot_scatter</code>、<code>_plot_histogram</code> 以及 <code>WaferPlot</code> 类）。它接收 <code>VGraph</code> 实例的引用（<code>self.vg</code>）以读取配置状态（<code>self.vg.x</code>、<code>self.vg.plot_style</code> 等），并直接在 Matplotlib <code>Axes</code> 上绘图。</p>
+<h4 id="colormap-normalization">色标归一化<a class="headerlink" href="#colormap-normalization" title="Permanent link">&para;</a></h4>
+<p><code>_build_color_norm(vmin, vmax, norm_kind, center)</code> 基于 <code>MGraph.colormap_norm</code>（<code>"linear"</code>/<code>"log"</code>/<code>"centered"</code>）和 <code>MGraph.colormap_center</code> 为晶圆图/二维图谱热图构建颜色映射归一化器，可在 <strong>坐标轴与范围</strong> (Axes &amp; Limits) 标签页中通过 <strong>Z axis</strong> 刻度控件进行编辑（仅针对 <code>wafer</code>/<code>2Dmap</code> 显示）。<code>"log"</code> 使用 <code>LogNorm</code>，<code>"centered"</code> 使用 <code>CenteredNorm</code>（适用于以 0 为中心的发散型数据，如应力/应变）；当所请求的归一化方式对当前数据范围无效时（例如对包含非正值的数据使用对数归一化），两者均会平滑回退为普通线性 <code>vmin</code>/<code>vmax</code>。</p>
+<p><code>_plot_wafer</code> 和 <code>_plot_2dmap</code> 均会先通过 <code>_clear_degenerate_zlim(zmin, zmax)</code> 处理 <code>vmin</code>/<code>vmax</code>，将显式设置且相等的 <code>zmin == zmax</code> 视同未设置，从而回退至由数据推导的范围。少数早期保存的 <code>.graphs</code> 文件中带有显式的 <code>zmin == zmax == 0.0</code>（源于早年现已修复的默认值）——如果字面遵从该值，会导致 <code>matplotlib.colors.Normalize(vmin=0, vmax=0)</code> 将所有数据点塌缩映射到同一颜色；当年重新打开这些文件时颜色映射失效的真正原因正是如此，而非色标归一化功能本身的问题。</p>
+<p><code>_resolve_marker_size(style, fallback)</code> 与 <code>_resolve_edge_color(style, fallback)</code> 集中实现了 "Unify Marker size / Edge color" 的行为逻辑（参见 <a href="#legend-series-tablegendseries">Legend &amp; Series (<code>TabLegendSeries</code>)</a>）：当 <code>VGraph.unify_marker_style</code> 为 <code>True</code> 时，所有系列均使用全局统一的 <code>scatter_size</code>/<code>scatter_edgecolor</code>；当其为 <code>False</code> 时，优先采用各个系列自身的 <code>legend_properties[i]</code> 覆写值（如有）。</p>
+<hr />
+<h2 id="data-flow-creating-a-plot"><strong>数据流：创建图表</strong><a class="headerlink" href="#data-flow-creating-a-plot" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>用户操作</strong>：用户选择一个 DataFrame，配置 X/Y/Z 轴，并在 <code>VWorkspaceGraphs</code> 界面中点击 <strong>添加图表</strong> (Add plot)。</li>
+<li><strong>配置捕获</strong>：View 调用 <code>_collect_plot_config()</code> 将所有界面设置收集为配置字典，随后通过 <code>_apply_default_style_to_config()</code> 混入 <code>MSettings.get_default_graph_style()</code>（即用户通过 <strong>设为默认样式</strong> (Set as Default Style) 保存的基准样式，若有——参见 <a href="#style-templates-plot-recipes">样式模板与绘图配方</a>）。收集到的数据标识字段（<code>x</code>/<code>y</code>/<code>z</code>/<code>df_name</code>/<code>plot_style</code>）优先级始终高于默认样式，因为默认样式中只包含外观字段。</li>
+<li><strong>模型创建</strong>：View 调用 <code>vm.create_graph(plot_config)</code>。ViewModel 通过 <code>graph_control</code> 校验完整配置，随后实例化并原子化更新 <code>MGraph(graph_id)</code>，记录一个撤销点，并返回该模型。</li>
+<li><strong>控件初始化</strong>：View 实例化 <code>VGraph(graph_id)</code> 控件，并调用 <code>create_plot_widget(dpi)</code> 初始化 Matplotlib 画布。</li>
+<li><strong>数据筛选</strong>：View 调用 <code>vm.apply_filters(df_name, filters)</code> 从 ViewModel 获取过滤后的 <code>filtered_df</code>。</li>
+<li><strong>渲染</strong>：View 调用 <code>VGraph.plot(filtered_df)</code>。</li>
+<li><strong>绘图执行</strong>：<code>VGraph</code> 调用 <code>_plot_primary_axis()</code>，实例化 <code>PlotRenderer(self)</code> 并委托具体绘制逻辑（例如 <code>self.renderer._plot_scatter()</code>），随后应用坐标轴范围、标签与图例，最后返回渲染完成的画布。</li>
+<li><strong>界面集成</strong>：View 将新建的 <code>VGraph</code> 控件封装在 <code>QMdiSubWindow</code> 中，并将其添加到 MDI 区域。</li>
+</ol>
+<p>这套默认样式混入逻辑同样适用于 <code>_on_plot_multi_wafer()</code>；但在应用绘图配方或复制现有图表时则刻意<strong>不</strong>应用默认样式，因为它们本身已经携带了完整且刻意指定的样式配置。</p>
+<h3 id="data-flow-aimcp-update"><strong>数据流：AI/MCP 更新</strong><a class="headerlink" href="#data-flow-aimcp-update" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>update_graph</code> 会先针对每一个目标图表及其 DataFrame 校验类型化的 <code>GraphPatch</code>。<code>graph_id="all"</code> 会在任何修改前先展开为具体 ID 列表。</li>
+<li>MCP 服务器向队列推入一个类型化的 <code>UpdatePlot</code> 指令；它绝不导入 Qt，也不直接修改任何控件。</li>
+<li><code>VMChat</code> 将队列命令转换为应用层配置，随后 <code>main.py</code> 将更新路由至 <code>VWorkspaceGraphs.update_graphs_from_config()</code>。</li>
+<li>工作区预校验所有目标，开启单一撤销批处理，依次更新每个 <code>MGraph</code>、重建/重绘对应控件、按显式几何尺寸调整窗口大小，并刷新当前已打开的 Customize 对话框。只要发生任何渲染失败，就会恢复所有模型与控件快照，确保批处理绝不会出现半应用状态。</li>
+<li>在 GUI 编辑、AI 编辑、撤销/重做、文件加载以及渲染器派生的样式同步之后，<code>graph_state_changed</code> 会刷新提供给 AI 的完整序列化图表上下文。</li>
+</ol>
+<hr />
+<h2 id="plot-styles"><strong>图表样式</strong><a class="headerlink" href="#plot-styles" title="Permanent link">&para;</a></h2>
+<p>每种图表样式均对应一个 <code>PlotRenderer._plot_*</code> 方法，直接使用 Matplotlib 原语进行绘制（不依赖 Seaborn）：</p>
+<table>
+<thead>
+<tr>
+<th>样式</th>
+<th>Matplotlib 原语</th>
+<th>Hue 分组支持</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>point</code></td>
+<td><code>ax.errorbar()</code></td>
+<td>✓ Z 列</td>
+<td>绘制各分类均值及误差棒；"Join" 开关可用线段连接均值点；唯一支持逐系列 <strong>标记</strong> (Marker) 列的样式</td>
+</tr>
+<tr>
+<td><code>scatter</code></td>
+<td><code>ax.scatter()</code></td>
+<td>✓ Z 列</td>
+<td>默认在所有系列间统一标记大小与边框色（见 Unify 复选框）</td>
+</tr>
+<tr>
+<td><code>box</code></td>
+<td><code>ax.boxplot()</code></td>
+<td>✓ Z 列</td>
+<td>支持调色板；箱体宽度根据分类间距自动计算</td>
+</tr>
+<tr>
+<td><code>bar</code></td>
+<td><code>ax.bar()</code></td>
+<td>✓ Z 列</td>
+<td>可选误差棒（标准差 / 95% 置信区间）</td>
+</tr>
+<tr>
+<td><code>line</code></td>
+<td><code>ax.plot()</code></td>
+<td>✓ Z 列</td>
+<td>标准折线图</td>
+</tr>
+<tr>
+<td><code>trendline</code></td>
+<td><code>np.poly1d</code> 拟合 + <code>ax.scatter()</code> / <code>ax.plot()</code> / <code>ax.fill_between()</code></td>
+<td>✓ Z 列</td>
+<td>支持自定义非原点/零截距锚定的多项式回归、解析计算的 95% 置信区间带及方程表导出</td>
+</tr>
+<tr>
+<td><code>histogram</code></td>
+<td><code>ax.hist()</code>（+ <code>scipy.stats.gaussian_kde</code>）</td>
+<td>✓ Z 列</td>
+<td>支持自定义分箱数、可选 KDE 密度曲线叠加，以及阶梯轮廓或实心填充柱</td>
+</tr>
+<tr>
+<td><code>wafer</code></td>
+<td>自定义 <code>WaferPlot</code>（<code>ax.scatter()</code>）</td>
+<td>—</td>
+<td>带晶粒位点的圆形晶圆可视化；支持色标归一化（线性/对数/居中）</td>
+</tr>
+<tr>
+<td><code>2Dmap</code></td>
+<td><code>ax.imshow()</code></td>
+<td>—</td>
+<td>通过 <code>pivot()</code> 生成矩形热图；支持与晶圆图相同的色标归一化选项</td>
+</tr>
+</tbody>
+</table>
+<h3 id="multi-axis-support"><strong>多坐标轴支持</strong><a class="headerlink" href="#multi-axis-support" title="Permanent link">&para;</a></h3>
+<p><code>VGraph</code> 最多支持 <strong>3 个 Y 轴</strong> 以及 1 个次 X 轴：</p>
+<ul>
+<li><strong>主 Y 轴</strong>（<code>self.ax</code>）：标准左侧坐标轴</li>
+<li><strong>次 Y 轴</strong>（<code>self.ax2</code>）：右侧坐标轴，通过 <code>ax.twinx()</code> 创建</li>
+<li><strong>第三 Y 轴</strong>（<code>self.ax3</code>）：最右侧坐标轴，向外偏移</li>
+<li><strong>次 X 轴</strong>（<code>x2</code>）：通过 <code>ax.twiny()</code> 创建</li>
+</ul>
+<p>每个副坐标轴都可以使用独立的数据列，并拥有自己的标题、最小/最大值范围、对数刻度开关、颜色和标记——全部均可在 Customize 对话框的 <strong>副坐标轴与放大插图</strong> (Secondary &amp; Inset Axes) 标签页（<code>TabSecondaryInset</code>）中编辑（此前仅能通过脚本设置或硬编码）。只有当某副坐标轴分配了数据列之后，对应行才会启用。</p>
+<hr />
+<h2 id="dataframe-management"><strong>DataFrame 管理</strong><a class="headerlink" href="#dataframe-management" title="Permanent link">&para;</a></h2>
+<h3 id="loading"><strong>加载</strong><a class="headerlink" href="#loading" title="Permanent link">&para;</a></h3>
+<p><code>VMWorkspaceGraphs.load_dataframes()</code> 使用 <code>m_io.load_dataframe_file()</code>：</p>
+<ul>
+<li><strong>Excel</strong>（<code>.xlsx</code>/<code>.xls</code>）：单工作表 → <code>{filename: df}</code>。多工作表 → 每个工作表映射为 <code>{filename_sheetname: df}</code>。</li>
+<li><strong>CSV</strong>：自动检测分号与逗号分隔符。</li>
+</ul>
+<h3 id="source-tracking-and-refresh"><strong>源路径追踪与刷新</strong><a class="headerlink" href="#source-tracking-and-refresh" title="Permanent link">&para;</a></h3>
+<p>每个已加载 DataFrame 的源文件路径均记录在 <code>self.dataframe_sources</code> 中。"Refresh" 按钮会从磁盘重新读取文件，方便外部工具修改数据后的迭代分析工作流。</p>
+<h3 id="programmatic-injection"><strong>编程式注入</strong><a class="headerlink" href="#programmatic-injection" title="Permanent link">&para;</a></h3>
+<p>其他工作区可以直接注入 DataFrame：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># From Maps workspace:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">graphs_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">add_dataframe</span><span class="p">(</span><span class="n">profile_name</span><span class="p">,</span> <span class="n">profile_df</span><span class="p">)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># From Spectra/Maps fit results:</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="bp">self</span><span class="o">.</span><span class="n">graphs_workspace</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">add_dataframe</span><span class="p">(</span><span class="s2">&quot;fit_results&quot;</span><span class="p">,</span> <span class="n">df_fit_results</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="filter-system"><strong>筛选系统</strong><a class="headerlink" href="#filter-system" title="Permanent link">&para;</a></h2>
+<p><code>VDataFilter</code> 控件提供动态查询构建器：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Each filter is a dict:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="s2">&quot;expression&quot;</span><span class="p">:</span> <span class="s2">&quot;Slot == 5&quot;</span><span class="p">,</span>    <span class="c1"># Pandas query expression</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="kc">True</span>                  <span class="c1"># Active/inactive toggle</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
+</code></pre></div>
+<p>筛选条件通过 <code>pd.DataFrame.query()</code> 应用：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span> <span class="nf">apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df_name</span><span class="p">,</span> <span class="n">filters</span><span class="p">):</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframes</span><span class="p">[</span><span class="n">df_name</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">for</span> <span class="n">filter_data</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">:</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="k">if</span> <span class="n">filter_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">filter_data</span><span class="p">[</span><span class="s2">&quot;expression&quot;</span><span class="p">])</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="k">return</span> <span class="n">df</span>
+</code></pre></div>
+<p>筛选条件<strong>按图表独立保存</strong>在 <code>MGraph.filters</code> 中，因此每个图表都可以拥有不同的启用筛选条件。</p>
+<h3 id="multi-wafer-workflow"><strong>多晶圆工作流</strong><a class="headerlink" href="#multi-wafer-workflow" title="Permanent link">&para;</a></h3>
+<p>当 DataFrame 包含 <code>Slot</code> 列时（半导体数据集中非常常见）：</p>
+<ol>
+<li>View 会显示槽位复选框以及 <strong>添加多晶圆图</strong> (Add Multi-Wafer) 按钮。</li>
+<li>用户勾选所需槽位（例如 1、3、5、7）。</li>
+<li><code>create_multi_wafer_graphs()</code> 为每个槽位创建一个晶圆图，并将 <code>Slot == N</code> 筛选条件合并进基础筛选条件中。</li>
+<li>所有晶圆图将同时显示在 MDI 区域中。</li>
+</ol>
+<hr />
+<h2 id="graph-customization"><strong>图表自定义</strong><a class="headerlink" href="#graph-customization" title="Permanent link">&para;</a></h2>
+<h3 id="customizegraphdialog-singleton"><strong><code>CustomizeGraphDialog</code>（单例）</strong><a class="headerlink" href="#customizegraphdialog-singleton" title="Permanent link">&para;</a></h3>
+<p><strong>包路径</strong>：<code>spectroview/view/components/customize_graph/</code> — <code>CustomizeGraphDialog</code>（位于 <code>customize_graph_dialog.py</code>）采用类似现代“设置”页面的双栏布局，配有支持实时关键词搜索的响应式左侧导航栏、带选中胶囊和左侧强调条的样式化列表项代理（item delegate），以及支持分组框高亮与自动滚动定位的模块化可滚动标签页：</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>类名</th>
+<th>模块</th>
+<th>作用域</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>常规与字体排版</strong> (General &amp; Typography)</td>
+<td><code>TabGeneral</code></td>
+<td><code>tab_general.py</code></td>
+<td>图像主题（<strong>浅色</strong> (Light) / <strong>深色</strong> (Dark)）、<strong>网格</strong> (Grid)、X 轴标签旋转、字体大小（Title/Axis/Tick/Colorbar）、数据排序</td>
+</tr>
+<tr>
+<td><strong>坐标轴与范围</strong></td>
+<td><code>TabAxesLimits</code></td>
+<td><code>tab_axes_limits.py</code></td>
+<td>带范围滑块（置于顶部）的坐标轴范围、X/Y 刻度（<strong>线性</strong> (Linear)/<strong>对数</strong> (Log)/<strong>对称对数 (Symlog)</strong>）、数据类型、反转、Z 色标刻度、断轴</td>
+</tr>
+<tr>
+<td>Ticks &amp; Spines</td>
+<td><code>TabTicksSpines</code></td>
+<td><code>tab_ticks_spines.py</code></td>
+<td>刻度方向、标签格式预设、次刻度线 (T/R/B/L)、坐标轴边框线 (T/R/B/L)</td>
+</tr>
+<tr>
+<td>Legend &amp; Series</td>
+<td><code>TabLegendSeries</code></td>
+<td><code>tab_legend_series.py</code></td>
+<td>图例框布局/字号/透明度/位置、统一标记样式、左对齐逐系列样式表</td>
+</tr>
+<tr>
+<td><strong>图表样式与拟合</strong> (Plot Style &amp; Fitting)</td>
+<td><code>TabPlotStyles</code></td>
+<td><code>tab_plot_styles.py</code></td>
+<td>图表样式选项（point/scatter/wafer）、统一误差棒、趋势线多项式/锚点/方程、直方图</td>
+</tr>
+<tr>
+<td>Annotations</td>
+<td><code>TabAnnotations</code></td>
+<td><code>tab_annotations.py</code></td>
+<td>可视化标注（<strong>垂直线</strong> (V-Line)、<strong>水平线</strong> (H-Line)、<strong>文本</strong> (Text)、<strong>箭头</strong> (Arrow)、<strong>垂直区域</strong> (V-Span)、<strong>水平区域</strong> (H-Span)、<strong>矩形框</strong> (Box)、<strong>引线标注</strong> (Callout)）及模态编辑对话框</td>
+</tr>
+<tr>
+<td><strong>副坐标轴与放大插图</strong></td>
+<td><code>TabSecondaryInset</code></td>
+<td><code>tab_secondary_inset.py</code></td>
+<td>双坐标副轴（Y2/Y3/X2，含标签/最小最大范围/对数/颜色/标记）、局部放大插图坐标轴</td>
+</tr>
+</tbody>
+</table>
+<p>这是一个工作区级单例对话框，当用户激活不同的 MDI 子窗口时会自动切换上下文（<code>switch_graph(graph_widget, graph_id)</code>）。内部包含 <code>_TabsCompatibilityProxy</code> 以及向后兼容的属性门面（<code>legend_widget</code>、<code>axis_widget</code>、<code>more_options_widget</code>、<code>annotations_widget</code>）。</p>
+<h3 id="live-preview-restyle-fast-path"><strong>实时预览与 Restyle 快速路径</strong><a class="headerlink" href="#live-preview-restyle-fast-path" title="Permanent link">&para;</a></h3>
+<p>任意标签页中的任何控件发生变更时，都会重启同一个 400 ms 防抖 <code>QTimer</code>。超时触发后，各标签页的 apply 方法会以 <code>replot=False</code> 作用于实时控件，再由 <code>graph_commit.snapshot()</code>/<code>diff()</code>（见下文）精确判断哪些字段发生了变化。若变更字段是 <code>graph_style.RESTYLE_SAFE_FIELDS</code> 的子集，对话框就会调用 <code>VGraph.restyle()</code>（快速原地重绘）；否则执行全量 <code>VGraph.plot(df)</code>。该实时预览绝不会触碰撤销栈或 <code>vm.update_graph()</code>——在用户点击 <strong>应用</strong> (Apply) 之前，所有更改仅体现于视觉效果；点击应用后，所有标签页的更改会被打包进一对 <code>vm.begin_undo_batch()</code>/<code>end_undo_batch()</code> 中（无论编辑了多少个标签页，每次点击应用仅产生一步撤销记录）。点击 <strong>取消</strong> (Cancel) 则依据对话框打开时捕获的快照还原控件状态，自始至终不会修改 ViewModel。</p>
+<h3 id="graph_stylepy-the-styledata-field-partition"><strong><code>graph_style.py</code> — 样式与数据字段分区</strong><a class="headerlink" href="#graph_stylepy-the-styledata-field-partition" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<code>spectroview/model/graphs/graph_style.py</code></p>
+<ul>
+<li><strong><code>STYLE_FIELD_NAMES</code></strong> — 除标识/数据列、数据坐标范围、标注以及窗口/输出几何尺寸外的所有 <code>MGraph</code> 字段（通过排除 <code>_NON_STYLE_FIELDS</code> 计算得出）。它定义了“图表的视觉外观”，可在不同数据构成的图表之间自由迁移。</li>
+<li><strong><code>RESTYLE_SAFE_FIELDS</code></strong> — <code>STYLE_FIELD_NAMES</code> 中更窄的子集：即对 <code>VGraph.restyle()</code> 快速重绘路径安全的字段（标题/标签/字号、网格、刻度方向与格式、主坐标轴范围、对数/对称对数刻度、背景色/边框线/边距、图例框样式）。排除一切需要重建图形艺术家的属性（逐系列颜色/标记/大小、色标、副坐标轴、标注、放大插图）。</li>
+<li><strong><code>extract_style(source_dict)</code></strong> / <strong><code>apply_style_dict(graph_widget, style_dict)</code></strong> / <strong><code>default_style()</code></strong> — 分别用于从图表中提取样式子集、将样式字典写入控件（并重置 <code>legend_properties</code> 以便重新派生逐系列颜色），以及生成硬编码的出厂默认样式。</li>
+<li><strong><code>can_restyle_without_replot(changed_fields)</code></strong> — 当且仅当每个变更字段均位于 <code>RESTYLE_SAFE_FIELDS</code> 中时返回 <code>True</code>。</li>
+</ul>
+<h3 id="graph_commitpy-change-tracking"><strong><code>graph_commit.py</code> — 变更追踪</strong><a class="headerlink" href="#graph_commitpy-change-tracking" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<code>spectroview/view/components/graphs/graph_commit.py</code></p>
+<p><code>snapshot(gw)</code> 会从实时 <code>VGraph</code> 控件深拷贝除 <code>graph_id</code> 外的每一个 <code>MGraph</code> 字段；<code>diff(gw, before)</code> 则仅返回与此前快照存在差异的字段补丁字典。该函数同时服务于 Customize 对话框的实时预览触发（决定选用 restyle 还是全量 replot）以及工具栏层面的编辑（例如在 <code>save_workspace()</code> 之前将拖拽后的图例位置或调整后的子窗口尺寸同步回模型）——在两种场景下，生成的补丁都会经由 <code>properties_changed.emit()</code> → <code>vm.update_graph()</code> 流转，也正是这一步真正记录撤销历史。</p>
+<h3 id="undoredo"><strong>撤销/重做</strong><a class="headerlink" href="#undoredo" title="Permanent link">&para;</a></h3>
+<p>撤销/重做栈位于 <code>VMWorkspaceGraphs</code> 而非 View 层：<code>_undo_stack</code>/<code>_redo_stack</code> 保存整个工作区的快照（<code>{graph_id: MGraph.save()-dict}</code>），上限为 50 条记录。每次调用 <code>create_graph()</code>/<code>update_graph()</code>/<code>delete_graph()</code> 都会记录一个撤销点，除非调用位于 <code>begin_undo_batch()</code>/<code>end_undo_batch()</code> 批处理块内部——此时整批操作会被折叠为单个撤销步骤（Customize 对话框的 <strong>应用</strong> 按钮以及绘图配方应用流程正是利用这一点，将多标签页或多图表的操作合并为一步撤销）。<code>undo_state_changed</code> 通过 <code>can_undo</code>/<code>can_redo</code> 使工具栏上的 <strong>撤销</strong> (Undo)/Redo 按钮保持同步。</p>
+<h3 id="keyboard-shortcuts"><strong>键盘快捷键</strong><a class="headerlink" href="#keyboard-shortcuts" title="Permanent link">&para;</a></h3>
+<p>快捷键注册在 <code>self.mdi_area</code> 上（而非整个工作区控件，以免用户在侧边栏 <code>QLineEdit</code> 中输入时遮蔽原生编辑快捷键），并作用于当前活动 MDI 子窗口中的图表。这种 <code>WidgetWithChildrenShortcut</code> 上下文还意味着它们天然仅限于 Graphs 标签页内生效：当切换到其他标签页时，<code>self.mdi_area</code>（及其内部一切控件）不在焦点链中，因此这些快捷键完全不会误触发。</p>
+<table>
+<thead>
+<tr>
+<th>快捷键</th>
+<th>动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Ctrl+Z</code></td>
+<td>撤销</td>
+</tr>
+<tr>
+<td><code>Ctrl+Shift+Z</code></td>
+<td>重做</td>
+</tr>
+<tr>
+<td><code>Ctrl+C</code></td>
+<td>将当前活动图表的<em>图像</em>复制到剪贴板（<code>VGraph.copy_to_clipboard()</code>，对应工具栏的 <strong>复制</strong> (Copy) 按钮）</td>
+</tr>
+<tr>
+<td><code>Ctrl+V</code></td>
+<td>将已复制的<em>样式</em>粘贴到当前活动图表</td>
+</tr>
+<tr>
+<td><code>Ctrl+E</code></td>
+<td>为当前活动图表打开 Customize Graph Dialog（对应工具栏的 Customize 按钮）</td>
+</tr>
+</tbody>
+</table>
+<p>样式复制/粘贴不再拥有独立的 <code>Ctrl+C</code> 快捷键（<code>_on_copy_style_shortcut()</code> 已被移除）——现在 <code>Ctrl+C</code> 用于复制图像，因为这是使用频率高得多的操作。样式复制仍可通过 Style 菜单中的 <strong>复制样式</strong> (Copy Style) 一键完成；<code>Ctrl+V</code> 依然会粘贴最近一次通过该方式复制的样式。</p>
+<h3 id="general-typography-tabgeneral"><strong>常规与字体排版 (<code>TabGeneral</code>)</strong><a class="headerlink" href="#general-typography-tabgeneral" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Display &amp; Grid</strong>：<strong>Figure theme</strong> 选择器（浅色/深色 —— 每次渲染都会从 <code>plt.rcParams</code> 重新应用 <code>axes.facecolor</code>/标签/刻度/边框线颜色，防止切换主题时残留下黑色文字或边框）、<strong>显示网格线</strong> (Show grid lines) 复选框（<code>MGraph.grid</code>），以及 <strong>X label rotation</strong> 微调框（<code>MGraph.x_rot</code>）。</li>
+<li><strong>Typography &amp; Font Sizes (pt)</strong>：Title、Axis label、Tick label 和 <strong>Colorbar</strong> 四个微调框排成一行（默认值为 12/12/9/10，与当前激活的 Matplotlib 样式一致）。<strong>Colorbar</strong> 字号（<code>MGraph.colorbar_fontsize</code>）用于设置晶圆图/二维图谱色标的刻度标签字号——<code>PlotRenderer._apply_colorbar_fontsize()</code> 会在每次色标（重新）创建后应用该设置，因此修改它会触发一次全量重绘（特意未纳入 <code>RESTYLE_SAFE_FIELDS</code>）。<strong>副标题</strong>没有独立的字号控件——它始终比主标题小 2 pt（在 <code>_set_figure_style</code> 中按 <code>title_fontsize − 2</code> 计算）；其<em>文本内容</em>在工作区侧边栏（<code>VWorkspaceGraphs</code>）中编辑。若通过编程方式设置了 <code>MGraph.figure_facecolor</code>/<code>figure_margins</code>，背景色与边距控制仍会被忠实保留与生效。</li>
+<li><strong>Data Sorting</strong>：智能分类排序开关（<code>MGraph.intelligent_sorting</code>）。</li>
+</ul>
+<h3 id="axes-limits-tabaxeslimits"><strong>坐标轴与范围 (<code>TabAxesLimits</code>)</strong><a class="headerlink" href="#axes-limits-tabaxeslimits" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Set Axis Limits</strong>：X/Y/Z 每个轴各占一行微调框与滑块组合（对于 <code>wafer</code>/<code>2Dmap</code>，X/Y 会隐藏，此时 Z 用作色标控制）。每个最小/最大值微调框均配有一个双端范围滑块，其可拖拽边界根据实际数据范围（外扩 10% 余量）自动推导。当某一范围未设定时，微调框会以灰色显示图表当前的实际渲染边界值——而非通用的 "default" 占位文本——使显示的数字始终具有实际参考意义；同一“真实值占位”模式也应用于该对话框中的所有其他可选微调框（插图范围、逐系列图例覆写）。</li>
+<li><strong>Axis Scales &amp; Data Types</strong>：每个轴（X/Y）的刻度（线性/<strong>对数</strong> (Logarithmic)/对称对数 (Symlog)）、数据类型（<strong>自动</strong> (Auto)/<strong>分类</strong> (Category)/<strong>数值</strong> (Numerical)）以及 Inverted 开关。针对 <code>wafer</code>/<code>2Dmap</code>，还会额外出现一行 <strong>Z axis</strong> 刻度控件（线性/对数/<strong>居中</strong> (Centered)，选择居中时附带 Center 基准值输入框）——这是支撑 <code>MGraph.colormap_norm</code>/<code>colormap_center</code> 的色标归一化控件；参见<a href="#colormap-normalization">色标归一化</a>。</li>
+<li><strong>Broken axis</strong>：X 轴断轴与 Y 轴断轴互斥（启用其中一项会自动禁用另一项，因为渲染器一次仅支持在一个轴上断轴）。渲染时通过 <code>gridspec</code> 将坐标轴拆分为两个面板——X 轴断轴时左右并排并共享 Y 轴，Y 轴断轴时上下堆叠并共享 X 轴——每个面板各自裁剪到其半段范围，隐藏相对一侧的边框线，并在真实边框边界绘制标准的斜双线 "//" 断轴标记。启用断轴时始终强制执行全量重绘（此时 <code>VGraph.restyle()</code> 返回 <code>False</code>），且与局部放大插图坐标轴互斥。</li>
+</ul>
+<h3 id="ticks-spines-tabticksspines"><strong>Ticks &amp; Spines (<code>TabTicksSpines</code>)</strong><a class="headerlink" href="#ticks-spines-tabticksspines" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Tick Appearance</strong>：刻度方向（<strong>默认</strong> (Default)/<strong>向内</strong> (In)/<strong>向外</strong> (Out)/<strong>双向</strong> (In &amp; Out)）和刻度标签格式（自动/Integer/1-decimal/2-decimal/Scientific）。</li>
+<li><strong>Minor Ticks &amp; Spines</strong>：次刻度线（分别控制 X-<strong>底部</strong> (Bottom)/X-<strong>顶部</strong> (Top)/Y-<strong>左侧</strong> (Left)/Y-<strong>右侧</strong> (Right)，并具备智能默认行为：自动在数值轴上显示次刻度线，而在分类轴或图谱上隐藏）以及 <strong>Show Spines / Frame Borders</strong>（顶部/右侧/底部/左侧）。</li>
+</ul>
+<h3 id="legend-series-tablegendseries"><strong>Legend &amp; Series (<code>TabLegendSeries</code>)</strong><a class="headerlink" href="#legend-series-tablegendseries" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Legend Box Styling</strong>：列数、边框、标题、字体大小、透明度（alpha）及位置。</li>
+<li><strong>Series Styling</strong>：一个可选的 <strong>"Unify marker size / edge color"</strong> 复选框（默认勾选）。勾选时，选框顶部单一的一行 Marker size / Edge color 控件作用于全部系列，表格中的逐系列 Marker size/Edge color 列保持隐藏。取消勾选后，这些逐系列列将显现（仅适用于 <code>point</code>/<code>scatter</code> 系列样式），允许每个系列独立覆写标记大小与边框颜色——回退逻辑由 <code>PlotRenderer._resolve_marker_size()</code>/<code>_resolve_edge_color()</code> 实现。逐系列的 <strong>标签</strong> (Label)、<strong>颜色</strong> (Color) 和 <strong>透明度</strong> (Alpha) 始终可独立编辑；<strong>标记</strong>仅在 point 样式下显示，而 <strong>线宽</strong> (Line width) 仅在实际绘制线条的样式中显示（<code>line</code>/<code>trendline</code>，或启用了 "Join" 的 <code>point</code>）——纯散点图/箱线图/柱状图并不存在可描述的线宽属性。未设置的逐系列线宽/透明度微调框同样会以灰色显示实际将使用的真实数值（如 <code>"1.50"</code>），而不是通用占位符。</li>
+</ul>
+<h3 id="plot-style-fitting-tabplotstyles"><strong>图表样式与拟合 (<code>TabPlotStyles</code>)</strong><a class="headerlink" href="#plot-style-fitting-tabplotstyles" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Plot Style Options</strong>：依赖当前图表类型的复选框（<strong>连接数据点（点图）</strong> (Join data points (point plot))、<strong>错开重叠点（点图）</strong> (Dodge overlapping points (point plot))、<strong>错开重叠点（散点图）</strong> (Dodge overlapping points (scatter plot))、<strong>显示统计摘要（晶圆图）</strong> (Show statistics summary (wafer plot))）。</li>
+<li><strong>Error Bars (Unified)</strong>：跨 <code>point</code>、<code>line</code> 和 <code>bar</code> 图表的误差棒显示开关、统计类型（<strong>95% 置信区间</strong> (95% CI) / <strong>标准差</strong> (Std. Dev.) / <strong>标准误</strong> (Std. Error) / <strong>无</strong> (None)，选项随图表类型而异）以及端帽宽度。</li>
+<li><strong>Trendline &amp; Histogram Controls</strong>：多项式阶数、截距锚点 (<span class="arithmatex">\(x_0, y_0\)</span>)、带复制按钮的拟合方程与 <span class="arithmatex">\(R^2\)</span> 只读表格，以及直方图分箱数量、显示模式（<strong>实心填充</strong> (Filled) / Step）和 KDE 曲线叠加开关。</li>
+</ul>
+<h3 id="annotations-tabannotations"><strong>Annotations (<code>TabAnnotations</code>)</strong><a class="headerlink" href="#annotations-tabannotations" title="Permanent link">&para;</a></h3>
+<p>八种标注类型，每种都对应一个 <strong>添加</strong> (Add) 按钮以及 <code>customize_annotation_dialogs.py</code> 中的专用编辑对话框：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>用途</th>
+<th>编辑对话框</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vline</code> / <code>hline</code></td>
+<td>垂直/水平参考线</td>
+<td><code>EditLineDialog</code></td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td>带可选背景框的自由文本标签</td>
+<td><code>EditTextDialog</code></td>
+</tr>
+<tr>
+<td><code>arrow</code></td>
+<td>点对点箭头</td>
+<td><code>EditArrowDialog</code></td>
+</tr>
+<tr>
+<td><code>vspan</code> / <code>hspan</code></td>
+<td>垂直/水平阴影条带</td>
+<td><code>EditSpanDialog</code></td>
+</tr>
+<tr>
+<td><code>box</code></td>
+<td>实心填充或描边矩形</td>
+<td><code>EditBoxDialog</code></td>
+</tr>
+<tr>
+<td><code>callout</code></td>
+<td>带指向特定数据点箭头的文本标签</td>
+<td><code>EditCalloutDialog</code></td>
+</tr>
+</tbody>
+</table>
+<p>全部以类型化字典形式存储在 <code>MGraph.annotations</code> 中。每种标注类型均支持<strong>拖拽交互</strong>——按住并拖拽即可实时更新位置并发射 <code>annotation_position_changed</code>——由 <code>graphs/v_graph_annotations.py</code> 中的 <code>GraphAnnotationMixin._on_annotation_click()</code>/<code>_on_annotation_drag()</code>/<code>_on_annotation_release()</code> 实现。点击命中测试采用手动方式（<code>self.ax.findobj()</code> + <code>artist.contains(event)</code>），而非使用 Matplotlib 的 <code>pick_event</code>：<code>Figure.pick()</code> 仅当 <code>event.inaxes</code> 等于图形艺术家自身的 Axes 时才投递拾取事件；但只要同时配置了次 Y 轴，它就会完全覆盖主 Axes 且拥有更高的 z-order，导致 <code>event.inaxes</code> 总是解析到次 Y 轴上，从而使主 Axes 上的标注根本收不到事件——这在过去会导致配置了 <code>y2</code>/<code>y3</code> 的图表上所有标注完全无法拖拽。<code>VGraph._ax_data_coords(event)</code> 则直接通过 <code>self.ax.transData</code> 从事件自身的像素坐标反算数据位置，从而绕开了 <code>event.inaxes</code> 的同源歧义问题。</p>
+<h3 id="secondary-inset-axes-tabsecondaryinset"><strong>副坐标轴与放大插图 (<code>TabSecondaryInset</code>)</strong><a class="headerlink" href="#secondary-inset-axes-tabsecondaryinset" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Secondary Twin Axes</strong>：Y2/Y3/X2 各自对应一行（在分配数据列之前保持禁用），提供 Label、<strong>最小值</strong> (Min)/<strong>最大值</strong> (Max)、Log 开关、Color 和 Marker 设置——参见<a href="#multi-axis-support">多坐标轴支持</a>。</li>
+<li><strong>Inset (Zoom) Axes</strong>：可勾选启用的一组控件，包含以坐标轴比例表示的 <strong>位置</strong> (Position) (x0, y0) 和 <strong>大小</strong> (Size) (w, h)、独立的 X/Y 范围，以及 "Show zoom indicator" 开关（调用 <code>ax.indicate_inset_zoom()</code>，从放大插图框向主图中被放大的区域绘制引导连接线）。插图 Axes 本身不会被持久化保存——每次渲染都会依据 <code>MGraph.inset_bounds</code> 重新构建。与断轴功能互斥。</li>
+</ul>
+<hr />
+<h2 id="style-templates-plot-recipes"><strong>样式模板与绘图配方</strong><a class="headerlink" href="#style-templates-plot-recipes" title="Permanent link">&para;</a></h2>
+<p>这是两个在概念上截然不同、过去曾容易混淆的功能：</p>
+<ul>
+<li><strong>绘图配方</strong> (Plot Recipe)（<code>MPlotRecipeStore</code> / <code>VPlotRecipeDialog</code>，目录：<code>&lt;working folder&gt;/plot_recipe/</code>）——保存了一<strong>整套完整的图表配置集合</strong>（同时包含数据绑定<em>与</em>样式：<code>df_name</code>、<code>x</code>/<code>y</code>/<code>z</code>、<code>filters</code> 以及所有样式字段），每个配方对应一个 JSON 文件。应用配方时会<strong>创建新图表</strong>：<code>_on_recipe_applied()</code> 会将每条保存配置中的 <code>df_name</code> 重新指向<em>当前选中的</em> DataFrame（而非每张图表最初保存时的旧 DataFrame），并跳过缺少所需列的图表同时向用户报告，而不会中止整批应用。整套配方会作为单个撤销步骤一次性应用。该对话框支持浏览/搜索/应用/重命名/<strong>复制副本</strong> (duplicate)/删除。</li>
+<li><strong>样式模板</strong> (Style Template)（<code>MStyleTemplateStore</code> / <code>VStyleTemplateDialog</code>，目录：<code>&lt;working folder&gt;/plot_style/</code>）——保存了<strong>仅包含外观</strong>的样式字典（<code>graph_style.extract_style()</code>），每个模板对应一个 JSON 文件。应用模板时（<code>_apply_style_to_graph()</code>）会通过 <code>graph_style.apply_style_dict()</code> 直接写入<strong>现有</strong>图表——绝不触碰任何数据绑定。它是 <code>VPlotRecipeDialog</code> 的精简姊妹版：由于样式模板始终只对应单个样式字典，因此没有图表计数，也不提供复制副本功能。</li>
+</ul>
+<p>这两个存储管理器都会刻意在<strong>每次使用时依据当前的 Working Folder 设置重新构建</strong>（<code>VWorkspaceGraphs._refresh_recipe_and_style_stores()</code>，会在所有应用/保存处理器顶部调用，包括 AI 对话面板通过 <code>VMChat.refresh_recipe_store()</code> 触发的配方保存流程），而不再于启动时一次性构建——此举修复了一个原有缺陷：此前若在工作区标签页已创建后再配置 Working Folder，该更改会静默失效，直到重启应用才生效。</p>
+<p>每个 <code>VGraph</code> 工具栏上的 <strong>Style 菜单</strong>将上述机制串接起来：<strong>保存样式...</strong> (Save Style…) / <strong>应用样式...</strong> (Apply Style…)（分别打开对应的管理对话框）、<strong>复制样式</strong> / <strong>粘贴样式</strong> (Paste Style)（内存剪贴板操作，<code>Ctrl+C</code>/<code>Ctrl+V</code>）、<strong>恢复默认</strong> (Reset to Default)（始终恢复为硬编码的出厂 <code>graph_style.default_style()</code>），以及 <strong>设为默认样式</strong>（通过 <code>MSettings.set_default_graph_style()</code> 将当前图表样式保存为新建图表的起始基准——参见<a href="#data-flow-creating-a-plot">数据流：创建图表</a>）。后两者是相互独立、互不重叠的概念：<strong>恢复默认</strong>无论当前默认样式是什么，始终还原为出厂样式；而<strong>设为默认样式</strong>仅影响<em>新创建</em>图表的初始外观，可跨重启持久化，既不会改变现有图表，也不会影响“恢复默认”的行为。</p>
+<hr />
+<h2 id="export-multi-panel-composer"><strong>导出与多子图组合器</strong><a class="headerlink" href="#export-multi-panel-composer" title="Permanent link">&para;</a></h2>
+<p><strong>文件</strong>：<code>spectroview/view/components/graphs/v_export_dialog.py</code></p>
+<ul>
+<li><strong><code>VExportDialog(graph_widget, parent=None)</code></strong> — 将单个图表导出为 PNG/TIFF/SVG/PDF/EPS，提供格式/DPI/透明背景/导出时临时主题覆写等控制项，外加物理尺寸区块（期刊预设、mm/英寸切换，留空则采用当前屏幕尺寸），该尺寸会回写持久化到图表的 <code>export_width_mm</code>/<code>export_height_mm</code> 字段中。</li>
+<li><strong><code>VBatchExportDialog(graph_widgets: dict, parent=None)</code></strong> — 一键将所有当前已打开的图表按各自已持久化的物理尺寸批量导出至指定文件夹，并在汇总对话框中报告逐个图表的失败详情。</li>
+</ul>
+<p><strong>文件</strong>：<code>spectroview/view/components/graphs/v_multipanel_dialog.py</code></p>
+<ul>
+<li><strong><code>VMultiPanelDialog(graph_widgets: dict, parent=None)</code></strong> — 将多个已勾选并重排顺序的打开图表组合到一张临时的 <code>matplotlib.figure.Figure</code> 网格中（自动推荐行列数、约束布局、合并内部子图共享的坐标轴标签、添加字母/数字子图标签）。每个子图均通过临时将源 <code>VGraph</code> 的 <code>.ax</code>/<code>.figure</code> 重定向至组合画布的子图位置并调用其常规渲染路径完成绘制，随后立即恢复源控件引用，因此绝不会修改实时工作区中的图表。激活了断轴的图表在组合图中会走简化的单面板渲染路径（这是一个已知的功能边界）。</li>
+</ul>
+<p>AI/MCP 通过 <code>GraphPatch</code> 暴露了持久化的单图导出尺寸（<code>export_width_mm</code> / <code>export_height_mm</code>）以及屏幕几何尺寸/DPI。实际的导出/批量导出和多子图组合操作仍保留为 GUI 工作流：输出格式、目标路径、透明背景、导出主题、图表勾选与排序以及子图网格布局均属于一次性的文件/排版选择，而非 <code>MGraph</code> 状态。</p>
+<hr />
+<h2 id="mdi-area-management"><strong>MDI 区域管理</strong><a class="headerlink" href="#mdi-area-management" title="Permanent link">&para;</a></h2>
+<p><code>Graphs</code> 工作区使用 <code>QMdiArea</code> 同时显示多个图表：</p>
+<pre class="mermaid"><code>graph LR
+    MDI["QMdiArea"] --&gt; SW1["子窗口 1"]
+    MDI --&gt; SW2["子窗口 2"]
+    MDI --&gt; SW3["子窗口 3"]
+    SW1 --&gt; VG1["VGraph"]
+    SW2 --&gt; VG2["VGraph"]
+    SW3 --&gt; VG3["VGraph"]</code></pre>
+<ul>
+<li>每个图表都被封装在独立的 <code>QMdiSubWindow</code> 中，以支持自由调整尺寸、最小化和窗口排列。Qt Fusion 原生子窗口边框较厚且带有明显斜面立体感；<code>self.mdi_area.setStyleSheet(...)</code> 通过添加 <code>QMdiSubWindow { border: 1px solid ... }</code> 规则将其压平为 1 px 细线（通过 QSS 设置任意边框属性都会使控件从原生边框渲染切换为 CSS 边框渲染）。</li>
+<li>底部工具栏汇总了全局控制按钮：全部最小化/全部删除、撤销/Redo、Compose Figure（纯图标按钮，因属于工作区全局操作且使用频率高于保留在侧边栏的配方按钮而迁移至此），以及一个共享的<strong>图表工具栏插槽</strong>（<code>self.graph_toolbar_slot</code> / <code>self._graph_toolbar_slot_layout</code>，伸缩因子设为 1 使其填满剩余宽度）。每个 <code>VGraph</code> 都在 <code>create_plot_widget()</code> 中构建其自身的 Matplotlib 导航工具栏（Home/Pan/<strong>缩放</strong> (Zoom)/Subplots）+ 一条 <code>QFrame.VLine</code> 分隔线 + 动作按钮行（Replicate/Customize/复制/Export/Style 菜单，通过分隔线与按钮之间的 <code>QHBoxLayout.addStretch()</code> 推紧至右边缘），但它被保留为无父对象且隐藏的状态（<code>self.toolbar_container</code>），不会显示在各自的 MDI 窗口内部——每个 MDI 窗口内只展示绘图画布本身。Export 按钮兼具双重功能（<code>VGraph._on_export_clicked()</code>，设计镜像自 <code>VSpectraViewer</code> 的 Copy 按钮）：普通点击发射 <code>export_requested(graph_id)</code>（单图导出对话框）；Ctrl+点击（在点击处理器内部通过 <code>QApplication.keyboardModifiers() &amp; Qt.ControlModifier</code> 检测）则改为发射 <code>export_all_requested</code>，连接到过去由侧边栏已移除的 <code>"Export All"</code> 按钮所调用的 <code>VWorkspaceGraphs._on_export_all_clicked()</code>——该功能合一后原按钮因冗余而被直接删除。每个动作按钮图标均在创建时一次性设定为固定的彩色图标；<code>VGraph.update_icon_colors()</code> 以及 <code>VWorkspaceGraphs</code> 中按主题重新着色的逻辑均已移除，因为图表上的任何图标都不再需要跟随应用主题变色。<code>VWorkspaceGraphs._sync_active_graph_toolbar()</code> 负责将当前活动 MDI 子窗口所属图表的 <code>toolbar_container</code> 重新挂接到该共享插槽中（在此之前先拆离上一个图表的容器），从而使所有图表在视觉上共用同一条工具栏，而不是各自携带一份完全相同的副本。在所有可能改变活动图表或重建图表工具栏的位置均会调用该方法：<code>_on_subwindow_activated</code>（涵盖子窗口点击、图表下拉选择器以及“已无子窗口”时的 <code>None</code> 情况）、<code>_build_graph_widget</code>（新建图表）、<code>_on_update_plot</code> / <code>main.py</code> 中的 AI 智能体图表更新路径（<code>create_plot_widget()</code> 会从零重建 <code>toolbar_container</code>，因此插槽必须重新同步到新实例），以及 <code>_on_graph_closed</code>/<code>_on_delete_all</code>/<code>clear_workspace</code>/<code>_rebuild_all_graph_widgets</code>（销毁/重建路径，确保插槽绝不悬空引用已销毁的控件）。X 轴标签旋转与网格开关过去也曾位于这条工具栏中——现已迁移到 Customize 对话框的 <strong>常规与字体排版</strong> 标签页（<code>TabGeneral</code>，与 Figure theme 并列），因为它们属于单图样式而非工作区全局属性，且原先工具栏里的控件既没有实时预览，也只作为一次性新建图表的默认值生效。（这里过去还曾有一个 DPI 微调框——现已移除：它以前只负责设置下一个新建图表的<em>默认</em> DPI，在选中现有图表时虽然视觉上会同步显示该图表的 DPI，但修改它却静默无效，极易被误解为实时编辑控件。<code>MGraph.dpi</code> 仍默认为 100 且可通过脚本或 AI 智能体设置；日常使用中用户无需手动微调屏幕渲染分辨率，而导出分辨率则在 <code>VExportDialog</code> 中拥有专门的显式控件。）</li>
+<li>图表选择下拉框（<strong>当前图表：</strong> (Active plot:)）与实时图像尺寸标签也均已移出底部工具栏：选择器现位于侧边栏中、紧邻 <strong>添加图表</strong> / <strong>更新图表</strong> (Update plot) 按钮上方（<code>VWorkspaceGraphs._setup_action_buttons()</code>），而图像尺寸标签则被彻底移除（连同 <code>MdiSubWindow</code> 的 <code>figsize_label</code> 参数及其随之失去意义的 <code>resizeEvent</code> 覆写一并移除）。</li>
+<li><strong>全部最小化</strong> (Minimize All) 可折叠所有窗口以保持工作区整洁。</li>
+<li>在下拉框中选择图表会激活对应的子窗口并同步右侧面板控件。</li>
+</ul>
+<h3 id="graph-storage"><strong>图表存储</strong><a class="headerlink" href="#graph-storage" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># VWorkspaceGraphs maintains a lookup:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">graph_widgets</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">graph_id</span><span class="p">:</span> <span class="p">(</span><span class="n">VGraph</span><span class="p">,</span> <span class="n">QDialog</span><span class="p">,</span> <span class="n">QMdiSubWindow</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>当通过下拉框或点击子窗口选中某个图表时：</p>
+<ol>
+<li><code>_on_subwindow_activated()</code> 识别对应的 <code>graph_id</code>。</li>
+<li>加载 ViewModel 中对应的 <code>MGraph</code>。</li>
+<li>同步右侧面板控件（X/Y/Z 下拉框、标签、样式）以与之匹配。</li>
+</ol>
+<hr />
+<h2 id="persistence"><strong>持久化</strong><a class="headerlink" href="#persistence" title="Permanent link">&para;</a></h2>
+<h3 id="spectroview-working-folder"><strong>SPECTROview 工作目录</strong><a class="headerlink" href="#spectroview-working-folder" title="Permanent link">&para;</a></h3>
+<p>一个在 <strong>设置</strong> (Settings) 面板中配置的全局统一根目录（<strong>SPECTROview 工作目录</strong> (SPECTROview Working Folder)），首次配置时会在其下自动创建（<code>os.makedirs(..., exist_ok=True)</code>）五个子目录和一个便携式配置文件：</p>
+<table>
+<thead>
+<tr>
+<th>子目录 / 文件</th>
+<th>用途</th>
+<th><code>MSettings</code> 获取方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fit_model/</code></td>
+<td>拟合模型 JSON 模板（<code>Spectra</code>/<code>Maps</code> 工作区）</td>
+<td><code>get_fit_model_folder()</code></td>
+</tr>
+<tr>
+<td><code>plot_recipe/</code></td>
+<td><strong>绘图配方</strong> (Plot Recipes)</td>
+<td><code>get_plot_recipe_folder()</code></td>
+</tr>
+<tr>
+<td><code>plot_style/</code></td>
+<td><strong>样式模板</strong> (Style Templates)</td>
+<td><code>get_plot_style_folder()</code></td>
+</tr>
+<tr>
+<td><code>ai_chat_history/</code></td>
+<td>AI 对话历史记录</td>
+<td><code>get_history_folder()</code> / <code>get_ai_history_folder()</code></td>
+</tr>
+<tr>
+<td><code>template/</code></td>
+<td>用户模板与自定义预设</td>
+<td><code>get_template_folder()</code></td>
+</tr>
+<tr>
+<td><code>config.json</code></td>
+<td>便携式配置备份</td>
+<td><code>export_config()</code> / <code>import_config()</code></td>
+</tr>
+</tbody>
+</table>
+<p>如果先前配置过旧版互相独立的 "Fit model folder" / "Plot template folder" 设置，<code>get_working_folder()</code> 会执行一次性自动迁移，以免既有配置被遗弃。另一项独立设置 <code>get_default_graph_style()</code>/<code>set_default_graph_style()</code> 用于保存 <strong>设为默认样式</strong> 的基准（参见<a href="#style-templates-plot-recipes">样式模板与绘图配方</a>）——它与工作目录无关，但采用相同的持久化方式（基于磁盘存储的 <code>QSettings</code>，重启后依然保留）。</p>
+<h3 id="save-format-graphs"><strong>保存格式 (<code>.graphs</code>)</strong><a class="headerlink" href="#save-format-graphs" title="Permanent link">&para;</a></h3>
+<p>当前格式（<code>format_version: 4</code>）是一个 <strong>ZIP 压缩包</strong>，由 <code>WorkspaceIO.save_workspace()</code> 写入。版本 4 将 <code>x_as_numeric=False</code> 保留为显式的 <strong>分类</strong> 选择；更早版本则沿用历史上的 False 转 <strong>自动</strong> 迁移逻辑：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>metadata.json                          # {&quot;format_version&quot;: 4, &quot;plots&quot;: {...}, &quot;dataframe_sources&quot;: {...}}
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>dataframes/&lt;name&gt;.parquet              # one Parquet file per DataFrame, streamed directly into the zip
+</code></pre></div>
+<p><code>metadata["plots"]</code> 中的每一项都是按 <code>graph_id</code> 索引的完整 <code>MGraph.save()</code> 字典：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="nt">&quot;plots&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">        </span><span class="nt">&quot;1&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">            </span><span class="nt">&quot;graph_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">            </span><span class="nt">&quot;df_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fit_results&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">            </span><span class="nt">&quot;plot_style&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;point&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">            </span><span class="nt">&quot;x&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Slot&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">            </span><span class="nt">&quot;y&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Si_center&quot;</span><span class="p">],</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">            </span><span class="nt">&quot;z&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Zone&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">            </span><span class="nt">&quot;filters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;expression&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;R² &gt; 0.95&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}],</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">            </span><span class="nt">&quot;legend_properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">            </span><span class="nt">&quot;annotations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">            </span><span class="nt">&quot;plot_width&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">480</span><span class="p">,</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">            </span><span class="nt">&quot;plot_height&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">400</span><span class="p">,</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">            </span><span class="nt">&quot;dpi&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">    </span><span class="nt">&quot;dataframe_sources&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">        </span><span class="nt">&quot;fit_results&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/path/to/original.xlsx&quot;</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="p">}</span>
+</code></pre></div>
+<p><code>WorkspaceIO.load_workspace()</code> 会嗅探文件开头的 ZIP 魔数；早于该格式的旧文件（原始 JSON，其中 DataFrame 作为经过 gzip 压缩的十六进制 CSV 字符串存储在 <code>original_dfs</code> 键下）会被识别为旧版格式，并经由专用的兼容回退路径加载——该路径仅用于打开旧文件，绝不用于保存。</p>
+<hr />
+<h2 id="plot-replication"><strong>图表复制</strong><a class="headerlink" href="#plot-replication" title="Permanent link">&para;</a></h2>
+<p>（位于共享图表工具栏中的）"Replicate" 按钮会针对当前活动图表创建一份深拷贝：</p>
+<ol>
+<li>通过 <code>save()</code> 序列化当前 <code>MGraph</code>。</li>
+<li>移除 <code>graph_id</code>（由 ViewModel 重新分配新 ID）。</li>
+<li>捕获当前子窗口尺寸作为副本的初始尺寸。</li>
+<li>使用克隆后的配置调用 <code>_create_and_display_plot()</code>。</li>
+</ol>
+<p>这使得开发者和用户能够针对同一份数据快速开展不同视觉设置的 A/B 对比。与新建图表（添加图表 / 添加多晶圆图）不同，复制出来的图表其样式<strong>不会</strong>被 <strong>设为默认样式</strong> 基准覆盖，因为它本身已经携带了一套完整且刻意指定的样式。</p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../maps/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 二维图谱工作区">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                二维图谱工作区
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../vbf_engine/" class="md-footer__link md-footer__link--next" aria-label="下一页: 向量化批量拟合引擎 (VBF)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                向量化批量拟合引擎 (VBF)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

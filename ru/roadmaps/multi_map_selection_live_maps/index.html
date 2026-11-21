@@ -1,0 +1,2851 @@
+
+<!doctype html>
+<html lang="ru" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Интерактивный инструмент для обработки, аппроксимации и визуализации спектроскопических данных">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/ru/roadmaps/multi_map_selection_live_maps/">
+      
+      
+      
+      
+        
+          <link rel="alternate" href="../../../roadmaps/multi_map_selection_live_maps/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/roadmaps/multi_map_selection_live_maps/" hreflang="fr">
+        
+          <link rel="alternate" href="../../../de/roadmaps/multi_map_selection_live_maps/" hreflang="de">
+        
+          <link rel="alternate" href="./" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/roadmaps/multi_map_selection_live_maps/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Technically Validated Specification & Implementation Roadmap: Multi-Map Selection & Live Maps - Документация SPECTROview</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#technically-validated-specification-implementation-roadmap-multi-map-selection-live-maps" class="md-skip">
+          Перейти к содержанию
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Верхний колонтитул">
+    <a href="../../" title="Документация SPECTROview" class="md-header__button md-logo" aria-label="Документация SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Документация SPECTROview
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Technically Validated Specification &amp; Implementation Roadmap: Multi-Map Selection &amp; Live Maps
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Выберите язык"
+      title="Выберите язык"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">RU</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../roadmaps/multi_map_selection_live_maps/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/roadmaps/multi_map_selection_live_maps/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/roadmaps/multi_map_selection_live_maps/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="ru"
+              class="md-select__link" aria-current="true"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/roadmaps/multi_map_selection_live_maps/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Поиск" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Поиск">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистить" aria-label="Очистить" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Инициализация поиска
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Главная
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Установка
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Руководство пользователя
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  ИИ-агент
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../developer/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Руководство разработчика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  История изменений
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Навигация" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="Документация SPECTROview" class="md-nav__button md-logo" aria-label="Документация SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    Документация SPECTROview
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Главная
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Установка
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство пользователя
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство пользователя
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Поддерживаемые форматы данных
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Обзор интерфейса
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Строка меню
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочие области «Спектры» и «Карты»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Многомерный анализ (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Калькуляторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Настройки
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сохранение и загрузка
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Горячие клавиши и советы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство разработчика
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство разработчика
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Конвейер загрузки файлов
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архитектура данных SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Спектры»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Векторизованный движок пакетной аппроксимации (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Многомерный анализ (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Локальный MCP-сервер
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Спектры» (загрузка, предобработка, аппроксимация)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты» (гиперспектральные данные, тепловые карты)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Визуализация данных («Графики»)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Калькуляторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Расширение SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    История изменений
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="technically-validated-specification-implementation-roadmap-multi-map-selection-live-maps">Technically Validated Specification &amp; Implementation Roadmap: Multi-Map Selection &amp; Live Maps<a class="headerlink" href="#technically-validated-specification-implementation-roadmap-multi-map-selection-live-maps" title="Permanent link">&para;</a></h1>
+<p><strong>Document Status</strong>: Fully Implemented &amp; Shipped in <code>v26.48.1</code> (Phases 0–6 + Post-Implementation Refinements &amp; Modularization)<br />
+<strong>Supersedes</strong>: Draft Roadmap (<code>34431df</code>, initial Phases 1–4 proposal)<br />
+<strong>Primary Modules Affected (Updated for Current <code>v26.48.1+</code> Package Structure)</strong>:</p>
+<ul>
+<li><code>spectroview/model/spectra/spectra_store.py</code>, <code>spectroview/model/spectra/spectral_parameters.py</code></li>
+<li><code>spectroview/viewmodel/maps/vm_workspace_maps.py</code>, <code>spectroview/viewmodel/spectra/vm_workspace_spectra.py</code>, <code>spectroview/viewmodel/maps/vm_live_maps.py</code></li>
+<li><code>spectroview/view/components/lists/v_map_list.py</code>, <code>spectroview/view/components/rgb_live_maps/</code> (<code>v_live_maps.py</code>, <code>v_live_map_subpanel.py</code>, <code>v_live_map_1d.py</code>, <code>v_live_map_2d.py</code>, <code>v_live_map_selection.py</code>, <code>v_live_maps_options.py</code>, <code>v_live_maps_legend_editor.py</code>, <code>v_range_selector.py</code>, <code>v_range_bracket_mixin.py</code>, <code>common.py</code>)</li>
+<li><code>spectroview/view/workspaces/v_workspace_maps.py</code>, <code>spectroview/view/workspaces/v_workspace_spectra.py</code></li>
+</ul>
+<p><strong>Related Features</strong>: Multi-Map Selection, RGB Spectral Range Brackets (<code>VSpectraViewer</code> / <code>RangeSelectorManager</code>), Adaptive 1D/2D Live Maps, Green Red/Blue (<code>R/B</code>) Ratio, Vectorized Parameter Caching, Async Worker Offload, Interactive Live Maps View Options</p>
+<hr />
+<h2 id="0-implementation-release-audit-summary-verified-against-codebase-git-history">0. Implementation &amp; Release Audit Summary (Verified Against Codebase &amp; Git History)<a class="headerlink" href="#0-implementation-release-audit-summary-verified-against-codebase-git-history" title="Permanent link">&para;</a></h2>
+<p>All phases of this specification (<code>Phase 0</code> through <code>Phase 5</code>), plus an additional <code>Phase 6</code> (Interactive Live Maps View Options &amp; Draggable Legend Editor) and subsequent UX, rendering, and package-modularization refinements, have been <strong>fully implemented, verified by automated tests, and shipped in release <code>v26.48.1</code></strong>:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Phase / Milestone</th>
+<th style="text-align: left;">Status</th>
+<th style="text-align: left;">Commit Hash(es)</th>
+<th style="text-align: left;">Shipped Release</th>
+<th style="text-align: left;">Verification &amp; Post-Implementation Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Phase 0</strong>: Baseline Hygiene, <code>MapData.data_version</code>, Slice-First <code>float64</code> Cast, Cached Delaunay <code>MapGridder</code>, Signal Separation &amp; Tab-Visibility Gate</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>850512b</code>, <code>138bb55</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Implemented <code>MapData.data_version</code> + <code>touch()</code>, slice-first <code>compute_spectral_parameter</code>, <code>~md.is_active</code> <code>NaN</code> masking, <code>MapGridder</code> (<code>build_map_gridder</code> / <code>evaluate_map_grid</code> with cached Delaunay barycentric weights and <code>cKDTree</code> <code>QhullError</code> fallback), hidden-tab dirty gating, and workspace-clear reset. Commit <code>138bb55</code> added cached <span class="arithmatex">\(O(1)\)</span> <code>fname_to_index_map</code> / <code>get_fname_index</code> on <code>MapData</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 1</strong>: <code>VMapsList</code> <code>ExtendedSelection</code> &amp; Placeholder-Safe Selection Model</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>850512b</code>, <code>bac32d0</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Enabled <code>ExtendedSelection</code>, added <code>maps_selection_changed = Signal(list, object)</code>, primary reconciliation on <code>Ctrl+Click</code> deselection, and name-preserving <code>set_maps_names()</code>. Commit <code>bac32d0</code> added drag-and-drop map reordering in <code>VMapsList</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 2</strong>: Two-Tier Workspace Coordination (<code>VMWorkspaceMaps</code> &amp; <code>VWorkspaceMaps</code>)</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>850512b</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Added <code>selected_map_names</code>, <code>select_maps(map_names, primary_name)</code>, <code>live_maps_selection_changed</code>, and batch <code>delete_selected_maps()</code> with confirmation dialog while keeping all preprocessing, baseline, fitting, and MVA tools strictly bound to the Primary Active Map.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 3</strong>: Multi-Map <code>VMLiveMaps</code> Engine, Data-Versioned LRU Cache &amp; <code>R/B</code> Ratio</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>850512b</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Added <code>set_map_datas()</code>, Primary-precedence dimensionality classification, active-only 2D evaluation (<code>set_active_2d_map</code>), 64-entry versioned <code>_intensity_cache</code>, <code>multi_profile_data_ready</code>, <code>map_2d_candidates_changed</code>, <code>live_maps_cleared</code>, and adaptive <code>60–250 ms</code> debounce timer.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 4</strong>: <code>VLiveMaps</code> / <code>LiveMapSubpanel</code> Multi-Profile Visualization, <code>Line2D</code> Pool &amp; 2D Switcher</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong> (Evolved in <code>5313933</code> &amp; <code>7b3ce50</code>)</td>
+<td style="text-align: left;"><code>850512b</code>, <code>5313933</code>, <code>7b3ce50</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Shipped in <code>850512b</code> with <code>Line2D</code> artist pooling, aspect-ratio reset (<code>set_aspect("auto")</code>), and tab-level 2D switcher. In <code>5313933</code>, the multi-1D header chip strip was retired in favor of the toggleable on-canvas draggable Legend box with dark-mode contrast fixes and configurable <code>Text size</code> (DPI raised from 70 to 96). In <code>7b3ce50</code>, multi-profile curves were standardized to uniform line thickness.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 5</strong>: Thresholded Async <code>QThreadPool</code> Worker (<code>&gt;= 25,000</code> spectra) &amp; Doc Sync</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>6cc1bce</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Added <code>ASYNC_SPECTRUM_THRESHOLD = 25_000</code>, <code>_LiveMapWorker(QRunnable)</code> on a dedicated single-worker <code>QThreadPool</code>, parented <code>_LiveMapWorkerBridge(QObject)</code>, monotonic <code>_generation_id</code> cancellation, and <code>Main.closeEvent()</code> worker drain. Verified by <code>tests/unit/viewmodel/test_vm_live_maps_async.py</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 6 &amp; Follow-Up Enhancements</strong>: View Options Menu, Plot Theme, Interactive Selection, 1D Normalization, Blitted Bracket Dragging &amp; Package Modularization</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>6cc1bce</code>, <code>3aa87f7</code>, <code>65b2912</code>, <code>98e721a</code>, <code>173e8d8</code>, <code>ebf397f</code>, <code>7aba5ce</code>, <code>ce22850</code>, <code>41a8ef0</code>, <code>6ed1f15</code>, <code>c32dd65</code>, <code>e92ea75</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Added top-right <code>[Show Legend \| More view options]</code> toolbar &amp; <code>LiveMapsLegendEditorDialog</code> (<code>6cc1bce</code>), persistent <code>Plot theme</code> (<code>Light Mode</code> / <code>Dark Mode</code>) &amp; per-subpanel <code>Rescale</code>/<code>Pan</code>/<code>Zoom</code> tools (<code>3aa87f7</code>), fixed copied figure size/theme &amp; 2-column options menu (<code>98e721a</code>), <code>Show figure label</code> (<code>173e8d8</code>), interactive spectrum selection from RGB Live Maps (<code>ebf397f</code>), 1D curve normalization toolbar (<code>7aba5ce</code>), Agg background blitting during bracket drag + <code>flush_pending()</code> on release (<code>ce22850</code>), <code>Ctrl+Click</code> copy plot data (<code>41a8ef0</code>), auto-hiding Green bracket on <code>R/B ratio</code> + consolidation into <code>spectroview/view/components/rgb_live_maps/</code> (<code>6ed1f15</code>, <code>e92ea75</code>), and auto-switching bottom tab to Live Maps on bracket activation (<code>c32dd65</code>).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-executive-summary">1. Executive Summary<a class="headerlink" href="#1-executive-summary" title="Permanent link">&para;</a></h2>
+<p>This document presents a comprehensive technical re-audit and implementation-ready specification for adding <strong>multi-map selection</strong> in the Maps workspace while hardening the <strong>RGB Live Brackets</strong>, <strong>Adaptive 1D/2D Live Maps</strong>, and <strong>Green R/B Ratio</strong> subsystems for large hyperspectral workloads.</p>
+<p>A second, code- and benchmark-driven audit of the existing codebase and the initial roadmap (<code>34431df</code>) exposed <strong>critical architectural contradictions, stale-state bugs, silent signal amplification, and severe CPU/memory bottlenecks</strong>:</p>
+<ol>
+<li><strong>Unreported <code>2×</code> and Spurious Recomputations</strong>: Under current wiring, switching maps computes Live Maps <strong>twice</strong> (<code>6</code> parameter passes across 3 brackets), single-point clicks in <code>VMapViewer</code> trigger full-map recalculation (<code>3</code> spurious passes), and checkbox toggles recompute all channels even though <code>VMLiveMaps</code> ignores <code>MapData.is_active</code>. Multi-selecting <span class="arithmatex">\(K\)</span> maps would multiply this wasted work by <span class="arithmatex">\(K\times\)</span>.</li>
+<li><strong>Invalidated <code>&lt; 15 ms</code> Performance Claim</strong>: Direct benchmarking shows a single <code>3,721</code>-spectrum map already takes <code>39.1–40.8 ms</code> in <code>VMLiveMaps</code> compute alone, while <code>N = 90,000</code> allocates <strong><code>947.5 MB</code></strong> peak Python memory and takes <strong><code>1.37–1.54 s</code></strong> due to casting the entire <code>(N, M)</code> matrix from <code>float32</code> to <code>float64</code> before column-masking. Scattered 2D maps re-run <code>scipy.interpolate.griddata</code> from scratch on every drag tick (<code>209.7 ms</code> at <code>N = 2,401</code>; <strong><code>14.51 s</code></strong> at <code>N = 160,000</code>), and Matplotlib <code>Agg</code> redraws cost <strong><code>127.6–188.7 ms</code> per subpanel</strong> (<code>~380–566 ms</code> across 3 subpanels).</li>
+<li><strong>Unresolved UX &amp; Data Contracts</strong>: The prior proposal contradicted itself on multi-map bulk preprocessing scope and mixed 1D/2D precedence, omitted <code>VMapsList</code> placeholder/selection Qt traps, left workspace-clear stale references unhandled, and omitted <code>R/B</code> ratio invalidation and heterogeneous map axis bounds.</li>
+</ol>
+<h3 id="resolved-design-baseline">Resolved Design Baseline<a class="headerlink" href="#resolved-design-baseline" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Ambiguity / Risk in Prior Draft (<code>34431df</code>)</th>
+<th style="text-align: left;">Validated Specification Decision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Bulk operations scope</strong> (Section 4.A Primary-only vs. Phase 2 <code>_get_target_mds</code> multi-select)</td>
+<td style="text-align: left;"><strong>Strict Primary-Only</strong> for all preprocessing, baseline, peak-model, fit, and single-map export tools (<code>Ctrl</code>-to-apply-all behavior preserved). Multi-selection drives comparison in <strong>Live Maps</strong> (plus explicit multi-map <strong>Delete</strong> confirmation on sidebar removal).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Mixed 1D + 2D selection</strong> (Section 4.D Primary-precedence vs. Phase 3 <code>all(...)</code> 1D)</td>
+<td style="text-align: left;"><strong>Primary-Precedence Mode Selection</strong>: Primary map (<code>current_map_name</code>) dimensionality sets Live Maps mode (<code>1D</code> compares all selected 1D profiles; <code>2D</code> enters 2D comparison switcher). Excluded mismatched maps are never coerced; an explicit exclusion badge informs the user.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>2D multi-map comparison UX</strong> (per-subpanel combo vs. tab-level switcher vs. micro-grid)</td>
+<td style="text-align: left;"><strong>Single Tab-Level 2D Switcher</strong> (<code>Prev / Combo / Next</code> in <code>VLiveMaps</code> header), initialized to Primary Map so Red, Blue, and Green (<code>R/B</code>) always inspect the same coherent 2D map.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Multi-profile legend crowding</strong> (per-subpanel <code>ax.legend()</code> on 250 px axes)</td>
+<td style="text-align: left;"><strong>Single Shared Tab-Level Header Legend Strip</strong> in <code>VLiveMaps</code> (only shown when <span class="arithmatex">\(\ge 2\)</span> profiles are plotted), preserving 100% of plot axis area.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>RGB brackets across differing X ranges</strong> (per-map brackets vs. shared brackets)</td>
+<td style="text-align: left;"><strong>Shared Workspace Brackets</strong> positioned on Primary Map's <code>VSpectraViewer</code>. Comparison maps missing points inside <code>[x_min, x_max]</code> yield <code>NaN</code> (with a concise partial/no-overlap status indicator) rather than silently hiding mismatches behind independent intervals.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Large map latency &amp; UI freezes</strong> (full-matrix <code>float64</code>, repeated <code>griddata</code>, hidden-tab eager work)</td>
+<td style="text-align: left;"><strong>Phase 0 Prerequisites</strong>: Visibility-gated lazy evaluation, clean signal separation, <strong>slice-first</strong> <code>float64</code> casting, cached <strong>Delaunay barycentric weights</strong> for scattered 2D maps, explicit <code>MapData.data_version</code> cache invalidation, and adaptive drag coalescing (plus optional thresholded <code>QThreadPool</code> worker for massive batches in Phase 5).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-phase-i-critical-re-audit-of-the-initial-proposal-34431df">2. Phase I — Critical Re-Audit of the Initial Proposal (<code>34431df</code>)<a class="headerlink" href="#2-phase-i-critical-re-audit-of-the-initial-proposal-34431df" title="Permanent link">&para;</a></h2>
+<p>The prior document (<code>docs/roadmaps/multi_map_selection_live_maps.md</code>, revision <code>34431df</code>) correctly identified the Two-Tier Selection concept (<code>Primary Active Map</code> vs. <code>Selected Maps Group</code>), but failed validation across five critical areas when checked against SPECTROview source code and empirical benchmarks.</p>
+<h3 id="a-internal-architectural-contradictions">A. Internal Architectural Contradictions<a class="headerlink" href="#a-internal-architectural-contradictions" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Contradiction on Bulk Operations Scope</strong>:</li>
+<li><em>Draft Section 1 &amp; Section 4.A</em>: Explicitly promised <em>"All single-map tools (<code>VMapViewer</code>, <code>VSpectraViewer</code>, <code>VMoreTab</code>, <code>VFitModelBuilder</code>, <code>VMVA</code>, <code>btn_view</code>, <code>btn_save</code>) operate exclusively on the Primary Active Map."</em></li>
+<li><em>Draft Phase 2 Step 1</em>: Prescribes <em>"Update <code>_get_target_mds(apply_all)</code> to target <code>selected_map_names</code> when multiple are selected."</em></li>
+<li>
+<p><em>Why this is dangerous</em>: Source inspection of <code>spectroview/viewmodel/vm_workspace_maps.py</code> shows <code>_get_target_mds()</code> (lines 449–455) only serves 7 actions (<code>reinit_spectra</code>, <code>apply_spectral_range</code>, <code>paste_baseline</code>, <code>subtract_baseline</code>, <code>delete_baseline</code>, <code>paste_peaks</code>, <code>delete_peaks</code>) and is <strong>bypassed</strong> by <code>apply_y_normalization</code> / <code>undo_y_normalization</code> (which resolve targets via <code>_get_selected_spectra()</code>), <code>apply_x_correction</code> / <code>undo_x_correction</code>, <code>_apply_fit_model_and_run</code>, <code>fit</code>, <code>_run_fit_thread</code>, <code>delete_current_map</code>, and CSV saving. Making <code>_get_target_mds()</code> silently mutate <code>selected_map_names</code> would cause asymmetric destructive edits across half the toolbar when a user selects maps purely to overlay Live Maps.</p>
+</li>
+<li>
+<p><strong>Contradiction on Mixed 1D/2D Multi-Selection</strong>:</p>
+</li>
+<li><em>Draft Section 4.D</em>: <em>"If the Primary Map is a 1D profile, Live Maps plots all selected 1D profiles (ignoring 2D maps with a status badge: 'Comparing 2 profile(s); 1 2D map excluded')."</em></li>
+<li><em>Draft Phase 3 Step 2</em>: <em>"If all selected maps are 1D profiles (<code>all(analyze_map_geometry(md.coords).is_profile for md in mds)</code>): ... If 2D maps: prioritize primary map."</em></li>
+<li>Those two rules produce opposite results whenever a user selects <code>[Profile_1D (Primary), Wafer_2D]</code>: Section 4.D plots <code>Profile_1D</code> as a line plot, whereas Phase 3 Step 2 sees <code>all(...) == False</code> and prioritizes the Primary... which is 1D, leaving an unhandled fallthrough branch.</li>
+</ol>
+<h3 id="b-invalidated-performance-assumptions">B. Invalidated Performance Assumptions<a class="headerlink" href="#b-invalidated-performance-assumptions" title="Permanent link">&para;</a></h3>
+<p>Draft Section 4.E claimed: <em>"Calculating parameters across multiple large maps (e.g., three 3,721-point maps = 11,163 spectra) during live bracket dragging is kept fluid (&lt; 15 ms total)."</em></p>
+<p>Direct benchmark runs against <code>HEAD</code> (<code>34431df</code>) disprove this assumption across every stage of the pipeline:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Operation / Benchmark Scenario (Observed on <code>34431df</code>)</th>
+<th style="text-align: center;">Measured Latency</th>
+<th style="text-align: center;">Measured Peak Alloc</th>
+<th style="text-align: center;">Prior Claim</th>
+<th style="text-align: left;">Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>compute_spectral_parameter</code> (10% band, <code>M = 1015</code>), <code>N = 3,721</code></td>
+<td style="text-align: center;"><strong>29.7 ms</strong></td>
+<td style="text-align: center;">39.2 MB</td>
+<td style="text-align: center;">"&lt; 15 ms for 3 maps"</td>
+<td style="text-align: left;"><strong>Refuted (1 map &gt; 2× budget)</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>VMLiveMaps</code> full pass (R+B+G <code>R/B</code>, 1 map <code>N = 3,721</code>)</td>
+<td style="text-align: center;"><strong>39.1–40.8 ms</strong></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">"&lt; 15 ms for 3 maps"</td>
+<td style="text-align: left;"><strong>Refuted (<code>3×</code> ~120 ms compute)</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>compute_spectral_parameter</code>, <code>N = 90,000</code> (<code>Y0</code> <code>float32</code> = 365.4 MB)</td>
+<td style="text-align: center;"><strong>732.2 ms</strong></td>
+<td style="text-align: center;"><strong>947.5 MB</strong></td>
+<td style="text-align: center;">Unanalyzed</td>
+<td style="text-align: left;"><strong>Critical Memory Spike</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>VMLiveMaps</code> full pass (1 map <code>N = 90,000</code>)</td>
+<td style="text-align: center;"><strong>1,366.9–1,538.6 ms</strong></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">Unanalyzed</td>
+<td style="text-align: left;"><strong>1.5 s UI Stall</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>compute_map_grid</code> (scattered <code>N = 2,401</code> / <code>N = 160,000</code>)</td>
+<td style="text-align: center;"><strong>209.7 ms</strong> / <strong>14,507.3 ms</strong></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">Unanalyzed</td>
+<td style="text-align: left;"><strong>14.5 s UI Freeze</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>LiveMapSubpanel</code> Agg render+draw (<code>320×260</code>, 2,000-pt 1D / 300×300 2D)</td>
+<td style="text-align: center;"><strong>127.6 ms</strong> / <strong>188.7 ms</strong></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">"fluid"</td>
+<td style="text-align: left;"><strong>380–566 ms across 3 panels</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The draft completely missed Matplotlib <code>Agg</code> canvas draw cost (<code>~128–189 ms</code> <em>per subpanel</em> = <code>~380–566 ms</code> per 3-panel update), which exceeds the <code>60 ms</code> debounce timer by <code>6×–9×</code>.</p>
+<h3 id="c-overlooked-redundant-compute-lifecycle-bugs">C. Overlooked Redundant Compute &amp; Lifecycle Bugs<a class="headerlink" href="#c-overlooked-redundant-compute-lifecycle-bugs" title="Permanent link">&para;</a></h3>
+<p>Instrumentation of the current signal graph (3 active brackets) quantified severe existing compute waste before multi-selection is even added:</p>
+<ul>
+<li><strong>Map switch via <code>VMapsList</code></strong>: Fires <code>batches = 2, compute_calls = 6, panel_updates = 6</code> (<strong><code>2×</code> redundant</strong>) because <code>VMWorkspaceMaps.select_map()</code> (lines 117–138) emits both <code>spectra_selection_changed</code> and <code>map_data_updated</code>, and <code>VWorkspaceMaps</code> routes both to <code>vm_live_maps.set_map_data(md)</code>.</li>
+<li><strong>Clicking a single spectrum point in <code>VMapViewer</code></strong>: Fires <code>batches = 1, compute_calls = 3, panel_update_map = 3</code> (<strong>100% spurious</strong>). Selecting a spectrum point changes no map intensities, yet <code>_on_map_viewer_selection</code> emits <code>spectra_selection_changed</code>, forcing a full-map recompute of all 3 Live Maps channels.</li>
+<li><strong>Toggling a spectrum checkbox (<code>is_active</code>)</strong>: Fires <code>batches = 1, compute_calls = 3, panel_update_map = 3</code>, even though <code>VMLiveMaps</code> computes across the entire <code>md.y_matrix</code> without consulting <code>md.is_active</code>.</li>
+<li><strong>Hidden-tab eager computation</strong>: Neither <code>VWorkspaceSpectra</code> nor <code>VWorkspaceMaps</code> checks whether Live Maps is the active tab in <code>bottom_tabs</code>. Loading maps, preprocessing, or clicking heatmap points computes and draws all 3 hidden Matplotlib canvases synchronously.</li>
+<li><strong>Workspace clear &amp; last-map delete memory leak</strong>: <code>VWorkspaceMaps._on_map_data_changed()</code> (line 396) guards <code>if self.vm.current_map_name:</code> before calling <code>set_map_data</code>. Clearing the workspace (<code>clear_workspace</code>) or deleting the final map never notifies <code>VMLiveMaps</code>, leaving the deleted <code>MapData</code> pinned in <code>VMLiveMaps._current_md</code> and stale plots rendered.</li>
+<li><strong>Bracket toggle double-evaluation &amp; missing label sync</strong>: <code>VWorkspaceSpectra._on_range_selector_toggled()</code> (lines 393–401) sets the range (<code>_timer.start()</code>) and immediately calls <code>set_selector_active(..., True)</code> (synchronous recompute), triggering two passes when a bracket turns on. Additionally, <code>VWorkspaceSpectra.setup_connections()</code> does not connect <code>selector_state_changed</code>, leaving <code>LiveMapSubpanel</code> header range badges potentially out of sync on axis initialization.</li>
+</ul>
+<h3 id="d-overlooked-qt-extendedselection-vmapslist-implementation-traps">D. Overlooked Qt <code>ExtendedSelection</code> &amp; <code>VMapsList</code> Implementation Traps<a class="headerlink" href="#d-overlooked-qt-extendedselection-vmapslist-implementation-traps" title="Permanent link">&para;</a></h3>
+<p>Draft Phase 1 prescribed <em>"Enable <code>ExtendedSelection</code>; emit <code>Signal(list, str)</code>"</em> without inspecting <code>spectroview/view/components/v_map_list.py</code> internals:</p>
+<ol>
+<li><strong>5 Non-Map Placeholder Rows</strong>: When empty, <code>_update_maps_placeholder()</code> (<code>v_map_list.py:136–154</code>) inserts 4 spacer <code>QListWidgetItem</code>s + 1 text prompt with <code>Qt.NoItemFlags</code>. Naive <code>count()</code>, <code>setCurrentRow(0)</code>, or index math collides with placeholder rows unless filtered cleanly (unlike <code>VSpectraList</code>, which tracks real items cleanly and cleans spacer flags).</li>
+<li><strong>Row-Index Selection Restoration</strong>: <code>VMapsList.set_maps_names()</code> (lines 157–177) currently preserves selection by integer row index rather than map name, and <code>VWorkspaceMaps._on_map_data_changed()</code> calls <code>self.v_maps_list.set_selected_map_name(self.vm.current_map_name)</code> (line 376), which executes <code>setCurrentRow()</code>. Under <code>ExtendedSelection</code>, calling <code>setCurrentRow(row)</code> <em>without</em> <code>QItemSelectionModel.NoUpdate</code> clears all other selected rows and destroys multi-selection on every preprocessing step or map addition.</li>
+<li><strong><code>currentItem()</code> vs. <code>selectedItems()</code> Divergence</strong>: In Qt <code>ExtendedSelection</code>:</li>
+<li><code>Ctrl+Click</code> on the currently focused item <strong>deselects</strong> it from <code>selectedItems()</code> while leaving <code>currentItem()</code> pointing at the now-unselected item.</li>
+<li>Clicking empty viewport whitespace clears <code>selectedItems()</code> to <code>[]</code>, while <code>currentItem()</code> may still reference the last focused item.</li>
+<li>The draft did not define reconciliation rules for <code>primary_name</code> vs. <code>selected_names</code>.</li>
+<li><strong>Unsafe Qt Signal Signature</strong>: <code>Signal(list, str)</code> cannot cleanly carry <code>None</code> when the workspace is cleared (<code>None</code> coerces to <code>""</code> or triggers PySide6 signature edge cases). <code>Signal(list, object)</code> (emitting <code>list[str]</code> and <code>Optional[str]</code>) matches safe <code>None</code> semantics.</li>
+</ol>
+<h3 id="e-visualization-ratio-semantics-testing-deficiencies">E. Visualization, Ratio Semantics &amp; Testing Deficiencies<a class="headerlink" href="#e-visualization-ratio-semantics-testing-deficiencies" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Legend Crowding</strong>: Calling <code>self.ax.legend()</code> inside a ~<code>250–300 px</code> <code>Figure(layout="compressed")</code> shrinks Matplotlib's layout engine around tick labels and titles across all 3 subpanels identically.</li>
+<li><strong>Unaddressed <code>R/B</code> Edge Cases &amp; Cache Invalidation</strong>: Draft Phase 3 step 3 gave one line to <code>_compute_rb_ratio()</code>, ignoring cross-map non-overlapping ranges, all-<code>NaN</code> heatmaps (<code>nanmin</code>/<code>nanmax</code>), Red-change <span class="arithmatex">\(\rightarrow\)</span> Green invalidation, and <code>MapData</code> in-place array mutations (where <code>_intensity_cache</code> keyed by Python <code>id(md)</code> or array identity would risk stale hits if mutated in place, e.g., <code>apply_cosmic_ray_erase</code>).</li>
+<li><strong>Testing Separation Violation</strong>: Draft Section 7 proposed testing <code>VMapsList</code> widget behavior inside <code>tests/unit/viewmodel/test_vm_workspace_maps.py</code>, conflating View widget tests (<code>tests/unit/view/test_v_maps_list.py</code>) with headless ViewModel tests.</li>
+</ul>
+<hr />
+<h2 id="3-phase-ii-authoritative-audit-of-current-implementation">3. Phase II — Authoritative Audit of Current Implementation<a class="headerlink" href="#3-phase-ii-authoritative-audit-of-current-implementation" title="Permanent link">&para;</a></h2>
+<h3 id="component-inventory-architectural-responsibilities">Component Inventory &amp; Architectural Responsibilities<a class="headerlink" href="#component-inventory-architectural-responsibilities" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Layer</th>
+<th style="text-align: left;">File</th>
+<th style="text-align: left;">Key Classes &amp; Entry Points</th>
+<th style="text-align: left;">State Owned</th>
+<th style="text-align: left;">Dependencies / Consumers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Model</strong></td>
+<td style="text-align: left;"><code>spectroview/model/spectra_store.py</code></td>
+<td style="text-align: left;"><code>MapData</code> (L23–110), <code>SpectraStore</code> (L117+)</td>
+<td style="text-align: left;"><code>x0</code> (<code>float64[M]</code>), <code>Y0</code> (<code>float32[N, M]</code>), <code>coords</code> (<code>float64[N, 2]</code>), <code>is_active</code> (<code>bool[N]</code>), <code>fnames</code>, <code>Y</code>/<code>x</code> processed, fit arrays, <code>x_axis</code>/<code>y_matrix</code> properties</td>
+<td style="text-align: left;">NumPy, Pandas (<code>fit_engine.baseline</code>); zero Qt widgets</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Model</strong></td>
+<td style="text-align: left;"><code>spectroview/model/spectral_parameters.py</code></td>
+<td style="text-align: left;"><code>compute_spectral_parameter</code> (L72–208), <code>compute_map_grid</code> (L410–527), <code>analyze_map_geometry</code> (L561–613), <code>compute_intensity_ratio</code> (L616–647)</td>
+<td style="text-align: left;">Pure functions; <code>analyze_map_geometry</code> SVD projection; <code>compute_map_grid</code> <code>griddata</code> 80×80</td>
+<td style="text-align: left;">NumPy; deferred <code>scipy.interpolate.griddata</code> inside <code>compute_map_grid</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Model</strong></td>
+<td style="text-align: left;"><code>spectroview/model/m_io.py</code></td>
+<td style="text-align: left;"><code>extract_map_arrays</code> (L274–330)</td>
+<td style="text-align: left;">Extracts <code>(x0, Y0, coords, fnames)</code> from DataFrame (<code>float32</code> <code>Y0</code>, <code>float64</code> <code>coords</code>)</td>
+<td style="text-align: left;">Pandas, NumPy</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>ViewModel</strong></td>
+<td style="text-align: left;"><code>spectroview/viewmodel/vm_live_maps.py</code></td>
+<td style="text-align: left;"><code>VMLiveMaps</code>; <code>set_map_data</code> (L169), <code>set_series_data</code> (L176), <code>set_selector_active</code> (L185), <code>set_selector_range</code> (L199), <code>_recalculate_batch</code> (L241)</td>
+<td style="text-align: left;"><code>_mode</code> (<code>series</code>|<code>map</code>), <code>_states</code> (<code>red</code>/<code>blue</code>/<code>green</code>), <code>_current_md</code>, <code>_current_mds</code>, <code>_geometry_cache</code>, pass <code>_intensity_cache</code>, 60 ms <code>QTimer</code></td>
+<td style="text-align: left;">Emits <code>map_data_ready</code>, <code>series_data_ready</code>, <code>profile_data_ready</code>, <code>selector_state_changed</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>ViewModel</strong></td>
+<td style="text-align: left;"><code>spectroview/viewmodel/vm_workspace_maps.py</code></td>
+<td style="text-align: left;"><code>VMWorkspaceMaps</code>; <code>select_map</code> (L117), <code>_get_target_mds</code> (L449), <code>set_spectrum_active</code> (L393), <code>remove_map</code> (L558), <code>clear_workspace</code> (L1070)</td>
+<td style="text-align: left;"><code>current_map_name</code>, <code>current_map_df</code>, <code>selected_fnames</code>, <code>maps</code> dict (legacy DF mirror) + inherited <code>SpectraStore</code> (<code>self.store</code>)</td>
+<td style="text-align: left;">Calls <code>VMLiveMaps</code> only indirectly via View; emits <code>spectra_selection_changed</code>, <code>map_data_updated</code>, <code>maps_changed</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>ViewModel</strong></td>
+<td style="text-align: left;"><code>spectroview/viewmodel/vm_workspace_spectra.py</code></td>
+<td style="text-align: left;"><code>VMWorkspaceSpectra</code>; <code>_reset_mapdata_arrays</code> (L640), <code>_clear_fit_state</code> (L661), <code>apply_*</code>, <code>subtract_baseline</code>, <code>apply_cosmic_ray_erase</code></td>
+<td style="text-align: left;"><code>self.store</code> (<code>SpectraStore</code>), <code>selected_fnames</code>, fit worker lifecycle</td>
+<td style="text-align: left;">Parent class of <code>VMWorkspaceMaps</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>View</strong></td>
+<td style="text-align: left;"><code>spectroview/view/components/v_map_list.py</code></td>
+<td style="text-align: left;"><code>VMapsList</code>; <code>SingleSelection</code> (L73), <code>map_selection_changed = Signal(int)</code> (L23), <code>_update_maps_placeholder</code> (L136), <code>set_maps_names</code> (L157), <code>set_selected_map_name</code> (L186)</td>
+<td style="text-align: left;">UI list items (+ 5 <code>NoItemFlags</code> placeholder items when empty)</td>
+<td style="text-align: left;">Emits <code>map_selection_changed(int)</code> &amp; action button signals to <code>VWorkspaceMaps</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>View</strong></td>
+<td style="text-align: left;"><code>spectroview/view/v_workspace_maps.py</code></td>
+<td style="text-align: left;"><code>VWorkspaceMaps(VWorkspaceSpectra)</code>; <code>_connect_signals</code> (L185), <code>_on_selection_changed_for_live_maps</code> (L229), <code>_on_map_viewer_selection</code> (L236), <code>_on_map_data_changed</code> (L356), <code>_on_map_selected</code> (L421), <code>clear_workspace</code> (L573)</td>
+<td style="text-align: left;">Owns <code>v_maps_list</code>, <code>v_map_viewer</code>, <code>viewer_dialogs</code> (<code>VMapViewerDialog</code> list); inherits <code>v_spectra_viewer</code>, <code>v_live_maps</code>, <code>vm_live_maps</code></td>
+<td style="text-align: left;">Coordinates <code>VMWorkspaceMaps</code>, Viewers/Dialogs, and <code>VMLiveMaps</code> / <code>VLiveMaps</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>View</strong></td>
+<td style="text-align: left;"><code>spectroview/view/v_workspace_spectra.py</code></td>
+<td style="text-align: left;"><code>VWorkspaceSpectra</code>; <code>bottom_tabs</code> (L69), <code>setup_connections</code> (L199; Live Maps L277–286), <code>_on_range_selector_toggled</code> (L393), <code>_on_selection_changed_for_live_maps</code> (L408)</td>
+<td style="text-align: left;">Owns <code>vm_live_maps</code>, <code>v_live_maps</code>, <code>v_spectra_viewer</code>, <code>bottom_tabs</code></td>
+<td style="text-align: left;">Base workspace for both Spectra and Maps</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>View</strong></td>
+<td style="text-align: left;"><code>spectroview/view/components/v_live_maps.py</code></td>
+<td style="text-align: left;"><code>LiveMapSubpanel</code> (L100), <code>VLiveMaps</code>; <code>Figure(dpi=70, layout="compressed")</code> (L184), <code>_reset_axes</code> (L206), <code>update_series</code> (L285), <code>update_map</code> (L380), <code>update_profile_data</code> (L590), <code>apply_theme</code> (L607)</td>
+<td style="text-align: left;"><code>_display_kind</code>, single <code>self.line</code>, <code>AxesImage</code> (<code>self.im</code>), colorbar, param &amp; channel UI controls</td>
+<td style="text-align: left;">Connects subpanel <code>param_changed</code> / <code>copy_requested</code> to <code>VMLiveMaps</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>View</strong></td>
+<td style="text-align: left;"><code>spectroview/view/components/v_spectra_viewer.py</code> &amp; <code>v_range_selector.py</code></td>
+<td style="text-align: left;"><code>VSpectraViewer</code>, <code>RangeSelectorManager</code></td>
+<td style="text-align: left;"><code>range_manager</code> (Red/Blue/Green brackets; creates 7 artists in <code>render(ax)</code> L282–366), <code>refresh_or_clamp_ranges</code> (L225–271)</td>
+<td style="text-align: left;">Emits <code>range_selector_toggled</code>, <code>range_selector_changed</code> on drag/clamp</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>View</strong></td>
+<td style="text-align: left;"><code>spectroview/view/components/v_map_viewer.py</code> &amp; <code>v_map_viewer_dialog.py</code></td>
+<td style="text-align: left;"><code>VMapViewer</code>, <code>VMapViewerDialog</code></td>
+<td style="text-align: left;">Debounced <code>plot_timer</code>, <code>_griddata_cache</code>, filters points using <code>map_df</code> (<code>md.is_active == True</code>)</td>
+<td style="text-align: left;">Single-map 2D inspection &amp; multi-window floating copies</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>App / Cross</strong></td>
+<td style="text-align: left;"><code>main.py</code>, <code>vm_mva.py</code>, <code>application/service.py</code></td>
+<td style="text-align: left;"><code>main.py::setup_connections</code>, <code>vm_mva.py::set_current_map_name</code>, <code>application/service.py::get_active_map</code></td>
+<td style="text-align: left;">MVA active map name; service reads <code>vm.current_map_name</code>, <code>selected_fnames</code>, <code>map_type</code></td>
+<td style="text-align: left;">Must remain bound to <strong>Primary Active Map</strong> only</td>
+</tr>
+</tbody>
+</table>
+<h3 id="current-state-architecture-execution-trace">Current-State Architecture &amp; Execution Trace<a class="headerlink" href="#current-state-architecture-execution-trace" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart TD
+    ML["VMapsList&lt;br/&gt;(SingleSelection, Signal int)"] --&gt;|"map_selection_changed(idx)"| VW_SEL["VWorkspaceMaps._on_map_selected"]
+    VW_SEL --&gt;|"vm.select_map(name)"| VM_SEL["VMWorkspaceMaps.select_map"]
+    VM_SEL --&gt;|"1. spectra_selection_changed"| VW_LM["VWorkspaceMaps._on_selection_changed_for_live_maps"]
+    VM_SEL --&gt;|"2. map_data_updated"| VW_MD["VWorkspaceMaps._on_map_data_changed"]
+    VW_LM --&gt;|"Pass 1: set_map_data(md)"| VMLM["VMLiveMaps"]
+    VW_MD --&gt;|"Pass 2 (duplicate!): set_map_data(md)"| VMLM
+    MV["VMapViewer&lt;br/&gt;(Point Click)"] --&gt;|"spectra_selected"| VM_SEL_PT["VMWorkspaceMaps.selected_fnames&lt;br/&gt;-&gt; spectra_selection_changed"]
+    VM_SEL_PT --&gt;|"Spurious Pass!"| VW_LM
+    RS["VSpectraViewer&lt;br/&gt;RangeSelectorManager"] --&gt;|"range_selector_changed&lt;br/&gt;/ range_selector_toggled"| VMLM
+    VMLM --&gt;|"map_data_ready / profile_data_ready"| VLM["VLiveMaps -&gt; 3x LiveMapSubpanel&lt;br/&gt;(Matplotlib Agg Canvas)"]</code></pre>
+<h4 id="traced-sequence-map-switch-bracket-drag-on-current-34431df">Traced Sequence: Map Switch &amp; Bracket Drag on Current <code>34431df</code><a class="headerlink" href="#traced-sequence-map-switch-bracket-drag-on-current-34431df" title="Permanent link">&para;</a></h4>
+<pre class="mermaid"><code>sequenceDiagram
+    participant User
+    participant List as VMapsList
+    participant VM as VMWorkspaceMaps
+    participant V as VWorkspaceMaps
+    participant VLM as VMLiveMaps
+    participant Sub as LiveMapSubpanel (x3)
+
+    Note over User,Sub: Current Bug 1: Switching map triggers 2x redundant compute &amp; draw
+    User-&gt;&gt;List: Click Map B
+    List-&gt;&gt;V: map_selection_changed(rowB)
+    V-&gt;&gt;VM: select_map("MapB")
+    VM--&gt;&gt;V: spectra_selection_changed(["MapB_(...)"])
+    V-&gt;&gt;VLM: set_map_data(mdB) [Compute Pass #1: 3 channels]
+    VLM--&gt;&gt;Sub: update_map / update_profile_data (3 Agg draws)
+    VM--&gt;&gt;V: map_data_updated()
+    V-&gt;&gt;VLM: set_map_data(mdB) [Compute Pass #2: DUPLICATE 3 channels]
+    VLM--&gt;&gt;Sub: update_map / update_profile_data (3 more Agg draws)
+
+    Note over User,Sub: Current Bug 2: Point click in VMapViewer triggers spurious full recompute
+    User-&gt;&gt;V: Click 1 point on heatmap
+    V-&gt;&gt;VM: selected_fnames = [point_fname]
+    VM--&gt;&gt;V: spectra_selection_changed([point_fname])
+    V-&gt;&gt;VLM: set_map_data(mdB) [Spurious Compute Pass: 3 channels]
+    VLM--&gt;&gt;Sub: 3 full-map draws for unchanged data!</code></pre>
+<hr />
+<h2 id="4-phase-iii-identified-limitations-missing-considerations">4. Phase III — Identified Limitations &amp; Missing Considerations<a class="headerlink" href="#4-phase-iii-identified-limitations-missing-considerations" title="Permanent link">&para;</a></h2>
+<h3 id="41-architecture-state-management">4.1 Architecture &amp; State Management<a class="headerlink" href="#41-architecture-state-management" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Conflated Signal Semantics</strong>: <code>spectra_selection_changed</code> means two completely different things in Maps workspace: <em>"spectra highlighted inside the current map"</em> (<code>VMapViewer</code> point click) vs. <em>"active map context changed"</em> (<code>VMWorkspaceMaps.select_map</code>). Routing <code>spectra_selection_changed</code> to Live Maps in <code>VWorkspaceMaps._on_selection_changed_for_live_maps</code> (lines 229–234) causes both duplicate map-switch passes and spurious point-click passes. Note that in <code>VWorkspaceSpectra</code> (<code>setup_connections</code>, lines 277–286), <code>spectra_selection_changed</code> rightly feeds Live Maps in <code>"series"</code> mode because highlighted items <em>are</em> the selected 1D spectra; <code>VWorkspaceMaps</code> must override that route cleanly.</li>
+<li><strong>Primary-vs-Selected Invariant</strong>: When multiple maps are selected in <code>VMapsList</code>:</li>
+<li>Single-map state (<code>current_map_name</code>, <code>current_map_df</code>, <code>selected_fnames</code>, <code>VMapViewer</code>, <code>VMapViewerDialog</code>s, <code>VSpectraViewer</code>, <code>VFitModelBuilder</code>, <code>vm_mva</code>, <code>VMoreTab</code>, <code>application/service.py::get_active_map()</code>) remains strictly coupled to <code>Primary Active Map</code>.</li>
+<li>Comparison state (<code>selected_map_names: list[str]</code>, deduplicated in list order) routes read-only references (<code>SpectraStore.get_map_data(name)</code>) to <code>VMLiveMaps</code>. Zero deep-copying of <code>Y0</code> or <code>Y</code> occurs across selection changes.</li>
+<li><strong>Mutating vs. Viewing Map Data</strong>: Preprocessing operations (<code>apply_y_normalization</code>, <code>subtract_baseline</code>, <code>apply_spectral_range</code>, <code>apply_x_correction</code>, <code>apply_cosmic_ray_erase</code>) and VBF fit completion mutate <code>MapData</code> arrays (<code>Y</code>, <code>x</code>, <code>peak_params</code>, <code>fit_r2</code>, <code>Y_bestfit</code>). Today there is no version counter on <code>MapData</code>, preventing cross-batch reuse of per-map bracket integrals or geometry caches without risking stale reads after in-place mutations.</li>
+</ol>
+<h3 id="42-performance-scalability">4.2 Performance &amp; Scalability<a class="headerlink" href="#42-performance-scalability" title="Permanent link">&para;</a></h3>
+<h4 id="verified-pre-optimization-baselines-task-177-task-181-qt_qpa_platformoffscreen">Verified Pre-Optimization Baselines (<code>task-177</code> &amp; <code>task-181</code>, <code>QT_QPA_PLATFORM=offscreen</code>)<a class="headerlink" href="#verified-pre-optimization-baselines-task-177-task-181-qt_qpa_platformoffscreen" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric / Case</th>
+<th style="text-align: left;">Conditions</th>
+<th style="text-align: center;">Measured Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>compute_spectral_parameter</code> (Integrated intensity)</td>
+<td style="text-align: left;"><code>N=3,721</code>, <code>M=1,015</code>, 10% band (<code>float32</code> <code>Y0</code>=15.1 MB)</td>
+<td style="text-align: center;"><strong>29.7 ms</strong>, peak alloc <strong>39.2 MB</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>compute_spectral_parameter</code> (Integrated intensity)</td>
+<td style="text-align: left;"><code>N=40,000</code>, <code>M=1,015</code>, 10% band (<code>float32</code> <code>Y0</code>=162.4 MB)</td>
+<td style="text-align: center;"><strong>339.0 ms</strong>, peak alloc <strong>421.1 MB</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>compute_spectral_parameter</code> (Integrated intensity)</td>
+<td style="text-align: left;"><code>N=90,000</code>, <code>M=1,015</code>, 10% band (<code>float32</code> <code>Y0</code>=365.4 MB)</td>
+<td style="text-align: center;"><strong>732.2 ms</strong>, peak alloc <strong>947.5 MB</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>Y0[:, mask].astype(np.float64)</code> (isolated slice-first comparison)</td>
+<td style="text-align: left;">Same <code>N=3,721</code> / <code>40,000</code> / <code>90,000</code>, 10% band</td>
+<td style="text-align: center;"><strong>6.8 ms</strong> / <strong>94.9 ms</strong> / <strong>180.2 ms</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>compute_map_grid</code> + <code>analyze_map_geometry</code> (regular grid)</td>
+<td style="text-align: left;"><code>N=3,721</code> / <code>N=90,000</code></td>
+<td style="text-align: center;">grid <code>0.76 ms</code> / <code>16.52 ms</code>; geom <code>1.14 ms</code> / <code>9.20 ms</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>compute_map_grid</code> (<code>scipy.interpolate.griddata</code>, scattered)</td>
+<td style="text-align: left;"><code>N=2,401</code> / <code>N=160,000</code> (80×80 linear)</td>
+<td style="text-align: center;"><strong>209.7 ms</strong> / <strong>14,507.3 ms</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>VMLiveMaps</code> full compute (R+B+Green=<code>R/B ratio</code>, <code>map</code> mode)</td>
+<td style="text-align: left;"><code>N=3,721</code> (<code>set_map_data</code> / Red drag tick R+G)</td>
+<td style="text-align: center;"><strong>39.1 ms</strong> / <strong>40.8 ms</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>VMLiveMaps</code> full compute (R+B+Green=<code>R/B ratio</code>, <code>map</code> mode)</td>
+<td style="text-align: left;"><code>N=90,000</code> (<code>set_map_data</code> / Red drag tick R+G)</td>
+<td style="text-align: center;"><strong>1,538.6 ms</strong> / <strong>1,366.9 ms</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>LiveMapSubpanel</code> first render+draw / in-place update+draw</td>
+<td style="text-align: left;"><code>320×260</code> Agg: <code>300×300</code> 2D map vs. <code>2,000</code>-pt 1D series</td>
+<td style="text-align: center;">2D: <strong>249.1 ms</strong> / <strong>188.7 ms</strong> · 1D: <strong>177.4 ms</strong> / <strong>127.6 ms</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">Map switch <code>2D &lt;-&gt; 1D</code> via <code>VMapsList</code> (3 active brackets)</td>
+<td style="text-align: left;">Call spy (<code>task-181</code>)</td>
+<td style="text-align: center;"><strong>2 batches, 6 compute calls, 6 panel updates</strong> (2× redundant)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Point click in <code>VMapViewer</code> / Checkbox toggle (<code>is_active</code>)</td>
+<td style="text-align: left;">Call spy (<code>task-181</code>)</td>
+<td style="text-align: center;"><strong>1 batch, 3 compute calls, 3 panel updates</strong> each (spurious)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Delete active map (auto-switch to next map)</td>
+<td style="text-align: left;">Call spy (<code>task-181</code>)</td>
+<td style="text-align: center;"><strong>2 batches, 6 compute calls, 6 panel updates</strong> (2× redundant)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="root-cause-bottlenecks-identified">Root-Cause Bottlenecks Identified<a class="headerlink" href="#root-cause-bottlenecks-identified" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Full-Matrix Upcast in <code>spectral_parameters.py:116</code></strong>:
+   <code>y_arr = np.asarray(Y, dtype=np.float64)</code> runs <em>before</em> the spectral band mask (<code>lines 135–142</code>) trims columns down to the 5–15% range under the bracket. Copying <code>365.4 MB</code> <code>float32</code> into <code>730.8 MB</code> <code>float64</code> (plus intermediate temporaries = <code>947.5 MB</code>) creates severe memory pressure and cache thrashing; across 5 multi-selected large maps this risks multi-GB stalls or OOM on 32-bit/laptop environments. Masking columns <em>before</em> casting (<code>np.asarray(Y[:, mask], dtype=np.float64)</code>) cuts intermediate allocation by <span class="arithmatex">\(\approx 10\times\)</span> and measured slice+cast time by <span class="arithmatex">\(\approx 4\times\)</span>.</li>
+<li><strong>Repeated <code>scipy.interpolate.griddata</code> on Scattered Maps</strong>:
+   Every 60 ms bracket move on a non-orthogonal wafer map rebuilds a 2D Qhull Delaunay triangulation and barycentric search from scratch (<code>209.7 ms</code> for 50×50; <code>14.5 s</code> for 400×400). Because <code>(X, Y)</code> spatial coordinates do not change during bracket drags, Delaunay simplex indices and vertex weights are strictly invariant per map geometry and can be precomputed once and applied in <code>&lt; 1 ms</code> per bracket tick.</li>
+<li><strong>Matplotlib <code>Agg</code> Redraw Budget &amp; Bracket Drag Churn</strong>:
+   Each full 3-subpanel Agg draw takes <code>~383 ms</code> (1D) to <code>~566 ms</code> (2D), while <code>RangeSelectorManager.render(ax)</code> (<code>v_range_selector.py:282–366</code>) removes and recreates <strong>7 artists</strong> on every canvas mouse-motion event (<code>v_spectra_viewer.py:2584–2593</code>). A fixed <code>60 ms</code> QTimer fires faster than Matplotlib finishes drawing large maps, queueing back-to-back main-thread stalls.</li>
+<li><strong>Inactive Tab Execution</strong>: Computing and drawing Live Maps while <code>bottom_tabs</code> is showing <code>Fit Model Builder</code>, <code>Fit Results</code>, or <code>MVA</code> is pure waste.</li>
+<li><strong><code>is_active</code> Consistency Gap</strong>: <code>VMapViewer</code> omits unchecked spectra (<code>is_active == False</code>) via <code>get_current_map_dataframe()</code>, whereas <code>VMLiveMaps</code> evaluates all <code>N</code> rows directly from <code>md.y_matrix</code>—yet <code>set_spectrum_active</code> / <code>set_all_current_map_spectra_active</code> emit <code>map_data_updated</code>, causing 3 full recomputes whose pixel output doesn't even reflect the unchecked mask! Live Maps should either consistently mask inactive pixels (<code>NaN</code> for 2D grids / omit or break 1D points—or explicitly match <code>VMapViewer</code> semantics via <code>is_active</code> masking in vectorized NumPy) and cache cleanly. Using <code>is_active</code> directly via vectorized masking (<code>~md.is_active -&gt; NaN</code> after fast vectorized intensity slice, or slicing active rows <code>Y[active, mask]</code>) guarantees 1:1 visual fidelity with <code>VMapViewer</code> without copying DataFrames.</li>
+</ol>
+<h3 id="43-rgb-live-brackets-green-rb-ratio-semantics">4.3 RGB Live Brackets &amp; Green <code>R/B</code> Ratio Semantics<a class="headerlink" href="#43-rgb-live-brackets-green-rb-ratio-semantics" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Bracket Range Compatibility Across Multiple Maps</strong>:
+   Maps loaded together may span different spectral ranges (e.g., <code>100–1800 cm^-1</code> vs. <code>400–1200 cm^-1</code>, or 532 nm vs. 633 nm calibration). When a Red or Blue bracket <code>[x_min, x_max]</code> has <span class="arithmatex">\(&lt; 1\)</span> (or <span class="arithmatex">\(&lt; 2\)</span> for trapezoidal integration) wavenumber samples in comparison Map <span class="arithmatex">\(j\)</span>:</li>
+<li>Map <span class="arithmatex">\(j\)</span> must not crash (<code>ValueError: zero-size array</code> or <code>IndexError</code>) and must not silently plot <code>0.0</code>.</li>
+<li><code>compute_spectral_parameter</code> / <code>VMLiveMaps</code> must return an all-<code>NaN</code> array for that channel on Map <span class="arithmatex">\(j\)</span>, exclude all-<code>NaN</code> curves from autoscale bounds cleanly, and annotate the subpanel status badge (e.g., <em>"Map B: out of spectral range"</em>).</li>
+<li><strong><code>R/B</code> Ratio Dependency &amp; Numerical Edge Cases</strong>:</li>
+<li>In <code>VMLiveMaps._recalculate_batch</code>, when <code>Green</code> parameter is <code>R/B ratio</code>, changing <code>Red</code> <strong>or</strong> <code>Blue</code> must recalculate <code>Green</code>, reusing Red and Blue 1D intensity vectors computed in the same pass via <code>_intensity_cache</code> (keyed by <code>(id(md), md.data_version, color_id, round(x_min, 6), round(x_max, 6), active_digest)</code>).</li>
+<li>If <code>Red</code> or <code>Blue</code> is deactivated or yields empty range / near-zero denominator (<code>abs(I_blue) &lt; max(abs(I_blue)) * 1e-3</code>, matching <code>compute_intensity_ratio</code> at <code>spectral_parameters.py:616–647</code>), pixels/points with small <code>I_blue</code> become <code>NaN</code>. If <em>all</em> values are <code>NaN</code>, Matplotlib 2D normalization (<code>np.nanmin</code>/<code>np.nanmax</code>) would raise <code>ValueError</code> unless explicitly guarded (fall back to <code>0.0, 1.0</code> and show <em>"No valid R/B points"</em> message).</li>
+<li>Intensity cache <strong>must not</strong> survive across <code>MapData</code> preprocessing/baseline/fit changes: explicit <code>MapData.data_version: int = 0</code> increments on any array or <code>is_active</code> mutation.</li>
+<li><strong>Toggle &amp; Init Sync</strong>:</li>
+<li>Fix <code>VWorkspaceSpectra._on_range_selector_toggled</code> (<code>lines 393–401</code>) so activating a bracket does not schedule both an async timer via <code>set_selector_range(..., immediate=False)</code> and a synchronous run via <code>set_selector_active(..., True)</code>.</li>
+<li>Connect <code>vm_live_maps.selector_state_changed</code> in <code>VWorkspaceSpectra.setup_connections()</code> so programmatic range clamping/initialization immediately updates subpanel header <code>[x_min, x_max]</code> pills.</li>
+</ol>
+<h3 id="44-multi-map-selection-ux-edge-cases">4.4 Multi-Map Selection &amp; UX Edge Cases<a class="headerlink" href="#44-multi-map-selection-ux-edge-cases" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong><code>ExtendedSelection</code> Corner Cases in <code>VMapsList</code></strong>:</li>
+<li><strong>Placeholder isolation</strong>: <code>_update_maps_placeholder()</code> rows must be stripped on real population and ignored when reading selection/primary state (<code>Qt.UserRole</code> or tracked item set rather than raw <code>row(item)</code>).</li>
+<li><strong>Ctrl-deselect of focused item</strong>: When <code>currentItem()</code> is no longer in <code>selectedItems()</code>, promote the top/last still-selected item as <code>primary_name</code> (or only update <code>primary_name</code> cleanly) so the Primary Map is always an actually selected map whenever <code>len(selected_names) &gt;= 1</code>.</li>
+<li><strong>Empty viewport click</strong>: Clicking blank whitespace clears <code>selectedItems()</code>. Guard against wiping <code>current_map_name</code> unexpectedly or explicitly handle empty selection (<code>current_map_name = None</code>, <code>selected_map_names = []</code>, Live Maps displays clean empty state — matching <code>VSpectraList</code> / empty workspace behavior cleanly, OR re-select previous if single-click empty area? Standard Qt <code>ExtendedSelection</code> like <code>VSpectraList</code> leaves empty selection cleanly; Live Maps and viewers must tolerate empty selection without errors).</li>
+<li><strong>Programmatic preservation</strong>: <code>set_maps_names()</code> and <code>_on_map_data_changed()</code> must preserve <code>selected_map_names</code> by map name (<code>QItemSelectionModel.Select</code>) without clobbering selection via <code>setCurrentRow()</code>.</li>
+<li><strong>1D Spatial Axis Labeling &amp; Scale Fidelity</strong>:</li>
+<li><code>analyze_map_geometry(md.coords)</code> extracts projected 1D <code>positions</code>, <code>axis_label</code>, and <code>is_profile</code>.</li>
+<li>When comparing multiple 1D profiles simultaneously:<ul>
+<li>If all share an <code>X</code>-aligned <code>axis_label</code>, use that shared <code>X</code> label cleanly.</li>
+<li>If all share a <code>Y</code>-aligned <code>axis_label</code>, use that shared <code>Y</code> label cleanly.</li>
+<li>If profiles mix <code>X</code> and <code>Y</code> directions or oblique traces -&gt; plot each against its own <code>positions</code>, label the axis generically (e.g., <code>"Position / Distance"</code>), and note mixed axis orientations in the status badge.</li>
+</ul>
+</li>
+<li><strong>Aspect Ratio Regression Prevention</strong>: Switching 2D <span class="arithmatex">\(\rightarrow\)</span> 1D (or switching between single 2D map and multi-1D selection) must always invoke <code>LiveMapSubpanel._reset_axes()</code> with <code>self.ax.set_aspect("auto", adjustable="box")</code> before plotting lines (preventing the squished-axis scale regression previously observed when 2D aspect lock persisted onto 1D line plots).</li>
+<li><strong>Color Determinism &amp; Visual Hierarchy</strong>:</li>
+<li>Assign colors sequentially from <code>spectroview.__init__.DEFAULT_COLORS</code> (20 high-contrast hex colors) paired with <code>MARKERS</code> fallback if <span class="arithmatex">\(&gt; 20\)</span> profiles are selected.</li>
+<li>Color/label assignment should follow deterministic selection order (or stable map-name-indexed mapping during a session) with Primary Map rendered at higher <code>zorder</code> and slightly heavier stroke (<code>linewidth=2.0</code> vs <code>1.5</code>) so users immediately spot the active map.</li>
+<li><strong>2D Multi-Map Comparison Ergonomics</strong>:</li>
+<li>Providing a tab-level <code>[ &lt; | Map Name Combo ▼ | &gt; ]</code> switcher bar in <code>VLiveMaps</code> allows comparing Red / Blue / <code>R/B</code> maps across all selected 2D maps without leaving Live Maps, keeping all 3 channels strictly locked to the same 2D map. Default selection in the switcher follows <code>primary_map_name</code> (unless user explicitly steps to a comparison map currently still in the selected 2D set).</li>
+</ol>
+<h3 id="45-error-handling-robustness">4.5 Error Handling &amp; Robustness<a class="headerlink" href="#45-error-handling-robustness" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Empty / <code>N = 0</code> / <code>N = 1</code> Maps</strong>: <code>N = 0</code> emits empty payload clearing subpanel safely; <code>N = 1</code> map has degenerate SVD spatial span—check <code>analyze_map_geometry</code> behavior (<code>is_profile=False</code> vs single-point <code>series</code> fallback) so <code>compute_map_grid</code> (<code>0</code>-span <code>extent</code>) never divides by zero or passes singular <code>imshow</code> bounds (<code>x_min == x_max</code> padded cleanly, already guarded or verified).</li>
+<li><strong>Non-Monotonic or Unsorted <code>x_axis</code></strong>: Integrated intensity uses trapezoidal / sorted quadrature or assumes ascending/descending <code>x_axis</code>; if comparison map <code>x_axis</code> is descending (e.g., nm vs <span class="arithmatex">\(\text{cm}^{-1}\)</span> or reversed export), <code>compute_spectral_parameter</code> sign normalization (<code>abs</code> or ascending sort check) must handle it uniformly across all maps.</li>
+<li><strong>Unmounted / Deleted Map References</strong>: Always resolve map names against <code>SpectraStore</code> before compute; strip removed names from <code>selected_map_names</code> and <code>VMLiveMaps._current_mds</code> immediately in <code>remove_map()</code> and <code>clear_workspace()</code>.</li>
+<li><strong>Async Stale Write Guard</strong>: Any background <code>QThreadPool</code> calculation must validate a monotonic <code>generation_id</code> token before applying emitted arrays to <code>VLiveMaps</code>.</li>
+</ul>
+<hr />
+<h2 id="5-phase-iv-technical-alternatives-analysis">5. Phase IV — Technical Alternatives Analysis<a class="headerlink" href="#5-phase-iv-technical-alternatives-analysis" title="Permanent link">&para;</a></h2>
+<h3 id="decision-matrix-across-7-key-engineering-axes">Decision Matrix Across 7 Key Engineering Axes<a class="headerlink" href="#decision-matrix-across-7-key-engineering-axes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Design Axis</th>
+<th style="text-align: left;">Alternative A</th>
+<th style="text-align: left;">Alternative B</th>
+<th style="text-align: left;">Alternative C</th>
+<th style="text-align: left;"><strong>Adopted Choice &amp; Rationale</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>1. Multi-Select Bulk Ops Scope</strong></td>
+<td style="text-align: left;">Apply <code>_get_target_mds()</code> to <code>selected_map_names</code></td>
+<td style="text-align: left;">Always Primary-only (keep <code>Ctrl</code> override for All maps; explicit confirmation on Multi-Delete)</td>
+<td style="text-align: left;">Dual toolbar toggle "Apply to Selected"</td>
+<td style="text-align: left;"><strong>Alternative B</strong>: Resolves the Section 4.A vs. Phase 2 contradiction cleanly, maintains 100% consistency across <em>all</em> preprocessing/fitting actions (even those bypassing <code>_get_target_mds()</code>), and prevents accidental destructive edits during visual Live Maps comparison.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>2. Mixed 1D/2D Precedence</strong></td>
+<td style="text-align: left;">Require <code>all()</code> maps be 1D (<code>all(...)</code>) to show profiles</td>
+<td style="text-align: left;"><strong>Primary-Precedence Mode</strong>: Primary's dimensionality determines Live Maps display (<code>1D</code> compares all selected 1D; <code>2D</code> enters 2D mode) + exclusion count</td>
+<td style="text-align: left;">Stack both 1D profiles and 2D heatmaps inside each subpanel</td>
+<td style="text-align: left;"><strong>Alternative B</strong>: Intuitive mental model ("what you focus on sets the mode"), zero vertical-height starvation, and explicit status feedback (<code>"Comparing 2 1D profiles (1 2D map excluded)"</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>3. 2D Multi-Map UX</strong></td>
+<td style="text-align: left;">Tab-level shared <code>[&lt; \| Map ▼ \| &gt;]</code> switcher bar</td>
+<td style="text-align: left;">Independent combo box per subpanel</td>
+<td style="text-align: left;">Side-by-side tiled mini-heatmaps (~80 px each)</td>
+<td style="text-align: left;"><strong>Alternative A</strong>: Preserves ~250–300 px readable subpanel width, guarantees Red/Blue/Green(<code>R/B</code>) show the exact same 2D specimen, and lets users step through selected 2D maps in 1 click without changing <code>VMapViewer</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>4. Multi-Profile Legend</strong></td>
+<td style="text-align: left;">Per-subpanel <code>self.ax.legend()</code></td>
+<td style="text-align: left;">Single shared header legend strip in <code>VLiveMaps</code> (above the 3 subpanels, visible when <span class="arithmatex">\(\ge 2\)</span> profiles)</td>
+<td style="text-align: left;">Interactive tooltip-only hover</td>
+<td style="text-align: left;"><strong>Alternative B</strong>: Calling <code>ax.legend()</code> on three <code>layout="compressed"</code> axes steals 20–35% plot area identically; a shared Qt badge strip costs zero Matplotlib layout budget and guarantees uniform styling.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>5. RGB Bracket Ownership</strong></td>
+<td style="text-align: left;">Shared brackets on Primary <code>VSpectraViewer</code> (out-of-range maps yield <code>NaN</code> + indicator)</td>
+<td style="text-align: left;">Per-map stored independent bracket intervals</td>
+<td style="text-align: left;">Union-clamped brackets across all maps</td>
+<td style="text-align: left;"><strong>Alternative A</strong>: Live comparison requires measuring the <em>same</em> spectral window across samples; independent brackets make <code>R/B</code> and intensity comparison physically ambiguous.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>6. Scattered 2D Interpolation</strong></td>
+<td style="text-align: left;">Re-run <code>scipy.interpolate.griddata</code> per drag tick (<code>210 ms–14.5 s</code>)</td>
+<td style="text-align: left;"><strong>Precompute &amp; cache Delaunay simplex indices + barycentric weights</strong> per map coords (deferred <code>scipy.spatial.Delaunay</code>)</td>
+<td style="text-align: left;">Fixed coarse nearest-neighbor downsampling (<code>cKDTree</code>)</td>
+<td style="text-align: left;"><strong>Alternative B</strong> (plus <code>cKDTree</code> nearest fallback for collinear/1D-like scatter): Reproduces exact <code>linear</code> <code>griddata</code> output while turning drag ticks from <code>210 ms–14.5 s</code> into <code>&lt; 1 ms</code> vectorized indexing (<code>O(grid^2)</code>). Preserves deferred <code>scipy</code> import invariant.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>7. Scheduling &amp; Concurrency</strong></td>
+<td style="text-align: left;">Sync coalesced main-thread only (<code>60 ms</code> timer)</td>
+<td style="text-align: left;">Always async <code>QThreadPool</code> for every map</td>
+<td style="text-align: left;"><strong>Hybrid</strong>: Phase 0/3 visibility gate + adaptive debounce (<code>max(60 ms, last_ms)</code>) + <strong>Phase 5 thresholded <code>QThreadPool</code></strong> when <code>sum(N_active) &gt; 25,000</code></td>
+<td style="text-align: left;"><strong>Alternative C</strong>: Avoids thread-handoff overhead &amp; complexity for normal <code>&lt; 25k</code> workloads while keeping UI smooth on <code>90k–160k+</code> maps or heavy multi-map selections. Matplotlib canvas draws stay strictly on Qt main thread.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="proposed-target-state-architecture">Proposed Target-State Architecture<a class="headerlink" href="#proposed-target-state-architecture" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart TD
+    subgraph UI_Sidebar["VMapsList (v_map_list.py)"]
+        ML["ExtendedSelection&lt;br/&gt;maps_selection_changed(selected_names, primary_name)"]
+    end
+
+    subgraph VM["VMWorkspaceMaps (vm_workspace_maps.py)"]
+        SEL["select_maps(selected_names, primary_name)&lt;br/&gt;Updates current_map_name + selected_map_names&lt;br/&gt;Emits map_context_changed (NOT dual compute)"]
+        MUT["Preprocessing / Fit / Checkbox&lt;br/&gt;Bumps md.data_version&lt;br/&gt;Emits map_data_updated(affected_names)"]
+        STORE[("SpectraStore&lt;br/&gt;MapData + data_version")]
+    end
+
+    subgraph ViewCoord["VWorkspaceMaps (v_workspace_maps.py)"]
+        GATE["Tab Visibility Gate&lt;br/&gt;(is Live Maps visible? else mark dirty)"]
+        ROUTE_1["Primary Map -&gt; VMapViewer, Dialogs,&lt;br/&gt;VSpectraViewer, VFitModelBuilder, vm_mva"]
+        ROUTE_M["selected_map_names -&gt; SpectraStore MDs -&gt; VMLiveMaps"]
+    end
+
+    subgraph Engine["VMLiveMaps (vm_live_maps.py)"]
+        CACHE["Versioned Intensity Cache + Geometry/Delaunay Cache"]
+        COMP["Vectorized Slice-First Compute (sync or QThreadPool &gt; 25k)&lt;br/&gt;R -&gt; B -&gt; Green (param or R/B ratio)"]
+    end
+
+    subgraph Viz["VLiveMaps &amp; LiveMapSubpanel (v_live_maps.py)"]
+        HDR["Shared Header: 2D Switcher Bar / Multi-Profile Legend Strip / Exclusion Badge"]
+        PAN["3x LiveMapSubpanel&lt;br/&gt;Line2D Pool (multi-1D) or AxesImage (2D)"]
+    end
+
+    ML --&gt; ROUTE_1
+    ML --&gt;|"maps_selection_changed"| SEL
+    SEL --&gt; STORE
+    SEL --&gt; GATE
+    MUT --&gt; STORE
+    MUT --&gt; GATE
+    GATE --&gt;|"Visible -&gt; set_map_datas(mds, primary)"| Engine
+    Engine --&gt; CACHE --&gt; COMP
+    COMP --&gt;|"multi_profile_ready / map_data_ready"| Viz</code></pre>
+<h3 id="target-state-signal-flow-multi-profile-2d-switcher">Target-State Signal Flow (Multi-Profile &amp; 2D Switcher)<a class="headerlink" href="#target-state-signal-flow-multi-profile-2d-switcher" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>sequenceDiagram
+    participant User
+    participant List as VMapsList
+    participant VM as VMWorkspaceMaps
+    participant Coord as VWorkspaceMaps
+    participant VLM as VMLiveMaps
+    participant UI as VLiveMaps
+
+    User-&gt;&gt;List: Ctrl/Shift+Click [Map1, Map2] (Primary=Map1)
+    List-&gt;&gt;Coord: maps_selection_changed(["Map1", "Map2"], "Map1")
+    Coord-&gt;&gt;VM: select_maps(["Map1", "Map2"], "Map1")
+    VM--&gt;&gt;Coord: map_selection_updated("Map1") [no duplicate Live Maps pass]
+    VM--&gt;&gt;Coord: spectra_selection_changed([first_pt_of_Map1]) [VMapViewer/SpectraViewer ONLY]
+
+    alt Live Maps Tab is Visible
+        Coord-&gt;&gt;VLM: set_map_datas([md1, md2], primary_name="Map1")
+        VLM-&gt;&gt;VLM: Primary Mode = 1D (or 2D), slice-first compute w/ md.data_version cache
+        VLM--&gt;&gt;UI: multi_profile_data_ready(...) or switcher + map_data_ready(...)
+        UI-&gt;&gt;UI: Update shared legend/switcher &amp; reuse Line2D/AxesImage in-place
+    else Live Maps Tab is Hidden
+        Coord-&gt;&gt;Coord: _live_maps_dirty = True (0 computes, 0 Agg draws)
+        User-&gt;&gt;Coord: Click "Live Maps" tab
+        Coord-&gt;&gt;VLM: Flush dirty set_map_datas([md1, md2], "Map1")
+    end</code></pre>
+<hr />
+<h2 id="6-phase-v-refined-implementation-ready-phased-roadmap">6. Phase V — Refined, Implementation-Ready Phased Roadmap<a class="headerlink" href="#6-phase-v-refined-implementation-ready-phased-roadmap" title="Permanent link">&para;</a></h2>
+<h3 id="phase-dependency-overview">Phase Dependency Overview<a class="headerlink" href="#phase-dependency-overview" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart LR
+    P0["Phase 0: Baseline Hygiene,&lt;br/&gt;Slice-First &amp; Scattered Cache"] --&gt; P1["Phase 1: VMapsList&lt;br/&gt;ExtendedSelection"]
+    P1 --&gt; P2["Phase 2: VMWorkspaceMaps &amp;&lt;br/&gt;VWorkspaceMaps Coordination"]
+    P0 --&gt; P3["Phase 3: Multi-Map VMLiveMaps&lt;br/&gt;Engine &amp; R/B Caching"]
+    P2 --&gt; P3
+    P3 --&gt; P4["Phase 4: VLiveMaps Multi-Profile&lt;br/&gt;Legend, Line Pool &amp; 2D Switcher"]
+    P4 --&gt; P5["Phase 5: Thresholded Async Worker&lt;br/&gt;&amp; Mandatory Doc Sync"]</code></pre>
+<hr />
+<h3 id="phase-0-baseline-hygiene-memoryinterpolation-fixes-lifecycle-bugs-completed-shipped-in-v26481-commits-850512b-138bb55">Phase 0: Baseline Hygiene, Memory/Interpolation Fixes &amp; Lifecycle Bugs <code>[Completed &amp; Shipped in v26.48.1 — commits 850512b, 138bb55]</code><a class="headerlink" href="#phase-0-baseline-hygiene-memoryinterpolation-fixes-lifecycle-bugs-completed-shipped-in-v26481-commits-850512b-138bb55" title="Permanent link">&para;</a></h3>
+<h4 id="a-objective">A. Objective<a class="headerlink" href="#a-objective" title="Permanent link">&para;</a></h4>
+<p>Eliminate existing duplicate computations, <code>947.5 MB</code> memory spikes, <code>14.5 s</code> scattered-interpolation freezes, hidden-tab CPU waste, and workspace-clear memory leaks <strong>before</strong> multi-selection multiplies these flaws by <span class="arithmatex">\(N\)</span> selected maps.</p>
+<h4 id="b-files-and-components">B. Files and Components<a class="headerlink" href="#b-files-and-components" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>spectroview/model/spectra_store.py</code> (<code>MapData</code>)</li>
+<li><code>spectroview/model/spectral_parameters.py</code> (<code>compute_spectral_parameter</code>, <code>compute_map_grid</code>, new cached Delaunay helper)</li>
+<li><code>spectroview/viewmodel/vm_workspace_maps.py</code>, <code>spectroview/viewmodel/vm_workspace_spectra.py</code></li>
+<li><code>spectroview/view/v_workspace_maps.py</code>, <code>spectroview/view/v_workspace_spectra.py</code></li>
+<li><code>spectroview/viewmodel/vm_live_maps.py</code></li>
+</ul>
+<h4 id="c-technical-implementation">C. Technical Implementation<a class="headerlink" href="#c-technical-implementation" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong><code>MapData.data_version: int = 0</code> (<code>spectra_store.py</code>)</strong>:</li>
+<li>Add <code>data_version: int = 0</code> and helper <code>def touch(self) -&gt; None: self.data_version += 1</code> to <code>MapData</code>.</li>
+<li>Call <code>md.touch()</code> (or via <code>SpectraStore</code> / <code>VMWorkspaceSpectra</code> mutators) whenever <code>x</code>, <code>Y</code>, <code>is_active</code>, <code>peak_params</code>, <code>fit_r2</code>, <code>Y_bestfit</code>, or <code>apply_cosmic_ray_erase</code> modifies <code>md</code>.</li>
+<li><strong>Slice-First <code>float64</code> Cast (<code>spectral_parameters.py</code>)</strong>:</li>
+<li>In <code>compute_spectral_parameter()</code>, construct the column boolean mask <code>mask = (x_arr &gt;= x_min) &amp; (x_arr &lt;= x_max)</code> on <code>x_arr</code> <strong>before</strong> converting <code>Y</code> to <code>float64</code>:
+     <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Slice columns FIRST on float32 view, then cast ONLY selected band to float64</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">y_band</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Y</span><span class="p">[:,</span> <span class="n">mask</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+</code></pre></div></li>
+<li>Handle descending <code>x_arr</code> cleanly so trapezoidal integration yields non-negative integral magnitude (respecting ascending order uniformly).</li>
+<li>Return <code>np.full(Y.shape[0], np.nan, dtype=np.float64)</code> if <code>np.count_nonzero(mask) == 0</code> (or <code>&lt; 2</code> for trapezoidal mode when bracket width is smaller than step spacing — check single-point fallback cleanly).</li>
+<li><strong>Cached Delaunay Barycentric Grid Interpolation (<code>spectral_parameters.py</code> / <code>VMLiveMaps</code>)</strong>:</li>
+<li>Add a precomputed spatial gridder dataclass <code>PrecomputedGridder</code> (or helper <code>build_map_gridder(coords, grid_res=80)</code> and <code>evaluate_map_grid(values, gridder)</code>):<ul>
+<li>Keep <code>from scipy.spatial import Delaunay</code> strictly <strong>inside</strong> the helper function to satisfy startup import deferral (<code>tests/performance/test_startup_imports.py</code>).</li>
+<li>Compute Delaunay triangulation once per unique <code>(coords_shape, coords_bytes_hash_or_token)</code> and extract per-grid-pixel simplex vertex indices <code>(grid_res^2, 3)</code> and barycentric weights <code>(grid_res^2, 3)</code> + out-of-hull mask (<code>simplex == -1 -&gt; NaN</code>).</li>
+<li>Fallback gracefully to regular 2D grid fast indexing when coordinates lie on a regular Cartesian lattice (preserving current <code>0.76–16.5 ms</code> fast path) and to <code>scipy.spatial.cKDTree</code> nearest-neighbor if points are coplanar/collinear (<code>QhullError</code>).</li>
+<li>Maintain backward compatibility of <code>compute_map_grid(coords, values, grid_res=80, gridder=None)</code> optional parameter.</li>
+</ul>
+</li>
+<li><strong>Signal Separation &amp; Tab-Visibility Gate (<code>vm_workspace_maps.py</code>, <code>v_workspace_maps.py</code>, <code>v_workspace_spectra.py</code>)</strong>:</li>
+<li>Stop calling <code>vm_live_maps.set_map_data(md)</code> inside <code>VWorkspaceMaps._on_selection_changed_for_live_maps</code> (<code>v_workspace_maps.py:229–234</code>)! Map-point clicks in <code>VMapViewer</code> emit <code>spectra_selection_changed</code> only for <code>VSpectraViewer</code>, never triggering full-map Live Maps recalculation.</li>
+<li>Route Live Maps updates strictly from map-level events (<code>_on_map_data_changed</code>, map selection change) using a single consolidated pass (reducing <code>2 -&gt; 1</code> batches per map switch).</li>
+<li>Add visibility gating in <code>VWorkspaceSpectra</code> and <code>VWorkspaceMaps</code>: track <code>self._live_maps_dirty: bool = False</code>; if <code>self.bottom_tabs.currentWidget() is not self.v_live_maps</code>, store dirty state and return without calling <code>vm_live_maps</code> recalculation; connect <code>self.bottom_tabs.currentChanged</code> to flush dirty updates once when the user opens Live Maps.</li>
+<li>Fix <code>_on_range_selector_toggled</code> (<code>v_workspace_spectra.py:393–401</code>) so activating a bracket does not double-calculate synchronously AND asynchronously; connect <code>vm_live_maps.selector_state_changed</code> in <code>VWorkspaceSpectra.setup_connections()</code>.</li>
+<li><strong>Clean Clear &amp; Empty-State Lifecycle (<code>v_workspace_maps.py</code>, <code>vm_live_maps.py</code>)</strong>:</li>
+<li>Remove the <code>if self.vm.current_map_name:</code> guard skipping Live Maps reset in <code>_on_map_data_changed()</code> (<code>v_workspace_maps.py:396</code>). When <code>current_map_name</code> is <code>None</code> (workspace cleared or final map deleted), call <code>vm_live_maps.set_map_data(None)</code> (or <code>set_map_datas([])</code>), stop <code>_timer</code>, clear <code>_pending_calc</code>, <code>_intensity_cache</code>, <code>_geometry_cache</code>, and reset all 3 <code>LiveMapSubpanel</code> instances.</li>
+</ol>
+<h4 id="d-dependencies">D. Dependencies<a class="headerlink" href="#d-dependencies" title="Permanent link">&para;</a></h4>
+<p>None (independent prerequisite phase).</p>
+<h4 id="e-performance-considerations">E. Performance Considerations<a class="headerlink" href="#e-performance-considerations" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Cuts <code>N = 90,000</code> peak compute memory from <strong><code>947.5 MB</code></strong> to <strong><code>~110 MB</code></strong> and slice+cast time by <code>~4×</code>.</li>
+<li>Cuts scattered <code>N = 160,000</code> drag tick compute from <strong><code>14,507 ms</code></strong> to <strong><code>&lt; 2 ms</code></strong> after initial triangulation.</li>
+<li>Cuts idle hidden-tab and point-click computes to <strong><code>0</code></strong>.</li>
+</ul>
+<h4 id="f-edge-cases">F. Edge Cases<a class="headerlink" href="#f-edge-cases" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Collinear/degenerate coordinates raising <code>scipy.spatial.QhullError</code> in <code>Delaunay</code> -&gt; fallback to <code>cKDTree</code> or single-point handling.</li>
+<li>In-place <code>Y</code> edit (cosmic ray erase) forgetting <code>md.touch()</code> -&gt; ensure all mutators in <code>VMWorkspaceSpectra</code> and <code>VMWorkspaceMaps</code> bump <code>data_version</code>.</li>
+<li><code>bottom_tabs</code> index changed programmatically in tests -&gt; verify <code>isVisible()</code> vs <code>currentWidget() is self.v_live_maps</code> carefully so headless unit tests that test <code>VMLiveMaps</code> directly bypass View-layer tab gating cleanly, and View-layer integration tests trigger <code>bottom_tabs.setCurrentWidget(ws.v_live_maps)</code>.</li>
+</ul>
+<h4 id="g-testing-and-validation">G. Testing and Validation<a class="headerlink" href="#g-testing-and-validation" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>tests/unit/model/test_spectral_parameters.py</code>: Verify slice-first output matches full-matrix <code>float64</code> output to <code>&lt; 1e-12</code> relative tolerance; verify empty-mask <code>NaN</code> return; verify <code>build_map_gridder</code> matches <code>griddata(..., method="linear")</code> and handles collinear <code>QhullError</code>.</li>
+<li><code>tests/unit/viewmodel/test_vm_live_maps.py</code>: Verify <code>data_version</code> invalidates cache; <code>set_map_data(None)</code> clears state and stops timer.</li>
+<li><code>tests/unit/view/test_workspace_maps_live_wiring.py</code>: Spy on <code>VMLiveMaps</code> recalculations proving point-click = <code>0</code> passes, map switch = <code>1</code> pass, hidden tab = <code>0</code> passes followed by <code>1</code> flush on tab switch, clear workspace resets panels.</li>
+<li><code>tests/performance/test_startup_imports.py</code>: Verify zero new top-level <code>scipy</code> imports.</li>
+</ul>
+<h4 id="h-acceptance-criteria">H. Acceptance Criteria<a class="headerlink" href="#h-acceptance-criteria" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Map switch runs exactly <code>1</code> compute batch (down from <code>2</code>); point click runs <code>0</code> batches; hidden tab runs <code>0</code> batches.</li>
+<li><code>N = 90,000</code> <code>compute_spectral_parameter</code> peak Python allocation reduced by <span class="arithmatex">\(\ge 75\%\)</span>.</li>
+<li>Scattered <code>N = 2,401</code> and <code>160,000</code> drag ticks run in <span class="arithmatex">\(&lt; 5\text{ ms}\)</span> post-init.</li>
+</ul>
+<hr />
+<h3 id="phase-1-vmapslist-extendedselection-robust-selection-model-completed-shipped-in-v26481-commits-850512b-bac32d0">Phase 1: <code>VMapsList</code> ExtendedSelection &amp; Robust Selection Model <code>[Completed &amp; Shipped in v26.48.1 — commits 850512b, bac32d0]</code><a class="headerlink" href="#phase-1-vmapslist-extendedselection-robust-selection-model-completed-shipped-in-v26481-commits-850512b-bac32d0" title="Permanent link">&para;</a></h3>
+<h4 id="a-objective_1">A. Objective<a class="headerlink" href="#a-objective_1" title="Permanent link">&para;</a></h4>
+<p>Enable standard Qt <code>ExtendedSelection</code> (<code>Click</code>, <code>Ctrl+Click</code>, <code>Shift+Click</code>, <code>Ctrl+A</code>) in <code>VMapsList</code> while preserving placeholder safety, deterministic map ordering, Primary-vs-Selected consistency, and backward compatibility with <code>map_selection_changed(int)</code>.</p>
+<h4 id="b-files-and-components_1">B. Files and Components<a class="headerlink" href="#b-files-and-components_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>spectroview/view/components/v_map_list.py</code> (<code>VMapsList</code>)</li>
+</ul>
+<h4 id="c-technical-implementation_1">C. Technical Implementation<a class="headerlink" href="#c-technical-implementation_1" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Selection Mode &amp; Placeholder Hygiene</strong>:</li>
+<li>Switch <code>self.maps_list.setSelectionMode(QAbstractItemView.ExtendedSelection)</code> (replacing <code>SingleSelection</code> at line 73).</li>
+<li>Store the real map name in <code>item.setData(Qt.UserRole, map_name)</code> (or track an explicit <code>self._is_placeholder_active: bool</code> / <code>item.flags() &amp; Qt.ItemIsSelectable</code>) so the 5 placeholder rows from <code>_update_maps_placeholder()</code> (<code>lines 136–154</code>) are never confused with real map items.</li>
+<li><strong>Canonical Signal Addition</strong>:</li>
+<li>Keep <code>map_selection_changed = Signal(int)</code> for backward compatibility.</li>
+<li>Add <code>maps_selection_changed = Signal(list, object)</code> emitting <code>(selected_map_names: list[str], primary_map_name: Optional[str])</code> — using <code>object</code> rather than <code>str</code> so <code>None</code> transfers losslessly when empty.</li>
+<li>Emit both signals in a single debounced/guarded handler attached to <code>itemSelectionChanged</code> (avoiding duplicate emission from paired <code>currentItemChanged</code> + <code>itemSelectionChanged</code> unless deduplicated by last-emitted <code>(tuple(selected), primary)</code> snapshot).</li>
+<li><strong>Primary Reconciliation Rule</strong>:</li>
+<li>Extract <code>selected_items</code> in visual list order (<code>for row in range(self.maps_list.count()): ... if item.isSelected()</code>).</li>
+<li>Resolve <code>primary_item = self.maps_list.currentItem()</code>:<ul>
+<li>If <code>primary_item</code> is selectable and <code>primary_item in selected_items</code>, <code>primary_name = primary_item.text()</code>.</li>
+<li>Else if <code>selected_items</code> is non-empty (e.g., user <code>Ctrl+Clicked</code> to deselect the focused item), pick the last/first remaining selected item (<code>selected_items[-1]</code>) and sync <code>setCurrentItem(item, QItemSelectionModel.NoUpdate)</code>.</li>
+<li>Else (<code>selected_items</code> is empty, e.g., blank viewport click or cleared list), <code>selected_names = []</code>, <code>primary_name = None</code>.</li>
+</ul>
+</li>
+<li><strong>Name-Preserving Repopulation (<code>set_maps_names</code> &amp; <code>set_selected_maps</code>)</strong>:</li>
+<li>Replace integer index capture in <code>set_maps_names()</code> (<code>line 159</code>) with capturing <code>(selected_names_before, primary_name_before)</code>.</li>
+<li>When repopulating under <code>blockSignals(True)</code>, restore every item whose name is still in <code>selected_names_before</code> using <code>item.setSelected(True)</code> and restore focus on <code>primary_name_before</code> (or first still-selected item, or row <code>0</code> if none survived) via <code>self.maps_list.setCurrentItem(target_item, QItemSelectionModel.NoUpdate)</code>.</li>
+<li>Add <code>get_selected_map_names(self) -&gt; list[str]</code> and <code>set_selected_map_name(self, name: str)</code> / <code>set_selected_maps(self, names: list[str], primary_name: Optional[str] = None)</code>: updating a single active highlight in <code>set_selected_map_name</code> must check whether <code>name</code> is already part of an existing multi-selection when triggered from <code>_on_map_data_changed()</code>, rather than blowing away multi-selection via bare <code>setCurrentRow()</code>.</li>
+<li><strong>Action Button Strip Semantics (<code>btn_view</code>, <code>btn_delete</code>, <code>btn_save</code>)</strong>:</li>
+<li>Update delete trigger / tooltip cleanly if desired, OR keep index/name lookup operating on <code>primary_name</code> for View/Save and optionally batch-delete via <code>VMWorkspaceMaps</code> (see Phase 2). Note: avoid letting <code>btn_view</code> / <code>btn_save</code> assume single <code>get_selected_map_index()</code> breaks when multi-selected (<code>get_selected_map_index()</code> returns the <code>primary_name</code> row index).</li>
+</ol>
+<h4 id="d-dependencies_1">D. Dependencies<a class="headerlink" href="#d-dependencies_1" title="Permanent link">&para;</a></h4>
+<p>None strictly, though coordinated with Phase 2 before activating multi-selection emissions in live app runs.</p>
+<h4 id="e-performance-considerations_1">E. Performance Considerations<a class="headerlink" href="#e-performance-considerations_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Use an <code>O(1)</code> lookup dictionary <code>self._items_by_name: dict[str, QListWidgetItem]</code> (mirroring <code>VSpectraList.items_by_fname</code> in <code>v_spectra_list.py</code>) and deduplicate <code>(selected_names, primary_name)</code> emissions so <code>Ctrl+A</code> over 100 maps fires <strong>exactly 1</strong> consolidated Qt signal rather than intermediate churn.</li>
+</ul>
+<h4 id="f-edge-cases_1">F. Edge Cases<a class="headerlink" href="#f-edge-cases_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Empty list (<code>_update_maps_placeholder()</code> active) -&gt; <code>get_selected_map_names()</code> returns <code>[]</code>, <code>get_selected_map_index()</code> returns <code>-1</code>.</li>
+<li>Clicking blank area below items -&gt; emits <code>([], None)</code> safely without returning placeholder text <code>"Double-click or Drag &amp; Drop..."</code>.</li>
+<li><code>Ctrl+Click</code> deselecting active map while another stays selected -&gt; <code>primary_name</code> cleanly shifts to remaining selected map.</li>
+<li>Reordering or renaming maps preserves selection set by name.</li>
+</ul>
+<h4 id="g-testing-and-validation_1">G. Testing and Validation<a class="headerlink" href="#g-testing-and-validation_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>tests/unit/view/test_v_maps_list.py</code> (update &amp; expand existing suite):</li>
+<li><code>test_extended_selection_ctrl_and_shift_clicks</code>: Verify ordered <code>selected_names</code> and <code>primary_name</code>.</li>
+<li><code>test_ctrl_deselect_primary_promotes_remaining_selected_map</code>: Verify Primary never points at an unselected item.</li>
+<li><code>test_set_maps_names_preserves_multi_selection</code>: Add/reorder maps and confirm existing multi-selection survives intact.</li>
+<li><code>test_empty_selection_and_placeholder_do_not_emit_dummy_rows</code>: Confirm blank click / empty list ignores the 5 placeholder rows and emits <code>([], None)</code>.</li>
+<li><code>test_backward_compatible_map_selection_changed_signal</code>: Confirm single click still emits valid integer row index.</li>
+</ul>
+<h4 id="h-acceptance-criteria_1">H. Acceptance Criteria<a class="headerlink" href="#h-acceptance-criteria_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>VMapsList</code> supports <code>ExtendedSelection</code>, passes all existing <code>test_v_maps_list.py</code> tests plus new multi-selection tests, and never returns placeholder items or wipes multi-selection on <code>set_maps_names</code>.</li>
+</ul>
+<hr />
+<h3 id="phase-2-two-tier-workspace-coordination-vmworkspacemaps-vworkspacemaps-completed-shipped-in-v26481-commit-850512b">Phase 2: Two-Tier Workspace Coordination (<code>VMWorkspaceMaps</code> &amp; <code>VWorkspaceMaps</code>) <code>[Completed &amp; Shipped in v26.48.1 — commit 850512b]</code><a class="headerlink" href="#phase-2-two-tier-workspace-coordination-vmworkspacemaps-vworkspacemaps-completed-shipped-in-v26481-commit-850512b" title="Permanent link">&para;</a></h3>
+<h4 id="a-objective_2">A. Objective<a class="headerlink" href="#a-objective_2" title="Permanent link">&para;</a></h4>
+<p>Implement the Two-Tier Selection Model inside <code>VMWorkspaceMaps</code> and <code>VWorkspaceMaps</code> cleanly: route the <strong>Primary Active Map</strong> exclusively to all single-map viewers/tools/MVA/services while routing the <strong>Selected Maps Group</strong> cleanly to <code>VMLiveMaps</code> (respecting the Phase 0 tab-visibility gate).</p>
+<h4 id="b-files-and-components_2">B. Files and Components<a class="headerlink" href="#b-files-and-components_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>spectroview/viewmodel/vm_workspace_maps.py</code> (<code>VMWorkspaceMaps</code>)</li>
+<li><code>spectroview/view/v_workspace_maps.py</code> (<code>VWorkspaceMaps</code>)</li>
+</ul>
+<h4 id="c-technical-implementation_2">C. Technical Implementation<a class="headerlink" href="#c-technical-implementation_2" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>State in <code>VMWorkspaceMaps</code></strong>:</li>
+<li>Add <code>self.selected_map_names: list[str] = []</code> alongside existing <code>self.current_map_name: Optional[str] = None</code> and <code>self.current_map_df</code>.</li>
+<li>Keep <code>spectroview/application/service.py::get_active_map()</code> and <code>_get_target_mds(apply_all)</code> strictly bound to <code>current_map_name</code> (Primary Map) or <code>self.store.map_names</code> (when <code>apply_all=True</code>), resolving the bulk-ops contradiction cleanly.</li>
+<li>Add <code>select_maps(self, map_names: list[str], primary_name: Optional[str] = None)</code>:<ul>
+<li>Filter <code>valid_names = [n for n in dict.fromkeys(map_names) if n in self.store.map_names]</code>.</li>
+<li>If <code>primary_name not in valid_names</code>, set <code>primary_name = valid_names[-1] if valid_names else None</code>.</li>
+<li>Update <code>self.selected_map_names = valid_names</code>.</li>
+<li>If <code>primary_name is None</code>: clear <code>current_map_name = None</code>, <code>current_map_df = None</code>, <code>selected_fnames = []</code>; emit <code>spectra_selection_changed.emit([])</code> and a distinct lightweight signal <code>live_maps_selection_changed.emit([], None)</code> without triggering spurious recalculations.</li>
+<li>Else if <code>primary_name != self.current_map_name</code>: update Primary map state (mirroring <code>select_map(primary_name)</code> for <code>current_map_df</code>, <code>selected_fnames</code>, <code>spectra_selection_changed</code> for <code>VMapViewer</code>/<code>VSpectraViewer</code>) <strong>and</strong> emit <code>live_maps_selection_changed.emit(self.selected_map_names, self.current_map_name)</code> once.</li>
+<li>Else (Primary unchanged, comparison selection changed, e.g., user <code>Ctrl+Clicked</code> Map 2 while Map 1 stayed Primary—or Ctrl-deselected Map 2): <strong>do NOT reset <code>VMapViewer</code>, <code>VSpectraViewer</code>, <code>VFitModelBuilder</code>, or <code>vm_mva</code></strong>; emit ONLY <code>live_maps_selection_changed.emit(self.selected_map_names, self.current_map_name)</code>! (Major win: <code>0</code> wasted work on single-map viewers when toggling comparison maps!)</li>
+</ul>
+</li>
+<li>Preserve <code>select_map(self, map_name: str)</code> as a clean wrapper calling <code>self.select_maps([map_name], primary_name=map_name)</code> for backward compatibility with existing callers/API/tests.</li>
+<li><strong>Deletion &amp; Clear Consistency (<code>delete_selected_maps</code> / <code>remove_map</code> / <code>clear_workspace</code>)</strong>:</li>
+<li>In <code>remove_map(name)</code> and <code>clear_workspace()</code>, remove deleted names from <code>selected_map_names</code>; if <code>selected_map_names</code> becomes empty, clear <code>current_map_name = None</code>, emit <code>live_maps_selection_changed.emit([], None)</code>.</li>
+<li>Add explicit <code>delete_selected_maps()</code> invoked when user clicks sidebar Delete with confirmation (deleting all <code>selected_map_names</code> cleanly in one batch and re-selecting adjacent survivor), while keeping <code>delete_current_map()</code> single-map backward compatible.</li>
+<li><strong>View Wiring in <code>VWorkspaceMaps</code></strong>:</li>
+<li>Connect <code>self.v_maps_list.maps_selection_changed</code> to <code>_on_maps_selection_changed(selected_names, primary_name)</code>.</li>
+<li>Route <code>primary_name</code> changes only to <code>vm_mva.set_current_map_name(primary_name)</code>, <code>v_more_tab</code>, <code>VMapViewer</code>, <code>viewer_dialogs</code>, and <code>VSpectraViewer</code>.</li>
+<li>Connect <code>vm.live_maps_selection_changed</code> -&gt; <code>_sync_live_maps_from_selection()</code> (gated by Phase 0 tab visibility).</li>
+<li>Update <code>_on_map_data_changed()</code> (<code>line 376</code>): instead of calling <code>self.v_maps_list.set_selected_map_name(self.vm.current_map_name)</code> unconditionally (which wipes multi-selection), call <code>self.v_maps_list.set_selected_maps(self.vm.selected_map_names, self.vm.current_map_name)</code> under blocked signals.</li>
+<li>Update <code>_on_fit_results_updated()</code> (<code>lines 400–419</code>): mark active fit-modified map <code>md.touch()</code> and schedule a Live Maps refresh only if that map is currently in <code>vm.selected_map_names</code> and the Live Maps tab is visible (or mark dirty).</li>
+</ol>
+<h4 id="d-dependencies_2">D. Dependencies<a class="headerlink" href="#d-dependencies_2" title="Permanent link">&para;</a></h4>
+<p>Requires <strong>Phase 0</strong> (signal separation + visibility gate + clear fix) and <strong>Phase 1</strong> (<code>VMapsList.maps_selection_changed</code>).</p>
+<h4 id="e-performance-considerations_2">E. Performance Considerations<a class="headerlink" href="#e-performance-considerations_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>Ctrl+Click</code> adding/removing a 2nd/3rd comparison map when Primary stays fixed triggers <strong>zero</strong> <code>VMapViewer</code>, <code>VMapViewerDialog</code>, <code>VSpectraViewer</code>, or <code>vm_mva</code> updates.</li>
+<li><code>select_maps</code> passes <code>MapData</code> references (<code>store.get_map_data(name)</code>), performing zero DataFrame or matrix copies for comparison maps.</li>
+</ul>
+<h4 id="f-edge-cases_2">F. Edge Cases<a class="headerlink" href="#f-edge-cases_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Primary stays unchanged while a comparison map is added or removed.</li>
+<li>Deselecting all maps (<code>selected_names=[]</code>) clears Live Maps without crashing <code>VMapViewer</code> or <code>vm_mva</code>.</li>
+<li>Deleting a subset of selected maps while Primary is among the deleted items vs. not among deleted items.</li>
+<li>Preprocessing (<code>apply_y_normalization</code>, <code>subtract_baseline</code>) runs on Primary Map, bumps <code>md.data_version</code>, and triggers refresh of Live Maps (re-using unchanged cached comparison map intensities in Phase 3!).</li>
+</ul>
+<h4 id="g-testing-and-validation_2">G. Testing and Validation<a class="headerlink" href="#g-testing-and-validation_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>tests/unit/viewmodel/test_vm_workspace_maps.py</code>:</li>
+<li><code>test_select_maps_preserves_primary_and_comparison_group</code></li>
+<li><code>test_select_maps_comparison_only_change_does_not_reemit_viewer_reset</code></li>
+<li><code>test_bulk_tools_remain_primary_only_unless_apply_all</code></li>
+<li><code>test_remove_map_and_clear_workspace_clean_selected_map_names</code></li>
+<li><code>tests/unit/view/test_workspace_maps_selection.py</code>:</li>
+<li><code>VWorkspaceMaps</code> multi-select routes Primary to <code>v_map_viewer</code> / <code>vm_mva</code> without refreshing <code>v_map_viewer</code> when adding comparison map #2.</li>
+</ul>
+<h4 id="h-acceptance-criteria_2">H. Acceptance Criteria<a class="headerlink" href="#h-acceptance-criteria_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Single selection retains 100% existing behavior across all viewers, dialogs, MVA, and <code>application/service.py::get_active_map()</code>.</li>
+<li>Multi-selection tracks <code>selected_map_names</code> and <code>current_map_name</code> without duplicating data or resetting <code>VMapViewer</code> / <code>VSpectraViewer</code> on comparison toggles.</li>
+</ul>
+<hr />
+<h3 id="phase-3-multi-map-vmlivemaps-engine-data-versioned-cache-rb-ratio-completed-shipped-in-v26481-commit-850512b">Phase 3: Multi-Map <code>VMLiveMaps</code> Engine, Data-Versioned Cache &amp; <code>R/B</code> Ratio <code>[Completed &amp; Shipped in v26.48.1 — commit 850512b]</code><a class="headerlink" href="#phase-3-multi-map-vmlivemaps-engine-data-versioned-cache-rb-ratio-completed-shipped-in-v26481-commit-850512b" title="Permanent link">&para;</a></h3>
+<h4 id="a-objective_3">A. Objective<a class="headerlink" href="#a-objective_3" title="Permanent link">&para;</a></h4>
+<p>Upgrade <code>VMLiveMaps</code> to manage multiple <code>MapData</code> instances cleanly, apply the <strong>Primary-Precedence Dimensionality Policy</strong>, maintain cross-batch intensity caches keyed by <code>md.data_version</code>, handle heterogeneous X-axes &amp; out-of-range <code>R/B</code> ratios safely, and expose structured multi-map payloads for both 1D multi-profile and 2D switcher modes.</p>
+<h4 id="b-files-and-components_3">B. Files and Components<a class="headerlink" href="#b-files-and-components_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>spectroview/viewmodel/vm_live_maps.py</code> (<code>VMLiveMaps</code>)</li>
+<li><code>spectroview/model/spectral_parameters.py</code> (ratio/NaN safety helpers if needed)</li>
+</ul>
+<h4 id="c-technical-implementation_3">C. Technical Implementation<a class="headerlink" href="#c-technical-implementation_3" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Multi-Map Entrypoint &amp; Mode State</strong>:</li>
+<li>Add <code>set_map_datas(self, mds: list[MapData], primary_name: Optional[str] = None, active_2d_name: Optional[str] = None)</code>:<ul>
+<li>Keep <code>set_map_data(self, md: Optional[MapData])</code> as a thin wrapper (<code>self.set_map_datas([md], md.name) if md is not None else self.set_map_datas([])</code>).</li>
+<li>Store <code>self._current_mds: list[MapData]</code>, <code>self._primary_map_name: Optional[str]</code>, and <code>self._active_2d_map_name: Optional[str]</code> (for 2D switcher control; initialized/re-anchored to <code>primary_name</code> if the previously viewed 2D map was deselected or Primary changed).</li>
+<li>Add <code>set_active_2d_map(self, map_name: str)</code> to switch which selected 2D map is displayed on demand without re-selecting in <code>VMapsList</code>.</li>
+</ul>
+</li>
+<li>When <code>not mds</code>: stop <code>_timer</code>, clear <code>_pending_calc</code>, clear <code>_intensity_cache</code>, emit empty reset signal (<code>live_maps_cleared</code> or empty <code>series</code>/<code>profile</code> payload), and return immediately.</li>
+<li><strong>Primary-Precedence Dimensionality Classification</strong>:</li>
+<li>Classify each map's spatial geometry via cached <code>(id(md), md.coords_version_or_shape)</code> <code>analyze_map_geometry(md.coords)</code>.</li>
+<li>Determine Primary Map <code>primary_md</code>:<ul>
+<li>If <code>primary_md.is_profile</code> (<strong>1D Mode</strong>):</li>
+<li>Included targets: <code>[md for md in mds if geom[md].is_profile]</code>.</li>
+<li>Excluded count: <code>n_excluded_2d = len(mds) - len(included)</code> (included in status telemetry, e.g., <code>"Comparing 3 1D profiles (1 2D map excluded)"</code>).</li>
+<li>Else (<strong>2D Mode</strong>):</li>
+<li>Included 2D candidates: <code>[md for md in mds if not geom[md].is_profile]</code>.</li>
+<li>Active displayed map: <code>target_2d = by_name.get(self._active_2d_map_name) or primary_md</code>.</li>
+<li>Emit switcher metadata (<code>available_2d_names</code>, <code>active_2d_name</code>, <code>n_excluded_1d</code>) and <strong>evaluate intensities ONLY for <code>target_2d</code></strong> (do not waste CPU computing non-displayed 2D maps!).</li>
+</ul>
+</li>
+<li><strong>Versioned Intensity Cache &amp; Selective <code>R/B</code> Invalidation</strong>:</li>
+<li>Replace pass-only cache eviction with an LRU/bounded cross-batch cache (e.g., max <code>64</code> entries, evicted on <code>remove_map</code> / <code>clear_workspace</code>) keyed cleanly to prevent <code>MapData</code> reload collisions:
+     <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">cache_key</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">md</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="nb">id</span><span class="p">(</span><span class="n">md</span><span class="p">),</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">md</span><span class="o">.</span><span class="n">data_version</span><span class="p">,</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">param_name</span><span class="p">,</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x_min</span><span class="p">),</span> <span class="mi">6</span><span class="p">),</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x_max</span><span class="p">),</span> <span class="mi">6</span><span class="p">),</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">)</span>
+</code></pre></div></li>
+<li>Benefit: When only Primary Map is baseline-subtracted or normalized, or when a 2nd/3rd map is added to the selection, unchanged maps hit <code>_intensity_cache</code> in <span class="arithmatex">\(O(1)\)</span> without re-integrating hundreds of thousands of spectra.</li>
+<li>When Green is configured in <code>R/B ratio</code> mode, compute/fetch <code>I_red</code> and <code>I_blue</code> using the same versioned cache (<code>"Integrated intensity"</code> for Red <code>[r_min, r_max]</code> and Blue <code>[b_min, b_max]</code>). Changing Red bracket updates Red plus Green when Green is in <code>R/B ratio</code> mode; changing Blue updates Blue plus Green similarly.</li>
+<li><strong>Vectorized <code>is_active</code> Consistency</strong>:</li>
+<li>After vectorized <code>compute_spectral_parameter(x_axis, y_matrix, ...)</code> (or before slicing via boolean row index if <code>&lt; 50%</code> active), apply <code>md.is_active</code> consistently:<ul>
+<li>In <strong>2D maps</strong>: set <code>values[~md.is_active] = np.nan</code> so <code>compute_map_grid</code> / <code>imshow</code> masks deselected pixels identically to <code>VMapViewer</code>!</li>
+<li>In <strong>1D profiles</strong>: set <code>values[~md.is_active] = np.nan</code> (Matplotlib breaks lines cleanly over <code>NaN</code> gaps without collapsing X indices).</li>
+</ul>
+</li>
+<li><strong>Typed Multi-Profile Payload (<code>multi_profile_data_ready</code>)</strong>:</li>
+<li><strong>Proposed signals</strong>: Introduce a structured multi-profile payload signal (while preserving <code>profile_data_ready</code> for single-profile backward compatibility):
+     <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Payload list of dicts/dataclasses per profile:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># {&quot;name&quot;: str, &quot;positions&quot;: np.ndarray, &quot;values&quot;: np.ndarray,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1">#  &quot;axis_label&quot;: str, &quot;is_primary&quot;: bool, &quot;out_of_range&quot;: bool}</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">multi_profile_data_ready</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># (color_id, entries, shared_x_label, status_msg)</span>
+</code></pre></div></li>
+<li>Also emit proposed <code>map_2d_candidates_changed = Signal(list, str, str)</code> (<code>candidate_names, active_name, status_msg</code>) and <code>live_maps_cleared = Signal()</code> so <code>VLiveMaps</code> keeps its tab-level 2D switcher synced and clears cleanly on empty selection.</li>
+<li>Determine <code>shared_x_label</code>: uniform axis (<code>"X"</code> or <code>"Y"</code>) if all included profiles share it; <code>"Position along profile"</code> when mixing X/Y or diagonal <code>"Distance"</code>.</li>
+<li><strong>Adaptive Debounce (<code>_recalculate_batch</code> scheduling)</strong>:</li>
+<li>Measure <code>last_compute_plus_emit_ms</code>. Set QTimer interval during continuous bracket drags to <code>max(60, min(250, int(last_elapsed_ms * 1.1)))</code> (leading-edge immediate feel on mouse release via <code>immediate=True</code> or trailing tick) so slow multi-map workloads coalesce rather than stalling Qt's event loop.</li>
+</ol>
+<h4 id="d-dependencies_3">D. Dependencies<a class="headerlink" href="#d-dependencies_3" title="Permanent link">&para;</a></h4>
+<p>Requires <strong>Phase 0</strong> and <strong>Phase 2</strong>.</p>
+<h4 id="e-performance-considerations_3">E. Performance Considerations<a class="headerlink" href="#e-performance-considerations_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>data_version</code>-keyed caching means adding Map 2 &amp; Map 3 only computes Map 2 &amp; Map 3, not Map 1 again.</li>
+<li>In 2D mode, selecting 5 2D maps computes <strong>only the 1 currently displayed 2D map</strong>, scaling as <code>O(1)</code> in selection count while giving instant 1-click switching (and keeping switcher jumps warm via cache!).</li>
+<li>In 1D multi-profile mode, slice-first <code>float64</code> across e.g. 5 profiles <span class="arithmatex">\(\times\)</span> 500 points (<span class="arithmatex">\(\sim 2{,}500\)</span> spectra) executes in <code>&lt; 5 ms</code>.</li>
+</ul>
+<h4 id="f-edge-cases_3">F. Edge Cases<a class="headerlink" href="#f-edge-cases_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Comparison profile X-axis disjoint from Red/Blue bracket -&gt; <code>values = all-NaN</code>, entry flagged <code>out_of_range=True</code>, status message reports partial/no spectral overlap instead of crashing.</li>
+<li><code>R/B</code> all-<code>NaN</code> or near-zero denominator across an entire map -&gt; <code>np.all(np.isnan(values))</code> handled safely (<code>vmin, vmax = 0.0, 1.0</code>, status <code>"No valid R/B data in range"</code>).</li>
+<li>Non-overlapping Primary X range after map switch -&gt; <code>_sync_or_init_ranges_from_axis</code> syncs from <code>primary_md.x_axis</code> and emits <code>selector_state_changed</code>.</li>
+<li>Single-profile payload retains exact single-curve behavior seamlessly.</li>
+</ul>
+<h4 id="g-testing-and-validation_3">G. Testing and Validation<a class="headerlink" href="#g-testing-and-validation_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>tests/unit/viewmodel/test_vm_live_maps.py</code>:</li>
+<li><code>test_multi_profile_eval_different_lengths_and_coords</code></li>
+<li><code>test_multi_profile_rb_ratio_and_zero_blue_nan_masking</code></li>
+<li><code>test_multi_profile_disjoint_spectral_range_graceful_nan</code></li>
+<li><code>test_mixed_1d_2d_primary_precedence_with_exclusion_msg</code></li>
+<li><code>test_2d_multi_selection_evaluates_only_active_2d_map_and_switches</code></li>
+<li><code>test_data_version_bump_invalidates_only_mutated_map_cache</code></li>
+<li><code>test_is_active_false_pixels_masked_as_nan</code></li>
+<li><code>test_empty_selection_clears_state_and_stops_timer</code></li>
+</ul>
+<h4 id="h-acceptance-criteria_3">H. Acceptance Criteria<a class="headerlink" href="#h-acceptance-criteria_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>VMLiveMaps</code> handles <code>0</code>, <code>1</code>, or <code>K</code> 1D/2D/mixed <code>MapData</code> instances cleanly without Qt widget references (pure ViewModel MVVM compliance).</li>
+<li>Data-versioned caching prevents recomputing untouched maps; 2D mode evaluates only the active switcher target.</li>
+</ul>
+<hr />
+<h3 id="phase-4-vlivemaps-livemapsubpanel-multi-profile-visualization-2d-switcher-completed-shipped-in-v26481-commits-850512b-5313933-7b3ce50">Phase 4: <code>VLiveMaps</code> / <code>LiveMapSubpanel</code> Multi-Profile Visualization &amp; 2D Switcher <code>[Completed &amp; Shipped in v26.48.1 — commits 850512b, 5313933, 7b3ce50]</code><a class="headerlink" href="#phase-4-vlivemaps-livemapsubpanel-multi-profile-visualization-2d-switcher-completed-shipped-in-v26481-commits-850512b-5313933-7b3ce50" title="Permanent link">&para;</a></h3>
+<h4 id="a-objective_4">A. Objective<a class="headerlink" href="#a-objective_4" title="Permanent link">&para;</a></h4>
+<p>Render multi-profile comparisons clearly without crowding compact Matplotlib axes, preserve smooth interactive drag updates by pooling <code>Line2D</code> artists, eliminate aspect-ratio glitches across 2D <span class="arithmatex">\(\leftrightarrow\)</span> 1D switching, and provide a shared 2D map switcher header bar.</p>
+<h4 id="b-files-and-components_4">B. Files and Components<a class="headerlink" href="#b-files-and-components_4" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>spectroview/view/components/v_live_maps.py</code> (<code>LiveMapSubpanel</code>, <code>VLiveMaps</code>)</li>
+<li><code>spectroview/view/v_workspace_maps.py</code> (connect new <code>VMLiveMaps</code> signals to <code>VLiveMaps</code>)</li>
+</ul>
+<h4 id="c-technical-implementation_4">C. Technical Implementation<a class="headerlink" href="#c-technical-implementation_4" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Shared Tab-Level Header Strip in <code>VLiveMaps</code></strong>:</li>
+<li>Add a slim top bar inside <code>VLiveMaps</code> (above the 3-column <code>LiveMapSubpanel</code> splitter/layout, height <code>~26–30 px</code>, hidden cleanly when single-map single-curve mode is active!):<ul>
+<li><strong>Multi-Profile Legend Mode</strong> (visible when <span class="arithmatex">\(\ge 2\)</span> 1D profiles are active): horizontally flowing/scrollable pill strip mapping <code>[Color Swatch + Marker] MapName</code> (Primary marked with subtle bold/accent border) using <code>DEFAULT_COLORS</code> (<code>spectroview/__init__.py:50–55</code>) paired with <code>MARKERS</code> (<code>lines 57–61</code>) cycling deterministically if <code>&gt; 20</code> maps.</li>
+<li><strong>2D Map Switcher Mode</strong> (visible when <code>len(available_2d_names) &gt;= 2</code> in 2D mode): <code>[ ◀ | ComboBox: Active 2D Map | ▶ ]</code> wired cleanly to <code>VMLiveMaps.set_active_2d_map(name)</code>.</li>
+<li><strong>Status / Exclusion Badge</strong> on the right edge (e.g., <code>"2 profiles · 1 2D map excluded"</code> or <code>"Map2: outside [Red]"</code>).</li>
+</ul>
+</li>
+<li><strong><code>Line2D</code> Pool in <code>LiveMapSubpanel</code></strong>:</li>
+<li>Replace single <code>self.line: Optional[Line2D]</code> with <code>self.lines: list[Line2D] = []</code>.</li>
+<li>Maintain a persistent pool of <code>Line2D</code> artists per curve count so bracket drags (<code>Red</code>/<code>Blue</code>/<code>Green</code>) reuse existing <code>line.set_data(x, y)</code> in-place without clearing/rebuilding axes when <code>len(entries) == len(self.lines)</code> and <code>self._display_kind == "profile"</code>:<ul>
+<li><strong>1 profile</strong>: Preserve exact current appearance — single solid line in the channel's selector color (<code>Red</code> / <code>Blue</code> / <code>Green</code>), no legend.</li>
+<li><strong><span class="arithmatex">\(\ge 2\)</span> profiles</strong>: Color index <span class="arithmatex">\(i\)</span> uses <code>DEFAULT_COLORS[i % len(DEFAULT_COLORS)]</code>; Primary profile uses <code>linewidth=2.0, zorder=4</code>; comparison profiles use <code>linewidth=1.4, zorder=3</code> (optional faint markers if sparse <code>N &lt;= 100</code> or cycle markers past 20 colors).</li>
+</ul>
+</li>
+<li>Compute finite autoscale bounds manually (<code>np.nanmin</code>/<code>np.nanmax</code> across finite points of all curves with <code>5%</code> margin) so curves whose values are all <code>NaN</code> (out-of-range or division by zero) do not collapse axes or raise warnings.</li>
+<li><strong>Aspect-Ratio Reset &amp; Theme Safety</strong>:</li>
+<li>In <code>_reset_axes()</code> (<code>v_live_maps.py:206–223</code>) and whenever <code>_display_kind</code> transitions (<code>2D -&gt; 1D</code>, <code>series -&gt; 2D</code>, <code>any -&gt; empty</code>), explicitly reset <code>self.ax.set_aspect("auto", adjustable="box")</code> and clear stale colorbars (<code>im</code> / <code>cbar</code>) before drawing new artists.</li>
+<li>Update <code>apply_theme()</code> (<code>lines 607–631</code>) to re-style header legend pills, switcher combo, <code>self.lines</code>, and axes backgrounds consistently in Light, Dark, and Soft-Dark themes without dropping multi-curve lines.</li>
+<li><strong>Empty State Reset</strong>:</li>
+<li>Add <code>VLiveMaps.clear_all()</code> / <code>LiveMapSubpanel.clear_plot()</code> invoked on <code>live_maps_cleared</code> (when workspace clears or all maps are deselected), resetting subpanel titles/ranges/plots to neutral placeholders.</li>
+</ol>
+<h4 id="d-dependencies_4">D. Dependencies<a class="headerlink" href="#d-dependencies_4" title="Permanent link">&para;</a></h4>
+<p>Requires <strong>Phase 3</strong>.</p>
+<h4 id="e-performance-considerations_4">E. Performance Considerations<a class="headerlink" href="#e-performance-considerations_4" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Reusing <code>Line2D</code> objects in <code>self.lines</code> avoids Matplotlib <code>ax.clear()</code> + layout recomputation during active bracket dragging.</li>
+<li>Keeping the legend out of all 3 Matplotlib <code>Figure(layout="compressed")</code> instances avoids shrinking axes and avoids 3× text-layout overhead inside Agg.</li>
+<li>Note: Do NOT call <code>canvas.draw()</code> synchronously — always use <code>canvas.draw_idle()</code> (queued Agg draw coalesced per Qt paint cycle) while honoring Phase 3's adaptive timer.</li>
+</ul>
+<h4 id="f-edge-cases_4">F. Edge Cases<a class="headerlink" href="#f-edge-cases_4" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Selection drops from 4 curves to 2 curves -&gt; prune extra <code>Line2D</code> artists via <code>line.remove()</code> cleanly (never leak orphan artists on <code>self.ax</code>).</li>
+<li>All 3 subpanels display different lengths (<code>Profile A: 15 pts</code>, <code>Profile B: 500 pts</code>) and one is <code>all-NaN</code> -&gt; autoscale computes bounds strictly over finite curves; if all curves are <code>all-NaN</code>, preserve <code>xlim</code> from spatial positions and default <code>ylim = (0.0, 1.0)</code>.</li>
+<li><code>LiveMapSubpanel</code> pop-out / copy action (<code>copy_requested</code>): verify whether copying multi-profile data or active 2D map to Clipboard/Graphs works gracefully or stays cleanly scoped to currently displayed curves.</li>
+<li>Rapid theme switching preserves all multi-profile curves and header strip theme styling.</li>
+</ul>
+<h4 id="g-testing-and-validation_4">G. Testing and Validation<a class="headerlink" href="#g-testing-and-validation_4" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>tests/unit/view/test_live_maps.py</code>:</li>
+<li><code>test_single_profile_retains_selector_color_and_hides_shared_legend</code></li>
+<li><code>test_multi_profile_uses_default_colors_and_shows_shared_legend_strip</code></li>
+<li><code>test_multi_profile_in_place_drag_reuses_line2d_artists_and_prunes_excess</code></li>
+<li><code>test_switch_2d_to_multi_1d_and_back_resets_aspect_auto</code></li>
+<li><code>test_2d_switcher_bar_visible_for_multiple_2d_maps_and_triggers_vm</code></li>
+<li><code>test_all_nan_curve_does_not_break_autoscale</code></li>
+<li><code>test_theme_switch_preserves_multi_lines_and_header</code></li>
+</ul>
+<h4 id="h-acceptance-criteria_4">H. Acceptance Criteria<a class="headerlink" href="#h-acceptance-criteria_4" title="Permanent link">&para;</a></h4>
+<ul>
+<li>1D multi-profile renders smoothly in all 3 channels with shared legend strip and intact <code>250–300 px</code> plot canvas area.</li>
+<li>Zero aspect-ratio squishing after any sequence of <code>2D -&gt; 1D -&gt; 2D</code> or <code>single &lt;-&gt; multi</code> switches.</li>
+<li>In-place artist reuse confirmed (same <code>Line2D</code> object <code>id</code>s during drag ticks).</li>
+</ul>
+<hr />
+<h3 id="phase-5-phase-6-implemented-thresholded-async-worker-live-maps-view-options-documentation-sync">Phase 5 &amp; Phase 6 (Implemented): Thresholded Async Worker, Live Maps View Options &amp; Documentation Sync<a class="headerlink" href="#phase-5-phase-6-implemented-thresholded-async-worker-live-maps-view-options-documentation-sync" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Phase 5 (<code>spectroview/viewmodel/vm_live_maps.py</code>, <code>spectroview/main.py</code>)</strong>:</li>
+<li><code>ASYNC_SPECTRUM_THRESHOLD = 25_000</code> (configurable on <code>VMLiveMaps(..., async_threshold=...)</code>): batches below 25k active spectra remain synchronous; batches <code>&gt;= 25,000</code> dispatch to a dedicated <code>QThreadPool(maxThreadCount=1)</code> <code>_LiveMapWorker</code> (<code>QRunnable</code>) bridged via parented <code>_LiveMapWorkerBridge(QObject)</code>.</li>
+<li>Monotonic <code>_generation_id</code> + <code>MapData.data_version</code> verification discards superseded drag/clear frames safely, and <code>shutdown()</code> drains active workers on <code>Main.closeEvent()</code>.</li>
+<li>Verified by <code>tests/unit/viewmodel/test_vm_live_maps_async.py</code>.</li>
+<li><strong>Phase 6 (<code>spectroview/view/components/v_live_maps.py</code>, <code>v_live_maps_legend_editor.py</code>)</strong>:</li>
+<li>Added top-right <code>[Show Legend | More view options]</code> toolbar in <code>VLiveMaps</code> with client-side cached re-rendering (zero spectral recomputation): Linear/Log X, Y, and Color (Z) <code>LogNorm</code> scaling with non-positive domain fallbacks, <code>Line</code> / <code>Dot</code> / <code>Line + Dots</code> styles + line width &amp; dot size, Show/Hide legend, legend location/columns/font size, draggable &amp; double-click-editable canvas legends (<code>LiveMapsLegendEditorDialog</code>) synchronized with multi-1D header chips, <code>Show grid</code>, <code>Share Y-axis (1D)</code>, <code>Heatmap smoothing</code>, <code>Show colorbars</code>, and <code>Reset view options</code>.</li>
+<li>Synchronized <code>docs/developer/maps.md</code>, <code>docs/developer/spectra.md</code>, and <code>docs/user_manual/spectra_maps.md</code>.</li>
+<li>Verified by expanded <code>tests/unit/view/test_live_maps.py</code>.</li>
+</ul>
+<hr />
+<h3 id="archive-of-original-phase-5-specification">Archive of Original Phase 5 Specification<a class="headerlink" href="#archive-of-original-phase-5-specification" title="Permanent link">&para;</a></h3>
+<h4 id="a-objective_5">A. Objective<a class="headerlink" href="#a-objective_5" title="Permanent link">&para;</a></h4>
+<p>Keep the GUI responsive during heavy multi-map batches (<code>total active spectra &gt; 25,000</code> or massive <code>90,000+</code> single maps), and synchronize all SPECTROview documentation surfaces required by <code>AGENTS.md</code>.</p>
+<h4 id="b-files-and-components_5">B. Files and Components<a class="headerlink" href="#b-files-and-components_5" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>spectroview/viewmodel/vm_live_maps.py</code> (background <code>QRunnable</code> + <code>QThreadPool</code> + <code>generation_id</code>)</li>
+<li>Documentation surfaces:</li>
+<li><code>docs/developer/</code> (Maps Workspace, Live Maps &amp; <code>VMLiveMaps</code> architecture)</li>
+<li><code>docs/user_manual/</code> (Multi-map selection, Live Maps 1D multi-profile comparison, 2D Switcher, <code>R/B</code> Ratio) + refreshed <strong>Modern Dark</strong> screenshots in <code>docs/user_manual_images/</code></li>
+<li><code>docs/api/</code> (note if any public selection helper is exposed; existing <code>spectroview/api/</code> signatures remain untouched)</li>
+</ul>
+<h4 id="c-technical-implementation_5">C. Technical Implementation<a class="headerlink" href="#c-technical-implementation_5" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Thresholded <code>QThreadPool</code> Offload (<code>vm_live_maps.py</code>)</strong>:</li>
+<li>Below <code>25,000</code> total active spectra across target maps: stay on synchronous timer-coalesced path (lowest overhead, deterministic).</li>
+<li>Above <code>25,000</code>: spawn a lightweight <code>QRunnable</code> on a dedicated <code>QThreadPool</code> (<code>maxThreadCount=1</code> or queued with <code>self._generation_id += 1</code> cancellation):<ul>
+<li>On main thread before launching worker: snapshot references + slice inputs safely alongside <code>gen = self._generation_id</code> and <code>data_versions</code>.</li>
+<li>Inside worker thread: run NumPy slice-first compute + cached Delaunay grid evaluation (pure NumPy/SciPy math, <strong>zero Qt widget calls</strong>).</li>
+<li>Emit result signal through a <code>QObject</code> bridge parented cleanly to <code>VMLiveMaps</code> (obeying <code>AGENTS.md</code> PySide6 lifetime rules) -&gt; main thread checks <code>if gen != self._generation_id: return</code> before populating <code>_intensity_cache</code> and emitting <code>map_data_ready</code> / <code>multi_profile_data_ready</code>.</li>
+</ul>
+</li>
+<li><strong>Thread Lifetime &amp; Teardown Safety</strong>:</li>
+<li>Connect parent widget/app cleanup (<code>destroyed</code> / <code>clear_workspace</code>) to increment <code>_generation_id</code>, stop <code>_timer</code>, and avoid dangling worker callbacks writing to destroyed <code>QObject</code>s.</li>
+<li><strong>Mandatory Documentation &amp; Visual Asset Synchronization</strong>:</li>
+<li>Update User Manual, Developer Guide, and verify Public API stability guarantees. Capture Modern Dark UI visuals showing multi-map selection + Live Maps 1D multi-profile legend strip &amp; 2D switcher (following native font rendering rules with no headless tofu boxes).</li>
+</ol>
+<h4 id="d-dependencies_5">D. Dependencies<a class="headerlink" href="#d-dependencies_5" title="Permanent link">&para;</a></h4>
+<p>Requires <strong>Phases 0–4</strong>.</p>
+<h4 id="e-performance-considerations_5">E. Performance Considerations<a class="headerlink" href="#e-performance-considerations_5" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Offloads <code>~180–500 ms</code> NumPy compute on massive batches off the Qt UI thread so mouse/bracket dragging stays visually smooth while Matplotlib <code>Agg</code> draws run solely on the Qt main thread when results arrive.</li>
+</ul>
+<h4 id="f-edge-cases_5">F. Edge Cases<a class="headerlink" href="#f-edge-cases_5" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Workspace cleared or map deleted <em>while</em> worker is mid-compute -&gt; bumped <code>_generation_id</code> drops stale worker output cleanly; worker holds sliced inputs safely.</li>
+<li>Rapid bracket dragging fires new generation -&gt; in-flight outdated generations are discarded cleanly upon completion without overwriting newer data.</li>
+</ul>
+<h4 id="g-testing-and-validation_5">G. Testing and Validation<a class="headerlink" href="#g-testing-and-validation_5" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>tests/unit/viewmodel/test_vm_live_maps_async.py</code>: Verify generation cancellation rejects stale worker results, verifies threshold branching (<code>&lt;= 25k</code> sync vs <code>&gt; 25k</code> async), verifies safe teardown while queued.</li>
+<li>Full regression &amp; lint gate:</li>
+<li><code>python -m pytest tests/ -m "not slow" -q</code></li>
+<li><code>python -m pyflakes</code> on all modified <code>.py</code> files</li>
+<li><code>tests/performance/test_startup_imports.py</code></li>
+</ul>
+<h4 id="h-acceptance-criteria_5">H. Acceptance Criteria<a class="headerlink" href="#h-acceptance-criteria_5" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Large (<code>90,000+</code>) map calculations do not block mouse/UI events during compute phase; stale async frames never render.</li>
+<li>All modified files pass <code>pyflakes</code>, full unit/integration test suite passes under <code>QT_QPA_PLATFORM=offscreen</code>, and all doc surfaces match implementation.</li>
+</ul>
+<hr />
+<h2 id="7-phase-vi-performance-validation-benchmarking-strategy">7. Phase VI — Performance Validation &amp; Benchmarking Strategy<a class="headerlink" href="#7-phase-vi-performance-validation-benchmarking-strategy" title="Permanent link">&para;</a></h2>
+<h3 id="a-measurement-protocol">A. Measurement Protocol<a class="headerlink" href="#a-measurement-protocol" title="Permanent link">&para;</a></h3>
+<p>All performance checks execute headless under <code>QT_QPA_PLATFORM=offscreen</code> with isolated <code>QSettings</code> and deterministic synthetic fixtures:</p>
+<ul>
+<li><strong>Timing</strong>: <code>time.perf_counter()</code> bracketing (1) pure compute (<code>compute_spectral_parameter</code> / <code>VMLiveMaps._recalculate_batch</code>), (2) full view draw (<code>QApplication.processEvents()</code> + Matplotlib canvas <code>draw</code>), and (3) end-to-end UI event <span class="arithmatex">\(\rightarrow\)</span> canvas idle.</li>
+<li><strong>Memory</strong>: <code>tracemalloc.start()</code> measuring <code>peak_alloc_mb</code> per step so temporary <code>float64</code> full-matrix regressions fail immediately.</li>
+<li><strong>Call/Redraw Hygiene</strong>: Lightweight signal/method counters verifying zero duplicate <code>VMLiveMaps</code> batch runs (<code>1</code> batch per logical change) and <code>0</code> compute calls when Live Maps is hidden or when heatmap points are clicked.</li>
+</ul>
+<h3 id="b-benchmark-scenarios-pre-optimization-baselines-target-budgets">B. Benchmark Scenarios, Pre-Optimization Baselines &amp; Target Budgets<a class="headerlink" href="#b-benchmark-scenarios-pre-optimization-baselines-target-budgets" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">#</th>
+<th style="text-align: left;">Scenario</th>
+<th style="text-align: center;">Pre-Opt Baseline (<code>34431df</code>, Observed)</th>
+<th style="text-align: center;">Target Post-Implementation Budget</th>
+<th style="text-align: center;">Hard Regression Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>1a</strong></td>
+<td style="text-align: left;">Single large regular 2D map (<code>N = 40,000</code>, <code>M = 1,015</code>, 10% band): compute &amp; peak alloc</td>
+<td style="text-align: center;">Compute <code>339 ms</code> · Peak <strong>421.1 MB</strong></td>
+<td style="text-align: center;">Compute <code>&lt; 110 ms</code> · Peak <code>&lt; 100 MB</code></td>
+<td style="text-align: center;">Peak alloc <code>&gt; 120 MB</code> or full-matrix upcast</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>1b</strong></td>
+<td style="text-align: left;">Single large regular 2D map (<code>N = 90,000</code>, <code>M = 1,015</code>, 10% band): compute &amp; peak alloc</td>
+<td style="text-align: center;">Compute <code>732 ms</code> (param) / <code>1.37–1.54 s</code> (<code>VMLiveMaps</code>) · Peak <strong>947.5 MB</strong></td>
+<td style="text-align: center;">Param <code>&lt; 200 ms</code> · Peak <code>&lt; 150 MB</code>; async offload keeps UI <code>&lt; 16 ms</code> input lag</td>
+<td style="text-align: center;">Peak alloc <code>&gt; 250 MB</code></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>1c</strong></td>
+<td style="text-align: left;">Scattered 2D map drag tick (<code>N = 2,401</code> / <code>N = 160,000</code>)</td>
+<td style="text-align: center;">Grid <code>209.7 ms</code> / <strong><code>14,507 ms</code></strong> every tick</td>
+<td style="text-align: center;">Init once, subsequent drag grid <code>&lt; 2 ms</code></td>
+<td style="text-align: center;">Drag grid <code>&gt; 10 ms</code></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: left;">Multi-selection of 5 large 2D maps (<code>N = 40,000</code> each): selection &amp; 2D switcher toggle</td>
+<td style="text-align: center;">N/A (<code>SingleSelection</code> only)</td>
+<td style="text-align: center;">Initial compute evaluates <strong>1</strong> active map (<code>O(1)</code> vs <code>O(K)</code>); switcher jump uses cache or single-map compute</td>
+<td style="text-align: center;">Computing unselected/non-displayed 2D maps</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>3</strong></td>
+<td style="text-align: left;">Multi-selection of 5–10 1D profiles (mixed lengths <code>50–2,000</code>, Red + Blue + <code>R/B</code> ratio)</td>
+<td style="text-align: center;">N/A</td>
+<td style="text-align: center;">Compute <code>&lt; 15 ms</code> for 10 profiles; <code>Line2D</code> update without <code>ax.clear()</code></td>
+<td style="text-align: center;">Recreation of <code>Line2D</code> objects during drag</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>4</strong></td>
+<td style="text-align: left;">Rapid bracket drag burst (20 motion events + release) &amp; <code>R/B</code> toggle</td>
+<td style="text-align: center;">Fixed <code>60 ms</code> timer; Agg draws <strong><code>128–189 ms × 3</code></strong></td>
+<td style="text-align: center;">Max <code>1</code> queued draw per adaptive tick (<code>max(60, last_ms)</code>); smooth release flush</td>
+<td style="text-align: center;">Uncoalesced per-event full recalculations</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>5</strong></td>
+<td style="text-align: left;">Rapid list sweep (<code>Ctrl+A</code> / <code>Shift+Click</code> over 50 maps)</td>
+<td style="text-align: center;">N/A</td>
+<td style="text-align: center;"><code>1</code> coalesced <code>maps_selection_changed</code> emission (<code>&lt; 5 ms</code> list update)</td>
+<td style="text-align: center;"><span class="arithmatex">\(O(K)\)</span> redundant signal emissions</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>6</strong></td>
+<td style="text-align: left;">Map switch (<code>2D &lt;-&gt; 1D</code>, 3 active brackets) &amp; Delete active map</td>
+<td style="text-align: center;"><strong><code>2</code> batches, <code>6</code> computes, <code>6</code> draws</strong> (<code>task-181</code>)</td>
+<td style="text-align: center;"><strong><code>1</code> batch, <code>3</code> computes</strong> (or cached), <code>aspect="auto"</code> verified</td>
+<td style="text-align: center;"><code>batches &gt; 1</code> or <code>aspect != "auto"</code> on 1D</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>7</strong></td>
+<td style="text-align: left;">Hidden Live Maps tab (load maps, preprocess, click <code>VMapViewer</code> point)</td>
+<td style="text-align: center;"><strong><code>3</code> computes</strong> on point click; <code>3–6</code> hidden draws (<code>task-181</code>)</td>
+<td style="text-align: center;"><strong><code>0</code> computes, <code>0</code> draws</strong> while hidden; <code>1</code> lazy flush on tab reveal</td>
+<td style="text-align: center;">Any <code>VMLiveMaps</code> compute while hidden</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>8</strong></td>
+<td style="text-align: left;">Workspace clear / delete all maps</td>
+<td style="text-align: center;"><strong>Stale <code>_current_md</code> retained</strong> (<code>v_workspace_maps.py:396</code>)</td>
+<td style="text-align: center;"><code>0</code> retained <code>MapData</code> refs in <code>VMLiveMaps</code>; <code>_timer.isActive() == False</code>; panels cleared</td>
+<td style="text-align: center;">Non-empty <code>_current_mds</code> or active timer</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  К началу
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

@@ -26,10 +26,16 @@
         
           <link rel="alternate" href="./" hreflang="fr">
         
+          <link rel="alternate" href="../../../de/developer/ai_agent/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/developer/ai_agent/" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/developer/ai_agent/" hreflang="zh">
+        
       
       
       <link rel="icon" href="../../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -37,10 +43,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -206,6 +212,36 @@
               class="md-select__link" aria-current="true"
             >
               Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/developer/ai_agent/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/developer/ai_agent/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/developer/ai_agent/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
             </a>
           </li>
         
@@ -2282,7 +2318,7 @@
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>├── __init__.py              # Docstring uniquement — garde le module optionnel
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>├── config/                  # Configuration YAML (model.yaml, settings.yaml, servers.yaml)
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>├── examples/                # Exemples de conversations few-shot (Markdown)
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>│   ├── plotting_examples.md #   Profil complet : 13 exemples avec appels d'outils
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>│   ├── plotting_examples.md #   Profil complet : 13 exemples avec appels d&#39;outils
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>│   └── examples_small.md    #   Profil simplifié : ~8 exemples concis couvrant les 5 outils
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>├── knowledge/               # Connaissances domaine statiques (Markdown ; profil complet uniquement)
 <a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>├── prompts/                 # Identité centrale et instructions thématiques (Markdown)
@@ -2294,7 +2330,7 @@
 <a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>│   └── ports.py             #   Protocole AppContext + RecordingContext (doublure de test)
 <a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>├── utils/
 <a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>│   ├── plot_utils.py        # normalize_plot_config / expand_comma_styles — coercition de types
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>│   ├── safe_eval.py         # evaluate_pandas_expression() — df.query() d'abord, eval() restreint en repli
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>│   ├── safe_eval.py         # evaluate_pandas_expression() — df.query() d&#39;abord, eval() restreint en repli
 <a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>│   └── df_summary.py        # compact_dataframe_schema() pour prompt ; summarize_dataframe_columns() pour ressource
 <a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>├── m_llm_client.py          # Couche Model : connexions LLM + workers QThread
 <a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>│                            #   - LLMWorker (Ollama)
@@ -2312,7 +2348,7 @@
 <a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>├── m_prompt_manager.py      # Cache et assemblage des fragments Markdown de prompt
 <a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>├── vm_chat.py               # ViewModel : choix du profil de prompt, détection petit modèle, boucle agentique
 <a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>├── v_chat_panel.py          # View : panneau de discussion intégré (QWidget) à côté des onglets
-<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>└── v_history_dialog.py      # View : navigateur d'historique (QDialog) avec horodatage, épinglage, recherche
+<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>└── v_history_dialog.py      # View : navigateur d&#39;historique (QDialog) avec horodatage, épinglage, recherche
 </code></pre></div>
 <h3 id="role-des-fichiers"><strong>Rôle des fichiers</strong><a class="headerlink" href="#role-des-fichiers" title="Permanent link">&para;</a></h3>
 <table>
@@ -2730,8 +2766,8 @@
 <p><code>to_llm_messages()</code> applique <code>max_context_messages</code> tout en élargissant la fenêtre vers l'arrière si une coupure tombait entre un appel assistant (<code>tool_calls</code>) et ses réponses <code>role="tool"</code>.</p>
 <h3 id="chatresult-reponse-analysee"><strong><code>ChatResult</code> — Réponse analysée</strong><a class="headerlink" href="#chatresult-reponse-analysee" title="Permanent link">&para;</a></h3>
 <p><strong>Fichier</strong> : <code>spectroview/ai_agent/vm_chat.py</code></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">ChatResult</span><span class="p">:</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"action"</span><span class="p">,</span> <span class="s2">"explanation"</span><span class="p">,</span> <span class="s2">"text_summary"</span><span class="p">,</span> <span class="s2">"plot_config"</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span> <span class="nc">ChatResult</span><span class="p">:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="s2">&quot;explanation&quot;</span><span class="p">,</span> <span class="s2">&quot;text_summary&quot;</span><span class="p">,</span> <span class="s2">&quot;plot_config&quot;</span><span class="p">)</span>
 </code></pre></div>
 <table>
 <thead>
@@ -2783,10 +2819,10 @@
 </ol>
 <p><strong>Profil simplifié</strong> : <code>prompts/system_small.md</code> + <code>rules/general.md</code> + <code>examples/examples_small.md</code>.</p>
 <p>L'agent utilise les <strong>appels d'outils natifs via MCP</strong> (<code>mcp/server.py</code>, <code>FastMCP</code>) :</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">query_dataframe</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">get_statistics</span><span class="p">(</span><span class="n">columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">query_dataframe</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">get_statistics</span><span class="p">(</span><span class="n">columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">plot_graph</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">plot_style</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">9</span> <span class="n">styles</span><span class="p">],</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>           <span class="n">filters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>           <span class="n">filters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
 <a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>           <span class="n">grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zlabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>           <span class="n">xmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ymin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ymax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>           <span class="n">color_palette</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xlogscale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ylogscale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -2857,10 +2893,10 @@
 <h3 id="initialisation-paresseuse"><strong>Initialisation paresseuse</strong><a class="headerlink" href="#initialisation-paresseuse" title="Permanent link">&para;</a></h3>
 <p>L'<strong>importation</strong> et l'<strong>instanciation du widget</strong> sont toutes deux différées jusqu'à <code>Main.open_ai_chat()</code>. Les SDK fournisseurs coûtant ~4,5 s à l'importation, <code>main.py</code> ne sonde le module qu'au démarrage (<code>importlib.util.find_spec</code>) sans l'exécuter :</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># main.py — niveau module : sonde uniquement, aucune exécution</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">LLM_AVAILABLE</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">"spectroview.ai_agent.v_chat_panel"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">LLM_AVAILABLE</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;spectroview.ai_agent.v_chat_panel&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># main.py — dans open_ai_chat()</span>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.ai_agent.v_chat_panel</span><span class="w"> </span><span class="kn">import</span> <span class="n">VChatPanel</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="kn">from</span> <span class="nn">spectroview.ai_agent.v_chat_panel</span> <span class="kn">import</span> <span class="n">VChatPanel</span>
 <a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span> <span class="o">=</span> <span class="n">VChatPanel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 <a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span><span class="o">.</span><span class="n">plot_requested</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_chat_plot_requested</span><span class="p">)</span>
@@ -2932,8 +2968,8 @@
 <hr />
 <h2 id="point-dentree-dans-la-barre-doutils"><strong>Point d'entrée dans la barre d'outils</strong><a class="headerlink" href="#point-dentree-dans-la-barre-doutils" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># v_menubar.py</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">actionAIChat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">Icons</span><span class="o">.</span><span class="n">sparkles</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">22</span><span class="p">),</span> <span class="s2">"SPECTROview AI Agent"</span><span class="p">)</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="bp">self</span><span class="o">.</span><span class="n">actionAIChat</span><span class="o">.</span><span class="n">setShortcut</span><span class="p">(</span><span class="s2">"Ctrl+Shift+A"</span><span class="p">)</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">actionAIChat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">Icons</span><span class="o">.</span><span class="n">sparkles</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">22</span><span class="p">),</span> <span class="s2">&quot;SPECTROview AI Agent&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="bp">self</span><span class="o">.</span><span class="n">actionAIChat</span><span class="o">.</span><span class="n">setShortcut</span><span class="p">(</span><span class="s2">&quot;Ctrl+Shift+A&quot;</span><span class="p">)</span>
 <a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="bp">self</span><span class="o">.</span><span class="n">actionAIChat</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ai_chat_requested</span><span class="o">.</span><span class="n">emit</span><span class="p">)</span>
 </code></pre></div>
 <p>Le signal <code>ai_chat_requested</code> est connecté à <code>Main.open_ai_chat()</code> dans <code>setup_connections()</code>, basculant la visibilité de <code>VChatPanel</code> dans <code>Main.workspace_splitter</code>.</p>
@@ -2943,14 +2979,14 @@
 <h3 id="patron-de-garde-dimportation"><strong>Patron de garde d'importation</strong><a class="headerlink" href="#patron-de-garde-dimportation" title="Permanent link">&para;</a></h3>
 <p>La disponibilité est sondée sans importer via <code>find_spec</code>, puis chargée paresseusement et mise en cache au premier appel :</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># m_llm_client.py — chaque SDK est sondé et chargé indépendamment</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">OLLAMA_AVAILABLE</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">"ollama"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">OLLAMA_AVAILABLE</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 <a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">_ollama</span> <span class="o">=</span> <span class="kc">None</span>
 <a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">_load_ollama</span><span class="p">():</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span><span class="sd">"""Retourne le module `ollama` (importé à la première utilisation), ou None."""</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">def</span> <span class="nf">_load_ollama</span><span class="p">():</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Retourne le module `ollama` (importé à la première utilisation), ou None.&quot;&quot;&quot;</span>
 <a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="k">global</span> <span class="n">_ollama</span>
 <a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="k">if</span> <span class="n">_ollama</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">OLLAMA_AVAILABLE</span><span class="p">:</span>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">ollama</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_mod</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>        <span class="kn">import</span> <span class="nn">ollama</span> <span class="k">as</span> <span class="nn">_mod</span>
 <a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>        <span class="n">_ollama</span> <span class="o">=</span> <span class="n">_mod</span>
 <a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>    <span class="k">return</span> <span class="n">_ollama</span>
 <a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="c1"># ... même schéma pour openai (_load_openai) et anthropic (_load_anthropic)</span>
@@ -3053,7 +3089,7 @@
 <a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
 <a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">filesystem</span>
 <a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stdio</span>
-<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">npx</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-y</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"@modelcontextprotocol/server-filesystem"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"~/data"</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">npx</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-y</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;@modelcontextprotocol/server-filesystem&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;~/data&quot;</span><span class="p p-Indicator">]</span>
 <a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">    </span><span class="nt">tools</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">read_file</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">list_directory</span><span class="p p-Indicator">]</span><span class="w">     </span><span class="c1"># liste blanche optionnelle</span>
 </code></pre></div>
@@ -3193,10 +3229,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../../../javascripts/mathjax.js"></script>
       

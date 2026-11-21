@@ -5,8 +5,8 @@
 
   {% set current_locale = i18n_page_locale | default(config.theme.language, true) | default('en', true) %}
   {% set src_norm = page.file.src_path.replace('\\', '/') if page and page.file else '' %}
-  {% set is_home = page and (page.is_homepage or page.url in ('', 'fr/') or src_norm in ('index.md', 'index.fr.md')) %}
-  {% set is_user_manual = page and (src_norm.startswith('user_manual/') or page.url.startswith('user_manual') or page.url.startswith('fr/user_manual')) %}
+  {% set is_home = page and (page.is_homepage or page.url in ('', 'fr/', 'de/', 'ru/', 'zh/') or src_norm in ('index.md', 'index.fr.md', 'index.de.md', 'index.ru.md', 'index.zh.md')) %}
+  {% set is_user_manual = page and (src_norm.startswith('user_manual/') or page.url.startswith('user_manual') or page.url.startswith(('fr/user_manual', 'de/user_manual', 'ru/user_manual', 'zh/user_manual'))) %}
 
   {% if page and (is_home or is_user_manual) %}
     <style>
@@ -16,23 +16,61 @@
   {% endif %}
 
   {% if is_home %}
-    {% if current_locale == 'fr' %}
-      {% set banner_alt = "Bannière SPECTROview" %}
-      {% set manual_title = "Manuel utilisateur" %}
-      {% set manual_label = "Commencer" %}
-      {% set repo_title = "Dépôt GitHub" %}
-      {% set repo_label = "Voir sur GitHub" %}
-      {% set pypi_title = "Paquet PyPI" %}
-      {% set pypi_label = "Voir sur PyPI" %}
-    {% else %}
-      {% set banner_alt = "SPECTROview Banner" %}
-      {% set manual_title = "User Manual" %}
-      {% set manual_label = "Get Started" %}
-      {% set repo_title = "GitHub Repository" %}
-      {% set repo_label = "View on GitHub" %}
-      {% set pypi_title = "PyPI Package" %}
-      {% set pypi_label = "View on PyPI" %}
-    {% endif %}
+    {% set hero_i18n = {
+      'en': {
+        'banner_alt': 'SPECTROview Banner',
+        'manual_title': 'User Manual',
+        'manual_label': 'Get Started',
+        'repo_title': 'GitHub Repository',
+        'repo_label': 'View on GitHub',
+        'pypi_title': 'PyPI Package',
+        'pypi_label': 'View on PyPI',
+      },
+      'fr': {
+        'banner_alt': 'Bannière SPECTROview',
+        'manual_title': 'Manuel utilisateur',
+        'manual_label': 'Commencer',
+        'repo_title': 'Dépôt GitHub',
+        'repo_label': 'Voir sur GitHub',
+        'pypi_title': 'Paquet PyPI',
+        'pypi_label': 'Voir sur PyPI',
+      },
+      'de': {
+        'banner_alt': 'SPECTROview-Banner',
+        'manual_title': 'Benutzerhandbuch',
+        'manual_label': 'Erste Schritte',
+        'repo_title': 'GitHub-Repository',
+        'repo_label': 'Auf GitHub ansehen',
+        'pypi_title': 'PyPI-Paket',
+        'pypi_label': 'Auf PyPI ansehen',
+      },
+      'ru': {
+        'banner_alt': 'Баннер SPECTROview',
+        'manual_title': 'Руководство пользователя',
+        'manual_label': 'Начать работу',
+        'repo_title': 'Репозиторий GitHub',
+        'repo_label': 'Открыть на GitHub',
+        'pypi_title': 'Пакет PyPI',
+        'pypi_label': 'Открыть на PyPI',
+      },
+      'zh': {
+        'banner_alt': 'SPECTROview 横幅',
+        'manual_title': '用户手册',
+        'manual_label': '快速开始',
+        'repo_title': 'GitHub 仓库',
+        'repo_label': '在 GitHub 上查看',
+        'pypi_title': 'PyPI 软件包',
+        'pypi_label': '在 PyPI 上查看',
+      },
+    } %}
+    {% set labels = hero_i18n.get(current_locale, hero_i18n['en']) %}
+    {% set banner_alt = labels.banner_alt %}
+    {% set manual_title = labels.manual_title %}
+    {% set manual_label = labels.manual_label %}
+    {% set repo_title = labels.repo_title %}
+    {% set repo_label = labels.repo_label %}
+    {% set pypi_title = labels.pypi_title %}
+    {% set pypi_label = labels.pypi_label %}
     <section class="tx-hero">
       <div class="tx-hero__image">
         <img src="{{ 'assets/top_banner.png' | url }}" alt="{{ banner_alt }}" style="width: 100%; display: block; max-width: 1200px; margin: 0 auto; padding-top: 2rem;" />

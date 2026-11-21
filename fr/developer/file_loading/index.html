@@ -26,10 +26,16 @@
         
           <link rel="alternate" href="./" hreflang="fr">
         
+          <link rel="alternate" href="../../../de/developer/file_loading/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/developer/file_loading/" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/developer/file_loading/" hreflang="zh">
+        
       
       
       <link rel="icon" href="../../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -37,10 +43,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -206,6 +212,36 @@
               class="md-select__link" aria-current="true"
             >
               Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/developer/file_loading/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/developer/file_loading/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/developer/file_loading/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
             </a>
           </li>
         
@@ -2037,25 +2073,25 @@
 <h3 id="dictionnaire-spectra-spectres-discrets">Dictionnaire Spectra — Spectres discrets<a class="headerlink" href="#dictionnaire-spectra-spectres-discrets" title="Permanent link">&para;</a></h3>
 <p>Tous les chargeurs de spectres (<code>load_wdf_spectrum</code>, <code>load_spc_spectrum</code>, <code>load_l6s_spectrum</code>, <code>load_ngs_spectrum</code>, <code>load_spectrum_file</code>, <code>load_TRPL_data</code>) renvoient un <strong>dictionnaire spectra</strong> unifié :</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"spectra"</span><span class="p">,</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="s2">"items"</span><span class="p">:</span> <span class="p">[</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;spectra&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        <span class="p">{</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"my_sample"</span><span class="p">,</span>       <span class="c1"># str — identifiant unique (nom sans extension ou nom + indice)</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>            <span class="s2">"x0"</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>        <span class="c1"># float64[M] — axe des nombres d'onde</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>            <span class="s2">"y0"</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>        <span class="c1"># float64[M] — valeurs brutes d'intensité</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>            <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{</span>              <span class="c1"># dict — paramètres d'acquisition</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>                <span class="s2">"File Format"</span><span class="p">:</span> <span class="s2">"Renishaw WDF"</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>                <span class="s2">"Laser Wavelength (nm)"</span><span class="p">:</span> <span class="s2">"532.00"</span><span class="p">,</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>                <span class="s2">"Exposure Time (s)"</span><span class="p">:</span> <span class="s2">"1.0"</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;my_sample&quot;</span><span class="p">,</span>       <span class="c1"># str — identifiant unique (nom sans extension ou nom + indice)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>            <span class="s2">&quot;x0&quot;</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>        <span class="c1"># float64[M] — axe des nombres d&#39;onde</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>            <span class="s2">&quot;y0&quot;</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>        <span class="c1"># float64[M] — valeurs brutes d&#39;intensité</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>            <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span>              <span class="c1"># dict — paramètres d&#39;acquisition</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>                <span class="s2">&quot;File Format&quot;</span><span class="p">:</span> <span class="s2">&quot;Renishaw WDF&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>                <span class="s2">&quot;Laser Wavelength (nm)&quot;</span><span class="p">:</span> <span class="s2">&quot;532.00&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>                <span class="s2">&quot;Exposure Time (s)&quot;</span><span class="p">:</span> <span class="s2">&quot;1.0&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>                <span class="c1"># ...</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>            <span class="p">}</span>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        <span class="p">},</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        <span class="c1"># Éléments supplémentaires pour les fichiers multi-spectres (ex. séries temporelles WDF)</span>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        <span class="p">{</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"my_sample_1"</span><span class="p">,</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>            <span class="s2">"x0"</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>            <span class="s2">"y0"</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>            <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"Time (s)"</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span> <span class="s2">"..."</span><span class="p">:</span> <span class="s2">"..."</span><span class="p">}</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;my_sample_1&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>            <span class="s2">&quot;x0&quot;</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>            <span class="s2">&quot;y0&quot;</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>            <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;Time (s)&quot;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span> <span class="s2">&quot;...&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">}</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        <span class="p">},</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    <span class="p">]</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="p">}</span>
@@ -2072,9 +2108,9 @@
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">df</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">load_wdf_map</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1">#  Disposition de df :</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1">#   Colonnes : ['X', 'Y', '100.5', '101.0', '101.5', ...]</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1">#   Colonnes : [&#39;X&#39;, &#39;Y&#39;, &#39;100.5&#39;, &#39;101.0&#39;, &#39;101.5&#39;, ...]</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="c1">#               |     |     |</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1">#               |     |     +-- valeurs de nombres d'onde sous forme de chaînes (cm-1)</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1">#               |     |     +-- valeurs de nombres d&#39;onde sous forme de chaînes (cm-1)</span>
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1">#               +-----+-------- coordonnées spatiales de platine (µm)</span>
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1">#</span>
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="c1">#   Forme : (N_spectra, 2 + M_wavenumbers)</span>
@@ -2109,11 +2145,11 @@
 <p><code>load_dataframe_file()</code> retourne un dictionnaire associant chaque clé de nom à un DataFrame. Pour les fichiers Excel à feuille unique ou CSV, la clé correspond au nom du fichier sans extension :</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Fichier Excel à une feuille ou CSV :</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">load_dataframe_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># -&gt; {"my_results": pd.DataFrame}</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># -&gt; {&quot;my_results&quot;: pd.DataFrame}</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># Fichier Excel multi-feuilles :</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">result</span> <span class="o">=</span> <span class="n">load_dataframe_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># -&gt; {"my_results_Sheet1": pd.DataFrame, "my_results_Sheet2": pd.DataFrame}</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># -&gt; {&quot;my_results_Sheet1&quot;: pd.DataFrame, &quot;my_results_Sheet2&quot;: pd.DataFrame}</span>
 </code></pre></div>
 <hr />
 <h2 id="comment-linterface-transforme-les-sorties-es-vers-spectrastore">Comment l'interface transforme les sorties E/S vers SpectraStore<a class="headerlink" href="#comment-linterface-transforme-les-sorties-es-vers-spectrastore" title="Permanent link">&para;</a></h2>
@@ -2121,13 +2157,13 @@
 <h3 id="espace-spectra-vmworkspacespectraload_files">Espace Spectra : <code>VMWorkspaceSpectra.load_files()</code><a class="headerlink" href="#espace-spectra-vmworkspacespectraload_files" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Dans viewmodel/spectra/vm_workspace_spectra.py — simplifié par souci de clarté</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">data_dict</span> <span class="o">=</span> <span class="n">load_wdf_spectrum</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>   <span class="c1"># -&gt; {"type": "spectra", "items": [...]}</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">data_dict</span> <span class="o">=</span> <span class="n">load_wdf_spectrum</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>   <span class="c1"># -&gt; {&quot;type&quot;: &quot;spectra&quot;, &quot;items&quot;: [...]}</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="p">[</span><span class="s2">"items"</span><span class="p">]:</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">fname</span>    <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span>           <span class="c1"># clé unique de carte</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">x0</span>       <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"x0"</span><span class="p">]</span>             <span class="c1"># float64[M]</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">y0</span>       <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"y0"</span><span class="p">]</span>             <span class="c1"># float64[M]</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">metadata</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"metadata"</span><span class="p">]</span>       <span class="c1"># dict</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;items&quot;</span><span class="p">]:</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">fname</span>    <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>           <span class="c1"># clé unique de carte</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">x0</span>       <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;x0&quot;</span><span class="p">]</span>             <span class="c1"># float64[M]</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">y0</span>       <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;y0&quot;</span><span class="p">]</span>             <span class="c1"># float64[M]</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">metadata</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;metadata&quot;</span><span class="p">]</span>       <span class="c1"># dict</span>
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
 <a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="c1"># Chaque spectre devient son propre bloc MapData dans SpectraStore :</span>
 <a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="c1"># N=1 (ligne unique), M = len(x0)</span>
@@ -2152,7 +2188,7 @@
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1"># x0:     float64[M]    — tous les canaux numériques valides (ordre croissant)</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># Y0:     float32[N, M] — matrice spectrale contiguë</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># coords: float64[N, 2] — positions (X, Y) de la platine</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1"># fnames: list[str]     — "{map_name}_({x}, {y})" (désambiguïsé avec _{k} en cas de sites répétés)</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1"># fnames: list[str]     — &quot;{map_name}_({x}, {y})&quot; (désambiguïsé avec _{k} en cas de sites répétés)</span>
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">add_map</span><span class="p">(</span>
 <a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="n">name</span>   <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
@@ -2337,10 +2373,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../../../javascripts/mathjax.js"></script>
       

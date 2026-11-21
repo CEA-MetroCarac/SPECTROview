@@ -1,0 +1,2881 @@
+
+<!doctype html>
+<html lang="ru" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Интерактивный инструмент для обработки, аппроксимации и визуализации спектроскопических данных">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/ru/developer/maps/">
+      
+      
+        <link rel="prev" href="../spectra/">
+      
+      
+        <link rel="next" href="../graphs/">
+      
+      
+        
+          <link rel="alternate" href="../../../developer/maps/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/developer/maps/" hreflang="fr">
+        
+          <link rel="alternate" href="../../../de/developer/maps/" hreflang="de">
+        
+          <link rel="alternate" href="./" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/developer/maps/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Рабочая область «Карты» - Документация SPECTROview</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#workspace-maps" class="md-skip">
+          Перейти к содержанию
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Верхний колонтитул">
+    <a href="../../" title="Документация SPECTROview" class="md-header__button md-logo" aria-label="Документация SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Документация SPECTROview
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Рабочая область «Карты»
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Выберите язык"
+      title="Выберите язык"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">RU</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../developer/maps/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/developer/maps/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/developer/maps/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="ru"
+              class="md-select__link" aria-current="true"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/developer/maps/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Поиск" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Поиск">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистить" aria-label="Очистить" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Инициализация поиска
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Главная
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Установка
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Руководство пользователя
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  ИИ-агент
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Руководство разработчика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  История изменений
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Навигация" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="Документация SPECTROview" class="md-nav__button md-logo" aria-label="Документация SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    Документация SPECTROview
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Главная
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Установка
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство пользователя
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство пользователя
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Поддерживаемые форматы данных
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Обзор интерфейса
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Строка меню
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочие области «Спектры» и «Карты»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Многомерный анализ (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Калькуляторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Настройки
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сохранение и загрузка
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Горячие клавиши и советы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство разработчика
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство разработчика
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Конвейер загрузки файлов
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архитектура данных SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Спектры»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты»
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Содержание">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Содержание
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-maps-differs-from-spectra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Чем Maps отличается от Spectra
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Чем Maps отличается от Spectra">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mapdata-in-maps-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MapData в контексте Maps
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Обзор архитектуры
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Обзор архитектуры">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-inheritance-instead-of-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Почему наследование вместо композиции?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#maps-specific-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Компоненты, специфичные для Maps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Компоненты, специфичные для Maps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vmworkspacemaps-the-viewmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMWorkspaceMaps — ViewModel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VMWorkspaceMaps — ViewModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#additional-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Дополнительные сигналы
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-method-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Справочник дополнительных методов
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vworkspacemaps-the-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VWorkspaceMaps — View
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vmapviewer-the-heatmap-canvas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMapViewer — холст тепловой карты
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vmapslist-the-maps-list-actions-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMapsList — панель списка карт и действий
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vmapviewerdialog-detachable-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMapViewerDialog — открепляемое окно
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-dual-storage-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Паттерн двойного хранения
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Паттерн двойного хранения">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filename-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Соглашение об именовании файлов
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Потоки данных
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Потоки данных">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loading-a-hyperspectral-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Загрузка гиперспектральной карты
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#map-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Выбор карты
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fitting-workflow-maps-override" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Рабочий процесс аппроксимации (переопределение в Maps)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#after-fitting-propagating-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        После аппроксимации: распространение результатов
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#map-visualization-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Конвейер визуализации карт
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Конвейер визуализации карт">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#heatmap-caching-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Стратегия кэширования тепловой карты
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interactive-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Интерактивное выделение
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#template-method-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Переопределение шаблонных методов
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Переопределение шаблонных методов">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_get_target_mdsapply_all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _get_target_mds(apply_all)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_on_map_data_changedmd-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _on_map_data_changed(md, action)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_post_bulk_actionapply_all-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _post_bulk_action(apply_all, action)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_emit_selected_spectra-override" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Переопределение _emit_selected_spectra()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-workspace-communication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Межмодульное взаимодействие рабочих областей
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Межмодульное взаимодействие рабочих областей">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#maps-spectra-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maps → рабочая область Spectra
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maps-graphs-workspace-profile-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maps → рабочая область Graphs (извлечение профиля)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fit-results-with-spatial-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Результаты аппроксимации с пространственными столбцами
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Постоянное хранение
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Постоянное хранение">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modern-format-v2-zip-backed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Современный формат (v2+, на основе ZIP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#legacy-loader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Устаревший загрузчик
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extension-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Руководство по расширению
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Руководство по расширению">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-new-map-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Добавление нового формата файлов карт
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-new-z-parameter-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Добавление нового типа Z-параметра
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-new-map-type-beyond-wafer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Добавление нового типа карт (помимо Wafer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Устранение неполадок
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Векторизованный движок пакетной аппроксимации (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Многомерный анализ (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Локальный MCP-сервер
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Спектры» (загрузка, предобработка, аппроксимация)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты» (гиперспектральные данные, тепловые карты)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Визуализация данных («Графики»)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Калькуляторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Расширение SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    История изменений
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Навигация" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Главная
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Руководство разработчика
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="workspace-maps"><strong>Рабочая область: «Карты»</strong><a class="headerlink" href="#workspace-maps" title="Permanent link">&para;</a></h1>
+<p>Рабочая область <code>Maps</code> предназначена для обработки <strong>гиперспектральных карт</strong> — пространственно разрешённых спектральных наборов данных, в которых каждому пикселю соответствует полный спектр. Она расширяет <a href="../spectra/">рабочую область «Спектры»</a> путём наследования, автоматически получая все возможности аппроксимации, коррекции базовой линии, редактирования пиков и сохранения состояния, а также добавляя пространственную привязку, визуализацию в виде тепловых карт и операции на основе координат.</p>
+<blockquote>
+<p>[!NOTE]
+<strong>Предварительные требования</strong> — Перед изучением данного руководства убедитесь, что вы знакомы со следующими материалами:</p>
+<ul>
+<li><a href="../spectra_store/">Архитектура данных: SpectraStore</a> — общая модель данных <code>MapData</code> / <code>SpectraStore</code>.</li>
+<li><a href="../spectra/">Рабочая область: Спектры</a> — базовый ViewModel, компоненты View и шаблоны потоков данных.</li>
+</ul>
+<p>На этой странице рассматриваются <strong>только расширения, специфичные для Maps</strong>. Унаследованное поведение здесь не повторяется.</p>
+</blockquote>
+<hr />
+<h2 id="how-maps-differs-from-spectra">Чем Maps отличается от Spectra<a class="headerlink" href="#how-maps-differs-from-spectra" title="Permanent link">&para;</a></h2>
+<p>Принципиальное различие заключается в мощности <code>MapData.N</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Рабочая область</th>
+<th><code>MapData.N</code></th>
+<th>Назначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Спектры</strong> (Spectra)</td>
+<td>1</td>
+<td>Один спектр на блок <code>MapData</code></td>
+</tr>
+<tr>
+<td><strong>Карты</strong> (Maps)</td>
+<td>2 – 100 000</td>
+<td>N спектров с общей осью волновых чисел</td>
+</tr>
+</tbody>
+</table>
+<p>Поскольку базовая <a href="../spectra_store/#mapdata-the-tensor-block">тензорная модель</a> полностью идентична, одна и та же векторизованная аппроксимация, работающая для 1 спектра, работает и для 100 000 без каких-либо изменений в движке.</p>
+<h3 id="mapdata-in-maps-context">MapData в контексте Maps<a class="headerlink" href="#mapdata-in-maps-context" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>MapData (&quot;wafer_300mm&quot;) — 50×50 wafer (2500 spectra, 1000 wavenumbers)
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── x0:          float64[1000]          1 shared wavenumber axis
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── Y0:          float32[2500, 1000]    raw intensities — 10 MB
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>├── x:           float64[800]           after spectral crop
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── Y:           float32[2500, 800]     after crop + baseline sub — 8 MB
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├── coords:      float64[2500, 2]       (X, Y) stage positions in µm
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>├── fnames:      list[str] × 2500       &quot;wafer_300mm_(x_pos, y_pos)&quot;
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>├── is_active:   bool[2500]             checkbox state
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>├── peak_params: float64[2500, K]       after VBF fit — all 2500 at once
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>├── fit_success: bool[2500]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>├── fit_r2:      float64[2500]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>├── Y_bestfit:   float32[2500, 800]     8 MB
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>└── Y_peaks:     [float32[2500, 800], ...]   8 MB per peak
+</code></pre></div>
+<hr />
+<h2 id="architecture-overview">Обзор архитектуры<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>graph LR
+    subgraph View ["Слой View"]
+        VWM["VWorkspaceMaps&lt;br/&gt;(наследует VWorkspaceSpectra)"]
+        ML["VMapsList&lt;br/&gt;(список карт + действия)"]
+        MV["VMapViewer&lt;br/&gt;(тепловая карта Matplotlib)"]
+        MVD["VMapViewerDialog&lt;br/&gt;(открепляемое окно)"]
+        SV_inh["VSpectraViewer&lt;br/&gt;(наследуется)"]
+        FMB_inh["VFitModelBuilder&lt;br/&gt;(наследуется)"]
+    end
+
+    subgraph VM ["Слой ViewModel"]
+        VMWM["VMWorkspaceMaps&lt;br/&gt;(наследует VMWorkspaceSpectra)"]
+        VMWS_inh["VMWorkspaceSpectra&lt;br/&gt;(базовый класс)"]
+    end
+
+    subgraph Model ["Слой Model"]
+        SS["SpectraStore"]
+        IO["m_io&lt;br/&gt;(загрузчики файлов карт)"]
+        VBF["VBFthread&lt;br/&gt;(мегапакетная аппроксимация)"]
+        WIO["WorkspaceIO"]
+    end
+
+    VWM --&gt; ML &amp; MV &amp; MVD
+    VWM --&gt; SV_inh &amp; FMB_inh
+    VWM --&gt;|"вызовы методов"| VMWM
+    VMWM -.-&gt;|"наследует"| VMWS_inh
+    VMWM --&gt;|"сигналы Qt"| VWM
+    VMWM --&gt; SS &amp; IO &amp; VBF &amp; WIO</code></pre>
+<h3 id="why-inheritance-instead-of-composition">Почему наследование вместо композиции?<a class="headerlink" href="#why-inheritance-instead-of-composition" title="Permanent link">&para;</a></h3>
+<p>Класс <code>VMWorkspaceMaps</code> <strong>наследует</strong> <code>VMWorkspaceSpectra</code>, а не оборачивает его:</p>
+<ul>
+<li>Все алгоритмы (базовая линия, пики, движок VBF) работают одинаково как с одиночными спектрами (N=1), так и с картами (N&gt;1).</li>
+<li>Дублирование или делегирование кода аппроксимации усложнило бы сопровождение и снизило надёжность.</li>
+<li>Переопределения по <strong>паттерну «Шаблонный метод»</strong> (Template Method) (три метода-перехватчика) достаточно для настройки выбора целевых объектов в массовых операциях без разветвления алгоритмической логики.</li>
+</ul>
+<p>Тот же принцип применяется и на уровне View: <code>VWorkspaceMaps</code> наследует <code>VWorkspaceSpectra</code>, переопределяет <code>setup_connections()</code>, чтобы предотвратить двойное связывание сигналов в <code>__init__</code>, а затем заменяет виджет правой боковой панели специализированной панелью карт <code>VMapsList + VMapViewer</code>.</p>
+<hr />
+<h2 id="maps-specific-components">Компоненты, специфичные для Maps<a class="headerlink" href="#maps-specific-components" title="Permanent link">&para;</a></h2>
+<h3 id="vmworkspacemaps-the-viewmodel"><code>VMWorkspaceMaps</code> — ViewModel<a class="headerlink" href="#vmworkspacemaps-the-viewmodel" title="Permanent link">&para;</a></h3>
+<p><strong>Файл</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/viewmodel/maps/vm_workspace_maps.py"><code>vm_workspace_maps.py</code></a> (вместе с миксинами аппроксимации и сохранения состояния в <code>spectroview/viewmodel/maps/</code>)</p>
+<p>Дополнительное состояние помимо унаследованного из <a href="../spectra/#vmworkspacespectra-the-viewmodel">VMWorkspaceSpectra</a>:</p>
+<table>
+<thead>
+<tr>
+<th>Атрибут</th>
+<th>Тип</th>
+<th>Назначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maps</code></td>
+<td><code>dict[str, pd.DataFrame]</code></td>
+<td>Исходные DataFrame карт, индексированные по имени (устаревший кэш)</td>
+</tr>
+<tr>
+<td><code>current_map_name</code></td>
+<td><code>str \| None</code></td>
+<td>Текущая активная карта</td>
+</tr>
+<tr>
+<td><code>maps_metadata</code></td>
+<td><code>dict[str, dict]</code></td>
+<td>Метаданные измерений для каждой карты (WDF, SPC, L6M, NGC)</td>
+</tr>
+<tr>
+<td><code>map_type</code></td>
+<td><code>str</code></td>
+<td><code>'2Dmap'</code> или <code>'Wafer_300mm'</code> / <code>'Wafer_200mm'</code> / <code>'Wafer_100mm'</code></td>
+</tr>
+<tr>
+<td><code>graphs_workspace</code></td>
+<td>ссылка</td>
+<td>Внедрённая ссылка для извлечения профилей</td>
+</tr>
+</tbody>
+</table>
+<h4 id="additional-signals">Дополнительные сигналы<a class="headerlink" href="#additional-signals" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">maps_list_changed</span>       <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>    <span class="c1"># map name list updated → VMapsList</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">map_data_updated</span>        <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>  <span class="c1"># current map DF changed → trigger heatmap redraw</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">send_spectra_to_workspace</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># deep copies → Spectra workspace</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">clear_map_cache_requested</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>   <span class="c1"># map name → VMapViewer cache invalidation</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">switch_to_graphs_tab</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>        <span class="c1"># request tab switch after profile extraction</span>
+</code></pre></div>
+<h4 id="additional-method-reference">Справочник дополнительных методов<a class="headerlink" href="#additional-method-reference" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Категория</th>
+<th>Методы</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Загрузка карт</strong></td>
+<td><code>load_map_files(paths)</code></td>
+</tr>
+<tr>
+<td><strong>Выбор и порядок карт</strong></td>
+<td><code>select_map(name)</code>, <code>select_maps(names, primary)</code>, <code>reorder_maps(new_order)</code>, <code>_show_map_spectra(name)</code></td>
+</tr>
+<tr>
+<td><strong>Удаление карт</strong></td>
+<td><code>delete_current_map()</code>, <code>remove_map(name)</code></td>
+</tr>
+<tr>
+<td><strong>Данные карты</strong></td>
+<td><code>get_current_map_dataframe()</code>, <code>get_fit_results_dataframe()</code></td>
+</tr>
+<tr>
+<td><strong>Экспорт</strong></td>
+<td><code>save_current_map_to_csv(file_path)</code></td>
+</tr>
+<tr>
+<td><strong>Аппроксимация</strong></td>
+<td><code>fit()</code>, <code>_run_fit_thread()</code>, <code>collect_fit_results()</code> — все переопределяют методы родительского класса</td>
+</tr>
+<tr>
+<td><strong>Межмодульное взаимодействие</strong></td>
+<td><code>send_selected_spectra_to_spectra_workspace()</code>, <code>extract_and_send_profile_to_graphs()</code></td>
+</tr>
+<tr>
+<td><strong>Сохранение состояния</strong></td>
+<td><code>save_work()</code>, <code>load_work()</code>, <code>_load_legacy_maps()</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="vworkspacemaps-the-view"><code>VWorkspaceMaps</code> — View<a class="headerlink" href="#vworkspacemaps-the-view" title="Permanent link">&para;</a></h3>
+<p><strong>Файл</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/workspaces/v_workspace_maps.py"><code>v_workspace_maps.py</code></a></p>
+<p>Переопределяет <code>_add_maps_panel()</code>, заменяя унаследованную боковую панель спектров на:</p>
+<ul>
+<li><code>VMapViewer</code> — холст тепловой карты с ползунками Z-параметра и диапазона X.</li>
+<li><code>VMapsList</code> — панель списка карт с кнопками управления картами и действий со спектрами.</li>
+</ul>
+<p>Левая часть (<code>SpectraViewer</code> + нижние вкладки) наследуется от <code>VWorkspaceSpectra</code>. В то время как <code>VWorkspaceSpectra</code> инициализирует <code>VLiveMaps</code> и <code>VMLiveMaps</code> в режиме <code>"spectra"</code> (отображая 1D-графики изменения параметров по текущим выбранным спектрам), <code>VWorkspaceMaps</code> переключает унаследованные экземпляры <code>v_live_maps</code> и <code>vm_live_maps</code> в режим <code>"map"</code> (<code>set_mode("map")</code>).</p>
+<p>В рабочей области Maps при загрузке или выборе карт <code>VWorkspaceMaps</code> синхронизирует <strong>двухуровневую модель выбора</strong>:</p>
+<ul>
+<li><strong>Основная карта (<code>VMWorkspaceMaps.current_map_name</code>)</strong>: управляет предобработкой, аппроксимацией, <code>VMapViewer</code>, <code>VSpectraViewer</code>, MVA и метаданными <code>More</code> полностью аналогично сценарию одиночного выбора.</li>
+<li><strong>Список выбранных карт (<code>VMWorkspaceMaps.selected_map_names</code>)</strong>: заполняется через <code>VMapsList</code> (<code>QAbstractItemView.ExtendedSelection</code>), позволяя выполнять сравнение с помощью <code>Ctrl+Click</code> / <code>Shift+Click</code> без изменения операций над основной картой и без перерисовки <code>VMapViewer</code>, пока основная карта остаётся неизменной.</li>
+</ul>
+<p><code>VWorkspaceMaps</code> передаёт <code>[MapData, ...]</code> и <code>primary_name</code> в <code>self.vm_live_maps.set_map_datas(...)</code> только тогда, когда активна вкладка <strong>Live-карты</strong> (Live Maps) (в противном случае устанавливается флаг <code>_live_maps_dirty = True</code> для однократного отложенного обновления при активации вкладки, а клики по пространственным точкам в <code>VMapViewer</code> игнорируются). Активация R/B/G-селектора диапазона в <code>VSpectraViewer</code> автоматически переключает <code>bottom_tabs</code> на <code>Live Maps</code> в методе <code>VWorkspaceSpectra._on_range_selector_toggled()</code> и немедленно применяет отложенный выбор. <code>VMLiveMaps</code> анализирует <code>md.coords</code> с помощью кэшируемых функций <code>analyze_map_geometry()</code> и <code>build_map_gridder()</code> (которые кэшируют индексы регулярной сетки или барицентрические вершины и веса <code>Delaunay</code> до тех пор, пока не изменятся <code>coords</code> или <code>is_active</code>), исключает неактивные (снятые с отметки) спектры (<code>~md.is_active</code>), кэширует срезы по параметрам при перетаскивании по ключу <code>(id(md), md.name, md.data_version, param, range)</code> и применяет адаптацию размерности с <strong>приоритетом основной карты</strong>:</p>
+<ul>
+<li><strong>Основная карта — 1D-профиль</strong>: испускает <code>multi_profile_data_ready</code> (при <span class="arithmatex">\(\ge 2\)</span> профилях) или <code>profile_data_ready</code> (одиночный профиль), накладывая все выбранные 1D-профили в согласованных цветах (<code>DEFAULT_COLORS</code>) с единой толщиной линий, при этом исключённые 2D-карты отмечаются в контекстном заголовке.</li>
+<li><strong>Основная карта — 2D-карта</strong>: заполняет <code>map_2d_candidates_changed</code> для переключателя 2D-карт <code>[◀ | ComboBox | ▶]</code> на вкладке, исключает 1D-профили и вычисляет/отрисовывает только одну видимую в данный момент 2D тепловую карту через <code>map_data_ready</code>.</li>
+<li><strong>Отношение интенсивностей Красный/Синий (<code>R/B ratio</code>)</strong>: динамически вычисляет <span class="arithmatex">\(I_{\mathrm{Red}} / I_{\mathrm{Blue}}\)</span> как для одиночных/множественных 1D-профилей, так и для 2D тепловых карт, маскируя нулевые и близкие к нулю значения синего канала, а также отключённые спектры как <code>NaN</code>. Пока в зелёном канале выбран режим <code>R/B ratio</code>, <code>VWorkspaceSpectra._on_range_selector_parameter_changed()</code> уведомляет <code>VSpectraViewer.set_range_selector_parameter()</code>, чтобы скрыть зелёный селектор диапазона на холсте спектра (и восстановить его сразу при выборе другого спектрального параметра).</li>
+</ul>
+<p>Для сверхкрупных пакетов (по умолчанию <code>&gt;= 25,000</code> активных спектров согласно <code>ASYNC_SPECTRUM_THRESHOLD</code>) <code>VMLiveMaps</code> выносит чистые вычисления NumPy и построение сетки в однопоточный пул <code>QThreadPool</code> (<code>_LiveMapWorker</code>), связанный через родительский <code>QObject</code> (<code>_LiveMapWorkerBridge</code>) с отменой по монотонно возрастающему <code>_generation_id</code> и корректным завершением <code>shutdown()</code> при выходе. <code>VMLiveMaps</code> также испускает <code>spatial_sites_changed</code> (передающий упорядоченные координаты активных точек, опциональные позиции 1D-профиля и имя целевой карты), чтобы панели Live-карт оставались синхронизированными с активным набором данных. На стороне UI виджеты RGB-диапазонов и Live-карт размещены вместе в пакете <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/rgb_live_maps/__init__.py"><code>spectroview/view/components/rgb_live_maps/</code></a> (<code>v_live_maps.py</code>, <code>v_live_maps_options.py</code>, <code>v_live_map_subpanel.py</code>, <code>v_live_map_1d.py</code>, <code>v_live_map_2d.py</code>, <code>v_live_map_selection.py</code>, <code>v_live_maps_legend_editor.py</code>, <code>v_range_selector.py</code>, <code>v_range_bracket_mixin.py</code>, <code>common.py</code>). <code>VLiveMaps</code> предоставляет постоянную кнопку <strong>Show Legend</strong> и компактное двухколоночное меню <strong>Дополнительные настройки вида</strong> (More view options) (<code>btn_legend</code> / <code>btn_options</code>), согласованное с отступами строк <code>VSpectraViewer</code> (поля <code>(2, 2, 2, 2)</code>), для мгновенной смены стиля на клиентской стороне при чётком базовом разрешении 96 DPI: независимую <strong>Plot theme</strong> (<code>"Light Mode"</code> по умолчанию или <code>"Dark Mode"</code>, отделённую от глобальных иконок интерфейса Qt через <code>apply_global_theme()</code>), линейное/логарифмическое масштабирование осей X, Y и цветовой шкалы Z с защитой от неположительных областей определения, стили графиков <code>line</code>/<code>dot</code>/<code>line+dots</code> (по умолчанию <code>"line"</code>), толщину линии (<code>1.5</code>), размер точек (<code>1.5</code>), размер текста графика (<code>6–24 pt</code>), <strong>Copied figure size</strong> (<code>copy_fig_width</code>/<code>copy_fig_height</code>, по умолчанию <code>5.5 × 4.0</code> in) и <strong>Copied figure theme</strong> (<code>Light Mode</code>/<code>Dark Mode</code>), благодаря чему рисунки для буфера обмена рендерятся с фиксированным физическим размером и соотношением сторон независимо от изменения размеров окна, настройку расположения/столбцов/шрифта легенды, диалог <code>LiveMapsLegendEditorDialog</code> для пользовательских подписей и цветов легенды, синхронизацию общей оси Y для 1D-графиков (с восстановлением индивидуальных границ каждой панели при отключении), переключатель заголовка осей рисунка (<code>show_figure_label</code>, по умолчанию выключен), линии сетки без предупреждений (по умолчанию выключены), сглаживание тепловой карты и видимость цветовой шкалы. Настройки вида сохраняются между запусками в <code>MSettings</code> (<code>live_maps_view_options/*</code>, отложенное сохранение с задержкой 250 ms и сброс на диск при выходе) и взаимно синхронизируются между рабочими областями Spectra и Maps. Каждая панель <code>LiveMapSubpanel</code> также содержит встроенные кнопки <strong>Rescale</strong>, <strong>Pan</strong> и <strong>Масштаб</strong> (Zoom), двунаправленно синхронизированные с <code>NoDoubleClickZoomToolbar</code> (с сохранением редактирования легенды по двойному клику), поддерживает двухрежимное действие <strong>Копировать</strong> (Copy) (<code>btn_copy</code>: обычный клик копирует холст рисунка с фиксированными параметрами <code>copy_fig_width</code> × <code>copy_fig_height</code> и <code>copy_fig_theme</code>; <code>Ctrl + Click</code> испускает <code>copy_data_requested(color_id)</code> и копирует исходные табличные данные в формате TSV через <code>copy_df_to_clb()</code> для 1D-серий, одиночных/множественных 1D-профилей и 2D-точек <code>(X, Y, Value)</code>, формируемых <code>VMLiveMaps.get_2d_copy_points()</code> с резервным переходом на <code>_grid</code>/<code>_extent</code>), при отображении 1D линейных графиков заменяет выбор 2D цветовой палитры во 2-й строке на по-панельные визуальные (без изменения данных) элементы управления <strong>Normalization</strong> для 1D (<code>btn_norm</code>, <code>norm_xmin</code>, <code>norm_xmax</code>, опирающиеся на <code>_normalize_1d_values()</code> и нормированные <code>_get_primary_profile_values()</code> / <code>reset_view()</code> + <code>normalization_changed</code> <span class="arithmatex">\(\rightarrow\)</span> <code>_sync_shared_y()</code>), разделяет с <code>VMapViewer</code> через <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/map_viewer/map_selection.py"><code>map_selection.py</code></a> пространственную геометрию (<code>compute_2d_spatial_geometry()</code>), логику разрешения клика/Ctrl+Click/выделения рамкой (<code>resolve_xy_selection()</code> / <code>resolve_1d_profile_selection()</code>) и красные наложения выделения (<code>MapCanvasSelector</code>), когда инструменты Pan/Масштаб и рамки легенд неактивны (направляя <code>VLiveMaps.spectra_selected</code> через <code>VWorkspaceMaps._on_live_maps_point_selection()</code> для обновления <code>VSpectraViewer</code>, <code>VMapViewer</code>, диалогов просмотра и всех панелей R/B/G без пересчёта сеток), в то время как быстрая смена стиля UI (<code>apply_view_options_fast()</code>), кэшированные с помощью <code>@lru_cache</code> словари <code>mplstyle</code> (<code>_get_cached_style_dict</code>), заморозка установившегося макета (<code>_on_canvas_draw</code> / <code>_request_relayout</code>) и привязанные к родительскому объекту таймеры объединённой перерисовки на 35 ms обеспечивают отсутствие подвисаний при интерактивном изменении параметров.</p>
+<p>Обновления селекторов диапазона адаптивно сглаживаются (debounce 60–250 ms) при непрерывном перемещении и немедленно применяются при отпускании кнопки мыши (<code>VSpectraViewer.range_drag_finished</code> <span class="arithmatex">\(\rightarrow\)</span> <code>VMLiveMaps.flush_pending()</code>). Во время перетаскивания границ <code>RangeSelectorManager.render()</code> обновляет существующие графические примитивы (artists) Matplotlib на месте (<code>set_animated(True)</code> с Agg-блиттингом фона и временной приостановкой <code>layout_engine</code> через <code>SpectraRangeBracketMixin</code> в <code>VSpectraViewer</code>, а также горизонтальным ограничением через <code>transData.inverted()</code>), тогда как быстрые пути обновления <code>LiveMapSubpanel</code> (<code>update_series()</code> / <code>update_multi_profile()</code>) кэшируют сигнатуры темы, размера текста, сетки и X-области (<code>_invalidate_style_caches()</code>), а <code>MapCanvasSelector.draw_1d_overlay()</code> повторно использует существующие 1D-маркеры выделения на месте, устраняя лишние перерисовки <code>tick_params()</code>/<code>AutoLocator()</code>. Графические элементы селектора диапазона используют <code>ax.add_artist()</code> в Matplotlib, чтобы никогда не искажать <code>ax.dataLim</code>, гарантируя, что кнопка <strong>Rescale</strong> (<code>Ctrl+R</code>) масштабирует график исключительно по спектральным данным.</p>
+<p><strong>Централизованное управление типом карты:</strong> атрибут <code>selected_map_type</code> является единым источником истины для всех окон просмотра (основного и открепляемых диалогов). Когда пользователь меняет значение в выпадающем списке любого просмотрщика, <code>_on_map_type_changed()</code> синхронно обновляет все окна просмотра, предотвращая рассогласование.</p>
+<h3 id="vmapviewer-the-heatmap-canvas"><code>VMapViewer</code> — холст тепловой карты<a class="headerlink" href="#vmapviewer-the-heatmap-canvas" title="Permanent link">&para;</a></h3>
+<p><strong>Пакет</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/map_viewer/__init__.py"><code>map_viewer/</code></a> (<code>v_map_viewer.py</code>, <code>v_map_plot.py</code>, <code>v_map_data.py</code>, <code>v_map_interactions.py</code>, <code>map_selection.py</code>)</p>
+<p>Наиболее сложный компонент View (~1 300 строк). Он отрисовывает как прямоугольные 2D-карты, так и круглые карты пластин (wafer). Возможности:</p>
+<ul>
+<li>Выпадающий список Z-параметра (<strong>Интенсивность</strong> (Intensity) / <strong>Площадь</strong> (Area) / любой столбец результатов аппроксимации)</li>
+<li>Двойной ползунок диапазона X (фильтрует волновые числа, учитываемые при расчёте Z)</li>
+<li>Переключатель удаления выбросов</li>
+<li><strong>Точное пространственное позиционирование координат</strong>: для регулярных декартовых сеток отрисовка выполняется через быстрый <code>imshow</code> с симметричными границами охвата. Для нерегулярных или разбросанных координат (например, файлов карт пластин, открытых в режиме <code>2Dmap</code>) автоматически отрисовываются квадратные пиксельные прямоугольники, центрированные точно в координатах <span class="arithmatex">\((X, Y)\)</span> каждой точки через <code>PatchCollection</code>, что полностью устраняет пространственный сдвиг между пикселями тепловой карты и наложениями выделения.</li>
+<li><strong>Выпадающий список цветовой шкалы</strong> (<strong>Линейный</strong> (Linear) / <strong>Log</strong>) в меню параметров (<code>…</code>) — <code>_build_color_kwargs()</code> возвращает <code>matplotlib.colors.LogNorm</code> для «Log» (с возвратом к обычному линейному <code>vmin</code>/<code>vmax</code>, если диапазон Z не является строго положительным, так как интенсивность/площадь ограничены значением <code>&gt;=0</code>, а параметры аппроксимации могут быть <code>&lt;=0</code>); применяется как к <code>imshow</code> в режиме <code>2Dmap</code>, так и к <code>imshow</code> после <code>griddata</code> для карт пластин</li>
+<li>Интерактивное выделение (одиночный клик, выделение прямоугольником, линия профиля)</li>
+<li><strong>Обновление графических элементов на месте и изоляция наборов данных</strong>: при изменении параметра, диапазона X или палитры на текущей активной карте (<code>_last_rendered_map_name == map_df_name</code>) <code>_do_plot_heatmap_internal()</code> использует быстрый путь, обновляя <code>self.img</code> (<code>set_data</code> / <code>set_array</code>, <code>set_extent</code>, <code>set_clim</code>) и <code>self.cbar.update_normal(...)</code> на месте без деструктивного вызова <code>figure.clf()</code>, пересоздания подграфиков и дорогостоящего <code>tight_layout()</code>. При переключении между разными наборами данных карт или типами карт выполняется чистая перестройка осей с повторным использованием кэшированного кортежа <code>(heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col, dx, dy)</code> из <code>_griddata_cache</code>.</li>
+<li><strong>Быстрое обновление ползунка диапазона Z</strong>: события перетаскивания ползунка в реальном времени обходят пересчёт ключей кэша и полную перерисовку карты, напрямую обновляя <code>set_clim()</code> / <code>set_norm()</code> и цветовую шкалу на месте.</li>
+<li><strong>Векторные элементы навигации и встроенное отображение координат</strong>: интерактивные кнопки навигации (<code>btn_home</code> / <code>btn_rescale</code>, <code>btn_pan</code>, <code>btn_zoom</code>), оформленные идентично элементам панели инструментов SPECTROview (<code>28x28</code>, <code>@surface_elevated</code>, скруглённые углы) с векторными SVG-иконками (<code>Icons.rescale()</code>, <code>Icons.pan()</code>, <code>Icons.zoom()</code>), заменяют стандартные иконки Matplotlib, сохраняя двустороннюю синхронизацию режимов с <code>NavigationToolbar2QT</code>. Нативная панель инструментов Matplotlib полностью скрыта в фоне, а текущие координаты аккуратно отображаются в специальной нативной метке <code>lbl_coordinates</code> (<code>min-width: 180px</code>, <code>@text_secondary</code>, выравнивание по правому краю) без обрезания и сдвигов макета.</li>
+<li>Открытие нескольких открепляемых диалоговых окон просмотра</li>
+</ul>
+<h3 id="vmapslist-the-maps-list-actions-panel"><code>VMapsList</code> — панель списка карт и действий<a class="headerlink" href="#vmapslist-the-maps-list-actions-panel" title="Permanent link">&para;</a></h3>
+<p><strong>Файл</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/lists/v_map_list.py"><code>v_map_list.py</code></a></p>
+<p>Отображает имена загруженных карт во внутреннем списке <code>_ReorderableMapsList(QListWidget)</code> (<code>ExtendedSelection</code> для множественного выбора с помощью <code>Shift+Click</code> / <code>Ctrl+Click</code> с отслеживанием основного фокуса через <code>maps_selection_changed(selected_names, primary_name)</code>, а также переупорядочивание перетаскиванием <code>InternalMove</code>, которое испускает сигнал <code>maps_order_changed(new_order)</code> и игнорирует перетаскивание внешних URL MIME, чтобы перетаскивание файлов передавалось родительским окнам). При внутреннем перетаскивании выделение и основной фокус сохраняются без лишнего мелькания выбора и передаются в <code>VMWorkspaceMaps.reorder_maps()</code>, который переупорядочивает <code>self.maps</code>, <code>SpectraStore.reorder_maps()</code> и <code>selected_map_names</code>, обновляя <code>VMapsList</code> и Live-карты без сброса <code>VMapViewer</code>. Дополняется кнопками быстрого управления (View, <strong>Удалить</strong> (Delete) — с запросом подтверждения при удалении нескольких выбранных карт, Export CSV) и унифицированными кнопками действий со спектрами (<strong>Выбрать все</strong> (Select All), Reinitialize, Fitting Statistics, Send to Spectra Workspace), которые применяются к основной карте и её пространственно выбранным спектрам.</p>
+<h3 id="vmapviewerdialog-detachable-window"><code>VMapViewerDialog</code> — открепляемое окно<a class="headerlink" href="#vmapviewerdialog-detachable-window" title="Permanent link">&para;</a></h3>
+<p><strong>Файл</strong>: <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/map_viewer/v_map_viewer_dialog.py"><code>v_map_viewer_dialog.py</code></a></p>
+<p>Обёртка <code>QDialog</code> вокруг второго экземпляра <code>VMapViewer</code>. Использует флаг <code>Qt.WindowStaysOnTopHint</code>, позволяющий пользователю выбирать пиксели в плавающем окне, пока основное окно отображает соответствующий спектр. Одновременно может быть открыто несколько диалоговых окон, каждое из которых отображает отдельный Z-параметр на одних и тех же пространственных данных. Данные передаются по ссылке — без дублирования.</p>
+<hr />
+<h2 id="the-dual-storage-pattern">Паттерн двойного хранения<a class="headerlink" href="#the-dual-storage-pattern" title="Permanent link">&para;</a></h2>
+<p>Рабочая область Maps поддерживает <strong>два хранилища</strong> для одних и тех же данных:</p>
+<ol>
+<li><strong><code>self.maps[map_name]</code></strong> — объект <code>pd.DataFrame</code> со столбцами <code>X, Y, w1, w2, ...</code> (по одной строке на спектр). Это устаревшее хранилище, заполняемое при загрузке парсером файлов.</li>
+<li><strong><code>self.store.get_map_data(map_name)</code></strong> — тензорный блок <code>MapData</code> со всем состоянием обработки.</li>
+</ol>
+<p>DataFrame используется как <strong>входные данные для тепловой карты</strong> (сводная таблица → imshow) и для <strong>экспорта в CSV</strong>. Тензорный блок применяется во <strong>всех аналитических операциях</strong> (базовая линия, аппроксимация, сбор результатов). При сохранении обработанных данных в CSV метод <code>save_current_map_to_csv()</code> читает из <code>md.x</code> / <code>md.Y</code> (обработанных данных), а не из исходного DataFrame.</p>
+<blockquote>
+<p>[!IMPORTANT]
+Когда новый разработчик задаётся вопросом «где находятся данные?», ответ таков: <strong>в обоих местах, для разных задач</strong>. DataFrame является входной точкой от загрузчика файлов и входом для конвейера тепловой карты. Тензорный блок является источником истины для всего анализа. Модификации (базовая линия, обрезка) затрагивают только тензорный блок — они не обновляют DataFrame.</p>
+</blockquote>
+<h3 id="filename-convention">Соглашение об именовании файлов<a class="headerlink" href="#filename-convention" title="Permanent link">&para;</a></h3>
+<p>Каждая строка спектра в блоке <code>MapData</code> получает уникальное имя <code>fname</code>, сформированное из её координат:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">fname</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">map_name</span><span class="si">}</span><span class="s2">_(</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">x_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">y_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># Example: &quot;wafer_300mm_(12.5, -7.0)&quot;</span>
+</code></pre></div>
+<p>Это соглашение используется по всей кодовой базе для:</p>
+<ul>
+<li>Фильтрации спектров, принадлежащих определённой карте: <code>fname.startswith(f"{map_name}_(")</code></li>
+<li>Извлечения координат из <code>fname</code>: разбор строки между <code>(</code> и <code>)</code>.</li>
+<li>Сопоставления записей <code>SpectraStore</code> со строками <code>DataFrame</code> при отрисовке тепловых карт.</li>
+</ul>
+<p>Разбор координат централизован в <code>parse_coords_from_fname()</code> (<code>viewmodel/common/spectral_utils.py</code>, реэкспортируется в <code>viewmodel/utils.py</code>); оба метода — <code>VWorkspaceMaps._extract_coords_from_fname()</code> и <code>VMWorkspaceMaps._extract_coords_for_spectra()</code> — делегируют ему эту задачу. При изменении соглашения об именах <code>fname</code> достаточно обновить эту единую вспомогательную функцию (сохраняя идентичное форматирование <code>float()</code> на стороне записи в <code>_extract_spectra_from_map()</code>).</p>
+<hr />
+<h2 id="data-flow">Потоки данных<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h2>
+<h3 id="loading-a-hyperspectral-map">Загрузка гиперспектральной карты<a class="headerlink" href="#loading-a-hyperspectral-map" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Действие пользователя</strong>: пользователь запускает загрузку карты в <code>VWorkspaceMaps</code>.</li>
+<li><strong>View → ViewModel</strong>: View вызывает <code>vm.load_map_files(paths)</code>.</li>
+<li><strong>Разбор файла</strong>: для каждого файла ViewModel обращается к модулю <code>m_io</code> (<code>load_wdf_map</code>, <code>load_spc_map</code>, <code>load_l6m_map</code>, <code>load_ngc_map</code> и др.). Модуль ввода-вывода возвращает DataFrame, содержащий <code>X</code>, <code>Y</code> и все столбцы волновых чисел, а также метаданные.</li>
+<li><strong>Сохранение данных (устаревшее)</strong>: ViewModel кэширует возвращённый DataFrame в <code>self.maps[name]</code>.</li>
+<li><strong>Извлечение данных</strong>: ViewModel вызывает <code>_extract_spectra_from_map(name, map_df)</code>, который делегирует функции <code>extract_map_arrays(name, map_df)</code> в <code>m_io.py</code> извлечение массивов <code>x0</code>, <code>Y0</code> и пространственных координат <code>coords</code> из DataFrame, а также построение списка пиксельных имён <code>fnames</code>.</li>
+<li><strong>Сохранение данных (тензорное)</strong>: ViewModel регистрирует данные в <code>SpectraStore</code> с помощью <code>add_map(name, x0, Y0, coords, fnames, is_active)</code>.</li>
+<li><strong>Обновление UI</strong>: после обработки всех файлов ViewModel испускает сигнал <code>maps_list_changed</code> со списком загруженных имён карт.</li>
+</ol>
+<p>Функция <code>extract_map_arrays()</code> отфильтровывает любые завершающие или нечисловые столбцы <code>Unnamed:</code>, сохраняя все корректные числовые каналы волновых чисел, и автоматически добавляет суффиксы <code>_{k}</code> к <code>fnames</code> только в случае дублирующихся пространственных координат <code>(X, Y)</code> (например, при многократном сканировании с временным разрешением в фиксированных точках пластины).</p>
+<h3 id="map-selection">Выбор карты<a class="headerlink" href="#map-selection" title="Permanent link">&para;</a></h3>
+<p>Когда пользователь кликает по имени карты в <code>VMapsList</code> или открывает новую карту:</p>
+<ol>
+<li><strong>Действие пользователя</strong>: пользователь открывает файл карты или кликает по имени карты в виджете <code>VMapsList</code>.</li>
+<li><strong>View → ViewModel</strong>: View перехватывает событие и вызывает <code>vm.select_map(map_name)</code>.</li>
+<li><strong>Обновление состояния и автовыбор</strong>: ViewModel устанавливает <code>current_map_name = map_name</code>, заполняет <code>_show_map_spectra(map_name)</code> и автоматически выбирает первый спектр <code>self.selected_fnames = [md.fnames[0]]</code>, испуская <code>spectra_selection_changed</code> для немедленного построения первого спектра в <code>VSpectraViewer</code>.</li>
+<li><strong>Обновление просмотрщика карт</strong>: ViewModel испускает <code>map_data_updated(current_map_df)</code>.</li>
+<li><strong>Перерисовка холста и наложение выделения</strong>: <code>VWorkspaceMaps</code> передаёт обновлённые данные в <code>VMapViewer.set_map_data()</code>, который автоматически подсвечивает первую координату <code>(x_0, y_0)</code> красной рамкой выделения и вызывает <code>plot_heatmap()</code> для отрисовки пространственных данных. Плавающие диалоги просмотра остаются синхронизированными.</li>
+</ol>
+<h3 id="fitting-workflow-maps-override">Рабочий процесс аппроксимации (переопределение в Maps)<a class="headerlink" href="#fitting-workflow-maps-override" title="Permanent link">&para;</a></h3>
+<p>Рабочая область Maps переопределяет <a href="../spectra/#fitting-workflow"><code>fit()</code></a> для формирования <strong>многозадачных пакетов (batches)</strong>, способных охватывать всю карту целиком:</p>
+<ol>
+<li><strong>Действие пользователя</strong>: пользователь нажимает кнопку <strong>Подгонка</strong> (Fit) (или Ctrl+Fit для применения ко всем картам).</li>
+<li><strong>Формирование задач</strong>:<ul>
+<li>Если <code>apply_all = True</code>: ViewModel группирует карты по длине оси X и объединяет их в мегапакетные матрицы <code>Y</code>.</li>
+<li>Если <code>apply_all = False</code>: ViewModel создаёт задачу только для текущей карты и выбранных индексов.</li>
+</ul>
+</li>
+<li><strong>Запуск потока</strong>: ViewModel запускает <code>VBFthread</code> со списком задач.</li>
+<li><strong>Выполнение в движке (фон)</strong>: для каждой задачи поток вызывает <code>VBFengine.fit_spectra()</code>. Объединённые задачи по нескольким картам аппроксимируются за одну векторизованную операцию.</li>
+<li><strong>Сохранение результатов (фон)</strong>: поток распределяет результаты обратно в соответствующие карты через <code>SpectraStore.set_fit_results()</code>.</li>
+<li><strong>Завершение</strong>: поток испускает <code>finished()</code>, после чего ViewModel вызывает <code>_on_fit_finished()</code>.</li>
+<li><strong>Сбор результатов</strong>: <code>collect_fit_results()</code> объединяет результаты в единый DataFrame.</li>
+<li><strong>Обновление UI</strong>: испускаются сигналы для перерисовки как тепловой карты (<code>map_data_updated</code>), так и таблицы результатов (<code>fit_results_updated</code>).</li>
+</ol>
+<p><strong>Мегапакетная группировка (mega-batch grouping)</strong> является ключевой оптимизацией производительности. Когда <code>apply_all=True</code>, карты с одинаковой длиной оси X объединяются в общую матрицу <code>Y</code> и аппроксимируются за один векторизованный вызов. Набор из 10 карт пластины, обработка каждой из которых по отдельности требует по 30 s, при пакетной обработке завершается примерно за ~35 s суммарно.</p>
+<h3 id="after-fitting-propagating-results">После аппроксимации: распространение результатов<a class="headerlink" href="#after-fitting-propagating-results" title="Permanent link">&para;</a></h3>
+<p>После <code>_on_fit_finished()</code>:</p>
+<ol>
+<li>Вызывается <code>collect_fit_results()</code> → формируется <code>self.df_fit_results</code> (DataFrame со столбцами <code>X, Y</code> и всеми столбцами результатов аппроксимации).</li>
+<li>Испускается <code>fit_results_updated</code> → обновляется таблица <code>VFitResults</code>.</li>
+<li>Испускается <code>map_data_updated</code> → <code>VMapViewer</code> перечитывает <code>df_fit_results</code> и добавляет столбцы результатов аппроксимации в выпадающий список Z-параметров.</li>
+<li>Испускается <code>clear_map_cache_requested</code> → <code>VMapViewer</code> очищает свой кэш <code>griddata</code> для затронутой карты.</li>
+</ol>
+<hr />
+<h2 id="map-visualization-pipeline">Конвейер визуализации карт<a class="headerlink" href="#map-visualization-pipeline" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Источник данных</strong>: в зависимости от состояния предобработки источником служат либо обработанные интенсивности (<code>md.Y</code>), либо исходные интенсивности (<code>md.Y0</code>).</li>
+<li><strong>Фильтрация DataFrame</strong>: <code>get_current_map_dataframe()</code> отфильтровывает неактивные спектры.</li>
+<li><strong>Привязка к просмотрщику</strong>: DataFrame передаётся в <code>VMapViewer.set_map_data()</code>.</li>
+<li><strong>Вычисление Z-значений</strong>: <code>_compute_z_values()</code> вычисляет целевую метрику в соответствии с выбором в выпадающем списке:<ul>
+<li><em>Интенсивность</em>: суммирует значения в пределах диапазона, заданного ползунком по оси X.</li>
+<li><em>Площадь</em>: вычисляет интеграл методом трапеций.</li>
+<li><em>Параметр аппроксимации</em>: считывает значения напрямую из <code>df_fit_results</code>.</li>
+</ul>
+</li>
+<li><strong>Удаление выбросов</strong>: при включённой пользователем опции Z-значения отсекаются по процентилям.</li>
+<li><strong>Логика отрисовки</strong>: в зависимости от <code>map_type</code>:<ul>
+<li><em>2D-карта</em>: быстрый путь. Сводная таблица отображает <code>(X, Y)</code> в <code>Z</code> на точной регулярной сетке, которая отрисовывается через <code>imshow()</code> в Matplotlib.</li>
+<li><em>Карта пластины (wafer)</em>: медленный путь. <code>scipy.griddata</code> интерполирует нерегулярные точки круговой пластины на сетку 80×80 перед отрисовкой через <code>imshow()</code>.</li>
+</ul>
+</li>
+</ol>
+<p><strong>Зачем нужны два пути отрисовки?</strong></p>
+<p>Прямоугольная 2D-карта содержит данные на регулярной сетке — сводной таблицы достаточно, и отрисовка занимает миллисекунды. При измерении пластины точки распределены по круговой области (не образуя регулярной сетки), поэтому <code>scipy.griddata</code> должен предварительно интерполировать данные на регулярную сетку, прежде чем <code>imshow</code> сможет их отобразить. Именно этот шаг является наиболее ресурсоёмким.</p>
+<h3 id="heatmap-caching-strategy">Стратегия кэширования тепловой карты<a class="headerlink" href="#heatmap-caching-strategy" title="Permanent link">&para;</a></h3>
+<p>Выполнение <code>scipy.griddata</code> на крупных картах может занимать 100–500 ms. Просмотрщик использует <strong>многоключевой кэш</strong>, чтобы избежать повторных вычислений:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">cache_key</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">map_name</span><span class="p">,</span>        <span class="c1"># which map</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">parameter</span><span class="p">,</span>       <span class="c1"># which Z parameter</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">),</span>    <span class="c1"># X-range filter</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">map_type</span><span class="p">,</span>        <span class="c1"># 2Dmap vs Wafer variant</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">mask_config</span><span class="p">,</span>     <span class="c1"># mask settings or None</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">remove_outliers</span>  <span class="c1"># outlier removal flag</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">)</span>
+</code></pre></div>
+<p>В кэше хранится кортеж <code>(heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col, dx, dy)</code>, сохраняющий точные пространственные размеры пикселя (<code>dx, dy</code>) при переключении типов карт и выборе файлов, что предотвращает смещение геометрии между наборами данных.</p>
+<p>Характеристики кэша:</p>
+<ul>
+<li><strong>Сохраняется при переключении карт</strong> — возврат к ранее просмотренной карте происходит мгновенно с восстановлением её точных пространственных размеров и интерполированной сетки <code>griddata</code>.</li>
+<li><strong>Инвалидируется по имени</strong> после завершения аппроксимации с помощью сигнала <code>clear_map_cache_requested</code>.</li>
+<li><strong>Не сохраняется на диск</strong> между сеансами работы — кэш существует только в <code>VMapViewer._griddata_cache</code>.</li>
+<li><strong>Изолируется по наборам данных</strong>: <code>can_fast_update</code> требует выполнения условия <code>_last_rendered_map_name == map_df_name</code> и проверяет число прямоугольников в <code>PatchCollection</code>, гарантируя, что обновление графических элементов на месте выполняется только для активного набора данных, тогда как смена карты всегда вызывает чистую перерисовку.</li>
+</ul>
+<h3 id="interactive-selection">Интерактивное выделение<a class="headerlink" href="#interactive-selection" title="Permanent link">&para;</a></h3>
+<p><code>VMapViewer</code> поддерживает три режима выделения:</p>
+<table>
+<thead>
+<tr>
+<th>Режим</th>
+<th>Триггер</th>
+<th>Поведение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Одиночный клик</strong></td>
+<td>Левый клик по карте</td>
+<td>Выбирает ближайшую точку и подсвечивает её красным прямоугольником</td>
+</tr>
+<tr>
+<td><strong>Выделение прямоугольником</strong></td>
+<td>Нажатие и перетаскивание</td>
+<td>Выбирает все точки внутри выделенного прямоугольника</td>
+</tr>
+<tr>
+<td><strong>Профиль</strong></td>
+<td>Ровно 2 выбранные точки, 2D-режим</td>
+<td>Активирует кнопку <strong>Извлечь профиль</strong> (Extract profile)</td>
+</tr>
+</tbody>
+</table>
+<p>Выделение в <code>VMapViewer</code> испускает сигнал <code>spectra_selected(list[tuple])</code>. Метод <code>VWorkspaceMaps._on_map_viewer_selection()</code> преобразует координаты <code>(x, y)</code> обратно в <code>fnames</code> и вызывает <code>vm.set_selected_fnames()</code>, что запускает <code>_emit_selected_spectra()</code> → <code>VSpectraViewer</code> перерисовывает выбранный спектр.</p>
+<p>Выделенные точки отрисовываются как единый объект <code>PatchCollection</code> (один вызов отрисовки для всех прямоугольников) вместо множества отдельных вызовов <code>add_patch()</code>, что обеспечивает время отрисовки O(1) независимо от размера выделения.</p>
+<hr />
+<h2 id="template-method-overrides">Переопределение шаблонных методов<a class="headerlink" href="#template-method-overrides" title="Permanent link">&para;</a></h2>
+<p>Рабочая область Maps настраивает унаследованный конвейер массовых операций с помощью трёх <a href="../spectra/#template-method-hooks">методов-перехватчиков</a>. Понимание их работы необходимо при отладке и расширении массовых операций.</p>
+<h3 id="_get_target_mdsapply_all"><code>_get_target_mds(apply_all)</code><a class="headerlink" href="#_get_target_mdsapply_all" title="Permanent link">&para;</a></h3>
+<p>Определяет, <strong>к каким объектам <code>MapData</code></strong> применяется массовая операция.</p>
+<table>
+<thead>
+<tr>
+<th><code>apply_all</code></th>
+<th>Рабочая область Spectra</th>
+<th>Рабочая область Maps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>False</code></td>
+<td>Блоки <code>MapData</code> выбранных спектров</td>
+<td>Только блок <code>MapData</code> текущей карты</td>
+</tr>
+<tr>
+<td><code>True</code></td>
+<td>Все блоки <code>MapData</code> в хранилище</td>
+<td>Блоки <code>MapData</code> всех карт</td>
+</tr>
+</tbody>
+</table>
+<p>Именно поэтому действие Ctrl+Subtract-Baseline в рабочей области Maps вычитает базовую линию из <strong>всех спектров текущей карты</strong> (а не только из выбранных) — переопределение в Maps возвращает объект <code>MapData</code> всей карты.</p>
+<h3 id="_on_map_data_changedmd-action"><code>_on_map_data_changed(md, action)</code><a class="headerlink" href="#_on_map_data_changedmd-action" title="Permanent link">&para;</a></h3>
+<p>Вызывается <strong>после изменения каждого отдельного объекта <code>MapData</code></strong> в цикле массовой обработки.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Maps workspace override:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">def</span> <span class="nf">_on_map_data_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">md</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;reinit_spectra&quot;</span><span class="p">:</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">clear_preprocess</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="k">elif</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;delete_baseline&quot;</span><span class="p">,</span> <span class="s2">&quot;subtract_baseline&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_spectral_range&quot;</span><span class="p">):</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">batch_preprocess</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">md</span><span class="o">.</span><span class="n">baseline_config</span><span class="p">,</span> <span class="n">md</span><span class="o">.</span><span class="n">range_min</span><span class="p">,</span> <span class="n">md</span><span class="o">.</span><span class="n">range_max</span><span class="p">)</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;paste_peaks&quot;</span><span class="p">:</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruct_y_peaks</span><span class="p">(</span><span class="n">md</span><span class="p">)</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="c1"># Always invalidate heatmap cache</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">clear_map_cache_requested</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="_post_bulk_actionapply_all-action"><code>_post_bulk_action(apply_all, action)</code><a class="headerlink" href="#_post_bulk_actionapply_all-action" title="Permanent link">&para;</a></h3>
+<p>Вызывается <strong>один раз после обработки всех объектов <code>MapData</code></strong>. Переопределение в Maps обновляет результаты аппроксимации и повторно отправляет представление карты.</p>
+<h3 id="_emit_selected_spectra-override">Переопределение <code>_emit_selected_spectra()</code><a class="headerlink" href="#_emit_selected_spectra-override" title="Permanent link">&para;</a></h3>
+<p>Переопределение в Maps формирует полезную нагрузку с <code>"type": "tensor"</code> (пакет с общей осью X) вместо формата <code>"type": "tensor_list"</code> (независимые массивы для каждого спектра), используемого в рабочей области Spectra:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Maps workspace:</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">batch_data</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;tensor&#39;</span><span class="p">,</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>             <span class="c1"># shared float64[M_proc]</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">Y</span><span class="p">,</span>             <span class="c1"># float32[n_selected, M_proc]</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="n">indices</span><span class="p">,</span> <span class="c1"># which rows within the map</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="o">...</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">}</span>
+</code></pre></div>
+<p>Это позволяет <code>VSpectraViewer</code> отрисовывать сразу несколько спектров карты за счёт матричных операций вместо цикла Python.</p>
+<hr />
+<h2 id="cross-workspace-communication">Межмодульное взаимодействие рабочих областей<a class="headerlink" href="#cross-workspace-communication" title="Permanent link">&para;</a></h2>
+<h3 id="maps-spectra-workspace">Maps → рабочая область Spectra<a class="headerlink" href="#maps-spectra-workspace" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># User selects spectra in Maps workspace and clicks &quot;Send to Spectra&quot;</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">vm</span><span class="o">.</span><span class="n">send_selected_spectra_to_spectra_workspace</span><span class="p">()</span>
+</code></pre></div>
+<p>Для каждого выбранного спектра выполняются следующие шаги:</p>
+<ol>
+<li>Создаётся <strong>глубокая копия</strong> словаря полезной нагрузки (исходные <code>x0</code>, <code>Y0</code>, <code>baseline_config</code>, <code>fit_model</code>, <code>range_min/max</code>, <code>is_subtracted</code>).</li>
+<li>Испускается сигнал <code>send_spectra_to_workspace(payloads)</code>.</li>
+<li><code>main.py</code> связывает этот сигнал с методом <code>receive_spectra()</code> ViewModel рабочей области Spectra, который регистрирует каждый словарь как новый блок <code>MapData</code> с N=1 в <code>SpectraStore</code> рабочей области <strong>Спектры</strong>.</li>
+</ol>
+<p>Глубокое копирование предотвращает перекрёстное загрязнение состояния между рабочими областями — редактирование спектра на вкладке Spectra не затрагивает исходную карту.</p>
+<h3 id="maps-graphs-workspace-profile-extraction">Maps → рабочая область Graphs (извлечение профиля)<a class="headerlink" href="#maps-graphs-workspace-profile-extraction" title="Permanent link">&para;</a></h3>
+<p>Когда пользователь выбирает ровно 2 точки в режиме 2D-карты и нажимает <strong>Извлечь профиль</strong>:</p>
+<ol>
+<li><strong>Действие пользователя</strong>: пользователь выбирает ровно 2 точки на 2D-карте и нажимает <strong>Извлечь профиль</strong>.</li>
+<li><strong>View → ViewModel</strong>: <code>VMapViewer</code> испускает сигнал <code>extract_profile_requested(profile_name)</code>.</li>
+<li><strong>Логика извлечения</strong>: <code>VWorkspaceMaps</code> делегирует задачу <code>_extract_profile()</code>, который строит DataFrame <code>profile_df</code> путём интерполяции точек вдоль соединяющего отрезка.</li>
+<li><strong>Передача данных</strong>: View передаёт сформированный набор данных в <code>VMWorkspaceMaps.extract_and_send_profile_to_graphs()</code>.</li>
+<li><strong>Перенос в рабочую область</strong>: ViewModel напрямую вызывает <code>VMWorkspaceGraphs.add_dataframe()</code>.</li>
+<li><strong>Обновление UI</strong>: сигнал даёт команду главному окну переключить фокус на вкладку Graphs.</li>
+</ol>
+<p>DataFrame профиля содержит столбцы <code>distance</code> (µm) и <code>values</code> (интенсивность Z). Рабочая область Graphs автоматически создаёт по нему линейный график.</p>
+<hr />
+<h2 id="fit-results-with-spatial-columns">Результаты аппроксимации с пространственными столбцами<a class="headerlink" href="#fit-results-with-spatial-columns" title="Permanent link">&para;</a></h2>
+<p><code>collect_fit_results()</code> переопределяет метод родительского класса, добавляя столбцы пространственных координат и зон:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># After super().collect_fit_results():</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># base DataFrame includes: Filename, X, Y, [Quadrant, Zone for wafers],</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># sorted fit parameters (x0_Peak1, fwhm_Peak1, area_Peak1, ...), and trailing R2</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="c1"># Maps workspace adds X, Y, and ensures Quadrant and Zone are present for wafer maps</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Final columns:</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1"># Filename | X | Y | Quadrant | Zone | x0_Peak1 | fwhm_Peak1 | area_Peak1 | ... | R2</span>
+</code></pre></div>
+<p>Столбец <code>Zone</code> классифицирует точки по радиальному расстоянию:</p>
+<table>
+<thead>
+<tr>
+<th>Зона</th>
+<th>Расстояние</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Center</td>
+<td>≤ 35 % радиуса</td>
+</tr>
+<tr>
+<td>Mid-Radius</td>
+<td>35 – 80 %</td>
+</tr>
+<tr>
+<td>Edge</td>
+<td>≥ 80 %</td>
+</tr>
+</tbody>
+</table>
+<p>Столбец <code>Quadrant</code> классифицирует точки по знаку координат (X, Y): Q1 (−,−), Q2 (−,+), Q3 (+,+), Q4 (+,−).</p>
+<hr />
+<h2 id="persistence">Постоянное хранение<a class="headerlink" href="#persistence" title="Permanent link">&para;</a></h2>
+<h3 id="modern-format-v2-zip-backed">Современный формат (v2+, на основе ZIP)<a class="headerlink" href="#modern-format-v2-zip-backed" title="Permanent link">&para;</a></h3>
+<p>Файлы рабочей области Maps (<code>.maps</code>) используют ту же ZIP-структуру, что описана в разделе <a href="../spectra_store/#persistence">SpectraStore: Постоянное хранение</a>, но имеют больший объём из-за размеров тензоров.</p>
+<p>DataFrame карт сериализуются в собственном двоичном формате для повышения скорости:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Fast serialization (vs to_csv which is 20-70× slower)</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">arr</span> <span class="o">=</span> <span class="n">map_df</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">();</span> <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="n">gzip</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(),</span> <span class="n">compresslevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># level=1: 70× faster, ~5% larger</span>
+</code></pre></div>
+<h3 id="legacy-loader">Устаревший загрузчик<a class="headerlink" href="#legacy-loader" title="Permanent link">&para;</a></h3>
+<p>Метод <code>_load_legacy_maps()</code> обрабатывает старые файлы <code>.maps</code> в формате JSON, где каждая карта хранилась как сжатая с помощью gzip и закодированная в шестнадцатеричном виде CSV-строка:</p>
+<ol>
+<li>Разбирает словарь верхнего уровня <code>"maps"</code> (map_name → hex_string).</li>
+<li>Распаковывает и считывает каждый CSV в DataFrame.</li>
+<li>Строит словарь поиска по координатам из записей <code>"spectrums_data"</code> (с ключом <code>(map_name, x, y)</code>).</li>
+<li>Регистрирует каждую карту в <code>SpectraStore</code> с помощью <code>add_map()</code>.</li>
+<li>Векторизованно восстанавливает базовые линии, кривые пиков и результаты аппроксимации.</li>
+</ol>
+<hr />
+<h2 id="extension-guide">Руководство по расширению<a class="headerlink" href="#extension-guide" title="Permanent link">&para;</a></h2>
+<h3 id="adding-a-new-map-file-format">Добавление нового формата файлов карт<a class="headerlink" href="#adding-a-new-map-file-format" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Создайте функцию загрузки в <code>spectroview/model/io/m_io.py</code> (например, <code>load_xyz_map(path) → pd.DataFrame</code>).</li>
+<li>В <code>VMWorkspaceMaps.load_map_files()</code> добавьте ветку <code>elif path.suffix.lower() == '.xyz':</code>.</li>
+<li>Возвращаемый DataFrame должен содержать столбцы <code>X</code> и <code>Y</code>, за которыми следуют числовые столбцы волновых чисел.</li>
+<li>Если формат предоставляет метаданные, возвращайте кортеж <code>(DataFrame, dict)</code> и сохраняйте словарь в <code>self.maps_metadata[map_name]</code>.</li>
+</ol>
+<h3 id="adding-a-new-z-parameter-type">Добавление нового типа Z-параметра<a class="headerlink" href="#adding-a-new-z-parameter-type" title="Permanent link">&para;</a></h3>
+<p>Новые типы Z-параметров вычисляются в <code>VMapViewer._compute_z_values()</code>. Чтобы добавить, например, отношение пиков:</p>
+<ol>
+<li>Добавьте название параметра в логику заполнения выпадающего списка <code>VMapViewer</code>.</li>
+<li>В <code>_compute_z_values()</code> добавьте ветку <code>elif parameter == "My Ratio":</code>, считывающую данные из <code>df_fit_results</code>.</li>
+<li>Ключ кэша уже включает <code>parameter</code>, поэтому кэширование будет работать автоматически.</li>
+</ol>
+<h3 id="adding-a-new-map-type-beyond-wafer">Добавление нового типа карт (помимо Wafer)<a class="headerlink" href="#adding-a-new-map-type-beyond-wafer" title="Permanent link">&para;</a></h3>
+<p>Новые пространственные схемы размещения требуют следующих изменений:</p>
+<ol>
+<li>Добавьте строку типа в выпадающий список <code>cbb_map_type</code>.</li>
+<li>В <code>VMapViewer.plot_heatmap()</code> добавьте ветку отрисовки (вероятнее всего, <code>scipy.griddata</code> со специальной маской).</li>
+<li>В <code>VMWorkspaceMaps.collect_fit_results()</code> добавьте ветку классификации зон и квадрантов для нового типа карты.</li>
+</ol>
+<hr />
+<h2 id="troubleshooting">Устранение неполадок<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<p><strong>Тепловая карта не обновляется после аппроксимации</strong></p>
+<ul>
+<li>После <code>_on_fit_finished()</code> должен вызываться метод <code>collect_fit_results()</code>. Убедитесь, что для имени карты испускается сигнал <code>clear_map_cache_requested</code>, а значение <code>parameter</code> в ключе кэша совпадает с текущим выбранным пунктом выпадающего списка.</li>
+</ul>
+<p><strong>Выбранный пиксель подсвечивает не тот спектр</strong></p>
+<ul>
+<li>Сопоставление координат <code>(x, y)</code> с именами <code>fnames</code> опирается на соответствие формата <code>{map_name}_(x, y)</code> значениям в <code>md.fnames</code>. Проверьте, что <code>float(x_pos)</code> формирует одинаковую строку в <code>_extract_spectra_from_map()</code> и в <code>_on_map_viewer_selection()</code>.</li>
+</ul>
+<p><strong>Аппроксимация большой карты ненадолго замораживает UI при запуске</strong></p>
+<ul>
+<li>Формирование задач (<code>_run_fit_thread()</code>) выполняется в основном потоке до вызова <code>VBFthread.start()</code>. Для очень больших карт построение индексов <code>np.arange(md.n_spectra)</code> происходит быстро, но операция <code>vstack</code> для матриц <code>Y</code> может быть медленной. Если это становится узким местом, профилируйте вызов <code>_run_fit_thread()</code> с помощью <code>cProfile</code>.</li>
+</ul>
+<p><strong>Send to Spectra создаёт дублирующиеся спектры</strong></p>
+<ul>
+<li>Метод <code>receive_spectra()</code> в ViewModel рабочей области Spectra перед добавлением проверяет условие <code>name in self.store.map_names</code>. Если появляются дубликаты, проверьте согласованность формата <code>fname</code> (обратите внимание на округление чисел с плавающей точкой в строковом представлении <code>(x_pos, y_pos)</code>).</li>
+</ul>
+<p><strong>Вызов <code>griddata</code> для пластины тормозит при каждой перерисовке</strong></p>
+<ul>
+<li>Убедитесь, что сигнал <code>clear_map_cache_requested</code> испускается только при необходимости (после аппроксимации, а не при каждом изменении выделения). Проверьте, что кортеж <code>cache_key</code> является хешируемым и стабильным — если какой-либо элемент незаметно меняется между перерисовками, кэш никогда не будет срабатывать.</li>
+</ul>
+<p><strong>Скачок потребления памяти при загрузке большого числа крупных карт</strong></p>
+<ul>
+<li>Для карты 50×50 (2 500 спектров) при 1 000 волновых чисел массив <code>MapData.Y0</code> (<code>float32</code>) занимает ~10 MB; для карты из 25 000 спектров при 1 000 волновых чисел <code>Y0</code> занимает ~100 MB, а при аппроксимации дополнительно выделяются массивы (<code>Y_bestfit</code> и по одному массиву <code>Y_peaks</code> на каждый пик). Используйте <code>remove_map()</code> для удаления карт, которые больше не нужны.</li>
+</ul>
+<p>По вопросам устранения неполадок, связанных с моделью данных (неприменённая предобработка, управление памятью), см. <a href="../spectra_store/#troubleshooting">SpectraStore: Устранение неполадок</a>.</p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  К началу
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Нижний колонтитул" >
+        
+          
+          <a href="../spectra/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Рабочая область «Спектры»">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Рабочая область «Спектры»
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../graphs/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Рабочая область «Графики»">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Рабочая область «Графики»
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

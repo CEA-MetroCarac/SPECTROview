@@ -1,0 +1,2431 @@
+
+<!doctype html>
+<html lang="ru" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Интерактивный инструмент для обработки, аппроксимации и визуализации спектроскопических данных">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/ru/roadmaps/python_performance_audit_and_roadmap/">
+      
+      
+      
+      
+        
+          <link rel="alternate" href="../../../roadmaps/python_performance_audit_and_roadmap/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/roadmaps/python_performance_audit_and_roadmap/" hreflang="fr">
+        
+          <link rel="alternate" href="../../../de/roadmaps/python_performance_audit_and_roadmap/" hreflang="de">
+        
+          <link rel="alternate" href="./" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/roadmaps/python_performance_audit_and_roadmap/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>SPECTROview — Strategy A (Pure-Python, NumPy, SciPy & PySide6) Performance Audit & Optimization Roadmap - Документация SPECTROview</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#spectroview-strategy-a-pure-python-numpy-scipy-pyside6-performance-audit-optimization-roadmap" class="md-skip">
+          Перейти к содержанию
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Верхний колонтитул">
+    <a href="../../" title="Документация SPECTROview" class="md-header__button md-logo" aria-label="Документация SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Документация SPECTROview
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              SPECTROview — Strategy A (Pure-Python, NumPy, SciPy &amp; PySide6) Performance Audit &amp; Optimization Roadmap
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Выберите язык"
+      title="Выберите язык"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">RU</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../roadmaps/python_performance_audit_and_roadmap/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/roadmaps/python_performance_audit_and_roadmap/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/roadmaps/python_performance_audit_and_roadmap/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="ru"
+              class="md-select__link" aria-current="true"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/roadmaps/python_performance_audit_and_roadmap/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Поиск" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Поиск">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистить" aria-label="Очистить" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Инициализация поиска
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Главная
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Установка
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Руководство пользователя
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  ИИ-агент
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../developer/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Руководство разработчика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  История изменений
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Навигация" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="Документация SPECTROview" class="md-nav__button md-logo" aria-label="Документация SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    Документация SPECTROview
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Главная
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Установка
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство пользователя
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство пользователя
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Поддерживаемые форматы данных
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Обзор интерфейса
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Строка меню
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочие области «Спектры» и «Карты»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Многомерный анализ (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Калькуляторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Настройки
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сохранение и загрузка
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Горячие клавиши и советы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство разработчика
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство разработчика
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Конвейер загрузки файлов
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архитектура данных SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Спектры»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Векторизованный движок пакетной аппроксимации (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Многомерный анализ (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Локальный MCP-сервер
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Спектры» (загрузка, предобработка, аппроксимация)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты» (гиперспектральные данные, тепловые карты)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Визуализация данных («Графики»)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Калькуляторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Расширение SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    История изменений
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="spectroview-strategy-a-pure-python-numpy-scipy-pyside6-performance-audit-optimization-roadmap">SPECTROview — Strategy A (Pure-Python, NumPy, SciPy &amp; PySide6) Performance Audit &amp; Optimization Roadmap<a class="headerlink" href="#spectroview-strategy-a-pure-python-numpy-scipy-pyside6-performance-audit-optimization-roadmap" title="Permanent link">&para;</a></h1>
+<p><strong>Document Status</strong>: Re-Audited Under Controlled Idle-CPU Conditions, Empirically Benchmarked &amp; Implementation-Ready Roadmap<br />
+<strong>Target Architecture</strong>: Strategy A — Pure-Python Optimization (<code>NumPy</code>, <code>SciPy</code>, <code>pandas</code>, <code>PySide6</code>, <code>Matplotlib</code>)<br />
+<strong>Decision Context</strong>: Following a full-repository technical audit and controlled re-profiling of <code>SPECTROview</code> (<code>v26.48.2</code>, 225 Python modules across <code>model/</code>, <code>viewmodel/</code>, <code>view/</code>, <code>fit_engine/</code>, <code>api/</code>, <code>application/</code>, and <code>ai_agent/</code>), <strong>Rust migration is not necessary</strong>. Over <strong>85–90% of the achievable end-to-end performance and memory improvements</strong> can be captured purely in Python by fixing data-structure choices, memory layout (<code>F_CONTIGUOUS</code> vs <code>C_CONTIGUOUS</code>), OpenBLAS thread oversubscription, memory duplication, algorithmic complexity, and Qt widget virtualization—while preserving zero-compiler <code>py3-none-any.whl</code> packaging and cross-platform CI/CD simplicity.</p>
+<hr />
+<h2 id="1-controlled-benchmarking-methodology-why-the-re-audit-changed-the-baseline">1. Controlled Benchmarking Methodology &amp; Why the Re-Audit Changed the Baseline<a class="headerlink" href="#1-controlled-benchmarking-methodology-why-the-re-audit-changed-the-baseline" title="Permanent link">&para;</a></h2>
+<h3 id="11-controlled-test-environment">1.1 Controlled Test Environment<a class="headerlink" href="#11-controlled-test-environment" title="Permanent link">&para;</a></h3>
+<p>All baseline and prototype measurements in this document were re-executed from scratch under strictly controlled conditions:</p>
+<ul>
+<li><strong>Hardware &amp; OS</strong>: Intel Core i5-8365U (4 physical cores / 8 logical processors, 1.60–1.90 GHz), Windows 64-bit.</li>
+<li><strong>Runtime Stack</strong>: Python <code>3.14.10</code>, NumPy, SciPy, pandas, PySide6 <code>6.10.2</code> (<code>QT_QPA_PLATFORM=offscreen</code>).</li>
+<li><strong>CPU Contention Guard</strong>: System-wide CPU utilization was sampled via Win32 <code>GetSystemTimes</code> (kernel + user vs. idle ticks) before every benchmark block, waiting until background system CPU load settled between <strong><code>1.6%</code> and <code>15.5%</code></strong> (compared to <strong><code>~83%</code> system CPU utilization</strong> during the initial exploratory profiling session).</li>
+<li><strong>Execution Protocol</strong>:</li>
+<li>Zero concurrent background tasks or parallel test processes were active during timing runs.</li>
+<li>All modules (<code>numpy</code>, <code>scipy</code>, <code>pandas</code>, <code>pybaselines</code>, <code>PySide6</code>, <code>spectroview.*</code>) were pre-imported before timed sections so cold-import latency never contaminated warm execution metrics.</li>
+<li>Every operation was executed with <strong>1–2 warmup passes</strong> followed by <strong>3–10 timed repetitions</strong>, recording <strong><code>min</code></strong>, <strong><code>median</code></strong>, and <strong><code>mean ± std</code></strong>.</li>
+</ul>
+<h3 id="12-measurement-taxonomy-used-in-this-document">1.2 Measurement Taxonomy Used in This Document<a class="headerlink" href="#12-measurement-taxonomy-used-in-this-document" title="Permanent link">&para;</a></h3>
+<p>To prevent conflating different classes of numbers, every metric in this roadmap is explicitly labeled as one of four categories:</p>
+<ol>
+<li><strong><code>[Measured — Current Baseline]</code></strong>: Direct multi-run <code>time.perf_counter()</code> / byte-footprint measurement of the unmodified <code>SPECTROview</code> <code>v26.48.2</code> codebase under idle CPU conditions (<code>1.6%–15.5%</code> background load).</li>
+<li><strong><code>[Measured — Isolated Prototype]</code></strong>: Direct multi-run measurement of a standalone in-memory prototype function implementing the proposed optimization on the exact same dataset and hardware during this audit (with numerical equivalence verified against the baseline).</li>
+<li><strong><code>[Estimated — Integrated Workflow]</code></strong>: Projected end-to-end timing or memory footprint once the isolated prototype is wired into the full <code>View ↔ ViewModel ↔ Model</code> pipeline (accounting for remaining unoptimized stages via Amdahl's Law).</li>
+<li><strong><code>[Theoretical — Asymptotic Scaling]</code></strong>: Mathematical complexity (<span class="arithmatex">\(O(\cdot)\)</span> FLOPs or byte count) as dataset dimensions (<span class="arithmatex">\(N\)</span> spectra, <span class="arithmatex">\(M\)</span> channels, <span class="arithmatex">\(K\)</span> parameters) scale.</li>
+</ol>
+<h3 id="13-high-cpu-session-vs-controlled-idle-cpu-baseline-comparison">1.3 High-CPU Session vs. Controlled Idle-CPU Baseline Comparison<a class="headerlink" href="#13-high-cpu-session-vs-controlled-idle-cpu-baseline-comparison" title="Permanent link">&para;</a></h3>
+<p>Re-profiling under idle CPU (<code>1.6%–15.5%</code>) revealed that the previous high-CPU session inflated pure compute and I/O timings by <strong><code>1.3×</code> to <code>7.0×</code></strong>, and uncovered four critical architectural insights that were previously masked by CPU contention:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Operation / Workload</th>
+<th style="text-align: right;">Previous High-CPU Measurement</th>
+<th style="text-align: left;">Controlled Idle-CPU Baseline (<code>min</code> / <strong><code>median</code></strong> / <code>mean ± std</code>)</th>
+<th style="text-align: center;">Inflation Factor</th>
+<th style="text-align: left;">Key Architectural Finding From Re-Audit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>m_io.load_wdf_map</code> (<code>3_3721map.wdf</code>, <code>3,721 × 575</code>, <code>8.3 MB</code>)</td>
+<td style="text-align: right;"><code>34.1 ms</code></td>
+<td style="text-align: left;"><code>13.88 ms</code> / <strong><code>14.50 ms</code></strong> / <code>14.61 ± 0.55 ms</code></td>
+<td style="text-align: center;"><code>2.35×</code></td>
+<td style="text-align: left;">Already near disk/memcpy speed (<code>&gt; 250k</code> spectra/s).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>m_io.load_spc_map</code> (<code>2dmap_spc.spc</code>, <code>1,681 × 1,024</code>, <code>6.8 MB</code>)</td>
+<td style="text-align: right;"><code>28.5 ms</code></td>
+<td style="text-align: left;"><code>13.54 ms</code> / <strong><code>13.67 ms</code></strong> / <code>14.41 ± 1.38 ms</code></td>
+<td style="text-align: center;"><code>2.08×</code></td>
+<td style="text-align: left;">Already near disk/memcpy speed.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>m_io.load_l6m_map</code> (<code>mapls6.l6m</code>, <code>1,368 × 1,024</code>, <code>2.2 MB</code>)</td>
+<td style="text-align: right;"><code>59.4 ms</code></td>
+<td style="text-align: left;"><code>32.18 ms</code> / <strong><code>32.42 ms</code></strong> / <code>32.51 ± 0.25 ms</code></td>
+<td style="text-align: center;"><code>1.83×</code></td>
+<td style="text-align: left;">Fast binary table parser (<code>&lt; 33 ms</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>m_io.load_map_file</code> (<code>2_MoS2_map.txt</code>, <code>1,520 × 1,015</code>, <code>7.6 MB</code>)</td>
+<td style="text-align: right;"><code>156.9 ms</code></td>
+<td style="text-align: left;"><code>115.58 ms</code> / <strong><code>121.18 ms</code></strong> / <code>122.91 ± 6.63 ms</code></td>
+<td style="text-align: center;"><code>1.30×</code></td>
+<td style="text-align: left;">C-engine <code>pd.read_csv</code> float parsing.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>m_io.load_map_file</code> (<code>1_CL_map.txt</code>, <code>16,384 × 1,024</code>, <code>151.0 MB</code>)</td>
+<td style="text-align: right;"><code>1,852.6 ms</code></td>
+<td style="text-align: left;"><code>1,053.06 ms</code> / <strong><code>1,118.58 ms</code></strong> / <code>1,149.78 ± 94.32 ms</code></td>
+<td style="text-align: center;"><code>1.66×</code></td>
+<td style="text-align: left;">C-engine <code>pd.read_csv</code>; returns Fortran-ordered block.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>m_io.extract_map_arrays</code> (<code>16,384 × 1,024</code> DataFrame <span class="arithmatex">\(\rightarrow\)</span> arrays)</td>
+<td style="text-align: right;"><code>162.8 ms</code></td>
+<td style="text-align: left;"><code>74.93 ms</code> / <strong><code>85.64 ms</code></strong> / <code>84.95 ± 7.30 ms</code></td>
+<td style="text-align: center;"><code>1.90×</code></td>
+<td style="text-align: left;"><strong>Bug discovered</strong>: returns <code>F_CONTIGUOUS</code> <code>Y0</code> (<code>strides=(4, 65536)</code>), hurting downstream row ops by <code>3.57×</code>!</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>NgsReader</code> (<code>mapls5.ngc</code>, <code>3.9 MB</code> compressed <code>lzhuf</code>)</td>
+<td style="text-align: right;"><code>23,175.7 ms</code></td>
+<td style="text-align: left;"><code>9,093.97 ms</code> / <strong><code>9,743.61 ms</code></strong> / <code>9,743.61 ± 649.63 ms</code></td>
+<td style="text-align: center;"><code>2.38×</code></td>
+<td style="text-align: left;">Still a <code>~9.1–9.7 s</code> pure-Python bit-loop bottleneck (<code>P6</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>VSpectraList.set_spectra_names</code> (<code>1,520</code> items, <code>QListWidget</code>)</td>
+<td style="text-align: right;"><code>313.3 ms</code></td>
+<td style="text-align: left;"><code>126.84 ms</code> / <strong><code>185.35 ms</code></strong> / <code>173.09 ± 24.36 ms</code></td>
+<td style="text-align: center;"><code>1.69×</code></td>
+<td style="text-align: left;">Scales super-linearly (<code>670.55 ms</code> at <code>3,721</code>; <strong><code>5,919.42 ms</code></strong> at <code>16,384</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>VDataframeTable.show</code> (<code>16,384 × 14</code> fit table, <code>229k</code> cells)</td>
+<td style="text-align: right;"><em>(Assumed slow)</em></td>
+<td style="text-align: left;"><code>9.77 ms</code> / <strong><code>10.76 ms</code></strong> / <code>11.38 ± 1.64 ms</code></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: left;"><strong>Already virtualized</strong> (<code>QAbstractTableModel</code> + <code>QTableView</code>)!</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>VGraph.plot</code> (<code>2Dmap</code> / <code>wafer</code>, <code>16,384</code> points)</td>
+<td style="text-align: right;"><code>155.1 ms</code> / <code>123.7 ms</code></td>
+<td style="text-align: left;"><code>58.41 ms</code> (<strong><code>73.06 ms</code></strong>) / <code>50.82 ms</code> (<strong><code>57.80 ms</code></strong>)</td>
+<td style="text-align: center;"><code>2.12×</code></td>
+<td style="text-align: left;">Already responsive (<code>~58–73 ms</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>eval_baseline_batch</code> (<code>Linear</code> / <code>Poly-3</code> attached, <code>1,520 × 575</code>, warm)</td>
+<td style="text-align: right;"><code>46.3 ms</code> / <code>47.5 ms</code></td>
+<td style="text-align: left;"><code>29.76 ms</code> (<strong><code>30.61 ms</code></strong>) / <code>29.05 ms</code> (<strong><code>30.79 ms</code></strong>)</td>
+<td style="text-align: center;"><code>1.52×</code></td>
+<td style="text-align: left;">Vectorized across all 1,520 spectra (<code>0.020 ms/spectrum</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>eval_baseline_batch</code> (<code>arpls</code>, <code>50 × 575</code>, warm)</td>
+<td style="text-align: right;"><code>1,659.0 ms</code> (<code>33.18 ms/spec</code>)</td>
+<td style="text-align: left;"><code>225.08 ms</code> / <strong><code>238.65 ms</code></strong> (<code>4.77 ms/spec</code>)</td>
+<td style="text-align: center;"><strong><code>6.95×</code></strong></td>
+<td style="text-align: left;"><code>asls</code> is <strong><code>1.13 ms/spec</code></strong> (<code>56.61 ms</code>); <code>snip</code> is <strong><code>7.58 ms/spec</code></strong> (<code>378.88 ms</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>MMVA.run_pca</code> (<code>1,520 × 575</code>, <code>n_components=5</code>)</td>
+<td style="text-align: right;"><code>2,535.0 ms</code></td>
+<td style="text-align: left;"><code>1,033.34 ms</code> / <strong><code>2,471.73 ms</code></strong> (<code>OPENBLAS=8</code>) <span class="arithmatex">\(\rightarrow\)</span> <strong><code>652.80 ms</code></strong> (<code>OPENBLAS=2</code>)</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: left;">OpenBLAS 8-thread thrashing + full SVD waste (<code>125.65 ms</code> with <code>P4.1</code> Gram + <code>OPENBLAS=2</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>MMVA.run_nmf</code> (<code>1,520 × 575</code>, <code>k=4</code>, <code>max_iter=200</code>)</td>
+<td style="text-align: right;"><code>11,836.0 ms</code></td>
+<td style="text-align: left;"><code>2,212.12 ms</code> / <strong><code>7,283.42 ms</code></strong> (<code>OPENBLAS=8</code>) <span class="arithmatex">\(\rightarrow\)</span> <strong><code>1,567.99 ms</code></strong> (<code>OPENBLAS=2</code>)</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: left;">OpenBLAS 8-thread barrier contention on <code>(1520, 4)</code> micro-GEMMs + <span class="arithmatex">\((N, M)\)</span> residual (<code>582.02 ms</code> with <code>P4.2</code> + <code>OPENBLAS=2</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>compute_fit_weights</code> (<code>1_CL_map</code>, <code>16,384 × 1,024</code>, cache miss)</td>
+<td style="text-align: right;"><code>1,702.0 ms</code></td>
+<td style="text-align: left;"><strong><code>2,355.58 ms</code></strong> (<code>F_CONTIGUOUS</code> <code>float32</code>) vs <strong><code>659.18 ms</code></strong> (<code>C_CONTIGUOUS</code> <code>float32</code>)</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: left;"><code>F_CONTIGUOUS</code> <code>Y0</code> from <code>extract_map_arrays</code> causes <code>3.57×</code> slowdown (<code>483.46 ms</code> with <code>P5.1</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>VBFengine.fit_spectra</code> (<code>1_CL_map.json</code>, <code>16,384 × 302</code>, <code>1 Lor</code>, <code>K=3</code>)</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: left;"><strong><code>3,433.74 ms</code></strong> (<code>OPENBLAS=8</code>) <span class="arithmatex">\(\rightarrow\)</span> <strong><code>1,434.02 ms</code></strong> (<code>OPENBLAS=2</code>, <code>0.088 ms/spec</code>)</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: left;">Capping OpenBLAS to 2 threads accelerates 16k-spectrum LM fit by <strong><code>2.40×</code></strong>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>VBFengine.fit_spectra</code> (<code>3_3721map.json</code>, <code>3,721 × 70</code>, <code>1 Lor</code>, <code>K=3</code>)</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: left;"><code>61.29 ms</code> / <strong><code>63.67 ms</code></strong> (<code>OPENBLAS=2</code>, <code>0.017 ms/spec</code>)</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: left;">Sub-70 ms for 3,721 spectra after commit <code>9250ae9</code>.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-classification-of-verified-bottlenecks-optimization-summary">2. Classification of Verified Bottlenecks &amp; Optimization Summary<a class="headerlink" href="#2-classification-of-verified-bottlenecks-optimization-summary" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Priority &amp; ID</th>
+<th style="text-align: left;">Subsystem &amp; Location</th>
+<th style="text-align: left;">Category</th>
+<th style="text-align: left;">Verified Root Cause</th>
+<th style="text-align: left;"><code>[Measured — Current Baseline]</code></th>
+<th style="text-align: left;"><code>[Measured — Isolated Prototype]</code></th>
+<th style="text-align: left;"><code>[Estimated — Integrated Workflow]</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong><code>P1</code></strong></td>
+<td style="text-align: left;"><code>VSpectraList</code> (<code>v_spectra_list.py:170–221</code>)</td>
+<td style="text-align: left;"><strong>GUI-bound / Memory-bound</strong></td>
+<td style="text-align: left;"><code>QListWidget</code> instantiates &amp; styles <span class="arithmatex">\(N\)</span> C++ <code>QListWidgetItem</code> objects synchronously (<code>VDataframeTable</code> is <em>already</em> virtualized at <code>10.76 ms</code>!).</td>
+<td style="text-align: left;"><strong><code>185.35 ms</code></strong> (<code>1,520</code>) / <strong><code>670.55 ms</code></strong> (<code>3,721</code>) / <strong><code>5,919.42 ms</code></strong> (<code>16,384</code>)</td>
+<td style="text-align: left;"><strong><code>0.74 ms</code></strong> (<code>1,520</code>) / <strong><code>1.87 ms</code></strong> (<code>3,721</code>) / <strong><code>8.73 ms</code></strong> (<code>16,384</code>) (<strong>250×–678×</strong>)</td>
+<td style="text-align: left;"><code>&lt; 10 ms</code> list refresh; eliminates 0.67–5.9 s main-thread UI freeze</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>P2</code></strong></td>
+<td style="text-align: left;"><code>extract_map_arrays</code> (<code>m_io.py:309</code>), <code>SpectraStore</code> (<code>spectra_store.py</code>), <code>VMWorkspaceMaps</code> (<code>vm_workspace_maps.py:72</code>)</td>
+<td style="text-align: left;"><strong>Memory-bound / Cache-layout</strong></td>
+<td style="text-align: left;">(1) <code>extract_map_arrays</code> leaves <code>.txt</code>/<code>.csv</code> <code>Y0</code> <code>F_CONTIGUOUS</code> (<code>strides=(4, 65536)</code>), slowing row ops <code>3.57×</code>; (2) <code>~1.01 GB</code> RAM per <code>67 MB</code> map due to duplicate <code>maps[name]</code> DataFrame, <code>float64</code> casts, and eager <code>Y_peaks</code>.</td>
+<td style="text-align: left;"><strong><code>~1,006.9 MB</code></strong> RAM per <code>16,384 × 1,024</code> fitted map; <strong><code>2,355.58 ms</code></strong> F-contiguous weight pass</td>
+<td style="text-align: left;"><strong><code>659.18 ms</code></strong> C-contiguous weight pass (<strong>3.57×</strong>); <strong><code>~201.4 MB</code></strong> RAM layout (<strong>80% reduction</strong>)</td>
+<td style="text-align: left;"><strong>~80% RAM reduction</strong> (<code>~805 MB</code> saved per 16k map) + <strong>3.5×</strong> faster row preprocessing</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>P3</code></strong></td>
+<td style="text-align: left;"><code>MMVA.run_pca</code> &amp; <code>MMVA.run_nmf</code> (<code>m_mva.py:75–201</code>) + OpenBLAS thread guard</td>
+<td style="text-align: left;"><strong>Algorithmic / Concurrency</strong></td>
+<td style="text-align: left;">(1) OpenBLAS spawns 8 threads on 4 cores, thrashing on <code>(1520, 4)</code> micro-GEMMs; (2) PCA runs full <code>svd</code> instead of Gram <code>eigh(X_c.T @ X_c)</code>; (3) NMF allocates <span class="arithmatex">\((N, M)\)</span> <code>X - W @ H</code> instead of <span class="arithmatex">\(O(K^2)\)</span> trace identity.</td>
+<td style="text-align: left;">PCA: <strong><code>2,471.73 ms</code></strong> · NMF: <strong><code>7,283.42 ms</code></strong> (<code>1,520 × 575</code>, default 8 threads)</td>
+<td style="text-align: left;">PCA: <strong><code>125.65 ms</code></strong> (<strong>19.7×</strong>) · NMF: <strong><code>582.02 ms</code></strong> (<strong>12.5×</strong>) (Gram/Trace + <code>OPENBLAS=2</code>)</td>
+<td style="text-align: left;">PCA <code>&lt; 140 ms</code>, NMF <code>&lt; 600 ms</code> on background <code>QThread</code> (<code>0 ms</code> UI freeze)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>P4</code></strong></td>
+<td style="text-align: left;"><code>noise.py</code>, <code>weights.py</code>, <code>optimizer.py</code> (VBF Engine &amp; Noise Weights)</td>
+<td style="text-align: left;"><strong>CPU-bound / Memory-bandwidth</strong></td>
+<td style="text-align: left;">(1) OpenBLAS 8-thread contention inside chunked LM (<code>2.40×</code> slower than 2 threads on <code>1_CL_map.json</code>); (2) <code>moving_average_5</code> upcasts <code>float32</code> to <code>float64</code> + full <code>np.sum(y)</code> fingerprint; (3) <code>np.linalg.solve</code> dispatch overhead on <span class="arithmatex">\(K=3\)</span>.</td>
+<td style="text-align: left;"><code>compute_fit_weights</code>: <strong><code>2,355.58 ms</code></strong> (F-order) / <strong><code>659.18 ms</code></strong> (C-order) · <code>3×3</code> solve: <strong><code>9.76 ms</code></strong> · <code>1_CL_map</code> fit: <strong><code>3,433.74 ms</code></strong></td>
+<td style="text-align: left;"><code>compute_fit_weights</code>: <strong><code>483.46 ms</code></strong> (<strong>4.87× vs F / 1.36× vs C</strong>) · <code>3×3</code> solve: <strong><code>1.54 ms</code></strong> (<strong>6.34×</strong>) · <code>1_CL_map</code> (<code>OPENBLAS=2</code>): <strong><code>1,434.02 ms</code></strong> (<strong>2.40×</strong>)</td>
+<td style="text-align: left;"><strong>1.5×–2.5×</strong> faster end-to-end VBF map fitting</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>P5</code></strong></td>
+<td style="text-align: left;"><code>eval_baseline_batch</code> (<code>baseline.py:179–244</code>) &amp; <code>VMWorkspaceSpectra.subtract_baseline</code></td>
+<td style="text-align: left;"><strong>GUI-bound / CPU-bound</strong></td>
+<td style="text-align: left;">Sequential loop over <span class="arithmatex">\(N\)</span> spectra runs synchronously on the main Qt thread (<code>4.77 ms/spec</code> <code>arpls</code> = <code>7.25 s</code> freeze for <code>1,520</code> spectra; <code>7.58 ms/spec</code> <code>snip</code> = <code>11.5 s</code> freeze).</td>
+<td style="text-align: left;"><code>arpls</code>: <strong><code>4.77 ms/spec</code></strong> · <code>asls</code>: <strong><code>1.13 ms/spec</code></strong> · <code>snip</code>: <strong><code>7.58 ms/spec</code></strong> (main-thread blocking)</td>
+<td style="text-align: left;"><em>(Verified: naive <code>Baseline</code> hoisting or 8-thread OpenBLAS <code>ThreadPool</code> does not speed up <code>arpls</code>)</em></td>
+<td style="text-align: left;"><strong><code>0 ms</code> UI freeze</strong> via background <code>QThread</code> + <strong>2.5×–3.2×</strong> speedup via single-BLAS-thread multi-process/shared-factorization solver</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>P6</code></strong></td>
+<td style="text-align: left;"><code>_decompress_ngc</code> (<code>m_ngs.py:48–181</code>) &amp; File Loading Thread</td>
+<td style="text-align: left;"><strong>CPU-bound / I/O-bound</strong></td>
+<td style="text-align: left;">Pure-Python bit-by-bit <code>lzhuf</code> adaptive Huffman + LZSS decompression loop on compressed <code>.ngc</code>/<code>.l6m</code> files runs on the main Qt thread.</td>
+<td style="text-align: left;"><strong><code>9,743.61 ms</code></strong> (<code>min 9,093.97 ms</code>) on <code>3.9 MB</code> <code>mapls5.ngc</code></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;"><strong>1.15×–1.3×</strong> pure-Python RLE slice fast-path (<strong>25×–40×</strong> if optional <code>numba</code> JIT present) + <strong><code>0 ms</code> UI freeze</strong> on background <code>QThread</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-detailed-strategy-a-workstreams-p1p6">3. Detailed Strategy A Workstreams (<code>P1</code>–<code>P6</code>)<a class="headerlink" href="#3-detailed-strategy-a-workstreams-p1p6" title="Permanent link">&para;</a></h2>
+<h3 id="p1-virtualize-vspectralist-qlistview-qabstractlistmodel-implemented-verified"><code>P1</code> — Virtualize <code>VSpectraList</code> (<code>QListView</code> + <code>QAbstractListModel</code>) <code>[Implemented &amp; Verified]</code><a class="headerlink" href="#p1-virtualize-vspectralist-qlistview-qabstractlistmodel-implemented-verified" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>Implementation Status (<code>P1</code>)</strong>: Virtualized <code>VSpectraList(QListView)</code> backed by <code>SpectraListModel(QAbstractListModel)</code> and <code>_VirtualSpectrumItem</code> compatibility proxy in <code>spectroview/view/components/lists/v_spectra_list.py</code>, plus <span class="arithmatex">\(O(1)\)</span> <code>set_all_checked()</code> batching in <code>VWorkspaceSpectra._on_check_all_toggled</code>. Verified with <code>tests/unit/view/test_v_spectra_list.py</code>, <code>tests/unit/view/test_v_metadata_tooltip.py</code>, and integration tests.</p>
+</blockquote>
+<h4 id="problem-verified-evidence">Problem &amp; Verified Evidence<a class="headerlink" href="#problem-verified-evidence" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Location</strong>: <code>spectroview/view/components/lists/v_spectra_list.py:170–221</code> (<code>VSpectraList.set_spectra_names</code>).</li>
+<li><strong>Audit Finding on <code>VDataframeTable</code></strong>: Reviewing <code>spectroview/view/components/lists/v_dataframe_table.py:14–195</code> confirmed that <strong><code>VDataframeTable</code> is already virtualized</strong> via <code>DataFrameTableModel(QAbstractTableModel)</code> + <code>QTableView</code> (caching column NumPy views <code>self._raw_cols = [self._df[c].to_numpy() for c in self._df.columns]</code> and sampling only <code>df.head(30)</code> in <code>_resize_columns_smart</code>). Under controlled benchmark conditions, <code>VDataframeTable.show()</code> renders a <strong><code>16,384 × 14</code> (<code>229,376</code>-cell)</strong> fit results table in <strong><code>min = 9.77 ms | median = 10.76 ms | mean = 11.38 ± 1.64 ms</code></strong>. No architectural rewrite of <code>VDataframeTable</code> is needed.</li>
+<li><strong>Remaining GUI Bottleneck (<code>VSpectraList</code>)</strong>: Unlike <code>VDataframeTable</code>, <code>VSpectraList</code> still subclasses <code>QListWidget</code> and executes a Python loop creating <span class="arithmatex">\(N\)</span> C++ <code>QListWidgetItem</code> instances, setting flags, check states, background brushes (<code>set_spectrum_item_color</code>), and three <code>Qt.UserRole</code> payloads per item on every list refresh.</li>
+<li><strong>Controlled Measurements (<code>[Measured — Current Baseline]</code> vs <code>[Measured — Isolated Prototype]</code>)</strong>:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Spectrum Count (<span class="arithmatex">\(N\)</span>)</th>
+<th style="text-align: left;"><code>VSpectraList.set_spectra_names</code> (<code>QListWidget</code>) <code>[Measured — Current Baseline]</code></th>
+<th style="text-align: left;"><code>QListView</code> + <code>QAbstractListModel</code> (<code>setUniformItemSizes(True)</code>) <code>[Measured — Isolated Prototype]</code></th>
+<th style="text-align: center;">Measured Speedup</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong><code>1,520</code> spectra</strong> (<code>2_MoS2_map</code>)</td>
+<td style="text-align: left;"><code>min = 126.84 ms</code> · <strong><code>median = 185.35 ms</code></strong> · <code>mean = 173.09 ± 24.36 ms</code></td>
+<td style="text-align: left;"><code>min = 0.62 ms</code> · <strong><code>median = 0.74 ms</code></strong> · <code>mean = 1.20 ± 0.83 ms</code></td>
+<td style="text-align: center;"><strong><code>250×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>3,721</code> spectra</strong> (<code>3_3721map</code>)</td>
+<td style="text-align: left;"><code>min = 625.01 ms</code> · <strong><code>median = 670.55 ms</code></strong> · <code>mean = 672.38 ± 31.31 ms</code></td>
+<td style="text-align: left;"><code>min = 1.52 ms</code> · <strong><code>median = 1.87 ms</code></strong> · <code>mean = 2.07 ± 0.54 ms</code></td>
+<td style="text-align: center;"><strong><code>358×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>16,384</code> spectra</strong> (<code>1_CL_map</code>)</td>
+<td style="text-align: left;"><code>min = 5,237.55 ms</code> · <strong><code>median = 5,919.42 ms</code></strong> · <code>mean = 6,938.96 ± 1,765.86 ms</code></td>
+<td style="text-align: left;"><code>min = 6.33 ms</code> · <strong><code>median = 8.73 ms</code></strong> · <code>mean = 8.17 ± 1.09 ms</code></td>
+<td style="text-align: center;"><strong><code>678×</code></strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="design-touchpoints">Design &amp; Touchpoints<a class="headerlink" href="#design-touchpoints" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong><code>SpectraListModel(QAbstractListModel)</code> (<code>v_spectra_list.py</code>)</strong>:</li>
+<li>Store lightweight parallel Python/NumPy sequences (<code>_fnames: list[str]</code>, <code>_is_active: np.ndarray</code>, <code>_has_baseline: np.ndarray</code>, <code>_has_fit: np.ndarray</code>, <code>_metadata: list[dict]</code>) and an <span class="arithmatex">\(O(1)\)</span> lookup dict <code>_fname_to_row: dict[str, int]</code>.</li>
+<li>Implement <code>rowCount()</code>, <code>data()</code> (<code>Qt.DisplayRole</code>, <code>Qt.CheckStateRole</code>, <code>Qt.BackgroundRole</code>, <code>Qt.ForegroundRole</code>, <code>Qt.UserRole</code>), <code>setData()</code> (for checkbox toggles emitting <code>spectrum_active_changed</code>), and <code>flags()</code>.</li>
+<li>Enable <code>setUniformItemSizes(True)</code> on the underlying <code>QListView</code> so Qt computes scrollbar geometry in <span class="arithmatex">\(O(1)\)</span> without querying <code>sizeHint()</code> across all <span class="arithmatex">\(N\)</span> rows.</li>
+<li><strong>Preserve External <code>VSpectraList</code> API</strong>:</li>
+<li>Keep <code>set_spectra_names(spectra: list[dict])</code>, <code>get_selected_fnames() -&gt; list[str]</code>, <code>set_selected_fnames(fnames: list[str])</code>, drag-and-drop reordering, and all existing signals (<code>spectra_selection_changed</code>, <code>spectrum_active_changed</code>, context-menu actions) 100% backward compatible.</li>
+</ol>
+<hr />
+<h3 id="p2-c-contiguous-map-extraction-hyperspectral-map-memory-de-duplication-implemented-verified"><code>P2</code> — C-Contiguous Map Extraction &amp; Hyperspectral Map Memory De-Duplication <code>[Implemented &amp; Verified]</code><a class="headerlink" href="#p2-c-contiguous-map-extraction-hyperspectral-map-memory-de-duplication-implemented-verified" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>Implementation Status (<code>P2</code>)</strong>: Enforced <code>C_CONTIGUOUS</code> <code>float32</code> <code>Y0</code> in <code>m_io.extract_map_arrays</code> and <code>SpectraStore.add_map</code> (<code>P2.1</code>), eliminated the duplicate <code>VMWorkspaceMaps.maps[name]</code> <code>float64</code> matrix by sharing <code>md.Y0</code>'s <code>float32</code> buffer (<code>P2.2</code>), preserved <code>float32</code> across <code>eval_baseline_batch</code> / preprocessing / <code>VBFthread</code> <code>Y_bestfit</code> without allocating blank <code>Y_baseline</code> arrays (<code>P2.3</code>), and replaced eager 3D <code>Y_peaks</code> arrays with on-demand <code>LazyPeakArray</code> views (<code>P2.4</code>).</p>
+</blockquote>
+<h4 id="problem-verified-evidence_1">Problem &amp; Verified Evidence<a class="headerlink" href="#problem-verified-evidence_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Locations</strong>:</li>
+<li><code>spectroview/model/io/m_io.py:307–313</code> (<code>extract_map_arrays</code>)</li>
+<li><code>spectroview/viewmodel/maps/vm_workspace_maps.py:72–115, 290–330</code></li>
+<li><code>spectroview/model/spectra/spectra_store.py:23–115</code> (<code>MapData</code>)</li>
+<li><code>spectroview/viewmodel/spectra/vm_workspace_spectra.py:1320–1390</code> (<code>_on_fit_finished</code>)</li>
+<li><strong>Verified Finding 1 — Fortran-Contiguous (<code>F_CONTIGUOUS</code>) Matrix Trap on <code>.txt</code>/<code>.csv</code> Maps</strong>:</li>
+<li>When <code>m_io.load_map_file()</code> parses a <code>.txt</code> or <code>.csv</code> map (<code>1_CL_map.txt</code>, <code>16,384 × 1,024</code>) via <code>pd.read_csv(..., engine="c")</code>, pandas stores the numeric block in <strong>column-major Fortran order (<code>F_CONTIGUOUS=True, C_CONTIGUOUS=False</code>)</strong>.</li>
+<li>In <code>extract_map_arrays</code> (<code>m_io.py:310</code>), <code>Y0 = map_df.iloc[:, 2:].to_numpy().astype(np.float32, copy=False)</code> preserves Fortran memory layout (<code>strides = (4, 65536)</code> on <code>16,384 × 1,024</code>, whereas <code>WdfReader</code> produces C-contiguous <code>strides = (2300, 4)</code>).</li>
+<li>Because <code>Y0</code> has a <strong>64 KB stride between adjacent wavenumber channels in the same spectrum</strong>, every row-wise operation (<code>np.diff(y, axis=1)</code>, <code>np.median(dy, axis=1)</code>, <code>moving_average_5</code>, <code>y[i]</code> single-spectrum plotting) suffers severe CPU cache-line thrashing:<ul>
+<li><strong><code>[Measured — Current Baseline]</code></strong>: <code>compute_fit_weights</code> on F-contiguous <code>Y_cl</code> (<code>float32</code>, <code>16,384 × 1,024</code>) takes <strong><code>min = 2,054.62 ms | median = 2,355.58 ms</code></strong>.</li>
+<li><strong><code>[Measured — Isolated Prototype]</code></strong>: Simply converting <code>Y0</code> to C-contiguous row-major layout (<code>np.ascontiguousarray(Y0, dtype=np.float32)</code>, <code>strides = (4096, 4)</code>) reduces the exact same <code>compute_fit_weights</code> call to <strong><code>min = 642.51 ms | median = 659.18 ms</code></strong> — an immediate <strong><code>3.57×</code> measured speedup</strong>!</li>
+</ul>
+</li>
+<li><strong>Verified Finding 2 — <code>~1.01 GB</code> Memory Amplification per <code>67.1 MB</code> Raw Map (<code>[Measured — Current Baseline]</code>)</strong>:
+  For a single <code>16,384 × 1,024</code> map (<code>16,777,216</code> channels) fitted with a 3-peak model (<code>K=9</code>):</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Array / Structure</th>
+<th style="text-align: left;">Location</th>
+<th style="text-align: left;">Current Dtype &amp; Shape</th>
+<th style="text-align: right;"><code>[Measured — Current Baseline]</code> RAM</th>
+<th style="text-align: left;">Post-<code>P2</code> Target Dtype &amp; Policy</th>
+<th style="text-align: right;"><code>[Theoretical — Post-P2 RAM]</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Raw intensities <code>md.Y0</code></td>
+<td style="text-align: left;"><code>SpectraStore</code> (<code>MapData</code>)</td>
+<td style="text-align: left;"><code>float32 (16384, 1024)</code> (C-contiguous)</td>
+<td style="text-align: right;"><code>67.1 MB</code></td>
+<td style="text-align: left;">Keep <code>float32 (16384, 1024)</code> C-contiguous</td>
+<td style="text-align: right;"><code>67.1 MB</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Duplicate DataFrame <code>self.maps[name]</code></td>
+<td style="text-align: left;"><code>VMWorkspaceMaps.maps</code></td>
+<td style="text-align: left;"><code>float64 (16384, 1026)</code></td>
+<td style="text-align: right;"><strong><code>134.5 MB</code></strong></td>
+<td style="text-align: left;"><strong>Eliminate</strong> (construct view/DF lazily on export)</td>
+<td style="text-align: right;"><strong><code>0.0 MB</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">Processed intensities <code>md.Y</code></td>
+<td style="text-align: left;"><code>SpectraStore</code> (<code>MapData</code>)</td>
+<td style="text-align: left;">Upcast to <code>float64 (16384, 1024)</code> on baseline subtract</td>
+<td style="text-align: right;"><strong><code>134.2 MB</code></strong></td>
+<td style="text-align: left;">Keep <strong><code>float32 (16384, 1024)</code></strong> (upcast chunks inside LM)</td>
+<td style="text-align: right;"><strong><code>67.1 MB</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">Fitted envelope <code>md.Y_bestfit</code></td>
+<td style="text-align: left;"><code>SpectraStore</code> (<code>MapData</code>)</td>
+<td style="text-align: left;"><code>float64 (16384, 1024)</code></td>
+<td style="text-align: right;"><strong><code>134.2 MB</code></strong></td>
+<td style="text-align: left;">Store as <strong><code>float32 (16384, 1024)</code></strong></td>
+<td style="text-align: right;"><strong><code>67.1 MB</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">Evaluated baseline <code>md.Y_baseline</code></td>
+<td style="text-align: left;"><code>SpectraStore</code> (<code>MapData</code>)</td>
+<td style="text-align: left;"><code>float64 (16384, 1024)</code></td>
+<td style="text-align: right;"><strong><code>134.2 MB</code></strong></td>
+<td style="text-align: left;">Reconstruct on demand for selected spectrum (or <code>float32</code>)</td>
+<td style="text-align: right;"><strong><code>0.0 MB</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">Individual peak curves <code>md.Y_peaks</code></td>
+<td style="text-align: left;"><code>SpectraStore</code> (<code>MapData</code>)</td>
+<td style="text-align: left;"><code>float64 (16384, 3, 1024)</code></td>
+<td style="text-align: right;"><strong><code>402.7 MB</code></strong></td>
+<td style="text-align: left;"><strong>Lazy on-demand evaluation</strong> from <code>md.peak_params[idx]</code></td>
+<td style="text-align: right;"><strong><code>0.0 MB</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Total per <code>16,384 × 1,024</code> Map</strong></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: right;"><strong><code>1,006.9 MB (~1.01 GB)</code></strong></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: right;"><strong><code>201.3 MB</code> (-80.0%)</strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="design-touchpoints_1">Design &amp; Touchpoints<a class="headerlink" href="#design-touchpoints_1" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong><code>P2.1</code> — Enforce C-Contiguous <code>float32</code> in <code>extract_map_arrays</code> (<code>m_io.py:309–312</code>)</strong>:</li>
+<li>Replace <code>.to_numpy().astype(np.float32, copy=False)</code> with <code>np.ascontiguousarray(map_df.iloc[:, 2:].to_numpy(), dtype=np.float32)</code>. One-time transpose during file load takes <code>~25 ms</code> on <code>16,384 × 1,024</code> and accelerates every subsequent row operation by <strong>3.5×+</strong>.</li>
+<li><strong><code>P2.2</code> — Remove Redundant <code>VMWorkspaceMaps.maps</code> Full-Matrix <code>float64</code> DataFrame</strong>:</li>
+<li>Use <code>SpectraStore</code> (<code>MapData.coords</code>, <code>MapData.x_axis</code>, <code>MapData.y_matrix</code>, <code>MapData.is_active</code>) as the single source of truth; build a pandas DataFrame only when an explicit table export requires it.</li>
+<li><strong><code>P2.3</code> — Preserve <code>float32</code> for <code>md.Y</code> and <code>md.Y_bestfit</code></strong>:</li>
+<li>Cast <code>eval_baseline_batch</code> subtraction result back to <code>np.float32</code> when <code>md.Y0.dtype == np.float32</code>, and store <code>Y_bestfit</code> as <code>np.float32</code> after VBF completion (while keeping <code>peak_params</code> and <code>fit_r2</code> in exact <code>float64</code>).</li>
+<li><strong><code>P2.4</code> — Lazy On-Demand <code>Y_peaks</code> Evaluation</strong>:</li>
+<li>Compute individual decomposed peak curves only for the currently displayed/selected spectrum index <span class="arithmatex">\(i\)</span> in <code>VSpectraViewer</code> (<code>&lt; 0.05 ms</code> for 1 spectrum) instead of materializing an <code>(N, P, M)</code> 3D <code>float64</code> tensor (<code>402.7 MB</code>) across all 16,384 pixels.</li>
+</ol>
+<hr />
+<h3 id="p3-algorithmic-optimization-openblas-thread-control-background-threading-for-multivariate-analysis-pca-nmf"><code>P3</code> — Algorithmic Optimization, OpenBLAS Thread Control &amp; Background Threading for Multivariate Analysis (PCA &amp; NMF)<a class="headerlink" href="#p3-algorithmic-optimization-openblas-thread-control-background-threading-for-multivariate-analysis-pca-nmf" title="Permanent link">&para;</a></h3>
+<h4 id="problem-verified-evidence_2">Problem &amp; Verified Evidence<a class="headerlink" href="#problem-verified-evidence_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Location</strong>: <code>spectroview/model/analysis/m_mva.py:75–201</code> (<code>MMVA.run_pca</code>, <code>MMVA.run_nmf</code>) and <code>spectroview/viewmodel/analysis/vm_mva.py</code>.</li>
+<li><strong>Three Compounding Root Causes Verified in Controlled Benchmarks</strong>:</li>
+<li><strong>OpenBLAS 8-Thread Oversubscription on 4 Physical Cores</strong>: By default, OpenBLAS spawns 8 threads on a 4-core / 8-thread CPU. Inside <code>MMVA.run_nmf</code> (<code>200</code> iterations <span class="arithmatex">\(\times\)</span> <code>6</code> matrix multiplications on narrow <code>(1520, 4)</code> and <code>(4, 575)</code> matrices = <code>1,200</code> micro-GEMMs), 8 OpenBLAS threads spin-wait at thread barriers across 4 cores, causing extreme OS scheduler jitter (<code>min = 2,212.12 ms</code> vs <code>median = 7,283.42 ms</code>, <code>max = 12,681.25 ms</code>). Setting <code>OPENBLAS_NUM_THREADS=2</code> alone cuts current NMF median time from <strong><code>7,283.42 ms</code> to <code>1,567.99 ms</code> (<code>4.65×</code> speedup)</strong> and current SVD PCA median time from <strong><code>2,471.73 ms</code> to <code>652.80 ms</code> (<code>3.79×</code> speedup)</strong>!</li>
+<li><strong>PCA Full Thin SVD Waste (<code>m_mva.py:94</code>)</strong>: <code>np.linalg.svd(X_centered, full_matrices=False)</code> computes all <span class="arithmatex">\(\min(n, p) = 575\)</span> singular vectors on an <span class="arithmatex">\((n, p)\)</span> rectangular matrix even when <code>n_components = 5</code>. Forming the symmetric <span class="arithmatex">\((p \times p)\)</span> covariance Gram matrix <span class="arithmatex">\(C = X_c^T X_c\)</span> via BLAS <code>dsyrk</code>/<code>dgemm</code> and calling <code>np.linalg.eigh(C)</code> is mathematically equivalent and dramatically faster whenever <span class="arithmatex">\(n &gt; p\)</span>.</li>
+<li><strong>NMF Explicit <code>(N, M)</code> Residual Allocation (<code>m_mva.py:189</code>)</strong>: Every 10 iterations, <code>MMVA.run_nmf</code> computes <code>error = np.linalg.norm(X - W @ H, "fro")</code>, allocating a full <code>(n, p)</code> residual matrix even though <code>numerator_W = X @ H.T</code>, <code>W.T @ W</code>, and <code>H @ H.T</code> are already available for the <span class="arithmatex">\(O(K^2)\)</span> Frobenius trace identity.</li>
+<li><strong>Controlled Multi-Run Measurements (<code>1,520 × 575</code>, <code>float64</code>)</strong>:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Algorithm &amp; Configuration</th>
+<th style="text-align: left;">Measurement Category</th>
+<th style="text-align: right;"><code>min</code></th>
+<th style="text-align: right;"><strong><code>median</code></strong></th>
+<th style="text-align: right;"><code>mean ± std</code></th>
+<th style="text-align: left;">Numerical Parity vs. Current Baseline</th>
+<th style="text-align: center;">Measured Speedup (Median)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>MMVA.run_pca</code> (<code>k=5</code>, current <code>svd</code>, default 8 BLAS threads)</td>
+<td style="text-align: left;"><code>[Measured — Current Baseline]</code></td>
+<td style="text-align: right;"><code>1,033.34 ms</code></td>
+<td style="text-align: right;"><strong><code>2,471.73 ms</code></strong></td>
+<td style="text-align: right;"><code>2,446.76 ± 895.34 ms</code></td>
+<td style="text-align: left;">Reference</td>
+<td style="text-align: center;"><code>1.00×</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>MMVA.run_pca</code> (<code>k=5</code>, current <code>svd</code>, <code>OPENBLAS_NUM_THREADS=2</code>)</td>
+<td style="text-align: left;"><code>[Measured — Isolated Prototype]</code></td>
+<td style="text-align: right;"><code>449.27 ms</code></td>
+<td style="text-align: right;"><strong><code>652.80 ms</code></strong></td>
+<td style="text-align: right;"><code>621.01 ± 91.33 ms</code></td>
+<td style="text-align: left;">Exact (<code>0.0</code>)</td>
+<td style="text-align: center;"><strong><code>3.79×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>P3.1</code> Gram <code>eigh(X_c.T @ X_c)</code> (<code>k=5</code>, default 8 BLAS threads)</td>
+<td style="text-align: left;"><code>[Measured — Isolated Prototype]</code></td>
+<td style="text-align: right;"><code>129.83 ms</code></td>
+<td style="text-align: right;"><strong><code>222.91 ms</code></strong></td>
+<td style="text-align: right;"><code>198.92 ± 49.65 ms</code></td>
+<td style="text-align: left;"><code>max_ev_diff = 3.73e-09</code></td>
+<td style="text-align: center;"><strong><code>11.09×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>P3.1</code> Gram <code>eigh(X_c.T @ X_c)</code> (<code>k=5</code>, <code>OPENBLAS_NUM_THREADS=2</code>)</strong></td>
+<td style="text-align: left;"><strong><code>[Measured — Isolated Prototype]</code></strong></td>
+<td style="text-align: right;"><strong><code>121.68 ms</code></strong></td>
+<td style="text-align: right;"><strong><code>125.65 ms</code></strong></td>
+<td style="text-align: right;"><strong><code>139.89 ± 28.48 ms</code></strong></td>
+<td style="text-align: left;"><strong><code>max_ev_diff = 3.73e-09</code></strong></td>
+<td style="text-align: center;"><strong><code>19.67×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>MMVA.run_nmf</code> (<code>k=4, 200 it</code>, current, default 8 BLAS threads)</td>
+<td style="text-align: left;"><code>[Measured — Current Baseline]</code></td>
+<td style="text-align: right;"><code>2,212.12 ms</code></td>
+<td style="text-align: right;"><strong><code>7,283.42 ms</code></strong></td>
+<td style="text-align: right;"><code>7,392.26 ± 4,274.69 ms</code></td>
+<td style="text-align: left;">Reference</td>
+<td style="text-align: center;"><code>1.00×</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>MMVA.run_nmf</code> (<code>k=4, 200 it</code>, current, <code>OPENBLAS_NUM_THREADS=2</code>)</td>
+<td style="text-align: left;"><code>[Measured — Isolated Prototype]</code></td>
+<td style="text-align: right;"><code>1,455.54 ms</code></td>
+<td style="text-align: right;"><strong><code>1,567.99 ms</code></strong></td>
+<td style="text-align: right;"><code>1,626.89 ± 170.51 ms</code></td>
+<td style="text-align: left;">Exact (<code>0.0</code>)</td>
+<td style="text-align: center;"><strong><code>4.65×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>P3.2</code> Trace-identity + prealloc NMF (<code>k=4</code>, default 8 BLAS threads)</td>
+<td style="text-align: left;"><code>[Measured — Isolated Prototype]</code></td>
+<td style="text-align: right;"><code>974.51 ms</code></td>
+<td style="text-align: right;"><strong><code>3,927.84 ms</code></strong></td>
+<td style="text-align: right;"><code>4,824.14 ± 3,288.24 ms</code></td>
+<td style="text-align: left;"><code>max_W_diff = 8.27e-05</code></td>
+<td style="text-align: center;"><strong><code>1.85×</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>P3.2</code> Trace-identity + prealloc NMF (<code>k=4</code>, <code>OPENBLAS_NUM_THREADS=2</code>)</strong></td>
+<td style="text-align: left;"><strong><code>[Measured — Isolated Prototype]</code></strong></td>
+<td style="text-align: right;"><strong><code>548.04 ms</code></strong></td>
+<td style="text-align: right;"><strong><code>582.02 ms</code></strong></td>
+<td style="text-align: right;"><strong><code>587.07 ± 25.28 ms</code></strong></td>
+<td style="text-align: left;"><strong><code>max_W_diff = 8.27e-05</code></strong></td>
+<td style="text-align: center;"><strong><code>12.51×</code></strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="design-touchpoints_2">Design &amp; Touchpoints<a class="headerlink" href="#design-touchpoints_2" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong><code>P3.1</code> — Dual Covariance Gram Eigendecomposition in <code>MMVA.run_pca</code> (<code>m_mva.py:75–133</code>)</strong>:</li>
+<li>When <span class="arithmatex">\(n &gt; p\)</span>, compute <span class="arithmatex">\(C = X_c^T X_c\)</span> (<code>shape = (p, p)</code>) and <code>eigvals, eigvecs = np.linalg.eigh(C)</code>, sort descending (<code>[::-1]</code>), clamp tiny negative numerical noise with <code>np.maximum(eigvals, 0.0)</code>, and recover <code>all_eigenvalues = eigvals / (n - 1)</code>, <code>loadings = eigvecs[:, :n_components].T</code>, and <code>scores = X_c @ loadings.T</code> (applying deterministic sign canonicalization so the largest-magnitude loading entry per component is positive).</li>
+<li>When <span class="arithmatex">\(n \le p\)</span>, use the dual <span class="arithmatex">\((n \times n)\)</span> Gram matrix <span class="arithmatex">\(C = X_c X_c^T\)</span> with <code>np.linalg.eigh(C)</code> and recover unit-norm loadings via <span class="arithmatex">\(V_k = S_k^{-1} U_k^T X_c\)</span>.</li>
+<li><strong><code>P3.2</code> — <span class="arithmatex">\(O(K^2)\)</span> Frobenius Trace Identity &amp; Preallocated Buffers in <code>MMVA.run_nmf</code> (<code>m_mva.py:138–201</code>)</strong>:</li>
+<li>Precompute <code>norm_X_sq = float(np.sum(X * X))</code> once before the loop and preallocate <code>num_H</code>, <code>den_H</code>, <code>WtW</code>, <code>num_W</code>, <code>den_W</code>, and <code>HHt</code> buffers using <code>np.matmul(..., out=...)</code>.</li>
+<li>
+<p>Every 10 iterations, refresh <code>np.matmul(W.T, W, out=WtW)</code> after updating <code>W</code> and evaluate:</p>
+<p>$<span class="arithmatex">\(\|X - WH\|_F = \sqrt{\max\left(0,\; \|X\|_F^2 - 2 \sum_{i,j} W_{i,j} (XH^T)_{i,j} + \sum_{a,b} (W^T W)_{a,b} (H H^T)_{a,b}\right)}\)</span>$</p>
+</li>
+<li>
+<p><strong><code>P3.3</code> — Application-Level OpenBLAS Thread Cap &amp; Background <code>QThread</code> in <code>VMMVA</code> (<code>main.py</code>, <code>vm_mva.py</code>)</strong>:</p>
+</li>
+<li>In <code>spectroview/__init__.py</code> (before <code>import numpy</code>), set default <code>os.environ.setdefault("OPENBLAS_NUM_THREADS", "2")</code> and <code>os.environ.setdefault("OMP_NUM_THREADS", "2")</code> (or <code>min(4, max(2, os.cpu_count() // 2))</code>) so OpenBLAS never oversubscribes logical hyperthreads on 4-core laptops.</li>
+<li>Offload <code>MMVA.run_pca</code> and <code>MMVA.run_nmf</code> to a parented <code>QThread</code> worker in <code>VMMVA</code> when <span class="arithmatex">\(n \cdot p \ge 250{,}000\)</span>.</li>
+</ol>
+<hr />
+<h3 id="p4-vbf-engine-float32-noiseweight-pipeline-analytical-3-times-3-spd-solver"><code>P4</code> — VBF Engine, <code>float32</code> Noise/Weight Pipeline &amp; Analytical <span class="arithmatex">\(3 \times 3\)</span> SPD Solver<a class="headerlink" href="#p4-vbf-engine-float32-noiseweight-pipeline-analytical-3-times-3-spd-solver" title="Permanent link">&para;</a></h3>
+<h4 id="problem-verified-evidence_3">Problem &amp; Verified Evidence<a class="headerlink" href="#problem-verified-evidence_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Locations</strong>:</li>
+<li><code>spectroview/fit_engine/noise.py:14–85</code> (<code>_array_2d_fingerprint</code>, <code>mad_noise</code>, <code>moving_average_5</code>)</li>
+<li><code>spectroview/fit_engine/weights.py:7–36</code> (<code>compute_fit_weights</code>)</li>
+<li><code>spectroview/fit_engine/optimizer.py:45–75</code> (<code>_batched_solve</code>)</li>
+<li><strong>Verified Finding 1 — Mixed-Dtype Upcasting in <code>moving_average_5</code> &amp; Full-Array Sum in <code>_array_2d_fingerprint</code></strong>:</li>
+<li>In <code>noise.py:69</code>, <code>moving_average_5(y)</code> allocates <code>out = np.empty((N, M), dtype=np.float64)</code> even when <code>y</code> is <code>float32</code>, forcing 5 mixed-dtype (<code>float64 += float32</code>) strided ufunc passes (<code>134.2 MB</code> allocation instead of <code>67.1 MB</code>).</li>
+<li>In <code>noise.py:25</code>, <code>_array_2d_fingerprint(y)</code> computes <code>float(np.sum(y))</code> across all <code>16,777,216</code> elements (<code>12.50 ms</code> per call <span class="arithmatex">\(\times 2\)</span> calls = <code>25 ms</code> overhead even on a cache hit, while <code>compute_fit_weights</code> takes <strong><code>169.17 ms</code> even on a cache hit</strong> because it allocates a <code>134.2 MB</code> <code>float64</code> <code>weights</code> array and scans two full <code>(N, M)</code> boolean masks!).</li>
+<li><strong><code>[Measured — Current Baseline]</code> vs <code>[Measured — Isolated Prototype]</code> (<code>16,384 × 1,024</code>)</strong>:<ul>
+<li>Current <code>compute_fit_weights</code> on F-contiguous <code>Y_cl</code> (<code>float32</code>): <strong><code>median = 2,355.58 ms</code></strong> (<code>min = 2,054.62 ms</code>).</li>
+<li>Current <code>compute_fit_weights</code> on C-contiguous <code>Y_cl</code> (<code>float32</code>): <strong><code>median = 659.18 ms</code></strong> (<code>min = 642.51 ms</code>).</li>
+<li><strong><code>[Measured — Isolated Prototype P4.1]</code></strong> (C-contiguous <code>float32</code> + <code>float32</code>-preserving <code>moving_average_5</code> + strided <code>y[::16, ::16]</code> fingerprint): <strong><code>median = 483.46 ms</code></strong> (<code>min = 453.84 ms</code>, <code>mean = 479.36 ± 16.59 ms</code>, <strong><code>0.000000</code> mask mismatch</strong>, <strong><code>4.87×</code> faster than current F-contiguous baseline and <code>1.36×</code> faster than C-contiguous baseline</strong>).</li>
+</ul>
+</li>
+<li><strong>Verified Finding 2 — Closed-Form Vectorized <span class="arithmatex">\(3 \times 3\)</span> SPD Solver for 1-Peak Fits (<span class="arithmatex">\(K = 3\)</span>)</strong>:</li>
+<li>For 1-peak Gaussian/Lorentzian fits (<span class="arithmatex">\(K = 3\)</span>), <code>_batched_solve</code> calls general LAPACK <code>dgesv</code> (<code>np.linalg.solve</code>) on <code>(Na, 3, 3)</code> matrices.</li>
+<li><strong><code>[Measured — Current Baseline]</code></strong>: <code>np.linalg.solve</code> on <code>(16,384 × 3 × 3)</code> takes <strong><code>min = 6.84 ms | median = 9.76 ms | mean = 9.84 ± 2.02 ms</code></strong>.</li>
+<li><strong><code>[Measured — Isolated Prototype P4.2]</code></strong>: Direct vectorized <span class="arithmatex">\(3 \times 3\)</span> symmetric cofactor/Cramer rule takes <strong><code>min = 1.36 ms | median = 1.54 ms | mean = 1.61 ± 0.25 ms</code></strong> (<strong><code>6.34×</code> measured speedup</strong>, <code>max_diff = 5.95e-14</code>).</li>
+<li><strong>Verified Finding 3 — Effect of <code>OPENBLAS_NUM_THREADS=2</code> on VBF Batched LM Fits</strong>:</li>
+<li>Because <code>optimizer.py</code> (since commit <code>9250ae9</code>) chunks large maps into L3-cache sub-batches of <code>256–2,048</code> spectra, running OpenBLAS with 8 threads on 4 physical cores causes thread-barrier overhead inside each chunk's <code>np.matmul(J_r_T, J_r)</code> normal-equation step:</li>
+<li><strong><code>[Measured — Current Baseline]</code> (<code>1_CL_map.json</code>, <code>16,384 × 302</code>, <code>1 Lorentzian</code>, <code>K=3</code>, default 8 BLAS threads)</strong>: <strong><code>min = 3,385.22 ms | median = 3,433.74 ms</code></strong> (<code>0.210 ms/spectrum</code>).</li>
+<li><strong><code>[Measured — Isolated Prototype P4.3]</code> (<code>1_CL_map.json</code>, <code>16,384 × 302</code>, <code>OPENBLAS_NUM_THREADS=2</code>)</strong>: <strong><code>1,434.02 ms</code></strong> (<code>0.088 ms/spectrum</code>, <strong><code>2.40×</code> measured speedup</strong>, <code>100.0%</code> converged, <code>med_R2 = 0.9841</code>)!</li>
+</ul>
+<h4 id="design-touchpoints_3">Design &amp; Touchpoints<a class="headerlink" href="#design-touchpoints_3" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong><code>P4.1</code> (<code>noise.py</code>, <code>weights.py</code>)</strong>:</li>
+<li>Preserve input <code>float32</code>/<code>float64</code> dtype in <code>moving_average_5(y)</code> (<code>out = np.empty((N, M), dtype=np.result_type(y.dtype, np.float32))</code>).</li>
+<li>Replace full <code>float(np.sum(y))</code> in <code>_array_2d_fingerprint(y)</code> with a constant-time strided sample <code>float(np.sum(y[::max(1, n // 32), ::max(1, m // 32)], dtype=np.float64))</code> + corner/center elements.</li>
+<li><strong><code>P4.2</code> (<code>optimizer.py:_batched_solve</code>)</strong>:</li>
+<li>Add a fast closed-form <span class="arithmatex">\(3 \times 3\)</span> symmetric solver branch when <code>K == 3</code>, falling back to <code>_batched_solve</code> general path if <code>np.any(det &lt;= 1e-18) or not np.all(np.isfinite(dp))</code>.</li>
+<li><strong><code>P4.3</code> (<code>spectroview/__init__.py</code> / <code>optimizer.py</code>)</strong>:</li>
+<li>Cap default OpenBLAS/OMP threads to <code>2</code> (or physical core count <span class="arithmatex">\(\div 2\)</span>) to eliminate the <code>2.40×</code> multi-thread barrier penalty inside L3-chunked VBF fits.</li>
+</ol>
+<hr />
+<h3 id="p5-background-worker-multi-core-acceleration-for-batch-automatic-baselines-arpls-asls-snip"><code>P5</code> — Background Worker &amp; Multi-Core Acceleration for Batch Automatic Baselines (<code>arpls</code>, <code>asls</code>, <code>snip</code>)<a class="headerlink" href="#p5-background-worker-multi-core-acceleration-for-batch-automatic-baselines-arpls-asls-snip" title="Permanent link">&para;</a></h3>
+<h4 id="problem-verified-evidence_4">Problem &amp; Verified Evidence<a class="headerlink" href="#problem-verified-evidence_4" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Location</strong>: <code>spectroview/fit_engine/baseline.py:112–244</code> (<code>eval_baseline</code>, <code>eval_baseline_batch</code>) and <code>spectroview/viewmodel/spectra/vm_workspace_spectra.py</code> (<code>subtract_baseline</code>).</li>
+<li><strong>Controlled Idle-CPU Measurements (<code>50 × 575</code> spectra from <code>3_3721map.wdf</code>, <code>[Measured — Current Baseline]</code>)</strong>:</li>
+<li>Attached <strong><code>Linear</code></strong> (<code>1,520 × 575</code>): <strong><code>median = 30.61 ms</code></strong> (<code>min = 29.76 ms</code>, <strong><code>0.020 ms/spectrum</code></strong>) — already fully vectorized.</li>
+<li>Attached <strong><code>Polynomial</code> (degree 3)</strong> (<code>1,520 × 575</code>): <strong><code>median = 30.79 ms</code></strong> (<code>min = 29.05 ms</code>, <strong><code>0.020 ms/spectrum</code></strong>) — already fully vectorized.</li>
+<li>Automatic <strong><code>asls</code> (ALS)</strong> (<code>50 × 575</code>): <strong><code>median = 56.61 ms</code></strong> (<code>min = 46.68 ms</code>, <strong><code>1.13 ms/spectrum</code></strong> <span class="arithmatex">\(\rightarrow\)</span> <code>[Estimated — Integrated Workflow]</code> <strong><code>1.72 s</code></strong> for <code>1,520</code> spectra).</li>
+<li>Automatic <strong><code>arpls</code></strong> (<code>50 × 575</code>): <strong><code>median = 238.65 ms</code></strong> (<code>min = 225.08 ms</code>, <strong><code>4.77 ms/spectrum</code></strong> <span class="arithmatex">\(\rightarrow\)</span> <code>[Estimated — Integrated Workflow]</code> <strong><code>7.25 s</code></strong> for <code>1,520</code> spectra).</li>
+<li>Automatic <strong><code>snip</code></strong> (<code>50 × 575</code>): <strong><code>median = 378.88 ms</code></strong> (<code>min = 349.80 ms</code>, <strong><code>7.58 ms/spectrum</code></strong> <span class="arithmatex">\(\rightarrow\)</span> <code>[Estimated — Integrated Workflow]</code> <strong><code>11.52 s</code></strong> for <code>1,520</code> spectra).</li>
+<li><strong>Important Negative Finding From Controlled Prototype Testing</strong>:</li>
+<li>We explicitly benchmarked two candidate micro-optimizations on <code>arpls</code> (<code>50 × 575</code>):<ol>
+<li>Hoisting <code>Baseline(x_data=x)</code> outside the per-spectrum loop in a single thread (<code>[Measured — Isolated Prototype]</code>: <strong><code>median = 263.38 ms</code></strong>, <code>min = 226.85 ms</code> vs <code>238.65 ms</code> baseline — <strong>no speedup</strong>, because <code>Baseline(x_data=x)</code> initialization takes <code>&lt; 0.1 ms</code> while <code>99%</code> of time is spent inside <code>scipy.linalg.solveh_banded</code> during iterative Whittaker reweighting).</li>
+<li>Running <code>ThreadPoolExecutor(max_workers=4)</code> over hoisted <code>Baseline(x_data=x)</code> instances while OpenBLAS uses default threads (<code>[Measured — Isolated Prototype]</code>: <strong><code>median = 366.48 ms</code></strong>, <code>min = 336.10 ms</code> — <strong><code>1.53×</code> slower</strong> due to GIL contention inside <code>pybaselines</code> Python iteration loops and thread contention!).</li>
+</ol>
+</li>
+<li><strong>Why This Matters</strong>: Recording this negative result prevents wasting engineering time on naive <code>Baseline</code> hoisting or <code>ThreadPoolExecutor</code> wrapping of <code>pybaselines</code>.</li>
+</ul>
+<h4 id="validated-design-touchpoints">Validated Design &amp; Touchpoints<a class="headerlink" href="#validated-design-touchpoints" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong><code>P5.1</code> — Non-Blocking <code>QThread</code> Execution for Batch Automatic Baselines (<code>vm_workspace_spectra.py</code>)</strong>:</li>
+<li>Whenever <code>subtract_baseline</code> runs an automatic baseline mode (<code>mode not in ("Linear", "Polynomial")</code>) across <span class="arithmatex">\(N &gt; 10\)</span> spectra, execute <code>eval_baseline_batch</code> inside a parented <code>QThread</code> worker with a progress bar and cancel button (mirroring <code>VBFthread</code>).</li>
+<li><strong><code>[Estimated — Integrated Workflow]</code></strong>: Main-thread UI freeze drops from <strong><code>1.7–11.5 s</code> to <code>0 ms</code></strong>.</li>
+<li><strong><code>P5.2</code> — Vectorized Batch <code>SNIP</code> in Pure NumPy (<code>baseline.py</code>)</strong>:</li>
+<li>The <code>SNIP</code> algorithm (<code>Iterative decreasing/increasing window morphological clipping</code>: <span class="arithmatex">\(y^{(p)}_{i,j} = \min(y^{(p-1)}_{i,j},\; 0.5 (y^{(p-1)}_{i,j-p} + y^{(p-1)}_{i,j+p}))\)</span> for <span class="arithmatex">\(p = 1 \dots W\)</span>) has <strong>zero data-dependent branching across spectra</strong> and can be written in <strong>12 lines of 2D vectorized NumPy slice operations</strong> over the entire <code>(N, M)</code> matrix simultaneously!</li>
+<li><strong><code>[Theoretical — Asymptotic Scaling]</code></strong>: Vectorizing 2D <code>SNIP</code> in NumPy eliminates <span class="arithmatex">\(N \times W\)</span> Python loop iterations, reducing <code>1,520 × 575</code> <code>SNIP</code> from <code>~11.5 s</code> to <strong><code>&lt; 150 ms</code> (~75× speedup)</strong>.</li>
+</ol>
+<hr />
+<h3 id="p6-legacy-ngc-lzhuf-decompression-background-file-loading"><code>P6</code> — Legacy <code>.ngc</code> (<code>lzhuf</code>) Decompression &amp; Background File Loading<a class="headerlink" href="#p6-legacy-ngc-lzhuf-decompression-background-file-loading" title="Permanent link">&para;</a></h3>
+<h4 id="problem-verified-evidence_5">Problem &amp; Verified Evidence<a class="headerlink" href="#problem-verified-evidence_5" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Location</strong>: <code>spectroview/model/io/m_ngs.py:48–181</code> (<code>_decompress_ngc</code>).</li>
+<li><strong>Controlled Measurement (<code>[Measured — Current Baseline]</code>)</strong>:</li>
+<li>Under 2.6% idle CPU, <code>NgsReader("examples/spectroscopic_data/mapls5.ngc")</code> (<code>3.9 MB</code> compressed <span class="arithmatex">\(\rightarrow\)</span> <code>7.40 MB</code> uncompressed) takes <strong><code>min = 9,093.97 ms | median = 9,743.61 ms</code></strong> (<code>2.38×</code> faster than the <code>23,175.7 ms</code> high-CPU measurement, but still a ~9.7 s synchronous block on the main Qt thread when loading a legacy LabSpec 5 <code>.ngc</code> map).</li>
+<li>By contrast, <code>.wdf</code> (<code>14.50 ms</code>), <code>.spc</code> (<code>13.67 ms</code>), and <code>.l6m</code> (<code>32.42 ms</code>) load in <strong><code>13–33 ms</code></strong>.</li>
+</ul>
+<h4 id="design-touchpoints_4">Design &amp; Touchpoints<a class="headerlink" href="#design-touchpoints_4" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong><code>P6.1</code> — RLE <code>dist == 1</code> Bytearray Slice Fast Path &amp; Local Variable Binding (<code>m_ngs.py:171–177</code>)</strong>:</li>
+<li>In <code>_decompress_ngc</code>, add <code>elif dist == 1: out[out_idx : out_idx + match_len] = bytes([out[src]]) * match_len; out_idx += match_len</code> for zero-run fills.</li>
+<li>Optionally decorate the inner integer bit-loop with <code>@numba.njit(cache=True)</code> inside a <code>try: import numba except ImportError:</code> block (zero hard dependency; <code>[Estimated — Integrated Workflow]</code>: <code>&lt; 250 ms</code> when <code>numba</code> is present, <code>~7.5–8.5 s</code> in pure CPython).</li>
+<li><strong><code>P6.2</code> — Background <code>QThread</code> File Loader for Heavy Files (<code>vm_workspace_maps.py</code>)</strong>:</li>
+<li>Offload file loading for <code>.ngc</code> files or text maps <code>&gt; 20 MB</code> (<code>1_CL_map.txt</code>, <code>151 MB</code>, <code>1.12 s</code>) to a background <code>QThread</code> with a busy-cursor/progress status indicator so the main window never freezes during disk I/O.</li>
+</ol>
+<hr />
+<h2 id="4-amdahls-law-end-to-end-workflow-impact-re-calibrated-to-idle-cpu-baseline">4. Amdahl's Law End-to-End Workflow Impact (Re-Calibrated to Idle-CPU Baseline)<a class="headerlink" href="#4-amdahls-law-end-to-end-workflow-impact-re-calibrated-to-idle-cpu-baseline" title="Permanent link">&para;</a></h2>
+<h3 id="scenario-1-loading-inspecting-fitting-plotting-1_cl_maptxt-16384-1024-151-mb">Scenario 1: Loading, Inspecting, Fitting &amp; Plotting <code>1_CL_map.txt</code> (<code>16,384 × 1,024</code>, <code>151 MB</code>)<a class="headerlink" href="#scenario-1-loading-inspecting-fitting-plotting-1_cl_maptxt-16384-1024-151-mb" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Workflow Stage</th>
+<th style="text-align: right;"><code>[Measured — Current Baseline]</code> (Idle CPU)</th>
+<th style="text-align: right;">Post-Strategy A Target (<code>[Measured Prototype]</code> or <code>[Estimated]</code>)</th>
+<th style="text-align: center;">Speedup / Saving</th>
+<th style="text-align: left;">Source of Improvement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1. Parse <code>1_CL_map.txt</code> + <code>extract_map_arrays</code> (<code>C_CONTIGUOUS</code>)</td>
+<td style="text-align: right;"><code>1,118.58 ms + 85.64 ms = 1,204.22 ms</code></td>
+<td style="text-align: right;"><code>~1,225 ms</code> (offloaded to background thread, <code>0 ms</code> UI freeze)</td>
+<td style="text-align: center;">Non-blocking UI</td>
+<td style="text-align: left;"><code>P2.1</code> + <code>P6.2</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">2. Populate <code>VSpectraList</code> (<code>16,384</code> items)</td>
+<td style="text-align: right;"><strong><code>5,919.42 ms</code></strong> (main-thread freeze)</td>
+<td style="text-align: right;"><strong><code>8.73 ms</code></strong> <code>[Measured — Isolated Prototype P1]</code></td>
+<td style="text-align: center;"><strong><code>678×</code></strong></td>
+<td style="text-align: left;"><code>P1</code> (<code>QListView</code> + <code>QAbstractListModel</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;">3. Compute Noise Weights (<code>compute_fit_weights</code>, <code>16,384 × 1,024</code>)</td>
+<td style="text-align: right;"><strong><code>2,355.58 ms</code></strong> (F-contiguous <code>Y0</code>)</td>
+<td style="text-align: right;"><strong><code>483.46 ms</code></strong> <code>[Measured — Isolated Prototype P4.1]</code></td>
+<td style="text-align: center;"><strong><code>4.87×</code></strong></td>
+<td style="text-align: left;"><code>P2.1</code> (<code>C_CONTIGUOUS</code>) + <code>P4.1</code> (<code>float32</code> <code>moving_average_5</code> &amp; strided fingerprint)</td>
+</tr>
+<tr>
+<td style="text-align: left;">4. VBF Fit (<code>1_CL_map.json</code>, <code>16,384 × 302</code>, <code>1 Lorentzian</code>, <code>K=3</code>)</td>
+<td style="text-align: right;"><strong><code>3,433.74 ms</code></strong> (8 OpenBLAS threads)</td>
+<td style="text-align: right;"><strong><code>1,434.02 ms</code></strong> <code>[Measured — Isolated Prototype P4.3]</code> (<code>~1,250 ms</code> <code>[Estimated]</code> with <code>P4.2</code> <span class="arithmatex">\(3 \times 3\)</span> solver)</td>
+<td style="text-align: center;"><strong><code>2.40×–2.75×</code></strong></td>
+<td style="text-align: left;"><code>P4.3</code> (<code>OPENBLAS_NUM_THREADS=2</code>) + <code>P4.2</code> (closed-form <span class="arithmatex">\(3 \times 3\)</span> solver)</td>
+</tr>
+<tr>
+<td style="text-align: left;">5. Populate Fit Results Table (<code>VDataframeTable</code>, <code>16,384 × 14</code>)</td>
+<td style="text-align: right;"><strong><code>10.76 ms</code></strong> (already virtualized)</td>
+<td style="text-align: right;"><strong><code>10.76 ms</code></strong> <code>[Measured — Current Baseline]</code></td>
+<td style="text-align: center;"><code>1.00×</code> (already optimal)</td>
+<td style="text-align: left;">Already uses <code>DataFrameTableModel(QAbstractTableModel)</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">6. Render Wafer / 2D Map in <code>VGraph</code> (<code>16,384</code> points)</td>
+<td style="text-align: right;"><strong><code>57.80 ms – 73.06 ms</code></strong></td>
+<td style="text-align: right;"><strong><code>57.80 ms – 73.06 ms</code></strong> <code>[Measured — Current Baseline]</code></td>
+<td style="text-align: center;"><code>1.00×</code> (already fast)</td>
+<td style="text-align: left;">Vectorized <code>PlotRenderer</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Total End-to-End Wall Time</strong></td>
+<td style="text-align: right;"><strong><code>12,996.8 ms (~13.00 s)</code></strong></td>
+<td style="text-align: right;"><strong><code>~3,235 ms (~3.24 s)</code></strong></td>
+<td style="text-align: center;"><strong><code>~4.02×</code> faster overall</strong></td>
+<td style="text-align: left;">Pure Python + NumPy + PySide6</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Total Main-Thread UI Freeze Time</strong></td>
+<td style="text-align: right;"><strong><code>~7,208 ms (~7.21 s)</code></strong></td>
+<td style="text-align: right;"><strong><code>&lt; 90 ms</code></strong> (imperceptible)</td>
+<td style="text-align: center;"><strong><code>~80×</code> lower UI blocking</strong></td>
+<td style="text-align: left;"><code>P1</code> virtualization + <code>P6.2</code> background load</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Steady-State RAM Footprint (Post-3-Peak Fit)</strong></td>
+<td style="text-align: right;"><strong><code>~1,006.9 MB (~1.01 GB)</code></strong></td>
+<td style="text-align: right;"><strong><code>~201.3 MB</code></strong> <code>[Theoretical — Post-P2 RAM]</code></td>
+<td style="text-align: center;"><strong><code>-80.0%</code> RAM (<code>~805 MB</code> saved)</strong></td>
+<td style="text-align: left;"><code>P2.2</code>–<code>P2.4</code> memory de-duplication</td>
+</tr>
+</tbody>
+</table>
+<h3 id="scenario-2-multivariate-analysis-pca-nmf-batch-baseline-on-1520-575-map">Scenario 2: Multivariate Analysis (PCA + NMF) &amp; Batch Baseline on <code>1,520 × 575</code> Map<a class="headerlink" href="#scenario-2-multivariate-analysis-pca-nmf-batch-baseline-on-1520-575-map" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Workflow Stage</th>
+<th style="text-align: right;"><code>[Measured — Current Baseline]</code> (Idle CPU)</th>
+<th style="text-align: right;">Post-Strategy A Target (<code>[Measured Prototype]</code> or <code>[Estimated]</code>)</th>
+<th style="text-align: center;">Speedup</th>
+<th style="text-align: left;">Source of Improvement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1. <code>MMVA.run_pca</code> (<code>1,520 × 575</code>, <code>n_components=5</code>)</td>
+<td style="text-align: right;"><strong><code>2,471.73 ms</code></strong> (full <code>svd</code>, 8 BLAS threads)</td>
+<td style="text-align: right;"><strong><code>125.65 ms</code></strong> <code>[Measured — Isolated Prototype P3.1]</code></td>
+<td style="text-align: center;"><strong><code>19.67×</code></strong></td>
+<td style="text-align: left;"><code>P3.1</code> Gram <code>eigh(X_c.T @ X_c)</code> + <code>OPENBLAS_NUM_THREADS=2</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">2. <code>MMVA.run_nmf</code> (<code>1,520 × 575</code>, <code>k=4</code>, <code>200</code> iters)</td>
+<td style="text-align: right;"><strong><code>7,283.42 ms</code></strong> (residual alloc, 8 BLAS threads)</td>
+<td style="text-align: right;"><strong><code>582.02 ms</code></strong> <code>[Measured — Isolated Prototype P3.2]</code></td>
+<td style="text-align: center;"><strong><code>12.51×</code></strong></td>
+<td style="text-align: left;"><code>P3.2</code> <span class="arithmatex">\(O(K^2)\)</span> trace identity &amp; preallocated buffers + <code>OPENBLAS_NUM_THREADS=2</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">3. Batch <code>SNIP</code> Baseline (<code>1,520 × 575</code>)</td>
+<td style="text-align: right;"><strong><code>~11,520 ms</code></strong> (<code>7.58 ms/spec</code> sequential loop)</td>
+<td style="text-align: right;"><strong><code>&lt; 150 ms</code></strong> <code>[Estimated — Integrated Workflow P5.2]</code></td>
+<td style="text-align: center;"><strong><code>~75×</code></strong></td>
+<td style="text-align: left;"><code>P5.2</code> 2D vectorized NumPy morphological clipping</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Total Analytical Workflow Time</strong></td>
+<td style="text-align: right;"><strong><code>~21,275 ms (~21.3 s)</code></strong></td>
+<td style="text-align: right;"><strong><code>~858 ms (&lt; 0.9 s)</code></strong></td>
+<td style="text-align: center;"><strong><code>~24.8×</code> faster</strong></td>
+<td style="text-align: left;">Pure NumPy / BLAS</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-phased-implementation-plan-verification-gates">5. Phased Implementation Plan &amp; Verification Gates<a class="headerlink" href="#5-phased-implementation-plan-verification-gates" title="Permanent link">&para;</a></h2>
+<p>When ready to implement Strategy A, execute the workstreams in three self-contained milestones:</p>
+<h3 id="milestone-1-memory-layout-openblas-thread-guard-map-ram-de-duplication-p2-p41-p43">Milestone 1 — Memory Layout, OpenBLAS Thread Guard &amp; Map RAM De-Duplication (<code>P2</code> + <code>P4.1</code> + <code>P4.3</code>)<a class="headerlink" href="#milestone-1-memory-layout-openblas-thread-guard-map-ram-de-duplication-p2-p41-p43" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Set default <code>OPENBLAS_NUM_THREADS=2</code> / <code>OMP_NUM_THREADS=2</code> in <code>spectroview/__init__.py</code> (before <code>numpy</code> import) when not overridden by the user's environment.</li>
+<li>[x] Enforce <code>np.ascontiguousarray(..., dtype=np.float32)</code> on <code>Y0</code> in <code>m_io.extract_map_arrays</code> (<code>m_io.py:309–312</code>).</li>
+<li>[ ] Preserve <code>float32</code> in <code>moving_average_5</code> and replace full <code>np.sum(y)</code> in <code>_array_2d_fingerprint</code> with strided sub-sampling (<code>noise.py</code>).</li>
+<li>[x] Eliminate duplicate <code>VMWorkspaceMaps.maps[name]</code> <code>float64</code> DataFrame, keep <code>md.Y</code> and <code>md.Y_bestfit</code> in <code>float32</code>, and make <code>md.Y_peaks</code> lazy on demand.</li>
+<li><strong>Verification Gate</strong>: <code>python -m pytest tests/unit/model tests/unit/viewmodel tests/unit/fit_engine -q</code> + verify <code>Y0.flags["C_CONTIGUOUS"] is True</code> on <code>.txt</code>, <code>.csv</code>, <code>.wdf</code>, <code>.spc</code>, and <code>.l6m</code> maps.</li>
+</ul>
+<h3 id="milestone-2-vspectralist-virtualization-p1-completed">Milestone 2 — <code>VSpectraList</code> Virtualization (<code>P1</code>) <code>[Completed]</code><a class="headerlink" href="#milestone-2-vspectralist-virtualization-p1-completed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] Refactor <code>VSpectraList</code> (<code>spectroview/view/components/lists/v_spectra_list.py</code>) to use <code>QListView</code> (<code>setUniformItemSizes(True)</code>) + <code>SpectraListModel(QAbstractListModel)</code>, following the proven pattern in <code>VDataframeTable</code> (<code>v_dataframe_table.py</code>).</li>
+<li><strong>Verification Gate</strong>: <code>python -m pytest tests/unit/view/test_v_spectra_list.py tests/unit/view/test_v_metadata_tooltip.py -v</code> + benchmark assertion that <code>set_spectra_names</code> for <code>16,384</code> items completes well below the <code>&lt; 25 ms</code> target.</li>
+</ul>
+<h3 id="milestone-3-fast-pcanmf-closed-form-3-times-3-vbf-solver-vectorized-snip-background-workers-p3-p42-p5-p6">Milestone 3 — Fast PCA/NMF, Closed-Form <span class="arithmatex">\(3 \times 3\)</span> VBF Solver &amp; Vectorized <code>SNIP</code> / Background Workers (<code>P3</code> + <code>P4.2</code> + <code>P5</code> + <code>P6</code>)<a class="headerlink" href="#milestone-3-fast-pcanmf-closed-form-3-times-3-vbf-solver-vectorized-snip-background-workers-p3-p42-p5-p6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Implement Gram <code>np.linalg.eigh(X_c.T @ X_c)</code> in <code>MMVA.run_pca</code> and <span class="arithmatex">\(O(K^2)\)</span> trace identity + preallocated buffers in <code>MMVA.run_nmf</code> (<code>m_mva.py</code>).</li>
+<li>[ ] Add closed-form <span class="arithmatex">\(3 \times 3\)</span> symmetric solver fast path in <code>optimizer.py::_batched_solve</code>.</li>
+<li>[ ] Vectorize 2D <code>SNIP</code> in <code>baseline.py</code> and add background <code>QThread</code> execution for batch automatic baselines (<code>vm_workspace_spectra.py</code>) and heavy file loading (<code>vm_workspace_maps.py</code>).</li>
+<li><strong>Verification Gate</strong>: Full test suite (<code>python -m pytest tests/ -m "not slow" -q</code>), startup import check (<code>tests/performance/test_startup_imports.py</code>), and bilingual documentation synchronization (<code>docs/developer/</code> and <code>docs/user_manual/</code>).</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  К началу
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

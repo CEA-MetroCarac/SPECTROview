@@ -1,0 +1,2971 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="用于光谱数据处理、拟合与可视化的交互式工具">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/zh/developer/vbf_engine/">
+      
+      
+        <link rel="prev" href="../graphs/">
+      
+      
+        <link rel="next" href="../mva/">
+      
+      
+        
+          <link rel="alternate" href="../../../developer/vbf_engine/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/developer/vbf_engine/" hreflang="fr">
+        
+          <link rel="alternate" href="../../../de/developer/vbf_engine/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/developer/vbf_engine/" hreflang="ru">
+        
+          <link rel="alternate" href="./" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>向量化批量拟合引擎 (VBF) - SPECTROview 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#developer-guide-vectorized-batch-fit-engine-vbf" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../" title="SPECTROview 文档" class="md-header__button md-logo" aria-label="SPECTROview 文档" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SPECTROview 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              向量化批量拟合引擎 (VBF)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="选择当前语言"
+      title="选择当前语言"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">ZH</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../developer/vbf_engine/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/developer/vbf_engine/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/developer/vbf_engine/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/developer/vbf_engine/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="zh"
+              class="md-select__link" aria-current="true"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  安装
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  用户手册
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI 智能体
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  开发者指南
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  更新日志
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="SPECTROview 文档" class="md-nav__button md-logo" aria-label="SPECTROview 文档" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    SPECTROview 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    安装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    用户手册
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    用户手册
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    支持的数据格式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    界面概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    菜单栏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱与二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多元分析 (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷计算器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    设置
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    保存与加载
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷键与技巧
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    开发者指南
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    开发者指南
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    文件加载流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据架构 SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    向量化批量拟合引擎 (VBF)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    向量化批量拟合引擎 (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-why-the-vbf-engine-is-much-faster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 为什么 VBF Engine 的速度快得多
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-performance-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 性能优化
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-code-logic-and-core-implementation-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 代码逻辑与核心实现原则
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 代码逻辑与核心实现原则">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-the-mathematics-of-batched-lm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1. 批量 LM 的数学原理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-independent-convergence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2. 独立收敛机制
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-robust-loss-functions-irls-style-scaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3. 鲁棒损失函数（IRLS 风格加权）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-folder-and-class-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 目录与类结构
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-processing-pipeline-execution-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 处理流水线 / 执行流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 处理流水线 / 执行流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-vbfthreadrun-task-orchestration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1. VBFthread.run() — 任务编排
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-vbfenginefit_spectra-the-numerical-core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2. VBFengine.fit_spectra() — 数值核心
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-the-vbfevaluator-in-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. VBFevaluator 详解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. VBFevaluator 详解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-parameter-space-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1. 参数空间映射
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-expression-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2. 表达式支持
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-model-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3. 模型路由
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-batched-peak-models-and-analytical-jacobians" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 批量峰型模型与解析雅可比矩阵
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. 批量峰型模型与解析雅可比矩阵">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-tensor-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1. 张量约定
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-registered-models-batched_models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2. 已注册模型（BATCHED_MODELS）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-numerical-jacobian-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3. 数值雅可比矩阵回退
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-the-vbfthread" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. VBFthread 线程类
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. VBFthread 线程类">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-task-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1. 任务分支
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-macos-stack-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2. macOS 栈空间大小
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3. 信号
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-optimization-parameters-and-adjustments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 优化参数与调优
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. 优化参数与调优">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-key-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1. 关键参数
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-tuning-for-performance-vs-accuracy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2. 性能与精度的权衡调优
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-damping-schedule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3. 阻尼调节策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-noise-level-estimation-and-noise-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 噪声水平估计与噪声阈值
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. 噪声水平估计与噪声阈值">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-how-noise-level-is-estimated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1. 如何估计噪声水平
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-how-coef_noise-activates-noise-thresholding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2. coef_noise 如何激活噪声阈值过滤
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10.2. coef_noise 如何激活噪声阈值过滤">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1021-mechanism-a-weight-masking-vbfthread_prepare_weights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2.1. 机制 A —— 权重掩蔽（VBFthread._prepare_weights）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1022-mechanism-b-peak-suppression-vbfevaluatorapply_noise_threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2.2. 机制 B —— 峰抑制（VBFevaluator.apply_noise_threshold）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-performance-and-precision-benefits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3. 性能与精度收益
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10.3. 性能与精度收益">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1031-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3.1. 性能
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1032-precision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3.2. 精度
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104-practical-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4. 实际示例
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#105-choosing-the-right-coef_noise-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.5. 如何选择合适的 coef_noise 值
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-adding-new-peak-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. 添加新峰型模型
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. 添加新峰型模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-fast-path-analytical-jacobian-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1. 快速路径：解析雅可比矩阵（推荐）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-slow-path-scalar-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2. 慢速路径：标量回退
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-registration-in-the-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3. 在应用程序中注册
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-timing-and-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. 计时与诊断
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. 计时与诊断">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-r2-computation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.1. R² 计算
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多元分析 (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    本地 MCP 服务器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱工作区（加载、预处理、拟合）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区（高光谱、热图）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据可视化（图表）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷计算器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    扩展 SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    更新日志
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="导航栏" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    首页
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    开发者指南
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="developer-guide-vectorized-batch-fit-engine-vbf"><strong>开发者指南：向量化批量拟合引擎 (VBF)</strong><a class="headerlink" href="#developer-guide-vectorized-batch-fit-engine-vbf" title="Permanent link">&para;</a></h1>
+<p>本文档深入介绍位于 <code>spectroview/fit_engine/</code> 中的向量化批量拟合引擎（<code>VBF</code>）的内部机制、软件架构与性能特征。</p>
+<hr />
+<h2 id="1-why-the-vbf-engine-is-much-faster"><strong>1. 为什么 <code>VBF Engine</code> 的速度快得多</strong><a class="headerlink" href="#1-why-the-vbf-engine-is-much-faster" title="Permanent link">&para;</a></h2>
+<p>传统的拟合引擎以<strong>逐条光谱（per-spectrum）</strong>的方式运行。对于包含数千条光谱的高光谱二维图谱，这种方式会引入显著开销：</p>
+<ul>
+<li><strong>Python 函数调用开销</strong>：每次迭代都需要调用目标函数与雅可比矩阵估计器数千次。</li>
+<li><strong>有限差分雅可比矩阵</strong>：数值近似求解雅可比矩阵时，每条光谱每次迭代都需要额外执行 <code>2 * K</code> 次函数求值（其中 K 为参数数量）。</li>
+<li><strong>顺序执行瓶颈</strong>：即使采用多进程并行，数据序列化与进程间通信开销依然会成为性能瓶颈。</li>
+</ul>
+<p><strong>向量化批量拟合引擎（<code>VBF Engine</code>）</strong>通过以下核心设计原则实现了数量级的加速：</p>
+<ol>
+<li><strong>整体同步优化</strong>：同时对全部 <span class="arithmatex">\(N\)</span> 条光谱执行联合优化。参数矩阵、数据数组和残差均作为大型二维或三维张量进行统一运算。</li>
+<li><strong>向量化运算（BLAS/LAPACK）</strong>：通过将拟合问题张量化，核心计算被下沉至高度优化的 C/Fortran 底层数值库：<ul>
+<li>法方程（<span class="arithmatex">\(J^T J\)</span> 与 <span class="arithmatex">\(J^T r\)</span>）的矩阵乘法与转置均通过 <code>np.matmul</code> 完成，并调度至批量 BLAS <code>gemm</code> 调用。（早期版本曾使用 <code>np.einsum</code>，但 <code>einsum</code> 对该缩并模式无法调度至 BLAS，实测慢 13–20× —— 参见 §2。）</li>
+<li>所有光谱的线性方程组直接针对 <code>(Na, K, K)</code> 张量通过<strong>批量 <code>np.linalg.solve</code></strong>（<code>np.linalg.solve(A, b[..., None])[..., 0]</code>）求解，在单次 LAPACK 批量调用中完成全部独立方程组求解而无需 Python 循环；仅在触发奇异矩阵 <code>LinAlgError</code> 时回退至逐矩阵 Cholesky/<code>np.linalg.solve</code>/<code>0.0</code> 处理。参见 §2 中的 <code>_batched_solve()</code>。</li>
+</ul>
+</li>
+<li><strong>解析雅可比矩阵</strong>：引擎不采用数值微分估算导数，而是为每一种已注册的峰型（<code>Gaussian</code>、<code>Lorentzian</code>、<code>PseudoVoigt</code>、<code>GaussianAsym</code>、<code>LorentzianAsym</code>、<code>Fano</code>、<code>DecaySingleExp</code>、<code>DecayBiExp</code>）提供精确的解析导数公式，从而彻底消除了 <span class="arithmatex">\(2K\)</span> 次额外函数求值。</li>
+<li><strong>无空间传播依赖</strong>：与早期采用螺旋遍历、按邻域顺序依次传递初值猜测的二维图谱拟合策略（强制顺序执行）不同，<code>VBF Engine</code> 通过幅值缩放对所有像素进行独立初始化，从而实现纯粹并行的张量数学计算。</li>
+<li><strong>可变长度 X 轴支持</strong>：当各条光谱不共享统一的 X 轴时，<code>x</code> 会作为 <code>(N, M)</code> 矩阵而非 <code>(M,)</code> 向量传入，所有批量模型函数与雅可比函数均依据 <code>x.ndim</code> 自动分支，实现按行而非按列的广播计算。</li>
+<li><strong>参数表达式支持</strong>：在将参数映射为自由参数之前，先对批处理中的数学约束表达式进行符号化求值，从而支持参数之间复杂的数学关系约束。</li>
+</ol>
+<hr />
+<h2 id="2-performance-optimizations"><strong>2. 性能优化</strong><a class="headerlink" href="#2-performance-optimizations" title="Permanent link">&para;</a></h2>
+<p>以下优化项专门针对 <code>fit_engine/</code> 中的数值计算核心。预处理层面的优化（范围裁剪、针对整幅二维图谱张量的基线评估）位于 <code>SpectraStore.batch_preprocess()</code> 中，详见 <a href="../spectra_store/">spectra_store.md</a>。</p>
+<ol>
+<li><strong>使用 <code>np.matmul</code> 替代 <code>np.einsum</code> 组装批量法方程</strong>（在典型 N/M/K 规模下实测，计算 <span class="arithmatex">\(J^TJ\)</span> 快 13–20×，计算 <span class="arithmatex">\(J^Tr\)</span> 快 3–4×）：<code>np.einsum('nmk,nml-&gt;nkl', J, J)</code> 针对此类缩并模式不会分派至 BLAS，而是回退至通用归约循环；数学上完全等价的 <code>J.transpose(0, 2, 1) @ J</code> 则会直接调度至批量 BLAS <code>gemm</code> 调用。</li>
+<li><strong>跳过被拒绝步长的冗余雅可比与法方程重算</strong>：当一次 LM 试探步被拒绝时，对应光谱的参数保持不变，因此其雅可比矩阵以及 <span class="arithmatex">\(J^TJ\)</span>/<span class="arithmatex">\(J^Tr\)</span> 依然完全有效，重试前仅需调整阻尼因子。<code>optimizer.py</code> 会按光谱缓存 <span class="arithmatex">\(J^TJ\)</span>/<span class="arithmatex">\(J^Tr\)</span>（<code>JTJ_cache</code>、<code>JTr_cache</code>），并仅对<em>上一步</em>被接受的光谱（通过布尔数组 <code>dirty</code> 追踪）重新计算，而非在每次迭代中对所有活跃光谱全部重算。这是数学上完全精确的优化而非近似——经验证相比全量重算引入的额外数值漂移为零。在收敛较慢的二维图谱上（许多光谱需要在递增阻尼下于同一点反复试探），约 30% 的活跃光谱迭代属于被拒绝的试探步，因此该机制可直接省去两项最耗时操作约 30% 的计算量。</li>
+<li><strong>受保护的 <code>np.nan_to_num</code> 调用</strong>：<code>np.nan_to_num</code> 即使在数组完全正常时也会执行三次完整的全数组扫描（<code>isnan</code>/<code>isposinf</code>/<code>isneginf</code>）以及花式索引赋值——而绝大多数迭代中数组都是正常的。<code>optimizer._finite_or_clean()</code> 先通过单次融合遍历检查 <code>np.isfinite(arr).all()</code>，仅当确实存在非有限值时才执行清理操作，在常见正常路径上提速约 10×。</li>
+<li><strong>无临时分配的原位模型与雅可比计算核</strong>：<code>models.py</code> 中的每个函数均只计算一次重复出现的量（<code>1/w²</code>、<code>1/w³</code>、<code>dx²</code> 等）并加以复用，用单次 <code>(N,1)</code> 倒数计算配合广播乘法（<code>inv_wl = 1.0 / wl</code>、<code>inv_wr = 1.0 / wr</code>）替代重复的 <code>(N,M)</code> 规模除法运算，并从第一步算术运算起就直接写入预分配的 <code>out=</code> 缓冲区（<code>np.subtract(..., out=out)</code>）。全部 8 个解析雅可比函数（<code>batched_*_jac</code>）均将偏导数直接原位写入 <code>J[:, :, k]</code> 切片视图，并利用代数恒等式 <span class="arithmatex">\(\frac{\partial f}{\partial w} = \frac{x - x_0}{w} \frac{\partial f}{\partial x_0}\)</span>（<code>J[:, :, 1] = dx * J[:, :, 2] * inv_w</code>），每次迭代每个峰可消除 3–6 次 <code>(N, M)</code> 堆内存临时分配。<code>scalar_models.py</code> 中的标量参考模型采用完全一致的 <code>1e-15</code> 宽度下限与 <code>1e-30</code> 寿命钳位，以确保与 <code>BATCHED_MODELS</code> 之间达到机器精度级一致（<span class="arithmatex">\(\le 10^{-13}\)</span>）。</li>
+<li><strong>共享噪声基底统计量、二维记忆化缓存与 O(N) 峰位索引查找</strong>：<code>apply_noise_threshold()</code> 在拟合前（用于生成干净的初始猜测）和拟合后（用于清理漂移进噪声区的峰——参见 §5.2 与 §10）各运行一次。两次调用均复用 <code>VBFevaluator.compute_noise_stats()</code> 缓存的统计信息；同时 <code>noise.py</code> 会缓存 1 条防篡改的二维数组指纹（<code>_array_2d_fingerprint</code>），使紧邻调用的 <code>compute_fit_weights(Y, fit_params)</code> 与 <code>compute_noise_stats(Y, coef_noise)</code> 无需对同一矩阵重复计算两次 <code>mad_noise(Y)</code> 和 <code>moving_average_5(Y)</code>。峰位到网格的索引查找采用 O(1) 等距算术计算、O(N log M) <code>np.searchsorted</code> 或 256 分块回退策略，避免分配 <code>(N, M)</code> 规模的距离矩阵。</li>
+<li><strong>批量线性求解器（<code>_batched_solve()</code>）</strong>：无论批量大小或参数个数如何，均通过单次 NumPy 批量调用 <code>np.linalg.solve(A, b[..., None])[..., 0]</code> 求解所有活跃的 <code>(Na, K, K)</code> 法方程组；仅在遇到奇异矩阵 <code>LinAlgError</code> 时，才对单矩阵回退使用 SciPy <code>cho_solve</code> / <code>np.linalg.solve</code> / <code>0.0</code>。</li>
+<li><strong>基于边界裁剪后平均位移的收敛判据</strong>：收敛检查基于边界裁剪后的实际参数位移（<code>p_trial_active - p_improved_old</code>）计算 <code>mean(|dp_actual| / |p|) &lt; xtol</code>，而非使用未受约束的 <code>dp</code> 或 <code>max()</code>，从而避免缓慢漂移的峰翼或卡在边界上的参数拖延整条光谱直至达到 <code>max_iter</code>。</li>
+<li><strong>向量化结果回写</strong>：<code>build_results_batch()</code> 复用单个 <code>(N, M)</code> 残差缓冲区同时计算所有光谱的最优拟合曲线与 R²，并在 <code>weights</code> 为全 1 均匀权重时跳过冗余乘法——全程无任何逐光谱 Python 循环。</li>
+<li><strong>零权重早退与均匀权重快速路径</strong>：被判定为纯噪声的光谱（所有权重均为零）会被立即标记为已收敛；而当 <code>weights</code> 为 <code>None</code> 或均匀 <code>1.0</code> 时，系统会直接绕过每次迭代中对残差和雅可比矩阵的 <code>(N, M)</code> 权重乘法。</li>
+<li><strong>转置 <code>(K, N, M)</code> 雅可比内存布局与零拷贝全批次快速路径</strong>：<code>batched_levenberg_marquardt()</code> 按 <code>(K, N, M)</code> 物理内存布局分配 <code>J_buf_base</code>，并将其暴露为逻辑形状 <code>(Nr, M, K)</code> 的视图 <code>J_r_buf = J_buf_base[:, :n_recompute, :].transpose(1, 2, 0)</code>。这样既能保证雅可比求值期间每个参数切片 <code>J[:, :, k]</code> 都是 100% C 连续的 <code>(Nr, M)</code> 数组，又能确保在 BLAS <code>dgemm</code> 调用 <code>JT_r @ J_r</code> 和 <code>JT_r @ scaled_r_r[:, :, None]</code> 时缩并轴 <code>M</code> 的步长为 8 字节。在所有光谱均处于活跃状态的早期迭代中（<code>n_active == N</code>、<code>n_recompute == N</code>），优化器采用零拷贝视图并通过 <code>np.matmul(..., out=...)</code> 将法方程结果直接写入 <code>JTJ_cache</code> 与 <code>JTr_cache</code>，无需花式索引聚集拷贝。</li>
+<li><strong>面向表达式约束的前向模式对偶数（<code>_DualVar</code>）解析链式求导</strong>：<code>VBFevaluator</code> 在 <code>from_fit_model()</code> 中对参数表达式仅执行一次拓扑排序与字节码编译，随后利用向量化前向模式自动微分（<code>_DualVar</code>）结合批量 BLAS 矩阵乘法（<code>J_full @ J_expr</code>）在单次遍历内计算精确的解析链式导数 <code>J_expr</code>，替代原有的 <span class="arithmatex">\(K_{\text{free}}\)</span> 遍有限差分与 <code>np.einsum</code>（在含表达式约束的模型上提速约 3×）。</li>
+<li><strong>自适应 L3 缓存分块批处理</strong>：当拟合超大规模高光谱二维图谱时（<span class="arithmatex">\(N \cdot M \cdot K &gt; 2{,}097{,}152\)</span>，或 <span class="arithmatex">\(N \ge 2{,}048\)</span> 且 <span class="arithmatex">\(N \cdot M \cdot K &gt; 1{,}048{,}576\)</span>），<code>batched_levenberg_marquardt()</code> 会自动将批次划分为契合 L3 缓存的子批次（<code>chunk_n</code> 目标工作集约为 ~4 MB），避免 DRAM 带宽饱和，使峰值内存占用降低高达 79% 并加速大图谱拟合。</li>
+<li><strong>纯 NumPy 分段线性基线插值</strong>：<code>eval_baseline()</code> 和 <code>eval_baseline_batch()</code> 通过纯 NumPy 实现的 <code>_interp_linear_extrap()</code> 计算分段线性基线（含边界线性外推），彻底消除了冷启动时导入 <code>scipy.interpolate</code> 的开销。</li>
+</ol>
+<h2 id="3-code-logic-and-core-implementation-principles"><strong>3. 代码逻辑与核心实现原则</strong><a class="headerlink" href="#3-code-logic-and-core-implementation-principles" title="Permanent link">&para;</a></h2>
+<p>该引擎实现了<strong>批量 Levenberg-Marquardt</strong> 算法。</p>
+<h3 id="31-the-mathematics-of-batched-lm"><strong>3.1. 批量 LM 的数学原理</strong><a class="headerlink" href="#31-the-mathematics-of-batched-lm" title="Permanent link">&para;</a></h3>
+<p>对于包含 <span class="arithmatex">\(M\)</span> 个波长点与 <span class="arithmatex">\(K\)</span> 个自由参数的 <span class="arithmatex">\(N\)</span> 条光谱：</p>
+<ol>
+<li><strong>模型求值</strong>：<span class="arithmatex">\(\mathbf{Y}_{pred} = f(\mathbf{x}, \mathbf{p})\)</span>，返回一个 <span class="arithmatex">\((N, M)\)</span> 张量。</li>
+<li><strong>计算残差</strong>：<span class="arithmatex">\(\mathbf{r} = \mathbf{W} \circ (\mathbf{Y}_{pred} - \mathbf{Y}_{data})\)</span>，返回一个 <span class="arithmatex">\((N, M)\)</span> 张量。</li>
+<li><strong>计算雅可比矩阵</strong>：<span class="arithmatex">\(\mathbf{J} = \frac{\partial f}{\partial \mathbf{p}}\)</span>，返回一个 <span class="arithmatex">\((N, M, K)\)</span> 张量。</li>
+<li><strong>法方程组装</strong>：通过 <code>np.matmul</code>（§2）组装 <span class="arithmatex">\(J^T J\)</span>（形状为 <span class="arithmatex">\(N \times K \times K\)</span>）与 <span class="arithmatex">\(J^T r\)</span>（形状为 <span class="arithmatex">\(N \times K\)</span>）。</li>
+<li><strong>阻尼项（Marquardt 步）</strong>：为每条光谱 <span class="arithmatex">\(i\)</span> 的 <span class="arithmatex">\(J^T J\)</span> 对角线添加阻尼因子 <span class="arithmatex">\(\lambda_i\)</span>。</li>
+<li><strong>线性求解</strong>：同时为全部 <span class="arithmatex">\(N\)</span> 条光谱求解 <span class="arithmatex">\((J^T J + \lambda \text{diag}(J^T J)) \delta \mathbf{p} = -J^T r\)</span>。</li>
+<li><strong>试探步评估</strong>：更新 <span class="arithmatex">\(\mathbf{p} \leftarrow \mathbf{p} + \delta \mathbf{p}\)</span>（投影回参数边界内）并评估新的代价函数值，根据试探成功或失败按光谱独立调整 <span class="arithmatex">\(\lambda\)</span>。</li>
+</ol>
+<h3 id="32-independent-convergence"><strong>3.2. 独立收敛机制</strong><a class="headerlink" href="#32-independent-convergence" title="Permanent link">&para;</a></h3>
+<p>尽管计算按批次联合执行，但每条光谱各自独立收敛。优化器通过布尔掩膜（<code>active = ~converged</code>）跳过已达到容差条件的光谱的雅可比计算与线性求解，从而在后续迭代中持续加速。第二个布尔掩膜（<code>dirty</code>，参见 §2）还会进一步跳过上一次迭代参数未发生变化（试探步被拒绝）的活跃光谱的雅可比与法方程重算——但<em>仍会</em>执行试探步评估，因为重试时仅阻尼因子发生了变化。</p>
+<h3 id="33-robust-loss-functions-irls-style-scaling"><strong>3.3. 鲁棒损失函数（IRLS 风格加权）</strong><a class="headerlink" href="#33-robust-loss-functions-irls-style-scaling" title="Permanent link">&para;</a></h3>
+<p>为在无需人工掩蔽数据的情况下抵御宇宙射线尖峰和尖锐探测器伪影等异常值，优化器通过迭代重加权最小二乘法（IRLS）支持鲁棒 M-估计量：</p>
+<ul>
+<li><strong><code>linear</code></strong>（默认）：标准最小二乘目标函数 <span class="arithmatex">\(\rho(z) = z\)</span>，<span class="arithmatex">\(\rho'(z) = 1\)</span>。其执行路径与原始无加权 LM 在比特级上完全一致。</li>
+<li><strong><code>soft_l1</code></strong>：平滑 <span class="arithmatex">\(L_1\)</span> 近似 <span class="arithmatex">\(\rho(z) = 2(\sqrt{1 + z} - 1)\)</span>，其导数缩放因子为 <span class="arithmatex">\(\sqrt{\rho'(z)} = (1 + z)^{-1/4}\)</span>，其中 <span class="arithmatex">\(z = (r / f\_scale)^2\)</span>。在零点附近呈二次特性，对大残差则平滑过渡为线性惩罚。</li>
+<li><strong><code>huber</code></strong>：Huber 损失函数——当 <span class="arithmatex">\(z \le 1\)</span> 时 <span class="arithmatex">\(\rho(z) = z\)</span>，否则为 <span class="arithmatex">\(2\sqrt{z} - 1\)</span>；导数缩放因子在 <span class="arithmatex">\(z \le 1\)</span> 时 <span class="arithmatex">\(\sqrt{\rho'(z)} = 1\)</span>，否则为 <span class="arithmatex">\(z^{-1/4}\)</span>。</li>
+</ul>
+<p><strong>数学表达式</strong>：
+残差与雅可比矩阵各行均按 <span class="arithmatex">\(w_{\text{robust}} = \sqrt{\rho'((r / f\_scale)^2)}\)</span> 进行缩放。每次迭代求解的法方程为：
+$<span class="arithmatex">\((J^T W J + \lambda \text{diag}(J^T W J)) \delta \mathbf{p} = -J^T W \mathbf{r}\)</span>$
+其中 <span class="arithmatex">\(W = \text{diag}(w_{\text{hard}}^2 \cdot w_{\text{robust}}^2)\)</span>。</p>
+<p><strong>权重组合顺序</strong>：</p>
+<ol>
+<li><strong>硬排除</strong>（<code>fit_negative</code> 与 <code>coef_noise</code> 噪声阈值）首先在 <code>weights.py</code> 中求值，为被排除的数据点赋予零权重（<span class="arithmatex">\(w_{\text{hard}} = 0\)</span>）。</li>
+<li><strong>鲁棒加权</strong>（<span class="arithmatex">\(w_{\text{robust}}\)</span>）随后在 <code>optimizer.py</code> 中作用于活跃数据点，平滑降低大异常残差的权重。零权重数据点始终保持为零。</li>
+</ol>
+<hr />
+<h2 id="4-folder-and-class-structure"><strong>4. 目录与类结构</strong><a class="headerlink" href="#4-folder-and-class-structure" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>graph TD
+    TFT["VBFthread"] --&gt;|"实例化"| TE["VBFengine"]
+    TE --&gt;|"构建"| EV["VBFevaluator"]
+    TE --&gt;|"调用"| OPT["batched_LM()"]
+    EV --&gt;|"路由至"| MOD["models.py"]
+    OPT --&gt;|"evaluate / jacobian"| EV</code></pre>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>类 / 函数</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vbf_thread.py</code></td>
+<td><code>VBFthread</code></td>
+<td><code>QThread</code> 封装类。将任务分组为单图谱、超大批量（<code>grouped_2d_maps</code>）或按长度分组（<code>map_names</code>）三种模式；构建权重矩阵；调用 <code>VBFengine.fit_spectra()</code>；将结果回写至 <code>SpectraStore</code>。发射 <code>progress_changed</code> 与 <code>timings_ready</code> 信号。在 macOS 上设置 8 MB 线程栈空间以防止 LAPACK 段错误。</td>
+</tr>
+<tr>
+<td><code>vbf_engine.py</code></td>
+<td><code>VBFengine</code></td>
+<td>单次拟合调用的公共 API 编排器。负责构建求值器、构建 <code>p0</code> 并应用噪声阈值、运行优化器、再次应用噪声阈值，以及构建结果数组。在 <code>self.timings</code> 中记录各阶段耗时。</td>
+</tr>
+<tr>
+<td><code>evaluator.py</code></td>
+<td><code>VBFevaluator</code></td>
+<td>连接字典格式的 <code>fit_model</code> 与扁平张量 API 的桥梁。解析峰定义、管理自由/固定参数索引、计算约束表达式、路由至对应的批量模型函数，并生成返回的结果数组（参数、R²、最优拟合曲线、各峰分曲线）——不生成中间 <code>FitResult</code> 对象。</td>
+</tr>
+<tr>
+<td><code>optimizer.py</code></td>
+<td><code>batched_levenberg_marquardt()</code></td>
+<td>纯数值优化器。使用批量 <code>np.matmul</code> 组装法方程以同时求解 N 个独立最小二乘问题，并通过 <code>JᵀJ</code>/<code>Jᵀr</code> 缓存跳过被拒绝试探步的重复计算（§2）。采用带单矩阵奇异回退的批量 <code>np.linalg.solve</code>，通过 <code>out=</code> 复用 <code>eval_buf</code>/<code>J_buf</code>，跳过均匀权重乘法，并检查边界裁剪后的 <code>dp</code> 收敛性。与 GUI 完全解耦。</td>
+</tr>
+<tr>
+<td><code>models.py</code></td>
+<td><code>batched_*()</code> 函数</td>
+<td>向量化峰型函数及其解析雅可比矩阵。包含 <code>BATCHED_MODELS</code> 注册表，以及面向未提供解析导数模型的 <code>numerical_jacobian()</code> 回退函数。</td>
+</tr>
+<tr>
+<td><code>scalar_models.py</code></td>
+<td>标量峰函数</td>
+<td>单光谱参考实现及其注册表 <code>PEAK_MODEL_REGISTRY</code>。供 <code>eval_peak_initial()</code>（UI 预览曲线）使用，同时当某个模型仅存在于 <code>PEAK_MODEL_REGISTRY</code> 而尚未在 <code>BATCHED_MODELS</code> 中实现批量版本时，由 <code>evaluator.py</code> 中的 <code>_make_batched_scalar()</code> 封装作为标量回退路径——目前所有已注册模型均同时具备两种实现，因此该回退路径主要作为面向未来扩展的安全保障，而非当前常规执行路径。</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-processing-pipeline-execution-flow"><strong>5. 处理流水线 / 执行流程</strong><a class="headerlink" href="#5-processing-pipeline-execution-flow" title="Permanent link">&para;</a></h2>
+<p>处理流水线分为两个层级：<code>VBFthread</code> 负责编排<strong>任务</strong>（哪些光谱组合在一起、如何构建权重、结果写回何处），而 <code>VBFengine.fit_spectra()</code> 则是每个任务调用一次的纯数值核心。</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant VM as ViewModel
+    participant TFT as VBFthread
+    participant TE as VBFengine
+    participant EV as VBFevaluator
+    participant OPT as optimizer
+
+    VM-&gt;&gt;TFT: start()
+    TFT-&gt;&gt;TFT: _prepare_weights() — 负值与噪声掩蔽
+    TFT-&gt;&gt;TE: fit_spectra(x, Y, fit_model, weights, fit_params)
+    TE-&gt;&gt;EV: from_fit_model()
+    TE-&gt;&gt;EV: build_p0_matrix() + apply_noise_threshold() (拟合前)
+    TE-&gt;&gt;OPT: batched_levenberg_marquardt()
+    TE-&gt;&gt;EV: apply_noise_threshold() (拟合后清理)
+    TE-&gt;&gt;EV: build_results_batch()
+    TE--&gt;&gt;TFT: p_full, success, r², best_fits, Y_peaks
+    TFT-&gt;&gt;TFT: _write_results() → store.set_fit_results(), md.Y_bestfit / md.Y_peaks
+    TFT--&gt;&gt;VM: progress_changed / timings_ready / finished</code></pre>
+<h3 id="51-vbfthreadrun-task-orchestration"><strong>5.1. <code>VBFthread.run()</code> — 任务编排</strong><a class="headerlink" href="#51-vbfthreadrun-task-orchestration" title="Permanent link">&para;</a></h3>
+<p>对于每个任务，<code>VBFthread</code> 在遍历 <code>self.tasks</code> 的单个循环内从以下三个分支中选择其一（不存在独立的 <code>_run_batched()</code> / <code>_run_single()</code> 方法）：</p>
+<table>
+<thead>
+<tr>
+<th>存在的任务键</th>
+<th>使用场景</th>
+<th>执行行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grouped_2d_maps</code></td>
+<td>使用共享模型执行“将模型应用到所有二维图谱”</td>
+<td>通过 <code>np.vstack</code> 将每幅二维图谱的 <code>Y</code> 拼接为单个矩阵，作为单一超大批次执行拟合，然后按行区间将结果分发回写至各个 <code>MapData</code>。</td>
+</tr>
+<tr>
+<td><code>map_names</code></td>
+<td>在<strong>光谱</strong> (Spectra) 工作区中批量拟合多条独立光谱（各自拥有独立模型）</td>
+<td>按 X 轴长度对光谱分组（光谱必须具有相同长度才能堆叠为同一矩阵），并将每个等长分组作为一个批次进行拟合。</td>
+</tr>
+<tr>
+<td><code>map_name</code> + <code>indices</code></td>
+<td>拟合单幅二维图谱（最常见场景）</td>
+<td>提取 <code>Y[indices]</code>，构建权重矩阵，并调用一次 <code>fit_spectra()</code>。</td>
+</tr>
+</tbody>
+</table>
+<p>在调用引擎之前，<code>VBFthread._prepare_weights()</code> 会依据 <code>fit_negative</code> 与 <code>coef_noise</code> 构建权重矩阵（参见 §9 与 §10 —— 此处的基于噪声掩蔽与 <code>VBFevaluator.compute_noise_stats()</code> 采用完全相同的公式）。</p>
+<h3 id="52-vbfenginefit_spectra-the-numerical-core"><strong>5.2. <code>VBFengine.fit_spectra()</code> — 数值核心</strong><a class="headerlink" href="#52-vbfenginefit_spectra-the-numerical-core" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>构建求值器</strong> — <code>VBFevaluator.from_fit_model(fit_model)</code> 将 <code>peak_models</code> 解析为扁平参数布局（§6）。若所有参数均已固定（<code>n_params_free == 0</code>），引擎将直接短路并立即返回。</li>
+<li><strong>构建 <code>p0</code></strong> — <code>build_p0_matrix()</code> 将模型初始参数平铺复制到全部 N 条光谱上，并根据各峰位 <code>x0</code> 处的观测数据对峰幅值进行缩放（缩放比值钳位在 <code>[0.01, 100]</code> 区间内，以防不良初始猜测导致数值发散）。随后 <code>apply_noise_threshold()</code> 将中心位于噪声阈值以下区域的峰的幅值与半高宽（FWHM）置零，为优化器提供干净的起点。</li>
+<li><strong>运行优化器</strong> — <code>batched_levenberg_marquardt()</code>（§3）持续迭代，直至所有光谱均已收敛、被标记为“停滞（stuck）”（§9.2）或达到最大迭代次数 <code>max_ite</code>。</li>
+<li><strong>拟合后清理</strong> — 对优化后的参数再次运行 <code>apply_noise_threshold()</code>，以清除在 LM 迭代过程中可能漂移至噪声区域内的峰。</li>
+<li><strong>构建结果</strong> — <code>build_results_batch()</code> 为整个批次一次性求值最优拟合曲线与各峰分曲线，并向量化计算全部 N 条光谱的 R²。返回纯数组结果（<code>p_full</code>、<code>success</code>、<code>rsquared</code>、<code>best_fits</code>、<code>Y_peaks</code>、<code>param_names</code>）——而非逐光谱对象。</li>
+</ol>
+<p>随后 <code>VBFthread._write_results()</code> 将这些数组写入 <code>SpectraStore</code>（<code>set_fit_results()</code>）以及 <code>MapData</code> 对象（<code>Y_bestfit</code>、<code>Y_peaks</code>）。</p>
+<hr />
+<h2 id="6-the-vbfevaluator-in-detail"><strong>6. <code>VBFevaluator</code> 详解</strong><a class="headerlink" href="#6-the-vbfevaluator-in-detail" title="Permanent link">&para;</a></h2>
+<p><code>VBFevaluator</code> 是引擎中最复杂的类。它充当灵活的字典式 GUI 世界与严谨的扁平张量式优化器世界之间的<strong>桥梁</strong>。</p>
+<h3 id="61-parameter-space-mapping"><strong>6.1. 参数空间映射</strong><a class="headerlink" href="#61-parameter-space-mapping" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>fit_model dict                    VBFevaluator                  Optimizer
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>┌─────────────────┐     ┌────────────────────────────┐     ┌──────────────┐
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│ peak_models:    │     │ _param_names:              │     │              │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   &quot;0&quot;:          │     │   [&quot;m01_ampli&quot;,            │     │  p_free      │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│     Gaussian:   │ ──► │    &quot;m01_fwhm&quot;,             │ ──► │  (N, K_free) │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│       ampli: .. │     │    &quot;m01_x0&quot;,               │     │              │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│       fwhm:  .. │     │    &quot;m02_ampli&quot;, ...]       │     │              │
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│       x0:    .. │     │                            │     │              │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│   &quot;1&quot;:          │     │ _free_idx:  [0, 1, 2, 3]   │     │              │
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│     Lorentzian: │     │ _fixed_idx: [4]            │     │              │
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│       ampli: .. │     │ _fixed_values: [0.5]       │     │              │
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│       ...       │     │                            │     │              │
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>└─────────────────┘     └────────────────────────────┘     └──────────────┘
+</code></pre></div>
+<h3 id="62-expression-support"><strong>6.2. 表达式支持</strong><a class="headerlink" href="#62-expression-support" title="Permanent link">&para;</a></h3>
+<p>参数可以通过数学表达式引用其他参数（例如 <code>m01_fwhm = m02_fwhm</code> 或 <code>m01_x0 + 10</code>）。求值器在 <code>_to_full()</code> 中按如下流程处理约束表达式：</p>
+<ol>
+<li>带有表达式的参数会被标记为<strong>固定</strong>（不直接参与优化）。</li>
+<li>在 <code>from_fit_model()</code> 期间，表达式按依赖关系进行拓扑排序并编译为 Python 代码对象（<code>_compile_exprs()</code>），从而避免在每次优化迭代中重复解析 <code>eval()</code> 字符串并反复重试。</li>
+<li>在 <code>_to_full()</code> 期间，已编译的表达式会在受限命名空间内通过单次拓扑遍历求值，该命名空间仅包含所有参数名称、<code>np</code> 以及常用数学函数（<code>sin</code>、<code>cos</code>、<code>tan</code>、<code>exp</code>、<code>log</code>、<code>log10</code>、<code>sqrt</code>、<code>abs</code>、<code>pi</code>、<code>e</code>、<code>minimum</code>、<code>maximum</code>、<code>clip</code>）。</li>
+<li>雅可比矩阵通过<strong>解析链式法则</strong>计入表达式约束：<code>_compute_j_expr()</code> 将自由参数初始化为向量化前向模式对偶数（<code>_DualVar(value, d_free)</code>）并执行一次已编译表达式链，得到形状为 <code>(N, K_total, K_free)</code> 的精确解析灵敏度张量 <code>J_expr</code>，然后通过批量 BLAS 矩阵乘法 <code>J_full @ J_expr</code> 计算受约束的雅可比矩阵。</li>
+</ol>
+<h3 id="63-model-routing"><strong>6.3. 模型路由</strong><a class="headerlink" href="#63-model-routing" title="Permanent link">&para;</a></h3>
+<p>求值器的 <code>evaluate()</code> 与 <code>jacobian()</code> 方法会遍历所有已注册的峰，并在提供 <code>out</code> 时将其贡献干净地写入或累加到 <code>out</code> 中：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">p_free</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">p_full</span> <span class="o">=</span> <span class="n">p_free</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_free_identity</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_full</span><span class="p">(</span><span class="n">p_free</span><span class="p">)</span>  <span class="c1"># (N, K_total)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="c1"># Single-peak models write directly into `out`; multi-peak models reuse one scratch buffer</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="o">...</span>
+</code></pre></div>
+<p>在计算雅可比矩阵时，若峰具备解析雅可比实现（<code>has_jac=True</code>），则直接调用；否则回退调用采用中心差分与相对扰动步长的 <code>numerical_jacobian()</code>。</p>
+<hr />
+<h2 id="7-batched-peak-models-and-analytical-jacobians"><strong>7. 批量峰型模型与解析雅可比矩阵</strong><a class="headerlink" href="#7-batched-peak-models-and-analytical-jacobians" title="Permanent link">&para;</a></h2>
+<h3 id="71-tensor-conventions"><strong>7.1. 张量约定</strong><a class="headerlink" href="#71-tensor-conventions" title="Permanent link">&para;</a></h3>
+<p>所有批量函数均遵循相同的调用签名：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span> <span class="nf">batched_shape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="sd">    x:      (M,) shared axis  OR  (N, M) per-spectrum axis</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="sd">    params: (N, n_p) parameter matrix</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="sd">    out:    optional preallocated (N, M) output buffer</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="sd">    Returns: (N, M) predicted values</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="k">def</span> <span class="nf">batched_shape_jac</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns: (N, M, n_p) Jacobian tensor (written into `out` when provided)&quot;&quot;&quot;</span>
+</code></pre></div>
+<p>在内部实现上，每个函数均遵循统一的效率模式（§2.4）：对重复出现的量（通常是诸如 <code>1/w²</code> 的倒数）仅计算一次，通过广播乘法加以复用而不再重复做除法，并将结果直接原位写入预分配的雅可比切片中。</p>
+<h3 id="72-registered-models-batched_models"><strong>7.2. 已注册模型（<code>BATCHED_MODELS</code>）</strong><a class="headerlink" href="#72-registered-models-batched_models" title="Permanent link">&para;</a></h3>
+<p>所有峰型模型均提供带<strong>解析雅可比矩阵</strong>的向量化批量实现，从而确保各类模型都能获得最高性能：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>参数</th>
+<th>公式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Gaussian</code></td>
+<td><code>ampli</code>、<code>fwhm</code>、<code>x0</code></td>
+<td><i>a</i> &middot; exp(-4 ln(2) &middot; (x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>)</td>
+</tr>
+<tr>
+<td><code>Lorentzian</code></td>
+<td><code>ampli</code>、<code>fwhm</code>、<code>x0</code></td>
+<td><i>a</i> / [1 + 4(x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>]</td>
+</tr>
+<tr>
+<td><code>PseudoVoigt</code></td>
+<td><code>ampli</code>、<code>fwhm</code>、<code>x0</code>、<code>alpha</code></td>
+<td>&alpha; &middot; G + (1-&alpha;) &middot; L</td>
+</tr>
+<tr>
+<td><code>GaussianAsym</code></td>
+<td><code>ampli</code>、<code>fwhm_l</code>、<code>fwhm_r</code>、<code>x0</code></td>
+<td>分段高斯函数（左/右半高宽独立）</td>
+</tr>
+<tr>
+<td><code>LorentzianAsym</code></td>
+<td><code>ampli</code>、<code>fwhm_l</code>、<code>fwhm_r</code>、<code>x0</code></td>
+<td>分段洛伦兹函数（左/右半高宽独立）</td>
+</tr>
+<tr>
+<td><code>Fano</code></td>
+<td><code>ampli</code>、<code>fwhm</code>、<code>x0</code>、<code>q</code></td>
+<td><i>a</i> &middot; (q + &epsilon;)<sup>2</sup> / (1 + &epsilon;<sup>2</sup>), &epsilon; = 2(x-x<sub>0</sub>)/w</td>
+</tr>
+<tr>
+<td><code>DecaySingleExp</code></td>
+<td><code>A</code>、<code>tau</code>、<code>B</code></td>
+<td><i>A</i> &middot; e<sup>-x/&tau;</sup> + B</td>
+</tr>
+<tr>
+<td><code>DecayBiExp</code></td>
+<td><code>A1</code>、<code>tau1</code>、<code>A2</code>、<code>tau2</code>、<code>B</code></td>
+<td><i>A</i><sub>1</sub> &middot; e<sup>-x/&tau;<sub>1</sub></sup> + <i>A</i><sub>2</sub> &middot; e<sup>-x/&tau;<sub>2</sub></sup> + B</td>
+</tr>
+</tbody>
+</table>
+<h3 id="73-numerical-jacobian-fallback"><strong>7.3. 数值雅可比矩阵回退</strong><a class="headerlink" href="#73-numerical-jacobian-fallback" title="Permanent link">&para;</a></h3>
+<p>对于未来仅在 <code>PEAK_MODEL_REGISTRY</code> 中注册（尚未提供批量实现）的自定义模型，<code>numerical_jacobian()</code> 会使用带相对扰动的<strong>中心差分</strong>作为回退方案：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">h</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">|</span><span class="n">param</span><span class="o">|</span> <span class="o">*</span> <span class="n">eps</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>          <span class="c1"># Scale step to parameter magnitude</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">J</span><span class="p">[:,:,</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="o">+</span><span class="n">h</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="o">-</span><span class="n">h</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="n">h</span>  <span class="c1"># Central difference</span>
+</code></pre></div>
+<p>每次迭代的耗时比解析雅可比约慢 <code>2K</code> 倍，但可确保任意新峰型函数的计算正确性。</p>
+<hr />
+<h2 id="8-the-vbfthread"><strong>8. <code>VBFthread</code> 线程类</strong><a class="headerlink" href="#8-the-vbfthread" title="Permanent link">&para;</a></h2>
+<h3 id="81-task-branches"><strong>8.1. 任务分支</strong><a class="headerlink" href="#81-task-branches" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>graph TD
+    TFT["VBFthread.run()"] --&gt; Check{"任务键？"}
+    Check --&gt;|"grouped_2d_maps"| G["超大批量：vstack 拼接所有二维图谱，单次拟合后分发回写"]
+    Check --&gt;|"map_names"| B["按 X 轴长度对光谱分组，逐组拟合"]
+    Check --&gt;|"map_name + indices"| S["单幅二维图谱：单次拟合"]</code></pre>
+<p>上述三个分支均位于 <code>run()</code> 中遍历 <code>self.tasks</code> 的同一个循环内部——各分支的触发条件参见 §5.1。</p>
+<h3 id="82-macos-stack-size"><strong>8.2. macOS 栈空间大小</strong><a class="headerlink" href="#82-macos-stack-size" title="Permanent link">&para;</a></h3>
+<p>该线程在 macOS 上显式设置了 8 MB 的栈空间（<code>setStackSize(8 * 1024 * 1024)</code>），原因如下：</p>
+<ul>
+<li>macOS 默认将 <code>QThread</code> 的栈大小限制为 512 KB。</li>
+<li><code>np.linalg.solve</code> 会调度至 LAPACK，而 LAPACK 会在栈上分配工作区数组。</li>
+<li>当 K 较大（自由参数较多）时，栈分配可能超过 512 KB 上限，从而导致段错误（segfault）。</li>
+</ul>
+<h3 id="83-signals"><strong>8.3. 信号</strong><a class="headerlink" href="#83-signals" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>信号</th>
+<th>载荷</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>progress_changed</code></td>
+<td><code>Signal(int, int, int, float, int)</code> → <code>(current, total, percent, elapsed_seconds, current)</code></td>
+<td>更新 View 中的进度条。（第 5 个参数与第 1 个参数相同。）</td>
+</tr>
+<tr>
+<td><code>timings_ready</code></td>
+<td><code>Signal(str)</code></td>
+<td>面向控制台/调试输出的分步骤格式化耗时明细</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-optimization-parameters-and-adjustments"><strong>9. 优化参数与调优</strong><a class="headerlink" href="#9-optimization-parameters-and-adjustments" title="Permanent link">&para;</a></h2>
+<p>可通过传入 <code>fit_params</code> 字典至 <code>fit_spectra()</code> 来调节引擎行为。</p>
+<h3 id="91-key-parameters"><strong>9.1. 关键参数</strong><a class="headerlink" href="#91-key-parameters" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>max_ite</code></strong>（默认值：200）：Levenberg-Marquardt 的最大迭代次数。增大该值有助于极其困难的光谱收敛，但会增加总执行时间。</li>
+<li><strong><code>xtol</code></strong>（默认值：1e-4）：参数步长 <span class="arithmatex">\(\delta p\)</span> 的相对容差。当所有活跃参数在边界裁剪后的相对变化量<strong>均值</strong>（<span class="arithmatex">\(\operatorname{mean}(|\Delta p_{\text{actual}}| / |p|)\)</span>）小于 <code>xtol</code> 时，即判定为收敛。以边界裁剪后的实际位移作为判据可确保受限于边界的参数能够干净利落地收敛而不会拖延至 <code>max_ite</code>；采用均值判据则可避免单个缓慢振荡的参数拖累整条光谱的收敛判定。</li>
+<li><strong><code>ftol</code></strong>（默认值：1e-4）：代价函数（残差平方和）的相对容差。若代价函数的相对变化小于 <code>ftol</code>，则认为该光谱已收敛。</li>
+<li><strong><code>fit_negative</code></strong>（默认值：<code>False</code>）：是否在拟合中包含负强度值。为 <code>False</code> 时，负值数据点将被赋予零权重（<code>VBFthread._prepare_weights()</code>）。</li>
+<li><strong><code>coef_noise</code></strong>（默认值：<code>0.0</code>）：噪声系数乘子。当 &gt; 0 时，将激活基于噪声的权重掩蔽（<code>VBFthread._prepare_weights()</code>）与峰抑制（<code>VBFevaluator.apply_noise_threshold()</code>）。详细说明请参阅<a href="#10-noise-level-estimation-and-noise-threshold">第 10 节</a>。</li>
+<li><strong><code>fit_outliers</code></strong> — <strong>历史遗留键，当前引擎已不再读取。</strong> 早期保存的 <code>fit_model</code> JSON 文件中可能仍包含该键，但 <code>fit_engine/</code>（乃至整个代码库）已不再检查它，会被静默忽略；保留在旧文件中不会产生任何影响。</li>
+</ul>
+<h3 id="92-tuning-for-performance-vs-accuracy"><strong>9.2. 性能与精度的权衡调优</strong><a class="headerlink" href="#92-tuning-for-performance-vs-accuracy" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>快速图谱拟合</strong>：用于快速预览时，可将 <code>xtol</code> 与 <code>ftol</code> 提高至 <code>1e-3</code> 或 <code>1e-2</code>。优化器将更早退出，以极短的时间给出粗略拟合结果。</li>
+<li><strong>高精度拟合</strong>：用于发表级别的结果时，可将 <code>xtol</code> 与 <code>ftol</code> 降低至 <code>1e-5</code> 或 <code>1e-6</code>。</li>
+<li><strong>处理“停滞（Stuck）”光谱</strong>：优化器会追踪 <code>consecutive_rejects</code>。如果某条光谱的代价函数在连续 15 次迭代中（尽管已调整阻尼）仍未能改善，则将其标记为已收敛（停滞），以防其拖慢整个批次的进度。该阈值（<code>optimizer.py</code> 中的 <code>MAX_REJECTS</code>）可根据需要调整。</li>
+</ul>
+<h3 id="93-damping-schedule"><strong>9.3. 阻尼调节策略</strong><a class="headerlink" href="#93-damping-schedule" title="Permanent link">&para;</a></h3>
+<p>每条光谱的阻尼因子 <span class="arithmatex">\(\lambda\)</span> 初始化为 <code>1e-2</code>，并在每次迭代后按如下规则更新：</p>
+<table>
+<thead>
+<tr>
+<th>结果</th>
+<th>λ 调整方式</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>代价改善</td>
+<td><code>λ /= 3.0</code>（下限 <code>1e-10</code>）</td>
+<td>更信任 Gauss-Newton 步方向</td>
+</tr>
+<tr>
+<td>代价恶化</td>
+<td><code>λ *= 2.5</code>（上限 <code>1e10</code>）</td>
+<td>向梯度下降方向靠拢</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-noise-level-estimation-and-noise-threshold"><strong>10. 噪声水平估计与噪声阈值</strong><a class="headerlink" href="#10-noise-level-estimation-and-noise-threshold" title="Permanent link">&para;</a></h2>
+<p><code>coef_noise</code> 参数控制着一套噪声感知过滤系统，可显著提升拟合的<strong>性能</strong>与<strong>精度</strong>，尤其适用于大量像素仅包含弱峰甚至无峰的高光谱二维图谱。</p>
+<h3 id="101-how-noise-level-is-estimated"><strong>10.1. 如何估计噪声水平</strong><a class="headerlink" href="#101-how-noise-level-is-estimated" title="Permanent link">&para;</a></h3>
+<p>公共辅助函数 <code>detect_noise_level()</code>（位于 <code>fit_engine/noise.py</code>，供 UI 在光谱查看器上显示/报告噪声水平）与拟合期间使用的内部批量估计器（<code>VBFevaluator.compute_noise_stats()</code>、<code>VBFthread._prepare_weights()</code>）采用完全相同的鲁棒估计方法：一阶差分绝对值的中位数，并换算为高斯分布等效标准差 σ。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span> <span class="nf">detect_noise_level</span><span class="p">(</span><span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">dy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>                                    <span class="c1"># δ[i] = y[i+1] − y[i]</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dy</span><span class="p">))</span> <span class="o">/</span> <span class="mf">0.6745</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>原理解析：</strong></p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>np.diff(y)</code></td>
+<td>相邻点一阶差分——由于真实光谱特征相对较宽、在单个采样步长内变化缓慢，差分结果主要由噪声主导</td>
+</tr>
+<tr>
+<td><code>np.median(np.abs(dy))</code></td>
+<td>绝对差值的中位数——与普通标准差不同，对尖锐峰边缘偶尔出现的大跳变具有很强的鲁棒性</td>
+</tr>
+<tr>
+<td><code>/ 0.6745</code></td>
+<td>将高斯分布的中位绝对偏差（MAD）转换为等效标准差（0.6745 为正态分布下 MAD 到 σ 的换算常数）</td>
+</tr>
+<tr>
+<td><code>* sqrt(2)</code></td>
+<td>两个独立含噪样本的一阶差分方差为 <span class="arithmatex">\(2\sigma^2\)</span>；该因子用于将其还原为单点噪声标准差 σ</td>
+</tr>
+</tbody>
+</table>
+<p><code>VBFevaluator.compute_noise_stats(Y, coef_noise)</code> 沿 <code>axis=1</code> 应用相同的 <code>diff</code>/<code>median</code> 逻辑，从而在整幅二维图谱上同时为每条光谱估计各自的噪声水平；同时还计算信号的 5 点移动平均值（<code>ymean</code>），用于逐点判断<em>信号本身</em>（而不仅仅是噪声）是否高于基底阈值：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">dy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">ampli_noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dy</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.6745</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>      <span class="c1"># (N,)</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">Y_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;edge&#39;</span><span class="p">)</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">ymean</span> <span class="o">=</span> <span class="p">(</span><span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>         <span class="o">+</span> <span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">Y_padded</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">:])</span> <span class="o">/</span> <span class="mf">5.0</span>                   <span class="c1"># 5-point moving average</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">noise_level</span> <span class="o">=</span> <span class="n">coef_noise</span> <span class="o">*</span> <span class="n">ampli_noise</span>                                   <span class="c1"># (N,)</span>
+</code></pre></div>
+<blockquote>
+<p><code>apply_noise_threshold()</code> 每次拟合会被调用两次（优化前与优化后各一次——参见 §5.2），而两次调用所需的 <code>ymean</code>/<code>noise_level</code> 完全相同。<code>VBFengine.fit_spectra()</code> 通过 <code>compute_noise_stats()</code> 仅计算一次并将结果（<code>noise_stats=</code>）传给两次调用，避免重复执行两遍中位数与平滑计算（§2）。</p>
+</blockquote>
+<h3 id="102-how-coef_noise-activates-noise-thresholding"><strong>10.2. <code>coef_noise</code> 如何激活噪声阈值过滤</strong><a class="headerlink" href="#102-how-coef_noise-activates-noise-thresholding" title="Permanent link">&para;</a></h3>
+<p>当 <code>coef_noise &gt; 0</code> 时，系统按 <code>noise_level = coef_noise × ampli_noise</code> 计算<strong>噪声水平阈值</strong>。该阈值会同时激活<strong>两项互补机制</strong>：</p>
+<h4 id="1021-mechanism-a-weight-masking-vbfthread_prepare_weights"><strong>10.2.1. 机制 A —— 权重掩蔽（<code>VBFthread._prepare_weights</code>）</strong><a class="headerlink" href="#1021-mechanism-a-weight-masking-vbfthread_prepare_weights" title="Permanent link">&para;</a></h4>
+<p>在拟合开始前，任何平滑后信号（<code>ymean</code>）低于噪声水平的数据点都会被设为零权重：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">weights</span><span class="p">[</span><span class="n">ymean</span> <span class="o">&lt;</span> <span class="n">noise_level</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="mf">0.0</span>   <span class="c1"># zero weight → ignored by optimizer</span>
+</code></pre></div>
+<p>优化器的残差计算 <span class="arithmatex">\(\mathbf{r} = \mathbf{W} \circ (\mathbf{Y}_{pred} - \mathbf{Y}_{data})\)</span> 会自然忽略这些被掩蔽的点，使拟合过程只聚焦于包含有效信号的区域。</p>
+<h4 id="1022-mechanism-b-peak-suppression-vbfevaluatorapply_noise_threshold"><strong>10.2.2. 机制 B —— 峰抑制（<code>VBFevaluator.apply_noise_threshold</code>）</strong><a class="headerlink" href="#1022-mechanism-b-peak-suppression-vbfevaluatorapply_noise_threshold" title="Permanent link">&para;</a></h4>
+<p>对于<strong>中心位置</strong>（<code>x0</code>）落在阈值以下区域的任意峰，系统会将其幅值与半高宽（FWHM）强制置零，并将该峰的其他形状参数恢复为拟合前的初始猜测（<code>p0_matrix</code>），以防止将随机噪声波动映射为真实结构。该机制在流水线中运行<strong>两次</strong>（§5.2）：</p>
+<ol>
+<li><strong>优化前</strong> — 设定干净的初始猜测，防止优化器尝试将噪声波动当作峰来拟合。</li>
+<li><strong>优化后</strong> — 清理在 LM 迭代过程中可能漂移至噪声区域内的峰。</li>
+</ol>
+<h3 id="103-performance-and-precision-benefits"><strong>10.3. 性能与精度收益</strong><a class="headerlink" href="#103-performance-and-precision-benefits" title="Permanent link">&para;</a></h3>
+<h4 id="1031-performance"><strong>10.3.1. 性能</strong><a class="headerlink" href="#1031-performance" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>方面</th>
+<th>作用原理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>更快的收敛速度</td>
+<td>在噪声区被置零的峰从一开始就保持为零，从而有效减少了活跃参数的数量</td>
+</tr>
+<tr>
+<td>更少的无效迭代</td>
+<td>若不进行噪声掩蔽，优化器会消耗大量迭代次数用微小的幽灵峰去拟合随机噪声</td>
+</tr>
+<tr>
+<td>更优的初始猜测</td>
+<td>预先将噪声区内的峰置零使 <span class="arithmatex">\(p_0\)</span> 更接近真实解，因此 LM 算法仅需更少迭代即可收敛</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1032-precision"><strong>10.3.2. 精度</strong><a class="headerlink" href="#1032-precision" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>方面</th>
+<th>作用原理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>消除幽灵峰</td>
+<td>在二维图谱中，部分像素可能峰很弱甚至没有峰。若无阈值过滤，噪声波动会被拟合成微小的虚假峰，导致参数图谱中出现伪影</td>
+</tr>
+<tr>
+<td>稳定强相关参数</td>
+<td>在接近噪声基底处，幅值、峰宽与峰位会高度相关——微小的噪声扰动就会引发参数大幅剧烈波动。峰抑制可消除这种不稳定性</td>
+</tr>
+<tr>
+<td>防止串扰</td>
+<td>位于噪声区的幽灵峰可能会从邻近真实峰“抢走”部分强度，使其拟合幅值产生偏差。峰抑制可杜绝这一问题</td>
+</tr>
+<tr>
+<td>更纯净的 R² 值</td>
+<td>被掩蔽的噪声区不参与 R² 计算，因此报告的拟合优度仅反映真实有效信号区域的质量</td>
+</tr>
+</tbody>
+</table>
+<h3 id="104-practical-example"><strong>10.4. 实际示例</strong><a class="headerlink" href="#104-practical-example" title="Permanent link">&para;</a></h3>
+<p>考虑一幅定义了 3 个峰的拉曼二维图谱，其中在部分像素处，2 号峰位于平坦基线区域：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Without coef_noise (= 0):
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>  Peak #2 → ampli = 0.3 (noise artifact), fwhm = 2.1 (meaningless), x0 = 520.3 (drifted)
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>  Peak #1 → ampli = 18.2 (slightly biased — peak #2 stealing intensity)
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>With coef_noise = 1:
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>  Peak #2 → ampli = 0.0, fwhm = 0.0   (correctly suppressed)
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>  Peak #1 → ampli = 19.1              (accurate, no cross-talk)
+</code></pre></div>
+<h3 id="105-choosing-the-right-coef_noise-value"><strong>10.5. 如何选择合适的 <code>coef_noise</code> 值</strong><a class="headerlink" href="#105-choosing-the-right-coef_noise-value" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>取值</th>
+<th>行为效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td><strong>禁用</strong> — 所有峰在全区域均参与拟合，不进行噪声掩蔽</td>
+</tr>
+<tr>
+<td><code>0.5 – 1.0</code></td>
+<td><strong>保守</strong> — 仅抑制明显处于噪声基底以下的峰或区域</td>
+</tr>
+<tr>
+<td><code>1.0 – 2.0</code></td>
+<td><strong>适中</strong> — 适用于大多数数据集的良好默认范围</td>
+</tr>
+<tr>
+<td><code>3.0 – 5.0</code></td>
+<td><strong>激进</strong> — 可能会抑制真实的弱峰；请谨慎使用</td>
+</tr>
+<tr>
+<td><code>&gt; 5.0</code></td>
+<td><strong>非常激进</strong> — 仅保留强且明确存在的峰</td>
+</tr>
+</tbody>
+</table>
+<p><code>MSettings.load_fit_settings()</code> 中的默认值为 <code>0.0</code>（禁用）。在 <strong>设置</strong> (Settings) 界面中，它以数值微调框形式提供，取值范围为 <code>[0.0, 10.0]</code>，步长为 <code>0.5</code>。</p>
+<hr />
+<h2 id="11-adding-new-peak-models"><strong>11. 添加新峰型模型</strong><a class="headerlink" href="#11-adding-new-peak-models" title="Permanent link">&para;</a></h2>
+<h3 id="111-fast-path-analytical-jacobian-recommended"><strong>11.1. 快速路径：解析雅可比矩阵（推荐）</strong><a class="headerlink" href="#111-fast-path-analytical-jacobian-recommended" title="Permanent link">&para;</a></h3>
+<p>要以最高性能添加新的峰型：</p>
+<p><strong>步骤 1</strong> — 在 <code>models.py</code> 中定义批量求值函数（支持可选的 <code>out=None</code> 缓冲区复用）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span> <span class="nf">batched_newshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="sd">    x:      (M,) or (N, M)</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="sd">    params: (N, n_p) where columns are [param1, param2, ...]</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="sd">    out:    optional (N, M) preallocated array</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="sd">    Returns: (N, M)</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">p1</span> <span class="o">=</span> <span class="n">params</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>    <span class="c1"># (N, 1) — broadcasts over M</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="n">p2</span> <span class="o">=</span> <span class="n">params</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>        <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">p2</span>    <span class="c1"># (N, M)</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>        <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">p2</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">*</span> <span class="n">some_function</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>        <span class="n">out</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>        <span class="k">return</span> <span class="n">out</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>    <span class="k">return</span> <span class="n">result</span>
+</code></pre></div>
+<p><strong>步骤 2</strong> — 推导并定义解析雅可比矩阵函数（接受 <code>out=None</code> 以实现切片原位求值）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">def</span> <span class="nf">batched_newshape_jac</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns: (N, M, n_p) — partial derivatives w.r.t. each parameter.&quot;&quot;&quot;</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="c1"># ... compute intermediates ...</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">N</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">shape</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">n_p</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">out</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">J</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_result_d_p1</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">J</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_result_d_p2</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="k">return</span> <span class="n">J</span>
+</code></pre></div>
+<p><strong>步骤 3</strong> — 在 <code>BATCHED_MODELS</code> 字典中注册：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">BATCHED_MODELS</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="c1"># ... existing ...</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="s2">&quot;NewShape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">batched_newshape</span><span class="p">,</span> <span class="n">batched_newshape_jac</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;param1&quot;</span><span class="p">,</span> <span class="s2">&quot;param2&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">]),</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>推导雅可比矩阵时，请遵循 <code>models.py</code> 全模块通用的高效编码模式（§2.4、§7.1）：将重复出现的 <code>1/w</code> 类项作为倒数预先计算一次并复用，并对大型 <code>(N,M)</code> 中间数组优先采用原位运算（<code>*=</code>、<code>+=</code>）。在正式启用前，务必在随机参数组上对照 <code>numerical_jacobian()</code> 验证解析雅可比矩阵的正确性。</p>
+<h3 id="112-slow-path-scalar-fallback"><strong>11.2. 慢速路径：标量回退</strong><a class="headerlink" href="#112-slow-path-scalar-fallback" title="Permanent link">&para;</a></h3>
+<p>如果推导解析雅可比矩阵不切实际：</p>
+<p><strong>步骤 1</strong> — 在 <code>scalar_models.py</code> 中定义标量函数：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">def</span> <span class="nf">newshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">param1</span><span class="p">,</span> <span class="n">param2</span><span class="p">):</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;x is a 1D array, params are scalars. Returns 1D array.&quot;&quot;&quot;</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="k">return</span> <span class="n">param1</span> <span class="o">*</span> <span class="n">some_function</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">param2</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>步骤 2</strong> — 在 <code>PEAK_MODEL_REGISTRY</code> 中注册：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">PEAK_MODEL_REGISTRY</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="c1"># ... existing ...</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="s2">&quot;NewShape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">newshape</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;param1&quot;</span><span class="p">,</span> <span class="s2">&quot;param2&quot;</span><span class="p">]),</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="p">}</span>
+</code></pre></div>
+<p>求值器会自动通过 <code>_make_batched_scalar()</code> 对其进行封装并调用 <code>numerical_jacobian()</code>。该方式功能完整，但每个峰每次迭代的速度显著更慢（约慢 10–50×）。</p>
+<h3 id="113-registration-in-the-application"><strong>11.3. 在应用程序中注册</strong><a class="headerlink" href="#113-registration-in-the-application" title="Permanent link">&para;</a></h3>
+<p>将模型添加到引擎后，还需在 <code>spectroview/__init__.py</code> 中注册它：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">PEAK_MODELS</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="s2">&quot;Gaussian&quot;</span><span class="p">,</span> <span class="s2">&quot;Lorentzian&quot;</span><span class="p">,</span> <span class="s2">&quot;PseudoVoigt&quot;</span><span class="p">,</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="c1"># ... existing ...</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="s2">&quot;NewShape&quot;</span><span class="p">,</span>  <span class="c1"># Add here to appear in the UI dropdown</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="p">]</span>
+</code></pre></div>
+<hr />
+<h2 id="12-timing-and-diagnostics"><strong>12. 计时与诊断</strong><a class="headerlink" href="#12-timing-and-diagnostics" title="Permanent link">&para;</a></h2>
+<p><code>VBFengine</code> 会在 <code>self.timings</code> 中记录各步骤的挂钟运行耗时：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Step 3 - build p0:     0.003s
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>Step 4 - batch fit:   1.234s (0.6 ms/spectrum, 1950/2000 converged)
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>Step 5 - write_back:   0.089s
+</code></pre></div>
+<p><code>VBFengine.fit_spectra()</code> 本身仅填充这三项计时——编号之所以从 3 开始，是为了承接在调用引擎之前就已经完成的前置（独立）阶段：向 <code>MapData</code> 应用拟合模型，以及 <code>SpectraStore.batch_preprocess()</code>（范围裁剪 + 基线扣除），这些前置步骤单独计时并记录在 <a href="../spectra_store/">spectra_store.md</a> 中。</p>
+<p>这些计时结果通过 <code>VBFthread.timings_ready</code> 发射并打印到控制台（调试时可在 <code>fit_spectra()</code> 中设置 <code>print_benchmark=True</code> 实时输出）。它们对于排查性能瓶颈极为重要：</p>
+<ul>
+<li>若 <strong>Step 4</strong> 耗时占主导 → 属于正常现象；这是实际的数值优化阶段，对于任何非平凡的二维图谱而言均是最大开销所在。</li>
+<li>若 <strong>Step 4</strong> 显示收敛率偏低 → 应优先检查初始猜测、参数边界或模型适用性，而非性能问题。</li>
+<li>若 <strong>Step 3</strong> 或 <strong>Step 5</strong> 相对于 Step 4 异常偏大 → 值得进行性能剖析；对于典型二维图谱，这两步通常应比 Step 4 小一到两个数量级。</li>
+</ul>
+<h3 id="121-r2-computation"><strong>12.1. R² 计算</strong><a class="headerlink" href="#121-r2-computation" title="Permanent link">&para;</a></h3>
+<p>拟合优度指标 R² 在 <code>build_results_batch()</code> 中计算：</p>
+<div class="arithmatex">\[
+R^2 = 1 - \frac{\sum_i w_i (y_i - \hat{y}_i)^2}{\sum_i w_i (y_i - \bar{y}_w)^2}
+\]</div>
+<p>其中 <span class="arithmatex">\(\bar{y}_w\)</span> 为加权平均值。当存在权重时，仅非零权重数据点会同时参与分子与分母的求和计算，从而确保被掩蔽的区域（负值点、噪声基底以下的数据点）不会人为拉高或拉低所报告的拟合质量。</p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../graphs/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 图表工作区">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                图表工作区
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../mva/" class="md-footer__link md-footer__link--next" aria-label="下一页: 多元分析 (MVA)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                多元分析 (MVA)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

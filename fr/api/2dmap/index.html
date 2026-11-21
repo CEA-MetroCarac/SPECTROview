@@ -26,10 +26,16 @@
         
           <link rel="alternate" href="./" hreflang="fr">
         
+          <link rel="alternate" href="../../../de/api/2dmap/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/api/2dmap/" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/api/2dmap/" hreflang="zh">
+        
       
       
       <link rel="icon" href="../../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -37,10 +43,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -206,6 +212,36 @@
               class="md-select__link" aria-current="true"
             >
               Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/api/2dmap/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/api/2dmap/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/api/2dmap/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
             </a>
           </li>
         
@@ -1747,53 +1783,53 @@
 <hr />
 <h2 id="workspaces-a-etat-persistant">Workspaces à état persistant<a class="headerlink" href="#workspaces-a-etat-persistant" title="Permanent link">&para;</a></h2>
 <p><code>spectroview.api.workspace.MapsWorkspace</code> reproduit l'espace Maps de l'interface graphique : une carte par fichier chargé, dont tous les pixels partagent un modèle d'ajustement, avec des identifiants de pixels nommés <code>f"{map_name}_({x}, {y})"</code> (ou <code>f"{map_name}_({x}, {y})_{k}"</code> lorsque des cartes résolues en temps contiennent plusieurs balayages aux mêmes coordonnées <code>(x, y)</code>), exactement comme dans l'interface. Il lit et écrit le même format de fichier <code>.maps</code> que le bouton « Save work » de l'application.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">workspace</span><span class="p">,</span> <span class="n">fitting</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">workspace</span><span class="p">,</span> <span class="n">fitting</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">ws</span> <span class="o">=</span> <span class="n">workspace</span><span class="o">.</span><span class="n">MapsWorkspace</span><span class="p">()</span>          <span class="c1"># ou MapsWorkspace(map_type="wafer_300mm") pour les cartes wafer</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">[</span><span class="n">map_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">load_files</span><span class="p">([</span><span class="s2">"2Dmap_Si.txt"</span><span class="p">])</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">ws</span> <span class="o">=</span> <span class="n">workspace</span><span class="o">.</span><span class="n">MapsWorkspace</span><span class="p">()</span>          <span class="c1"># ou MapsWorkspace(map_type=&quot;wafer_300mm&quot;) pour les cartes wafer</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">[</span><span class="n">map_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">load_files</span><span class="p">([</span><span class="s2">&quot;2Dmap_Si.txt&quot;</span><span class="p">])</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">fit_model</span> <span class="o">=</span> <span class="n">fitting</span><span class="o">.</span><span class="n">load_fit_model_template</span><span class="p">(</span><span class="s2">"fit_model_Si.json"</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">fit_model</span> <span class="o">=</span> <span class="n">fitting</span><span class="o">.</span><span class="n">load_fit_model_template</span><span class="p">(</span><span class="s2">&quot;fit_model_Si.json&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">ws</span><span class="o">.</span><span class="n">set_fit_model</span><span class="p">(</span><span class="n">fit_model</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="n">map_name</span><span class="p">])</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">ws</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">map_names</span><span class="o">=</span><span class="p">[</span><span class="n">map_name</span><span class="p">])</span>            <span class="c1"># un seul appel vectorisé pour tous les pixels de la carte</span>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">df</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">collect_results</span><span class="p">()</span>               <span class="c1"># une ligne par pixel, incluant les coordonnées X/Y</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1"># Construire la carte thermique d'un paramètre ajusté</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">zi</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">get_heatmap</span><span class="p">(</span><span class="n">map_name</span><span class="p">,</span> <span class="s2">"ampli_Si"</span><span class="p">)</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1"># Construire la carte thermique d&#39;un paramètre ajusté</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">zi</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">get_heatmap</span><span class="p">(</span><span class="n">map_name</span><span class="p">,</span> <span class="s2">&quot;ampli_Si&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">zi</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="n">xi</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">xi</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">max</span><span class="p">()],</span> <span class="n">origin</span><span class="o">=</span><span class="s2">"lower"</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"jet"</span><span class="p">)</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">"Amplitude"</span><span class="p">)</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">"heatmap.png"</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">zi</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="n">xi</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">xi</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">max</span><span class="p">()],</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Amplitude&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;heatmap.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="c1"># Extraire un profil linéaire entre deux points de la carte thermique</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="n">profile</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">extract_profile</span><span class="p">(</span><span class="n">map_name</span><span class="p">,</span> <span class="s2">"ampli_Si"</span><span class="p">,</span> <span class="n">point1</span><span class="o">=</span><span class="p">(</span><span class="n">xi</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="n">point2</span><span class="o">=</span><span class="p">(</span><span class="n">xi</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="n">profile</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">extract_profile</span><span class="p">(</span><span class="n">map_name</span><span class="p">,</span> <span class="s2">&quot;ampli_Si&quot;</span><span class="p">,</span> <span class="n">point1</span><span class="o">=</span><span class="p">(</span><span class="n">xi</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="n">point2</span><span class="o">=</span><span class="p">(</span><span class="n">xi</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">yi</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="nb">print</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>  <span class="c1"># colonnes : X, Y, distance, values</span>
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="c1"># Sauvegarder — ce fichier s'ouvre directement dans l'interface SPECTROview</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="n">ws</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"session.maps"</span><span class="p">)</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="c1"># Sauvegarder — ce fichier s&#39;ouvre directement dans l&#39;interface SPECTROview</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="n">ws</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;session.maps&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p><code>get_heatmap(map_name, value_col, ...)</code> accepte <code>value_col="Intensity"</code> ou <code>"Area"</code> (calculés directement à partir des intensités brutes, sans ajustement préalable) ou n'importe quelle colonne de paramètre d'ajustement présente dans <code>df_fit_results</code> (appelez d'abord <code>collect_results()</code>). Pour les cartes de type <em>wafer</em> (<code>map_type != "2Dmap"</code>), la grille est construite par interpolation de points dispersés sur le rayon de plaquette défini par <code>map_type</code> ; pour <code>"2Dmap"</code>, il s'agit d'un pivot exact rapide sur la grille régulière de l'acquisition.</p>
 <p>Recharger une session ultérieurement (créée via cette API ou enregistrée depuis l'interface graphique) :</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">ws2</span> <span class="o">=</span> <span class="n">workspace</span><span class="o">.</span><span class="n">MapsWorkspace</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"session.maps"</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">ws2</span> <span class="o">=</span> <span class="n">workspace</span><span class="o">.</span><span class="n">MapsWorkspace</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;session.maps&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p><code>MapsWorkspace</code> hérite de toutes les méthodes de prétraitement de <code>SpectraWorkspace</code> (<code>crop</code>, <code>set_baseline</code>, <code>subtract_baseline</code>, <code>normalize</code>, <code>reinit</code>) — chacune s'applique simultanément à tous les pixels de la ou des cartes ciblées.</p>
 <hr />
 <h2 id="chargement-direct-des-donnees-de-carte">Chargement direct des données de carte<a class="headerlink" href="#chargement-direct-des-donnees-de-carte" title="Permanent link">&para;</a></h2>
 <p>Pour un contrôle direct sur tableaux sans <code>MapsWorkspace</code>, <code>spectroview.api.io.load_map()</code> renvoie le DataFrame brut de la carte (utilisé en interne par <code>MapsWorkspace.load_files()</code>) :</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">io</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">io</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Les fichiers WDF, SPC, L6M et NGC retournent (DataFrame, metadata_dict) ; TXT/CSV retournent uniquement un DataFrame.</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">load_map</span><span class="p">(</span><span class="s2">"my_wafer_map.wdf"</span><span class="p">)</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">load_map</span><span class="p">(</span><span class="s2">&quot;my_wafer_map.wdf&quot;</span><span class="p">)</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">df_map</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">result</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="p">{})</span>
 </code></pre></div>
 <p>Les deux premières colonnes du DataFrame retourné contiennent toujours les coordonnées spatiales (<code>X</code>, <code>Y</code>) ; toutes les colonnes suivantes correspondent aux valeurs de nombre d'onde (sous forme de chaînes de caractères) :</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">x_coords</span> <span class="o">=</span> <span class="n">df_map</span><span class="p">[</span><span class="s2">"X"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">y_coords</span> <span class="o">=</span> <span class="n">df_map</span><span class="p">[</span><span class="s2">"Y"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">x_coords</span> <span class="o">=</span> <span class="n">df_map</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">y_coords</span> <span class="o">=</span> <span class="n">df_map</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">wn_cols</span>  <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df_map</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"X"</span><span class="p">,</span> <span class="s2">"Y"</span><span class="p">)]</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">wn_cols</span>  <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df_map</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">)]</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">x_axis</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">wn_cols</span><span class="p">])</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">Y_matrix</span> <span class="o">=</span> <span class="n">df_map</span><span class="p">[</span><span class="n">wn_cols</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 </code></pre></div>
@@ -1802,12 +1838,12 @@
 <h2 id="analyse-multivariee-mva">Analyse multivariée (MVA)<a class="headerlink" href="#analyse-multivariee-mva" title="Permanent link">&para;</a></h2>
 <p>L'analyse multivariée explore de grands jeux de données complexes sans nécessiter de connaissance préalable des positions de pics. <code>spectroview.api.analysis</code> fournit l'ACP (PCA) et la NMF, applicables à toute matrice <code>(n_spectra, n_wavenumbers)</code> — par exemple <code>Y_matrix</code> ci-dessus, ou <code>Y0</code> extrait du magasin sous-jacent d'un <code>MapsWorkspace</code>.</p>
 <h3 id="analyse-en-composantes-principales-pca">Analyse en Composantes Principales (PCA)<a class="headerlink" href="#analyse-en-composantes-principales-pca" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spectroview.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">analysis</span><span class="p">,</span> <span class="n">preprocessing</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">spectroview.api</span> <span class="kn">import</span> <span class="n">analysis</span><span class="p">,</span> <span class="n">preprocessing</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">Y_norm</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">normalize_spectra</span><span class="p">(</span><span class="n">Y_matrix</span><span class="p">)</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">pca_result</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">Y_norm</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"Explained Variance Ratios:"</span><span class="p">,</span> <span class="n">pca_result</span><span class="o">.</span><span class="n">explained_variance_ratio</span><span class="p">)</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Explained Variance Ratios:&quot;</span><span class="p">,</span> <span class="n">pca_result</span><span class="o">.</span><span class="n">explained_variance_ratio</span><span class="p">)</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">scores</span>   <span class="o">=</span> <span class="n">pca_result</span><span class="o">.</span><span class="n">scores</span>     <span class="c1"># (n_spectra, n_components)</span>
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">loadings</span> <span class="o">=</span> <span class="n">pca_result</span><span class="o">.</span><span class="n">loadings</span>   <span class="c1"># (n_components, n_wavenumbers)</span>
 </code></pre></div>
@@ -1822,13 +1858,13 @@
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># errors : (n_spectra,) résidu L2 par spectre — utile pour repérer les spectres atypiques</span>
 </code></pre></div>
 <h3 id="export-des-resultats-mva">Export des résultats MVA<a class="headerlink" href="#export-des-resultats-mva" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">df_pca</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"X"</span><span class="p">:</span> <span class="n">x_coords</span><span class="p">,</span> <span class="s2">"Y"</span><span class="p">:</span> <span class="n">y_coords</span><span class="p">})</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">df_pca</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;X&quot;</span><span class="p">:</span> <span class="n">x_coords</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">:</span> <span class="n">y_coords</span><span class="p">})</span>
 <a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pca_result</span><span class="o">.</span><span class="n">n_components</span><span class="p">):</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">df_pca</span><span class="p">[</span><span class="sa">f</span><span class="s2">"PCA_Score_PC</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">df_pca</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;PCA_Score_PC</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
 <a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">df_pca</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">"map_with_pca_scores.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">df_pca</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;map_with_pca_scores.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
 <p>Pour visualiser <code>df_pca</code> sous forme de carte thermique exactement comme <code>MapsWorkspace.get_heatmap()</code>, utilisez <code>spectroview.model.spectra.heatmap.build_heatmap_grid(x_coords, y_coords, scores[:, 0], map_type="2Dmap")</code>.</p>
 
@@ -1961,10 +1997,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../../../javascripts/mathjax.js"></script>
       

@@ -1,0 +1,2881 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="用于光谱数据处理、拟合与可视化的交互式工具">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/zh/developer/maps/">
+      
+      
+        <link rel="prev" href="../spectra/">
+      
+      
+        <link rel="next" href="../graphs/">
+      
+      
+        
+          <link rel="alternate" href="../../../developer/maps/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/developer/maps/" hreflang="fr">
+        
+          <link rel="alternate" href="../../../de/developer/maps/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/developer/maps/" hreflang="ru">
+        
+          <link rel="alternate" href="./" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>二维图谱工作区 - SPECTROview 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#workspace-maps" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../" title="SPECTROview 文档" class="md-header__button md-logo" aria-label="SPECTROview 文档" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SPECTROview 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              二维图谱工作区
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="选择当前语言"
+      title="选择当前语言"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">ZH</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../developer/maps/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/developer/maps/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/developer/maps/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/developer/maps/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="zh"
+              class="md-select__link" aria-current="true"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  安装
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  用户手册
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI 智能体
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  开发者指南
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  更新日志
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="SPECTROview 文档" class="md-nav__button md-logo" aria-label="SPECTROview 文档" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    SPECTROview 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    安装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    用户手册
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    用户手册
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    支持的数据格式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    界面概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    菜单栏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱与二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多元分析 (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷计算器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    设置
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    保存与加载
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷键与技巧
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    开发者指南
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    开发者指南
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    文件加载流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据架构 SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-maps-differs-from-spectra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maps 与 Spectra 的差异
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Maps 与 Spectra 的差异">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mapdata-in-maps-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maps 上下文中的 MapData
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        架构概览
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="架构概览">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-inheritance-instead-of-composition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为何采用继承而非组合？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#maps-specific-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maps 专用组件
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Maps 专用组件">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vmworkspacemaps-the-viewmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMWorkspaceMaps — ViewModel 层
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VMWorkspaceMaps — ViewModel 层">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#additional-signals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        新增信号
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-method-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        新增方法参考
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vworkspacemaps-the-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VWorkspaceMaps — View 层
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vmapviewer-the-heatmap-canvas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMapViewer — 热图画布
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vmapslist-the-maps-list-actions-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMapsList — 图谱列表与操作面板
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vmapviewerdialog-detachable-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMapViewerDialog — 可分离独立窗口
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-dual-storage-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        双重存储模式
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="双重存储模式">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filename-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        文件命名约定
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据流
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="数据流">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loading-a-hyperspectral-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        加载高光谱二维图谱
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#map-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        二维图谱选择
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fitting-workflow-maps-override" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        拟合工作流（Maps 覆写）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#after-fitting-propagating-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        拟合后：结果传递与同步
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#map-visualization-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        图谱可视化流水线
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="图谱可视化流水线">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#heatmap-caching-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        热图缓存策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interactive-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        交互式选择
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#template-method-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模板方法覆写
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="模板方法覆写">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_get_target_mdsapply_all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _get_target_mds(apply_all)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_on_map_data_changedmd-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _on_map_data_changed(md, action)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_post_bulk_actionapply_all-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _post_bulk_action(apply_all, action)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_emit_selected_spectra-override" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _emit_selected_spectra() 覆写
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-workspace-communication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        跨工作区通信
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="跨工作区通信">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#maps-spectra-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maps → 光谱工作区
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maps-graphs-workspace-profile-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maps → 图表工作区（剖面提取）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fit-results-with-spatial-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        带空间列的拟合结果
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        持久化
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="持久化">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modern-format-v2-zip-backed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        现代格式（v2+，基于 ZIP）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#legacy-loader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        旧版加载器
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extension-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        扩展指南
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="扩展指南">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-new-map-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        添加新的二维图谱文件格式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-new-z-parameter-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        添加新的 Z 参数类型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-new-map-type-beyond-wafer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        添加新的图谱类型（晶圆图之外）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        故障排查
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    向量化批量拟合引擎 (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多元分析 (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    本地 MCP 服务器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱工作区（加载、预处理、拟合）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区（高光谱、热图）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据可视化（图表）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷计算器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    扩展 SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    更新日志
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="导航栏" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    首页
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    开发者指南
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="workspace-maps"><strong>工作区：二维图谱</strong><a class="headerlink" href="#workspace-maps" title="Permanent link">&para;</a></h1>
+<p><code>Maps</code> 工作区专门处理<strong>高光谱二维图谱数据</strong>——即每个像素对应一条完整光谱的空间分辨光谱数据集。它通过继承扩展了<a href="../spectra/">光谱工作区</a>，自动获得所有的拟合、基线处理、峰编辑及持久化功能，并在此基础上增加了空间位置感知、热图可视化以及基于坐标的操作。</p>
+<blockquote>
+<p>[!NOTE]
+<strong>前置知识</strong> —— 在阅读本指南前，请确保您已熟悉以下内容：</p>
+<ul>
+<li><a href="../spectra_store/">数据架构：SpectraStore</a> —— 共享的 <code>MapData</code> / <code>SpectraStore</code> 数据模型。</li>
+<li><a href="../spectra/">工作区：光谱</a> —— 基础 ViewModel、View 组件与数据流模式。</li>
+</ul>
+<p>本页<strong>仅介绍 Maps 工作区特有的扩展功能</strong>，继承自父类的行为不再赘述。</p>
+</blockquote>
+<hr />
+<h2 id="how-maps-differs-from-spectra">Maps 与 Spectra 的差异<a class="headerlink" href="#how-maps-differs-from-spectra" title="Permanent link">&para;</a></h2>
+<p>两者的核心差异在于 <code>MapData.N</code> 的基数不同：</p>
+<table>
+<thead>
+<tr>
+<th>工作区</th>
+<th><code>MapData.N</code></th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>光谱</strong> (Spectra)</td>
+<td>1</td>
+<td>每个 <code>MapData</code> 数据块包含 1 条光谱</td>
+</tr>
+<tr>
+<td><strong>二维图谱</strong> (Maps)</td>
+<td>2 – 100 000</td>
+<td>N 条光谱共享同一个波数轴</td>
+</tr>
+</tbody>
+</table>
+<p>由于底层的<a href="../spectra_store/#mapdata-the-tensor-block">张量模型</a>完全一致，因此适用于 1 条光谱的向量化拟合同样可以直接处理 100 000 条光谱，引擎代码无需任何改动。</p>
+<h3 id="mapdata-in-maps-context">Maps 上下文中的 <code>MapData</code><a class="headerlink" href="#mapdata-in-maps-context" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>MapData (&quot;wafer_300mm&quot;) — 50×50 wafer (2500 spectra, 1000 wavenumbers)
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── x0:          float64[1000]          1 shared wavenumber axis
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── Y0:          float32[2500, 1000]    raw intensities — 10 MB
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>├── x:           float64[800]           after spectral crop
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── Y:           float32[2500, 800]     after crop + baseline sub — 8 MB
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├── coords:      float64[2500, 2]       (X, Y) stage positions in µm
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>├── fnames:      list[str] × 2500       &quot;wafer_300mm_(x_pos, y_pos)&quot;
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>├── is_active:   bool[2500]             checkbox state
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>├── peak_params: float64[2500, K]       after VBF fit — all 2500 at once
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>├── fit_success: bool[2500]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>├── fit_r2:      float64[2500]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>├── Y_bestfit:   float32[2500, 800]     8 MB
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>└── Y_peaks:     [float32[2500, 800], ...]   8 MB per peak
+</code></pre></div>
+<hr />
+<h2 id="architecture-overview">架构概览<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>graph LR
+    subgraph View ["View 层"]
+        VWM["VWorkspaceMaps&lt;br/&gt;(继承自 VWorkspaceSpectra)"]
+        ML["VMapsList&lt;br/&gt;(图谱列表 + 操作按钮)"]
+        MV["VMapViewer&lt;br/&gt;(Matplotlib 热图)"]
+        MVD["VMapViewerDialog&lt;br/&gt;(可分离视图窗口)"]
+        SV_inh["VSpectraViewer&lt;br/&gt;(继承)"]
+        FMB_inh["VFitModelBuilder&lt;br/&gt;(继承)"]
+    end
+
+    subgraph VM ["ViewModel 层"]
+        VMWM["VMWorkspaceMaps&lt;br/&gt;(继承自 VMWorkspaceSpectra)"]
+        VMWS_inh["VMWorkspaceSpectra&lt;br/&gt;(基类)"]
+    end
+
+    subgraph Model ["Model 层"]
+        SS["SpectraStore"]
+        IO["m_io&lt;br/&gt;(二维图谱文件加载器)"]
+        VBF["VBFthread&lt;br/&gt;(超大规模批量拟合)"]
+        WIO["WorkspaceIO"]
+    end
+
+    VWM --&gt; ML &amp; MV &amp; MVD
+    VWM --&gt; SV_inh &amp; FMB_inh
+    VWM --&gt;|"方法调用"| VMWM
+    VMWM -.-&gt;|"继承自"| VMWS_inh
+    VMWM --&gt;|"Qt 信号"| VWM
+    VMWM --&gt; SS &amp; IO &amp; VBF &amp; WIO</code></pre>
+<h3 id="why-inheritance-instead-of-composition">为何采用继承而非组合？<a class="headerlink" href="#why-inheritance-instead-of-composition" title="Permanent link">&para;</a></h3>
+<p><code>VMWorkspaceMaps</code> <strong>继承并扩展</strong> <code>VMWorkspaceSpectra</code>，而非将其封装组合：</p>
+<ul>
+<li>所有拟合算法（基线、峰、VBF 引擎）对单条光谱（N=1）与二维图谱（N&gt;1）均采用完全相同的处理逻辑。</li>
+<li>复制或委派拟合代码会增加维护上的脆弱性。</li>
+<li>通过<strong>模板方法模式（Template Method pattern）</strong>覆写三个钩子方法，即可定制批量操作的作用目标，而无需分叉任何算法逻辑。</li>
+</ul>
+<p>View 层也采用相同的模式：<code>VWorkspaceMaps</code> 继承 <code>VWorkspaceSpectra</code>，覆写 <code>setup_connections()</code> 以避免在 <code>__init__</code> 期间重复连接信号槽，随后将右侧边栏控件替换为二维图谱专用的 <code>VMapsList + VMapViewer</code> 面板。</p>
+<hr />
+<h2 id="maps-specific-components">Maps 专用组件<a class="headerlink" href="#maps-specific-components" title="Permanent link">&para;</a></h2>
+<h3 id="vmworkspacemaps-the-viewmodel"><code>VMWorkspaceMaps</code> — ViewModel 层<a class="headerlink" href="#vmworkspacemaps-the-viewmodel" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/viewmodel/maps/vm_workspace_maps.py"><code>vm_workspace_maps.py</code></a>（拟合与持久化 Mixin 位于 <code>spectroview/viewmodel/maps/</code>）</p>
+<p>除继承自 <a href="../spectra/#vmworkspacespectra-the-viewmodel">VMWorkspaceSpectra</a> 的状态外，新增以下属性：</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>类型</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maps</code></td>
+<td><code>dict[str, pd.DataFrame]</code></td>
+<td>按名称索引的原始图谱 DataFrame（历史兼容缓存）</td>
+</tr>
+<tr>
+<td><code>current_map_name</code></td>
+<td><code>str \| None</code></td>
+<td>当前激活选中的图谱名称</td>
+</tr>
+<tr>
+<td><code>maps_metadata</code></td>
+<td><code>dict[str, dict]</code></td>
+<td>各图谱的采集元数据（WDF、SPC、L6M、NGC）</td>
+</tr>
+<tr>
+<td><code>map_type</code></td>
+<td><code>str</code></td>
+<td><code>'2Dmap'</code> 或 <code>'Wafer_300mm'</code> / <code>'Wafer_200mm'</code> / <code>'Wafer_100mm'</code></td>
+</tr>
+<tr>
+<td><code>graphs_workspace</code></td>
+<td>ref</td>
+<td>注入的图表工作区引用，用于剖面提取</td>
+</tr>
+</tbody>
+</table>
+<h4 id="additional-signals">新增信号<a class="headerlink" href="#additional-signals" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">maps_list_changed</span>       <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>    <span class="c1"># map name list updated → VMapsList</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">map_data_updated</span>        <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>  <span class="c1"># current map DF changed → trigger heatmap redraw</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">send_spectra_to_workspace</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># deep copies → Spectra workspace</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">clear_map_cache_requested</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>   <span class="c1"># map name → VMapViewer cache invalidation</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">switch_to_graphs_tab</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>        <span class="c1"># request tab switch after profile extraction</span>
+</code></pre></div>
+<h4 id="additional-method-reference">新增方法参考<a class="headerlink" href="#additional-method-reference" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>图谱加载</strong></td>
+<td><code>load_map_files(paths)</code></td>
+</tr>
+<tr>
+<td><strong>图谱选择与排序</strong></td>
+<td><code>select_map(name)</code>, <code>select_maps(names, primary)</code>, <code>reorder_maps(new_order)</code>, <code>_show_map_spectra(name)</code></td>
+</tr>
+<tr>
+<td><strong>图谱删除</strong></td>
+<td><code>delete_current_map()</code>, <code>remove_map(name)</code></td>
+</tr>
+<tr>
+<td><strong>图谱数据</strong></td>
+<td><code>get_current_map_dataframe()</code>, <code>get_fit_results_dataframe()</code></td>
+</tr>
+<tr>
+<td><strong>导出</strong></td>
+<td><code>save_current_map_to_csv(file_path)</code></td>
+</tr>
+<tr>
+<td><strong>拟合</strong> (Fit)</td>
+<td><code>fit()</code>, <code>_run_fit_thread()</code>, <code>collect_fit_results()</code> —— 均覆写父类方法</td>
+</tr>
+<tr>
+<td><strong>跨工作区</strong></td>
+<td><code>send_selected_spectra_to_spectra_workspace()</code>, <code>extract_and_send_profile_to_graphs()</code></td>
+</tr>
+<tr>
+<td><strong>持久化</strong></td>
+<td><code>save_work()</code>, <code>load_work()</code>, <code>_load_legacy_maps()</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="vworkspacemaps-the-view"><code>VWorkspaceMaps</code> — View 层<a class="headerlink" href="#vworkspacemaps-the-view" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/workspaces/v_workspace_maps.py"><code>v_workspace_maps.py</code></a></p>
+<p>覆写 <code>_add_maps_panel()</code>，将继承而来的光谱侧边栏替换为：</p>
+<ul>
+<li><code>VMapViewer</code> —— 带有 Z 参数选择与 X 范围滑块的热图画布。</li>
+<li><code>VMapsList</code> —— 包含图谱管理与光谱操作按钮的图谱列表面板。</li>
+</ul>
+<p>左侧区域（<code>SpectraViewer</code> + 底部标签页）继承自 <code>VWorkspaceSpectra</code>。其中 <code>VWorkspaceSpectra</code> 会将 <code>VLiveMaps</code> 和 <code>VMLiveMaps</code> 初始化为 <code>"spectra"</code> 模式（绘制当前所选光谱的一维参数变化曲线），而 <code>VWorkspaceMaps</code> 则将继承的 <code>v_live_maps</code> 和 <code>vm_live_maps</code> 实例切换为 <code>"map"</code> 模式（<code>set_mode("map")</code>）。</p>
+<p>在 <code>Maps</code> 工作区中，加载或选择图谱时，<code>VWorkspaceMaps</code> 会同步维护一套<strong>双层选择模型（Two-Tier selection model）</strong>：</p>
+<ul>
+<li><strong>主图谱（<code>VMWorkspaceMaps.current_map_name</code>）</strong>：驱动预处理、拟合、<code>VMapViewer</code>、<code>VSpectraViewer</code>、多元分析（MVA）以及 <code>More</code> 元数据面板，其行为与单选工作流完全一致。</li>
+<li><strong>已选图谱列表（<code>VMWorkspaceMaps.selected_map_names</code>）</strong>：通过 <code>VMapsList</code>（<code>QAbstractItemView.ExtendedSelection</code>）填充，支持使用 <code>Ctrl+Click</code> / <code>Shift+Click</code> 进行多图谱对比，而不会改变针对主图谱的操作；只要主图谱未发生变化，也不会触发 <code>VMapViewer</code> 重绘。</li>
+</ul>
+<p><code>VWorkspaceMaps</code> 仅在<strong>实时图谱</strong> (Live Maps) 标签页处于激活状态时，才将 <code>[MapData, ...]</code> 和 <code>primary_name</code> 转发给 <code>self.vm_live_maps.set_map_datas(...)</code>（否则标记 <code>_live_maps_dirty = True</code> 以便在切换至该标签页时执行单次延迟刷新，同时忽略 <code>VMapViewer</code> 上的空间测点点击）。在 <code>VSpectraViewer</code> 上启用 R/B/G 波段选择器时，<code>VWorkspaceSpectra._on_range_selector_toggled()</code> 会自动将 <code>bottom_tabs</code> 切换至 <code>Live Maps</code> 并立即刷新任何待处理的选择。<code>VMLiveMaps</code> 通过带缓存的 <code>analyze_map_geometry()</code> 与 <code>build_map_gridder()</code> 检查 <code>md.coords</code>（在 <code>coords</code> 或 <code>is_active</code> 未改变前一直缓存规则网格索引或 <code>Delaunay</code> 重心顶点/权重），排除未勾选的光谱（<code>~md.is_active</code>），按 <code>(id(md), md.name, md.data_version, param, range)</code> 键在拖动期间缓存单参数数据切片，并应用<strong>主图谱优先（Primary-Precedence）</strong>的维度自适应策略：</p>
+<ul>
+<li><strong>主图谱为一维剖面</strong>：发射 <code>multi_profile_data_ready</code>（当 <span class="arithmatex">\(\ge 2\)</span> 条剖面时）或 <code>profile_data_ready</code>（单条剖面）信号，以匹配的配色方案（<code>DEFAULT_COLORS</code>）和统一线宽叠加绘制所有选中的一维剖面，并在上下文标题栏提示被排除的二维图谱。</li>
+<li><strong>主图谱为二维图谱</strong>：填充 <code>map_2d_candidates_changed</code> 以驱动标签页顶部的 <code>[◀ | ComboBox | ▶]</code> 二维图谱切换器，排除一维剖面，并仅通过 <code>map_data_ready</code> 计算并渲染当前可见的单幅二维热图。</li>
+<li><strong>红/蓝强度比值（<code>R/B ratio</code>）</strong>：在单/多条一维剖面与二维热图上均动态计算 <span class="arithmatex">\(I_{\mathrm{Red}} / I_{\mathrm{Blue}}\)</span>，并将零或近零的蓝区强度以及未勾选的光谱屏蔽为 <code>NaN</code>。当绿区通道选中 <code>R/B ratio</code> 时，<code>VWorkspaceSpectra._on_range_selector_parameter_changed()</code> 会通知 <code>VSpectraViewer.set_range_selector_parameter()</code> 在光谱画布上隐藏绿区选框括号（一旦切换回其他光谱参数即自动恢复显示）。</li>
+</ul>
+<p>对于超大规模批次（默认通过 <code>ASYNC_SPECTRUM_THRESHOLD</code> 设定为 <code>&gt;= 25,000</code> 条激活光谱），<code>VMLiveMaps</code> 会将纯 NumPy 计算与网格化任务卸载到单工作线程的 <code>QThreadPool</code>（<code>_LiveMapWorker</code>）中执行，通过带父对象的 <code>QObject</code>（<code>_LiveMapWorkerBridge</code>）进行桥接通信，并配合单调递增的 <code>_generation_id</code> 实现过期任务取消及退出时的 <code>shutdown()</code> 清理。<code>VMLiveMaps</code> 还会发射 <code>spatial_sites_changed</code> 信号（携带按序排列的激活测点坐标、可选的一维剖面位置以及目标图谱名称），使实时图谱面板与当前激活数据集保持对齐。在 UI 层面，RGB 波段选择与实时图谱相关控件共同位于 <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/rgb_live_maps/__init__.py"><code>spectroview/view/components/rgb_live_maps/</code></a>（包括 <code>v_live_maps.py</code>、<code>v_live_maps_options.py</code>、<code>v_live_map_subpanel.py</code>、<code>v_live_map_1d.py</code>、<code>v_live_map_2d.py</code>、<code>v_live_map_selection.py</code>、<code>v_live_maps_legend_editor.py</code>、<code>v_range_selector.py</code>、<code>v_range_bracket_mixin.py</code>、<code>common.py</code>）。<code>VLiveMaps</code> 提供持久化的 <strong>Show Legend</strong> 按钮以及与 <code>VSpectraViewer</code> 行间距（<code>(2, 2, 2, 2)</code> 边距）一致的紧凑双栏<strong>更多视图选项</strong> (More view options) 菜单（<code>btn_legend</code> / <code>btn_options</code>），可在清晰的 96 DPI 基准下实现即时的客户端样式重绘：独立的 <strong>Plot theme</strong>（默认 <code>"Light Mode"</code> 或 <code>"Dark Mode"</code>，与全局 Qt UI 图标通过 <code>apply_global_theme()</code> 解耦）、线性/对数 X、Y 和 Z 色标缩放（带非正定义域保护）、<code>line</code>/<code>dot</code>/<code>line+dots</code> 绘图样式（默认 <code>"line"</code>）、线宽（<code>1.5</code>）、点大小（<code>1.5</code>）、图表文字大小（<code>6–24 pt</code>）、<strong>Copied figure size</strong>（<code>copy_fig_width</code>/<code>copy_fig_height</code>，默认 <code>5.5 × 4.0</code> in）与 <strong>Copied figure theme</strong>（<code>Light Mode</code>/<code>Dark Mode</code>），确保复制到剪贴板的图像始终以固定物理尺寸与纵横比渲染而不受窗口大小变化影响；此外还支持图例位置/列数/字号配置、用于自定义画布图例标签与颜色的 <code>LiveMapsLegendEditorDialog</code>、一维共享 Y 轴同步（关闭时恢复各子面板原有边界）、坐标轴图像标签开关（<code>show_figure_label</code>，默认关闭）、无警告网格线（默认关闭）、热图平滑以及色标显示开关。视图选项通过 <code>MSettings</code> 跨重启持久化存储（<code>live_maps_view_options/*</code>，带有 250 ms 防抖保存及退出刷盘机制），并在光谱工作区与二维图谱工作区之间保持双向同步。每个 <code>LiveMapSubpanel</code> 还在内部集成了与 <code>NoDoubleClickZoomToolbar</code> 双向同步的每面板独立 <strong>Rescale</strong>、<strong>Pan</strong> 和<strong>缩放</strong> (Zoom) 按钮（同时保留双击图例打开编辑的功能）；支持双模式<strong>复制</strong> (Copy)（<code>btn_copy</code>：普通点击按固定 <code>copy_fig_width</code> × <code>copy_fig_height</code> 和 <code>copy_fig_theme</code> 复制图像画布；<code>Ctrl + Click</code> 则发射 <code>copy_data_requested(color_id)</code>，通过 <code>copy_df_to_clb()</code> 将底层表格数据以 TSV 格式复制至剪贴板，全面覆盖一维变化序列、单/多条一维剖面，以及由 <code>VMLiveMaps.get_2d_copy_points()</code> 提供并支持 <code>_grid</code>/<code>_extent</code> 回退的二维 <code>(X, Y, Value)</code> 数据点）；当显示一维折线图时，会自动将第 2 行的二维色标选择器替换为各子面板独享的仅视图显示级一维 <strong>Normalization</strong> 控件（<code>btn_norm</code>、<code>norm_xmin</code>、<code>norm_xmax</code>，底层由 <code>_normalize_1d_values()</code> 以及归一化后的 <code>_get_primary_profile_values()</code> / <code>reset_view()</code> + <code>normalization_changed</code> → <code>_sync_shared_y()</code> 支撑）；并通过 <a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/map_viewer/map_selection.py"><code>map_selection.py</code></a> 与 <code>VMapViewer</code> 共享空间几何计算（<code>compute_2d_spatial_geometry()</code>）、单击/Ctrl+Click/框选解析（<code>resolve_xy_selection()</code> / <code>resolve_1d_profile_selection()</code>）以及红色选区叠加层（<code>MapCanvasSelector</code>），只要 Pan/Zoom 工具及图例框未处于激活交互状态即可生效（通过 <code>VWorkspaceMaps._on_live_maps_point_selection()</code> 路由 <code>VLiveMaps.spectra_selected</code> 信号，在不重算网格的前提下同步更新 <code>VSpectraViewer</code>、<code>VMapViewer</code>、独立弹窗视图以及全部 R/B/G 子面板）；同时借助快速 UI 样式重绘（<code>apply_view_options_fast()</code>）、<code>@lru_cache</code> 缓存的 <code>mplstyle</code> 字典（<code>_get_cached_style_dict</code>）、稳定布局冻结（<code>_on_canvas_draw</code> / <code>_request_relayout</code>）以及带父对象的 35 ms 合并重绘定时器，确保交互式选项调节始终流畅不卡顿。</p>
+<p>在连续拖动波段选择器时，更新会进行自适应防抖（60–250 ms），并在鼠标松开时立即刷新（<code>VSpectraViewer.range_drag_finished</code> → <code>VMLiveMaps.flush_pending()</code>）。在拖动选框括号期间，<code>RangeSelectorManager.render()</code> 原地更新现有的 Matplotlib Artist 对象（启用 <code>set_animated(True)</code> 配合 Agg 背景位块传输 <em>blitting</em>，通过 <code>VSpectraViewer</code> 上的 <code>SpectraRangeBracketMixin</code> 暂时挂起 <code>layout_engine</code>，并利用 <code>transData.inverted()</code> 限制水平边界）；与此同时，<code>LiveMapSubpanel</code> 的快速更新路径（<code>update_series()</code> / <code>update_multi_profile()</code>）会缓存主题/字号/网格/X 域签名（<code>_invalidate_style_caches()</code>），而 <code>MapCanvasSelector.draw_1d_overlay()</code> 则原地复用已有的一维选区标记，彻底消除因频繁调用 <code>tick_params()</code>/<code>AutoLocator()</code> 导致的重绘开销。波段选择器的 Artist 通过 Matplotlib 的 <code>ax.add_artist()</code> 添加，避免污染 <code>ax.dataLim</code>，从而保证 <strong>Rescale</strong> 按钮（<code>Ctrl+R</code>）始终仅缩放到光谱数据本身的范围。</p>
+<p><strong>集中式图谱类型管理</strong>：<code>selected_map_type</code> 属性是所有视图组件（主视图 + 独立弹窗）的唯一事实来源。当用户在任意视图中更改组合框选项时，<code>_on_map_type_changed()</code> 会同步更新全部视图，从而避免状态漂移。</p>
+<h3 id="vmapviewer-the-heatmap-canvas"><code>VMapViewer</code> — 热图画布<a class="headerlink" href="#vmapviewer-the-heatmap-canvas" title="Permanent link">&para;</a></h3>
+<p><strong>包路径</strong>：<a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/map_viewer/__init__.py"><code>map_viewer/</code></a>（<code>v_map_viewer.py</code>、<code>v_map_plot.py</code>、<code>v_map_data.py</code>、<code>v_map_interactions.py</code>、<code>map_selection.py</code>）</p>
+<p>这是整个 View 层中最复杂的组件（约 1 300 行代码），同时负责渲染二维矩形图谱与圆形晶圆图谱。其核心特性包括：</p>
+<ul>
+<li>Z 参数组合框（<strong>强度</strong> (Intensity) / <strong>面积</strong> (Area) / 任意拟合结果列）</li>
+<li>X 范围双滑块（筛选参与计算 Z 值的波数区间）</li>
+<li>异常点剔除开关</li>
+<li><strong>精确空间坐标定位</strong>：对于规则笛卡尔网格，通过带对称边界范围的 <code>imshow</code> 实现快速渲染；对于不规则或离散坐标（例如在 <code>2Dmap</code> 模式下加载的晶圆图文件），则自动通过 <code>PatchCollection</code> 在每个测点的精确 <span class="arithmatex">\((X, Y)\)</span> 坐标处绘制正方形像素块，彻底消除热图单元与选区叠加层之间的空间错位。</li>
+<li><strong>色标刻度组合框</strong>（<strong>线性</strong> (Linear) / <strong>对数</strong> (Log)，位于选项菜单 <code>…</code> 中）—— <code>_build_color_kwargs()</code> 会为“对数”返回 <code>matplotlib.colors.LogNorm</code>（当 Z 范围并非严格正值时，由于强度/面积会被截断至 <code>&gt;=0</code> 且拟合参数可能 <code>&lt;=0</code>，会自动回退至普通线性 <code>vmin</code>/<code>vmax</code>）；该逻辑同时适用于 <code>2Dmap</code> 的 <code>imshow</code> 与晶圆的 <code>griddata</code> <code>imshow</code>。</li>
+<li>交互式选择（单击、矩形框选、剖面线）</li>
+<li><strong>原地 Artist 更新与数据集隔离</strong>：当对当前活动图谱（<code>_last_rendered_map_name == map_df_name</code>）修改参数、X 范围或调色板时，<code>_do_plot_heatmap_internal()</code> 会走快速路径，原地更新 <code>self.img</code>（<code>set_data</code> / <code>set_array</code>、<code>set_extent</code>、<code>set_clim</code>）及 <code>self.cbar.update_normal(...)</code>，避开破坏性的 <code>figure.clf()</code>、子图重建和高耗时的 <code>tight_layout()</code>。而在不同图谱数据集或图谱类型之间切换时，则会执行干净的坐标轴重建，同时复用 <code>_griddata_cache</code> 中缓存的 <code>(heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col, dx, dy)</code>。</li>
+<li><strong>Z 范围滑块快速更新</strong>：实时拖动滑块事件会绕过缓存键重算与图谱重绘，直接原地更新 <code>set_clim()</code> / <code>set_norm()</code> 与色标。</li>
+<li><strong>矢量导航控件与内置坐标显示</strong>：交互式导航按钮（<code>btn_home</code> / <code>btn_rescale</code>、<code>btn_pan</code>、<code>btn_zoom</code>）采用与 SPECTROview 工具栏控件完全一致的样式（<code>28x28</code>、<code>@surface_elevated</code>、圆角边框）和矢量 SVG 图标（<code>Icons.rescale()</code>、<code>Icons.pan()</code>、<code>Icons.zoom()</code>），替换默认的 Matplotlib 图标并与 <code>NavigationToolbar2QT</code> 保持双向模式同步。原生 Matplotlib 工具栏完全隐藏在后台，实时坐标则由专用的原生 <code>lbl_coordinates</code> 标签（<code>min-width: 180px</code>、<code>@text_secondary</code>、右对齐）整洁显示，无裁切或布局抖动。</li>
+<li>多视图弹窗生成</li>
+</ul>
+<h3 id="vmapslist-the-maps-list-actions-panel"><code>VMapsList</code> — 图谱列表与操作面板<a class="headerlink" href="#vmapslist-the-maps-list-actions-panel" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/lists/v_map_list.py"><code>v_map_list.py</code></a></p>
+<p>在内部的 <code>_ReorderableMapsList(QListWidget)</code> 中展示已加载的图谱名称（支持通过 <code>Shift+Click</code> / <code>Ctrl+Click</code> 进行 <code>ExtendedSelection</code> 多选，并通过 <code>maps_selection_changed(selected_names, primary_name)</code> 跟踪主图谱焦点；同时支持 <code>InternalMove</code> 拖放重排并发射 <code>maps_order_changed(new_order)</code> 信号，同时忽略外部 URL MIME 拖放以便文件拖放能够传递至父窗口）。在内部拖放时，系统会保留当前选区与主图谱焦点而不会产生瞬时选择抖动，并将新顺序转发至 <code>VMWorkspaceMaps.reorder_maps()</code>，从而更新 <code>self.maps</code>、<code>SpectraStore.reorder_maps()</code> 与 <code>selected_map_names</code>，并同步刷新 <code>VMapsList</code> 和实时图谱，而无需重置 <code>VMapViewer</code>。同时配备快捷管理按钮（View、<strong>删除</strong> (Delete)——在删除多幅所选图谱时会弹出确认提示、Export CSV）以及统一的光谱操作按钮（<strong>全选</strong> (Select All)、Reinitialize、Fitting Statistics、Send to Spectra Workspace），针对主图谱及其空间选中的光谱执行对应操作。</p>
+<h3 id="vmapviewerdialog-detachable-window"><code>VMapViewerDialog</code> — 可分离独立窗口<a class="headerlink" href="#vmapviewerdialog-detachable-window" title="Permanent link">&para;</a></h3>
+<p><strong>文件</strong>：<a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/map_viewer/v_map_viewer_dialog.py"><code>v_map_viewer_dialog.py</code></a></p>
+<p>围绕第二个 <code>VMapViewer</code> 实例构建的 <code>QDialog</code> 包装器。它启用了 <code>Qt.WindowStaysOnTopHint</code>，使用户在浮动窗口中挑选像素点的同时，主窗口仍能持续展示对应的光谱。支持同时打开多个独立弹窗，各自在同一份空间数据上展示不同的 Z 参数。底层数据以引用方式共享，不存在任何数据复制开销。</p>
+<hr />
+<h2 id="the-dual-storage-pattern">双重存储模式<a class="headerlink" href="#the-dual-storage-pattern" title="Permanent link">&para;</a></h2>
+<p><code>Maps</code> 工作区为同一份数据维护了<strong>两套存储结构</strong>：</p>
+<ol>
+<li><strong><code>self.maps[map_name]</code></strong> —— 包含 <code>X, Y, w1, w2, ...</code> 列的 <code>pd.DataFrame</code>（每行对应一条光谱）。这是加载阶段由文件解析器填充的历史兼容存储结构。</li>
+<li><strong><code>self.store.get_map_data(map_name)</code></strong> —— 包含全部处理状态的 <code>MapData</code> 张量数据块。</li>
+</ol>
+<p>DataFrame 用于<strong>热图输入</strong>（数据透视表 → <code>imshow</code>）和 <strong>CSV 导出</strong>；张量数据块则用于<strong>所有分析运算</strong>（基线处理、拟合、结果汇总）。将已处理数据保存为 CSV 时，<code>save_current_map_to_csv()</code> 会从 <code>md.x</code> / <code>md.Y</code>（已处理数据）而非原始 DataFrame 中读取。</p>
+<blockquote>
+<p>[!IMPORTANT]
+当新开发者疑惑“数据究竟存在哪里？”时，答案是：<strong>两处均有存储，但各自承担不同职责</strong>。DataFrame 是文件加载器的入口以及热图流水线的输入源；张量数据块则是所有分析运算的唯一事实来源。各类预处理修改（基线、裁剪）仅作用于张量数据块——不会回写更新 DataFrame。</p>
+</blockquote>
+<h3 id="filename-convention">文件命名约定<a class="headerlink" href="#filename-convention" title="Permanent link">&para;</a></h3>
+<p><code>MapData</code> 数据块中的每一行光谱都会根据其空间坐标生成唯一的 <code>fname</code>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">fname</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">map_name</span><span class="si">}</span><span class="s2">_(</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">x_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">y_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># Example: &quot;wafer_300mm_(12.5, -7.0)&quot;</span>
+</code></pre></div>
+<p>该命名约定贯穿整个代码库，用于实现以下功能：</p>
+<ul>
+<li>筛选属于特定图谱的光谱：<code>fname.startswith(f"{map_name}_(")</code></li>
+<li>从 <code>fname</code> 中提取坐标：解析 <code>(</code> 与 <code>)</code> 之间的坐标文本。</li>
+<li>将 <code>SpectraStore</code> 条目匹配回 <code>DataFrame</code> 行，用于热图渲染。</li>
+</ul>
+<p>坐标解析逻辑集中实现在 <code>parse_coords_from_fname()</code>（位于 <code>viewmodel/common/spectral_utils.py</code>，并在 <code>viewmodel/utils.py</code> 中重新导出）；<code>VWorkspaceMaps._extract_coords_from_fname()</code> 与 <code>VMWorkspaceMaps._extract_coords_for_spectra()</code> 均委托给该函数执行。如果未来需要修改 <code>fname</code> 约定，只需更新这一处辅助函数（同时确保写入端 <code>_extract_spectra_from_map()</code> 中的 <code>float()</code> 格式化逻辑保持完全一致）。</p>
+<hr />
+<h2 id="data-flow">数据流<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h2>
+<h3 id="loading-a-hyperspectral-map">加载高光谱二维图谱<a class="headerlink" href="#loading-a-hyperspectral-map" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>用户操作</strong>：用户在 <code>VWorkspaceMaps</code> 中触发加载图谱文件的操作。</li>
+<li><strong>View → ViewModel</strong>：View 调用 <code>vm.load_map_files(paths)</code>。</li>
+<li><strong>文件解析</strong>：针对每个文件，ViewModel 委托给 <code>m_io</code> 模块（<code>load_wdf_map</code>、<code>load_spc_map</code>、<code>load_l6m_map</code>、<code>load_ngc_map</code> 等）。I/O 模块返回包含 <code>X</code>、<code>Y</code> 与所有波数列的 DataFrame，以及采集元数据。</li>
+<li><strong>数据存储（历史结构）</strong>：ViewModel 将返回的 DataFrame 缓存在 <code>self.maps[name]</code> 中。</li>
+<li><strong>数据提取</strong>：ViewModel 调用 <code>_extract_spectra_from_map(name, map_df)</code>，该函数进一步委托给 <code>m_io.py</code> 中的 <code>extract_map_arrays(name, map_df)</code>，从 DataFrame 中提取 <code>x0</code>、<code>Y0</code> 和空间坐标 <code>coords</code> 数组，并构建像素的 <code>fnames</code> 列表。</li>
+<li><strong>数据存储（张量）</strong>：ViewModel 通过 <code>add_map(name, x0, Y0, coords, fnames, is_active)</code> 将数据注册到 <code>SpectraStore</code> 中。</li>
+<li><strong>UI 更新</strong>：所有文件处理完成后，ViewModel 发射携带有已加载图谱名称列表的 <code>maps_list_changed</code> 信号。</li>
+</ol>
+<p><code>extract_map_arrays()</code> 会自动剔除末尾或非数值型的 <code>Unnamed:</code> 列，同时保留全部有效的数值波数通道；并且仅当存在重复的 <code>(X, Y)</code> 空间坐标（例如固定晶圆位点的时间分辨多次扫描图谱）时，才会自动向 <code>fnames</code> 追加 <code>_{k}</code> 后缀。</p>
+<h3 id="map-selection">二维图谱选择<a class="headerlink" href="#map-selection" title="Permanent link">&para;</a></h3>
+<p>当用户在 <code>VMapsList</code> 中点击某个图谱名称或打开新图谱时：</p>
+<ol>
+<li><strong>用户操作</strong>：用户在 <code>VMapsList</code> 控件中打开图谱文件或点击某个图谱名称。</li>
+<li><strong>View → ViewModel</strong>：View 捕获该事件并调用 <code>vm.select_map(map_name)</code>。</li>
+<li><strong>状态更新与自动选中</strong>：ViewModel 设置 <code>current_map_name = map_name</code>，填充 <code>_show_map_spectra(map_name)</code>，并自动选中第一条光谱 <code>self.selected_fnames = [md.fnames[0]]</code>，同时发射 <code>spectra_selection_changed</code> 信号以立即在 <code>VSpectraViewer</code> 中绘制第一条光谱。</li>
+<li><strong>图谱视图刷新</strong>：ViewModel 发射 <code>map_data_updated(current_map_df)</code>。</li>
+<li><strong>画布重绘与选区叠加</strong>：<code>VWorkspaceMaps</code> 将更新后的数据转发给 <code>VMapViewer.set_map_data()</code>，后者自动用红色选区叠加层高亮第一个坐标点 <code>(x_0, y_0)</code> 并调用 <code>plot_heatmap()</code> 渲染空间数据。浮动独立视图弹窗也会保持同步。</li>
+</ol>
+<h3 id="fitting-workflow-maps-override">拟合工作流（Maps 覆写）<a class="headerlink" href="#fitting-workflow-maps-override" title="Permanent link">&para;</a></h3>
+<p>Maps 工作区覆写了 <a href="../spectra/#fitting-workflow"><code>fit()</code></a>，用于构建可覆盖整幅二维图谱的<strong>多任务批次（multi-task batches）</strong>：</p>
+<ol>
+<li><strong>用户操作</strong>：用户点击“拟合”（或按下 <code>Ctrl+Fit</code> 以应用到所有图谱）。</li>
+<li><strong>任务构建</strong>：<ul>
+<li>若 <code>apply_all = True</code>：ViewModel 按 X 轴长度对图谱进行分组，并将它们堆叠为超大规模批次的 <code>Y</code> 矩阵。</li>
+<li>若 <code>apply_all = False</code>：ViewModel 仅针对当前图谱及选中的光谱索引构建任务。</li>
+</ul>
+</li>
+<li><strong>启动线程</strong>：ViewModel 使用任务列表启动 <code>VBFthread</code>。</li>
+<li><strong>引擎执行（后台线程）</strong>：针对每个任务，线程调用 <code>VBFengine.fit_spectra()</code>。堆叠后的多图谱任务作为单次向量化运算完成拟合。</li>
+<li><strong>结果写入（后台线程）</strong>：线程通过 <code>SpectraStore.set_fit_results()</code> 将结果分发回各自对应的图谱。</li>
+<li><strong>执行完成</strong>：线程发射 <code>finished()</code> 信号，ViewModel 随之调用 <code>_on_fit_finished()</code>。</li>
+<li><strong>结果汇总</strong>：<code>collect_fit_results()</code> 将结果聚合为单个 DataFrame。</li>
+<li><strong>UI 刷新</strong>：发射信号以同时重绘热图（<code>map_data_updated</code>）与结果表（<code>fit_results_updated</code>）。</li>
+</ol>
+<p><strong>超大规模批量分组（Mega-batch grouping）</strong>是核心的性能优化策略。当 <code>apply_all=True</code> 时，具有相同 X 轴长度的图谱会被堆叠进单个 <code>Y</code> 矩阵中并在一次向量化调用里完成拟合。包含 10 幅晶圆测试的数据若单幅各自耗时 30 s，采用批量合并后总共仅需约 35 s 即可完成。</p>
+<h3 id="after-fitting-propagating-results">拟合后：结果传递与同步<a class="headerlink" href="#after-fitting-propagating-results" title="Permanent link">&para;</a></h3>
+<p>在 <code>_on_fit_finished()</code> 执行完毕后：</p>
+<ol>
+<li>调用 <code>collect_fit_results()</code> → 构建 <code>self.df_fit_results</code>（包含 <code>X, Y</code> 列及所有拟合列的 DataFrame）。</li>
+<li>发射 <code>fit_results_updated</code> 信号 → <code>VFitResults</code> 表格更新。</li>
+<li>发射 <code>map_data_updated</code> 信号 → <code>VMapViewer</code> 重新读取 <code>df_fit_results</code> 并将拟合参数列添加至其 Z 参数组合框。</li>
+<li>发射 <code>clear_map_cache_requested</code> 信号 → <code>VMapViewer</code> 使受影响图谱名称的 <code>griddata</code> 缓存失效。</li>
+</ol>
+<hr />
+<h2 id="map-visualization-pipeline">图谱可视化流水线<a class="headerlink" href="#map-visualization-pipeline" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>数据源</strong>：依据预处理状态，数据源为已处理强度（<code>md.Y</code>）或原始强度（<code>md.Y0</code>）。</li>
+<li><strong>DataFrame 过滤</strong>：<code>get_current_map_dataframe()</code> 过滤掉未激活的光谱。</li>
+<li><strong>视图绑定</strong>：将 DataFrame 传入 <code>VMapViewer.set_map_data()</code>。</li>
+<li><strong>Z 值计算</strong>：<code>_compute_z_values()</code> 根据组合框当前选中项计算目标指标：<ul>
+<li><em>强度</em>：对所选 X 范围滑块区间内的强度求和。</li>
+<li><em>面积</em>：计算梯形数值积分。</li>
+<li><em>拟合参数</em>：直接从 <code>df_fit_results</code> 中读取对应数值。</li>
+</ul>
+</li>
+<li><strong>异常点剔除</strong>：若用户启用该功能，则按百分位数对 Z 值进行截断。</li>
+<li><strong>渲染逻辑</strong>：依据 <code>map_type</code> 区分路径：<ul>
+<li><em>2D 图谱</em>：快速路径。通过数据透视表将 <code>(X, Y)</code> 映射到规则网格上的 <code>Z</code> 值，并由 Matplotlib <code>imshow()</code> 进行渲染。</li>
+<li><em>晶圆图</em>：慢速路径。通过 <code>scipy.griddata</code> 将不规则圆形分布的测点插值到 80×80 网格上，再经由 <code>imshow()</code> 渲染。</li>
+</ul>
+</li>
+</ol>
+<p><strong>为何采用两条渲染路径？</strong></p>
+<p>二维矩形图谱的数据点本身位于规则网格上——仅构建数据透视表即可在毫秒级完成渲染。而晶圆测量数据的测点分布在圆形区域内（并非规则网格），因此必须先通过 <code>scipy.griddata</code> 插值到规则网格上，才能由 <code>imshow</code> 进行绘制。这正是开销较大的步骤。</p>
+<h3 id="heatmap-caching-strategy">热图缓存策略<a class="headerlink" href="#heatmap-caching-strategy" title="Permanent link">&para;</a></h3>
+<p>对于大型图谱，<code>scipy.griddata</code> 的插值运算可能耗时 100–500 ms。为此，视图组件采用<strong>多键缓存（multi-key cache）</strong>来避免重复计算：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">cache_key</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">map_name</span><span class="p">,</span>        <span class="c1"># which map</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">parameter</span><span class="p">,</span>       <span class="c1"># which Z parameter</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">),</span>    <span class="c1"># X-range filter</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">map_type</span><span class="p">,</span>        <span class="c1"># 2Dmap vs Wafer variant</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">mask_config</span><span class="p">,</span>     <span class="c1"># mask settings or None</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">remove_outliers</span>  <span class="c1"># outlier removal flag</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">)</span>
+</code></pre></div>
+<p>该缓存条目存储 <code>(heatmap_pivot, extent, vmin, vmax, grid_z, final_z_col, dx, dy)</code>，在切换图谱类型和选择文件时保留精确的像素空间尺寸（<code>dx, dy</code>），以防止跨数据集的几何尺度漂移。</p>
+<p>该缓存具有以下特性：</p>
+<ul>
+<li><strong>跨图谱切换保留</strong> —— 切换回先前查看过的图谱时可瞬时渲染，并恢复其精确的空间尺寸与插值网格数据。</li>
+<li><strong>按名称失效</strong> —— 拟合完成后通过 <code>clear_map_cache_requested</code> 信号使对应图谱缓存失效。</li>
+<li><strong>不跨会话持久化</strong> —— 仅驻留在内存中的 <code>VMapViewer._griddata_cache</code> 内。</li>
+<li><strong>数据集隔离</strong>：<code>can_fast_update</code> 要求满足 <code>_last_rendered_map_name == map_df_name</code> 并校验 <code>PatchCollection</code> 的图元数量，确保原地 Artist 更新仅在当前活动数据集上执行，而切换数据集时始终触发干净的整图重绘。</li>
+</ul>
+<h3 id="interactive-selection">交互式选择<a class="headerlink" href="#interactive-selection" title="Permanent link">&para;</a></h3>
+<p><code>VMapViewer</code> 支持三种选择模式：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>触发方式</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>单击</strong></td>
+<td>在图谱上左键点击</td>
+<td>选中距离最近的测点，并以红色矩形框高亮标记</td>
+</tr>
+<tr>
+<td><strong>矩形框选</strong></td>
+<td>按住并拖动鼠标</td>
+<td>选中所拖选矩形区域内的所有测点</td>
+</tr>
+<tr>
+<td><strong>剖面</strong></td>
+<td>在二维模式下准确选中 2 个测点</td>
+<td>启用“<strong>提取剖面</strong> (Extract profile)”按钮</td>
+</tr>
+</tbody>
+</table>
+<p>在 <code>VMapViewer</code> 中进行选择会发射 <code>spectra_selected(list[tuple])</code> 信号。<code>VWorkspaceMaps._on_map_viewer_selection()</code> 将 <code>(x, y)</code> 坐标映射回 <code>fnames</code> 并调用 <code>vm.set_selected_fnames()</code>，进而触发 <code>_emit_selected_spectra()</code> → <code>VSpectraViewer</code> 重绘所选光谱。</p>
+<p>所有选中测点均作为一个整体的 <code>PatchCollection</code> 渲染（仅需单次绘制调用即可画出所有矩形框），而非逐个调用 <code>add_patch()</code>，从而确保无论选区大小如何，渲染时间复杂度始终保持为 O(1)。</p>
+<hr />
+<h2 id="template-method-overrides">模板方法覆写<a class="headerlink" href="#template-method-overrides" title="Permanent link">&para;</a></h2>
+<p>Maps 工作区通过三个<a href="../spectra/#template-method-hooks">钩子方法</a>定制继承而来的批量操作流水线。在调试或扩展批量操作时，理解这些钩子方法至关重要。</p>
+<h3 id="_get_target_mdsapply_all"><code>_get_target_mds(apply_all)</code><a class="headerlink" href="#_get_target_mdsapply_all" title="Permanent link">&para;</a></h3>
+<p>决定批量操作所针对的 <strong><code>MapData</code> 目标对象</strong>。</p>
+<table>
+<thead>
+<tr>
+<th><code>apply_all</code></th>
+<th>光谱工作区</th>
+<th>二维图谱工作区</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>False</code></td>
+<td>所选光谱对应的 <code>MapData</code> 数据块</td>
+<td>仅当前图谱的 <code>MapData</code> 数据块</td>
+</tr>
+<tr>
+<td><code>True</code></td>
+<td>存储中所有的 <code>MapData</code> 数据块</td>
+<td>所有图谱的 <code>MapData</code> 数据块</td>
+</tr>
+</tbody>
+</table>
+<p>正因如此，在 <code>Maps</code> 工作区中执行 <code>Ctrl+Subtract-Baseline</code> 会对<strong>当前图谱中的所有光谱</strong>执行基线扣除（而不仅是当前选中的光谱）——因为 Maps 的覆写实现返回的是整幅图谱的 <code>MapData</code>。</p>
+<h3 id="_on_map_data_changedmd-action"><code>_on_map_data_changed(md, action)</code><a class="headerlink" href="#_on_map_data_changedmd-action" title="Permanent link">&para;</a></h3>
+<p>在批量操作循环中，<strong>每当单个 <code>MapData</code> 被修改后</strong>调用。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Maps workspace override:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">def</span> <span class="nf">_on_map_data_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">md</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;reinit_spectra&quot;</span><span class="p">:</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">clear_preprocess</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="k">elif</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;delete_baseline&quot;</span><span class="p">,</span> <span class="s2">&quot;subtract_baseline&quot;</span><span class="p">,</span> <span class="s2">&quot;apply_spectral_range&quot;</span><span class="p">):</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">batch_preprocess</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">md</span><span class="o">.</span><span class="n">baseline_config</span><span class="p">,</span> <span class="n">md</span><span class="o">.</span><span class="n">range_min</span><span class="p">,</span> <span class="n">md</span><span class="o">.</span><span class="n">range_max</span><span class="p">)</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;paste_peaks&quot;</span><span class="p">:</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruct_y_peaks</span><span class="p">(</span><span class="n">md</span><span class="p">)</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="c1"># Always invalidate heatmap cache</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">clear_map_cache_requested</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="_post_bulk_actionapply_all-action"><code>_post_bulk_action(apply_all, action)</code><a class="headerlink" href="#_post_bulk_actionapply_all-action" title="Permanent link">&para;</a></h3>
+<p>在<strong>所有 <code>MapData</code> 对象处理完毕后统一调用一次</strong>。Maps 的覆写实现会刷新拟合结果并重新发射图谱视图更新信号。</p>
+<h3 id="_emit_selected_spectra-override"><code>_emit_selected_spectra()</code> 覆写<a class="headerlink" href="#_emit_selected_spectra-override" title="Permanent link">&para;</a></h3>
+<p>Maps 的覆写实现构建 <code>"type": "tensor"</code> 负载（共享 X 轴批次），而非 Spectra 工作区的 <code>"type": "tensor_list"</code>（每条光谱各自独立的数组）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Maps workspace:</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">batch_data</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;tensor&#39;</span><span class="p">,</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>             <span class="c1"># shared float64[M_proc]</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">Y</span><span class="p">,</span>             <span class="c1"># float32[n_selected, M_proc]</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="s1">&#39;indices&#39;</span><span class="p">:</span> <span class="n">indices</span><span class="p">,</span> <span class="c1"># which rows within the map</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="o">...</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">}</span>
+</code></pre></div>
+<p>这使得 <code>VSpectraViewer</code> 能够通过矩阵运算而非 Python 循环同时渲染多条二维图谱光谱。</p>
+<hr />
+<h2 id="cross-workspace-communication">跨工作区通信<a class="headerlink" href="#cross-workspace-communication" title="Permanent link">&para;</a></h2>
+<h3 id="maps-spectra-workspace">Maps → 光谱工作区<a class="headerlink" href="#maps-spectra-workspace" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># User selects spectra in Maps workspace and clicks &quot;Send to Spectra&quot;</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">vm</span><span class="o">.</span><span class="n">send_selected_spectra_to_spectra_workspace</span><span class="p">()</span>
+</code></pre></div>
+<p>对于每条所选光谱：</p>
+<ol>
+<li>构建一个<strong>深拷贝（deep-copied）</strong>的负载字典（包含原始 <code>x0</code>、<code>Y0</code>、<code>baseline_config</code>、<code>fit_model</code>、<code>range_min/max</code>、<code>is_subtracted</code>）。</li>
+<li>发射 <code>send_spectra_to_workspace(payloads)</code> 信号。</li>
+<li><code>main.py</code> 将该信号连接至光谱 ViewModel 的 <code>receive_spectra()</code>，后者将每条负载作为新的 N=1 <code>MapData</code> 数据块注册到<strong>光谱</strong>工作区的 <code>SpectraStore</code> 中。</li>
+</ol>
+<p>深拷贝可防止跨工作区的状态污染——在光谱标签页中编辑该光谱不会影响原始二维图谱。</p>
+<h3 id="maps-graphs-workspace-profile-extraction">Maps → 图表工作区（剖面提取）<a class="headerlink" href="#maps-graphs-workspace-profile-extraction" title="Permanent link">&para;</a></h3>
+<p>当用户在二维图谱模式下准确选择 2 个测点并点击“提取剖面”时：</p>
+<ol>
+<li><strong>用户操作</strong>：用户在二维图谱上准确选择 2 个测点并点击“提取剖面”。</li>
+<li><strong>View → ViewModel</strong>：<code>VMapViewer</code> 发射 <code>extract_profile_requested(profile_name)</code> 信号。</li>
+<li><strong>提取逻辑</strong>：<code>VWorkspaceMaps</code> 委托给 <code>_extract_profile()</code>，后者沿两点连线段对测点进行插值，构建 <code>profile_df</code> DataFrame。</li>
+<li><strong>负载转发</strong>：View 将负载传递至 <code>VMWorkspaceMaps.extract_and_send_profile_to_graphs()</code>。</li>
+<li><strong>工作区传输</strong>：ViewModel 直接调用 <code>VMWorkspaceGraphs.add_dataframe()</code>。</li>
+<li><strong>UI 更新</strong>：发射信号通知主窗口将焦点切换至<strong>图表</strong> (Graphs) 标签页。</li>
+</ol>
+<p>生成的剖面 DataFrame 包含 <code>distance</code> (µm) 与 <code>values</code>（Z 强度）两列，图表工作区会自动据此创建一条折线图。</p>
+<hr />
+<h2 id="fit-results-with-spatial-columns">带空间列的拟合结果<a class="headerlink" href="#fit-results-with-spatial-columns" title="Permanent link">&para;</a></h2>
+<p><code>collect_fit_results()</code> 覆写父类方法以追加空间坐标列与晶圆分区列：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># After super().collect_fit_results():</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># base DataFrame includes: Filename, X, Y, [Quadrant, Zone for wafers],</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># sorted fit parameters (x0_Peak1, fwhm_Peak1, area_Peak1, ...), and trailing R2</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="c1"># Maps workspace adds X, Y, and ensures Quadrant and Zone are present for wafer maps</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Final columns:</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1"># Filename | X | Y | Quadrant | Zone | x0_Peak1 | fwhm_Peak1 | area_Peak1 | ... | R2</span>
+</code></pre></div>
+<p><code>Zone</code> 按径向距离划分区域：</p>
+<table>
+<thead>
+<tr>
+<th>Zone</th>
+<th>距离范围</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Center</td>
+<td>≤ 半径的 35 %</td>
+</tr>
+<tr>
+<td>Mid-Radius</td>
+<td>35 – 80 %</td>
+</tr>
+<tr>
+<td>Edge</td>
+<td>≥ 80 %</td>
+</tr>
+</tbody>
+</table>
+<p><code>Quadrant</code> 按 <code>(X, Y)</code> 坐标正负号划分象限：Q1 (−,−)、Q2 (−,+)、Q3 (+,+)、Q4 (+,−)。</p>
+<hr />
+<h2 id="persistence">持久化<a class="headerlink" href="#persistence" title="Permanent link">&para;</a></h2>
+<h3 id="modern-format-v2-zip-backed">现代格式（v2+，基于 ZIP）<a class="headerlink" href="#modern-format-v2-zip-backed" title="Permanent link">&para;</a></h3>
+<p>Maps 工作区文件（<code>.maps</code>）采用与 <a href="../spectra_store/#persistence">SpectraStore：持久化</a> 中相同的 ZIP 归档结构，只是由于张量数据更大而体积更大。</p>
+<p>二维图谱 DataFrame 采用自定义二进制格式进行高速序列化：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Fast serialization (vs to_csv which is 20-70× slower)</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">arr</span> <span class="o">=</span> <span class="n">map_df</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">();</span> <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">arr</span><span class="p">)</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="n">gzip</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(),</span> <span class="n">compresslevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># level=1: 70× faster, ~5% larger</span>
+</code></pre></div>
+<h3 id="legacy-loader">旧版加载器<a class="headerlink" href="#legacy-loader" title="Permanent link">&para;</a></h3>
+<p><code>_load_legacy_maps()</code> 用于读取旧版 <code>.maps</code> JSON 文件，其中每幅图谱均以 gzip+hex 编码的 CSV 字符串形式存储：</p>
+<ol>
+<li>解析顶层 <code>"maps"</code> 字典（<code>map_name → hex_string</code>）。</li>
+<li>解压并将每个 CSV 读取为 DataFrame。</li>
+<li>根据 <code>"spectrums_data"</code> 条目构建坐标查找字典（以 <code>(map_name, x, y)</code> 为键）。</li>
+<li>通过 <code>add_map()</code> 将每幅图谱注册到 <code>SpectraStore</code> 中。</li>
+<li>以向量化方式恢复基线、峰曲线及拟合结果。</li>
+</ol>
+<hr />
+<h2 id="extension-guide">扩展指南<a class="headerlink" href="#extension-guide" title="Permanent link">&para;</a></h2>
+<h3 id="adding-a-new-map-file-format">添加新的二维图谱文件格式<a class="headerlink" href="#adding-a-new-map-file-format" title="Permanent link">&para;</a></h3>
+<ol>
+<li>在 <code>spectroview/model/io/m_io.py</code> 中创建加载函数（例如 <code>load_xyz_map(path) → pd.DataFrame</code>）。</li>
+<li>在 <code>VMWorkspaceMaps.load_map_files()</code> 中添加 <code>elif path.suffix.lower() == '.xyz':</code> 分支。</li>
+<li>返回的 DataFrame 必须包含 <code>X</code> 和 <code>Y</code> 列，其后紧跟数值型波数列。</li>
+<li>若该格式包含元数据，请返回 <code>(DataFrame, dict)</code> 元组，并将该字典存入 <code>self.maps_metadata[map_name]</code>。</li>
+</ol>
+<h3 id="adding-a-new-z-parameter-type">添加新的 Z 参数类型<a class="headerlink" href="#adding-a-new-z-parameter-type" title="Permanent link">&para;</a></h3>
+<p>新的 Z 参数类型在 <code>VMapViewer._compute_z_values()</code> 中计算。例如，若要添加峰比值参数：</p>
+<ol>
+<li>将参数名称添加至 <code>VMapViewer</code> 组合框选项填充逻辑中。</li>
+<li>在 <code>_compute_z_values()</code> 中添加 <code>elif parameter == "My Ratio":</code> 分支，从 <code>df_fit_results</code> 读取数据。</li>
+<li>由于缓存键中已包含 <code>parameter</code>，缓存机制会自动生效。</li>
+</ol>
+<h3 id="adding-a-new-map-type-beyond-wafer">添加新的图谱类型（晶圆图之外）<a class="headerlink" href="#adding-a-new-map-type-beyond-wafer" title="Permanent link">&para;</a></h3>
+<p>新增空间布局类型需要以下步骤：</p>
+<ol>
+<li>将类型名称字符串添加至 <code>cbb_map_type</code> 组合框中。</li>
+<li>在 <code>VMapViewer.plot_heatmap()</code> 中添加渲染分支（通常使用带自定义掩膜的 <code>scipy.griddata</code>）。</li>
+<li>在 <code>VMWorkspaceMaps.collect_fit_results()</code> 中为该新类型添加分区/象限（Zone/Quadrant）分类分支。</li>
+</ol>
+<hr />
+<h2 id="troubleshooting">故障排查<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<p><strong>拟合完成后热图未更新</strong></p>
+<ul>
+<li>必须在 <code>_on_fit_finished()</code> 之后调用 <code>collect_fit_results()</code>。请检查是否针对该图谱名称发射了 <code>clear_map_cache_requested</code> 信号，以及缓存键中的 <code>parameter</code> 是否与组合框当前选中的参数一致。</li>
+</ul>
+<p><strong>选中的像素未高亮显示对应的正确光谱</strong></p>
+<ul>
+<li>从 <code>(x, y)</code> 坐标到 <code>fnames</code> 的映射依赖 <code>{map_name}_(x, y)</code> 格式与 <code>md.fnames</code> 的严格匹配。请检查 <code>float(x_pos)</code> 在 <code>_extract_spectra_from_map()</code> 与 <code>_on_map_viewer_selection()</code> 中生成的字符串表示是否完全一致。</li>
+</ul>
+<p><strong>拟合大型图谱时，启动瞬间 UI 短暂卡顿</strong></p>
+<ul>
+<li>任务构建（<code>_run_fit_thread()</code>）在调用 <code>VBFthread.start()</code> 之前于主线程执行。对于超大型图谱，<code>np.arange(md.n_spectra)</code> 索引构建很快，但多个 <code>Y</code> 矩阵的 <code>vstack</code> 拼接操作可能较慢。若该处成为性能瓶颈，可使用 <code>cProfile</code> 对 <code>_run_fit_thread()</code> 进行性能剖析。</li>
+</ul>
+<p><strong>Send to Spectra 创建了重复光谱</strong></p>
+<ul>
+<li>光谱 ViewModel 的 <code>receive_spectra()</code> 在添加前会检查 <code>name in self.store.map_names</code>。若仍出现重复，请检查 <code>fname</code> 格式是否一致（留意 <code>(x_pos, y_pos)</code> 字符串格式中的浮点数舍入差异）。</li>
+</ul>
+<p><strong>每次重绘晶圆 <code>griddata</code> 都很慢</strong></p>
+<ul>
+<li>请确保仅在必要时发射 <code>clear_map_cache_requested</code>（即拟合完成之后，切勿在每次点击选区时触发）。同时检查 <code>cache_key</code> 元组是否可哈希且稳定——若其中任意元素在两次渲染间意外发生改变，缓存将永远无法命中。</li>
+</ul>
+<p><strong>加载多幅大型图谱时出现内存峰值</strong></p>
+<ul>
+<li>对于包含 1,000 个波数的 50×50 图谱（2,500 条光谱），<code>MapData.Y0</code>（<code>float32</code>）约占 10 MB；对于包含 1,000 个波数的 25,000 条光谱图谱，<code>Y0</code> 约占 100 MB，且拟合过程还会额外分配数组（<code>Y_bestfit</code> 以及每个峰对应一个 <code>Y_peaks</code> 条目）。请对不再需要的图谱调用 <code>remove_map()</code> 释放内存。</li>
+</ul>
+<p>有关数据模型相关的故障排查（预处理未生效、内存管理等），请参阅 <a href="../spectra_store/#troubleshooting">SpectraStore：故障排查</a>。</p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../spectra/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 光谱工作区">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                光谱工作区
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../graphs/" class="md-footer__link md-footer__link--next" aria-label="下一页: 图表工作区">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                图表工作区
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,3308 @@
+
+<!doctype html>
+<html lang="de" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Interaktives Werkzeug zur Verarbeitung, Anpassung und Visualisierung spektroskopischer Daten">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/de/developer/ai_agent/">
+      
+      
+        <link rel="prev" href="../mva/">
+      
+      
+        <link rel="next" href="../mcp_server/">
+      
+      
+        
+          <link rel="alternate" href="../../../developer/ai_agent/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/developer/ai_agent/" hreflang="fr">
+        
+          <link rel="alternate" href="./" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/developer/ai_agent/" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/developer/ai_agent/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>KI-Agent - SPECTROview-Dokumentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ai-data-chat" class="md-skip">
+          Zum Inhalt
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Kopfzeile">
+    <a href="../../" title="SPECTROview-Dokumentation" class="md-header__button md-logo" aria-label="SPECTROview-Dokumentation" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SPECTROview-Dokumentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              KI-Agent
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Sprache wechseln"
+      title="Sprache wechseln"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">DE</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../developer/ai_agent/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/developer/ai_agent/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="de"
+              class="md-select__link" aria-current="true"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/developer/ai_agent/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/developer/ai_agent/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Suche" placeholder="Suche" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Suche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Zurücksetzen" aria-label="Zurücksetzen" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Suche wird initialisiert
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Hauptnavigation" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Startseite
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Benutzerhandbuch
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  KI-Agent
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Entwicklerhandbuch
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Änderungsprotokoll
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="SPECTROview-Dokumentation" class="md-nav__button md-logo" aria-label="SPECTROview-Dokumentation" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    SPECTROview-Dokumentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startseite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benutzerhandbuch
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Benutzerhandbuch
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unterstützte Datenformate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Überblick über die Benutzeroberfläche
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Menüleiste
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereiche Spektren & Karten
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Diagramme
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multivariate Analyse (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schnellrechner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Einstellungen
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Speichern & Laden
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tastenkürzel & Tipps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KI-Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Entwicklerhandbuch
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Entwicklerhandbuch
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline zum Laden von Dateien
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datenarchitektur SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Spektren
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Karten
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Diagramme
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vektorisierte Batch-Fit-Engine (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multivariate Analyse (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KI-Agent
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KI-Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Inhaltsverzeichnis">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Inhaltsverzeichnis
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites-for-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Voraussetzungen für Benutzer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Voraussetzungen für Benutzer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-1-macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option 1: macOS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-2-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option 2: Windows
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-steps-both-platforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gemeinsame Schritte (beide Plattformen)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architekturübersicht
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architekturübersicht">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-appcontext-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Die AppContext-Grenze
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#complete-graph-customization-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vollständiger Vertrag zur Diagrammanpassung
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mcphub-one-loop-many-servers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCPHub — eine Schleife, viele Server
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pushed-vs-pulled-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Push- vs. Pull-Kontext
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modulstruktur
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Modulstruktur">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rolle der Dateien
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#small-model-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unterstützung kleiner Modelle
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Unterstützung kleiner Modelle">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Erkennung
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#persisted-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persistierte Einstellungen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-changes-in-simplified-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Was sich im vereinfachten Modus ändert
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema-level-accommodations-help-every-model-not-just-small-ones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anpassungen auf Schemaebene (helfen jedem Modell, nicht nur kleinen)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#case-study-qwen38b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fallstudie: qwen3:8b
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wichtige Klassen
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wichtige Klassen">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#llmworker-apiworker-anthropicworker-background-threads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LLMWorker / APIWorker / AnthropicWorker — Hintergrund-Threads
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#llmclient-connection-facade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LLMClient — Verbindungsfassade
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#promptmanager-prompt-assembly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PromptManager — Prompt-Zusammenstellung
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vmchat-viewmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VMChat — ViewModel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VMChat — ViewModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#public-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Öffentliche API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-agentic-tool-calling-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Die agentische Tool-Calling-Schleife
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anfrageoptionen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conversation-history-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unterhaltungsverlauf und Persistenz
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chatresult-parsed-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ChatResult — Analysierte Antwort
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vchatpanel-embedded-chat-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VChatPanel — Eingebettetes Chat-Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-prompt-llm-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System-Prompt und LLM-Vertrag
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="System-Prompt und LLM-Vertrag">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#safety-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sicherheit und Validierung
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow-end-to-end" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End-Datenfluss
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-graphs-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration in den Arbeitsbereich Diagramme
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration in den Arbeitsbereich Diagramme">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lazy-initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verzögerte Initialisierung (Lazy Initialization)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dataframe-synchronization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DataFrame-Synchronisierung
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plot-config-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Normalisierung der Plot-Konfiguration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#graph-update-delete-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ablauf beim Aktualisieren und Löschen von Diagrammen
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#toolbar-entry-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Einstiegspunkt in der Symbolleiste
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-dependency-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verwaltung optionaler Abhängigkeiten
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verwaltung optionaler Abhängigkeiten">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#import-guard-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import-Guard-Muster
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#response-parsing-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Antwortauswertung und Fehlerbehandlung
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-features-graph-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aktuelle Funktionen (Arbeitsbereich Diagramme)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connecting-another-mcp-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Einen weiteren MCP-Server anbinden
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lokaler MCP-Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Spektren (Laden, Vorverarbeitung, Fit)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arbeitsbereich Karten (hyperspektral, Heatmaps)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datenvisualisierung (Diagramme)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schnellrechner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SPECTROview erweitern
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Änderungsprotokoll
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Startseite
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Entwicklerhandbuch
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="ai-data-chat"><strong>AI Data Chat</strong><a class="headerlink" href="#ai-data-chat" title="Permanent link">&para;</a></h1>
+<p>Der <code>AI Data Chat</code> ist ein optionaler, anbieterübergreifender KI-Chatbot, mit dem Benutzer ihre Daten in natürlicher Sprache abfragen, filtern, plotten und bearbeiten können. Er unterstützt lokale Inferenz über <strong>Ollama</strong>, Cloud-Anbieter über das <strong>OpenAI</strong>-SDK (OpenAI, DeepSeek, Gemini sowie jeden OpenAI-kompatiblen Endpunkt) und <strong>Anthropic</strong>-Claude-Modelle. Der Agent kommuniziert mit dem <code>Graphs</code>-Arbeitsbereich, um Plots in Echtzeit zu erstellen, zu aktualisieren und zu löschen.</p>
+<blockquote>
+<p>Die Nutzung des KI-Moduls ist <strong>optional</strong> — läuft Ollama nicht und ist kein Cloud-API-Schlüssel konfiguriert, zeigt das Chat-Panel einen roten Status „not connected“ an, während der Rest von SPECTROview völlig unbeeinträchtigt bleibt. Die zugrunde liegenden Python-Pakete (<code>ollama</code>, <code>openai</code>, <code>anthropic</code>, <code>mcp</code>) sind jedoch unbedingte Installationsabhängigkeiten des Projekts (siehe <a href="#optional-dependency-management">Verwaltung optionaler Abhängigkeiten</a>).</p>
+</blockquote>
+<p>Auch eine zweite, eigene Dimension von „optional“ spielt hier eine wichtige Rolle: <strong>kleine lokale Modelle erhalten einen anderen, vereinfachten Prompt und eine eigene Anfragekonfiguration als große bzw. Cloud-Modelle</strong> — dies ist die größte architektonische Erweiterung seit der MCP-Migration und wird weiter unten in einem eigenen Abschnitt behandelt (<a href="#small-model-support">Unterstützung kleiner Modelle</a>).</p>
+<hr />
+<h2 id="prerequisites-for-users"><strong>Voraussetzungen für Benutzer</strong><a class="headerlink" href="#prerequisites-for-users" title="Permanent link">&para;</a></h2>
+<h3 id="option-1-macos"><strong>Option 1: macOS</strong><a class="headerlink" href="#option-1-macos" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Ollama installieren</strong>
+   Mit Homebrew (empfohlen):
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>brew<span class="w"> </span>install<span class="w"> </span>ollama
+</code></pre></div>
+   <em>(Alternativ können Sie die macOS-Anwendung direkt von der <a href="https://ollama.com/download/mac">offiziellen Ollama-Website</a> herunterladen.)</em></p>
+</li>
+<li>
+<p><strong>Den Ollama-Dienst starten</strong>
+   Falls Sie Homebrew verwendet haben, starten Sie Ollama als Hintergrunddienst:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>brew<span class="w"> </span>services<span class="w"> </span>start<span class="w"> </span>ollama
+</code></pre></div>
+   <em>(Falls Sie die Mac-App installiert haben, öffnen Sie einfach die Anwendung Ollama aus Ihrem Programme-Ordner. Das Symbol erscheint anschließend in Ihrer Menüleiste.)</em></p>
+</li>
+</ol>
+<h3 id="option-2-windows"><strong>Option 2: Windows</strong><a class="headerlink" href="#option-2-windows" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Ollama installieren</strong>
+   Laden Sie das Windows-Installationsprogramm von der <a href="https://ollama.com/download/windows">offiziellen Ollama-Website</a> herunter und führen Sie es aus.</p>
+</li>
+<li>
+<p><strong>Den Ollama-Dienst starten</strong>
+   Ollama startet nach der Installation in der Regel automatisch. Falls nicht, suchen Sie im Startmenü nach „Ollama“ und öffnen Sie die Anwendung. Das Ollama-Symbol sollte im Infobereich der Taskleiste (unten rechts) erscheinen.</p>
+</li>
+</ol>
+<hr />
+<h3 id="common-steps-both-platforms"><strong>Gemeinsame Schritte (beide Plattformen)</strong><a class="headerlink" href="#common-steps-both-platforms" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Ein KI-Modell herunterladen</strong>
+   SPECTROview verwendet standardmäßig <code>qwen2.5-coder:7b</code>. Öffnen Sie Ihr Terminal (bzw. Eingabeaufforderung / PowerShell unter Windows) und laden Sie das Modell herunter:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ollama<span class="w"> </span>pull<span class="w"> </span>qwen2.5-coder:7b
+</code></pre></div>
+   Jedes Ollama-Modell mit Unterstützung für Tool-/Function-Calling funktioniert — unter <a href="#small-model-support">Unterstützung kleiner Modelle</a> erfahren Sie, wie SPECTROview sein Verhalten an das gewählte Modell anpasst.</p>
+</li>
+<li>
+<p><strong>SPECTROview installieren</strong>
+   <code>ollama</code>, <code>openai</code>, <code>anthropic</code> und <code>mcp</code> sind Kernabhängigkeiten des Pakets (keine separate Extras-Gruppe), sodass eine reguläre Installation bereits alles enthält, was die KI-Funktion benötigt:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>SPECTROview starten</strong>
+   Starten Sie die Anwendung:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>-m<span class="w"> </span>spectroview.main
+</code></pre></div>
+   Klicken Sie auf die Schaltfläche <strong>AI Data Chat</strong> in der oberen Symbolleiste. Das Chat-Panel öffnet sich, und in der Statusleiste sollte <strong>🟢 Ollama connected</strong> angezeigt werden.</p>
+</li>
+</ol>
+<hr />
+<h2 id="architecture-overview"><strong>Architekturübersicht</strong><a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
+<p>Die KI-Funktion folgt demselben strikten <strong>MVVM</strong>-Muster wie der Rest der Anwendung. Der gesamte KI-bezogene Code befindet sich im Paket <code>spectroview/ai_agent/</code>, isoliert von den Hauptarbeitsbereichen.</p>
+<pre class="mermaid"><code>graph TD
+    TB["VMenuBar (Symbolleisten-Schaltfläche)"] --&gt;|"ai_chat_requested"| Main["main.py"]
+    Main --&gt;|"verzögerte Erstellung"| VCP["VChatPanel (View)"]
+    VCP --&gt;|"Methodenaufruf"| VMC["VMChat (ViewModel)"]
+    VMC --&gt;|"Kleines Modell erkannt?"| DET["ollama show + Namensmuster"]
+    DET --&gt;|"Stufen-Entscheidung"| VMC
+    VMC --&gt;|"erstellt Prompt (stufenabhängig)"| PM["PromptManager"]
+    PM --&gt;|"lädt .md"| FS["Dateisystem (prompts/, rules/, ...)"]
+    VMC --&gt;|"chat(..., request_options)"| LLC["LLMClient (Model)"]
+    LLC --&gt;|"startet (mit MCP-Tools + Optionen)"| LLW["LLMWorker (QThread)"]
+    LLW --&gt;|"HTTP-Stream"| OLL["Ollama/OpenAI/Anthropic (lokal/Cloud)"]
+    OLL --&gt;|"Tool-Aufrufe / Textfragmente"| LLW
+    LLW --&gt;|"Signale"| LLC
+    LLC --&gt;|"Signale"| VMC
+    VMC --&gt;|"call_tool / read_resource"| HUB["MCPHub (mcp/hub.py)"]
+    HUB --&gt;|"persistente Sitzungen"| SRV["SPECTROview-Server + externe MCP-Server"]
+    SRV --&gt;|"liest Daten / übermittelt Befehle"| CTX["AppContext (agent/ports.py)"]
+    CTX --&gt;|"eingereihte AgentCommands"| VMC
+    VMC --&gt;|"result_ready (ChatResult)"| VCP
+    VCP --&gt;|"plot_requested"| Main
+    Main --&gt;|"erstellen / aktualisieren / löschen"| VWG["VWorkspaceGraphs"]
+    VWG --&gt; GCL["graph_control.py: validierter GraphPatch"]
+    GCL --&gt; MG["MGraph"]
+    MG --&gt; RENDER["VGraph / PlotRenderer / Canvas-Aktualisierung"]</code></pre>
+<h3 id="the-appcontext-boundary"><strong>Die AppContext-Grenze</strong><a class="headerlink" href="#the-appcontext-boundary" title="Permanent link">&para;</a></h3>
+<p>Der MCP-Server importiert <code>VMChat</code> <strong>nicht</strong>. Er erhält einen <code>AppContext</code>
+(<code>agent/ports.py</code>) — ein Protokoll mit fünf Methoden: DataFrames auflisten, einen DataFrame abrufen, den
+aktiven Namen abfragen, Diagramme auflisten und einen Befehl einreichen. <code>VMChat</code> stellt einen <code>VMChatContext</code>-Adapter bereit; Tests liefern <code>RecordingContext</code>.</p>
+<p>Genau dadurch lässt sich die Tool-Schicht unabhängig testen (ohne Qt, ohne LLM, ohne
+Anwendung), und derselbe Server könnte auch außerhalb des Prozesses laufen. Tools mutieren niemals
+das ViewModel; sie übermitteln typisierte Befehle (<code>agent/commands.py</code>:
+<code>CreatePlot</code>, <code>UpdatePlot</code>, <code>DeletePlots</code>). Eingaben für Plots und Aktualisierungen werden vor dem
+Einreihen über den gemeinsamen Vertrag <code>spectroview.model.graphs.graph_control</code> validiert,
+und der Arbeitsbereich Diagramme wendet genau denselben Vertrag an der Mutationsgrenze erneut an.</p>
+<p>SPECTROview verfügt außerdem über ein vollständiges externes Desktop-MCP-Profil. Es nutzt dasselbe
+FastMCP-Modul, arbeitet jedoch auf <code>SpectroviewApplicationAPI</code>, einer Live-Sitzungsfassade,
+die durch einen gequeueten Qt-Hauptthread-Dispatcher geschützt ist. Der interne Chat behält
+das hier dokumentierte Fünf-Tool-Profil zugunsten der Zuverlässigkeit kleiner Modelle bei. Siehe
+<a href="../mcp_server/">Lokaler MCP-Server</a> für den Endpunkt, den vollständigen Tool-Katalog und den
+Erweiterungs-Workflow.</p>
+<h3 id="complete-graph-customization-contract"><strong>Vollständiger Vertrag zur Diagrammanpassung</strong><a class="headerlink" href="#complete-graph-customization-contract" title="Permanent link">&para;</a></h3>
+<p>Die MCP-Tools behalten zugunsten der Zuverlässigkeit kleiner Modelle einige wenige gängige Top-Level-Parameter bei und stellen für den vollständigen Umfang <code>other_properties: GraphPatch</code> bereit.
+<code>GraphPatch</code> wird aus jedem veränderlichen Dataclass-Feld von <code>MGraph</code> mit
+<code>extra="forbid"</code> generiert; verschachtelte Datensätze für Filter, Serienstile, Rahmenlinien (Spines), Achsenbrüche und Anmerkungen sind ebenfalls typisiert. So wird verhindert, dass eine manuell gepflegte Positivliste (Allowlist) hinter der GUI zurückbleibt, und ein einziger kohärenter Aufruf kann logarithmische Skalierung, Schriftarten, Legendenplatzierung, Linienstärken, Anmerkungen, Nebenachsen, Einsatzfenster-Geometrie und jeden weiteren Diagrammzustand gemeinsam aktualisieren.</p>
+<p>Weglassen bedeutet Beibehalten. Ein explizites <code>null</code> wird nur für nullbare Felder akzeptiert.
+Der Server validiert Filter gegen den Ziel-DataFrame und prüft
+<code>graph_id="all"</code> gegen jedes geöffnete Diagramm, bevor ein einzelner atomarer Befehl eingereiht wird.
+Das Tool-Ergebnis meldet bewusst „validated and queued“, da ausschließlich der GUI-Thread das endgültige Rendering verlässlich bestätigen kann.</p>
+<h3 id="mcphub-one-loop-many-servers"><strong>MCPHub — eine Schleife, viele Server</strong><a class="headerlink" href="#mcphub-one-loop-many-servers" title="Permanent link">&para;</a></h3>
+<p><code>MCPHub</code> (<code>mcp/hub.py</code>) besitzt eine einzige <code>asyncio</code>-Ereignisschleife in einem Hintergrund-Thread
+und hält für jeden in <code>config/servers.yaml</code> aufgeführten Server (<code>in-process</code>, <code>stdio</code> oder <code>http</code>) eine initialisierte Sitzung offen. Aufrufer im Qt-Thread verwenden
+einfache synchrone Methoden; der Hub leitet jeden Aufruf auf seine Ereignisschleife um.</p>
+<p>Zuvor rief das ViewModel <code>asyncio.run()</code> direkt im GUI-Thread auf und
+baute die Server-Sitzung für jeden Tool-Batch neu auf — was die Benutzeroberfläche blockierte und nur funktionierte, weil der einzige Server in-process lief.</p>
+<p>Tool-Namen bleiben unqualifiziert, solange sie serverübergreifend eindeutig sind (sodass <code>plot_graph</code> überall dort weiter funktioniert, wo es dokumentiert ist); ein Name, der von zwei Servern angeboten wird, wird für beide zu <code>&lt;server_id&gt;__&lt;tool&gt;</code>. Eine serverbezogene Positivliste <code>tools:</code> hält die
+angebotene Menge klein — Tool-Schemas sind bei jedem Zug Prompt-Tokens, und kleine lokale Modelle bauen ab etwa einem Dutzend Tools schnell ab.</p>
+<h3 id="pushed-vs-pulled-context"><strong>Push- vs. Pull-Kontext</strong><a class="headerlink" href="#pushed-vs-pulled-context" title="Permanent link">&para;</a></h3>
+<p>Der System-Prompt enthält stets die Namen und Dimensionen der DataFrames, jeden Spaltennamen
+samt seinem <code>dtype</code> sowie eine kompakte Zusammenfassung jedes geöffneten Diagramms. Beispielwerte, Zeilenvorschauen und die tatsächlichen vollständigen <code>MGraph.save()</code>-Konfigurationen sind umfangreich und
+selten ausschlaggebend; daher liegen sie hinter MCP-<strong>Ressourcen</strong>
+(<code>spectroview://dataframes/detail</code>, <code>spectroview://graphs/detail</code>).</p>
+<p>Keine LLM-API kennt nativ das Konzept einer Ressource, weshalb der Hub das Auslesen als
+synthetisches Tool <code>get_context(uri)</code> bereitstellt, dessen <code>uri</code>-Enum genau die aktuell verfügbaren Ressourcen auflistet — was zudem grammatikgesteuerte lokale Modelle auf eine reale URI einschränkt. Ressourcen, die von einem beliebigen Server hinzugefügt werden, erscheinen dort ohne Client-Änderung.</p>
+<hr />
+<h2 id="module-structure"><strong>Modulstruktur</strong><a class="headerlink" href="#module-structure" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>spectroview/ai_agent/
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>├── __init__.py              # Docstring only — keeps the module optional
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>├── config/                  # YAML configuration (model.yaml, settings.yaml, servers.yaml)
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>├── examples/                # Few-shot conversation examples (Markdown)
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>│   ├── plotting_examples.md #   Full-tier: 13 examples, tool-call style
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>│   └── examples_small.md    #   Simplified-tier: ~8 tight examples covering all 5 tools
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>├── knowledge/                # Static domain facts (Markdown; full tier only)
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>├── prompts/                  # Core identity + per-topic instructions (Markdown)
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>│   ├── system.md, chat.md, plotting.md   # Full tier (default; also used by cloud providers)
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>│   └── system_small.md      #   Simplified tier — single consolidated file for detected small models
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>├── rules/                   # Behavioural constraints (Markdown)
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>├── agent/                   # Qt-free core
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>│   ├── commands.py          #   CreatePlot / UpdatePlot / DeletePlots dataclasses
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>│   └── ports.py             #   AppContext protocol + RecordingContext (the test fake)
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>├── utils/
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>│   ├── plot_utils.py        # normalize_plot_config / expand_comma_styles — type coercion for plot configs
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>│   ├── safe_eval.py         # evaluate_pandas_expression() — df.query() first, sandboxed eval() fallback
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>│   └── df_summary.py        # compact_dataframe_schema() for the prompt; summarize_dataframe_columns() for the resource
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>├── m_llm_client.py          # Model layer: LLM connections + QThread workers
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>│                            #   - LLMWorker (Ollama)
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>│                            #   - APIWorker (OpenAI-compatible)
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>│                            #   - AnthropicWorker (Anthropic SDK)
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>│                            #   - anthropic_tools()/anthropic_messages() — protocol translation
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>│                            #   - LLMClient (unified facade)
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>│                            #   - get_ollama_model_info() — `ollama show` wrapper for size detection
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>├── m_conversation.py        # Data model: single conversation (messages, save/load JSON)
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>├── m_conversation_store.py  # Conversation store: scan/list/load saved conversations
+<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>├── mcp/
+<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>│   ├── server.py            # SPECTROview&#39;s FastMCP server: 5 tools + 2 resources
+<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>│   ├── hub.py               # MCP client: one loop thread, one session per server
+<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>│   └── config.py            # servers.yaml -&gt; validated ServerSpec list
+<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>├── m_prompt_manager.py      # Prompt caching and assembly: loads and merges the Markdown fragments
+<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>├── vm_chat.py               # ViewModel: prompt-tier selection, small-model detection, request tuning, agentic loop
+<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>├── v_chat_panel.py          # View: embedded chat panel (QWidget) beside workspace tabs
+<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>└── v_history_dialog.py      # View: history browser dialog (QDialog) with timestamps, pinning, search, and batch delete
+</code></pre></div>
+<h3 id="file-roles"><strong>Rolle der Dateien</strong><a class="headerlink" href="#file-roles" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Datei</th>
+<th>Schicht</th>
+<th>Zuständigkeit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>m_prompt_manager.py</code></td>
+<td><strong>Model</strong></td>
+<td>Lädt Markdown-Dateien, hält sie im Cache und setzt sie für gegebene Listen <code>prompts=</code>/<code>rules=</code>/<code>knowledge=</code>/<code>examples=</code> zu einem System-Prompt zusammen. Parst außerdem <code>config/model.yaml</code>/<code>config/settings.yaml</code> (<code>.model_config</code>).</td>
+</tr>
+<tr>
+<td><code>m_llm_client.py</code></td>
+<td><strong>Model</strong></td>
+<td>Kapselt Ollama, das OpenAI-SDK und das Anthropic-SDK. Prüft die Verfügbarkeit, listet Modelle auf, ermittelt die Parameteranzahl eines Modells (<code>get_ollama_model_info</code>), übersetzt den OpenAI-Tool-Dialekt in den von Anthropic und startet je nach gewähltem Anbieter einen von drei <code>QThread</code>-Workern im Hintergrund.</td>
+</tr>
+<tr>
+<td><code>m_conversation.py</code></td>
+<td><strong>Model</strong></td>
+<td>Repräsentiert eine einzelne Unterhaltung: Nachrichten hinzufügen (einschließlich <code>tool_calls</code>/<code>tool_call_id</code>), automatische Titelvergabe, Speichern/Laden als JSON, Begrenzung auf die letzten N Nachrichten, <strong>ohne einen Tool-Aufruf von seinem Ergebnis zu trennen</strong>. Überspringt das Speichern leerer Unterhaltungen.</td>
+</tr>
+<tr>
+<td><code>m_conversation_store.py</code></td>
+<td><strong>Model</strong></td>
+<td>Durchsucht den Verlaufsordner, listet gespeicherte Unterhaltungen als schlanke Zusammenfassungen auf und lädt Unterhaltungen anhand ihrer ID.</td>
+</tr>
+<tr>
+<td><code>agent/ports.py</code></td>
+<td><strong>Model</strong></td>
+<td><code>AppContext</code> — das Einzige, was die MCP-Tools über die Anwendung wissen. <code>RecordingContext</code> ist die In-Memory-Implementierung, die in jedem Tool-Test verwendet wird.</td>
+</tr>
+<tr>
+<td><code>agent/commands.py</code></td>
+<td><strong>Model</strong></td>
+<td><code>CreatePlot</code>/<code>UpdatePlot</code>/<code>DeletePlots</code> — das, worum ein Tool die Anwendung bittet, anstelle roher Dictionaries mit Schlüsseln <code>_graph_update</code>/<code>_graph_delete</code>.</td>
+</tr>
+<tr>
+<td><code>mcp/server.py</code></td>
+<td><strong>Model</strong></td>
+<td>FastMCP-Server, der die 5 Tools und 2 Ressourcen von SPECTROview mit anfragezeitiger Validierung von Filtern und Plot-Typen bereitstellt. Hängt ausschließlich von <code>AppContext</code> ab.</td>
+</tr>
+<tr>
+<td><code>mcp/hub.py</code></td>
+<td><strong>Model</strong></td>
+<td>MCP-Client: Hintergrund-Ereignisschleife, eine persistente Sitzung pro konfiguriertem Server, Qualifizierung von Tool-Namen, Positivlisten (Allowlists) und das synthetische Ressourcen-Tool <code>get_context</code>.</td>
+</tr>
+<tr>
+<td><code>mcp/config.py</code></td>
+<td><strong>Model</strong></td>
+<td>Parst und validiert <code>config/servers.yaml</code>; überspringt (mit Warnung) jeden Eintrag, der fehlerhaft, deaktiviert oder eine doppelte ID ist.</td>
+</tr>
+<tr>
+<td><code>utils/safe_eval.py</code></td>
+<td><strong>Model</strong></td>
+<td>Gemeinsamer, in einer Sandbox laufender Evaluator für pandas-Ausdrücke, der sowohl von <code>query_dataframe</code> als auch vom Filter-Validierungsschritt in <code>plot_graph</code>/<code>update_graph</code> genutzt wird.</td>
+</tr>
+<tr>
+<td><code>utils/df_summary.py</code></td>
+<td><strong>Model</strong></td>
+<td><code>compact_dataframe_schema()</code> erstellt den stets übergebenen Block aus Namen und dtypes; <code>summarize_dataframe_columns()</code> erstellt die detaillierte Auflistung für die Ressource <code>dataframes/detail</code> und fasst oberhalb von <code>column_detail_threshold</code> Spalten nach Präfix zusammen, ohne jemals einen Spaltennamen zu verbergen.</td>
+</tr>
+<tr>
+<td><code>utils/plot_utils.py</code></td>
+<td><strong>Model</strong></td>
+<td><code>normalize_plot_config()</code>/<code>expand_comma_styles()</code> — bereitet akkumulierte Plot-Konfigurationen nach (Typumwandlung, Expansion kommagetrennter Mehrfach-Stile), bevor sie den Arbeitsbereich Diagramme erreichen.</td>
+</tr>
+<tr>
+<td><code>vm_chat.py</code></td>
+<td><strong>ViewModel</strong></td>
+<td>Erkennt die Modellstufe (klein vs. voll), erstellt den stufengerechten System-Prompt, stellt Ollama-/Timeout-/Max-Token-Anfrageoptionen zusammen, verwaltet den Unterhaltungsverlauf und führt die agentische Tool-Calling-Schleife aus (bis zu 5 Züge).</td>
+</tr>
+<tr>
+<td><code>v_chat_panel.py</code></td>
+<td><strong>View</strong></td>
+<td>Eingebettetes <code>QWidget</code>-Panel mit Chat-Blasen, Anbieter-/Modellauswahl, Zeitstempelanzeige, kompakter 42-px-Kopfzeile und mehrzeiliger Eingabekarte. Sendet <code>plot_requested(dict)</code>, wenn die KI ein Diagramm erstellt/aktualisiert/löscht. Die Modellauswahl ist eine <strong>editierbare</strong> <code>QComboBox</code> (ein Modellname kann direkt eingetippt werden); für den Anbieter <strong>Benutzerdefiniert</strong> (Custom) wird ihre Liste über <code>_custom_model_names()</code> aus der kommagetrennten Einstellung <code>custom_models</code> (<strong>Einstellungen</strong> (Settings) ▸ AI) befüllt, sodass auch Endpunkte ohne Modellauflistungs-API nutzbar bleiben.</td>
+</tr>
+<tr>
+<td><code>v_history_dialog.py</code></td>
+<td><strong>View</strong></td>
+<td>Durchsuchbare Liste gespeicherter Unterhaltungen, sortiert nach den neuesten zuerst. Unterstützt Öffnen, Umbenennen, Duplizieren und Löschen.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="small-model-support"><strong>Unterstützung kleiner Modelle</strong><a class="headerlink" href="#small-model-support" title="Permanent link">&para;</a></h2>
+<p>Kleine lokale Modelle (grob gesagt alles unter ~10 Mrd. Parametern) erhalten einen spürbar anderen Prompt, ein anderes Kontextbudget und eine andere Anfragekonfiguration als große bzw. Cloud-Modelle — nicht bloß eine kürzere Fassung desselben Inhalts. Der Grund ist, dass ein großer, informationsdichter Prompt mit einem nicht gesetzten Kontextfenster für sich genommen ausreicht, um ein ansonsten fähiges kleines Modell beim Tool-Calling scheitern zu lassen (siehe die Fallstudie am Ende dieses Abschnitts).</p>
+<h3 id="detection">Erkennung<a class="headerlink" href="#detection" title="Permanent link">&para;</a></h3>
+<p><code>VMChat._auto_detect_small_model()</code> entscheidet in folgender Reihenfolge:</p>
+<ol>
+<li><strong>Manuelle Überschreibung</strong> — <code>VMChat.set_small_model_mode(True | False | None)</code>. <code>None</code> (der Standardwert) bedeutet „automatische Erkennung beibehalten“ und wird über <code>MSettings</code> persistiert.</li>
+<li><strong>Prüfung der Parameteranzahl</strong> (nur Ollama) — <code>get_ollama_model_info(model)</code> ruft <code>ollama show &lt;model&gt;</code> auf, parst <code>details.parameter_size</code> (z. B. <code>"8.2B"</code>) über <code>_parse_param_size_to_billions()</code> und vergleicht den Wert mit <code>small_model_param_threshold_b</code> aus <code>config/model.yaml</code> (Standard <strong>10.0</strong>). Wird für die Lebensdauer der <code>VMChat</code>-Instanz pro Modellname im Cache gespeichert.</li>
+<li><strong>Fallback über Namensmuster</strong> — lässt sich die Parameteranzahl nicht bestimmen (Cloud-Modell oder <code>ollama show</code> schlägt fehl), wird der Modellname gegen <code>VMChat._SMALL_MODEL_PATTERNS</code> abgeglichen, eine Liste bekannter Tags kleiner Modelle (<code>qwen3:8b</code>, <code>gemma3:4b</code>, <code>phi3:mini</code>, <code>deepseek-r1:8b</code> usw.).</li>
+<li><strong>Standard: vollständige Stufe.</strong> Greift keine Regel, wird das Modell als groß behandelt. Einem unerkannten Modell den vollständigen Prompt zu geben, ist der sicherere Fehlerfall, als ein unerkanntes <em>großes</em> Modell unnötig einzuschränken.</li>
+</ol>
+<p>Die Erkennung ist für die Schritte 2–3 fest auf <code>provider == "Ollama"</code> begrenzt — Cloud-Anbieter erhalten immer die vollständige Stufe, sofern keine manuelle Überschreibung etwas anderes erzwingt. Die Erkennung läuft bei <code>set_model()</code>/<code>set_provider()</code> erneut, niemals in <code>__init__</code> (ein Netzwerkaufruf an <code>ollama show</code> darf nicht mit der Objektkonstruktion in ein Wettlaufproblem geraten).</p>
+<h3 id="persisted-settings"><strong>Persistierte Einstellungen</strong><a class="headerlink" href="#persisted-settings" title="Permanent link">&para;</a></h3>
+<p>Alles, was der Agent speichert — Anbieter, gewähltes Modell pro Anbieter, Prompt-Stufe und Chatverlaufs-Ordner — liegt unter dem Präfix <code>ai_chat/</code> des zentralen Anwendungsspeichers, auf den über <code>MSettings.get_ai_value()</code> / <code>set_ai_value()</code> zugegriffen wird. Das KI-Modul importiert kein eigenes <code>QSettings</code>.</p>
+<p>Früher wurde ein zweites <code>QSettings("SPECTROview", "AIChat")</code>-Paar geführt. Dadurch war die Konfiguration des Agenten für den Rest der App unsichtbar und schlüpfte, schlimmer noch, an der Test-Fixture <code>_isolate_qsettings</code> vorbei — sodass jeder Test, der ein <code>VMChat</code> instanziierte, die echten Einstellungen der Entwickler las und Chatverläufe in deren echten Verlaufsordner schrieb. <code>MSettings._migrate_legacy_ai_settings()</code> kopiert die alten Werte einmalig herüber (abgesichert durch einen Markierungsschlüssel, ohne jemals einen neueren Wert zu überschreiben) und belässt den Alt-Speicher an Ort und Stelle, damit ältere Builds weiterhin laufen.</p>
+<blockquote>
+<p><strong>Geheimnisse (<code>spectroview/settings/secrets.py</code>)</strong>: API-Schlüssel (<code>OpenAI</code>, <code>Anthropic</code>, <code>Mistral</code>, <code>Gemini</code>, <code>DeepSeek</code>, <code>Custom</code>) werden über <code>SecretStore</code> im benutzerspezifischen Konfigurationsspeicher des Betriebssystems abgelegt (<code>QSettings("CEA-Leti", "SPECTROview")</code> unter dem verschleierten Namensraum <code>_credentials/</code>) und strikt aus exportierten <code>config.json</code>-Dateien ausgeschlossen, damit Zugangsdaten nicht geleakt oder versehentlich eingecheckt werden können. <code>config/servers.yaml</code> <em>ist</em> versioniert: tragen Sie dort niemals ein Token ein, sondern verwenden Sie stattdessen <code>${VAR}</code> (wird von <code>mcp/config.py</code> expandiert).</p>
+</blockquote>
+<h3 id="what-changes-in-simplified-mode">Was sich im vereinfachten Modus ändert<a class="headerlink" href="#what-changes-in-simplified-mode" title="Permanent link">&para;</a></h3>
+<p>Alle vier folgenden Aspekte werden in <code>vm_chat.py</code> berechnet und aus <code>config/model.yaml</code> gelesen:</p>
+<table>
+<thead>
+<tr>
+<th>Aspekt</th>
+<th>Vollständige Stufe</th>
+<th>Vereinfachte Stufe</th>
+<th>Konfigurationsschlüssel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>System-Prompt</td>
+<td><code>system.md</code>+<code>chat.md</code>+<code>plotting.md</code> + <code>rules/general,plotting,spectroview</code> + <code>knowledge/features</code> + <code>examples/plotting_examples</code> (~27K Zeichen)</td>
+<td><code>system_small.md</code> + <code>rules/general</code> + <code>examples/examples_small</code> (~9K Zeichen)</td>
+<td>k. A. (fest codierte Listen in <code>_build_system_prompt()</code>)</td>
+</tr>
+<tr>
+<td>Unterhaltungsverlauf</td>
+<td>unbegrenzt</td>
+<td>letzte 6 Nachrichten</td>
+<td><code>max_context_messages</code> / <code>max_context_messages_small</code></td>
+</tr>
+<tr>
+<td>Ollama <code>num_ctx</code></td>
+<td>16384</td>
+<td>8192</td>
+<td><code>ollama_num_ctx_full</code> / <code>ollama_num_ctx_small</code></td>
+</tr>
+<tr>
+<td>Max. Ausgabetokens</td>
+<td>81920</td>
+<td>4096</td>
+<td><code>max_tokens</code> / <code>max_tokens_small</code></td>
+</tr>
+<tr>
+<td>Ollama <code>think</code></td>
+<td>nicht gesetzt (Modell-/Ollama-Standard)</td>
+<td><code>false</code></td>
+<td><code>ollama_think</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>rules/general.md</code> wird von beiden Stufen gemeinsam genutzt (die Datei ist klein und universell gültig); <code>rules/plotting.md</code>, <code>rules/spectroview.md</code> und <code>knowledge/features.md</code> sind ausschließlich der vollständigen Stufe vorbehalten — ihre wesentlichen Inhalte (Quotierung von Filtern, Achsenabbildung für räumliche Plots) sind stattdessen direkt in <code>system_small.md</code> integriert.</p>
+<p><code>num_ctx</code> und <code>think</code> gelten ausschließlich für Ollama-<code>options</code>: Das <code>request_options</code>-Dictionary von <code>LLMClient.chat()</code> wird pro Anbieter übersetzt, und diese beiden Schlüssel werden niemals an <code>APIWorker</code>/<code>AnthropicWorker</code> weitergereicht — es ist strukturell ausgeschlossen, dass sie DeepSeek/OpenAI/Anthropic/Gemini beeinflussen, unabhängig davon, welche Stufe aktiv ist.</p>
+<h3 id="schema-level-accommodations-help-every-model-not-just-small-ones">Anpassungen auf Schemaebene (helfen jedem Modell, nicht nur kleinen)<a class="headerlink" href="#schema-level-accommodations-help-every-model-not-just-small-ones" title="Permanent link">&para;</a></h3>
+<p>Zwei Änderungen in <code>mcp/server.py</code> reduzieren Mehrdeutigkeiten für <em>jedes</em> Modell, unabhängig von der Prompt-Stufe:</p>
+<ul>
+<li><code>plot_style</code> ist ein <code>Literal[...]</code> (erzeugt ein echtes JSON-Schema-<code>enum</code> der 9 gültigen Plot-Typen) anstelle eines reinen <code>str</code>.</li>
+<li>Die gebräuchlichsten <code>other_properties</code>-Schlüssel (<code>grid</code>, <code>plot_title</code>, <code>xlabel</code>, <code>ylabel</code>, <code>zlabel</code>, Achsengrenzen, <code>color_palette</code>, Log-Skala-Flags usw.) sind explizite, typisierte, benannte Parameter von <code>plot_graph</code>/<code>update_graph</code>, zusätzlich zum Sammel-Dictionary <code>other_properties</code>. Ein Modell, das <code>grid=true</code> auf der obersten Ebene des Aufrufs übergibt (statt korrekt verschachtelt in <code>other_properties</code>), verliert diesen Wert nicht mehr — beide Formen werden in der endgültigen Konfiguration zusammengeführt, wobei im Konfliktfall der benannte Parameter Vorrang hat.</li>
+</ul>
+<h3 id="case-study-qwen38b">Fallstudie: qwen3:8b<a class="headerlink" href="#case-study-qwen38b" title="Permanent link">&para;</a></h3>
+<p>Bei derselben Anfrage nach 3 Plots war ein großes Cloud-Modell (DeepSeek) in einem einzigen Zug erfolgreich; <code>qwen3:8b</code> scheiterte vor Einführung dieses Systems bei zwei Versuchen auf zwei verschiedene Arten:</p>
+<ul>
+<li><strong>Versuch A</strong>: gab null Tool-Aufrufe aus — stattdessen 2.237 Zeichen Prosa, die einen Plan in als ```python formatiertem Pseudocode beschrieb, der nie tatsächlich ausgeführt wurde.</li>
+<li><strong>Versuch B</strong>: gab gültige Tool-Aufrufe aus, setzte aber <code>grid: true</code> als Top-Level-Argument (die einzige Stelle, an der die echte Signatur es akzeptierte, war verschachtelt in <code>other_properties</code>) — von MCP/Pydantic stillschweigend verworfen, kein Fehler, kein erneuter Versuch.</li>
+</ul>
+<p>Nach den obigen Korrekturen: <strong>3/3 Wiederholungsläufe waren erfolgreich</strong>, wobei jeder genau 3 korrekt aufgebaute <code>plot_graph</code>-Aufrufe (mit sauber erhaltenem <code>grid</code>) und eine abschließende Zusammenfassung lieferte — in durchschnittlich ~19 s gesamt gegenüber den ursprünglichen 42–100 s <em>pro einzelnem fehlgeschlagenen Zug</em>.</p>
+<hr />
+<h2 id="key-classes"><strong>Wichtige Klassen</strong><a class="headerlink" href="#key-classes" title="Permanent link">&para;</a></h2>
+<h3 id="llmworker-apiworker-anthropicworker-background-threads"><strong><code>LLMWorker</code> / <code>APIWorker</code> / <code>AnthropicWorker</code> — Hintergrund-Threads</strong><a class="headerlink" href="#llmworker-apiworker-anthropicworker-background-threads" title="Permanent link">&para;</a></h3>
+<p><strong>Datei</strong>: <code>spectroview/ai_agent/m_llm_client.py</code></p>
+<p>Drei <code>QThread</code>-Unterklassen, eine pro Backend. Jede führt eine einzelne Streaming-Chat-Anfrage aus (bzw. bei Anthropic mit Tools eine nicht-streamende Anfrage).</p>
+<table>
+<thead>
+<tr>
+<th>Klasse</th>
+<th>Backend</th>
+<th>Benötigtes Paket</th>
+<th>Zusätzliche Konstruktorparameter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LLMWorker</code></td>
+<td>Ollama (lokal)</td>
+<td><code>ollama</code></td>
+<td><code>options</code> (dict: <code>num_ctx</code>, <code>num_predict</code>), <code>think</code> (<code>bool</code>|<code>"low"</code>|<code>"medium"</code>|<code>"high"</code>|<code>None</code>), <code>timeout</code></td>
+</tr>
+<tr>
+<td><code>APIWorker</code></td>
+<td>OpenAI, DeepSeek, Gemini, Custom</td>
+<td><code>openai</code></td>
+<td><code>timeout</code>, <code>max_tokens</code></td>
+</tr>
+<tr>
+<td><code>AnthropicWorker</code></td>
+<td>Anthropic Claude</td>
+<td><code>anthropic</code></td>
+<td><code>timeout</code>, <code>max_tokens</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>LLMWorker</code> erzeugt nur dann ein <code>ollama.Client(timeout=...)</code>, wenn tatsächlich ein Timeout gesetzt ist; andernfalls nutzt er direkt die Hilfsfunktion <code>ollama.chat()</code> auf Modulebene. Von Ollama zurückgegebene Tool-Aufrufe treffen als Pydantic-Modellobjekte (<code>ollama._types.Message.ToolCall</code>) ein, nicht als einfache Dictionaries — <code>LLMWorker.run()</code> normalisiert jedes Objekt vor dem Emittieren über <code>.model_dump()</code>, sodass <code>MConversation.save()</code> (reines <code>json.dump</code>) nicht an einem nicht serialisierbaren Objekt scheitert.</p>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Nutzlast (Payload)</th>
+<th>Zweck</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chunk_received</code></td>
+<td><code>str</code></td>
+<td>Jedes gestreamte Token-Fragment</td>
+</tr>
+<tr>
+<td><code>response_ready</code></td>
+<td><code>(str, list)</code></td>
+<td>Vollständig zusammengesetzter Antworttext + akkumulierte Tool-Aufrufe</td>
+</tr>
+<tr>
+<td><code>error_occurred</code></td>
+<td><code>str</code></td>
+<td>Fehlermeldung, falls das Backend nicht erreichbar ist</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Fehlermeldungen legen die eigentliche Ursache offen.</strong> Alle drei Worker leiten abgefangene Ausnahmen durch <code>_format_exception()</code>, das die <code>__cause__</code>/<code>__context__</code>-Kette durchläuft. Die SDKs von <code>openai</code>/<code>anthropic</code> fassen Low-Level-TLS-/Socket-Fehler zu einem knappen <code>APIConnectionError("Connection error.")</code> zusammen; ohne diesen Durchlauf würden ein Unternehmens-CA-<code>CERTIFICATE_VERIFY_FAILED</code>, ein DNS-<code>getaddrinfo failed</code> oder eine abgewiesene Verbindung alle identisch und nicht diagnostizierbar dargestellt.</p>
+<p><strong>Unternehmens- / interne CA-TLS-Zertifikate.</strong> <code>openai</code>/<code>anthropic</code> verifizieren TLS über httpx gegen das certifi-Bündel, dem private Unternehmens-CAs fehlen — ein On-Premises-Endpunkt scheitert dann mit dem undurchsichtigen „Connection error.“ von oben. <code>m_llm_client</code> handhabt dies bereits beim Import: Benennt <code>SSL_CERT_FILE</code>/<code>REQUESTS_CA_BUNDLE</code> eine PEM-Datei, wird diese als httpx-<code>verify</code> übergeben (<code>_make_http_client()</code>, das über <code>http_client=</code> an jeden SDK-Client durchgereicht wird); andernfalls leitet <code>truststore.inject_into_ssl()</code> die Verifizierung über den Zertifikatsspeicher des Betriebssystems (z. B. den Windows-Zertifikatsspeicher), wo solche CAs in der Regel bereits hinterlegt sind. <code>truststore</code> ist eine Kernabhängigkeit; der Import ist dennoch geschützt, sodass ein Fehlen in einer Umgebung lediglich certifi als Standard belässt.</p>
+<p>Das Ollama-Feld <code>message["thinking"]</code> (der verborgene Notizblock von Hybrid-Reasoning-Modellen, wenn <code>think</code> aktiviert ist) wird absichtlich <strong>niemals</strong> an <code>chunk_received</code> bzw. den Antworttext angehängt — genau durch das Zusammenführen eines verborgenen Reasoning-Kanals in die sichtbare Antwort entsteht der oben gezeigte qwen3-Fehler „Versuch A“. Ein UI-Umschalter „Show model reasoning“ (ein Opt-in-Override <code>think=True</code> sowie ein einklappbarer Reasoning-Bereich unter jeder Nachrichtenblase) existierte zeitweise und wurde inzwischen <strong>vollständig entfernt</strong> — die App fordert <code>think=True</code> nie mehr explizit an, sodass <code>think</code> einfach beim Standard der jeweiligen Stufe bleibt (nicht gesetzt für die vollständige Stufe, <code>false</code> für die kleine Stufe; siehe Tabelle unter <a href="#small-model-support">Unterstützung kleiner Modelle</a>). Die Kanaltrennung selbst bleibt unabhängig von dieser Entfernung erhalten: Selbst wenn ein Modell unaufgefordert <code>thinking</code>-Inhalte ausgibt, hält das Signal <code>thinking_chunk_received</code> von <code>LLMWorker</code> (und <code>VMChat._on_thinking_chunk</code>, das das Fragment nun einfach verwirft statt es anzuzeigen) diese aus dem Antwortkanal heraus.</p>
+</blockquote>
+<h3 id="llmclient-connection-facade"><strong><code>LLMClient</code> — Verbindungsfassade</strong><a class="headerlink" href="#llmclient-connection-facade" title="Permanent link">&para;</a></h3>
+<p><strong>Datei</strong>: <code>spectroview/ai_agent/m_llm_client.py</code></p>
+<p>Eine schlanke, Qt-freie Fassade, welche die Anbieterauswahl, die Speicherung von API-Schlüsseln und den Worker-Lebenszyklus verwaltet.</p>
+<p><strong>Bekannte Anbieter</strong> (definiert im Dictionary <code>API_PROVIDERS</code>):</p>
+<ul>
+<li><code>Ollama</code> → <code>LLMWorker</code></li>
+<li><code>OpenAI</code>, <code>DeepSeek</code>, <code>Gemini</code>, <code>Custom</code> → <code>APIWorker</code></li>
+<li><code>Anthropic</code> → <code>AnthropicWorker</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Methode</th>
+<th>Zweck</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>is_available()</code></td>
+<td><code>True</code>, wenn das Paket des aktiven Anbieters installiert ist und (Ollama) der Daemon antwortet bzw. (Cloud) ein API-Schlüssel gesetzt ist</td>
+</tr>
+<tr>
+<td><code>get_models()</code></td>
+<td>Sortierte Liste der verfügbaren Modellnamen für den aktiven Anbieter</td>
+</tr>
+<tr>
+<td><code>chat(model, messages, on_chunk, on_done, on_error, tools=None, parent=None, request_options=None)</code></td>
+<td>Startet den passenden Hintergrund-Worker für den aktiven Anbieter; bricht zuvor jede laufende Anfrage ab. <code>request_options</code> (<code>num_ctx</code>/<code>think</code>/<code>timeout</code>/<code>max_tokens</code>) wird pro Anbieter übersetzt — siehe <a href="#small-model-support">Unterstützung kleiner Modelle</a> zur anbieterübergreifenden Isolationsgarantie.</td>
+</tr>
+<tr>
+<td><code>cancel()</code></td>
+<td>Beendet den aktuellen Worker-Thread</td>
+</tr>
+<tr>
+<td><code>is_busy()</code></td>
+<td><code>True</code>, solange ein Worker läuft</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Hilfsfunktion auf Modulebene</strong>: <code>get_ollama_model_info(model) -&gt; Optional[ollama.ShowResponse]</code> — Best-Effort-Aufruf von <code>ollama.show()</code>, gibt bei jedem Fehler <code>None</code> zurück und löst niemals eine Ausnahme aus. Wird von der Kleines-Modell-Erkennung in <code>VMChat</code> genutzt.</p>
+<p><strong>Standardmodell</strong>: <code>qwen2.5-coder:7b</code> (konfigurierbar über die UI-Auswahlliste; <code>LLMClient.DEFAULT_MODEL</code>).</p>
+<h3 id="promptmanager-prompt-assembly"><strong><code>PromptManager</code> — Prompt-Zusammenstellung</strong><a class="headerlink" href="#promptmanager-prompt-assembly" title="Permanent link">&para;</a></h3>
+<p><strong>Datei</strong>: <code>spectroview/ai_agent/m_prompt_manager.py</code></p>
+<p>Ein cachender Manager, der Markdown-Abschnitte von der Festplatte liest und sie für die jeweils übergebenen Listen <code>prompts=</code>/<code>rules=</code>/<code>knowledge=</code>/<code>examples=</code> zu einem System-Prompt verknüpft.</p>
+<table>
+<thead>
+<tr>
+<th>Methode</th>
+<th>Zweck</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>load_prompt(name)</code> / <code>load_rule(name)</code> / <code>load_knowledge(name)</code> / <code>load_example(name)</code></td>
+<td>Lädt eine Markdown-Datei anhand ihres Dateistamms und speichert sie im Arbeitsspeicher zwischen (automatische Invalidierung bei mtime-Änderung, falls <code>auto_reload: true</code>)</td>
+</tr>
+<tr>
+<td><code>build_prompt(prompts, rules, knowledge, examples)</code></td>
+<td>Setzt einen vollständigen System-Prompt aus den genannten Fragmenten zusammen. Fehlende Dateien werden mit einer Warnung übersprungen, statt eine Ausnahme auszulösen.</td>
+</tr>
+<tr>
+<td><code>.model_config</code></td>
+<td>Geparste <code>config/model.yaml</code> als Dictionary</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Welche Fragmente geladen werden, wird im Code entschieden</strong>, und zwar durch <code>VMChat._build_system_prompt()</code> — eine Liste für die vollständige Stufe, eine für die vereinfachte Stufe (siehe <a href="#small-model-support">Unterstützung kleiner Modelle</a>). Es gibt keinen Intent-Router. Ein früherer schlüsselwortbasierter Router (<code>_detect_intent()</code>, <code>_INTENT_DEFAULTS</code>, <code>enable_intent_detection</code>) war wirkungslos — die expliziten Listen haben ihn stets umgangen — und wurde zusammen mit den fünf Prompt-Fragmenten entfernt, die nur er hätte laden können (<code>prompts/fitting.md</code>, <code>prompts/coding.md</code>, <code>rules/fitting.md</code>, <code>rules/python.md</code>, <code>examples/filtering_examples.md</code>). Sie lassen sich bei Bedarf aus der Git-Historie wiederherstellen, falls jemals echtes Intent-Routing gebaut wird.</p>
+</blockquote>
+<h3 id="vmchat-viewmodel"><strong><code>VMChat</code> — ViewModel</strong><a class="headerlink" href="#vmchat-viewmodel" title="Permanent link">&para;</a></h3>
+<p><strong>Datei</strong>: <code>spectroview/ai_agent/vm_chat.py</code></p>
+<p>Verwaltet eine mit den geladenen DataFrames verknüpfte Chat-Sitzung. Folgt dem MVVM-Vertrag: Der View ruft öffentliche Methoden auf; das ViewModel antwortet ausschließlich über Signale.</p>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Nutzlast (Payload)</th>
+<th>Zweck</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>thinking_changed</code></td>
+<td><code>(bool, str)</code></td>
+<td><code>True</code>, während die LLM-/Tool-Schleife arbeitet, mit einer Statusbezeichnung (<code>"Thinking"</code> / <code>"Executing tools..."</code>)</td>
+</tr>
+<tr>
+<td><code>chunk_received</code></td>
+<td><code>str</code></td>
+<td>Gestreamte Token-Fragmente für die Tipp-Animation</td>
+</tr>
+<tr>
+<td><code>result_ready</code></td>
+<td><code>ChatResult</code></td>
+<td>Endergebnis, sobald die agentische Schleife keine Tool-Aufrufe mehr absetzt</td>
+</tr>
+<tr>
+<td><code>error_occurred</code></td>
+<td><code>str</code></td>
+<td>Benutzerfreundliche Fehlermeldung</td>
+</tr>
+<tr>
+<td><code>tool_execution_received</code></td>
+<td><code>(str, str)</code></td>
+<td>Tool-Name + dessen Ergebnistext; wird für jeden Tool-Aufruf in der Schleife emittiert (auch für Zwischenschritte). Der View nutzt dies ausschließlich zur Aktualisierung des vorübergehenden „Thinking“-Status — Zwischenschritte von Tools werden nicht mehr als Chips in der Unterhaltung gerendert</td>
+</tr>
+<tr>
+<td><code>conversation_changed</code></td>
+<td><code>str</code></td>
+<td>Titel der neuen bzw. geladenen Unterhaltung</td>
+</tr>
+</tbody>
+</table>
+<h4 id="public-api"><strong>Öffentliche API</strong><a class="headerlink" href="#public-api" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Methode</th>
+<th>Zweck</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>set_dataframes(dfs, active_name)</code></td>
+<td>Verfügbare DataFrames aktualisieren</td>
+</tr>
+<tr>
+<td><code>update_active_df_name(name)</code></td>
+<td>Aktiven DataFrame wechseln, ohne den Verlauf zu löschen</td>
+</tr>
+<tr>
+<td><code>set_graphs(graphs)</code></td>
+<td>Bekannte offene Diagramme aktualisieren (werden als Kontext in den System-Prompt aufgenommen)</td>
+</tr>
+<tr>
+<td><code>set_model(model)</code></td>
+<td>Modell wechseln; startet die Kleines-Modell-Autoerkennung erneut</td>
+</tr>
+<tr>
+<td><code>set_provider(provider, api_key, base_url, model)</code></td>
+<td>Backend wechseln; startet Autoerkennung erneut; beginnt eine neue Unterhaltung</td>
+</tr>
+<tr>
+<td><code>set_small_model_mode(enabled)</code></td>
+<td><code>True</code>/<code>False</code> erzwingt eine Stufe, <code>None</code> aktiviert die automatische Erkennung wieder</td>
+</tr>
+<tr>
+<td><code>is_small_model_mode()</code></td>
+<td><code>True</code>, wenn derzeit die vereinfachte Stufe aktiv ist</td>
+</tr>
+<tr>
+<td><code>process_query(user_text)</code></td>
+<td>Eine Benutzerfrage an das LLM senden</td>
+</tr>
+<tr>
+<td><code>cancel()</code></td>
+<td>Laufende Anfrage abbrechen</td>
+</tr>
+<tr>
+<td><code>clear_history()</code></td>
+<td>Unterhaltungsverlauf zurücksetzen (entspricht <strong>+ Neuer Chat</strong> (+ New Chat))</td>
+</tr>
+</tbody>
+</table>
+<h4 id="the-agentic-tool-calling-loop"><strong>Die agentische Tool-Calling-Schleife</strong><a class="headerlink" href="#the-agentic-tool-calling-loop" title="Permanent link">&para;</a></h4>
+<p><code>process_query()</code> → <code>LLMClient.chat()</code> → <code>_on_done(full_text, tool_calls)</code>:</p>
+<ul>
+<li>Wenn <code>tool_calls</code> nicht leer ist: die <code>arguments</code> jedes Aufrufs (geparst, falls sie als JSON-Zeichenkette ankamen; ein Parse-Fehler erzeugt eine handlungsleitende Tool-Ergebnis-Nachricht „please retry with valid JSON“, anstatt stillschweigend <code>{}</code> einzusetzen) werden über <code>MCPHub.call_tool(name, args)</code> weitergeleitet, wodurch der Aufruf an den jeweiligen Server geroutet wird, dem dieses Tool gehört. Jedes Tool-Ergebnis — Erfolg, ein Validierungsfehler oder eine Meldung über ein unbekanntes Tool — wird als <code>role="tool"</code>-Nachricht an den Unterhaltungsverlauf angehängt, und <code>_on_done</code> ruft <code>LLMClient.chat()</code> erneut mit dem aktualisierten Verlauf auf. Begrenzt durch <code>VMChat.MAX_AGENT_TURNS</code> (<strong>5</strong>).</li>
+<li>Wenn <code>tool_calls</code> leer ist: der Zug endet über <code>_emit_final_result()</code>.</li>
+</ul>
+<p><code>_emit_final_result()</code> leert die während des Zugs am Kontext eingereihten Befehle, überführt sie in Konfigurationen (einmalig normalisiert in <code>_commands_to_configs</code>) und emittiert <code>ChatResult(action="plot", plot_config=[...])</code> — oder <code>ChatResult(action="answer", text_summary=...)</code>, wenn nichts eingereiht wurde.</p>
+<p>Diese Methode läuft auf <strong>jedem</strong> Beendigungspfad, einschließlich des Zug-Limits und einer Ausnahme bei der Tool-Ausführung. Zuvor brachen diese beiden Pfade vorzeitig ab, sodass ein Modell, das drei Plots eingereiht hatte und dann bis zum Limit weiter Tools aufrief, den Benutzer nach der Meldung, die Diagramme seien erstellt worden, mit einem Fehler und ohne Diagramme zurückließ.</p>
+<p><strong><code>ChatResult.action</code> ist ausschließlich <code>"plot"</code> oder <code>"answer"</code>.</strong> Die Vor-MCP-Werte des JSON-Protokolls (<code>"filter"</code>/<code>"statistics"</code>/<code>"update"</code>/<code>"delete"</code>/<code>"query"</code>) besitzen keinen Codepfad mehr; Ergebnisse von <code>query_dataframe</code>/<code>get_statistics</code> erreichen den Benutzer als abschließender Prosatext des Modells und nicht als separates strukturiertes Ergebnis. Die alten Restfelder <code>dataframe</code>/<code>raw_response</code>/<code>query</code>/<code>target_dataframe</code> sowie das Widget <code>_DataFramePreview</code>, das nur für sie gerendert wurde, wurden entfernt.</p>
+<h4 id="request-options"><strong>Anfrageoptionen</strong><a class="headerlink" href="#request-options" title="Permanent link">&para;</a></h4>
+<p><code>_build_request_options()</code> liest <code>config/model.yaml</code> und gibt das Dictionary <code>num_ctx</code>/<code>think</code>/<code>timeout</code>/<code>max_tokens</code> zurück, das bei jedem <code>LLMClient.chat()</code>-Aufruf als <code>request_options=</code> übergeben wird — die vollständige Tabelle mit den Werten für die vollständige und vereinfachte Stufe finden Sie unter <a href="#small-model-support">Unterstützung kleiner Modelle</a>.</p>
+<h4 id="conversation-history-persistence"><strong>Unterhaltungsverlauf und Persistenz</strong><a class="headerlink" href="#conversation-history-persistence" title="Permanent link">&para;</a></h4>
+<p>Unterhaltungen werden automatisch als JSON-Dateien in dem vom Benutzer konfigurierten Verlaufsordner gespeichert (<strong>Einstellungen</strong> → Tab <strong>KI-Einstellungen</strong> (AI Settings)). <code>MConversation</code>:</p>
+<ul>
+<li>Sammelt Nachrichten (einschließlich <code>tool_calls</code>/<code>tool_call_id</code> für Tool-Calling-Züge) mit ISO-Zeitstempeln.</li>
+<li>Vergibt automatisch einen Titel aus der ersten Benutzernachricht (bis zu 60 Zeichen).</li>
+<li>Speichert nach jedem Assistenten-Zug und nach jedem Batch von Tool-Ergebnissen dauerhaft auf die Festplatte.</li>
+<li>Wird <strong>nicht gelöscht</strong>, wenn der Benutzer eine neue Arbeitsbereichsdatei lädt oder DataFrames wechselt — nur <strong>+ Neuer Chat</strong> setzt ihn zurück.</li>
+</ul>
+<p>Der tatsächlich an das LLM gesendete Kontext wird über <code>max_context_messages</code> begrenzt — unbegrenzt für die vollständige Stufe, die letzten 6 Nachrichten für die vereinfachte Stufe (siehe <a href="#small-model-support">Unterstützung kleiner Modelle</a>; dies ersetzt eine frühere Klassenkonstante <code>MAX_HISTORY_PAIRS = 6</code>, die zwar existierte, aber nie verdrahtet war).</p>
+<p><code>to_llm_messages()</code> <strong>erweitert</strong> dieses Fenster, statt blind abzuschneiden: Eine Nachricht mit <code>role="tool"</code> ist nur unmittelbar nach der Assistenten-Nachricht gültig, die ihre <code>tool_calls</code> trägt; würde die Begrenzung genau dazwischen fallen, wird das Fenster rückwärts erweitert, bis das Paar vollständig ist. Ein Schnitt zwischen beiden führte dazu, dass Anbieter die Anfrage ablehnten — und da das Limit nur im vereinfachten Modus aktiv ist, traf es genau jene kleinen lokalen Modelle, die sich von einem API-Fehler am schlechtesten erholen können.</p>
+<h3 id="chatresult-parsed-response"><strong><code>ChatResult</code> — Analysierte Antwort</strong><a class="headerlink" href="#chatresult-parsed-response" title="Permanent link">&para;</a></h3>
+<p><strong>Datei</strong>: <code>spectroview/ai_agent/vm_chat.py</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span> <span class="nc">ChatResult</span><span class="p">:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="s2">&quot;explanation&quot;</span><span class="p">,</span> <span class="s2">&quot;text_summary&quot;</span><span class="p">,</span> <span class="s2">&quot;plot_config&quot;</span><span class="p">)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Feld</th>
+<th>Typ</th>
+<th>Zweck</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>action</code></td>
+<td><code>str</code></td>
+<td><code>"plot"</code> oder <code>"answer"</code> — die einzigen beiden Werte (siehe oben)</td>
+</tr>
+<tr>
+<td><code>explanation</code></td>
+<td><code>str</code></td>
+<td>Text, der auf der Nachrichtenkarte angezeigt wird, wenn Diagrammbefehle ausgeführt wurden</td>
+</tr>
+<tr>
+<td><code>text_summary</code></td>
+<td><code>str</code></td>
+<td>Der abschließende Text des LLM in natürlicher Sprache</td>
+</tr>
+<tr>
+<td><code>plot_config</code></td>
+<td><code>list[dict]</code> | <code>None</code></td>
+<td>Akkumulierte Konfigurationsliste zum Erstellen/Aktualisieren/Löschen für den Arbeitsbereich Diagramme</td>
+</tr>
+</tbody>
+</table>
+<h3 id="vchatpanel-embedded-chat-panel"><strong><code>VChatPanel</code> — Eingebettetes Chat-Panel</strong><a class="headerlink" href="#vchatpanel-embedded-chat-panel" title="Permanent link">&para;</a></h3>
+<p><strong>Datei</strong>: <code>spectroview/ai_agent/v_chat_panel.py</code></p>
+<p>Ein eingebettetes <code>QWidget</code>-Panel ganz rechts im <code>Main.workspace_splitter</code>, gestaltet in einer modernen Kartenoptik nach dem Vorbild von KI-Eingabefeldern.</p>
+<p><strong>Kopfzeile (<code>chatHeader</code>)</strong>: Kompaktes einzeiliges Layout (feste Höhe 42 px):</p>
+<ul>
+<li><strong>Unterhaltungstitel (<code>edit_title</code>)</strong>: Editierbares <code>QLineEdit</code>, das sich über die verfügbare Breite der Kopfzeile erstreckt.</li>
+<li><strong>Aktionsschaltflächen</strong>: 30×30-Symbolschaltflächen für <strong>Chatverlauf</strong> (Chat History) (<code>btn_history</code>), <strong>Neuer Chat</strong> (<code>btn_new_chat</code>), <strong>Chat leeren</strong> (Clear Chat) (<code>btn_clear</code>) und Close Panel (<code>btn_close</code>). (Die internen Attribute <code>lbl_status</code> und <code>lbl_no_data</code> bleiben aus Signalkompatibilitätsgründen erhalten, ohne die Kopfzeilen-UI zu überladen.)</li>
+</ul>
+<p><strong>Eingabebereich (<code>chatComposerFrame</code>)</strong>:</p>
+<ul>
+<li>Eingefasste Karte mit abgerundeten Ecken (8 px) und feinem Rahmen am unteren Rand des Panels.</li>
+<li><strong>Oben</strong>: Automatisch mitwachsende mehrzeilige Texteingabe (<code>_ChatLineEdit</code>), rahmenlos mit transparentem Hintergrund.</li>
+<li><strong>Eingebettete Symbolleiste</strong>: Unten innerhalb der Eingabekarte platziert:</li>
+<li>Auswahlliste für KI-Anbieter (<code>cbb_provider</code>)</li>
+<li>Auswahlliste für Modell (<code>cbb_model</code>, editierbar)</li>
+<li>Schaltfläche zum Aktualisieren von Verbindung/Modellen (<code>btn_refresh_models</code>)</li>
+<li>Stretch-Abstand</li>
+<li>Mikrofon-Schaltfläche für Sprachdiktat (<code>btn_mic</code>)</li>
+<li>Moderne Aktionsschaltfläche (<code>btn_send</code>): wechselt zwischen einem blauen Zustand <strong>Senden</strong> (Send) und einem roten Zustand <strong>Stopp</strong> (Stop), mit dynamischem Hover-/Aktiv-Styling.</li>
+</ul>
+<p>Die frühere manuelle Auswahlliste für die Prompt-Stufe (<code>cbb_prompt_tier</code>: Auto / Full / Small) wurde entfernt; die Erkennung kleiner Modelle arbeitet automatisch auf Basis der Parameteranzahl des Modells.</p>
+<p>Hilfs-Widgets:</p>
+<ul>
+<li><strong><code>_MessageCard</code></strong>: gestaltete Nachrichtenblase; <code>_add_card(text, role, timestamp)</code> rückt sie passend zum jeweiligen Sprecher seitlich ein</li>
+<li><strong><code>_ChatLineEdit</code></strong> / Eingabebereich: emittiert <code>send_requested</code> beim Drücken der Eingabetaste</li>
+</ul>
+<hr />
+<h2 id="system-prompt-llm-contract"><strong>System-Prompt und LLM-Vertrag</strong><a class="headerlink" href="#system-prompt-llm-contract" title="Permanent link">&para;</a></h2>
+<p>Der System-Prompt ist modular aufgebaut und wird von <code>PromptManager</code> verwaltet; abhängig vom aktiven Modell wird er aus zwei Stufen feingranularer Markdown-Dateien zusammengesetzt (siehe <a href="#small-model-support">Unterstützung kleiner Modelle</a>):</p>
+<p><strong>Vollständige Stufe</strong> (Standard; wird auch für alle Cloud-Anbieter verwendet):</p>
+<ol>
+<li><strong>Kern-Prompt</strong> (<code>prompts/system.md</code>, <code>chat.md</code>, <code>plotting.md</code>): Identität, Tool-Nutzungsvertrag, Plot-Anweisungen.</li>
+<li><strong>Dynamischer Kontext</strong> (injiziert durch <code>VMChat</code>): DataFrame-Schemas/Beispielwerte (oberhalb von <code>column_detail_threshold</code> Spalten über <code>utils/df_summary.py</code> verdichtet), Name des aktiven DataFrames, Zusammenfassung offener Diagramme.</li>
+<li><strong>Regeln</strong> (<code>rules/general.md</code>, <code>plotting.md</code>, <code>spectroview.md</code>): Verhaltensvorgaben.</li>
+<li><strong>Wissen</strong> (<code>knowledge/features.md</code>): statische Fakten über die Software.</li>
+<li><strong>Beispiele</strong> (<code>examples/plotting_examples.md</code>): 13 Few-Shot-Tool-Call-Beispiele.</li>
+</ol>
+<p><strong>Vereinfachte Stufe</strong>: <code>prompts/system_small.md</code> (eigenständig: Identität, kritische Regeln, Platzhalter für dynamischen Kontext, Tool-Liste, gängige <code>plot_graph</code>-Optionen, Abbildung räumlicher Plots, Hinweise für mehrstufige Züge — alles in einer Datei) + <code>rules/general.md</code> + <code>examples/examples_small.md</code> (~8 Beispiele, die alle 5 Tools abdecken).</p>
+<p>Der Agent nutzt <strong>natives Tool-/Function-Calling</strong> über das <strong>Model Context Protocol (MCP)</strong> — ganz ohne JSON-Text-Parsing. Das LLM erhält für jedes Tool ein striktes, typisiertes Schema (<code>mcp/server.py</code>, erstellt mit <code>FastMCP</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">query_dataframe</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">get_statistics</span><span class="p">(</span><span class="n">columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">plot_graph</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">plot_style</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">9</span> <span class="n">styles</span><span class="p">],</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>           <span class="n">filters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">df_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>           <span class="n">grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zlabel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>           <span class="n">xmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ymin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ymax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>           <span class="n">color_palette</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xlogscale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ylogscale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>           <span class="n">scatter_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hist_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trendline_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>           <span class="n">other_properties</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">update_graph</span><span class="p">(</span><span class="n">graph_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>   <span class="c1"># same optional fields as plot_graph, all Optional</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">delete_graph</span><span class="p">(</span><span class="n">delete_all</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">graph_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</code></pre></div>
+<p>Die benannten optionalen Parameter von <code>plot_graph</code>/<code>update_graph</code> (<code>grid</code>, <code>plot_title</code>, Achsengrenzen usw.) wirken additiv zu <code>other_properties</code> — beide Formen funktionieren, und ein über den benannten Parameter übergebener Wert gewinnt, falls derselbe Schlüssel auch in <code>other_properties</code> vorkommt. Dies ist die direkte Lösung für die obige qwen3-Fallstudie: Ein Modell muss nicht länger eine undokumentierte Verschachtelungsregel korrekt erraten, damit gängige Eigenschaften wie <code>grid</code> angewendet werden.</p>
+<p><code>LLMClient</code> fängt Tool-Aufrufe ab und leitet sie an eine In-Process-MCP-Client-Sitzung weiter; Ergebnisse (einschließlich Validierungsfehler) fließen in den Unterhaltungsverlauf zurück, sodass das Modell darauf reagieren kann.</p>
+<h3 id="safety-validation"><strong>Sicherheit und Validierung</strong><a class="headerlink" href="#safety-validation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Filter-/Abfrageausdrücke</strong> werden durch <code>utils/safe_eval.py::evaluate_pandas_expression()</code> ausgewertet: Die Funktion versucht zuerst <code>DataFrame.query()</code> (die eigene eingeschränkte Grammatik von pandas, die die reine Spaltensyntax aus jedem Prompt sicher verarbeitet — z. B. <code>"FWHM_Si &gt; 5"</code>) und fällt für Ausdrücke, die <code>.query()</code> nicht darstellen kann, wie etwa <code>"df.groupby('Slot')['x'].mean().idxmax()"</code>, auf ein namensraumbeschränktes <code>eval()</code> (<code>{"__builtins__": {}}</code>, gebunden nur an <code>df</code>/<code>pd</code>/<code>np</code>/einzelne Spalten) zurück. Dies ist eine echte Obermenge des vorherigen reinen <code>eval()</code>-Verhaltens — nichts, was zuvor funktionierte, hört auf zu funktionieren, und es wird keine neue Angriffsfläche eingeführt.</li>
+<li><strong><code>plot_graph</code>/<code>update_graph</code> führen für jeden Filter einen Trockenlauf</strong> gegen den echten Ziel-DataFrame durch, <em>bevor</em> der Plot akzeptiert wird. Ein ungültiger Filter (am häufigsten: ein nicht in Anführungszeichen gesetzter Zeichenkettenwert) liefert einen handlungsleitenden Fehler — der Plot wird <strong>nicht</strong> erstellt — anstatt dass das Tool unabhängig von der Korrektheit stets pauschal Erfolg meldet.</li>
+<li><strong><code>plot_style</code> wird schemavalidiert</strong> (Enum) und zusätzlich in Python im Sinne einer Defense-in-Depth für Anbieter geprüft, die Tool-Argumente nicht grammatikalisch einschränken.</li>
+<li><strong>Fehlerhafte JSON-Tool-Call-Argumente</strong> (selten; hauptsächlich relevant bei OpenAI-kompatiblen Anbietern, bei denen <code>arguments</code> als zu parsender String gestreamt wird) erzeugen eine Fehlermeldung, die zu einem erneuten Versuch auffordert, anstatt stillschweigend durch <code>{}</code> ersetzt zu werden.</li>
+</ul>
+<hr />
+<h2 id="data-flow-end-to-end"><strong>End-to-End-Datenfluss</strong><a class="headerlink" href="#data-flow-end-to-end" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>sequenceDiagram
+    participant User as Benutzer
+    participant VCP as VChatPanel (View)
+    participant VMC as VMChat (ViewModel)
+    participant LLC as LLMClient (Model)
+    participant Worker as LLMWorker (QThread)
+    participant Backend as Ollama/OpenAI/Anthropic
+    participant MCPS as MCP-Server (Tools)
+    participant Main as main.py
+    participant VWG as VWorkspaceGraphs
+
+    User-&gt;&gt;VCP: gibt Frage ein + Enter
+    VCP-&gt;&gt;VMC: process_query(text)
+    VMC-&gt;&gt;VMC: _build_system_prompt() (stufenabhängig)
+    VMC-&gt;&gt;VMC: _build_request_options() (num_ctx/think/timeout/max_tokens)
+    VMC--&gt;&gt;VCP: thinking_changed(True, "Thinking")
+    VMC-&gt;&gt;LLC: chat(model, messages, tools, request_options)
+    LLC-&gt;&gt;Worker: start()
+    Worker-&gt;&gt;Backend: chat(stream=True, options=..., think=...)
+
+    loop jedes Token / Tool-Call-Delta
+        Backend--&gt;&gt;Worker: chunk
+        Worker--&gt;&gt;VMC: chunk_received(fragment)
+        VMC--&gt;&gt;VCP: chunk_received(fragment)
+    end
+
+    Worker--&gt;&gt;VMC: response_ready(text, tool_calls)
+
+    alt tool_calls nicht leer (agentische Schleife, max. 5 Iterationen)
+        VMC--&gt;&gt;VCP: thinking_changed(True, "Executing tools...")
+        VMC-&gt;&gt;MCPS: MCPHub.call_tool(name, args) für jeden Aufruf
+        MCPS--&gt;&gt;VMC: Ergebnistext (validiert, Fehler bei ungültigem Filter/Stil)
+        VMC--&gt;&gt;VCP: tool_execution_received(name, result)
+        VMC-&gt;&gt;LLC: chat(...) erneut mit aktualisiertem Verlauf
+        Note over VMC,LLC: wiederholt bis keine tool_calls mehr oder 5-Runden-Limit
+    else keine tool_calls
+        VMC-&gt;&gt;VMC: _emit_final_result() — eingereihte AgentCommands abrufen
+        VMC--&gt;&gt;VCP: result_ready(ChatResult)
+        VMC--&gt;&gt;VCP: thinking_changed(False, "Thinking")
+    end
+
+    alt action == "plot" (inkl. Update-/Delete-Konfigs)
+        VCP--&gt;&gt;Main: plot_requested(cfg) pro Eintrag
+        Main-&gt;&gt;Main: _on_chat_plot_requested / _apply_graph_update / _apply_graph_delete
+        Main-&gt;&gt;VWG: Diagramm(e) erstellen / aktualisieren / schließen
+    else action == "answer"
+        VCP-&gt;&gt;VCP: text_summary in der KI-Nachrichtenblase anzeigen
+    end</code></pre>
+<hr />
+<h2 id="integration-with-graphs-workspace"><strong>Integration in den Arbeitsbereich Diagramme</strong><a class="headerlink" href="#integration-with-graphs-workspace" title="Permanent link">&para;</a></h2>
+<h3 id="lazy-initialization"><strong>Verzögerte Initialisierung (Lazy Initialization)</strong><a class="headerlink" href="#lazy-initialization" title="Permanent link">&para;</a></h3>
+<p>Sowohl der <strong>Import</strong> als auch das <strong>Widget</strong> werden bis zu <code>Main.open_ai_chat()</code> aufgeschoben. Der Import der Anbieter-SDKs kostet ~4,5 s, weshalb <code>main.py</code> beim Start lediglich prüft, ob das Modul vorhanden ist (<code>importlib.util.find_spec</code>, ohne Ausführung), und den eigentlichen Import erst durchführt, wenn der Benutzer das Panel zum ersten Mal öffnet.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># main.py — module level: probe only, nothing is executed</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">LLM_AVAILABLE</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;spectroview.ai_agent.v_chat_panel&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># main.py — inside open_ai_chat()</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="kn">from</span> <span class="nn">spectroview.ai_agent.v_chat_panel</span> <span class="kn">import</span> <span class="n">VChatPanel</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span> <span class="o">=</span> <span class="n">VChatPanel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_chat_panel</span><span class="o">.</span><span class="n">plot_requested</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_chat_plot_requested</span><span class="p">)</span>
+</code></pre></div>
+<p>Dasselbe Prinzip gilt eine Ebene tiefer: <code>mcp</code> wird in <code>MCPHub._open_session()</code> importiert statt auf Modulebene von <code>hub.py</code>.</p>
+<h3 id="dataframe-synchronization"><strong>DataFrame-Synchronisierung</strong><a class="headerlink" href="#dataframe-synchronization" title="Permanent link">&para;</a></h3>
+<p>Das Chat-Panel bleibt über drei in <code>main.py</code> eingerichtete Signalverbindungen mit dem Arbeitsbereich Diagramme synchron:</p>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Handler</th>
+<th>Auslöser</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vm.dataframes_changed</code></td>
+<td><code>sync_chat_dfs_full</code></td>
+<td>DataFrames hinzugefügt/entfernt — aktualisiert alle DFs und Diagramminformationen</td>
+</tr>
+<tr>
+<td><code>vm.dataframe_columns_changed</code></td>
+<td><code>sync_chat_active</code></td>
+<td>Auswahl des aktiven DataFrames geändert — behält den Chatverlauf bei</td>
+</tr>
+<tr>
+<td><code>vm.graphs_changed</code></td>
+<td><code>sync_chat_graphs</code></td>
+<td>Diagramme erstellt/aktualisiert/gelöscht — aktualisiert Diagramm-IDs im System-Prompt</td>
+</tr>
+</tbody>
+</table>
+<p>Jedes Mal, wenn das Panel eingeblendet wird, wird eine Synchronisierung erzwungen, um sicherzustellen, dass aktuelle Daten vorliegen.</p>
+<h3 id="plot-config-normalization"><strong>Normalisierung der Plot-Konfiguration</strong><a class="headerlink" href="#plot-config-normalization" title="Permanent link">&para;</a></h3>
+<p>Eingereihte Befehle werden <strong>einmalig</strong> in <code>VMChat._commands_to_configs()</code> normalisiert, bevor sie an <code>main.py</code> emittiert werden. (Früher normalisierten sowohl <code>VMChat</code> als auch <code>main.py</code> dasselbe Dictionary; der Durchlauf in <code>main.py</code> wurde entfernt.)</p>
+<table>
+<thead>
+<tr>
+<th>Feld</th>
+<th>Normalisierung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>y</code></td>
+<td><code>str</code> → <code>[str]</code>, <code>None</code> → <code>[]</code></td>
+</tr>
+<tr>
+<td>Grenzfelder (<code>xmin</code>, <code>ymin</code>, ...)</td>
+<td><code>str</code>/<code>int</code>/<code>"null"</code> → <code>float</code> oder <code>None</code></td>
+</tr>
+<tr>
+<td>Ganzzahlfelder (<code>x_rot</code>, <code>scatter_size</code>, ...)</td>
+<td>Umwandlung in <code>int</code>, bei Fehlschlag entfernen</td>
+</tr>
+<tr>
+<td><code>filters</code></td>
+<td><code>["expr1", "expr2"]</code> → <code>[{"expression": "expr1", "state": True}, ...]</code></td>
+</tr>
+<tr>
+<td><code>plot_style</code></td>
+<td>Kommagetrennt (<code>"box, scatter"</code>) → eine Konfiguration pro Stil</td>
+</tr>
+</tbody>
+</table>
+<p><code>utils/plot_utils.py</code> bezieht seine gültigen Plot-Typen und Farbpaletten aus <code>spectroview.PLOT_STYLES</code>/<code>PALETTE</code>, ebenso wie der Validator von <code>mcp/server.py</code>. Das <code>Literal</code> des Tool-Schemas muss statisch analysierbar bleiben und wird daher ausgeschrieben — <code>test_ai_agent_schema.py::TestPlotStyleSingleSourceOfTruth</code> schlägt fehl, falls die Listen jemals auseinanderlaufen.</p>
+<h3 id="graph-update-delete-flow"><strong>Ablauf beim Aktualisieren und Löschen von Diagrammen</strong><a class="headerlink" href="#graph-update-delete-flow" title="Permanent link">&para;</a></h3>
+<p><code>UpdatePlot</code>/<code>DeletePlots</code>-Befehle werden für das bestehende <code>plot_requested</code>-Signal in Einträge der Form <code>{"_graph_update": {...}}</code> / <code>{"_graph_delete": {...}}</code> überführt, und <code>main.py</code>:</p>
+<ol>
+<li>Ruft die bestehenden <code>MGraph</code>-Modelle anhand der ID ab (oder löst <code>"all"</code> auf).</li>
+<li>Ruft <code>vm.update_graph(...)</code> auf oder schließt die entsprechenden <code>QMdiSubWindow</code>s.</li>
+</ol>
+<hr />
+<h2 id="toolbar-entry-point"><strong>Einstiegspunkt in der Symbolleiste</strong><a class="headerlink" href="#toolbar-entry-point" title="Permanent link">&para;</a></h2>
+<p>Die Umschalt-Aktion für den KI-Chat wird der Hauptsymbolleiste in <code>VMenuBar</code> rechts unmittelbar vor der Schaltfläche zur Update-Prüfung hinzugefügt:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># v_menubar.py</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="bp">self</span><span class="o">.</span><span class="n">actionAIChat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">Icons</span><span class="o">.</span><span class="n">sparkles</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">22</span><span class="p">),</span> <span class="s2">&quot;SPECTROview AI Agent&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="bp">self</span><span class="o">.</span><span class="n">actionAIChat</span><span class="o">.</span><span class="n">setShortcut</span><span class="p">(</span><span class="s2">&quot;Ctrl+Shift+A&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="bp">self</span><span class="o">.</span><span class="n">actionAIChat</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ai_chat_requested</span><span class="o">.</span><span class="n">emit</span><span class="p">)</span>
+</code></pre></div>
+<p>Das Signal <code>ai_chat_requested</code> ist in <code>setup_connections()</code> mit <code>Main.open_ai_chat()</code> verbunden, wodurch die Sichtbarkeit von <code>VChatPanel</code> umgeschaltet wird, das direkt in <code>Main.workspace_splitter</code> ganz rechts neben den Haupt-Arbeitsbereichs-Tabs eingebettet ist.</p>
+<hr />
+<h2 id="optional-dependency-management"><strong>Verwaltung optionaler Abhängigkeiten</strong><a class="headerlink" href="#optional-dependency-management" title="Permanent link">&para;</a></h2>
+<p><code>ollama</code>, <code>openai</code>, <code>anthropic</code> und <code>mcp</code> sind <strong>unbedingte Kernabhängigkeiten</strong> in <code>pyproject.toml</code> — es gibt keine separate Extras-Gruppe <code>[ai]</code>; eine reguläre Installation via <code>pip install -e .</code> bringt bereits alles mit, was die KI-Funktion benötigt. Optional ist lediglich die tatsächliche <em>Nutzung</em> der Funktion zur Laufzeit:</p>
+<h3 id="import-guard-pattern"><strong>Import-Guard-Muster</strong><a class="headerlink" href="#import-guard-pattern" title="Permanent link">&para;</a></h3>
+<p>Die Verfügbarkeit wird geprüft, <strong>ohne zu importieren</strong> — <code>find_spec</code> sucht das Paket lediglich, führt es aber niemals aus — und der echte Import findet bei der ersten Verwendung statt und wird global im Modul zwischengespeichert:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># m_llm_client.py — each SDK is probed and loaded independently</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">OLLAMA_AVAILABLE</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">_ollama</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">def</span> <span class="nf">_load_ollama</span><span class="p">():</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the `ollama` module (imported on first use), or None.&quot;&quot;&quot;</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="k">global</span> <span class="n">_ollama</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="k">if</span> <span class="n">_ollama</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">OLLAMA_AVAILABLE</span><span class="p">:</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>        <span class="kn">import</span> <span class="nn">ollama</span> <span class="k">as</span> <span class="nn">_mod</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>        <span class="n">_ollama</span> <span class="o">=</span> <span class="n">_mod</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>    <span class="k">return</span> <span class="n">_ollama</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="c1"># ... same pattern for openai (_load_openai), anthropic (_load_anthropic)</span>
+</code></pre></div>
+<p>Da der Loader die globale Modulvariable zurückgibt, sobald sie gesetzt ist, können Tests über <code>patch.object(m_llm_client, "_ollama", fake)</code> weiterhin ein Fake-Objekt einsetzen.</p>
+<p>Falls ein Paket tatsächlich fehlt (z. B. in einer abgespeckten Umgebung) oder Ollama nicht läuft bzw. kein API-Schlüssel gesetzt ist:</p>
+<ul>
+<li>Der betroffene Anbieter meldet über <code>LLMClient.is_available()</code>, dass er nicht verfügbar ist, was als rote Statusmeldung mit konkreten Installationshinweisen angezeigt wird.</li>
+<li>Beim Start wird kein Fehler ausgelöst; der Rest der Anwendung bleibt unberührt.</li>
+</ul>
+<hr />
+<h2 id="response-parsing-error-handling"><strong>Antwortauswertung und Fehlerbehandlung</strong><a class="headerlink" href="#response-parsing-error-handling" title="Permanent link">&para;</a></h2>
+<p>Mit <strong>MCP Tool Calling</strong> gibt es bei der Antwortauswertung überhaupt kein Freitext-JSON mehr zu parsen:</p>
+<ol>
+<li><strong>Tool-Ausführung</strong>: Das LLM gibt strukturierte Tool-Aufrufe über das native Function-Calling-Protokoll des Anbieters aus.</li>
+<li><strong>Validierung an der Tool-Grenze</strong>: <code>mcp/server.py</code> validiert <code>plot_style</code> (Schema-Enum) und führt für jeden Filter einen Trockenlauf durch (<code>utils/safe_eval.py</code>), bevor ein Plot/Update akzeptiert wird — ungültige Eingaben führen zu einer handlungsleitenden Fehlermeldung an das Modell, anstatt stillschweigend erfolgreich zu erscheinen oder verworfen zu werden.</li>
+<li><strong>Fehlerhafte Argumente</strong>: Eine <code>arguments</code>-Nutzlast als JSON-String, die nicht geparst werden kann (oder nicht zu einem Objekt parst), erzeugt eine Tool-Ergebnis-Nachricht mit Aufforderung zum erneuten Versuch, statt stillschweigend durch <code>{}</code> ersetzt zu werden.</li>
+<li><strong>Nur-Text-Fallback</strong>: Antwortet das LLM mit reinem Text ohne Tool-Aufruf, wird dieser Text zu <code>ChatResult(action="answer", text_summary=...)</code> — so erhält der Benutzer immer etwas Nützliches zu sehen, selbst wenn keine Datenoperation stattfand.</li>
+<li><strong>Fehlender Ziel-DataFrame</strong>: MCP-Tools lösen ein leeres <code>df_name</code> zum aktuell aktiven DataFrame auf.</li>
+<li><strong>Nicht serialisierbare Tool-Call-Objekte</strong>: Ollama gibt <code>tool_calls</code> als Pydantic-Modellobjekte zurück; <code>LLMWorker.run()</code> normalisiert jedes davon in ein einfaches Dictionary (<code>.model_dump()</code>), bevor es zum Unterhaltungsverlauf hinzugefügt wird, sodass <code>json.dump()</code> in <code>MConversation.save()</code> nicht fehlschlägt.</li>
+</ol>
+<hr />
+<h2 id="current-features-graph-workspace"><strong>Aktuelle Funktionen (Arbeitsbereich Diagramme)</strong><a class="headerlink" href="#current-features-graph-workspace" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Funktion</th>
+<th>Beschreibung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ploterstellung in natürlicher Sprache</strong></td>
+<td>Beliebige der 9 unterstützten Plot-Typen (point, scatter, box, bar, line, trendline, histogram, wafer, 2Dmap) samt Spalten-, Filter- und Stiloptionen anfordern</td>
+</tr>
+<tr>
+<td><strong>Erstellung mehrerer Plots</strong></td>
+<td>Eine einzelne Anfrage kann mehrere Plots gleichzeitig erzeugen (parallele Tool-Aufrufe oder mehrere Züge der agentischen Schleife)</td>
+</tr>
+<tr>
+<td><strong>Datenfilterung</strong></td>
+<td>DataFrames in natürlicher Sprache filtern (übersetzt in einen validierten pandas-Ausdruck, siehe <a href="#safety-validation">Sicherheit und Validierung</a>)</td>
+</tr>
+<tr>
+<td><strong>Deskriptive Statistiken</strong></td>
+<td><code>describe()</code>-Statistiken für bestimmte Spalten anfordern</td>
+</tr>
+<tr>
+<td><strong>Diagrammänderung</strong></td>
+<td>Bestehende Diagrammeigenschaften (Achsengrenzen, Titel, Stil, Filter, Palette) anhand der Diagramm-ID aktualisieren</td>
+</tr>
+<tr>
+<td><strong>Diagrammlöschung</strong></td>
+<td>Bestimmte Diagramme oder alle Diagramme per Anweisung in natürlicher Sprache löschen</td>
+</tr>
+<tr>
+<td><strong>Unterstützung mehrerer DataFrames</strong></td>
+<td>Zwischen mehreren geladenen DataFrames wechseln; die KI weiß, welcher aktiv ist</td>
+</tr>
+<tr>
+<td><strong>Anpassung an kleine Modelle</strong></td>
+<td>Erkennt kleine lokale Modelle automatisch (anhand der Parameteranzahl oder des Namens) und wechselt zu einem kürzeren Prompt, begrenztem Verlauf und abgestimmten Ollama-Anfrageoptionen (<code>VMChat.set_small_model_mode()</code>). Siehe <a href="#small-model-support">Unterstützung kleiner Modelle</a>.</td>
+</tr>
+<tr>
+<td><strong>Selbstkorrigierende Tool-Aufrufe</strong></td>
+<td>Ungültige Filter oder Plot-Typen werden vor der Anwendung mit einem handlungsleitenden Fehler abgewiesen, sodass das Modell im selben Zug bzw. in derselben Schleife nachbessern kann</td>
+</tr>
+<tr>
+<td><strong>Unterhaltungsgedächtnis</strong></td>
+<td>Mehrstufige Unterhaltungen; vollständiger Verlauf für große/Cloud-Modelle, die letzten 6 Nachrichten für erkannte kleine Modelle</td>
+</tr>
+<tr>
+<td><strong>Persistenz von Unterhaltungen</strong></td>
+<td>Unterhaltungen überstehen das Laden von Dateien sowie Tab-Wechsel. Nur <strong>+ Neuer Chat</strong> setzt den Verlauf zurück</td>
+</tr>
+<tr>
+<td><strong>Verlaufsbrowser</strong></td>
+<td>Vergangene Unterhaltungen über den Verlaufsdialog einsehen, durchsuchen, öffnen, umbenennen, duplizieren und löschen</td>
+</tr>
+<tr>
+<td><strong>Streaming-Antworten</strong></td>
+<td>Token-für-Token-Anzeige mit Live-Tippanimation bei jedem Anbieter, einschließlich Anthropic mit Tools</td>
+</tr>
+<tr>
+<td><strong>Modell- und Anbieterauswahl</strong></td>
+<td>Direkt in der Eingabe-Symbolleiste zwischen lokal heruntergeladenen Ollama-Modellen oder Cloud-Anbietern wechseln</td>
+</tr>
+<tr>
+<td><strong>Kontextbezogene Prompts</strong></td>
+<td>Der System-Prompt enthält DataFrame-Namen, Dimensionen und jede Spalte mit ihrem <code>dtype</code>; Beispielwerte, Zeilenvorschauen und vollständige Diagrammkonfigurationen werden bei Bedarf über <code>get_context</code> abgerufen</td>
+</tr>
+<tr>
+<td><strong>Externe MCP-Server</strong></td>
+<td>Jeder in <code>config/servers.yaml</code> aufgeführte <code>stdio</code>- oder <code>http</code>-MCP-Server wird beim Start verbunden und seine Tools werden dem Modell mit optionaler serverbezogener Positivliste (Allowlist) angeboten</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="connecting-another-mcp-server"><strong>Einen weiteren MCP-Server anbinden</strong><a class="headerlink" href="#connecting-another-mcp-server" title="Permanent link">&para;</a></h2>
+<p>Fügen Sie einen Block in <code>spectroview/ai_agent/config/servers.yaml</code> hinzu und starten Sie neu:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">servers</span><span class="p">:</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spectroview</span><span class="w">          </span><span class="c1"># SPECTROview&#39;s own tools — keep this one</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">in-process</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="nt">factory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spectroview.ai_agent.mcp.server:create_mcp_server</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">filesystem</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="nt">transport</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stdio</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">npx</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-y</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;@modelcontextprotocol/server-filesystem&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;~/data&quot;</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">    </span><span class="nt">tools</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">read_file</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">list_directory</span><span class="p p-Indicator">]</span><span class="w">     </span><span class="c1"># optional allowlist</span>
+</code></pre></div>
+<p><code>${VARS}</code> und <code>~</code> werden in <code>command</code>, <code>env</code> und <code>url</code> expandiert. Ein Server, der nicht startet, wird protokolliert und übersprungen — der Chat arbeitet mit dem weiter, was verbunden wurde.</p>
+<p>Zwei Dinge sollten Sie dabei im Hinterkopf behalten:</p>
+<ul>
+<li><strong>Die Anzahl der Tools hat ihren Preis.</strong> Das Schema jedes Tools steht bei jedem Zug im Prompt,
+  und kleine lokale Modelle verlieren ab etwa einem Dutzend Tools schnell an Genauigkeit. Nutzen Sie
+  <code>tools:</code>, um nur das bereitzustellen, was Sie wirklich benötigen.</li>
+<li><strong>Die Tool-Beschreibungen eines externen Servers sind nicht vertrauenswürdiger Text</strong>, der von
+  jemand anderem verfasst wurde und dem Modell wortwörtlich übergeben wird. Aktivieren Sie nur Server, denen Sie vertrauen,
+  und bevorzugen Sie eine Positivliste (Allowlist) für alles, was schreibend zugreifen kann.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Zurück zum Seitenanfang
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Fußzeile" >
+        
+          
+          <a href="../mva/" class="md-footer__link md-footer__link--prev" aria-label="Zurück: Multivariate Analyse (MVA)">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Zurück
+              </span>
+              <div class="md-ellipsis">
+                Multivariate Analyse (MVA)
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../mcp_server/" class="md-footer__link md-footer__link--next" aria-label="Weiter: Lokaler MCP-Server">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Weiter
+              </span>
+              <div class="md-ellipsis">
+                Lokaler MCP-Server
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

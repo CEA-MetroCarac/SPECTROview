@@ -26,10 +26,16 @@
         
           <link rel="alternate" href="./" hreflang="fr">
         
+          <link rel="alternate" href="../../../de/developer/spectra_store/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/developer/spectra_store/" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/developer/spectra_store/" hreflang="zh">
+        
       
       
       <link rel="icon" href="../../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -37,10 +43,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -206,6 +212,36 @@
               class="md-select__link" aria-current="true"
             >
               Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/developer/spectra_store/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/developer/spectra_store/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/developer/spectra_store/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
             </a>
           </li>
         
@@ -1997,23 +2033,23 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>SpectraStore
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>└── dict: _maps { map_name → MapData }
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    │
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ├── MapData ("spectrum_A")          ← Espace Spectra : spectre unique (N=1)
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    │   ├── x0: float64[M]             axe des nombres d'onde brut
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ├── MapData (&quot;spectrum_A&quot;)          ← Espace Spectra : spectre unique (N=1)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    │   ├── x0: float64[M]             axe des nombres d&#39;onde brut
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    │   ├── Y0: float32[1, M]          intensités brutes (1 spectre)
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    │   ├── x:  float64[M_proc]        axe traité (après recadrage)
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    │   ├── Y:  float32[1, M_proc]     intensités traitées (après recadrage + ligne de base)
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    │   ├── coords: float64[1, 2]      toujours (0.0, 0.0) pour un spectre ponctuel
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    │   ├── fnames: ["spectrum_A"]      identifiant unique
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    │   ├── fnames: [&quot;spectrum_A&quot;]      identifiant unique
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    │   ├── fit_model: dict             définition du modèle de pics
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    │   ├── peak_params: float64[1, K]  paramètres ajustés
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    │   ├── fit_success: bool[1]
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    │   └── ...
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    │
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    └── MapData ("wafer_300mm")         ← Espace Maps : carte hyperspectrale (N=2500)
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    └── MapData (&quot;wafer_300mm&quot;)         ← Espace Maps : carte hyperspectrale (N=2500)
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        ├── x0: float64[M]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        ├── Y0: float32[2500, M]        matrice d'intensités brutes
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        ├── Y0: float32[2500, M]        matrice d&#39;intensités brutes
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        ├── coords: float64[2500, 2]    positions (X, Y) de platine
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        ├── fnames: [str × 2500]        "wafer_300mm_(x, y)" par spectre
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        ├── fnames: [str × 2500]        &quot;wafer_300mm_(x, y)&quot; par spectre
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        ├── peak_params: float64[2500, K]
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        ├── fit_success: bool[2500]
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        └── ...
@@ -2025,8 +2061,8 @@
 <hr />
 <h2 id="mapdata-le-bloc-tensoriel"><code>MapData</code> — Le bloc tensoriel<a class="headerlink" href="#mapdata-le-bloc-tensoriel" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nd">@dataclass</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">MapData</span><span class="p">:</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="sd">"""All numerical data for a single hyperspectral map."""</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">class</span> <span class="nc">MapData</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;All numerical data for a single hyperspectral map.&quot;&quot;&quot;</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
 </code></pre></div>
 <p><code>MapData</code> est une dataclass qui détient tous les tableaux volumineux d'un jeu de données logique. Ses champs sont organisés par groupes fonctionnels :</p>
@@ -2207,24 +2243,24 @@ L'<strong>architecture à double jeu de tableaux</strong> (<code>x0/Y0</code> vs
 <tr>
 <td><code>Y_bestfit</code></td>
 <td><code>[N, M_proc]</code></td>
-<td>Courbe composite du modèle (somme des pics + ligne de base)</td>
+<td>Courbe composite du modèle (<code>float32</code>, somme des pics + ligne de base)</td>
 </tr>
 <tr>
 <td><code>Y_baseline</code></td>
 <td><code>[N, M_proc]</code></td>
-<td>Courbe de ligne de base évaluée</td>
+<td>Courbe de ligne de base évaluée (<code>float32</code> en traitement par lots)</td>
 </tr>
 <tr>
 <td><code>Y_peaks</code></td>
 <td>liste de <code>[N, M_proc]</code></td>
-<td>Un tableau par pic (pour l'affichage individuel de chaque pic)</td>
+<td>Vues <code>LazyPeakArray</code> évaluées à la demande par ligne sélectionnée</td>
 </tr>
 </tbody>
 </table>
 <hr />
 <h2 id="mapinfo-descripteur-leger"><code>MapInfo</code> — Descripteur léger<a class="headerlink" href="#mapinfo-descripteur-leger" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@dataclass</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">MapInfo</span><span class="p">:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">class</span> <span class="nc">MapInfo</span><span class="p">:</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">row_start</span><span class="p">:</span> <span class="nb">int</span>   <span class="c1"># toujours 0 (conservé pour compatibilité API)</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">row_end</span><span class="p">:</span> <span class="nb">int</span>
@@ -2234,14 +2270,14 @@ L'<strong>architecture à double jeu de tableaux</strong> (<code>x0/Y0</code> vs
 <p><code>MapInfo</code> est un résumé minimal renvoyé par <code>SpectraStore.get_map_info()</code>. Il existe pour assurer la <strong>compatibilité API</strong> — le code historique qui avait besoin de savoir où commençait une carte dans un tableau global continue de fonctionner sans modification, même si le tableau global n'existe plus. Privilégiez <code>get_map_data()</code> pour un accès direct.</p>
 <hr />
 <h2 id="spectrastore-le-conteneur"><code>SpectraStore</code> — Le conteneur<a class="headerlink" href="#spectrastore-le-conteneur" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">SpectraStore</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">class</span> <span class="nc">SpectraStore</span><span class="p">:</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">_maps</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MapData</span><span class="p">]</span>   <span class="c1"># blocs de données par carte</span>
 </code></pre></div>
 <p><code>SpectraStore</code> est un conteneur léger adossé à un dictionnaire. Son API publique se découpe proprement en :</p>
 <h3 id="enregistrement-de-cartes">Enregistrement de cartes<a class="headerlink" href="#enregistrement-de-cartes" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">store</span><span class="o">.</span><span class="n">add_map</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">Y0</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">fnames</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>   <span class="c1"># enregistre une nouvelle carte</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">store</span><span class="o">.</span><span class="n">remove_map</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>                              <span class="c1"># supprime une carte et libère la mémoire</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">store</span><span class="o">.</span><span class="n">reorder_maps</span><span class="p">(</span><span class="n">new_order</span><span class="p">)</span>                       <span class="c1"># réordonne pour l'affichage dans la liste</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">store</span><span class="o">.</span><span class="n">reorder_maps</span><span class="p">(</span><span class="n">new_order</span><span class="p">)</span>                       <span class="c1"># réordonne pour l&#39;affichage dans la liste</span>
 </code></pre></div>
 <h3 id="acces-aux-donnees">Accès aux données<a class="headerlink" href="#acces-aux-donnees" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">md</span>   <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">get_map_data</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>                     <span class="c1"># MapData — accès principal</span>
@@ -2252,7 +2288,7 @@ L'<strong>architecture à double jeu de tableaux</strong> (<code>x0/Y0</code> vs
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">store</span><span class="o">.</span><span class="n">set_fit_results</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">peak_params</span><span class="p">,</span> <span class="n">success</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">param_names</span><span class="p">,</span> <span class="n">fit_model</span><span class="p">)</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">store</span><span class="o">.</span><span class="n">build_fit_results_df</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">map_type</span><span class="p">,</span> <span class="n">peak_labels</span><span class="p">,</span> <span class="n">only_converged</span><span class="p">,</span> <span class="n">decimals</span><span class="p">)</span>  <span class="c1"># → pd.DataFrame</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1">#   colonnes : Filename, X, Y, [Zone, Quadrant], &lt;paramètres de pics&gt;, R2</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1">#   `decimals` (4 par défaut) arrondit chaque colonne numérique d'ajustement ; X/Y gardent toute leur précision.</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1">#   `decimals` (4 par défaut) arrondit chaque colonne numérique d&#39;ajustement ; X/Y gardent toute leur précision.</span>
 </code></pre></div>
 <h3 id="pretraitement">Prétraitement<a class="headerlink" href="#pretraitement" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">store</span><span class="o">.</span><span class="n">batch_preprocess</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">baseline_config</span><span class="p">,</span> <span class="n">range_min</span><span class="p">,</span> <span class="n">range_max</span><span class="p">)</span>   <span class="c1"># vectorisé</span>
@@ -2266,17 +2302,17 @@ L'<strong>architecture à double jeu de tableaux</strong> (<code>x0/Y0</code> vs
 <hr />
 <h2 id="spectrumproxy-et-baselineproxy-passerelle-vers-la-view"><code>SpectrumProxy</code> et <code>BaselineProxy</code> — Passerelle vers la View<a class="headerlink" href="#spectrumproxy-et-baselineproxy-passerelle-vers-la-view" title="Permanent link">&para;</a></h2>
 <p><code>SpectrumProxy</code> et <code>BaselineProxy</code> sont des <strong>objets mandataires en lecture/écriture</strong> offrant une interface par spectre sans dupliquer aucune donnée tensorielle.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">SpectrumProxy</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">class</span> <span class="nc">SpectrumProxy</span><span class="p">:</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">md</span><span class="p">:</span> <span class="n">MapData</span>       <span class="c1"># référence vers le bloc tensoriel parent</span>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span>          <span class="c1"># indice de ligne dans le tenseur</span>
 <a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">fname</span><span class="p">:</span> <span class="nb">str</span>        <span class="c1"># identifiant unique</span>
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
 <a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="nd">@property</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span>   <span class="c1"># lit md.labels[idx]</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="k">def</span> <span class="nf">label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span>   <span class="c1"># lit md.labels[idx]</span>
 <a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="nd">@label</span><span class="o">.</span><span class="n">setter</span>          <span class="c1"># écrit md.labels[idx]</span>
 <a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>
 <a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>    <span class="nd">@property</span>
-<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">color</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span>   <span class="c1"># lit md.colors[idx]</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>    <span class="k">def</span> <span class="nf">color</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span>   <span class="c1"># lit md.colors[idx]</span>
 <a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>    <span class="nd">@color</span><span class="o">.</span><span class="n">setter</span>          <span class="c1"># écrit md.colors[idx]</span>
 </code></pre></div>
 <p>La View ne détient jamais de tableaux bruts. Lorsque <code>VMWorkspaceSpectra._emit_selected_spectra()</code> prépare les données destinées à <code>VSpectraViewer</code>, il emballe une liste d'objets <code>SpectrumProxy</code> aux côtés des tranches de tableaux. La View peut ainsi écrire <code>proxy.label = "My Label"</code> et la modification atterrit automatiquement dans <code>md.labels[idx]</code> sans aucun callback explicite.</p>
@@ -2583,10 +2619,10 @@ L'<strong>architecture à double jeu de tableaux</strong> (<code>x0/Y0</code> vs
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../../../javascripts/mathjax.js"></script>
       

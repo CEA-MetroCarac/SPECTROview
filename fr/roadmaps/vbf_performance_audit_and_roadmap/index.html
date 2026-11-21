@@ -22,10 +22,16 @@
         
           <link rel="alternate" href="./" hreflang="fr">
         
+          <link rel="alternate" href="../../../de/roadmaps/vbf_performance_audit_and_roadmap/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/roadmaps/vbf_performance_audit_and_roadmap/" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/roadmaps/vbf_performance_audit_and_roadmap/" hreflang="zh">
+        
       
       
       <link rel="icon" href="../../../assets/icon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -33,10 +39,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -202,6 +208,36 @@
               class="md-select__link" aria-current="true"
             >
               Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/roadmaps/vbf_performance_audit_and_roadmap/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/roadmaps/vbf_performance_audit_and_roadmap/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/roadmaps/vbf_performance_audit_and_roadmap/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
             </a>
           </li>
         
@@ -1564,13 +1600,83 @@
 
 
 <h1 id="performance-audit-optimization-roadmap-spectroview-vbf-fitting-engine">Performance Audit &amp; Optimization Roadmap: SPECTROview VBF Fitting Engine<a class="headerlink" href="#performance-audit-optimization-roadmap-spectroview-vbf-fitting-engine" title="Permanent link">&para;</a></h1>
-<p><strong>Document Status</strong>: Audited, Empirically Benchmarked &amp; Phased Roadmap<br />
+<p><strong>Document Status</strong>: Audited, Empirically Benchmarked &amp; Phased Roadmap (<strong>Phase 1, Phase 2 <code>P2.1</code>, and Phase 3 <code>P3.3</code> Implemented &amp; Shipped in <code>v26.48.1</code></strong>)<br />
 <strong>Primary Modules Covered</strong>:</p>
 <ul>
 <li><code>spectroview/fit_engine/optimizer.py</code>, <code>spectroview/fit_engine/evaluator.py</code>, <code>spectroview/fit_engine/models.py</code></li>
-<li><code>spectroview/fit_engine/vbf_engine.py</code>, <code>spectroview/fit_engine/vbf_thread.py</code>, <code>spectroview/fit_engine/baseline.py</code></li>
+<li><code>spectroview/fit_engine/vbf_engine.py</code>, <code>spectroview/fit_engine/vbf_thread.py</code>, <code>spectroview/fit_engine/baseline.py</code>, <code>spectroview/fit_engine/noise.py</code></li>
 <li><code>spectroview/main.py</code> (background prewarming)</li>
 </ul>
+<p><strong>Implementation &amp; Release Audit Summary (Verified Against Codebase &amp; Git History)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Roadmap Item</th>
+<th style="text-align: left;">Implementation Status</th>
+<th style="text-align: left;">Commit Hash(es)</th>
+<th style="text-align: left;">Shipped Release</th>
+<th style="text-align: left;">Summary of Shipped Changes vs. Remaining Work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Phase 1: <code>P1.1</code>–<code>P1.5</code></strong></td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>38e66c4</code></td>
+<td style="text-align: left;"><code>v26.48.1</code> (<code>v26.47.1</code> bump)</td>
+<td style="text-align: left;">Post-clip <code>dp_actual</code> convergence check &amp; uniform-weight fast path (<code>P1.1</code>), unified <code>np.linalg.solve</code> primary solver (<code>P1.2</code>), fused <code>PseudoVoigt</code> &amp; <code>out=</code> buffers (<code>P1.3</code>), zero-copy <code>_all_free_identity</code> <code>VBFevaluator</code> fast path (<code>P1.4</code>), and <span class="arithmatex">\(O(N)\)</span> noise-threshold lookup + pure-NumPy <code>_interp_linear_extrap</code> linear baseline (<code>P1.5</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 2: <code>P2.1</code></strong> (L3 Batch Chunking, Contiguous Jacobian &amp; In-Place Kernels)</td>
+<td style="text-align: left;"><strong>Partially Completed &amp; Shipped</strong> (Core chunking + memory layout shipped; intra-chunk active-row compaction pending)</td>
+<td style="text-align: left;"><code>9250ae9</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;"><strong>Shipped</strong>: Adaptive L3-cache sub-batch chunking (<code>_choose_chunk_size(N, M, K)</code> targeting 12 MiB in <code>[256, 2048]</code>) with monotonic weighted <code>progress_callback</code>, physical <code>(K, N, M)</code> Jacobian buffer transposed to <code>(N, M, K)</code> for C-contiguous parameter slices and unit-stride BLAS <code>dgemm</code>, in-place <code>d/dw = ((x - x0)/w) * d/dx0</code> analytical derivatives in <code>models.py</code>, zero-copy <code>all_active = (n_active == N)</code> fast path, and 2D noise/moving-average memoization in <code>noise.py</code>. <strong>Remaining</strong>: Intra-chunk active-row sub-array compaction when <code>1 &lt;= n_diverged &lt; N_chunk</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 2: <code>P2.2</code></strong> (Bound-Pinned Peak &amp; Stagnation Early Exit)</td>
+<td style="text-align: left;"><strong>Pending</strong></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">Diagonal Tikhonov zero-column safeguarding, plateau early exit, and Nielsen gain-ratio damping update remain planned.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 2: <code>P2.3</code></strong> (Safe Support-Windowed Peak Evaluation)</td>
+<td style="text-align: left;"><strong>Pending</strong></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">Exact machine-epsilon windowing (<code>|dx/w| &lt;= 4.5</code>) for Gaussian models and chunk ROI tight-mask prefiltering remain planned.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 2: <code>P2.4</code></strong> (BLAS Thread Control &amp; Persistent Worker Pool)</td>
+<td style="text-align: left;"><strong>Pending</strong> (Validated in controlled re-audit)</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">Controlled re-profiling on <code>v26.48.2</code> confirmed that <code>OPENBLAS_NUM_THREADS=2</code> reduces <code>1_CL_map.json</code> (<code>16,384 × 302</code>) fit time from <code>3,433.74 ms</code> (default 8 threads) to <strong><code>1,434.02 ms</code> (<code>2.40×</code> speedup)</strong>. Tracked in <code>python_performance_audit_and_roadmap.md</code> (<code>P3.3</code>/<code>P4.3</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 3: <code>P3.1</code></strong> (Optional Native C++/OpenMP L1-Resident Kernel)</td>
+<td style="text-align: left;"><strong>Deferred / Not Required</strong></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">Deferred per Strategy A decision (<code>python_performance_audit_and_roadmap.md</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 3: <code>P3.2</code></strong> (Variable Projection VarPro &amp; Spatial Warm-Start)</td>
+<td style="text-align: left;"><strong>Pending</strong></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">Long-term algorithmic enhancement for multi-peak overlaps.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Phase 3: <code>P3.3</code></strong> (Vectorized Forward-Mode Dual-Number AD for <code>_exprs</code>)</td>
+<td style="text-align: left;"><strong>Fully Completed &amp; Shipped</strong></td>
+<td style="text-align: left;"><code>9250ae9</code></td>
+<td style="text-align: left;"><code>v26.48.1</code></td>
+<td style="text-align: left;">Implemented topological expression bytecode compilation (<code>_compiled_expr_ops</code>) and vectorized forward-mode dual-number automatic differentiation (<code>_DualVar</code>, <code>_DUAL_SAFE_NAMESPACE</code>) with batched <code>np.matmul</code> chain-rule combination in <code>spectroview/fit_engine/evaluator.py</code> (<code>2.97×</code> speedup over finite-difference chain-rule loops).</td>
+</tr>
+</tbody>
+</table>
 <p><strong>Benchmark Datasets &amp; Configs Audited</strong>:</p>
 <ul>
 <li><code>examples/fit_benchmarking_data/3_3721map.wdf</code> (<code>N=3,721</code>, <code>M=575</code>, <code>[55.94..958.82 cm⁻¹]</code>, <code>float32</code>)</li>
@@ -1631,21 +1737,21 @@
 <td style="text-align: left;">Post-clip <code>dp</code> convergence fix, uniform <code>np.linalg.solve</code> primary path, fused <code>PseudoVoigt</code>, zero-copy free-param <code>VBFevaluator</code>, pure-NumPy linear baseline &amp; O(N) threshold index</td>
 <td style="text-align: left;"><strong>1.53×–4.58×</strong> real map fits; <strong>1.60×–4.36×</strong> per-iter kernels; <strong>854×</strong> cold 2-pt baseline (<code>scipy</code>-free)</td>
 <td style="text-align: left;">Minimal (Pure NumPy/Python, verified <code>R²</code> parity)</td>
-<td style="text-align: left;"><strong>Implemented &amp; Verified</strong></td>
+<td style="text-align: left;"><strong>Completed &amp; Shipped (<code>38e66c4</code>, <code>v26.48.1</code>)</strong></td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>Phase 2 (<code>P2.1</code>–<code>P2.4</code>)</strong></td>
-<td style="text-align: left;">L3-cache batch chunking + <code>active_idx</code> compaction, inactive/bound-pinned peak convergence handling, safe support-window slicing, BLAS thread caps &amp; warm worker pool</td>
-<td style="text-align: left;"><strong>1.7×–2.0×</strong> additional pure-Python cache/parallel gain + up to <strong>3×–10×</strong> on localized multi-peak bands</td>
+<td style="text-align: left;">L3-cache batch chunking + <code>(K, N, M)</code> layout + <code>active_idx</code> compaction (<code>P2.1</code>), inactive/bound-pinned peak convergence handling (<code>P2.2</code>), safe support-window slicing (<code>P2.3</code>), BLAS thread caps &amp; warm worker pool (<code>P2.4</code>)</td>
+<td style="text-align: left;"><strong>1.7×–2.4×</strong> additional pure-Python cache/parallel gain + up to <strong>3×–10×</strong> on localized multi-peak bands</td>
 <td style="text-align: left;">Low–Moderate (cross-platform Python/NumPy)</td>
-<td style="text-align: left;">Planned Future Milestone</td>
+<td style="text-align: left;"><strong><code>P2.1</code> Shipped (<code>9250ae9</code>, <code>v26.48.1</code>); <code>P2.2</code>–<code>P2.4</code> Pending</strong></td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>Phase 3 (<code>P3.1</code>–<code>P3.3</code>)</strong></td>
-<td style="text-align: left;">Optional C++/OpenMP L1-resident single-spectrum LM kernel (prebuilt wheels + NumPy fallback), Variable Projection (VarPro) / spatial warm-start, vectorized dual-number AD for <code>_exprs</code></td>
-<td style="text-align: left;"><strong>10×–30×+</strong> approach toward LabSpec-class interactive sub-second 20k-spectrum fitting</td>
-<td style="text-align: left;">Higher build/packaging complexity (native wheels)</td>
-<td style="text-align: left;">Planned Long-Term Architecture</td>
+<td style="text-align: left;">Optional C++/OpenMP L1-resident single-spectrum LM kernel (<code>P3.1</code>), Variable Projection (VarPro) / spatial warm-start (<code>P3.2</code>), vectorized dual-number AD for <code>_exprs</code> (<code>P3.3</code>)</td>
+<td style="text-align: left;"><strong>2.97×</strong> expression chain-rule speedup (<code>P3.3</code>); <strong>10×–30×+</strong> long-term native/VarPro ceiling</td>
+<td style="text-align: left;">Low for <code>P3.3</code> (pure NumPy); higher for <code>P3.1</code></td>
+<td style="text-align: left;"><strong><code>P3.3</code> Shipped (<code>9250ae9</code>, <code>v26.48.1</code>); <code>P3.1</code> Deferred; <code>P3.2</code> Pending</strong></td>
 </tr>
 </tbody>
 </table>
@@ -2309,7 +2415,10 @@
 <hr />
 <h2 id="4-phase-2-implementation-plan-high-impact-moderate-complexity">4. Phase 2 Implementation Plan (High Impact, Moderate Complexity)<a class="headerlink" href="#4-phase-2-implementation-plan-high-impact-moderate-complexity" title="Permanent link">&para;</a></h2>
 <p>Phase 2 targets memory hierarchy efficiency, stalled-peak termination, localized spatial sparsity, and multi-core CPU scaling — all purely in Python/NumPy without native compiler toolchains.</p>
-<h3 id="p21-l3-cache-sized-batch-chunking-active-row-compaction"><code>P2.1</code> — L3-Cache-Sized Batch Chunking &amp; Active-Row Compaction<a class="headerlink" href="#p21-l3-cache-sized-batch-chunking-active-row-compaction" title="Permanent link">&para;</a></h3>
+<h3 id="p21-l3-cache-sized-batch-chunking-active-row-compaction-partially-completed-shipped-in-v26481-commit-9250ae9"><code>P2.1</code> — L3-Cache-Sized Batch Chunking &amp; Active-Row Compaction <code>[Partially Completed &amp; Shipped in v26.48.1 — commit 9250ae9]</code><a class="headerlink" href="#p21-l3-cache-sized-batch-chunking-active-row-compaction-partially-completed-shipped-in-v26481-commit-9250ae9" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>Implementation Status (<code>9250ae9</code>, <code>v26.48.1</code>)</strong>: Adaptive L3-cache batch chunking (<code>_choose_chunk_size(N, M, K)</code> in <code>optimizer.py:21–42</code>, chunked outer loop in <code>optimizer.py:263–320</code> with monotonic weighted <code>progress_callback</code>), physical <code>(K, N, M)</code> Jacobian buffer transposed to <code>(N, M, K)</code> for unit-stride BLAS <code>dgemm</code>, in-place analytical derivatives in <code>models.py</code>, zero-copy <code>all_active = (n_active == N)</code> full-batch fast path, and 2D noise/moving-average memoization in <code>noise.py</code> are <strong>completed and shipped</strong>. Under controlled idle-CPU re-benchmarking (<code>v26.48.2</code>), <code>WDF 3_3721map.json</code> (<code>3,721 × 70, K=3</code>) improved from <code>157.6 ms</code> (Phase 1) to <strong><code>70.81 ms</code></strong> (<code>63.67 ms</code> with <code>OPENBLAS_NUM_THREADS=2</code>), and <code>CL 1_CL_map.json</code> (<code>16,384 × 302, K=3</code>) improved from <code>3,802.1 ms</code> (Phase 1) to <strong><code>3,433.74 ms</code></strong> (<strong><code>1,434.02 ms</code></strong> with <code>OPENBLAS_NUM_THREADS=2</code>). Only intra-chunk active-row sub-array compaction when <code>1 &lt;= n_diverged &lt; N_chunk</code> remains open.</p>
+</blockquote>
 <h4 id="problem-evidence">Problem &amp; Evidence<a class="headerlink" href="#problem-evidence" title="Permanent link">&para;</a></h4>
 <ul>
 <li>Currently, <code>batched_levenberg_marquardt()</code> keeps global <code>(N, M, K)</code> Jacobian tensors (<code>~114–684 MiB</code> on <code>N=16,384, M=304</code>) and <code>(N, K, K)</code> caches for all <code>N</code> spectra simultaneously, even after 75–90% have converged or while active rows span fragmented memory indices.</li>
@@ -2518,7 +2627,10 @@
 </li>
 </ol>
 <hr />
-<h3 id="p33-vectorized-forward-mode-dual-number-ad-for-linked-expressions-_exprs"><code>P3.3</code> — Vectorized Forward-Mode Dual-Number AD for Linked Expressions (<code>_exprs</code>)<a class="headerlink" href="#p33-vectorized-forward-mode-dual-number-ad-for-linked-expressions-_exprs" title="Permanent link">&para;</a></h3>
+<h3 id="p33-vectorized-forward-mode-dual-number-ad-for-linked-expressions-_exprs-completed-shipped-in-v26481-commit-9250ae9"><code>P3.3</code> — Vectorized Forward-Mode Dual-Number AD for Linked Expressions (<code>_exprs</code>) <code>[Completed &amp; Shipped in v26.48.1 — commit 9250ae9]</code><a class="headerlink" href="#p33-vectorized-forward-mode-dual-number-ad-for-linked-expressions-_exprs-completed-shipped-in-v26481-commit-9250ae9" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>Implementation Status (<code>9250ae9</code>, <code>v26.48.1</code>)</strong>: <strong>Fully completed and shipped</strong> in <code>spectroview/fit_engine/evaluator.py</code> via <code>_DualVar</code>, <code>_DUAL_SAFE_NAMESPACE</code>, topological expression bytecode compilation (<code>_compiled_expr_ops</code>), and batched <code>np.matmul</code> chain-rule combination (<code>2.97×</code> speedup over finite-difference chain-rule loops), verified by unit tests in <code>tests/unit/fit_engine/test_evaluator.py</code>.</p>
+</blockquote>
 <h4 id="problem-evidence_4">Problem &amp; Evidence<a class="headerlink" href="#problem-evidence_4" title="Permanent link">&para;</a></h4>
 <ul>
 <li>Currently (<code>2dmap_spc.spc | 3p_expr</code>, <code>vbf_bench_report.txt</code>), linking 2 parameters via <code>_exprs</code> (<code>K_free = 7 &lt; K_total = 9</code>) caused <code>jac</code> time to balloon from <strong><code>42.37 s (53.4%)</code> to <code>75.73 s (68.9%)</code></strong> despite solving <em>smaller</em> <code>7×7</code> normal equations!</li>
@@ -2630,10 +2742,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../../../javascripts/mathjax.js"></script>
       

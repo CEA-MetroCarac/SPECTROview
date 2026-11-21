@@ -1,0 +1,2633 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="用于光谱数据处理、拟合与可视化的交互式工具">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/zh/developer/spectra_store/">
+      
+      
+        <link rel="prev" href="../file_loading/">
+      
+      
+        <link rel="next" href="../spectra/">
+      
+      
+        
+          <link rel="alternate" href="../../../developer/spectra_store/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/developer/spectra_store/" hreflang="fr">
+        
+          <link rel="alternate" href="../../../de/developer/spectra_store/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/developer/spectra_store/" hreflang="ru">
+        
+          <link rel="alternate" href="./" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>数据架构 SpectraStore - SPECTROview 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#data-architecture-spectrastore" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../" title="SPECTROview 文档" class="md-header__button md-logo" aria-label="SPECTROview 文档" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SPECTROview 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              数据架构 SpectraStore
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="选择当前语言"
+      title="选择当前语言"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">ZH</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../developer/spectra_store/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/developer/spectra_store/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/developer/spectra_store/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/developer/spectra_store/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="zh"
+              class="md-select__link" aria-current="true"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  安装
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_manual/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  用户手册
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../user_manual/ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI 智能体
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  开发者指南
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  更新日志
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="SPECTROview 文档" class="md-nav__button md-logo" aria-label="SPECTROview 文档" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    SPECTROview 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    安装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_manual/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    用户手册
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    用户手册
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    支持的数据格式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    界面概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    菜单栏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱与二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多元分析 (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷计算器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    设置
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    保存与加载
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷键与技巧
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_manual/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    开发者指南
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    开发者指南
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    文件加载流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据架构 SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据架构 SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#design-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        设计理念
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据层级结构
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mapdata-the-tensor-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MapData —— 张量数据块
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MapData —— 张量数据块">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spectral-arrays-immutable-raw-mutable-processed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        光谱数组（不可变原始数据 + 可变已处理数据）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-spectrum-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        单条光谱元数据
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preprocessing-state-shared-across-all-n-spectra-in-a-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        预处理状态（在二维图谱的所有 N 条光谱间共享）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fit-results-filled-after-vbf-engine-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        拟合结果（VBF 引擎运行后填充）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visualization-curves-derived-for-rendering-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        可视化曲线（派生数据，仅用于渲染）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mapinfo-lightweight-descriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MapInfo —— 轻量级描述符
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spectrastore-the-container" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SpectraStore —— 存储容器
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SpectraStore —— 存储容器">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#map-registration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        二维图谱注册
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据访问
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fit-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        拟合结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preprocessing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        预处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        序列化
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spectrumproxy-and-baselineproxy-view-bridge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SpectrumProxy 与 BaselineProxy —— View 层桥梁
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-relationships" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        类关系图
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-management-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据管理策略
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="数据管理策略">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        存储
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retrieval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据获取
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updates-and-synchronization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        更新与同步
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        内存管理
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preprocessing-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        预处理流程
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        持久化
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="持久化">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#modern-format-v2-zip-backed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        现代格式（v2+，基于 ZIP 归档）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serialization-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        序列化 API
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        故障排查
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    向量化批量拟合引擎 (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多元分析 (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    本地 MCP 服务器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱工作区（加载、预处理、拟合）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区（高光谱、热图）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据可视化（图表）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷计算器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    扩展 SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    更新日志
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="导航栏" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    首页
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    开发者指南
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="data-architecture-spectrastore"><strong>数据架构：SpectraStore</strong><a class="headerlink" href="#data-architecture-spectrastore" title="Permanent link">&para;</a></h1>
+<p><code>SpectraStore</code> 是 SPECTROview 中所有数值型光谱数据的<strong>单一数据源</strong>。<a href="../spectra/">光谱 (Spectra)</a> 与 <a href="../maps/">二维图谱 (Maps)</a> 两个工作区均从同一个存储中读写数据。理解该模块是每一位新贡献者入门的最重要一步。</p>
+<p><strong>源文件</strong>：<a href="https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/model/spectra/spectra_store.py"><code>spectra_store.py</code></a></p>
+<hr />
+<h2 id="design-philosophy">设计理念<a class="headerlink" href="#design-philosophy" title="Permanent link">&para;</a></h2>
+<p>在引入 <code>SpectraStore</code> 之前（26.24.1 之前的版本），SPECTROview 将每条光谱存储为独立的 Python 对象。这在处理包含数千条光谱的大型高光谱二维图谱时会造成性能瓶颈。以张量为中心的重构将逻辑上属于同一“二维图谱”的所有光谱存储为连续的 NumPy 数组，从而实现：</p>
+<ul>
+<li><strong>向量化预处理</strong> —— 在单次操作中对整个 N×M 矩阵应用范围裁剪与基线扣除。</li>
+<li><strong>批量拟合</strong> —— <a href="../vbf_engine/">VBF 引擎</a>直接对张量进行运算，无需 Python 层级的循环迭代。</li>
+<li><strong>O(1) 二维图谱访问</strong> —— 无论存储规模大小，获取二维图谱数据只需一次字典查找。</li>
+<li><strong>异构数据集</strong> —— 每个二维图谱各自拥有独立的 X 轴，因此不同波数范围的二维图谱可以顺畅共存。</li>
+</ul>
+<hr />
+<h2 id="data-hierarchy">数据层级结构<a class="headerlink" href="#data-hierarchy" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>SpectraStore
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>└── dict: _maps { map_name → MapData }
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ├── MapData (&quot;spectrum_A&quot;)          ← Spectra workspace: single spectrum (N=1)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    │   ├── x0: float64[M]             raw wavenumber axis
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    │   ├── Y0: float32[1, M]          raw intensity (1 spectrum)
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    │   ├── x:  float64[M_proc]        processed axis (after crop)
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    │   ├── Y:  float32[1, M_proc]     processed intensity (after crop + baseline)
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    │   ├── coords: float64[1, 2]      always (0.0, 0.0) for point spectra
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    │   ├── fnames: [&quot;spectrum_A&quot;]      unique identifier
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    │   ├── fit_model: dict             peak model definition
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    │   ├── peak_params: float64[1, K]  fitted parameters
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    │   ├── fit_success: bool[1]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    │   └── ...
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    │
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    └── MapData (&quot;wafer_300mm&quot;)         ← Maps workspace: hyperspectral map (N=2500)
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        ├── x0: float64[M]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        ├── Y0: float32[2500, M]        raw intensity matrix
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        ├── coords: float64[2500, 2]    (X, Y) stage positions
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        ├── fnames: [str × 2500]        &quot;wafer_300mm_(x, y)&quot; per spectrum
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        ├── peak_params: float64[2500, K]
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        ├── fit_success: bool[2500]
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        └── ...
+</code></pre></div>
+<blockquote>
+<p>[!IMPORTANT]
+<strong>单条光谱与完整的高光谱二维图谱均使用相同的 <code>MapData</code> 结构</strong> —— 二者仅在行数 N 上有所区别。正是这一统一模型使光谱工作区与二维图谱工作区能够共享同一个 ViewModel 基类（<code>VMWorkspaceSpectra</code>）。</p>
+</blockquote>
+<hr />
+<h2 id="mapdata-the-tensor-block"><code>MapData</code> —— 张量数据块<a class="headerlink" href="#mapdata-the-tensor-block" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">class</span> <span class="nc">MapData</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;All numerical data for a single hyperspectral map.&quot;&quot;&quot;</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+<p><code>MapData</code> 是一个 dataclass，用于持有单个逻辑数据集的所有大型数组。其字段按功能分组组织：</p>
+<h3 id="spectral-arrays-immutable-raw-mutable-processed">光谱数组（不可变原始数据 + 可变已处理数据）<a class="headerlink" href="#spectral-arrays-immutable-raw-mutable-processed" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>形状</th>
+<th>dtype</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x0</code></td>
+<td><code>[M]</code></td>
+<td>float64</td>
+<td>原始波数轴 —— <strong>永不修改</strong></td>
+</tr>
+<tr>
+<td><code>Y0</code></td>
+<td><code>[N, M]</code></td>
+<td>float32</td>
+<td>原始强度数据 —— <strong>永不修改</strong></td>
+</tr>
+<tr>
+<td><code>x</code></td>
+<td><code>[M_proc]</code></td>
+<td>float64</td>
+<td>裁剪或 X 轴校正后的工作波数轴（若为 <code>None</code> → 使用 <code>x0</code>）</td>
+</tr>
+<tr>
+<td><code>Y</code></td>
+<td><code>[N, M_proc]</code></td>
+<td>float32</td>
+<td>完成所有预处理后的工作强度矩阵（若为 <code>None</code> → 使用 <code>Y0</code>）</td>
+</tr>
+<tr>
+<td><code>coords</code></td>
+<td><code>[N, 2]</code></td>
+<td>float64</td>
+<td>空间 (X, Y) 坐标 —— 对于单点光谱始终为 <code>(0, 0)</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>[!IMPORTANT]
+<strong>双数组设计</strong>（<code>x0/Y0</code> 与 <code>x/Y</code>）是实现非破坏性预处理的关键。<code>x0</code> 和 <code>Y0</code> 在加载文件时写入一次，此后<strong>永不再改动</strong>。所有预处理操作都会生成 <code>x</code> 和 <code>Y</code>。调用 <code>reinit_spectra()</code> 只需将 <code>md.x = None; md.Y = None</code>，即可让存储自动回退至原始数组。</p>
+</blockquote>
+<h3 id="per-spectrum-metadata">单条光谱元数据<a class="headerlink" href="#per-spectrum-metadata" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>长度</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fnames</code></td>
+<td>N</td>
+<td>每行光谱的唯一字符串标识符</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>N</td>
+<td><code>bool</code> —— 指示该光谱在 UI 列表中是否处于勾选激活状态</td>
+</tr>
+<tr>
+<td><code>colors</code></td>
+<td>N</td>
+<td>可选的每条光谱显示颜色</td>
+</tr>
+<tr>
+<td><code>labels</code></td>
+<td>N</td>
+<td>可选的用户自定义显示标签</td>
+</tr>
+</tbody>
+</table>
+<h3 id="preprocessing-state-shared-across-all-n-spectra-in-a-map">预处理状态（在二维图谱的所有 N 条光谱间共享）<a class="headerlink" href="#preprocessing-state-shared-across-all-n-spectra-in-a-map" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>baseline_config</code></td>
+<td><code>dict</code></td>
+<td>基线算法及其参数（<code>mode</code>、<code>points</code>、<code>coef</code> 等）</td>
+</tr>
+<tr>
+<td><code>is_baseline_subtracted</code></td>
+<td><code>bool</code> 或 <code>bool[N]</code></td>
+<td>指示 <code>Y</code> 是否已完成基线扣除</td>
+</tr>
+<tr>
+<td><code>range_min</code> / <code>range_max</code></td>
+<td><code>float</code></td>
+<td>当前光谱裁剪范围边界</td>
+</tr>
+<tr>
+<td><code>xcorrection_value</code></td>
+<td><code>float</code></td>
+<td>已施加的 X 轴平移校正值（cm⁻¹）</td>
+</tr>
+<tr>
+<td><code>intensity_norm_factor</code></td>
+<td><code>float</code></td>
+<td>强度乘法归一化因子</td>
+</tr>
+<tr>
+<td><code>map_metadata</code></td>
+<td><code>dict</code></td>
+<td>来自 WDF/SPC 文件的采集元数据</td>
+</tr>
+</tbody>
+</table>
+<h3 id="fit-results-filled-after-vbf-engine-runs">拟合结果（VBF 引擎运行后填充）<a class="headerlink" href="#fit-results-filled-after-vbf-engine-runs" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>形状</th>
+<th>dtype</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>peak_params</code></td>
+<td><code>[N, K]</code></td>
+<td>float64</td>
+<td>优化后的拟合参数值</td>
+</tr>
+<tr>
+<td><code>fit_success</code></td>
+<td><code>[N]</code></td>
+<td>bool</td>
+<td>每条光谱的收敛标志</td>
+</tr>
+<tr>
+<td><code>fit_r2</code></td>
+<td><code>[N]</code></td>
+<td>float64</td>
+<td>每条光谱的决定系数</td>
+</tr>
+<tr>
+<td><code>param_names</code></td>
+<td>list[str]</td>
+<td>—</td>
+<td><code>peak_params</code> 的列标签（例如 <code>m01_x0</code>、<code>m01_fwhm</code>）</td>
+</tr>
+<tr>
+<td><code>fit_model</code></td>
+<td><code>dict</code></td>
+<td>—</td>
+<td>用于拟合的峰模型定义</td>
+</tr>
+</tbody>
+</table>
+<h3 id="visualization-curves-derived-for-rendering-only">可视化曲线（派生数据，仅用于渲染）<a class="headerlink" href="#visualization-curves-derived-for-rendering-only" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>形状</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Y_bestfit</code></td>
+<td><code>[N, M_proc]</code></td>
+<td>拟合合成模型曲线（<code>float32</code>，所有峰与基线之和）</td>
+</tr>
+<tr>
+<td><code>Y_baseline</code></td>
+<td><code>[N, M_proc]</code></td>
+<td>计算得到的基线曲线（批量计算时为 <code>float32</code>）</td>
+</tr>
+<tr>
+<td><code>Y_peaks</code></td>
+<td><code>[N, M_proc]</code> 组成的列表</td>
+<td>按需针对所选切片行计算的逐峰 <code>LazyPeakArray</code> 视图</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="mapinfo-lightweight-descriptor"><code>MapInfo</code> —— 轻量级描述符<a class="headerlink" href="#mapinfo-lightweight-descriptor" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">class</span> <span class="nc">MapInfo</span><span class="p">:</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">row_start</span><span class="p">:</span> <span class="nb">int</span>   <span class="c1"># always 0 (kept for API compatibility)</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">row_end</span><span class="p">:</span> <span class="nb">int</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">n_spectra</span><span class="p">:</span> <span class="nb">int</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">n_wavenumbers</span><span class="p">:</span> <span class="nb">int</span>
+</code></pre></div>
+<p><code>MapInfo</code> 是由 <code>SpectraStore.get_map_info()</code> 返回的精简摘要对象。它的存在是为了保障 <strong>API 兼容性</strong> —— 尽管全局数组已不复存在，原先需要知道“该二维图谱在全局数组中从何处开始”的旧代码仍可无需修改而继续运行。如需直接访问数据，建议优先使用 <code>get_map_data()</code>。</p>
+<hr />
+<h2 id="spectrastore-the-container"><code>SpectraStore</code> —— 存储容器<a class="headerlink" href="#spectrastore-the-container" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">class</span> <span class="nc">SpectraStore</span><span class="p">:</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">_maps</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MapData</span><span class="p">]</span>   <span class="c1"># per-map data blocks</span>
+</code></pre></div>
+<p><code>SpectraStore</code> 是一个由字典支撑的轻量级容器，其公开 API 清晰地划分为以下几个部分：</p>
+<h3 id="map-registration">二维图谱注册<a class="headerlink" href="#map-registration" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">store</span><span class="o">.</span><span class="n">add_map</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">Y0</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">fnames</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>   <span class="c1"># register a new map</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">store</span><span class="o">.</span><span class="n">remove_map</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>                              <span class="c1"># delete a map and free memory</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">store</span><span class="o">.</span><span class="n">reorder_maps</span><span class="p">(</span><span class="n">new_order</span><span class="p">)</span>                       <span class="c1"># reorder for list display</span>
+</code></pre></div>
+<h3 id="data-access">数据访问<a class="headerlink" href="#data-access" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">md</span>   <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">get_map_data</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>                     <span class="c1"># MapData — primary access</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">info</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">get_map_info</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>                     <span class="c1"># MapInfo — lightweight summary</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">x</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">get_xy_batch</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>            <span class="c1"># (processed) arrays for subset</span>
+</code></pre></div>
+<h3 id="fit-results">拟合结果<a class="headerlink" href="#fit-results" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">store</span><span class="o">.</span><span class="n">set_fit_results</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">peak_params</span><span class="p">,</span> <span class="n">success</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">param_names</span><span class="p">,</span> <span class="n">fit_model</span><span class="p">)</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">store</span><span class="o">.</span><span class="n">build_fit_results_df</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">map_type</span><span class="p">,</span> <span class="n">peak_labels</span><span class="p">,</span> <span class="n">only_converged</span><span class="p">,</span> <span class="n">decimals</span><span class="p">)</span>  <span class="c1"># → pd.DataFrame</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1">#   columns: Filename, X, Y, [Zone, Quadrant], &lt;peak params&gt;, R2</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1">#   `decimals` (default 4) rounds every numeric fit column; X/Y stay full-precision.</span>
+</code></pre></div>
+<h3 id="preprocessing">预处理<a class="headerlink" href="#preprocessing" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">store</span><span class="o">.</span><span class="n">batch_preprocess</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">baseline_config</span><span class="p">,</span> <span class="n">range_min</span><span class="p">,</span> <span class="n">range_max</span><span class="p">)</span>   <span class="c1"># vectorized</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">store</span><span class="o">.</span><span class="n">clear_preprocess</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>                                           <span class="c1"># reset to x0/Y0</span>
+</code></pre></div>
+<h3 id="serialization">序列化<a class="headerlink" href="#serialization" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">store</span><span class="o">.</span><span class="n">to_npz_dict</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>              <span class="c1"># heavy arrays → dict for NPZ</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">store</span><span class="o">.</span><span class="n">to_metadata_dict</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>         <span class="c1"># lightweight metadata → dict for JSON</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">SpectraStore</span><span class="o">.</span><span class="n">load_map_from_npz</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># class method: restore from saved arrays</span>
+</code></pre></div>
+<hr />
+<h2 id="spectrumproxy-and-baselineproxy-view-bridge"><code>SpectrumProxy</code> 与 <code>BaselineProxy</code> —— View 层桥梁<a class="headerlink" href="#spectrumproxy-and-baselineproxy-view-bridge" title="Permanent link">&para;</a></h2>
+<p><code>SpectrumProxy</code> 和 <code>BaselineProxy</code> 是<strong>可读写代理对象</strong>，它们在不复制任何张量数据的前提下提供了面向单条光谱的访问接口。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">class</span> <span class="nc">SpectrumProxy</span><span class="p">:</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">md</span><span class="p">:</span> <span class="n">MapData</span>       <span class="c1"># reference to the parent tensor block</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span>          <span class="c1"># row index within the tensor</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">fname</span><span class="p">:</span> <span class="nb">str</span>        <span class="c1"># unique identifier</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="nd">@property</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="k">def</span> <span class="nf">label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span>   <span class="c1"># reads md.labels[idx]</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="nd">@label</span><span class="o">.</span><span class="n">setter</span>          <span class="c1"># writes md.labels[idx]</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>    <span class="nd">@property</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>    <span class="k">def</span> <span class="nf">color</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span>   <span class="c1"># reads md.colors[idx]</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>    <span class="nd">@color</span><span class="o">.</span><span class="n">setter</span>          <span class="c1"># writes md.colors[idx]</span>
+</code></pre></div>
+<p>View 层从不直接持有原始数组。当 <code>VMWorkspaceSpectra._emit_selected_spectra()</code> 为 <code>VSpectraViewer</code> 准备数据负载时，会将一组 <code>SpectrumProxy</code> 对象与数组切片打包在一起。这样 View 层只需调用 <code>proxy.label = "My Label"</code>，变更便会自动写入 <code>md.labels[idx]</code>，无需任何显式回调。</p>
+<hr />
+<h2 id="class-relationships">类关系图<a class="headerlink" href="#class-relationships" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>classDiagram
+    class SpectraStore {
+        -_maps: dict
+        +add_map()
+        +get_map_data() MapData
+        +get_map_info() MapInfo
+        +set_fit_results()
+        +build_fit_results_df() DataFrame
+        +batch_preprocess()
+        +to_npz_dict()
+        +load_map_from_npz()
+    }
+
+    class MapData {
+        +name: str
+        +x0: ndarray
+        +Y0: ndarray
+        +x: ndarray
+        +Y: ndarray
+        +coords: ndarray
+        +is_active: ndarray
+        +fnames: list
+        +baseline_config: dict
+        +fit_model: dict
+        +peak_params: ndarray
+        +Y_bestfit: ndarray
+        +has_fit_results() bool
+        +n_spectra: int
+    }
+
+    class MapInfo {
+        +name: str
+        +n_spectra: int
+        +n_wavenumbers: int
+        +row_start: int
+        +row_end: int
+    }
+
+    class SpectrumProxy {
+        +md: MapData
+        +idx: int
+        +fname: str
+        +label: str
+        +color: str
+        +baseline: BaselineProxy
+    }
+
+    class BaselineProxy {
+        +mode: str
+        +points: list
+        +is_subtracted: bool
+    }
+
+    SpectraStore "1" *-- "0..*" MapData : "拥有"
+    MapData "1" &lt;-- "0..*" SpectrumProxy : "封装数据行"
+    SpectrumProxy "1" *-- "1" BaselineProxy : "拥有"
+    MapInfo ..&gt; MapData : "描述"</code></pre>
+<hr />
+<h2 id="data-management-strategy">数据管理策略<a class="headerlink" href="#data-management-strategy" title="Permanent link">&para;</a></h2>
+<h3 id="storage">存储<a class="headerlink" href="#storage" title="Permanent link">&para;</a></h3>
+<p>每条光谱或二维图谱都作为独立的 <code>MapData</code> 数据块存储在 <code>SpectraStore._maps</code> 中，不存在全局数组或共享索引。这消除了区间偏移计算，并使删除操作达到 O(1) 复杂度（<code>del _maps[name]</code>）。</p>
+<p>对于每个 <code>MapData</code>，存储中都维护着<strong>两对数组</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>数组对</th>
+<th>内容</th>
+<th>可变性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x0 / Y0</code></td>
+<td>从文件加载的原始数据</td>
+<td>注册后<strong>只读</strong></td>
+</tr>
+<tr>
+<td><code>x / Y</code></td>
+<td>预处理后的工作数据</td>
+<td>由 <code>batch_preprocess()</code> 覆写，由 <code>clear_preprocess()</code> 清除</td>
+</tr>
+</tbody>
+</table>
+<p>当 <code>x</code> 或 <code>Y</code> 为 <code>None</code> 时，存储会在所有访问方法（<code>get_xy_batch</code>、<code>set_plot_data</code> 等）中透明地回退至 <code>x0</code> / <code>Y0</code>。</p>
+<h3 id="retrieval">数据获取<a class="headerlink" href="#retrieval" title="Permanent link">&para;</a></h3>
+<p>ViewModel 始终通过 <code>SpectraStore.get_map_data(name)</code> 获取数据，该方法返回指向 <code>MapData</code> 数据块的<strong>直接引用</strong>（而非副本）。这意味着：</p>
+<ul>
+<li><strong>读取过程零拷贝</strong> —— 不会复制任何数据。</li>
+<li><strong>写入即时生效</strong> —— 对 <code>md.Y</code> 所做的任何修改，在持有同一 <code>md</code> 引用的所有位置均立即可见。</li>
+</ul>
+<p>正因如此，ViewModel 会在每次操作开始时调用 <code>self.store.get_map_data(fname)</code>，而不是将 <code>md</code> 缓存为实例变量。</p>
+<h3 id="updates-and-synchronization">更新与同步<a class="headerlink" href="#updates-and-synchronization" title="Permanent link">&para;</a></h3>
+<p>每次状态变更后，ViewModel 都遵循一致的更新模式：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>mutate MapData  →  _emit_selected_spectra()  →  [optional] _emit_list_update()
+</code></pre></div>
+<p><code>_emit_selected_spectra()</code> 会重新读取所有选中的 <code>MapData</code> 数据块，并向光谱查看器发射一份新的数据负载。<code>_emit_list_update()</code> 则会重新读取所有二维图谱名称，并发射用于着色光谱列表的状态字典。</p>
+<p>这种<strong>基于信号的拉取 (pull-on-signal)</strong> 模式确保 View 始终与 Model 保持一致，而无需在每次字段变更时发出显式通知。</p>
+<h3 id="memory-management">内存管理<a class="headerlink" href="#memory-management" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>Y0</code> 以 <code>float32</code> 格式存储，相较于 <code>float64</code> 可减少一半内存占用，且在光谱分析中不会产生可察觉的精度损失。</li>
+<li>已处理数组 <code>Y</code> 仅在首次执行预处理操作时才分配内存。</li>
+<li><code>Y_bestfit</code>、<code>Y_baseline</code> 和 <code>Y_peaks</code> 均在首次拟合时延迟分配内存。</li>
+<li>使用 <code>store.remove_map(name)</code> 删除二维图谱会移除对应的字典条目；当不再存在其他引用时，Python 垃圾回收机制会释放相应数组。</li>
+<li>基线计算的大型中间结果不会被缓存 —— 它们由 <code>eval_baseline_batch()</code> 按需实时重新计算。</li>
+</ul>
+<hr />
+<h2 id="preprocessing-pipeline">预处理流程<a class="headerlink" href="#preprocessing-pipeline" title="Permanent link">&para;</a></h2>
+<p>所有预处理均为<strong>非破坏性</strong>操作，<code>x0</code> 和 <code>Y0</code> 始终保持不变。</p>
+<ol>
+<li><strong>原始数据</strong>：<code>x0</code> 与 <code>Y0</code>（不可变）。</li>
+<li><strong>范围裁剪</strong>：在 <code>md.range_min</code> 与 <code>md.range_max</code> 之间对数组进行切片。</li>
+<li><strong>X 轴校正</strong>：将 <code>md.xcorrection_value</code> 累加到波数轴上。</li>
+<li><strong>基线计算</strong>：<code>SpectraStore.batch_preprocess()</code> 为整个张量计算基线模型。</li>
+<li><strong>基线扣除</strong>：从裁剪后的强度矩阵中减去计算得到的基线。</li>
+<li><strong>工作数组</strong>：最终结果保存在 <code>md.x</code> 与 <code>md.Y</code> 中。</li>
+<li><strong>下游使用</strong>：所有可视化与拟合操作均使用这组工作数组。</li>
+</ol>
+<p><code>SpectraStore.batch_preprocess()</code> 在单次向量化调用中即可对整个 N×M 矩阵完成范围裁剪与基线扣除。对于光谱工作区（N=1），该操作处理单条光谱；对于二维图谱工作区（N=2500），则在一次调用中处理整个二维图谱张量。</p>
+<hr />
+<h2 id="persistence">持久化<a class="headerlink" href="#persistence" title="Permanent link">&para;</a></h2>
+<h3 id="modern-format-v2-zip-backed">现代格式（v2+，基于 ZIP 归档）<a class="headerlink" href="#modern-format-v2-zip-backed" title="Permanent link">&para;</a></h3>
+<p>工作区文件（<code>.spectra</code> / <code>.maps</code>）本质上是 ZIP 压缩归档：</p>
+<table>
+<thead>
+<tr>
+<th>条目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>metadata.json</code></td>
+<td>轻量级 JSON：<code>format_version</code>、<code>store_meta</code> 字典（fnames、colors、labels、baseline_config、fit_model、范围边界、xcorrection）</td>
+</tr>
+<tr>
+<td><code>arrays.npz</code></td>
+<td>NumPy 压缩数组：<code>store_{name}_x0</code>、<code>store_{name}_y0</code>、<code>store_{name}_coords</code>、<code>store_{name}_peak_params</code>、<code>store_{name}_Y_bestfit</code>、<code>store_{name}_Y_peak_{i}</code></td>
+</tr>
+<tr>
+<td><code>dataframes.pkl</code></td>
+<td>可选：pickle 序列化的 <code>df_fit_results</code></td>
+</tr>
+</tbody>
+</table>
+<p>将轻量级 JSON 元数据与大型二进制数组分离，使得无需加载数 GB 的光谱数据即可快速检视元数据。</p>
+<h3 id="serialization-api">序列化 API<a class="headerlink" href="#serialization-api" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Save path: ViewModel → SpectraStore → WorkspaceIO</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">metadata</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">to_metadata_dict</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>   <span class="c1"># JSON-serializable dict</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">arrays</span>   <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">to_npz_dict</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>        <span class="c1"># heavy NumPy arrays</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># Load path: WorkspaceIO → SpectraStore</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">SpectraStore</span><span class="o">.</span><span class="n">load_map_from_npz</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">arrays</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="troubleshooting">故障排查<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<p><strong>预处理结果未应用到查看器</strong></p>
+<ul>
+<li>查看器从数据负载中接收 <code>md.x</code> / <code>md.Y</code>。如果尚未调用 <code>batch_preprocess()</code>（例如未配置基线也未设置范围裁剪），<code>md.x</code> 和 <code>md.Y</code> 将保持为 <code>None</code>，此时查看器会回退使用 <code>md.x0</code> / <code>md.Y0</code>。这是预期的非破坏性行为。</li>
+</ul>
+<p><strong>处理大型二维图谱时内存持续增长</strong></p>
+<ul>
+<li><code>md.Y_bestfit</code>、<code>md.Y_baseline</code> 和 <code>md.Y_peaks</code> 在二维图谱被删除或调用 <code>reinit_spectra()</code>（将其重置为 <code>None</code>）之前不会被释放。对于超大型二维图谱，建议对不再需要的数据调用 <code>store.remove_map()</code> 进行清理。</li>
+</ul>
+<p><strong><code>get_map_data()</code> 返回 <code>None</code></strong></p>
+<ul>
+<li>二维图谱名称区分大小写，必须与传给 <code>add_map()</code> 的键名完全一致。可通过查看 <code>store.map_names</code> 来确认已注册的键名。</li>
+</ul>
+<p><strong>零拷贝语义导致意外的副作用</strong></p>
+<ul>
+<li>由于 <code>get_map_data()</code> 返回的是直接引用，在任何位置修改 <code>md.Y</code> 都会影响所有使用方。请始终通过 ViewModel 既定的“修改后发射信号（mutate-then-signal）”流程操作，以确保 UI 状态一致。</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../file_loading/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 文件加载流程">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                文件加载流程
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../spectra/" class="md-footer__link md-footer__link--next" aria-label="下一页: 光谱工作区">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                光谱工作区
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

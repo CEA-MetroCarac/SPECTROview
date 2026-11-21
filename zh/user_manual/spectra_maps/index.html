@@ -1,0 +1,2596 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="用于光谱数据处理、拟合与可视化的交互式工具">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/zh/user_manual/spectra_maps/">
+      
+      
+        <link rel="prev" href="../menu_bar/">
+      
+      
+        <link rel="next" href="../graphs/">
+      
+      
+        
+          <link rel="alternate" href="../../../user_manual/spectra_maps/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/user_manual/spectra_maps/" hreflang="fr">
+        
+          <link rel="alternate" href="../../../de/user_manual/spectra_maps/" hreflang="de">
+        
+          <link rel="alternate" href="../../../ru/user_manual/spectra_maps/" hreflang="ru">
+        
+          <link rel="alternate" href="./" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>光谱与二维图谱工作区 - SPECTROview 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#workspace-spectra-and-maps" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../" title="SPECTROview 文档" class="md-header__button md-logo" aria-label="SPECTROview 文档" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SPECTROview 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              光谱与二维图谱工作区
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="选择当前语言"
+      title="选择当前语言"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">ZH</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../user_manual/spectra_maps/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/user_manual/spectra_maps/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/user_manual/spectra_maps/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../ru/user_manual/spectra_maps/"
+              hreflang="ru"
+              class="md-select__link"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="zh"
+              class="md-select__link" aria-current="true"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  安装
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  用户手册
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../ai_agent/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  AI 智能体
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../developer/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  开发者指南
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  更新日志
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+    <style>
+      /* Hide the default H1 title injected by MkDocs */
+      .md-content h1 { display: none !important; }
+    </style>
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="SPECTROview 文档" class="md-nav__button md-logo" aria-label="SPECTROview 文档" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    SPECTROview 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    安装
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    用户手册
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    用户手册
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    支持的数据格式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    界面概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    菜单栏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱与二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱与二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#workspace-spectra-and-maps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        工作区：光谱与二维图谱
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="工作区：光谱与二维图谱">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-maplist-and-mapviewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. MapList 与 MapViewer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-spectralist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. SpectraList
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. SpectraList">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-cross-workspace-transfer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1. 跨工作区传输
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-spectraviewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. SpectraViewer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. SpectraViewer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-spectraviewer-with-interactive-mouse-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1. SpectraViewer 鼠标交互控制
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-toolbar-buttons-and-view-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2. 工具栏按钮与视图选项
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-batch-legend-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3. 批量图例编辑器
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-heatmap-visualization-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4. 热图可视化模式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-interactive-3d-visualization-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5. 交互式 3D 可视化模式
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6. 交互式光谱波段选择器与实时图谱（光谱与二维图谱工作区）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-fitmodelbuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. FitModelBuilder
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. FitModelBuilder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-fitting-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1. Fitting 面板
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-supported-peak-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2. 支持的峰型轮廓
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-peaktable-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3. PeakTable 面板
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-fitmodelcontrol-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4. FitModelControl 面板
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-collect-and-save-fit-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 汇总与保存拟合结果
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 汇总与保存拟合结果">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-splitting-filename-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1. 拆分文件名特征
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-compute-and-add-new-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2. 计算并添加新列
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-save-and-visualize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3. 保存与可视化
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-more-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. More 标签页
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多元分析 (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷计算器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    设置
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    保存与加载
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷键与技巧
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    开发者指南
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    开发者指南
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    文件加载流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据架构 SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图表工作区
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    向量化批量拟合引擎 (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    多元分析 (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 智能体
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    本地 MCP 服务器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    光谱工作区（加载、预处理、拟合）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    二维图谱工作区（高光谱、热图）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据可视化（图表）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    快捷计算器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    扩展 SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    更新日志
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="导航栏" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    首页
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    用户手册
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>光谱与二维图谱工作区</h1>
+
+<h2 id="workspace-spectra-and-maps"><strong>工作区：光谱与二维图谱</strong><a class="headerlink" href="#workspace-spectra-and-maps" title="Permanent link">&para;</a></h2>
+<p><code>Maps</code> 与 <code>Spectra</code> 工作区采用统一的设计理念并共享众多核心功能。不过，<code>Maps</code> 工作区还专门针对大规模高光谱数据集的处理配备了专用工具。</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/sepctra_maps_ws.gif" alt="光谱与二维图谱工作区" width="900"><br>
+  <i><code>Spectra</code> 和 <code>Maps</code> 工作区界面概览。两个界面均划分为三个主要区域：左上方的光谱视图（<code>SpectraViewer</code>）、左下方的拟合模型构建器（<code>FitModelBuilder</code>）以及右侧列表区（<code>SpectraList</code> / <code>MapList</code>）。</i>
+</div>
+
+<hr />
+<h3 id="1-maplist-and-mapviewer"><strong>1. <code>MapList</code> 与 <code>MapViewer</code></strong><a class="headerlink" href="#1-maplist-and-mapviewer" title="Permanent link">&para;</a></h3>
+<p><code>MapList</code> 与 <code>MapViewer</code> 是专为高效浏览与管理高光谱数据集而设计的组件。<code>MapList</code> 会列出所有已加载的二维图谱文件，包括晶圆图（wafer maps）与常规二维图谱。</p>
+<p><code>MapList</code> 旁边的操作按钮可用于：(1) 查看所选图谱的数据，(2) 从工作区中删除所选图谱，或 (3) 将所选图谱直接导出为 Excel 文件。</p>
+<p>您可以通过 <code>MapList</code> 轻松在已加载的二维图谱之间切换，使用 <code>Ctrl+Click</code> 或 <code>Shift+Click</code> 多选图谱，并在列表中<strong>拖放</strong>一个或多个所选图谱来调整其排列顺序（这会更新<strong>实时图谱</strong> (Live Maps) 中的对比顺序，同时保持当前活动的主图谱不变）。选中的主图谱（Primary）会渲染在 <code>MapViewer</code> 中。打开或选中一幅图谱时，<strong>系统会自动选中该图谱中的第一条光谱</strong>并在热图上高亮标记，同时立即在 <code>SpectraViewer</code> 中绘制其光谱曲线，并同步基线、峰表与元数据。默认情况下，<code>MapViewer</code> 显示信号的<strong>强度</strong> (Intensity) 或<strong>面积</strong> (Area) 热图；如果该图谱已完成拟合，您还可以选择并可视化任意拟合参数的热图。</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/maps_switching.gif" alt="切换二维图谱" width="350"><br>
+</div>
+
+<ul>
+<li>双滑块可用于快速调节热图的光谱范围与数据数值范围。</li>
+<li>导航工具栏控件（<strong>Home / Rescale</strong>、<strong>Pan / Drag</strong> 与<strong>缩放</strong> (Zoom)）配备了统一的 SPECTROview 矢量图标按钮，支持交互式浏览、平移以及局部放大图谱区域。</li>
+<li>您可以同时打开多个 <code>MapViewer</code> 实例，以便对比不同的拟合参数。</li>
+<li>选项菜单（<code>…</code>）中包含<strong>色标刻度</strong> (Color scale) 选择器，可将热图归一化方式在<strong>线性</strong> (Linear) 与<strong>对数</strong> (Log) 之间切换。当数值跨越多个数量级时，对数刻度尤为实用；若数据范围并非严格大于零，系统会自动回退至线性刻度。</li>
+</ul>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/mapviewer_sliders.gif" alt="MapViewer 滑块" width="600"><br>
+</div>
+
+<p><strong>掩膜功能</strong>：通过定义基于参数的自定义数值筛选条件，从热图中隔离提取特定目标区域。</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/mask.png" alt="掩膜配置" width="350">
+</div>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/masked_map.png" alt="掩膜处理后的图谱结果" width="350"><br>
+  <i>二维图谱掩膜功能示例：通过设置掩膜条件（峰 A1g 强度 &gt; 40 a.u.），可将 MoS2 薄片从周围衬底背景中分离出来。</i>
+</div>
+
+<hr />
+<h3 id="2-spectralist"><strong>2. <code>SpectraList</code></strong><a class="headerlink" href="#2-spectralist" title="Permanent link">&para;</a></h3>
+<p><code>SpectraList</code> 用于显示所有已加载的离散光谱（在 <code>Spectra</code> 工作区中），或当前所选图谱包含的全部光谱（在 <code>Maps</code> 工作区中）（如下图所示）。</p>
+<p>您可以单选或多选光谱，所选光谱会立即在 <code>SpectraViewer</code> 中同步显示。专用按钮支持全选光谱、重置光谱、将所选数据保存为 TXT 文件，或将当前所选光谱发送至 <code>Spectra</code> 工作区进行独立分析。</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/spectralist.png" alt="SpectraList 组件" width="400"><br>
+  <i><code>Maps</code> 工作区中的 <code>SpectraList</code> 与进度条。</i>
+</div>
+
+<p><strong>处理状态指示器</strong>：每个条目右侧的小圆点指示灯直观展示了其当前处理状态（绿色表示拟合已收敛，红色表示拟合未收敛，蓝色表示已扣除基线，灰色表示已裁剪，透明/无圆点表示尚未修改的原始光谱）。</p>
+<p><code>SpectraList</code> 下方的<strong>进度条</strong>实时显示拟合进度（%）、已收敛光谱数量以及已用时间（s），并配有<strong>停止</strong> (Stop) 按钮，可随时安全中止正在进行的拟合任务。</p>
+<h4 id="21-cross-workspace-transfer"><strong>2.1. 跨工作区传输</strong><a class="headerlink" href="#21-cross-workspace-transfer" title="Permanent link">&para;</a></h4>
+<p>当将所选光谱从 <code>Maps</code> 工作区发送至 <code>Spectra</code> 工作区时，系统会采用深拷贝（deep-copied）数据结构字典来传递数据，从而确保：</p>
+<ul>
+<li>原始强度数组与坐标数组完好无损。</li>
+<li><code>baseline_config</code>（包括锚点位置与计算模式）按当前配置原样传输。</li>
+<li>完整的 <code>fit_model</code>（包括所有峰约束范围、表达式与初始猜测值）均得以保留。</li>
+<li>当前生效的光谱裁剪边界与基线扣除状态保持一致。</li>
+</ul>
+<p>这保证了传输后的光谱在新工作区标签页中保留完整的交互与分析状态，同时不会影响原始二维图谱。</p>
+<hr />
+<h3 id="3-spectraviewer"><strong>3. <code>SpectraViewer</code></strong><a class="headerlink" href="#3-spectraviewer" title="Permanent link">&para;</a></h3>
+<p><code>SpectraViewer</code> 是核心绘图组件，用于可视化通过 <code>SpectraList</code> 选中的所有光谱（及其最佳拟合曲线）。</p>
+<h4 id="31-spectraviewer-with-interactive-mouse-controls"><strong>3.1. <code>SpectraViewer</code> 鼠标交互控制</strong><a class="headerlink" href="#31-spectraviewer-with-interactive-mouse-controls" title="Permanent link">&para;</a></h4>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/spectraviewer_interactive.gif" alt="SpectraViewer 交互控制" width="600">
+</div>
+
+<ul>
+<li><strong>显示峰参数</strong>：将鼠标悬停在任意已拟合峰上，即可弹出工具提示，显示该峰的精确参数。</li>
+<li><strong>添加/删除峰</strong>：启用工具栏中的<strong>峰</strong> (Peak) 按钮后，在谱图上左键点击可放置新的峰初始猜测，右键点击已有峰附近则可将其删除。</li>
+<li><strong>调整峰初始猜测</strong>：在拟合前，可直接点击并拖动初始峰猜测的中心位置或峰宽以手动微调。</li>
+<li><strong>快速缩放 Y 轴</strong>：滚动鼠标滚轮可快速放大或缩小 Y 轴显示范围。</li>
+</ul>
+<h4 id="32-toolbar-buttons-and-view-options"><strong>3.2. 工具栏按钮与视图选项</strong><a class="headerlink" href="#32-toolbar-buttons-and-view-options" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>按钮</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="Rescale" src="../../../user_manual_images/Spectra_Maps/rescale.png" /></td>
+<td><strong>Rescale</strong>：自动调整坐标轴范围以适配当前数据。快捷键：<code>Ctrl + R</code>。</td>
+</tr>
+<tr>
+<td><img alt="Zoom" src="../../../user_manual_images/Spectra_Maps/zoom.png" /></td>
+<td><strong>缩放</strong>：开启后，可使用鼠标左键框选区域进行局部放大。</td>
+</tr>
+<tr>
+<td><img alt="Baseline" src="../../../user_manual_images/Spectra_Maps/add_baseline.png" /></td>
+<td><strong>基线</strong> (Baseline)：开启后，可直接点击光谱曲线手动设置 <code>baseline</code> 锚点。</td>
+</tr>
+<tr>
+<td><img alt="Peaks" src="../../../user_manual_images/Spectra_Maps/add_peaks.png" /></td>
+<td><strong>峰</strong> (Peaks)：开启后，可直接点击光谱曲线手动添加峰初始猜测。</td>
+</tr>
+<tr>
+<td><img alt="Normalization" src="../../../user_manual_images/Spectra_Maps/normalize.png" /></td>
+<td><strong>Normalization</strong>：将所选光谱按其最大峰强归一化后显示。在 “min” 和 “max” 输入框中填入数值，即可指定在特定光谱波段范围内进行归一化。<br><img alt="归一化示例" src="../../../user_manual_images/Spectra_Maps/ex_normalization.png" /><br><em>原始光谱（左）与归一化光谱（右）对比 —— 非常适合用于观察细微的峰位偏移。</em></td>
+</tr>
+<tr>
+<td><img alt="Bestfit" src="../../../user_manual_images/Spectra_Maps/show_bestfit.png" /></td>
+<td><strong>Show Bestfit</strong>：开启或关闭最佳拟合曲线的显示。</td>
+</tr>
+<tr>
+<td><img alt="Legend" src="../../../user_manual_images/Spectra_Maps/show_legend.png" /></td>
+<td><strong>Legend</strong>：切换图例框的显示（若勾选了<strong>显示色标代替图例</strong> (Show colorbar instead of legend)，则切换色标显示）。当图例显示在画布内部时，默认固定在右上角（<code>upper right</code>）以避免遮挡低强度光谱（也可通过 <strong>More Options</strong> 中的<strong>将图例移至图外</strong> (Move legend box outside) 将其放置到画布外侧相邻位置）。在图例框内任意位置双击，即可在同一对话框中统一编辑调色板、最大显示条目数以及各光谱的颜色和标签。点击 <strong>OK</strong> 应用更改，或点击<strong>取消</strong> (Cancel) 放弃更改。为保证界面响应流畅，光谱与二维图谱工作区的选中光谱每次最多按 100 条分批编辑；如需编辑当前批次之外的光谱，请缩小选择范围。</td>
+</tr>
+<tr>
+<td><img alt="Heatmap" src="../../../user_manual_images/Spectra_Maps/heatmap_button.png" /></td>
+<td><strong>Plot Heatmap</strong>：位于工具栏右侧、紧邻 <strong>More Options</strong> 与<strong>复制</strong> (Copy) 左侧，用于将多条选中的光谱切换为二维强度热图模式。该模式可展现光谱强度的连续演变过程，并直接在工具栏提供 Y 轴参数选择、自定义轴标题以及分辨率控制。</td>
+</tr>
+<tr>
+<td><img alt="3D View" src="../../../user_manual_images/Spectra_Maps/view_3d_button.png" /></td>
+<td><strong>3D View</strong>：位于工具栏右侧 <strong>Plot Heatmap</strong> 与 <strong>More Options</strong> 之间，可将所选光谱切换为交互式三维可视化模式。按住左键拖动可旋转视角，按住中键拖动可平移视图，右键拖动或滚动滚轮可缩放，点击 <strong>Rescale</strong>（<code>Ctrl + R</code>）可重置相机视角与坐标轴范围。</td>
+</tr>
+<tr>
+<td><img alt="More View Options" src="../../../user_manual_images/Spectra_Maps/view_options.png" /></td>
+<td><strong>More Options</strong>：位于工具栏右侧（<strong>复制</strong>按钮之前），打开紧凑的双栏配置面板，可调整 X/Y 轴单位、切换对数刻度、更改绘图样式、通过直观的色带预览选择离散或渐变光谱调色板、设置图例最大条目数（默认 15）、勾选<strong>将图例移至图外</strong>使图例紧邻画布放置而不遮挡光谱、勾选<strong>显示色标代替图例</strong>（勾选后将动态显示<strong>色标参数</strong> (Colorbar parameter) 下拉框用于选择光谱 <code>Index</code> 或文件名中的数值字段，以及<strong>色标标题</strong> (Colorbar label) 输入框）以便为有序光谱系列在右侧显示色标、切换原始数据/残差 (Raw/Residual) 曲线的可见性、开启网格、调节线宽，以及设定精确的图像尺寸。<br><img alt="More Options 面板" src="../../../user_manual_images/Spectra_Maps/menu_view_options.png" /></td>
+</tr>
+<tr>
+<td><img alt="Copy" src="../../../user_manual_images/Spectra_Maps/copy.png" /></td>
+<td><strong>复制</strong>：位于工具栏最右侧，可将当前图表以高质量图像形式复制到剪贴板。使用 <code>Ctrl + Click</code>（macOS 上为 <code>Cmd + Click</code>）则可将图表的原始数值数据复制到剪贴板。</td>
+</tr>
+</tbody>
+</table>
+<h4 id="33-batch-legend-editor"><strong>3.3. 批量图例编辑器</strong><a class="headerlink" href="#33-batch-legend-editor" title="Permanent link">&para;</a></h4>
+<p>使用工具栏上的 <strong>Legend</strong> 按钮显示图例后，<strong>在图例框内任意位置双击</strong>即可打开批量图例编辑器。该工作流取代了以往需要为每个标签或颜色逐一打开独立对话框的繁琐操作。</p>
+<p>对话框顶部包含两项作用于整张图表的全局控件：</p>
+<ul>
+<li><strong>调色板</strong> (Color palette)：通过可视化色带预览选择调色板。离散调色板包括 20 色的 <code>DEFAULT_COLORS</code>、<code>tab20</code>、<code>tab20b</code>、<code>tab20c</code>、<code>Dark2</code>、<code>Paired</code> 与 <code>Accent</code>；渐变调色板包括 <code>viridis</code>、<code>plasma</code>、<code>jet</code>、<code>cividis</code> 与 <code>magma</code>。</li>
+<li><strong>图例最大条目数</strong> (Max legend items)：设置图例中最多显示的条目数量（默认为 15）。该设置不会从图表中移除任何光谱。</li>
+</ul>
+<p>光谱列表中每条可编辑光谱占一行：</p>
+<ul>
+<li><strong>光谱</strong> (Spectrum) 显示原始光谱名称或文件名。</li>
+<li><strong>颜色</strong> (Color) 可从当前调色板中挑选色块。选择<strong>自动</strong> (Automatic) 时，光谱颜色保持与调色板分配联动；选择具体色块则会为该光谱创建独立覆盖颜色。点击<strong>更多颜色…</strong> (More colors…) 可挑选调色板之外的自定义颜色。</li>
+<li><strong>标签</strong> (Label) 用于修改图例中显示的文字。清空自定义标签即可恢复为光谱原始文件名。</li>
+</ul>
+<p>切换调色板时，所有设为<strong>自动</strong>的颜色预览会自动更新，而手动指定的颜色则会保持不变。点击 <strong>OK</strong> 统一应用全部修改，或点击<strong>取消</strong>放弃对话框中的所有更改。确认后的标签与颜色会写回底层光谱对象，使光谱列表、光谱工作区、二维图谱工作区以及保存的工作区文件始终保持同步。</p>
+<div class="admonition note">
+<p class="admonition-title">每次最多编辑 100 条光谱</p>
+<p>为确保大批量选中光谱时的界面流畅度，光谱与二维图谱工作区中的对话框最多仅为前 <strong>100 条已绘光谱</strong>创建编辑行。当所选数量超过此限制时，对话框会提示 <strong>“显示 100 / N”</strong> (<strong>“showing 100 of N”</strong>)。当前批次之外的光谱不会被修改；若需编辑其余光谱，请缩小当前选择范围。</p>
+</div>
+<h4 id="34-heatmap-visualization-mode"><strong>3.4. 热图可视化模式</strong><a class="headerlink" href="#34-heatmap-visualization-mode" title="Permanent link">&para;</a></h4>
+<p><strong>Heatmap Plot</strong> 工具可将多条已绘光谱转换为连续的二维强度分布图。该模式特别适合分析系列演化数据，例如原位变温实验谱图、时间分辨动力学过程、空间线扫描或组分梯度测试。</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/heatmap_plot_for_spectraviewer_0.png" alt="SpectraViewer 热图模式" width="800"><br>
+
+</div>
+
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/heatmap_plot_for_spectraviewer.png" alt="SpectraViewer 热图模式" width="800"><br>
+  <i>处于热图可视化模式下的 <code>SpectraViewer</code>，展示了原位变温系列测试的连续二维强度分布图。</i>
+</div>
+
+<h5 id="key-controls-and-parameters"><strong>主要控件与参数</strong><a class="headerlink" href="#key-controls-and-parameters" title="Permanent link">&para;</a></h5>
+<p>启用热图模式后，专用配置控件会直接出现在主工具栏上，同时不适用于该模式的一维工具（如峰标记、基线锚点、宇宙射线消除器以及归一化输入框）会自动隐藏：</p>
+<ul>
+<li><strong>热图切换开关</strong> (<img alt="Heatmap" src="../../../user_manual_images/Spectra_Maps/heatmap_button.png" />)：启用或关闭二维热图渲染。取消勾选此按钮可立即恢复标准一维光谱曲线并重新显示所有常规工具栏工具。</li>
+<li><strong>Y 轴参数下拉框</strong>：</li>
+<li><strong><code>Index</code></strong>：按照光谱选择顺序（<code>0, 1, 2, ...</code>）沿纵轴均匀堆叠光谱。</li>
+<li><strong>文件名字段（Tokens）</strong>：自动解析文件名中以下划线分隔的数值参数（例如 <code>sample_25°C.txt</code>、<code>sample_100°C.txt</code>、<code>sample_200°C.txt</code> 会自动提取 <code>25°C</code> 等字段，并解析出对应数值 <code>25, 100, 200</code> 作为物理 Y 轴坐标）。</li>
+<li><strong>自定义 Y 轴标题</strong>：用于覆盖自动生成的纵轴标题（例如 <code>Temperature (°C)</code>、<code>Time (min)</code> 或 <code>Position (µm)</code>）。</li>
+<li><strong>Y 轴插值点数（<code>Pts:</code>）</strong>：指定用于平滑插值渲染的纵向插值切片数（默认 <code>300</code> 点）。将该值设为 <code>0</code> 可禁用插值，直接显示原始离散光谱行。</li>
+<li><strong>强度色标</strong>：遵循在 <strong>More Options</strong> 中所选的当前调色板（例如 <code>jet</code>、<code>viridis</code>、<code>plasma</code>）。</li>
+</ul>
+<h4 id="35-interactive-3d-visualization-mode"><strong>3.5. 交互式 3D 可视化模式</strong><a class="headerlink" href="#35-interactive-3d-visualization-mode" title="Permanent link">&para;</a></h4>
+<p>位于工具栏右侧 <strong>Plot Heatmap</strong> 与 <strong>More Options</strong> 之间的 <strong>3D View</strong> 按钮 (<img alt="3D View" src="../../../user_manual_images/Spectra_Maps/view_3d_button.png" />) 可在交互式三维空间中展示所选光谱（<strong>X</strong> 轴为光谱轴，<strong>Y</strong> 轴为序列索引或文件名参数，<strong>Z</strong> 轴为强度）：</p>
+<ul>
+<li><strong>交互式相机导航</strong>：</li>
+<li><strong>旋转</strong>：在 3D 图表任意位置按住鼠标左键拖动，即可自由旋转俯仰角与方位角。</li>
+<li><strong>平移 / 缩放</strong>：按住鼠标中键拖动可平移视图；按住鼠标右键拖动（或滚动鼠标滚轮）可沿强度轴方向缩放。</li>
+<li><strong>重置视角</strong>：点击 <strong>Rescale</strong>（<code>Ctrl + R</code>）可恢复默认相机角度并自适应全部数据边界。</li>
+<li><strong>共享序列轴控件</strong>：从工具栏下拉菜单中选择 <code>Index</code> 或从文件名解析出的任意数值参数（如 <code>25°C</code>、<code>100°C</code>），并可按需设置自定义 Y 轴标题。</li>
+<li><strong>兼容选项</strong>：可与 <strong>Normalization</strong>、<strong>Show Bestfit</strong>、<strong>Legend / Colorbar</strong> 模式、<strong>折线图 / 点</strong> (Line / Dot) 绘图样式、<strong>原始数据</strong> (Raw) 叠加显示、<strong>网格</strong> (Grid)、Z 轴<strong>线性 / 对数</strong>刻度、<strong>浅色 / 深色</strong> (Light / Dark) 主题以及<strong>复制</strong>到剪贴板等功能无缝配合。在标准视图、<strong>Plot Heatmap</strong> 与 <strong>3D View</strong> 之间切换时，系统会自动恢复对应的工具栏工具。</li>
+</ul>
+<h4 id="36-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces"><strong>3.6. 交互式光谱波段选择器与实时图谱（光谱与二维图谱工作区）</strong><a class="headerlink" href="#36-interactive-spectral-range-selectors-live-maps-spectra-maps-workspaces" title="Permanent link">&para;</a></h4>
+<p>在<strong>光谱</strong> (Spectra) 和<strong>二维图谱</strong> (Maps) 两个工作区中，您均可在 <code>SpectraViewer</code> 内交互式框选最多三个光谱特征波段，并在专属的<strong>实时图谱</strong>标签页中实时观察它们的变化趋势：</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/rgb_spectra_bracketing.png" alt="RGB 光谱波段选择器" width="800"><br>
+</div>
+
+<ul>
+<li><strong>光谱工作区</strong>：针对 <code>SpectraList</code> 中<strong>当前选中的光谱</strong>，绘制最多三条颜色编码（红、蓝、绿）的<strong>一维参数变化曲线</strong>，便于快速对比不同光谱间峰强、峰位、峰高或峰面积的演变规律。</li>
+</ul>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/rgb_live_spectra.png" alt="RGB 实时光谱变化曲线" width="800"><br>
+</div>
+
+<ul>
+<li><strong>二维图谱工作区</strong>：自动适应当前所选图谱的空间维度：</li>
+<li><strong>二维图谱</strong>：在当前激活的高光谱网格上实时显示最多三幅<strong>二维空间热图</strong>。</li>
+<li><strong>一维图谱（剖面 / 线扫描）</strong>：自动检测共线测量坐标，并将红、蓝、绿通道沿空间坐标轴（<code>X (mm)</code>、<code>Y (mm)</code> 或 <code>Distance (mm)</code>）绘制为<strong>一维折线图</strong>；切换不同图谱时，界面会在热图与剖面折线图之间无缝切换。</li>
+</ul>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/rgb_live_map.png" alt="RGB 实时图谱" width="800"><br>
+</div>
+
+<h5 id="range-selector-controls-spectra-viewer"><strong>波段选择器控件 (<code>SpectraViewer</code>)</strong><a class="headerlink" href="#range-selector-controls-spectra-viewer" title="Permanent link">&para;</a></h5>
+<p>位于 <code>SpectraViewer</code> 右侧边缘的垂直工具栏提供了三个独立的彩色开关按钮：</p>
+<ul>
+<li><strong>红区</strong> (Red) (<code>R</code>)</li>
+<li><strong>蓝区</strong> (Blue) (<code>B</code>)</li>
+<li><strong>绿区</strong> (Green) (<code>G</code>)</li>
+</ul>
+<p>每个按钮都会在光谱图上激活一对可拖动的垂直边界标记（括号边界及阴影区间），并自动将底部标签栏切换至<strong>实时图谱</strong>标签页：</p>
+<ul>
+<li><strong>交互式拖动</strong>：点击并拖动任一侧的垂直边界线即可调节最小或最大波数；点击并拖动中间的阴影区域可在保持宽度不变的前提下整体平移波段区间。</li>
+<li><strong>多波段同时启用</strong>：三个选择器可任意组合并同时启用，每个通道独立维护各自的颜色、区间与可见性。</li>
+<li><strong>自动缩放完整性</strong>：波段选择器标记不会撑大或干扰光谱自动缩放边界，确保 <strong>Rescale</strong> 按钮（<code>Ctrl+R</code>）始终精准缩放到已加载的光谱数据范围。</li>
+<li><strong>自动限幅</strong>：裁剪光谱或加载新数据时，波段选择器会自动限幅并重新定位到当前可见的光谱域内。</li>
+<li><strong>实时刷新</strong>：在<strong>实时图谱</strong>标签页打开时，拖动任意选择器或更改选中的光谱/图谱都会立即重新计算并更新相应的一维变化曲线（在<strong>光谱</strong>工作区中）或二维空间热图 / 一维剖面曲线（在<strong>二维图谱</strong>工作区中），同时通过 60–250 ms 的自适应防抖（debounce）机制保证在大数据集上拖动依然顺滑流畅。在当前图谱或光谱列表中取消勾选的光谱会自动被屏蔽，从而防止异常离群点拉偏色标或剖面曲线。</li>
+<li><strong>多图谱选择与对比（二维图谱工作区）</strong>：在<strong>二维图谱</strong>列表中按住 <code>Ctrl+Click</code> 或 <code>Shift+Click</code> 可同时选中多幅图谱，同时保持您的<strong>主图谱</strong> (Primary Map) 继续用于预处理、拟合以及 <code>MapViewer</code> 显示：</li>
+<li><strong>多条一维剖面对比</strong>：当主图谱为一维线扫描时，所有选中的一维剖面会以统一的线宽共同叠加显示在各通道子面板中（切换 <strong>Legend</strong> 按钮可在画布上识别每条曲线）。</li>
+<li><strong>在所选二维图谱间切换</strong>：当主图谱为二维图谱时，实时图谱顶部栏会出现紧凑的 <code>◀ [2D Map Selector] ▶</code> 切换器，让您在不丢失多选状态的前提下依次浏览所选二维热图。</li>
+<li><strong>批量删除</strong>：当选中多幅图谱时按下<strong>删除</strong> (Delete) 键，系统会弹出确认提示后再统一移除所有选中的图谱。</li>
+</ul>
+<h5 id="live-maps-tab-visualization-subpanels"><strong>实时图谱标签页可视化与子面板</strong><a class="headerlink" href="#live-maps-tab-visualization-subpanels" title="Permanent link">&para;</a></h5>
+<p><strong>实时图谱</strong>标签页位于底部标签栏的<strong>拟合结果</strong> (Fit Results) 与 <strong>MVA</strong> 之间，而<strong>更多</strong> (More) 标签页位于标签栏末尾。</p>
+<ul>
+<li><strong>子面板显示</strong>：当启用一个或多个波段选择器时，对应的子面板（红、蓝、绿）会并排显示；若当前未启用任何选择器，面板会显示引导提示，指导您在 <code>SpectraViewer</code> 右侧边缘激活波段选择器按钮。</li>
+<li><strong>支持的光谱参数</strong>：每个子面板均可通过下拉列表选择要提取并绘制的光谱参数：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>积分强度</strong> (Integrated intensity)</td>
+<td>直接提取</td>
+<td>所选光谱区间内的强度积分（<span class="arithmatex">\(\sum Y \cdot \Delta x\)</span>）。</td>
+</tr>
+<tr>
+<td><strong>平均强度</strong> (Mean intensity)</td>
+<td>直接提取</td>
+<td>所选区间内的平均强度。</td>
+</tr>
+<tr>
+<td><strong>最大强度</strong> (Maximum intensity)</td>
+<td>直接提取</td>
+<td>所选区间内测得的最大强度值。</td>
+</tr>
+<tr>
+<td><strong>峰位</strong> (Peak position)</td>
+<td>直接提取</td>
+<td>区间内最大强度所对应的波数。</td>
+</tr>
+<tr>
+<td><strong>峰高</strong> (Peak height)</td>
+<td>直接提取</td>
+<td>最大强度减去区间两端点连线构成的局部基线值。</td>
+</tr>
+<tr>
+<td><strong>峰位（拟合）</strong> (Peak position (fit))</td>
+<td>基于拟合</td>
+<td>区间内已拟合峰的中心波数（<span class="arithmatex">\(x_0\)</span>）（需先完成拟合）。</td>
+</tr>
+<tr>
+<td><strong>峰高（拟合）</strong> (Peak height (fit))</td>
+<td>基于拟合</td>
+<td>区间内已拟合峰的拟合振幅（<span class="arithmatex">\(A\)</span>）（需先完成拟合）。</td>
+</tr>
+<tr>
+<td><strong>峰面积（拟合）</strong> (Peak area (fit))</td>
+<td>基于拟合</td>
+<td>已拟合峰的解析积分面积（需先完成拟合）。</td>
+</tr>
+<tr>
+<td><strong>R/B 比值</strong> (R/B ratio) <em>（仅限绿区通道）</em></td>
+<td>派生计算</td>
+<td>逐像素（二维图谱）或逐点（一维剖面 / 光谱系列）计算的积分强度比值 <span class="arithmatex">\(I_{\mathrm{Red}} / I_{\mathrm{Blue}}\)</span>。移动或调整红区、蓝区边界时会自动同步更新；蓝区强度为零或接近零的点会安全屏蔽为 <code>NaN</code>。选择 <strong>R/B 比值</strong>期间，光谱图上的绿区选框会自动隐藏，仅保留决定比值的红区与蓝区选框（切换回其他任意参数后绿区选框会立即恢复）。</td>
+</tr>
+</tbody>
+</table>
+<p><em>注</em>：如果选择了基于拟合的参数但当前尚未生成拟合结果，子面板会友好地显示提示横幅，而不会展示误导性或错误数值。</p>
+<h5 id="interactive-spectrum-selection-from-rgb-live-maps-maps-workspace"><strong>从 RGB 实时图谱交互式选取光谱 <em>(二维图谱工作区)</em></strong><a class="headerlink" href="#interactive-spectrum-selection-from-rgb-live-maps-maps-workspace" title="Permanent link">&para;</a></h5>
+<p>在<strong>二维图谱</strong>工作区中处理二维图谱或一维剖面图谱时（只要 <strong>Pan</strong> 与<strong>缩放</strong>工具未勾选），您无需离开实时图谱标签页即可直接从任意红区、蓝区或绿区子面板中选取光谱：</p>
+<ul>
+<li><strong>单击</strong>：选中距离点击坐标最近的光谱，并立即在 <code>SpectraViewer</code> 中显示。</li>
+<li><strong><code>Ctrl</code> + 点击</strong>：将另一个光谱添加到当前选区（或取消已选测点的选中状态）。</li>
+<li><strong>点击并拖动</strong>：绘制虚线选框以选中矩形区域内的全部光谱（<code>Ctrl</code> + 拖动可将框选光谱追加到当前选区中）。</li>
+<li><strong>同步高亮与图谱切换</strong>：选中的测点会在所有激活的 RGB 子面板中以红色轮廓标出，并与主 <code>MapViewer</code> 及浮动 <code>VMapViewerDialog</code> 窗口保持同步。如果您此前通过顶部 <code>◀ [2D Map] ▶</code> 控件切换到了另一幅二维图谱，点击其上的任意测点会自动将该图谱设为主图谱并加载其光谱。点击处于打开状态的图例框内部时，仍保留用于拖动图例或双击编辑图例标签。</li>
+</ul>
+<h5 id="individual-subpanel-controls"><strong>各子面板独立控件</strong><a class="headerlink" href="#individual-subpanel-controls" title="Permanent link">&para;</a></h5>
+<p>每个子面板均配有专属控件：</p>
+<ul>
+<li><strong>Rescale / Pan / 缩放</strong>：每个子面板顶部均设有独立的导航按钮，可在不影响相邻通道的情况下局部放大感兴趣区域、平移曲线或热图，以及恢复完整绘图范围。双击图例依然会打开图例编辑器，而不会触发缩放重置。</li>
+<li><strong>一维曲线归一化</strong> <em>（一维图谱与一维折线图）</em>：开启各 RGB 子面板参数下拉框旁的归一化按钮（可配合可选的 <code>Xmin</code> 与 <code>Xmax</code> 边界），即可在不修改底层原始数据的前提下，将每条显示的一维曲线独立按其全局最大值或 <code>[Xmin, Xmax]</code> 区间内最大值归一化为 <code>1.0</code> —— 非常适合对比信号振幅各异的不同图谱之间的剖面形态。</li>
+<li><strong>Palette</strong> <em>（二维图谱工作区中的二维热图）</em>：可选择任意标准色标（如 <code>viridis</code>、<code>plasma</code>、<code>inferno</code>、<code>jet</code>、<code>turbo</code>、<code>coolwarm</code>、<code>cividis</code>、<code>magma</code>、<code>Reds</code>、<code>Blues</code>、<code>Greens</code>）。在<strong>光谱</strong>工作区中，每条一维变化曲线会自动采用与其对应选择器相同的颜色（红、蓝或绿）。</li>
+<li><strong>复制</strong>：按照已配置的<strong>复制图像尺寸</strong> (Copied figure size) 与<strong>复制图像主题</strong> (Copied figure theme) 将子面板图像复制到剪贴板（独立于当前 SPECTROview 窗口大小）。按住 <strong><code>Ctrl</code> + 点击</strong>（macOS 上为 <strong><code>Cmd</code> + 点击</strong>）则可将当前图表的底层数值数据集以制表符分隔列的形式复制到剪贴板（一维参数变化序列、单条/多条一维剖面表，或二维 <code>(X, Y, Value)</code> 图谱数据点）。</li>
+<li><strong>范围 / 状态徽章</strong>：显示当前波段区间 <span class="arithmatex">\([x_{min}, x_{max}]\)</span> 或拟合状态。</li>
+</ul>
+<h5 id="live-maps-view-options-legend-customization"><strong>实时图谱视图选项与图例自定义</strong><a class="headerlink" href="#live-maps-view-options-legend-customization" title="Permanent link">&para;</a></h5>
+<p>当激活一个或多个选择器时，<strong>实时图谱</strong>标签页右上角会出现两个快捷控件：</p>
+<ul>
+<li><strong>Show / Hide Legend (<code>btn_legend</code>)</strong>：切换一维子面板中的交互式画布图例显示。您可以直接用鼠标拖动图例位置，或双击画布图例框来编辑其标签与颜色。</li>
+<li><strong>更多视图选项 (<code>⋯</code>)</strong> (More View Options)：打开与 <code>SpectraViewer</code> 布局一致的紧凑双栏菜单（所有设置均在光谱与二维图谱工作区之间同步，并自动保存以供下次启动使用）：</li>
+<li><strong>图表主题</strong> (Plot Theme)：独立于全局应用界面主题，将实时图谱图像在<strong>浅色模式</strong> (Light Mode)（白色画布，默认）与<strong>深色模式</strong> (Dark Mode) 之间切换。</li>
+<li><strong>坐标轴与色标刻度</strong>：将 <strong>X 轴刻度</strong> (X-scale)、<strong>Y 轴刻度</strong> (Y-scale) 与<strong>色标 (Z) 刻度</strong> (Color (Z) scale) 在<strong>线性</strong>与<strong>对数</strong>之间切换（非严格正值区间会自动安全回退）。</li>
+<li><strong>绘图样式与尺寸</strong>：将一维曲线在<strong>折线图</strong>（默认）、<strong>线 + 点</strong> (Line + Dots) 与<strong>点</strong>之间切换，并调整<strong>线宽</strong> (Line width)（默认 <code>1.5</code>）、<strong>点大小</strong> (Dot size)（默认 <code>1.5</code>）及图表<strong>文本大小</strong> (Text size)（<code>6–24 pt</code>，同步缩放坐标轴标题、标签、刻度与色标标签）。</li>
+<li><strong>复制图像尺寸与主题</strong>：以英寸为单位设置剪贴板输出图像的固定尺寸（<strong>复制图像尺寸</strong>，默认 <code>5.5</code> × <code>4.0</code>），并选择<strong>复制图像主题</strong>（默认<strong>浅色模式</strong>，或<strong>深色模式</strong>），使复制出的图像无论窗口如何缩放都能保持固定比例与清晰可读的字号。</li>
+<li><strong>图例框设置</strong>：切换图例可见性、更改<strong>图例位置</strong> (Legend location)（<code>best</code>、各角落、<code>outside right</code>、<code>outside top</code>）、<strong>图例列数</strong> (Legend columns)、<strong>图例字号</strong> (Legend font size)，或打开<strong>编辑图例标签...</strong> (Edit legend labels...) 直接重命名画布图例系列名称并挑选自定义颜色。</li>
+<li><strong>显示与对比辅助选项</strong>：显示或隐藏各 RGB 画布上方的<strong>显示图像标签</strong> (Show figure label) 标题（默认关闭）、切换<strong>显示网格</strong> (Show grid)（默认关闭）、通过<strong>共享 Y 轴 (1D)</strong> (Share Y-axis (1D)) 同步各面板的 Y 轴范围、开启双线性<strong>热图平滑</strong> (Heatmap smoothing)、显示/隐藏 <strong>Colorbars</strong>，或点击<strong>重置视图选项</strong> (Reset view options) 恢复默认设置。</li>
+</ul>
+<hr />
+<h3 id="4-fitmodelbuilder"><strong>4. <code>FitModelBuilder</code></strong><a class="headerlink" href="#4-fitmodelbuilder" title="Permanent link">&para;</a></h3>
+<p>在 <code>FitModelBuilder</code> 标签页中，您可以配置光谱拟合模型。该标签页分为三个主要面板：<code>Fitting</code>、<code>PeakTable</code> 和 <code>FitModelControl</code>，下文将逐一介绍。</p>
+<p>您可以使用全局拟合参数，或在 <code>Settings Panel</code> 中调整拟合参数（详情请参阅“设置”章节）。</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/fit_model_builder.png" alt="Fit Model Builder 界面" width="850"><br>
+  <i><code>FitModelBuilder</code> 标签页布局：(1) <code>Fitting</code> 面板（左侧），(2) <code>PeakTable</code> 面板（右上），以及 (3) <code>FitModelControl</code> 面板（右下）。</i>
+</div>
+
+<h4 id="41-fitting-panel"><strong>4.1. <code>Fitting</code> 面板</strong><a class="headerlink" href="#41-fitting-panel" title="Permanent link">&para;</a></h4>
+<p><code>Fitting</code> 面板通过以下四个逻辑步骤引导您构建稳健的拟合模型：</p>
+<p><strong>第 1 步：X 轴校正（可选）</strong>：根据已知标准参考样品的实测结果（例如位于精确 520.7 cm⁻¹ 处的硅峰）执行经验 X 轴校正。只需先拟合参考数据，输入其理论精确峰位并应用平移，即可全局校正校准偏差。</p>
+<p><strong>第 2 步：定义拟合范围</strong>：将数学拟合计算限制在 X 轴上特定的感兴趣光谱区域内。</p>
+<p><strong>第 3 步：基线定义</strong>：<strong>SPECTROview</strong> 提供两种不同的光谱基线定义模式（<code>Manual</code> 或 <code>Auto</code>）：</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/baseline_widget.png" alt="基线配置组件" width="600"><br>
+   <i>基线模式选择：Manual 模式（左）与 Auto 模式（右）。</i>
+</div>
+
+<ul>
+<li><strong>Manual 模式（<code>Linear</code> 或 <code>Polynomial</code>）</strong>：直接在 <code>SpectraViewer</code> 中点击以设置基线锚点。勾选<strong>已附加</strong> (Attached) 可自动将点击点吸附到最接近的数据曲线上；勾选 <em>Correct noise</em> 则会取相邻数据点的局部平均值作为锚点强度，从而在高噪声条件下也能稳健定位锚点。</li>
+<li><strong>Auto 模式</strong>：由高级算法自动生成基线曲线，并通过滑块微调算法的拟合贴合程度：</li>
+<li><strong><code>arPLS</code></strong>：非对称重加权惩罚最小二乘法（Asymmetrically Reweighted PLS），是典型拉曼与红外光谱基线扣除的基准算法。</li>
+<li><strong><code>airPLS</code></strong>：高灵敏度算法，非常适合去除强而复杂的荧光背景，在拉曼光谱数据中经过充分验证并广受推荐。</li>
+<li><strong><code>AsLS</code></strong>：稳定性极高的算法，但有时难以区分高噪声与宽峰，最适用于相对干净的光谱。</li>
+<li><strong><code>ModPoly</code></strong>：改进多项式算法（Modified Polynomial），在简单多项式型荧光背景扣除中十分常用且高效。</li>
+</ul>
+<p><strong>第 4 步：峰定义</strong>：</p>
+<ul>
+<li>在确保<strong>峰</strong>切换按钮开启的前提下，直接在 <code>SpectraViewer</code> 中左键点击添加峰，并可通过鼠标拖动交互式调整峰的初始猜测参数。</li>
+<li>添加到图中的每个峰都会立即显示在 <strong><code>PeakTable</code></strong> 中。</li>
+<li>支持的峰型轮廓包括：<code>Lorentzian</code>、<code>Gaussian</code>、<code>PseudoVoigt</code>、<code>LorentzianAsym</code>、<code>GaussianAsym</code>、<code>Fano</code>、<code>DecaySingleExp</code> 和 <code>DecayBiExp</code>。</li>
+</ul>
+<h4 id="42-supported-peak-profiles"><strong>4.2. 支持的峰型轮廓</strong><a class="headerlink" href="#42-supported-peak-profiles" title="Permanent link">&para;</a></h4>
+<p><strong>SPECTROview</strong> 的 <code>VBF Engine</code> 为以下数学峰型轮廓提供了高度优化的实现：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>参数</th>
+<th>公式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Gaussian</code></td>
+<td><code>ampli</code>, <code>fwhm</code>, <code>x0</code></td>
+<td><i>a</i> &middot; exp(-4 ln(2) &middot; (x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>)</td>
+</tr>
+<tr>
+<td><code>Lorentzian</code></td>
+<td><code>ampli</code>, <code>fwhm</code>, <code>x0</code></td>
+<td><i>a</i> / [1 + 4(x-x<sub>0</sub>)<sup>2</sup> / w<sup>2</sup>]</td>
+</tr>
+<tr>
+<td><code>PseudoVoigt</code></td>
+<td><code>ampli</code>, <code>fwhm</code>, <code>x0</code>, <code>alpha</code></td>
+<td>&alpha; &middot; G + (1-&alpha;) &middot; L</td>
+</tr>
+<tr>
+<td><code>GaussianAsym</code></td>
+<td><code>ampli</code>, <code>fwhm_l</code>, <code>fwhm_r</code>, <code>x0</code></td>
+<td>含左/右 <code>FWHM</code> 的分段高斯函数</td>
+</tr>
+<tr>
+<td><code>LorentzianAsym</code></td>
+<td><code>ampli</code>, <code>fwhm_l</code>, <code>fwhm_r</code>, <code>x0</code></td>
+<td>含左/右 <code>FWHM</code> 的分段洛伦兹函数</td>
+</tr>
+<tr>
+<td><code>Fano</code></td>
+<td><code>ampli</code>, <code>fwhm</code>, <code>x0</code>, <code>q</code></td>
+<td><i>a</i> &middot; (q + &epsilon;)<sup>2</sup> / (1 + &epsilon;<sup>2</sup>), &epsilon; = 2(x-x<sub>0</sub>)/w</td>
+</tr>
+<tr>
+<td><code>DecaySingleExp</code></td>
+<td><code>A</code>, <code>tau</code>, <code>B</code></td>
+<td><i>A</i> &middot; e<sup>-t/&tau;</sup> + B</td>
+</tr>
+<tr>
+<td><code>DecayBiExp</code></td>
+<td><code>A1</code>, <code>tau1</code>, <code>A2</code>, <code>tau2</code>, <code>B</code></td>
+<td><i>A</i><sub>1</sub> &middot; e<sup>-t/&tau;<sub>1</sub></sup> + <i>A</i><sub>2</sub> &middot; e<sup>-t/&tau;<sub>2</sub></sup> + B</td>
+</tr>
+</tbody>
+</table>
+<h4 id="43-peaktable-panel"><strong>4.3. <code>PeakTable</code> 面板</strong><a class="headerlink" href="#43-peaktable-panel" title="Permanent link">&para;</a></h4>
+<p><code>PeakTable</code> 列出了您所定义各峰的全部数学参数；当您在视图中拖动峰时，这些属性会同步动态更新。</p>
+<p><strong>动态峰索引</strong>：每个峰都会按创建顺序自动附上索引后缀（例如 <code>_1</code>、<code>_2</code>）。当您添加、删除或重排峰时，<strong>SPECTROview</strong> 会自动重新编排索引以保持编号连续（例如删除峰 2 后，原峰 3 会自动成为新的峰 2），从而确保数学表达式与拟合结果始终井然有序。</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/peak_table.png" alt="Peak Table 面板" width="800"><br>
+   <i>显示峰参数与约束条件的 <code>PeakTable</code> 面板。</i>
+</div>
+
+<p><strong>为拟合模型添加约束条件</strong>：</p>
+<p><strong>固定</strong> (Fix)：勾选“<strong>固定</strong> (fix)”复选框可锁定参数值，使优化器在拟合过程中不再改动该参数。</p>
+<p><strong>限制范围</strong> (Limits)：输入最小与最大边界值，以限制优化器调节该参数的允许范围。</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/peak_table_max_min.png" alt="Peak Table 参数限制" width="800"><br>
+   <i>示例 1：激活峰表下方的“限制范围”选项，并为每个拟合参数设定“min”和“max”值。</i>
+</div>
+
+<p><strong>表达式</strong> (Expression)：定义参数之间的复杂数学关系。<strong>SPECTROview</strong> 的 <code>VBF Engine</code> 会在将约束映射给优化器之前，对这些表达式进行严谨的数学求值。若因删除操作导致峰被重新编号，数学表达式中的相应峰引用也会自动更新，避免模型失效。</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/peak_table_expression.png" alt="Peak Table 表达式约束" width="800"><br>
+   <i>示例 2：利用表达式约束 (1) 峰 E (P2) 的峰位比峰 A (P1) 小 17，或 (2) 峰 E (P2) 的振幅恰好为峰 A (P1) 振幅的一半。</i>
+</div>
+
+<h4 id="44-fitmodelcontrol-panel"><strong>4.4. <code>FitModelControl</code> 面板</strong><a class="headerlink" href="#44-fitmodelcontrol-panel" title="Permanent link">&para;</a></h4>
+<p>完整定义模型后，点击<strong>拟合</strong> (Fit) 按钮即可执行优化计算。</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/fit_control_panel.png" alt="Fit Model Control 面板" width="650"><br>
+   <i><code>FitModelControl</code> 面板。</i>
+</div>
+
+<p><strong>复制 / 粘贴拟合模型</strong>：
+您可以将一条光谱上已配置完整的拟合模型复制到另一条光谱上，从而轻松将复杂设置复用到各个独立文件中。</p>
+<blockquote>
+<ul>
+<li>当您<strong>粘贴</strong> (Paste) 模型时，拟合引擎始终会从当前激活的设置面板中读取<em>实时</em>的噪声阈值（Noise Threshold）设定。这意味着您可以先复制模型，再调整噪声阈值，随后粘贴即可按新噪声配置应用模型。</li>
+</ul>
+</blockquote>
+<p><strong>保存 / 加载拟合模型</strong>：
+如果您打算频繁使用某套模型，可将其保存为模板。已保存的模型可通过下拉菜单轻松读取并应用到新数据集中。</p>
+<ul>
+<li><strong>从下拉列表选择</strong>：在<strong>拟合模型：</strong> (<code>Fit model:</code>) 组合框中挑选任意预设模型。</li>
+<li><strong>通过按钮加载</strong>：点击<strong>加载</strong> (Load) 按钮浏览本地文件系统并加载任意 <code>.json</code> 拟合模型模板。</li>
+<li><strong>拖放加载</strong>：您可以将 <code>.json</code> 拟合模型文件直接拖放到<strong>拟合模型构建器</strong> (<code>Fit Model Builder</code>) 面板上，或拖放到<strong>光谱</strong> / <strong>二维图谱</strong>工作区的任意位置。文件会立即添加到模型列表中并在下拉框中自动选中，随时可供应用。</li>
+<li><strong>应用模型</strong>：点击<strong>应用</strong> (Apply) 将所加载的模型分配给当前选中的光谱（或在点击<strong>应用</strong>时按住 <strong>Ctrl</strong> 键将其批量分配给所有光谱）。</li>
+</ul>
+<blockquote>
+<ul>
+<li>当您点击<strong>保存</strong> (Save) 将模型写入 <code>.json</code> 文件时，<em>当前</em>的噪声阈值会永久保存进该文件中。此后当您<strong>应用</strong>（<strong>加载</strong>）该模型时，拟合引擎将严格采用文件中保存的噪声阈值，而忽略设置面板中的当前设置。</li>
+</ul>
+</blockquote>
+<hr />
+<h3 id="5-collect-and-save-fit-results"><strong>5. 汇总与保存拟合结果</strong><a class="headerlink" href="#5-collect-and-save-fit-results" title="Permanent link">&para;</a></h3>
+<p>当光谱或二维图谱拟合完成后，您需要将最佳拟合结果汇总整理：</p>
+<ul>
+<li>切换到<strong>拟合结果</strong>标签页。</li>
+<li>点击 <strong>Collect</strong> 按钮。<strong>SPECTROview</strong> 会立即将全部最佳拟合参数汇总到一张统一的数据表中。每条光谱的拟合优度（<strong>R2</strong>，即决定系数）也会作为单独一列包含其中，因此您可以像对待任意拟合参数一样对其进行筛选或绘图（例如在 <code>Maps</code> 工作区绘制 R² 热图）。点击任意列标题即可选中整列，跨多个列标题拖动则可多选列并快速复制到剪贴板。</li>
+</ul>
+<blockquote>
+<p><strong>调整小数精度</strong>：数值结果（<code>x0</code>、<code>ampli</code>、<code>fwhm</code>、<code>area</code>、<code>R2</code> 等）显示的小数位数由<strong>拟合结果</strong>标签页顶部、紧邻 <strong>Collect</strong> 按钮上方的<strong>结果小数位数</strong> (Fit results decimals) 微调框控制（默认为 3）。修改数值后再次点击 <strong>Collect</strong>，即可按新精度重建结果表。该精度设置同样适用于计算列（见下文）；X/Y 坐标列始终保留完整精度。</p>
+</blockquote>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/collect_fit_results.gif" alt="汇总拟合结果" width="800"><br>
+   <i>汇总拟合结果界面与汇总后的数据表。</i>
+</div>
+
+<h4 id="51-splitting-filename-features"><strong>5.1. 拆分文件名特征</strong><a class="headerlink" href="#51-splitting-filename-features" title="Permanent link">&para;</a></h4>
+<p>此工具可自动提取嵌入在文件名中的元数据信息。例如，若您的文件命名为 <code>Sample1_ProcessA_Temp25</code>，该工具可按下划线（<code>_</code>）拆分文件名，并将提取出的字段分别填入数据集的新增列中（参见上方演示视频）。</p>
+<h4 id="52-compute-and-add-new-columns"><strong>5.2. 计算并添加新列</strong><a class="headerlink" href="#52-compute-and-add-new-columns" title="Permanent link">&para;</a></h4>
+<p>您可以基于已有拟合参数的数学组合轻松创建新列（例如通过 <code>x0_p1 - x0_p2</code> 计算峰位偏移量）。
+支持的数学运算符包括：<code>+</code>、<code>-</code>、<code>*</code>、<code>/</code>、<code>**</code>、<code>%</code> 以及 <code>()</code>。计算生成的新列同样会按标签页顶部设定的<strong>结果小数位数</strong>进行四舍五入。</p>
+<blockquote>
+<p><strong>重要提示</strong>：如果列名包含空格或特殊字符，必须使用反引号将其括起来。例如：<code>`x0_LO(M)`</code></p>
+</blockquote>
+<h4 id="53-save-and-visualize"><strong>5.3. 保存与可视化</strong><a class="headerlink" href="#53-save-and-visualize" title="Permanent link">&para;</a></h4>
+<p>完成数据表整理后，您可以：</p>
+<ul>
+<li><strong>使用清晰的名称保存数据表</strong>，然后<strong>直接发送至 <code>Graphs</code> 工作区</strong>进行即时绘图。</li>
+</ul>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/send_to_graph.png" alt="发送至图表区按钮" width="300"><br>
+</div>
+<p><br></p>
+<ul>
+<li><strong>将其导出为 Excel/CSV 电子表格</strong>以供外部软件分析处理。</li>
+</ul>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/export_to_csv.png" alt="导出为 CSV 按钮" width="300"><br>
+</div>
+
+<h3 id="6-more-tab"><strong>6. <code>More</code> 标签页</strong><a class="headerlink" href="#6-more-tab" title="Permanent link">&para;</a></h3>
+<p><code>More</code>（<strong>更多</strong>）标签页汇集了辅助工具与元数据查看功能，共分为三个区域：</p>
+<div align="center">
+  <img src="../../../user_manual_images/Spectra_Maps/moretab.png" alt="More 标签页概览" width="850"><br>
+</div>
+
+<ul>
+<li><strong>左侧</strong>：直接显示从已加载的 <code>.wdf</code>、<code>.spc</code>、<code>.l6s</code>、<code>.l6m</code>、<code>.ngs</code> 或 <code>.ngc</code> 文件中提取的完整元数据，展示采集时使用的精确仪器参数设置。</li>
+<li><strong>中间</strong>：显示当前所选光谱的详细属性与统计信息。</li>
+<li><strong>右侧</strong>：提供额外的预处理实用工具，例如全局强度归一化算法以及宇宙射线伪峰检测与去除工具。</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../menu_bar/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 菜单栏">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                菜单栏
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../graphs/" class="md-footer__link md-footer__link--next" aria-label="下一页: 图表工作区">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                图表工作区
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

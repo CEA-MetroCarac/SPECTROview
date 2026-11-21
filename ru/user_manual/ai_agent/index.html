@@ -1,0 +1,2243 @@
+
+<!doctype html>
+<html lang="ru" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Интерактивный инструмент для обработки, аппроксимации и визуализации спектроскопических данных">
+      
+      
+        <meta name="author" content="Van Hoan Le">
+      
+      
+        <link rel="canonical" href="https://CEA-MetroCarac.github.io/SPECTROview/ru/user_manual/ai_agent/">
+      
+      
+        <link rel="prev" href="../shortcuts/">
+      
+      
+        <link rel="next" href="../../developer/">
+      
+      
+        
+          <link rel="alternate" href="../../../user_manual/ai_agent/" hreflang="en">
+        
+          <link rel="alternate" href="../../../fr/user_manual/ai_agent/" hreflang="fr">
+        
+          <link rel="alternate" href="../../../de/user_manual/ai_agent/" hreflang="de">
+        
+          <link rel="alternate" href="./" hreflang="ru">
+        
+          <link rel="alternate" href="../../../zh/user_manual/ai_agent/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../../assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>ИИ-агент - Документация SPECTROview</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-N8XYNZ7WFC"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-N8XYNZ7WFC",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-N8XYNZ7WFC",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ai-chat-agent" class="md-skip">
+          Перейти к содержанию
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Верхний колонтитул">
+    <a href="../../" title="Документация SPECTROview" class="md-header__button md-logo" aria-label="Документация SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Документация SPECTROview
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ИИ-агент
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      
+
+<div class="md-header__option">
+  <div class="md-select">
+    <button
+      type="button"
+      class="md-header__button md-lang-switcher"
+      aria-label="Выберите язык"
+      title="Выберите язык"
+    >
+      <span class="md-lang-switcher__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2m-5.15 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56M14.34 14H9.66c-.1-.66-.16-1.32-.16-2s.06-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2M12 19.96c-.83-1.2-1.5-2.53-1.91-3.96h3.82c-.41 1.43-1.08 2.76-1.91 3.96M8 8H5.08A7.92 7.92 0 0 1 9.4 4.44C8.8 5.55 8.35 6.75 8 8m-2.92 8H8c.35 1.25.8 2.45 1.4 3.56A8 8 0 0 1 5.08 16m-.82-2C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2M12 4.03c.83 1.2 1.5 2.54 1.91 3.97h-3.82c.41-1.43 1.08-2.77 1.91-3.97M18.92 8h-2.95a15.7 15.7 0 0 0-1.38-3.56c1.84.63 3.37 1.9 4.33 3.56M12 2C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg>
+      </span>
+      <span class="md-lang-switcher__code">RU</span>
+      <span class="md-lang-switcher__caret" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.58 12 13.17l4.59-4.59L18 10l-6 6-6-6z"/></svg>
+      </span>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a
+              href="../../../user_manual/ai_agent/"
+              hreflang="en"
+              class="md-select__link"
+            >
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../fr/user_manual/ai_agent/"
+              hreflang="fr"
+              class="md-select__link"
+            >
+              Français
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../de/user_manual/ai_agent/"
+              hreflang="de"
+              class="md-select__link"
+            >
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="./"
+              hreflang="ru"
+              class="md-select__link" aria-current="true"
+            >
+              Русский
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a
+              href="../../../zh/user_manual/ai_agent/"
+              hreflang="zh"
+              class="md-select__link"
+            >
+              简体中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Поиск" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Поиск">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистить" aria-label="Очистить" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Инициализация поиска
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Главная
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Установка
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Руководство пользователя
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  ИИ-агент
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../developer/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Руководство разработчика
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  История изменений
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+  
+        
+      
+
+  
+  
+  
+  
+
+  
+    <style>
+      /* Hide the default H1 title injected by MkDocs */
+      .md-content h1 { display: none !important; }
+    </style>
+  
+
+  
+
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Навигация" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="Документация SPECTROview" class="md-nav__button md-logo" aria-label="Документация SPECTROview" data-md-component="logo">
+      
+  <img src="../../../assets/icon.png" alt="logo">
+
+    </a>
+    Документация SPECTROview
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CEA-MetroCarac/SPECTROview" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CEA-MetroCarac/SPECTROview
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Главная
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Установка
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство пользователя
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство пользователя
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../supported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Поддерживаемые форматы данных
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Обзор интерфейса
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../menu_bar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Строка меню
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spectra_maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочие области «Спектры» и «Карты»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Многомерный анализ (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Калькуляторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Настройки
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../save_load/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сохранение и загрузка
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shortcuts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Горячие клавиши и советы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Содержание">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Содержание
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ai-chat-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ИИ-чат-агент
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ИИ-чат-агент">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-opening-the-ai-chat-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Открытие ИИ-чат-агента
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-supported-providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Поддерживаемые провайдеры
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-configuring-a-provider-and-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Настройка провайдера и модели
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-automatic-small-model-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Автоматическая оптимизация для небольших моделей
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-modern-chat-composer-interface-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Современный редактор сообщений и обзор интерфейса
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Современный редактор сообщений и обзор интерфейса">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#conversation-history-dialog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Окно истории диалогов
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#voice-dictation-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎤 Голосовой ввод (опционально)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-what-the-ai-agent-can-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Возможности ИИ-агента
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-prompt-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Примеры запросов (промптов)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Примеры запросов (промптов)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#complex-combined-prompts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚀 Сложные / комбинированные запросы
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#simple-single-action-prompts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧩 Простые одношаговые запросы
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-conversation-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. История диалогов
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-tips-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Советы и рекомендации
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#10-troubleshooting-a-connection-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Устранение ошибки «Connection error.»
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#11-keyboard-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Горячие клавиши
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство разработчика
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство разработчика
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/file_loading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Конвейер загрузки файлов
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra_store/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архитектура данных SpectraStore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Спектры»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/maps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Графики»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/vbf_engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Векторизованный движок пакетной аппроксимации (VBF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Многомерный анализ (MVA)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/ai_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ИИ-агент
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/mcp_server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Локальный MCP-сервер
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/spectra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Спектры» (загрузка, предобработка, аппроксимация)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/2dmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Рабочая область «Карты» (гиперспектральные данные, тепловые карты)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Визуализация данных («Графики»)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/calculators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Калькуляторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/extending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Расширение SPECTROview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    История изменений
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>ИИ-агент</h1>
+
+<h2 id="ai-chat-agent"><strong>ИИ-чат-агент</strong><a class="headerlink" href="#ai-chat-agent" title="Permanent link">&para;</a></h2>
+<p><strong>ИИ-ассистент SPECTROview</strong> (SPECTROview AI Agent) — это встроенный интеллектуальный помощник, который позволяет выполнять запросы, фильтровать, визуализировать и изменять данные на обычном естественном языке без программирования.</p>
+<blockquote>
+<p>ИИ-чат-агент является <strong>дополнительной функцией</strong>. SPECTROview полноценно работает и без него — настраивать его нужно только в том случае, если вы планируете использовать возможности ИИ.</p>
+</blockquote>
+<div align="center">
+  <img src="../../../user_manual_images/AI-agent/demo_ai_agent.gif" alt="Демонстрация работы ИИ-чат-агента" width="900"><br>
+  <em>Общайтесь со SPECTROview на естественном языке, чтобы фильтровать данные, а также создавать или настраивать графики.</em>
+</div>
+
+<hr />
+<h3 id="1-opening-the-ai-chat-agent"><strong>1. Открытие ИИ-чат-агента</strong><a class="headerlink" href="#1-opening-the-ai-chat-agent" title="Permanent link">&para;</a></h3>
+<p>Переключать отображение встроенной панели ИИ-чата можно двумя способами:</p>
+<ul>
+<li>Нажмите кнопку <strong>AI Chat Agent</strong> в правой части верхней строки меню (непосредственно перед кнопкой <strong>Проверить обновления</strong> (Check for updates)).</li>
+<li>Используйте сочетание клавиш <strong><code>Ctrl + Shift + A</code></strong>.</li>
+</ul>
+<p>Панель встроена непосредственно в правую часть главного графического интерфейса, рядом с вкладками рабочих областей (<strong>Спектры</strong> (Spectra), <strong>Карты</strong> (Maps), <strong>Графики</strong> (Graphs)). Вы можете свободно изменять её ширину с помощью разделителя или нажать кнопку закрытия (<code>✕</code>) в заголовке панели, чтобы скрыть её и вернуть рабочим областям всю ширину окна.</p>
+<hr />
+<h3 id="2-supported-providers"><strong>2. Поддерживаемые провайдеры</strong><a class="headerlink" href="#2-supported-providers" title="Permanent link">&para;</a></h3>
+<p>ИИ-агент «из коробки» поддерживает несколько LLM-бэкендов — устанавливать дополнительные пакеты не требуется:</p>
+<table>
+<thead>
+<tr>
+<th>Провайдер</th>
+<th>Описание</th>
+<th>Требования</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ollama (локально)</strong> (Ollama (local))</td>
+<td>Полностью локальная работа, без интернета и API-ключа</td>
+<td>Установленный и запущенный <a href="https://ollama.com">Ollama</a></td>
+</tr>
+<tr>
+<td><strong>OpenAI</strong></td>
+<td>GPT-4o, GPT-4o-mini и др.</td>
+<td>API-ключ</td>
+</tr>
+<tr>
+<td><strong>DeepSeek</strong></td>
+<td>Экономичные модели с высоким качеством логического вывода</td>
+<td>API-ключ DeepSeek</td>
+</tr>
+<tr>
+<td><strong>Gemini</strong></td>
+<td>Модели Google Gemini</td>
+<td>API-ключ Gemini</td>
+</tr>
+<tr>
+<td><strong>Mistral</strong></td>
+<td>Модели Mistral AI</td>
+<td>API-ключ Mistral</td>
+</tr>
+<tr>
+<td><strong>Anthropic</strong></td>
+<td>Модели Claude</td>
+<td>API-ключ Anthropic</td>
+</tr>
+<tr>
+<td><strong>Пользовательский</strong> (Custom)</td>
+<td>Любой OpenAI-совместимый сервер (например, внутренний или корпоративный)</td>
+<td>Базовый URL + API-ключ</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Примечание:</strong> DeepSeek, Gemini и другие OpenAI-совместимые провайдеры используют Python-пакет <code>openai</code> исключительно как универсальный сетевой клиент. Вы <strong>не</strong> отправляете свои данные в OpenAI — сам пакет лишь переиспользуется как стандартный клиентский инструмент для работы с API.</p>
+</blockquote>
+<hr />
+<h3 id="3-configuring-a-provider-and-model"><strong>3. Настройка провайдера и модели</strong><a class="headerlink" href="#3-configuring-a-provider-and-model" title="Permanent link">&para;</a></h3>
+<ol>
+<li>В нижней части панели, в области <strong>Chat Composer</strong>, выберите <strong>AI Provider</strong> из выпадающего списка (<code>Ollama (local)</code>, <code>OpenAI</code>, <code>Anthropic</code>, <code>Mistral</code>, <code>Gemini</code>, <code>DeepSeek</code> или <code>Custom</code>).</li>
+<li>
+<p>Для облачных провайдеров укажите ваш <strong>API-ключ</strong> в диалоговом окне <strong>Настройки</strong> (Settings) (<code>Ctrl + Shift + S</code> → вкладка <strong>Настройки ИИ</strong> (AI Settings)):</p>
+<ul>
+<li>Поля <strong>Пользовательский API-ключ</strong> (Custom API Key), <strong>Базовый URL</strong> (Base URL) и <strong>Название модели</strong> (Model Name(s)) для провайдера <strong>Пользовательский</strong> отображаются по умолчанию.</li>
+<li>Ключи других облачных провайдеров сгруппированы в свёрнутом разделе <strong>▸ Другие облачные провайдеры</strong> (Other cloud providers).</li>
+<li>Нажмите кнопку <strong>Проверить подключение</strong> (Test Connection) прямо во вкладке <strong>Настройки ИИ</strong>, чтобы проверить аутентификацию, доступность сервера и наличие модели с мгновенной визуальной индикацией (<code>✓ Connection successful</code> или подробным сообщением об ошибке).</li>
+</ul>
+</li>
+<li>
+<p>Выберите <strong>Модель</strong> (Model) из редактируемого выпадающего списка моделей рядом с выбором провайдера на панели ввода. Если нужной модели нет в списке, вы можете ввести её идентификатор вручную.</p>
+</li>
+<li>Нажмите кнопку <strong>⟳ refresh</strong> рядом со списком моделей, чтобы обновить перечень доступных моделей.</li>
+</ol>
+<blockquote>
+<p><strong>Название модели и отображаемое имя:</strong> Некоторые серверы (особенно пользовательские) не предоставляют API для получения списка моделей. Укажите названия используемых моделей в окне <strong>Настройки</strong> → вкладка <strong>Настройки ИИ</strong> → <strong>Название модели</strong> через запятую (например, <code>model-a, model-b</code>). Вы также можете задать собственное <strong>Отображаемое имя</strong> (Display Label) (например, <code>ABC</code> или <code>Lab Model</code>), чтобы ваш сервер отображался в выпадающем списке провайдеров под этим именем вместо стандартного <code>Custom</code>. Изменения настроек сразу применяются ко всем открытым панелям чата.</p>
+</blockquote>
+<hr />
+<h3 id="4-automatic-small-model-optimization"><strong>4. Автоматическая оптимизация для небольших моделей</strong><a class="headerlink" href="#4-automatic-small-model-optimization" title="Permanent link">&para;</a></h3>
+<p>Небольшие локальные модели (примерно до ~10 млрд параметров — такие как <code>qwen2.5:7b</code>, <code>gemma2:2b</code>, <code>phi3:mini</code>) заметно чувствительнее к длинным системным промптам. SPECTROview автоматически определяет число параметров локальных моделей Ollama и включает компактный уровень системного промпта, сфокусированное окно контекста диалога и адаптированные параметры генерации.</p>
+<hr />
+<h3 id="5-modern-chat-composer-interface-overview"><strong>5. Современный редактор сообщений и обзор интерфейса</strong><a class="headerlink" href="#5-modern-chat-composer-interface-overview" title="Permanent link">&para;</a></h3>
+<p>Интерфейс чата имеет продуманную и единую компоновку:</p>
+<ul>
+<li><strong>Верхняя панель заголовка</strong>: компактная однострочная панель с редактируемым <strong>названием диалога</strong> слева (занимает всю доступную ширину) и кнопками быстрых действий справа: <strong>История диалогов</strong> (Chat History), <strong>Новый чат</strong> (New Chat), <strong>Очистить чат</strong> (Clear Chat) и <strong>Close Panel (<code>✕</code>)</strong>.</li>
+<li><strong>Лента диалога</strong>: отображает карточки сообщений с цветовым кодированием (сообщения пользователя, ответы ИИ с форматированием Markdown, таблицами и формулами, а также уведомления об ошибках).</li>
+<li>
+<p><strong>Встроенный блок ввода</strong>: скруглённая область в нижней части панели, включающая:</p>
+<ul>
+<li>Многострочное текстовое поле с автоматическим изменением высоты (<code>Enter</code> — отправка сообщения, <code>Shift + Enter</code> — перенос строки).</li>
+<li>Встроенную нижнюю панель инструментов с селектором <strong>AI Provider</strong>, селектором <strong>Модель</strong>, кнопкой <strong>Refresh</strong>, <strong>микрофоном голосового ввода (<code>🎤</code>)</strong> и кнопкой <strong>Отправить</strong> (Send) ▶ / <strong>Стоп</strong> (Stop) ■.</li>
+</ul>
+</li>
+</ul>
+<h4 id="conversation-history-dialog"><strong>Окно истории диалогов</strong><a class="headerlink" href="#conversation-history-dialog" title="Permanent link">&para;</a></h4>
+<p>При нажатии на кнопку <strong>История диалогов</strong> открывается окно управления диалогами в стиле PLUME:</p>
+<ul>
+<li><strong>Фильтр поиска</strong>: мгновенный текстовый поиск по названиям диалогов в реальном времени.</li>
+<li><strong>Группировка по разделам</strong>: закреплённые диалоги отображаются вверху в разделе <strong>Закреплённые</strong> (PINNED); остальные группируются хронологически (<strong>Сегодня</strong> (TODAY), <strong>Вчера</strong> (YESTERDAY), <strong>На этой неделе</strong> (THIS WEEK), <strong>Ранее</strong> (OLDER)).</li>
+<li><strong>Точные метки времени и число сообщений</strong>: каждая карточка диалога показывает точное время (<code>YYYY-MM-DD HH:MM:SS</code>) и количество сообщений.</li>
+<li><strong>Действия</strong>: закрепление/открепление, переименование, дублирование и удаление диалогов с помощью кнопок на строке диалога или через контекстное меню по правому щелчку мыши.</li>
+<li><strong>Безопасное удаление всех диалогов</strong>: кнопка <strong>Удалить все</strong> (Delete All) очищает незакреплённые диалоги, надёжно сохраняя закреплённые.</li>
+</ul>
+<p>Сообщения в панели чата выводятся в хронологическом порядке в виде наглядных блоков с цветовым кодированием:</p>
+<ul>
+<li>🔵 <strong>Синий блок</strong> — ваши сообщения (пользователь)</li>
+<li>🟢 <strong>Зелёный блок</strong> — ответы ИИ-агента</li>
+<li>🔴 <strong>Красный блок</strong> — сообщения об ошибках</li>
+</ul>
+<p>Для каждого сообщения отображается <strong>метка времени</strong> (<code>YY-MM-DD HH:MM</code>) и кнопки действий:</p>
+<ul>
+<li><strong>📋 Копировать</strong> (Copy) — скопировать текст сообщения в буфер обмена</li>
+<li><strong>↩ Ответить</strong> (Reply) (только для сообщений ИИ) — ответить конкретно на это сообщение ИИ</li>
+</ul>
+<h4 id="voice-dictation-optional">🎤 Голосовой ввод (опционально)<a class="headerlink" href="#voice-dictation-optional" title="Permanent link">&para;</a></h4>
+<p>Вы можете использовать кнопку микрофона на панели ввода, чтобы диктовать запросы голосом вместо набора текста. Для этой функции требуются дополнительные зависимости:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>SpeechRecognition<span class="w"> </span>pyaudio
+</code></pre></div>
+<p>Если эти пакеты не установлены, кнопка микрофона всё равно будет отображаться, но при нажатии на неё появится сообщение с инструкцией по их установке.</p>
+<hr />
+<h3 id="6-what-the-ai-agent-can-do"><strong>6. Возможности ИИ-агента</strong><a class="headerlink" href="#6-what-the-ai-agent-can-do" title="Permanent link">&para;</a></h3>
+<p>ИИ-агент имеет полное представление о загруженных вами DataFrame и открытых графиках. Он умеет:</p>
+<ul>
+<li><strong>Фильтровать данные</strong>: выводить строки, удовлетворяющие любым условиям</li>
+<li><strong>Вычислять статистику</strong>: среднее, стандартное отклонение, минимум, максимум, процентили</li>
+<li><strong>Строить графики</strong>: создавать графики в любом из 9 поддерживаемых стилей</li>
+<li><strong>Изменять графики</strong>: обновлять пределы осей, заголовки, цвета и фильтры</li>
+<li><strong>Удалять графики</strong>: удалять отдельные или все открытые графики</li>
+<li><strong>Отвечать на вопросы</strong>: пояснять содержимое столбцов, предлагать дальнейшие шаги анализа</li>
+</ul>
+<p>Агент всегда знает названия всех ваших DataFrame, а также имена и типы каждого столбца. Остальные сведения — например, примеры значений в столбце или точные текущие настройки конкретного графика — он запрашивает только тогда, когда это необходимо для ответа, благодаря чему обычные запросы выполняются максимально быстро.</p>
+<hr />
+<h3 id="7-prompt-examples"><strong>7. Примеры запросов (промптов)</strong><a class="headerlink" href="#7-prompt-examples" title="Permanent link">&para;</a></h3>
+<h4 id="complex-combined-prompts">🚀 Сложные / комбинированные запросы<a class="headerlink" href="#complex-combined-prompts" title="Permanent link">&para;</a></h4>
+<p>Главная сила агента заключается в выполнении сложных многошаговых задач за <strong>одно сообщение</strong> — он может проанализировать данные, построить несколько графиков и сразу настроить их оформление.</p>
+<p><strong>Анализ с последующим построением:</strong></p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Compute the mean and std of center_Si per Zone, then create a bar plot of the
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>per-Zone mean with error bars from the std, sorted from highest to lowest.
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Find the wafer with the highest average FWHM_Si, filter to just that wafer, and
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>plot a wafer map of its FWHM_Si.
+</code></pre></div></p>
+<p><strong>Несколько графиков в одном запросе:</strong></p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Create three graphs: a scatter of Slot vs center_Si colored by Zone, a box plot
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>of center_Si grouped by Zone, and a histogram of center_Si with 40 bins.
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>For each of FWHM_Si, center_Si and intensity_Si, plot a point plot vs Slot
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>colored by wafer.
+</code></pre></div></p>
+<p><strong>Построение и настройка оформления в одном запросе:</strong></p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Make a scatter plot of Slot vs center_Si colored by Zone, set the title to
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>&quot;Si peak position&quot;, label the Y-axis &quot;Raman shift (cm⁻¹)&quot;, set the Y range to
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>[520, 522], use the viridis palette, and turn on the grid.
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Plot FWHM_Si vs temperature as a trendline, filter to Zone == &quot;center&quot;, move the
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>legend to the upper right, and use a log scale on the X-axis.
+</code></pre></div></p>
+<p><strong>Всё вместе:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Filter the data to R_squared &gt; 0.95, then create a scatter plot and a box plot
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>of center_Si vs Zone side by side, colored by wafer, both with the title
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>&quot;High-quality fits only&quot; and the grid enabled.
+</code></pre></div>
+<hr />
+<h4 id="simple-single-action-prompts">🧩 Простые одношаговые запросы<a class="headerlink" href="#simple-single-action-prompts" title="Permanent link">&para;</a></h4>
+<p>Удобные базовые примеры, каждый из которых выполняет одну операцию — фильтрацию, сводку, построение графика, правку параметров или ответ на вопрос. Их можно свободно объединять в сложные запросы, показанные выше.</p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Show rows where FWHM_Si &gt; 5 and R_squared &gt; 0.95
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Give me statistics for center_Si and FWHM_Si by Zone
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Create a scatter plot of Slot vs center_Si colored by Zone
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Plot a wafer map of fwhm_Si for Slot 11
+</code></pre></div></p>
+<p><em>(Примечание: для графиков <code>wafer</code> (карта пластины) и <code>2Dmap</code> (2D-карта) в вашем наборе данных должны присутствовать столбцы пространственных координат X и Y.)</em></p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Set the Y-axis range of graph 3 to [3.5, 4.2] and use the viridis palette
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Delete graph 3
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>What columns are available in my data?
+</code></pre></div></p>
+<hr />
+<h3 id="8-conversation-history"><strong>8. История диалогов</strong><a class="headerlink" href="#8-conversation-history" title="Permanent link">&para;</a></h3>
+<p>ИИ-агент <strong>помнит контекст беседы</strong> на протяжении нескольких реплик:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>User: Show rows where FWHM &gt; 5
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>AI:   Found 42 rows...
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>User: Now create a scatter plot of Slot vs center_Si for those rows
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>AI:   (creates scatter plot with FWHM &gt; 5 filter applied)
+</code></pre></div>
+<ul>
+<li>История чата <strong>сохраняется</strong> при загрузке новых файлов или переключении наборов данных — она сбрасывается только при нажатии кнопки <strong>➕ Новый чат</strong>.</li>
+<li>Предыдущие диалоги автоматически сохраняются, и их можно повторно открыть через панель <strong>History</strong> (кнопка 📋).</li>
+<li>Используйте кнопку <strong>↩ Ответить</strong> под любым сообщением ИИ, чтобы ответить именно на эту реплику.</li>
+</ul>
+<hr />
+<h3 id="9-tips-best-practices"><strong>9. Советы и рекомендации</strong><a class="headerlink" href="#9-tips-best-practices" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Указывайте точные названия столбцов</strong> — ИИ знает имена всех столбцов, но точное написание исключает неоднозначность.</li>
+<li><strong>Указывайте ID графиков</strong> — при изменении или удалении графика сверьтесь с его номером (ID) в строке заголовка окна.</li>
+<li><strong>Начинайте с простого</strong> — сначала запросите базовый график, а затем уточняйте оформление в последующих сообщениях.</li>
+<li><strong>Несколько графиков сразу</strong> — запрашивайте разные типы визуализации в одном сообщении: <em>«Create a box and scatter plot of X vs Y»</em>.</li>
+<li><strong>Следите за строкой состояния</strong> — красный индикатор 🔴 означает отсутствие подключения. Проверьте API-ключ в окне <strong>Настройки</strong> или убедитесь, что Ollama запущен.</li>
+<li><strong>Локальная модель не справляется?</strong> — см. <a href="#4-automatic-small-model-optimization">раздел 4</a>, ограничивайте запрос одним-двумя графиками за сообщение и отдавайте предпочтение моделям с официально заявленной поддержкой вызова инструментов (<em>tool/function calling</em>).</li>
+</ul>
+<hr />
+<h3 id="10-troubleshooting-a-connection-error"><strong>10. Устранение ошибки «Connection error.»</strong><a class="headerlink" href="#10-troubleshooting-a-connection-error" title="Permanent link">&para;</a></h3>
+<p>Если облачный или пользовательский провайдер возвращает ошибку <strong>«Connection error.»</strong>, приложению вообще не удалось установить сетевое соединение (это <em>не</em> ошибка неверного названия модели и <em>не</em> истёкший API-ключ — для них выводятся другие сообщения). Основные причины:</p>
+<ul>
+<li><strong>Неверный базовый URL</strong> — для провайдера <strong>Пользовательский</strong> проверьте поле <strong>Базовый URL</strong> в окне <strong>Настройки</strong>. Там должен быть указан корневой OpenAI-совместимый адрес сервиса (например, <code>https://host/v1</code> или <code>https://host/openai/</code>), а <strong>не</strong> полный путь <code>.../chat/completions</code>.</li>
+<li><strong>Корпоративный или внутренний сервер с частным сертификатом</strong> — локальный сервер в интрасети (например, <code>https://…intra.company…/</code>) часто защищён корпоративным центром сертификации, которому Python по умолчанию не доверяет, из-за чего возникает скрытая ошибка <em>certificate verify failed</em>. SPECTROview решает эту проблему автоматически, доверяя <strong>системному хранилищу сертификатов вашей ОС</strong> (через пакет <code>truststore</code>, предустановленный по умолчанию). Если ошибка всё же сохраняется, перед запуском программы укажите путь к цепочке сертификатов вашей организации в формате <code>.pem</code> (например, <code>chain_bundle.pem</code>) через переменную окружения <strong><code>SSL_CERT_FILE</code></strong>.</li>
+<li><strong>Отсутствие доступа к сети / VPN</strong> — внутренний сервер может быть доступен только из корпоративной сети или при подключённом VPN.</li>
+</ul>
+<p>Теперь карточка ошибки отображает под основным сообщением первопричину сбоя (например, <code>CERTIFICATE_VERIFY_FAILED</code>, <code>getaddrinfo failed</code>), что позволяет сразу определить, какой из перечисленных случаев имеет место.</p>
+<hr />
+<h3 id="11-keyboard-shortcuts"><strong>11. Горячие клавиши</strong><a class="headerlink" href="#11-keyboard-shortcuts" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Сочетание клавиш</th>
+<th>Действие</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Ctrl + Shift + A</code></td>
+<td>Открыть ИИ-чат-агент</td>
+</tr>
+<tr>
+<td><code>Enter</code></td>
+<td>Отправить сообщение</td>
+</tr>
+<tr>
+<td><code>Shift + Enter</code></td>
+<td>Перенос строки в поле ввода</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  К началу
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Нижний колонтитул" >
+        
+          
+          <a href="../shortcuts/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Горячие клавиши и советы">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Горячие клавиши и советы
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../developer/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Архитектура">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Архитектура
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CEA-Leti / Van Hoan Le
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/CEA-MetroCarac/SPECTROview" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/spectroview/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "navigation.indexes", "navigation.footer", "navigation.path", "toc.integrate", "search.highlight", "search.suggest", "content.code.copy", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

@@ -695,13 +695,9 @@ class Main(QMainWindow):
 
     def manual(self):
         """Open online User Manual web documentation."""
-        lang = get_language()
-        url_str = (
-            "https://cea-metrocarac.github.io/SPECTROview/fr/user_manual/"
-            if lang == "fr"
-            else "https://cea-metrocarac.github.io/SPECTROview/user_manual/"
-        )
-        QDesktopServices.openUrl(QUrl(url_str))
+        from spectroview import docs_url
+
+        QDesktopServices.openUrl(QUrl(docs_url("user_manual/", get_language())))
 
     def open_github_repo(self):
         """Open the project's GitHub repository."""

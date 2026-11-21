@@ -1,7 +1,7 @@
 """
-Validation tests for SPECTROview's French–English multilingual MkDocs setup.
+Validation tests for SPECTROview's multilingual MkDocs setup (EN / FR / DE / RU / ZH).
 
-Tier 1 tests validate mkdocs.yml i18n configuration, EN/FR file and nav parity,
+Tier 1 tests validate mkdocs.yml i18n configuration, file and nav parity,
 and docs_hooks.py behavior using only stdlib + PyYAML (so CI remains fast).
 Tier 2 builds the full site with ``mkdocs build --strict`` when MkDocs and
 ``mkdocs-static-i18n`` are installed and checks every built HTML page, image,
@@ -107,8 +107,16 @@ def test_mkdocs_i18n_config_valid():
     langs = {lang["locale"]: lang for lang in i18n["languages"]}
     assert langs["en"]["default"] is True
     assert langs["en"]["build"] is True
-    assert langs["fr"]["name"] == "Français"
-    assert langs["fr"]["build"] is True
+    expected_names = {
+        "fr": "Français",
+        "de": "Deutsch",
+        "ru": "Русский",
+        "zh": "简体中文",
+    }
+    for locale, native_name in expected_names.items():
+        assert locale in langs, f"Missing locale {locale} in mkdocs.yml"
+        assert langs[locale]["name"] == native_name
+        assert langs[locale]["build"] is True
 
 
 def test_all_nav_pages_have_english_and_french_files():
@@ -135,18 +143,19 @@ def test_all_nav_pages_have_english_and_french_files():
     assert not empty, f"Empty nav documentation files: {empty}"
 
 
-def test_all_nav_labels_have_french_translations():
+@pytest.mark.parametrize("locale", ["fr", "de", "ru", "zh"])
+def test_all_nav_labels_have_translations(locale: str):
     cfg = _load_mkdocs_config()
     i18n = _get_i18n_plugin_config(cfg)
     langs = {lang["locale"]: lang for lang in i18n["languages"]}
-    nav_translations = langs["fr"]["nav_translations"]
+    nav_translations = langs[locale]["nav_translations"]
 
     titles = {title for title, _ in _iter_nav_entries(cfg["nav"])}
     missing = sorted(t for t in titles if not str(nav_translations.get(t, "")).strip())
-    assert not missing, f"Missing French nav_translations for: {missing}"
+    assert not missing, f"Missing {locale} nav_translations for: {missing}"
 
 
-def test_docs_hooks_date_formatting_en_and_fr(monkeypatch, tmp_path):
+def test_docs_hooks_date_formatting_all_locales(monkeypatch, tmp_path):
     hooks = _load_docs_hooks_module()
     fixed_now = datetime.datetime(2026, 2, 5, 14, 7)
 
@@ -157,30 +166,33 @@ def test_docs_hooks_date_formatting_en_and_fr(monkeypatch, tmp_path):
 
     monkeypatch.setattr(datetime, "datetime", _FixedDateTime)
 
-    en_page = SimpleNamespace(file=SimpleNamespace(src_path="user_manual/index.md"))
-    fr_page = SimpleNamespace(file=SimpleNamespace(src_path="user_manual/index.fr.md"))
+    cases = [
+        ("en", "user_manual/index.md", "(Last updated: 01 January 2020 at 00:00)", "(Last updated: 05 February 2026 at 14:07)"),
+        ("fr", "user_manual/index.fr.md", "(Dernière mise à jour : 01 janvier 2020 à 00:00)", "(Dernière mise à jour : 05 février 2026 à 14:07)"),
+        ("de", "user_manual/index.de.md", "(Zuletzt aktualisiert: 01. Januar 2020 um 00:00)", "(Zuletzt aktualisiert: 05. Februar 2026 um 14:07)"),
+        ("ru", "user_manual/index.ru.md", "(Последнее обновление: 01 января 2020 г. в 00:00)", "(Последнее обновление: 05 февраля 2026 г. в 14:07)"),
+        ("zh", "user_manual/index.zh.md", "(最后更新：2020年01月01日 00:00)", "(最后更新：2026年02月05日 14:07)"),
+    ]
 
-    en_out = hooks.on_page_markdown(
-        "<i>(Last updated: 01 January 2020 at 00:00)</i>", en_page, {}, None
-    )
-    fr_out = hooks.on_page_markdown(
-        "<i>(Dernière mise à jour : 01 janvier 2020 à 00:00)</i>", fr_page, {}, None
-    )
-    assert "(Last updated: 05 February 2026 at 14:07)" in en_out
-    assert "(Dernière mise à jour : 05 février 2026 à 14:07)" in fr_out
+    for locale, src_path, initial, expected in cases:
+        page = SimpleNamespace(file=SimpleNamespace(src_path=src_path))
+        out = hooks.on_page_markdown(f"<i>{initial}</i>", page, {}, None)
+        assert expected in out, f"Date formatting mismatch for {locale}: {out}"
 
-    # SPECTROVIEW_DOCS_NO_STAMP=1 must prevent mutating files on disk
-    en_idx = tmp_path / "index.md"
-    fr_idx = tmp_path / "index.fr.md"
-    en_idx.write_text("(Last updated: 01 January 2020 at 00:00)", encoding="utf-8")
-    fr_idx.write_text("(Dernière mise à jour : 01 janvier 2020 à 00:00)", encoding="utf-8")
+    # SPECTROVIEW_DOCS_NO_STAMP=1 must prevent mutating files on disk across all locales
+    files_to_check = []
+    for locale, src_path, initial, _ in cases:
+        idx_file = tmp_path / Path(src_path).name
+        idx_file.write_text(initial, encoding="utf-8")
+        files_to_check.append((idx_file, initial))
+
     monkeypatch.setenv("SPECTROVIEW_DOCS_NO_STAMP", "1")
     hooks._update_last_updated_date(str(tmp_path))
-    assert "01 January 2020" in en_idx.read_text(encoding="utf-8")
-    assert "01 janvier 2020" in fr_idx.read_text(encoding="utf-8")
+    for idx_file, initial in files_to_check:
+        assert idx_file.read_text(encoding="utf-8") == initial
 
 
-def test_docs_hooks_rewrites_html_links_and_images_en_and_fr():
+def test_docs_hooks_rewrites_html_links_and_images_all_locales():
     hooks = _load_docs_hooks_module()
     static_files = [
         SimpleNamespace(
@@ -209,21 +221,26 @@ def test_docs_hooks_rewrites_html_links_and_images_en_and_fr():
             'href="../"',
             'src="../../user_manual_images/Home/logo.png"',
         ),
-        (
-            "user_manual/index.fr.md",
-            "fr/user_manual/index.html",
-            'href="graphs/#sec"',
-            'href="./"',
-            'src="../../user_manual_images/Home/logo.png"',
-        ),
-        (
-            "user_manual/graphs.fr.md",
-            "fr/user_manual/graphs/index.html",
-            'href="../graphs/#sec"',
-            'href="../"',
-            'src="../../../user_manual_images/Home/logo.png"',
-        ),
     ]
+    for loc in ("fr", "de", "ru", "zh"):
+        cases.extend(
+            [
+                (
+                    f"user_manual/index.{loc}.md",
+                    f"{loc}/user_manual/index.html",
+                    'href="graphs/#sec"',
+                    'href="./"',
+                    'src="../../user_manual_images/Home/logo.png"',
+                ),
+                (
+                    f"user_manual/graphs.{loc}.md",
+                    f"{loc}/user_manual/graphs/index.html",
+                    'href="../graphs/#sec"',
+                    'href="../"',
+                    'src="../../../user_manual_images/Home/logo.png"',
+                ),
+            ]
+        )
 
     for src_path, dest_uri, exp_graphs, exp_index, exp_img in cases:
         page = SimpleNamespace(file=SimpleNamespace(src_path=src_path, dest_uri=dest_uri))
@@ -367,11 +384,11 @@ def test_mkdocs_strict_build_links_images_anchors_and_switcher(tmp_path):
     assert "m12.87 15.07-2.54-2.51" not in en_home_html
     assert "m12.87 15.07-2.54-2.51" not in fr_home_html
 
-    # Verify search index covers both EN and FR
+    # Verify search index covers all 5 languages
     search_index_path = site_dir / "search" / "search_index.json"
     assert search_index_path.is_file()
     search_data = json.loads(search_index_path.read_text(encoding="utf-8"))
-    assert search_data["config"]["lang"] == ["en", "fr"]
+    assert search_data["config"]["lang"] == ["en", "fr", "de", "ru", "zh"]
     locations = {doc["location"] for doc in search_data["docs"]}
     assert any(loc.startswith("fr/") for loc in locations)
     assert any(loc.startswith("user_manual/") for loc in locations)
@@ -453,8 +470,9 @@ def test_mkdocs_strict_build_links_images_anchors_and_switcher(tmp_path):
 
         en_alt_map = {label: href for href, label in en_parser.alternates}
         fr_alt_map = {label: href for href, label in fr_parser.alternates}
-        assert set(en_alt_map.keys()) == {"English", "Français"}
-        assert set(fr_alt_map.keys()) == {"English", "Français"}
+        expected_labels = {"English", "Français", "Deutsch", "Русский", "简体中文"}
+        assert set(en_alt_map.keys()) == expected_labels
+        assert set(fr_alt_map.keys()) == expected_labels
         assert en_parser.current_alt_hreflangs == [exp_en_lang]
         assert fr_parser.current_alt_hreflangs == [exp_fr_lang]
 

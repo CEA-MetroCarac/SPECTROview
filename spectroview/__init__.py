@@ -22,6 +22,17 @@ TEXT_EXPIRE = (
     "Github page (cf. About) to update newest version."
 )
 
+DOCS_BASE_URL = "https://cea-metrocarac.github.io/SPECTROview/"
+DOCS_LANGUAGES = ("en", "fr", "de", "ru", "zh")
+
+
+def docs_url(path: str = "", lang: str = "en") -> str:
+    """Return the localized online documentation URL for ``lang`` and ``path``."""
+    clean_path = path.lstrip("/")
+    if lang in DOCS_LANGUAGES and lang != "en":
+        return f"{DOCS_BASE_URL}{lang}/{clean_path}"
+    return f"{DOCS_BASE_URL}{clean_path}"
+
 # Predefined axis labels for autocomplete
 AXIS_LABELS = [
     "Si peak position (cm$^{-1}$)",

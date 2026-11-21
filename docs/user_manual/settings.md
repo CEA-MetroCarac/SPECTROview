@@ -52,7 +52,7 @@ Specify a single universal root folder for all of SPECTROview's templates, recip
 
 #### **Interface Language**
 
-- **Language**: Select between **English** (default), **Français**, **简体中文** (Simplified Chinese), **Deutsch** (German), and **Русский** (Russian). Changes apply **live across the entire application** — menus, workspaces, viewers, dialogs, scientific plot labels, and the AI Chat panel — without restarting. Clicking **Cancel** rolls back any live previewed language change to the previously saved setting. The selected language persists across sessions via `QSettings` and `config.json`, and clicking **Open User Manual** opens the matching English (`/user_manual/`) or French (`/fr/user_manual/`) documentation (falling back to English for languages without a separate web manual).
+- **Language**: Select between **English** (default), **Français**, **简体中文** (Simplified Chinese), **Deutsch** (German), and **Русский** (Russian). Changes apply **live across the entire application** — menus, workspaces, viewers, dialogs, scientific plot labels, and the AI Chat panel — without restarting. Clicking **Cancel** rolls back any live previewed language change to the previously saved setting. The selected language persists across sessions via `QSettings` and `config.json`, and clicking **Open User Manual** opens the matching documentation version (`/user_manual/` for English, `/fr/user_manual/` for French, `/de/user_manual/` for German, `/ru/user_manual/` for Russian, and `/zh/user_manual/` for Simplified Chinese).
 
 #### **Application Updates**
 

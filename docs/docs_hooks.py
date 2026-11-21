@@ -17,27 +17,54 @@ _FR_MONTHS = (
     "janvier", "février", "mars", "avril", "mai", "juin",
     "juillet", "août", "septembre", "octobre", "novembre", "décembre",
 )
+_DE_MONTHS = (
+    "",
+    "Januar", "Februar", "März", "April", "Mai", "Juni",
+    "Juli", "August", "September", "Oktober", "November", "Dezember",
+)
+_RU_MONTHS = (
+    "",
+    "января", "февраля", "марта", "апреля", "мая", "июня",
+    "июля", "августа", "сентября", "октября", "ноября", "декабря",
+)
 
 _INDEX_FILE_RE = re.compile(r'(?:^|/)index(?:\.[a-z]{2}(?:-[A-Z]{2})?)?\.md$')
+_LOCALE_SUFFIX_RE = re.compile(r'\.(fr|de|ru|zh)\.md$')
 _EN_STAMP_RE = re.compile(r"\(Last updated:\s*[^)]+\)", re.IGNORECASE)
 _FR_STAMP_RE = re.compile(r"\(Dernière mise à jour\s*:\s*[^)]+\)", re.IGNORECASE)
+_DE_STAMP_RE = re.compile(r"\(Zuletzt aktualisiert:\s*[^)]+\)", re.IGNORECASE)
+_RU_STAMP_RE = re.compile(r"\(Последнее обновление:\s*[^)]+\)", re.IGNORECASE)
+_ZH_STAMP_RE = re.compile(r"\(最后更新[：:]\s*[^)]+\)")
+
+_STAMP_SPECS = {
+    "en": (_EN_STAMP_RE, "(Last updated: {ts})", "index.md"),
+    "fr": (_FR_STAMP_RE, "(Dernière mise à jour : {ts})", "index.fr.md"),
+    "de": (_DE_STAMP_RE, "(Zuletzt aktualisiert: {ts})", "index.de.md"),
+    "ru": (_RU_STAMP_RE, "(Последнее обновление: {ts})", "index.ru.md"),
+    "zh": (_ZH_STAMP_RE, "(最后更新：{ts})", "index.zh.md"),
+}
 
 
 def _format_timestamp(locale: str, now: datetime.datetime | None = None) -> str:
-    """Format timestamp using locale-independent English or French month names."""
+    """Format timestamp using locale-independent month names for supported locales."""
     if now is None:
         now = datetime.datetime.now()
     if locale == "fr":
         return f"{now.day:02d} {_FR_MONTHS[now.month]} {now.year} à {now.hour:02d}:{now.minute:02d}"
+    if locale == "de":
+        return f"{now.day:02d}. {_DE_MONTHS[now.month]} {now.year} um {now.hour:02d}:{now.minute:02d}"
+    if locale == "ru":
+        return f"{now.day:02d} {_RU_MONTHS[now.month]} {now.year} г. в {now.hour:02d}:{now.minute:02d}"
+    if locale == "zh":
+        return f"{now.year}年{now.month:02d}月{now.day:02d}日 {now.hour:02d}:{now.minute:02d}"
     return f"{now.day:02d} {_EN_MONTHS[now.month]} {now.year} at {now.hour:02d}:{now.minute:02d}"
 
 
 def _detect_locale(src_path: str) -> str:
     """Infer locale from a suffix-named Markdown source path."""
     norm = src_path.replace("\\", "/")
-    if norm.endswith(".fr.md"):
-        return "fr"
-    return "en"
+    match = _LOCALE_SUFFIX_RE.search(norm)
+    return match.group(1) if match else "en"
 
 
 def on_startup(command, dirty):
@@ -239,31 +266,23 @@ def on_page_content(html, page, config, files):
 
 def on_page_markdown(markdown, page, config, files):
     """
-    Hook to dynamically ensure the rendered user manual index pages (EN and FR)
-    always carry the current date, and guarantee that lists and tables are
-    properly spaced for Python-Markdown.
+    Hook to dynamically ensure the rendered user manual index pages across all
+    supported locales always carry the current date, and guarantee that lists
+    and tables are properly spaced for Python-Markdown.
     """
     src_path = page.file.src_path.replace('\\', '/')
     if _INDEX_FILE_RE.search(src_path) and "user_manual" in src_path:
         locale = _detect_locale(src_path)
         timestamp_str = _format_timestamp(locale)
-        if locale == "fr":
-            markdown = _FR_STAMP_RE.sub(
-                f"(Dernière mise à jour : {timestamp_str})",
-                markdown,
-            )
-        else:
-            markdown = _EN_STAMP_RE.sub(
-                f"(Last updated: {timestamp_str})",
-                markdown,
-            )
+        pattern, template, _ = _STAMP_SPECS.get(locale, _STAMP_SPECS["en"])
+        markdown = pattern.sub(template.format(ts=timestamp_str), markdown)
     return ensure_markdown_spacing(markdown)
 
 
 def on_pre_build(config, **kwargs):
     """
     Hook that runs before the MkDocs build process starts.
-    Updates timestamps in docs/user_manual/index.md and index.fr.md
+    Updates timestamps in docs/user_manual/index[.<lang>].md
     when building or deploying (skipped during 'mkdocs serve' or when
     SPECTROVIEW_DOCS_NO_STAMP=1 is set).
     """
@@ -273,19 +292,17 @@ def on_pre_build(config, **kwargs):
 
 
 def _update_last_updated_date(manual_dir: str) -> None:
-    """Automatically update the Last updated timestamp in user_manual/index[.fr].md."""
+    """Automatically update the Last updated timestamp in user_manual/index[.<lang>].md."""
     if _is_serve_mode or os.environ.get("SPECTROVIEW_DOCS_NO_STAMP") == "1":
         return
 
     now = datetime.datetime.now()
-    targets = [
-        ("index.md", "en", _EN_STAMP_RE, f"(Last updated: {_format_timestamp('en', now)})"),
-        ("index.fr.md", "fr", _FR_STAMP_RE, f"(Dernière mise à jour : {_format_timestamp('fr', now)})"),
-    ]
-    for filename, locale, pattern, new_text in targets:
+    for locale, (pattern, template, filename) in _STAMP_SPECS.items():
         index_path = os.path.join(manual_dir, filename)
         if not os.path.isfile(index_path):
             continue
+        ts_str = _format_timestamp(locale, now)
+        new_text = template.format(ts=ts_str)
         try:
             with open(index_path, "r", encoding="utf-8") as f:
                 content = f.read()
@@ -296,7 +313,7 @@ def _update_last_updated_date(manual_dir: str) -> None:
                     f.write(new_content)
                 print(
                     f"  [docs_hook] Automatically updated {filename} ({locale}) "
-                    f"date and time to: {_format_timestamp(locale, now)}"
+                    f"date and time to: {ts_str}"
                 )
         except OSError as e:
             print(f"  [docs_hook] Warning: Could not update {filename} last updated date: {e}")

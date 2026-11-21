@@ -94,6 +94,7 @@ hooks:
 
 exclude_docs: |
   docs_hooks.py
+  i18n_check.py
   __pycache__/
   **/__pycache__/
 
@@ -174,6 +175,108 @@ plugins:
             Data Visualization (Graphs): Visualisation de données (Graphs)
             Extending SPECTROview: Étendre SPECTROview
             Changelog: Historique des versions
+        - locale: de
+          name: Deutsch
+          build: true
+          site_name: SPECTROview-Dokumentation
+          site_description: Interaktives Werkzeug zur Verarbeitung, Anpassung und Visualisierung spektroskopischer Daten
+          nav_translations:
+            Home: Startseite
+            Installation: Installation
+            User Manual: Benutzerhandbuch
+            Supported Data: Unterstützte Datenformate
+            UI Overview: Überblick über die Benutzeroberfläche
+            Menu Bar: Menüleiste
+            Workspace Spectra & Maps: Arbeitsbereiche Spektren & Karten
+            Workspace Graphs: Arbeitsbereich Diagramme
+            Multivariate Analysis (MVA): Multivariate Analyse (MVA)
+            Quick Calculators: Schnellrechner
+            Settings: Einstellungen
+            Save & Load: Speichern & Laden
+            Shortcuts & Tips: Tastenkürzel & Tipps
+            AI Agent: KI-Agent
+            Developer Guide: Entwicklerhandbuch
+            Architecture: Architektur
+            File Loading Pipeline: Pipeline zum Laden von Dateien
+            Data Architecture SpectraStore: Datenarchitektur SpectraStore
+            Workspace Spectra: Arbeitsbereich Spektren
+            Workspace Maps: Arbeitsbereich Karten
+            Vectorized Batch Fit Engine (VBF): Vektorisierte Batch-Fit-Engine (VBF)
+            Local MCP Server: Lokaler MCP-Server
+            API: API
+            Spectra Workspace (load, preprocess, fit): Arbeitsbereich Spektren (Laden, Vorverarbeitung, Fit)
+            Maps Workspace (hyperspectral, heatmaps): Arbeitsbereich Karten (hyperspektral, Heatmaps)
+            Data Visualization (Graphs): Datenvisualisierung (Diagramme)
+            Extending SPECTROview: SPECTROview erweitern
+            Changelog: Änderungsprotokoll
+        - locale: ru
+          name: Русский
+          build: true
+          site_name: Документация SPECTROview
+          site_description: Интерактивный инструмент для обработки, аппроксимации и визуализации спектроскопических данных
+          nav_translations:
+            Home: Главная
+            Installation: Установка
+            User Manual: Руководство пользователя
+            Supported Data: Поддерживаемые форматы данных
+            UI Overview: Обзор интерфейса
+            Menu Bar: Строка меню
+            Workspace Spectra & Maps: Рабочие области «Спектры» и «Карты»
+            Workspace Graphs: Рабочая область «Графики»
+            Multivariate Analysis (MVA): Многомерный анализ (MVA)
+            Quick Calculators: Калькуляторы
+            Settings: Настройки
+            Save & Load: Сохранение и загрузка
+            Shortcuts & Tips: Горячие клавиши и советы
+            AI Agent: ИИ-агент
+            Developer Guide: Руководство разработчика
+            Architecture: Архитектура
+            File Loading Pipeline: Конвейер загрузки файлов
+            Data Architecture SpectraStore: Архитектура данных SpectraStore
+            Workspace Spectra: Рабочая область «Спектры»
+            Workspace Maps: Рабочая область «Карты»
+            Vectorized Batch Fit Engine (VBF): Векторизованный движок пакетной аппроксимации (VBF)
+            Local MCP Server: Локальный MCP-сервер
+            API: API
+            Spectra Workspace (load, preprocess, fit): Рабочая область «Спектры» (загрузка, предобработка, аппроксимация)
+            Maps Workspace (hyperspectral, heatmaps): Рабочая область «Карты» (гиперспектральные данные, тепловые карты)
+            Data Visualization (Graphs): Визуализация данных («Графики»)
+            Extending SPECTROview: Расширение SPECTROview
+            Changelog: История изменений
+        - locale: zh
+          name: 简体中文
+          build: true
+          site_name: SPECTROview 文档
+          site_description: 用于光谱数据处理、拟合与可视化的交互式工具
+          nav_translations:
+            Home: 首页
+            Installation: 安装
+            User Manual: 用户手册
+            Supported Data: 支持的数据格式
+            UI Overview: 界面概览
+            Menu Bar: 菜单栏
+            Workspace Spectra & Maps: 光谱与二维图谱工作区
+            Workspace Graphs: 图表工作区
+            Multivariate Analysis (MVA): 多元分析 (MVA)
+            Quick Calculators: 快捷计算器
+            Settings: 设置
+            Save & Load: 保存与加载
+            Shortcuts & Tips: 快捷键与技巧
+            AI Agent: AI 智能体
+            Developer Guide: 开发者指南
+            Architecture: 架构
+            File Loading Pipeline: 文件加载流程
+            Data Architecture SpectraStore: 数据架构 SpectraStore
+            Workspace Spectra: 光谱工作区
+            Workspace Maps: 二维图谱工作区
+            Vectorized Batch Fit Engine (VBF): 向量化批量拟合引擎 (VBF)
+            Local MCP Server: 本地 MCP 服务器
+            API: API
+            Spectra Workspace (load, preprocess, fit): 光谱工作区（加载、预处理、拟合）
+            Maps Workspace (hyperspectral, heatmaps): 二维图谱工作区（高光谱、热图）
+            Data Visualization (Graphs): 数据可视化（图表）
+            Extending SPECTROview: 扩展 SPECTROview
+            Changelog: 更新日志
 
 extra:
   analytics:

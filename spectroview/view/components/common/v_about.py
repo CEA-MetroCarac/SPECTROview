@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QDialog, QLabel, QTextBrowser, QVBoxLayout
 
-from spectroview import BUILD_NUMBER, ICON_DIR, VERSION
+from spectroview import BUILD_NUMBER, ICON_DIR, VERSION, docs_url
 from spectroview.i18n import bind_window_title, get_language, on_language_changed, tr
 
 
@@ -38,11 +38,7 @@ class VAboutDialog(QDialog):
         layout.addWidget(self.info_browser)
 
     def _refresh_html(self) -> None:
-        docs_url = (
-            "https://CEA-MetroCarac.github.io/SPECTROview/fr/"
-            if get_language() == "fr"
-            else "https://CEA-MetroCarac.github.io/SPECTROview"
-        )
+        doc_link = docs_url("", get_language())
         info = f"""
         <div style="text-align: center;">
             <h2>SPECTROview</h2>
@@ -59,7 +55,7 @@ class VAboutDialog(QDialog):
             <li>{tr("Dedicated module for effortless, fast, and easy data visualization.")}</li>
         </ul>
         <p style="text-align:left;">
-            {tr("Full documentation is available at")} <a href="{docs_url}">{docs_url}</a>
+            {tr("Full documentation is available at")} <a href="{doc_link}">{doc_link}</a>
         </p>
         <hr>
         <h3>{tr("Citation:")}</h3>

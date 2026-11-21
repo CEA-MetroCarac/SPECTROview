@@ -1,4 +1,4 @@
-{#- Custom EN/FR language switcher: globe icon + active locale code (EN/FR) + chevron -#}
+{#- Custom multilingual language switcher: globe icon + active locale code + chevron -#}
 {% set current_locale = i18n_page_locale | default(config.theme.language, true) | default('en', true) %}
 {% set icon = config.theme.icon.alternate or "material/web" %}
 <div class="md-header__option">

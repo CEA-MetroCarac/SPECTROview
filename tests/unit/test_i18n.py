@@ -359,7 +359,7 @@ class TestMainWindowLiveLanguageSwitching:
             assert win.v_spectra_workspace.btn_reinit.text() == "重置"
             assert win.v_maps_workspace.v_fit_model_builder.btn_fit.text() == "拟合"
             win.manual()
-            assert opened_urls[-1].endswith("/user_manual/") and "/fr/" not in opened_urls[-1]
+            assert opened_urls[-1].endswith("/zh/user_manual/")
 
             # German
             win.set_language("de")
@@ -372,7 +372,7 @@ class TestMainWindowLiveLanguageSwitching:
             assert win.v_spectra_workspace.btn_reinit.text() == "Zurücksetzen"
             assert win.v_maps_workspace.v_fit_model_builder.btn_fit.text() == "Anpassen"
             win.manual()
-            assert opened_urls[-1].endswith("/user_manual/") and "/fr/" not in opened_urls[-1]
+            assert opened_urls[-1].endswith("/de/user_manual/")
 
             # Russian
             win.set_language("ru")
@@ -385,7 +385,7 @@ class TestMainWindowLiveLanguageSwitching:
             assert win.v_spectra_workspace.btn_reinit.text() == "Сброс"
             assert win.v_maps_workspace.v_fit_model_builder.btn_fit.text() == "Подгонка"
             win.manual()
-            assert opened_urls[-1].endswith("/user_manual/") and "/fr/" not in opened_urls[-1]
+            assert opened_urls[-1].endswith("/ru/user_manual/")
 
             # Switch back live to English — no duplicate tabs/actions, state intact
             win.set_language("en")

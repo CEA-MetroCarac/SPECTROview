@@ -2,7 +2,7 @@
   <img src="../user_manual_images/Home/logo.png" alt="Логотип SPECTROview" width="80" align="left" style="float: left; margin-right: 20px;">
   <div style="text-align: right;">
     <h2 align="right" style="margin-top: 0; margin-bottom: 0; text-align: right;">Руководство пользователя SPECTROview</h2>
-    <p align="right" style="margin-top: 5px; color: gray; font-size: 0.9em; text-align: right;"><i>(Последнее обновление: 20 ноября 2026 г. в 13:18)</i></p>
+    <p align="right" style="margin-top: 5px; color: gray; font-size: 0.9em; text-align: right;"><i>(Последнее обновление: 21 ноября 2026 г. в 15:02)</i></p>
   </div>
 </div>
 <div style="clear: both;"></div>

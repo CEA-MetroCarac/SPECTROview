@@ -96,11 +96,11 @@ For every task, execute these steps proportionally:
    - Run static check on changed files (`python -m pyflakes spectroview/<file>.py`).
    - Review git diff to ensure no unintended edits, leftover debug prints, or unwanted files.
 5. **Document**:
-   - Update relevant documentation across the three surfaces in **both English (`*.md`) and French (`*.fr.md`)** in the same task (and add `nav_translations` in `mkdocs.yml` for any new pages) per [.agents/rules/documentation.md](file:///.agents/rules/documentation.md):
-     - Developer Guide (`docs/developer/*.md` & `*.fr.md`)
-     - Public API (`docs/api/*.md` & `*.fr.md`)
-     - User Manual (`docs/user_manual/*.md` & `*.fr.md`)
-   - Verify documentation spacing, bilingual parity, links, and strict MkDocs build (`python -m pytest tests/unit/test_markdown_syntax.py tests/unit/test_docs_i18n.py -v` and `mkdocs build --strict`).
+   - Update relevant documentation across the three surfaces in **all five languages (`*.md` and `*.{fr,de,ru,zh}.md`)** in the same task (and add `nav_translations` for `fr`, `de`, `ru`, `zh` in `mkdocs.yml` for any new pages) per [.agents/rules/documentation.md](file:///.agents/rules/documentation.md):
+     - Developer Guide (`docs/developer/*.md` & `*.{fr,de,ru,zh}.md`)
+     - Public API (`docs/api/*.md` & `*.{fr,de,ru,zh}.md`)
+     - User Manual (`docs/user_manual/*.md` & `*.{fr,de,ru,zh}.md`)
+   - Verify documentation spacing, five-language parity, structural checks (`python docs/i18n_check.py check de|ru|zh`), links, and strict MkDocs build (`python -m pytest tests/unit/test_markdown_syntax.py tests/unit/test_docs_i18n.py -v` and `mkdocs build --strict`).
    - Synchronize Visual Assets: Whenever UI components, buttons, dialogs, or themes change, re-capture related screenshots and illustrations in `docs/user_manual_images/` in **Modern Dark mode** using native font rendering (no headless tofu `□□□` boxes) and high-contrast dark button tiles.
 6. **Commit & Report**:
    - Stage only related files for the completed milestone.
@@ -127,8 +127,8 @@ python -m pytest tests/ -q
 # Static syntax and import check on modified files
 python -m pyflakes spectroview/<file>.py
 
-# Bilingual documentation checks (markdown spacing, EN/FR parity, strict build)
-python -m pytest tests/unit/test_markdown_syntax.py tests/unit/test_docs_i18n.py -v
+# Multilingual documentation checks (markdown spacing, 5-language parity, strict build)
+python -m pytest tests/unit/test_markdown_syntax.py tests/unit/test_docs_i18n.py tests/unit/test_docs_url.py -v
 $env:SPECTROVIEW_DOCS_NO_STAMP="1"; python -m mkdocs build --strict -d .tmp_site_check
 
 # Launch application
@@ -162,6 +162,6 @@ python -m spectroview.main
 A task is complete only when:
 1. The implementation satisfies all acceptance criteria without breaking contracts or introducing regressions.
 2. New or updated unit/integration tests cover the new feature and pass cleanly without event loop warnings or memory leaks (`test_i18n.py` catalog & UI literal audits pass when GUI/ViewModel strings change).
-3. Relevant documentation across the three doc surfaces has been synchronized in both English and French (with passing docs build/parity checks) in the same task.
+3. Relevant documentation across the three doc surfaces has been synchronized in all five supported languages (EN, FR, DE, RU, ZH) with passing docs build and parity checks in the same task.
 4. The final diff has been inspected and contains no unrelated changes.
 5. Completed milestones are committed with a meaningful Conventional Commit.

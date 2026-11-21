@@ -52,11 +52,11 @@ Follow this procedure to eliminate bugs at their root cause while safeguarding a
 
 ---
 
-## Phase 4: Synchronize Bilingual Documentation
+## Phase 4: Synchronize Multilingual Documentation
 
 If the bug fix alters documented behavior, parameters, or fixes an error in the manual:
 
-- Update **both** English (`*.md`) and French (`*.fr.md`) counterparts in `docs/developer/`, `docs/api/`, or `docs/user_manual/` per [.agents/rules/documentation.md](../../rules/documentation.md) and verify with `tests/unit/test_docs_i18n.py` and `mkdocs build --strict`.
+- Update all five language versions (`*.md` and `*.{fr,de,ru,zh}.md`) in `docs/developer/`, `docs/api/`, or `docs/user_manual/` per [.agents/rules/documentation.md](../../rules/documentation.md) and verify with `tests/unit/test_docs_i18n.py`, `docs/i18n_check.py`, and `mkdocs build --strict`.
 
 ---
 

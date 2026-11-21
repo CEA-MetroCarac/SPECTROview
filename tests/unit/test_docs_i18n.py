@@ -81,6 +81,15 @@ def _load_docs_hooks_module():
     return module
 
 
+def _load_i18n_check_module():
+    chk_path = DOCS_DIR / "i18n_check.py"
+    spec = importlib.util.spec_from_file_location("spectroview_i18n_check", chk_path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_mkdocs_i18n_config_valid():
     cfg = _load_mkdocs_config()
     theme = cfg["theme"]
@@ -119,7 +128,8 @@ def test_mkdocs_i18n_config_valid():
         assert langs[locale]["build"] is True
 
 
-def test_all_nav_pages_have_english_and_french_files():
+@pytest.mark.parametrize("locale", ["fr", "de", "ru", "zh"])
+def test_all_nav_pages_have_localized_files(locale: str):
     cfg = _load_mkdocs_config()
     entries = _iter_nav_entries(cfg["nav"])
     md_paths = [path for _, path in entries if path is not None]
@@ -129,18 +139,26 @@ def test_all_nav_pages_have_english_and_french_files():
     empty: list[str] = []
     for rel_path in md_paths:
         en_file = DOCS_DIR / rel_path
-        fr_file = en_file.with_name(f"{en_file.stem}.fr.md")
+        loc_file = en_file.with_name(f"{en_file.stem}.{locale}.md")
         if not en_file.is_file():
             missing.append(str(en_file.relative_to(REPO_ROOT)))
         elif en_file.stat().st_size == 0:
             empty.append(str(en_file.relative_to(REPO_ROOT)))
-        if not fr_file.is_file():
-            missing.append(str(fr_file.relative_to(REPO_ROOT)))
-        elif fr_file.stat().st_size == 0:
-            empty.append(str(fr_file.relative_to(REPO_ROOT)))
+        if not loc_file.is_file():
+            missing.append(str(loc_file.relative_to(REPO_ROOT)))
+        elif loc_file.stat().st_size == 0:
+            empty.append(str(loc_file.relative_to(REPO_ROOT)))
 
-    assert not missing, f"Missing nav documentation files: {missing}"
-    assert not empty, f"Empty nav documentation files: {empty}"
+    assert not missing, f"Missing nav documentation files for {locale}: {missing}"
+    assert not empty, f"Empty nav documentation files for {locale}: {empty}"
+
+
+@pytest.mark.parametrize("locale", ["de", "ru", "zh"])
+def test_i18n_check_structural_parity(locale: str):
+    pytest.importorskip("markdown")
+    chk = _load_i18n_check_module()
+    failures = chk.validate_language(locale)
+    assert not failures, f"Structural i18n_check failures for {locale}: {failures}"
 
 
 @pytest.mark.parametrize("locale", ["fr", "de", "ru", "zh"])
@@ -374,15 +392,20 @@ def test_mkdocs_strict_build_links_images_anchors_and_switcher(tmp_path):
     combined = proc.stdout + "\n" + proc.stderr
     assert proc.returncode == 0, f"mkdocs build --strict failed:\n{combined}"
 
-    # Verify root landing pages, hero CTA localization, and EN/FR language switcher badge
-    en_home_html = (site_dir / "index.html").read_text(encoding="utf-8")
-    fr_home_html = (site_dir / "fr" / "index.html").read_text(encoding="utf-8")
-    assert "Get Started" in en_home_html
-    assert "Commencer" in fr_home_html
-    assert '<span class="md-lang-switcher__code">EN</span>' in en_home_html
-    assert '<span class="md-lang-switcher__code">FR</span>' in fr_home_html
-    assert "m12.87 15.07-2.54-2.51" not in en_home_html
-    assert "m12.87 15.07-2.54-2.51" not in fr_home_html
+    # Verify root landing pages, hero CTA localization, and language switcher badge across all 5 locales
+    home_expectations = [
+        ("en", site_dir / "index.html", "Get Started", "EN"),
+        ("fr", site_dir / "fr" / "index.html", "Commencer", "FR"),
+        ("de", site_dir / "de" / "index.html", "Erste Schritte", "DE"),
+        ("ru", site_dir / "ru" / "index.html", "Начать работу", "RU"),
+        ("zh", site_dir / "zh" / "index.html", "快速开始", "ZH"),
+    ]
+    for loc, home_path, expected_cta, expected_badge in home_expectations:
+        assert home_path.is_file(), f"Missing home page for {loc}: {home_path}"
+        home_html = home_path.read_text(encoding="utf-8")
+        assert expected_cta in home_html, f"Missing hero CTA '{expected_cta}' in {loc}"
+        assert f'<span class="md-lang-switcher__code">{expected_badge}</span>' in home_html
+        assert "m12.87 15.07-2.54-2.51" not in home_html
 
     # Verify search index covers all 5 languages
     search_index_path = site_dir / "search" / "search_index.json"
@@ -390,26 +413,26 @@ def test_mkdocs_strict_build_links_images_anchors_and_switcher(tmp_path):
     search_data = json.loads(search_index_path.read_text(encoding="utf-8"))
     assert search_data["config"]["lang"] == ["en", "fr", "de", "ru", "zh"]
     locations = {doc["location"] for doc in search_data["docs"]}
-    assert any(loc.startswith("fr/") for loc in locations)
-    assert any(loc.startswith("user_manual/") for loc in locations)
+    for prefix in ("fr/", "de/", "ru/", "zh/", "user_manual/"):
+        assert any(loc.startswith(prefix) for loc in locations), f"No search docs under {prefix}"
 
-    # Verify all 31 nav pages are built for both EN and FR
+    # Verify all 31 nav pages are built for all 5 languages
     cfg = _load_mkdocs_config()
     for _, rel_md in _iter_nav_entries(cfg["nav"]):
         if rel_md is None:
             continue
         stem_dir = rel_md[:-3]  # strip .md
         if stem_dir == "index":
-            en_target = site_dir / "index.html"
-            fr_target = site_dir / "fr" / "index.html"
+            rel_html = Path("index.html")
         elif stem_dir.endswith("/index"):
-            en_target = site_dir / stem_dir[:-5] / "index.html"
-            fr_target = site_dir / "fr" / stem_dir[:-5] / "index.html"
+            rel_html = Path(stem_dir[:-5]) / "index.html"
         else:
-            en_target = site_dir / stem_dir / "index.html"
-            fr_target = site_dir / "fr" / stem_dir / "index.html"
-        assert en_target.is_file(), f"Missing built EN page for {rel_md}"
-        assert fr_target.is_file(), f"Missing built FR page for {rel_md}"
+            rel_html = Path(stem_dir) / "index.html"
+
+        assert (site_dir / rel_html).is_file(), f"Missing built EN page for {rel_md}"
+        for loc in ("fr", "de", "ru", "zh"):
+            loc_target = site_dir / loc / rel_html
+            assert loc_target.is_file(), f"Missing built {loc.upper()} page for {rel_md}"
 
     # Parse every HTML file to verify images, internal links, anchors, and switchers
     parsed_pages: dict[Path, _HtmlLinkAndIdParser] = {}
@@ -453,30 +476,33 @@ def test_mkdocs_strict_build_links_images_anchors_and_switcher(tmp_path):
     assert not broken_links, "Broken links in built site:\n" + "\n".join(broken_links)
     assert not broken_anchors, "Broken anchors in built site:\n" + "\n".join(broken_anchors)
 
-    # Verify per-page language switcher links across key EN & FR pages
-    switcher_pairs = [
-        ("index.html", "fr/index.html", "en", "fr"),
-        ("user_manual/graphs/index.html", "fr/user_manual/graphs/index.html", "en", "fr"),
-        ("api/spectra/index.html", "fr/api/spectra/index.html", "en", "fr"),
-        ("developer/vbf_engine/index.html", "fr/developer/vbf_engine/index.html", "en", "fr"),
+    # Verify per-page language switcher links across all 5 languages on key pages
+    locale_to_label = {
+        "en": "English",
+        "fr": "Français",
+        "de": "Deutsch",
+        "ru": "Русский",
+        "zh": "简体中文",
+    }
+    expected_labels = set(locale_to_label.values())
+    sample_pages = [
+        "index.html",
+        "user_manual/graphs/index.html",
+        "api/spectra/index.html",
+        "developer/vbf_engine/index.html",
     ]
-    for en_rel, fr_rel, exp_en_lang, exp_fr_lang in switcher_pairs:
-        en_file = (site_dir / en_rel).resolve()
-        fr_file = (site_dir / fr_rel).resolve()
-        en_parser = parsed_pages[en_file]
-        fr_parser = parsed_pages[fr_file]
-        assert en_parser.html_lang == exp_en_lang
-        assert fr_parser.html_lang == exp_fr_lang
-
-        en_alt_map = {label: href for href, label in en_parser.alternates}
-        fr_alt_map = {label: href for href, label in fr_parser.alternates}
-        expected_labels = {"English", "Français", "Deutsch", "Русский", "简体中文"}
-        assert set(en_alt_map.keys()) == expected_labels
-        assert set(fr_alt_map.keys()) == expected_labels
-        assert en_parser.current_alt_hreflangs == [exp_en_lang]
-        assert fr_parser.current_alt_hreflangs == [exp_fr_lang]
-
-        to_fr = _resolve_site_target(site_dir, en_file, en_alt_map["Français"])
-        to_en = _resolve_site_target(site_dir, fr_file, fr_alt_map["English"])
-        assert to_fr is not None and to_fr[0].resolve() == fr_file
-        assert to_en is not None and to_en[0].resolve() == en_file
+    for sample_rel in sample_pages:
+        locale_files = {
+            loc: ((site_dir / sample_rel) if loc == "en" else (site_dir / loc / sample_rel)).resolve()
+            for loc in locale_to_label
+        }
+        for src_loc, src_file in locale_files.items():
+            src_parser = parsed_pages[src_file]
+            assert src_parser.html_lang == src_loc
+            assert src_parser.current_alt_hreflangs == [src_loc]
+            alt_map = {label: href for href, label in src_parser.alternates}
+            assert set(alt_map.keys()) == expected_labels
+            for dst_loc, dst_label in locale_to_label.items():
+                resolved_target = _resolve_site_target(site_dir, src_file, alt_map[dst_label])
+                assert resolved_target is not None
+                assert resolved_target[0].resolve() == locale_files[dst_loc]

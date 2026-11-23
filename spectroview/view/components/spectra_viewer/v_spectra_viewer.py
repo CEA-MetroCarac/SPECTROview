@@ -204,9 +204,9 @@ class VSpectraViewer(
         main_layout.addLayout(canvas_row)
         main_layout.addWidget(self.control_bar)
 
-    # ─── Vertical right panel (eraser + shift sliders) ───
+    # ─── Vertical right panel (Y-scale, eraser + shift sliders) ───
     def _create_vertical_right_panel(self):
-        """Create a vertical panel with eraser tool buttons and Y/X-shift sliders."""
+        """Create a vertical panel with Y-scale toggle, eraser buttons, and Y/X-shift sliders."""
         panel = QGroupBox()
         panel.setFixedWidth(32)
         panel.setObjectName("shiftPanel")
@@ -215,6 +215,21 @@ class VSpectraViewer(
         layout.setContentsMargins(2, 2, 2, 2)
         layout.setSpacing(2)
         layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+
+        # ── Y-scale Linear/Log toggle button ──
+        self.btn_yscale_log = QToolButton()
+        self.btn_yscale_log.setObjectName("btn_yscale_log")
+        self.btn_yscale_log.setCheckable(True)
+        self.btn_yscale_log.setChecked(False)
+        self.btn_yscale_log.setIcon(Icons.log_scale())
+        self.btn_yscale_log.setIconSize(QSize(18, 18))
+        self.btn_yscale_log.setFixedSize(22, 22)
+        bind_tooltip(
+            self.btn_yscale_log,
+            "Toggle Y-axis scale (Linear / Log)",
+        )
+        self.btn_yscale_log.toggled.connect(self._on_yscale_btn_toggled)
+        layout.addWidget(self.btn_yscale_log, 0, Qt.AlignHCenter)
 
         # ── Eraser button ──
         self.btn_eraser = QToolButton()
@@ -670,6 +685,7 @@ class VSpectraViewer(
         self.btn_zoom.setVisible(not is_3d)
         self.btn_peak.setVisible(is_standard)
         self.btn_baseline.setVisible(is_standard)
+        self.btn_yscale_log.setVisible(is_standard)
         self.btn_eraser.setVisible(is_standard)
         self.shift_panel.setVisible(is_standard)
 
@@ -768,6 +784,9 @@ class VSpectraViewer(
             self.lbl_coordinates.setStyleSheet(
                 f"font-size: 11px; padding: 0px 4px; color: {tok.text_secondary};"
             )
+
+        if hasattr(self, "btn_yscale_log"):
+            self.btn_yscale_log.setIcon(Icons.log_scale(color=icon_color))
 
         if hasattr(self, "btn_eraser"):
             self.btn_eraser.setIcon(Icons.eraser(color=icon_color))

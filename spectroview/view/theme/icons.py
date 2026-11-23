@@ -160,6 +160,7 @@ LEGACY_ICON_MAP: dict[str, str] = {
     "norm.png": "norm",
     "stats": "stats",
     "stats.png": "stats",
+    "log_scale": "log_scale",
 
     # Graphing
     "line": "graph_line",
@@ -491,6 +492,10 @@ class Icons:
     @classmethod
     def stats(cls, color: str | None = None, size: int = 16) -> QIcon:
         return svg_icon("stats", size=size, color=color)
+
+    @classmethod
+    def log_scale(cls, color: str | None = None, size: int = 16) -> QIcon:
+        return svg_icon("log_scale", size=size, color=color)
 
     # ── Graphing ──
     @classmethod

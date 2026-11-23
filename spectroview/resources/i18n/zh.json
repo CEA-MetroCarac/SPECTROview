@@ -1178,6 +1178,7 @@
     "Today": "今天",
     "Toggle Cartesian grid lines on the plot canvas (G key shortcut).": "切换绘图画布上的笛卡尔网格线（快捷键 G）。",
     "Toggle SPECTROview AI Agent (Ctrl+Shift+A)\nQuery your fit results using natural language and get instant answers.\n": "打开/关闭 SPECTROview AI 助手 (Ctrl+Shift+A)\n使用自然语言查询拟合结果并即时获取解答。\n",
+    "Toggle Y-axis scale (Linear / Log)": "切换 Y 轴刻度（线性 / 对数）",
     "Toggle error bar visibility on bar plots.": "切换柱状图上的误差棒显示。",
     "Toggle {color} Spectral Range Selector": "切换 {color} 光谱波段选择器",
     "Tolerance:": "容差：",

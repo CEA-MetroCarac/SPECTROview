@@ -1178,6 +1178,7 @@
     "Today": "Сегодня",
     "Toggle Cartesian grid lines on the plot canvas (G key shortcut).": "Включить или скрыть координатную сетку (клавиша G).",
     "Toggle SPECTROview AI Agent (Ctrl+Shift+A)\nQuery your fit results using natural language and get instant answers.\n": "Открыть / скрыть ИИ-ассистента SPECTROview (Ctrl+Shift+A)\nАнализируйте результаты аппроксимации на естественном языке.\n",
+    "Toggle Y-axis scale (Linear / Log)": "Переключить масштаб оси Y (Линейный / Log)",
     "Toggle error bar visibility on bar plots.": "Показать/скрыть планки ошибок на столбчатой диаграмме.",
     "Toggle {color} Spectral Range Selector": "Включить/выключить селектор диапазона: {color}",
     "Tolerance:": "Допуск:",

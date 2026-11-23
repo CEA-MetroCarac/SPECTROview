@@ -1330,4 +1330,142 @@ def test_line_width_default_and_step(viewer):
     assert viewer.get_options_state()["lw"] == pytest.approx(0.75)
 
 
+def test_yscale_button_default_and_layout_position(viewer):
+    """Verify btn_yscale_log defaults to unchecked (Linear) and sits directly above btn_eraser."""
+    from spectroview.i18n import combo_data_or_text
+
+    assert viewer.btn_yscale_log.isCheckable()
+    assert not viewer.btn_yscale_log.isChecked()
+    assert combo_data_or_text(viewer.cbb_yscale) == "Linear"
+    assert viewer.get_options_state()["yscale"] == "Linear"
+
+    shift_layout = viewer.shift_panel.layout()
+    assert shift_layout.itemAt(0).widget() is viewer.btn_yscale_log
+    assert shift_layout.itemAt(1).widget() is viewer.btn_eraser
+
+
+def test_yscale_button_and_combobox_bidirectional_sync(viewer):
+    """Verify clicking btn_yscale_log and changing cbb_yscale stay bidirectionally synchronized."""
+    from spectroview.i18n import combo_data_or_text, set_combo_by_data_or_text
+
+    x = np.linspace(100.0, 200.0, 10)
+    y = np.vstack([np.linspace(1.0, 10.0, 10), np.linspace(2.0, 20.0, 10)])
+    data = {
+        "type": "tensor",
+        "x": x,
+        "y": y,
+        "x0": x,
+        "y0": y,
+        "colors": [None, None],
+        "labels": ["s1", "s2"],
+        "fnames": ["s1.txt", "s2.txt"],
+        "proxies": [],
+    }
+    viewer.set_plot_data(data)
+
+    emitted = []
+    viewer.allOptionsSyncChanged.connect(lambda state: emitted.append(state["yscale"]))
+
+    # Button click -> Log
+    viewer.btn_yscale_log.click()
+    assert viewer.btn_yscale_log.isChecked() is True
+    assert combo_data_or_text(viewer.cbb_yscale) == "Log"
+    assert viewer.get_options_state()["yscale"] == "Log"
+    assert viewer.ax.get_yscale() == "log"
+    assert emitted == ["Log"]
+
+    # Button click -> Linear
+    viewer.btn_yscale_log.click()
+    assert viewer.btn_yscale_log.isChecked() is False
+    assert combo_data_or_text(viewer.cbb_yscale) == "Linear"
+    assert viewer.get_options_state()["yscale"] == "Linear"
+    assert viewer.ax.get_yscale() == "linear"
+    assert emitted == ["Log", "Linear"]
+
+    # Combobox -> Log syncs button without duplicate signal emission
+    emitted.clear()
+    set_combo_by_data_or_text(viewer.cbb_yscale, "Log")
+    assert viewer.btn_yscale_log.isChecked() is True
+    assert viewer.ax.get_yscale() == "log"
+    assert emitted == ["Log"]
+
+    # Combobox -> Linear syncs button
+    set_combo_by_data_or_text(viewer.cbb_yscale, "Linear")
+    assert viewer.btn_yscale_log.isChecked() is False
+    assert viewer.ax.get_yscale() == "linear"
+    assert emitted == ["Log", "Linear"]
+
+
+def test_yscale_set_options_state_and_cross_viewer_sync(qapp):
+    """Verify set_options_state and allOptionsSyncChanged synchronize btn_yscale_log across viewers."""
+    from spectroview.i18n import combo_data_or_text
+
+    v1 = VSpectraViewer()
+    v2 = VSpectraViewer()
+    try:
+        v1.allOptionsSyncChanged.connect(v2.set_options_state)
+        v2.allOptionsSyncChanged.connect(v1.set_options_state)
+
+        v1.btn_yscale_log.click()
+        assert v2.btn_yscale_log.isChecked() is True
+        assert combo_data_or_text(v2.cbb_yscale) == "Log"
+
+        v2.set_options_state({"yscale": "Linear"})
+        assert v2.btn_yscale_log.isChecked() is False
+        assert combo_data_or_text(v2.cbb_yscale) == "Linear"
+
+        v2.btn_yscale_log.click()
+        assert v1.btn_yscale_log.isChecked() is True
+        assert combo_data_or_text(v1.cbb_yscale) == "Log"
+    finally:
+        v1.close()
+        v2.close()
+
+
+def test_yscale_sync_under_translated_language(viewer):
+    """Verify Y-scale button and combobox remain synced under non-English i18n (e.g. zh)."""
+    from spectroview.i18n import combo_data_or_text, get_language, set_language
+
+    prev_lang = get_language()
+    try:
+        set_language("zh", persist=False)
+        viewer.btn_yscale_log.setChecked(True)
+        assert combo_data_or_text(viewer.cbb_yscale) == "Log"
+        assert viewer.get_options_state()["yscale"] == "Log"
+
+        idx_linear = viewer.cbb_yscale.findData("Linear")
+        assert idx_linear >= 0
+        viewer.cbb_yscale.setCurrentIndex(idx_linear)
+        assert viewer.btn_yscale_log.isChecked() is False
+        assert viewer.get_options_state()["yscale"] == "Linear"
+    finally:
+        set_language(prev_lang, persist=False)
+
+
+def test_yscale_button_mode_visibility_and_theme(viewer):
+    """Verify btn_yscale_log visibility in Heatmap/3D modes and icon refresh on theme changes."""
+    viewer.show()
+    viewer.set_plot_data(_tensor_data(3))
+
+    assert viewer.btn_yscale_log.isVisible()
+
+    viewer.btn_heatmap.setChecked(True)
+    assert not viewer.btn_yscale_log.isVisible()
+
+    viewer.btn_heatmap.setChecked(False)
+    assert viewer.btn_yscale_log.isVisible()
+
+    viewer.btn_3d.setChecked(True)
+    assert not viewer.btn_yscale_log.isVisible()
+
+    viewer.btn_3d.setChecked(False)
+    assert viewer.btn_yscale_log.isVisible()
+
+    viewer.apply_global_theme("light")
+    assert not viewer.btn_yscale_log.icon().isNull()
+    viewer.apply_global_theme("dark")
+    assert not viewer.btn_yscale_log.icon().isNull()
+
+
+
 

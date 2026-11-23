@@ -360,6 +360,12 @@ _SVG_TEMPLATES: dict[str, str] = {
         '<path d="M3 15c3-1 6-7 9-7s6 6 9 7" stroke-dasharray="2 2" opacity="0.5"/>'
         '<path d="M3 21c3-1 6-7 9-7s6 6 9 7" stroke-dasharray="2 2" opacity="0.5"/>'
     ),
+    "log_scale": (
+        '<line x1="3" x2="3" y1="5" y2="17"/>'
+        '<ellipse cx="9.4" cy="13.8" rx="2.8" ry="3.2"/>'
+        '<ellipse cx="18.3" cy="13.8" rx="2.7" ry="3.1"/>'
+        '<path d="M21 10.7v8.2a2.6 2.6 0 0 1-2.6 2.6h-2.1"/>'
+    ),
 
     # ── Graphing & Publication Plotting ──
     "graph_line": (

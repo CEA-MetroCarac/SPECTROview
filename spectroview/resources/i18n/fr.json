@@ -1178,6 +1178,7 @@
     "Today": "Aujourd'hui",
     "Toggle Cartesian grid lines on the plot canvas (G key shortcut).": "Afficher ou masquer la grille cartésienne sur le graphique (raccourci G).",
     "Toggle SPECTROview AI Agent (Ctrl+Shift+A)\nQuery your fit results using natural language and get instant answers.\n": "Afficher/masquer l'agent IA SPECTROview (Ctrl+Shift+A)\nInterrogez vos résultats d'ajustement en langage naturel et obtenez des réponses immédiates.\n",
+    "Toggle Y-axis scale (Linear / Log)": "Basculer l'échelle de l'axe Y (Linéaire / Log)",
     "Toggle error bar visibility on bar plots.": "Afficher ou masquer les barres d'erreur sur les graphiques en barres.",
     "Toggle {color} Spectral Range Selector": "Activer/désactiver le sélecteur de plage spectrale {color}",
     "Tolerance:": "Tolérance :",

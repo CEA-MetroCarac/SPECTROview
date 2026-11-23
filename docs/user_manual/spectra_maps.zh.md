@@ -100,6 +100,7 @@ _______
 | ![3D View](../user_manual_images/Spectra_Maps/view_3d_button.png) | **3D View**：位于工具栏右侧 **Plot Heatmap** 与 **More Options** 之间，可将所选光谱切换为交互式三维可视化模式。按住左键拖动可旋转视角，按住中键拖动可平移视图，右键拖动或滚动滚轮可缩放，点击 **Rescale**（`Ctrl + R`）可重置相机视角与坐标轴范围。 |
 | ![More View Options](../user_manual_images/Spectra_Maps/view_options.png) | **More Options**：位于工具栏右侧（**复制**按钮之前），打开紧凑的双栏配置面板，可调整 X/Y 轴单位、切换对数刻度、更改绘图样式、通过直观的色带预览选择离散或渐变光谱调色板、设置图例最大条目数（默认 15）、勾选**将图例移至图外**使图例紧邻画布放置而不遮挡光谱、勾选**显示色标代替图例**（勾选后将动态显示**色标参数** (Colorbar parameter) 下拉框用于选择光谱 `Index` 或文件名中的数值字段，以及**色标标题** (Colorbar label) 输入框）以便为有序光谱系列在右侧显示色标、切换原始数据/残差 (Raw/Residual) 曲线的可见性、开启网格、调节线宽，以及设定精确的图像尺寸。<br>![More Options 面板](../user_manual_images/Spectra_Maps/menu_view_options.png) |
 | ![Copy](../user_manual_images/Spectra_Maps/copy.png) | **复制**：位于工具栏最右侧，可将当前图表以高质量图像形式复制到剪贴板。使用 `Ctrl + Click`（macOS 上为 `Cmd + Click`）则可将图表的原始数值数据复制到剪贴板。 |
+| ![Y 轴刻度](../user_manual_images/Spectra_Maps/log_scale.png) | **Y 轴刻度（线性 / 对数）** (Y-Scale)：位于右侧竖向工具栏顶部、宇宙射线去除按钮正上方，用于将光谱 Y 轴在**线性**（默认未按下）与**对数**（按下）之间切换，并与 **More Options** 中的 **Y 轴刻度** (Y-scale) 下拉框保持双向同步。 |
 
 #### **3.3. 批量图例编辑器** { #33-batch-legend-editor }
 

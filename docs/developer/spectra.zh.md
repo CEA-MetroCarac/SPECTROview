@@ -107,7 +107,7 @@ self.btn_reinit.clicked.connect(lambda: self._apply_with_ctrl(vm.reinit_spectra)
 - **数据对齐与非规则网格插值**：当所选光谱拥有不同的或非对齐的波数网格时，`_plot_heatmap()` 会通过 `scipy.interpolate.interp1d` 将所有光谱行对齐到公共的光谱范围内。
 - **Y 轴字段提取**：使用正则表达式自动解析文件名中嵌入的数值参数（例如 `_100C_`、`_250K_`），若未匹配到则默认回退为按索引顺序排列（`0..N-1`）。
 - **平滑垂直插值**：当 `spin_heatmap_interp > 0`（默认 300 点）时，支持沿垂直轴执行一维三次或线性插值。
-- **动态工具栏适配**：激活热图模式会切换工具栏控件的可见状态：标准一维工具（`btn_peak`、`btn_baseline`、`btn_eraser`、`btn_norm`、`btn_bestfit` 以及 `shift_panel`）通过 `setVisible(False)` 隐藏，同时显示热图专属控件（`cbb_heatmap_yaxis`、`le_heatmap_ylabel`、`spin_heatmap_interp`）。取消勾选该模式后，一维工具会立即恢复显示。
+- **动态工具栏适配**：激活热图模式会切换工具栏控件的可见状态：标准一维工具（`btn_peak`、`btn_baseline`、`btn_yscale_log`、`btn_eraser`、`btn_norm`、`btn_bestfit` 以及 `shift_panel`）通过 `setVisible(False)` 隐藏，同时显示热图专属控件（`cbb_heatmap_yaxis`、`le_heatmap_ylabel`、`spin_heatmap_interp`）。取消勾选该模式后，一维工具会立即恢复显示。（`btn_yscale_log` 位于 `shift_panel` 顶部、`btn_eraser` 上方，并与选项菜单中的 `cbb_yscale` 保持双向同步。）
 
 ### `VSpectraViewer` — 交互式 3D 视图模式 { #vspectraviewer-interactive-3d-view-mode }
 
@@ -115,7 +115,7 @@ self.btn_reinit.clicked.connect(lambda: self._apply_with_ctrl(vm.reinit_spectra)
 
 - **投影切换与回调清理 (`_ensure_axes_projection`)**：仅在进入或退出 3D 模式时才在二维直角坐标系与 `Axes3D` 之间切换 `self.ax`；在调用 `figure.delaxes()` 之前会先断开 `Axes3D` 画布回调并禁用 3D 鼠标事件绑定，从而避免在多次模式切换后出现回调函数累积的问题。
 - **向量化 3D 渲染 (`FastLine3DCollection`)**：继承 `Line3DCollection`，通过单次向量化的 `proj3d._proj_trans_points()` 调用一次性投影统一 `(N, M, 3)` 张量或异构 `tensor_list` 选区中的所有三维点，并在交互式旋转相机视角时原地更新 `Path._vertices`；全面支持 `"line"` 和 `"dot"` 绘图样式、归一化、原始数据叠加、最佳拟合曲线、Z 轴对数刻度以及图例/色标模式。
-- **鼠标旋转与模式互斥 (`_sync_mode_toolbar_state`)**：`btn_3d` 与 `btn_heatmap` 彼此互斥。激活 3D 模式会自动关闭 `NoDoubleClickZoomToolbar` 的二维缩放功能（`_set_zoom_tool_active(False)`），隐藏不兼容的一维工具（`btn_zoom`、`btn_peak`、`btn_baseline`、`btn_eraser`、`shift_panel`），并共享 `cbb_heatmap_yaxis` / `le_heatmap_ylabel` 以利用文件名数值字段进行 Y 轴定位；此时左键拖拽可旋转视角 `(elev, azim)`，中键拖拽可平移视图，右键拖拽或滚轮可缩放 Z 轴，点击 `Rescale`（`Ctrl+R`）则可将相机视角（`25°`, `-60°`）与数据范围重置为默认状态。
+- **鼠标旋转与模式互斥 (`_sync_mode_toolbar_state`)**：`btn_3d` 与 `btn_heatmap` 彼此互斥。激活 3D 模式会自动关闭 `NoDoubleClickZoomToolbar` 的二维缩放功能（`_set_zoom_tool_active(False)`），隐藏不兼容的一维工具（`btn_zoom`、`btn_peak`、`btn_baseline`、`btn_yscale_log`、`btn_eraser`、`shift_panel`），并共享 `cbb_heatmap_yaxis` / `le_heatmap_ylabel` 以利用文件名数值字段进行 Y 轴定位；此时左键拖拽可旋转视角 `(elev, azim)`，中键拖拽可平移视图，右键拖拽或滚轮可缩放 Z 轴，点击 `Rescale`（`Ctrl+R`）则可将相机视角（`25°`, `-60°`）与数据范围重置为默认状态。
 
 ### 交互式光谱映射与实时图谱 { #interactive-spectral-mapping-live-maps }
 

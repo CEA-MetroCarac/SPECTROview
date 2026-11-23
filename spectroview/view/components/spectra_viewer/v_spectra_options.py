@@ -173,7 +173,7 @@ class SpectraOptionsMenuMixin:
             self.cbb_yscale,
             [("Linear", "Linear"), ("Log", "Log")],
         )
-        self.cbb_yscale.currentIndexChanged.connect(self._emit_view_options)
+        self.cbb_yscale.currentIndexChanged.connect(self._on_yscale_combo_changed)
         left_layout.addWidget(
             self._wrap_menu_row(left_col, "Y-scale:", self.cbb_yscale)
         )
@@ -442,6 +442,7 @@ class SpectraOptionsMenuMixin:
 
         current_state = self.get_options_state()
         if current_state == state and getattr(self, "_has_applied_plot_style", False):
+            self._sync_yscale_button()
             return
 
         self._is_setting_options = True
@@ -604,6 +605,7 @@ class SpectraOptionsMenuMixin:
             )
 
         self._sync_menu_checkboxes()
+        self._sync_yscale_button()
         self._apply_plot_style()
         self._plot()
         self._is_setting_options = False
@@ -670,6 +672,33 @@ class SpectraOptionsMenuMixin:
             if not getattr(self, "_is_setting_options", False):
                 self.allOptionsSyncChanged.emit(self.get_options_state())
             self._plot()
+
+    def _sync_yscale_button(self):
+        """Sync the right-toolbar Y-scale toggle button with cbb_yscale without re-emitting."""
+        btn = getattr(self, "btn_yscale_log", None)
+        cbb = getattr(self, "cbb_yscale", None)
+        if btn is None or cbb is None:
+            return
+        is_log = combo_data_or_text(cbb) == "Log"
+        if btn.isChecked() != is_log:
+            btn.blockSignals(True)
+            btn.setChecked(is_log)
+            btn.blockSignals(False)
+
+    def _on_yscale_combo_changed(self):
+        """Handle Y-scale combobox changes: sync toolbar button, emit options, and redraw."""
+        self._sync_yscale_button()
+        self._emit_view_options()
+
+    def _on_yscale_btn_toggled(self, checked: bool):
+        """Handle right-toolbar Y-scale toggle button: sync cbb_yscale, emit options, and redraw."""
+        target = "Log" if checked else "Linear"
+        cbb = getattr(self, "cbb_yscale", None)
+        if cbb is not None and combo_data_or_text(cbb) != target:
+            cbb.blockSignals(True)
+            set_combo_by_data_or_text(cbb, target)
+            cbb.blockSignals(False)
+        self._emit_view_options()
 
     def _emit_view_options(self):
         if getattr(self, "_is_setting_options", False):

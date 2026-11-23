@@ -1178,6 +1178,7 @@
     "Today": "Heute",
     "Toggle Cartesian grid lines on the plot canvas (G key shortcut).": "Kartesisches Gitternetz auf dem Plot umschalten (Taste G).",
     "Toggle SPECTROview AI Agent (Ctrl+Shift+A)\nQuery your fit results using natural language and get instant answers.\n": "SPECTROview KI-Assistent ein-/ausblenden (Strg+Umschalt+A)\nFragen Sie Ihre Fit-Ergebnisse in natürlicher Sprache ab.\n",
+    "Toggle Y-axis scale (Linear / Log)": "Y-Achsenskala umschalten (Linear / Log)",
     "Toggle error bar visibility on bar plots.": "Fehlerbalken in Balkendiagrammen ein-/ausblenden.",
     "Toggle {color} Spectral Range Selector": "Spektralbereichswähler ({color}) umschalten",
     "Tolerance:": "Toleranz:",

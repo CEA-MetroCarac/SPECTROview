@@ -1467,5 +1467,242 @@ def test_yscale_button_mode_visibility_and_theme(viewer):
     assert not viewer.btn_yscale_log.icon().isNull()
 
 
+def _ragged_tensor_list(count):
+    xs = [np.linspace(10.0, 20.0 + i, 5 + i) for i in range(count)]
+    ys = [np.linspace(1.0, 2.0, 5 + i) + i for i in range(count)]
+    return {
+        "type": "tensor_list",
+        "x": xs,
+        "y": ys,
+        "x0": [arr.copy() for arr in xs],
+        "y0": [arr.copy() + 0.5 for arr in ys],
+        "colors": [None] * count,
+        "labels": [f"Ragged {i + 1}" for i in range(count)],
+        "fnames": [f"ragged_{i + 1}.txt" for i in range(count)],
+        "proxies": [],
+    }
+
+
+@pytest.mark.parametrize("data_kind", ["tensor", "tensor_list"])
+@pytest.mark.parametrize("count", [1, 3])
+@pytest.mark.parametrize("plot_style", ["line", "dot"])
+def test_xy_shift_sliders_shift_all_spectra_including_first(
+    viewer, data_kind, count, plot_style
+):
+    """Verify X/Y sliders apply 1-based (i + 1) * step offsets to all spectra, raw overlays, and dot/line styles."""
+    from spectroview.i18n import set_combo_by_data_or_text
+
+    data = _tensor_data(count) if data_kind == "tensor" else _ragged_tensor_list(count)
+    viewer.act_raw.setChecked(True)
+    set_combo_by_data_or_text(viewer.cbb_plotstyle, plot_style)
+    viewer.set_plot_data(data)
+
+    x_orig = [
+        data["x"][i] if data_kind == "tensor_list" else data["x"]
+        for i in range(count)
+    ]
+    y_orig = [data["y"][i] for i in range(count)]
+    x0_orig = [
+        data["x0"][i] if data_kind == "tensor_list" else data["x0"]
+        for i in range(count)
+    ]
+    y0_orig = [data["y0"][i] for i in range(count)]
+
+    viewer.slider_y_shift.setValue(40)
+    viewer.slider_x_shift.setValue(25)
+    x_step, y_step = viewer._compute_shift_steps()
+    assert x_step > 0.0
+    assert y_step > 0.0
+
+    if plot_style == "line":
+        main_segs = viewer.ax.collections[0].get_segments()
+        raw_segs = viewer.ax.collections[1].get_segments()
+        assert len(main_segs) == count
+        assert len(raw_segs) == count
+        for i in range(count):
+            np.testing.assert_allclose(main_segs[i][:, 0], x_orig[i] + (i + 1) * x_step)
+            np.testing.assert_allclose(main_segs[i][:, 1], y_orig[i] + (i + 1) * y_step)
+            np.testing.assert_allclose(raw_segs[i][:, 0], x0_orig[i] + (i + 1) * x_step)
+            np.testing.assert_allclose(raw_segs[i][:, 1], y0_orig[i] + (i + 1) * y_step)
+    else:
+        offsets = viewer.ax.collections[0].get_offsets()
+        cursor = 0
+        for i in range(count):
+            n_pts = len(x_orig[i])
+            pts = offsets[cursor : cursor + n_pts]
+            np.testing.assert_allclose(pts[:, 0], x_orig[i] + (i + 1) * x_step)
+            np.testing.assert_allclose(pts[:, 1], y_orig[i] + (i + 1) * y_step)
+            cursor += n_pts
+        raw_segs = viewer.ax.collections[1].get_segments()
+        assert len(raw_segs) == count
+        for i in range(count):
+            np.testing.assert_allclose(raw_segs[i][:, 0], x0_orig[i] + (i + 1) * x_step)
+            np.testing.assert_allclose(raw_segs[i][:, 1], y0_orig[i] + (i + 1) * y_step)
+
+    # Resetting sliders to 0 restores original coordinates
+    viewer.slider_y_shift.setValue(0)
+    viewer.slider_x_shift.setValue(0)
+    if plot_style == "line":
+        restored_segs = viewer.ax.collections[0].get_segments()
+        for i in range(count):
+            np.testing.assert_allclose(restored_segs[i][:, 0], x_orig[i])
+            np.testing.assert_allclose(restored_segs[i][:, 1], y_orig[i])
+    else:
+        restored_offsets = viewer.ax.collections[0].get_offsets()
+        cursor = 0
+        for i in range(count):
+            n_pts = len(x_orig[i])
+            pts = restored_offsets[cursor : cursor + n_pts]
+            np.testing.assert_allclose(pts[:, 0], x_orig[i])
+            np.testing.assert_allclose(pts[:, 1], y_orig[i])
+            cursor += n_pts
+
+
+def test_xy_shift_sliders_align_first_spectrum_overlays(viewer):
+    """Verify baseline, bestfit, and residual overlays on spectrum 0 shift by +1 * step."""
+    data = _tensor_data(3)
+    x = data["x"]
+    y_base = np.vstack([np.full_like(x, 0.2 + 0.1 * i) for i in range(3)])
+    y_bestfit = np.vstack([x + i + 0.5 for i in range(3)])
+    data["y_baseline"] = y_base
+    data["y_bestfit"] = y_bestfit
+
+    viewer.btn_bestfit.setChecked(True)
+    viewer.act_residual.setChecked(True)
+    viewer.set_plot_data(data)
+
+    viewer.slider_x_shift.setValue(30)
+    viewer.slider_y_shift.setValue(50)
+    x_step, y_step = viewer._compute_shift_steps()
+    assert x_step > 0.0
+    assert y_step > 0.0
+
+    # Exclude empty legend proxy Line2D artists; overlays per spectrum: baseline, bestfit, residual
+    lines = [ln for ln in viewer.ax.get_lines() if len(ln.get_xdata()) > 0]
+    assert len(lines) == 9  # 3 overlays * 3 spectra
+
+    # Spectrum 0 overlays (indices 0, 1, 2) must match (+1 * x_step, +1 * y_step)
+    np.testing.assert_allclose(lines[0].get_xdata(), x + x_step)
+    np.testing.assert_allclose(lines[0].get_ydata(), y_base[0] + y_step)
+    np.testing.assert_allclose(lines[1].get_xdata(), x + x_step)
+    np.testing.assert_allclose(lines[1].get_ydata(), y_bestfit[0] + y_step)
+    np.testing.assert_allclose(lines[2].get_xdata(), x + x_step)
+    np.testing.assert_allclose(lines[2].get_ydata(), (data["y"][0] - y_bestfit[0]) + y_step)
+
+
+def test_xy_shift_sliders_auto_rescale_and_preserve_zoom_on_other_redraws(viewer):
+    """Verify X/Y sliders auto-rescale axes (including log scale) while other redraws keep zoom."""
+    import warnings
+
+    data = _tensor_data(3)
+    # Use strictly positive values so log scale test is valid
+    data["y"] = data["y"] + 1.0
+    data["y0"] = data["y0"] + 1.0
+    viewer.set_plot_data(data)
+
+    orig_xlim = viewer.ax.get_xlim()
+    orig_ylim = viewer.ax.get_ylim()
+
+    # Moving Y slider expands ylim to enclose both first and last shifted spectra
+    viewer.slider_y_shift.setValue(60)
+    x_step, y_step = viewer._compute_shift_steps()
+    assert x_step == 0.0
+    assert y_step > 0.0
+    shifted_ylim = viewer.ax.get_ylim()
+    expected_y_min = float(np.min(data["y"][0])) + y_step
+    expected_y_max = float(np.max(data["y"][-1])) + 3 * y_step
+    assert shifted_ylim[0] <= expected_y_min
+    assert shifted_ylim[1] >= expected_y_max
+    assert shifted_ylim[1] > orig_ylim[1]
+
+    # Moving X slider expands xlim to enclose both first and last shifted spectra
+    viewer.slider_x_shift.setValue(50)
+    x_step, y_step = viewer._compute_shift_steps()
+    assert x_step > 0.0
+    shifted_xlim = viewer.ax.get_xlim()
+    expected_x_min = float(np.min(data["x"])) + x_step
+    expected_x_max = float(np.max(data["x"])) + 3 * x_step
+    assert shifted_xlim[0] <= expected_x_min
+    assert shifted_xlim[1] >= expected_x_max
+    assert shifted_xlim[1] > orig_xlim[1]
+
+    # Log Y-scale mode rescales cleanly without Matplotlib warnings
+    viewer.btn_yscale_log.setChecked(True)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always", UserWarning)
+        viewer.slider_y_shift.setValue(80)
+    nonpos_warnings = [
+        w for w in caught if "non-positive" in str(w.message)
+    ]
+    assert nonpos_warnings == []
+    assert viewer.ax.get_yscale() == "log"
+    assert viewer.ax.get_ylim()[0] > 0
+
+    # Resetting sliders back to 0 shrinks limits back to original linear bounds
+    viewer.btn_yscale_log.setChecked(False)
+    viewer.slider_y_shift.setValue(0)
+    viewer.slider_x_shift.setValue(0)
+    assert viewer.ax.get_xlim() == pytest.approx(orig_xlim)
+    assert viewer.ax.get_ylim() == pytest.approx(orig_ylim)
+
+    # Non-slider redraws (e.g. toggling Grid) must still preserve custom zoom limits
+    custom_xlim = (0.25, 0.75)
+    custom_ylim = (1.5, 2.5)
+    viewer.ax.set_xlim(custom_xlim)
+    viewer.ax.set_ylim(custom_ylim)
+    viewer.act_grid.setChecked(True)
+    assert viewer.ax.get_xlim() == pytest.approx(custom_xlim)
+    assert viewer.ax.get_ylim() == pytest.approx(custom_ylim)
+
+
+def test_shift_panel_elements_fit_without_clipping_or_overlap(qapp):
+    """Verify right-side shift_panel controls fit inside bounds without clipping or overlap in a QSplitter."""
+    from PySide6.QtWidgets import QSplitter, QWidget
+
+    splitter = QSplitter(Qt.Vertical)
+    viewer = VSpectraViewer()
+    viewer.setMinimumHeight(200)
+    bottom = QWidget()
+    bottom.setMinimumHeight(150)
+    splitter.addWidget(viewer)
+    splitter.addWidget(bottom)
+
+    try:
+        splitter.show()
+        cases = [
+            (320, False),
+            (374, False),
+            (374, True),
+            (530, False),
+            (530, True),
+        ]
+        for top_height, eraser_active in cases:
+            viewer.btn_eraser.setChecked(eraser_active)
+            splitter.resize(800, top_height + 250)
+            splitter.setSizes([top_height, 250])
+            qapp.processEvents()
+
+            panel = viewer.shift_panel
+            panel_rect = panel.contentsRect()
+            lay = panel.layout()
+            for idx in range(lay.count()):
+                w = lay.itemAt(idx).widget()
+                if w is not None and w.isVisible():
+                    geo = w.geometry()
+                    assert geo.top() >= panel_rect.top()
+                    assert geo.bottom() <= panel_rect.bottom()
+
+            sy_geo = viewer.slider_y_shift.geometry()
+            sx_geo = viewer.slider_x_shift.geometry()
+            assert sy_geo.bottom() < sx_geo.top()
+            assert 24 <= sy_geo.height() <= 120
+            assert 24 <= sx_geo.height() <= 120
+            if top_height == 530:
+                assert sy_geo.height() == 120
+                assert sx_geo.height() == 120
+    finally:
+        splitter.close()
+
+
 
 

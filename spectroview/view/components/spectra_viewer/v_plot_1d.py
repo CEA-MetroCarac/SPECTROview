@@ -138,8 +138,8 @@ class SpectraPlot1DMixin:
         all_x_dots, all_y_dots, all_c_dots = [], [], []
 
         N = len(self._tensor_data["y"])
-        x_offsets = np.arange(N) * x_shift_step
-        y_offsets = np.arange(N) * y_shift_step
+        x_offsets = np.arange(1, N + 1) * x_shift_step
+        y_offsets = np.arange(1, N + 1) * y_shift_step
 
         x = self._tensor_data["x"]
         Y = self._tensor_data["y"]
@@ -270,8 +270,8 @@ class SpectraPlot1DMixin:
             y_val = self._tensor_data.get("y")
             y_raw = y_val[spec_idx] if isinstance(y_val, list) else y_val[spec_idx]
 
-            x_offset = spec_idx * x_shift_step
-            y_offset = spec_idx * y_shift_step
+            x_offset = (spec_idx + 1) * x_shift_step
+            y_offset = (spec_idx + 1) * y_shift_step
 
             # Check if baseline is subtracted
             is_sub = False

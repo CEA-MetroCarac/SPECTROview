@@ -18,7 +18,9 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSizePolicy,
     QSlider,
+    QSpacerItem,
     QSpinBox,
     QToolButton,
     QVBoxLayout,
@@ -121,6 +123,7 @@ class VSpectraViewer(
         self._init_ui()
         self._current_spectra = []
         self._tensor_data = None
+        self._force_autoscale = False
 
         self._fitted_lines = []     # [(line, peak_info)]
         self._highlighted_line = None
@@ -212,7 +215,7 @@ class VSpectraViewer(
         panel.setObjectName("shiftPanel")
 
         layout = QVBoxLayout(panel)
-        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setContentsMargins(2, 4, 2, 4)
         layout.setSpacing(2)
         layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
@@ -267,7 +270,9 @@ class VSpectraViewer(
         # ── Spectral Range Selector Panel (Red, Blue, Green) ──
         layout.addWidget(self._create_range_selector_panel(panel), 0, Qt.AlignHCenter)
 
-        layout.addStretch(1)
+        layout.addSpacerItem(
+            QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        )
 
         # ── Y Shift slider ──
         lbl_y = QLabel("Y")
@@ -275,16 +280,20 @@ class VSpectraViewer(
         bind_tooltip(lbl_y, "Shift spectra vertically (waterfall offset)")
 
         self.slider_y_shift = QSlider(Qt.Vertical)
-        self.slider_y_shift.setFixedHeight(120)
+        self.slider_y_shift.setMinimumHeight(24)
+        self.slider_y_shift.setMaximumHeight(120)
+        self.slider_y_shift.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
+        )
         self.slider_y_shift.setRange(0, 100)
         self.slider_y_shift.setValue(0)
         bind_tooltip(self.slider_y_shift, "Y Shift: offset each spectrum vertically")
-        self.slider_y_shift.valueChanged.connect(self._plot)
+        self.slider_y_shift.valueChanged.connect(self._on_shift_slider_changed)
 
         layout.addWidget(lbl_y, 0, Qt.AlignHCenter)
-        layout.addWidget(self.slider_y_shift, 0, Qt.AlignHCenter)
+        layout.addWidget(self.slider_y_shift, 1, Qt.AlignHCenter)
 
-        layout.addSpacing(15)
+        layout.addSpacing(6)
 
         # ── X Shift slider ──
         lbl_x = QLabel("X")
@@ -292,14 +301,18 @@ class VSpectraViewer(
         bind_tooltip(lbl_x, "Shift spectra horizontally")
 
         self.slider_x_shift = QSlider(Qt.Vertical)
-        self.slider_x_shift.setFixedHeight(120)
+        self.slider_x_shift.setMinimumHeight(24)
+        self.slider_x_shift.setMaximumHeight(120)
+        self.slider_x_shift.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
+        )
         self.slider_x_shift.setRange(0, 100)
         self.slider_x_shift.setValue(0)
         bind_tooltip(self.slider_x_shift, "X Shift: offset each spectrum horizontally")
-        self.slider_x_shift.valueChanged.connect(self._plot)
+        self.slider_x_shift.valueChanged.connect(self._on_shift_slider_changed)
 
         layout.addWidget(lbl_x, 0, Qt.AlignHCenter)
-        layout.addWidget(self.slider_x_shift, 0, Qt.AlignHCenter)
+        layout.addWidget(self.slider_x_shift, 1, Qt.AlignHCenter)
 
         return panel
 
@@ -553,6 +566,14 @@ class VSpectraViewer(
         self._plot()
         self._rescale()
 
+    def _on_shift_slider_changed(self, _value: int = 0):
+        """Redraw shifted spectra and auto-rescale axes to keep all shifted curves in view."""
+        self._force_autoscale = True
+        try:
+            self._plot()
+        finally:
+            self._force_autoscale = False
+
     def _plot(self):
         style_name = combo_data_or_text(self.cbb_theme)
         if style_name == "Dark Mode":
@@ -606,7 +627,9 @@ class VSpectraViewer(
         # Save current zoom/pan limits so they survive a full ax.clear()
         xlim = self.ax.get_xlim()
         ylim = self.ax.get_ylim()
-        is_default = xlim == (0.0, 1.0) and ylim == (0.0, 1.0)
+        is_default = getattr(self, "_force_autoscale", False) or (
+            xlim == (0.0, 1.0) and ylim == (0.0, 1.0)
+        )
 
         fg_color = plt.rcParams.get("axes.labelcolor", "black")
 

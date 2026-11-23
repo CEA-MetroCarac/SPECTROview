@@ -184,6 +184,7 @@ class SettingsDialog(QDialog):
     theme_selected = Signal(str)
     language_selected = Signal(str)
     check_updates_requested = Signal()
+    peak_profiles_changed = Signal()
 
     def __init__(self, vm: VMSettings, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -565,6 +566,7 @@ class SettingsDialog(QDialog):
         )
         all_profiles, user_profiles = self.vm.get_peak_profiles(working_folder)
         self._tab_fit.set_peak_profiles(all_profiles, user_profiles, select_name=clean_name)
+        self.peak_profiles_changed.emit()
 
     def _on_delete_peak_profile(self, name: str) -> None:
         ans = QMessageBox.question(
@@ -580,6 +582,7 @@ class SettingsDialog(QDialog):
         if self.vm.delete_peak_profile(name, working_folder=working_folder):
             all_profiles, user_profiles = self.vm.get_peak_profiles(working_folder)
             self._tab_fit.set_peak_profiles(all_profiles, user_profiles)
+            self.peak_profiles_changed.emit()
 
     # ──────────────────────────────────────────────
     # Action Handlers

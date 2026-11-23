@@ -457,6 +457,16 @@ class Main(QMainWindow):
         dlg.check_updates_requested.connect(self._manual_update_check)
         dlg.theme_selected.connect(self.toggle_theme)
         dlg.language_selected.connect(self.set_language)
+
+        def _refresh_workspace_peak_profiles() -> None:
+            for ws in (
+                getattr(self, "v_spectra_workspace", None),
+                getattr(self, "v_maps_workspace", None),
+            ):
+                if ws is not None and hasattr(ws, "refresh_peak_profiles"):
+                    ws.refresh_peak_profiles()
+
+        dlg.peak_profiles_changed.connect(_refresh_workspace_peak_profiles)
         initial_theme = self.settings.get_theme()
         initial_language = self.settings.get_language()
         if dlg.exec():
@@ -465,10 +475,6 @@ class Main(QMainWindow):
                 self.v_spectra_workspace.v_spectra_viewer._plot()
             if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
                 self.v_maps_workspace.v_spectra_viewer._plot()
-            if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'refresh_peak_profiles'):
-                self.v_spectra_workspace.refresh_peak_profiles()
-            if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'refresh_peak_profiles'):
-                self.v_maps_workspace.refresh_peak_profiles()
             self._sync_mcp_runtime()
             if self._chat_panel is not None:
                 self._chat_panel.reload_settings()
@@ -477,6 +483,7 @@ class Main(QMainWindow):
                 self.toggle_theme(initial_theme)
             if self.settings.get_language() != initial_language:
                 self.set_language(initial_language)
+        _refresh_workspace_peak_profiles()
 
     def _sync_mcp_runtime(self):
         """Apply the opt-in localhost MCP setting without restarting the app."""

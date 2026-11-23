@@ -392,6 +392,7 @@ class VWorkspaceSpectra(QWidget):
 
     def refresh_peak_profiles(self) -> None:
         """Reload available peak profiles and active selection into FitModelBuilder."""
+        self.m_settings.settings.sync()
         profiles = self.m_settings.get_all_peak_profiles()
         active = self.m_settings.get_active_peak_profile_name()
         self.v_fit_model_builder.set_peak_profiles(list(profiles.keys()), active)

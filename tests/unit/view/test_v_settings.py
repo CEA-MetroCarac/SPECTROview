@@ -560,3 +560,37 @@ class TestPeakProfilesUI:
             win.deleteLater()
             qapp.processEvents()
 
+    def test_new_profile_saved_in_settings_updates_fit_model_builder_without_restart(
+        self, qapp, tmp_path, monkeypatch
+    ):
+        from PySide6.QtWidgets import QInputDialog
+        import spectroview.main as main_mod
+        from spectroview.settings.ui.settings_dialog import SettingsDialog
+
+        monkeypatch.setattr(main_mod.Main, "_prewarm_ai_chat", lambda self: None)
+        win = main_mod.Main()
+        try:
+            win.settings.set_working_folder(str(tmp_path))
+            monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Live_PL", True))
+
+            def _fake_exec(dlg):
+                dlg._tab_fit.spin_maxshift.setValue(0.2)
+                dlg._tab_fit.spin_minfwhm.setValue(0.005)
+                dlg._tab_fit.spin_maxfwhm.setValue(0.6)
+                dlg._tab_fit.spin_default_fwhm.setValue(0.04)
+                dlg._tab_fit.btn_save_profile.click()
+                # Verify live update works even if user cancels/closes dialog after saving profile
+                assert win.v_spectra_workspace.v_fit_model_builder.cbb_peak_profile.findData("Live_PL") >= 0
+                assert win.v_maps_workspace.v_fit_model_builder.cbb_peak_profile.findData("Live_PL") >= 0
+                return 0
+
+            monkeypatch.setattr(SettingsDialog, "exec", _fake_exec)
+            win._open_settings(section="fit", highlight="peak_limits")
+
+            assert win.v_spectra_workspace.v_fit_model_builder.cbb_peak_profile.findData("Live_PL") >= 0
+            assert win.v_maps_workspace.v_fit_model_builder.cbb_peak_profile.findData("Live_PL") >= 0
+        finally:
+            win.close()
+            win.deleteLater()
+            qapp.processEvents()
+

@@ -293,7 +293,7 @@ The `Fitting` panel guides you through the process of building a robust model in
 - Add peaks directly inside the `SpectraViewer` by left-clicking (ensure the Peak toggle button is active). You can interactively adjust their initial guesses by dragging them with the mouse.
 - Every peak added to the plot is immediately listed in the **`PeakTable`**.
 - Supported peak profiles include: `Lorentzian`, `Gaussian`, `PseudoVoigt`, `LorentzianAsym`, `GaussianAsym`, `Fano`, `DecaySingleExp`, and `DecayBiExp`.
-- Click the gear button in the `Peaks` group to jump straight to the **Global Peak Limits** section of **Fit Settings**, where you can switch or save **Peak profile** presets (e.g., Raman, PL, XRD).
+- Use the **Peak profile** dropdown in the `Peaks` group to switch directly between global peak limit presets (e.g., Raman, PL (eV), PL (nm), XRD), or click the gear button next to it to jump straight to the **Global Peak Limits** section of **Fit Settings**.
 
 #### **4.2. Supported Peak Profiles**
 

@@ -479,16 +479,27 @@ class TestPeakProfiles:
             settings.save_peak_profile("NoFolder", 1.0, 0.1, 2.0)
 
         settings.set_working_folder(str(tmp_path))
-        saved_path = settings.save_peak_profile("PL/eV:Custom*", 0.25, 0.002, 0.8)
+        saved_path = settings.save_peak_profile("PL/eV:Custom*", 0.25, 0.002, 0.8, default_fwhm=0.04)
         assert saved_path.endswith(".json")
         assert (tmp_path / "peak_profile").is_dir()
 
         user_profiles = settings.load_user_peak_profiles()
         assert "PL/eV:Custom*" in user_profiles
-        assert user_profiles["PL/eV:Custom*"] == {"maxshift": 0.25, "minfwhm": 0.002, "maxfwhm": 0.8}
+        assert user_profiles["PL/eV:Custom*"] == {
+            "maxshift": 0.25,
+            "minfwhm": 0.002,
+            "maxfwhm": 0.8,
+            "default_fwhm": 0.04,
+        }
 
         merged = settings.get_all_peak_profiles()
         assert "PL/eV:Custom*" in merged
+
+        applied = settings.apply_peak_profile("PL (eV)")
+        assert applied is not None
+        assert applied["default_fwhm"] == 0.05
+        assert settings.get_active_peak_profile_name() == "PL (eV)"
+        assert settings.load_fit_settings()["default_fwhm"] == 0.05
 
         assert settings.delete_peak_profile("PL/eV:Custom*") is True
         assert "PL/eV:Custom*" not in settings.load_user_peak_profiles()

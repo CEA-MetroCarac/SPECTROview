@@ -145,6 +145,40 @@ class TestVFitModelBuilderCopyPasteFeedback:
         builder.btn_peak_settings.click()
         assert emitted == [True]
 
+    def test_peak_profile_combobox_in_peaks_group_emits_and_syncs_workspaces(self, qapp, monkeypatch):
+        import spectroview.main as main_mod
+        from spectroview.model.m_settings import MSettings
+
+        builder = VFitModelBuilder()
+        builder.set_peak_profiles(["Raman (cm⁻¹)", "PL (eV)"], "Raman (cm⁻¹)")
+        assert builder.cbb_peak_profile.currentData() == "Raman (cm⁻¹)"
+
+        selected = []
+        builder.peak_profile_changed.connect(selected.append)
+        idx_pl = builder.cbb_peak_profile.findData("PL (eV)")
+        builder.cbb_peak_profile.setCurrentIndex(idx_pl)
+        assert selected == ["PL (eV)"]
+
+        # Selecting Custom does not emit a profile switch
+        idx_custom = builder.cbb_peak_profile.findData("__custom__")
+        builder.cbb_peak_profile.setCurrentIndex(idx_custom)
+        assert selected == ["PL (eV)"]
+
+        monkeypatch.setattr(main_mod.Main, "_prewarm_ai_chat", lambda self: None)
+        win = main_mod.Main()
+        try:
+            spec_cbb = win.v_spectra_workspace.v_fit_model_builder.cbb_peak_profile
+            maps_cbb = win.v_maps_workspace.v_fit_model_builder.cbb_peak_profile
+            idx = spec_cbb.findData("PL (eV)")
+            assert idx >= 0
+            spec_cbb.setCurrentIndex(idx)
+            assert maps_cbb.currentData() == "PL (eV)"
+            assert MSettings().load_fit_settings()["default_fwhm"] == 0.05
+        finally:
+            win.close()
+            win.deleteLater()
+            qapp.processEvents()
+
 
 class TestLowerTabsPackageExports:
     def test_package_exports_and_mva_hierarchy(self, qapp):

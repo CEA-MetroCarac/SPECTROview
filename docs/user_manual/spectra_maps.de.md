@@ -294,7 +294,7 @@ Das Panel `Fitting` führt Sie in vier logischen Schritten zum Aufbau eines robu
 - Fügen Sie Peaks direkt im `SpectraViewer` per Linksklick hinzu (stellen Sie sicher, dass die Umschalt-Schaltfläche **Peak** aktiv ist). Ihre Startwerte lassen sich anschließend interaktiv durch Ziehen mit der Maus anpassen.
 - Jeder dem Plot hinzugefügte Peak erscheint sofort in der **`PeakTable`**.
 - Unterstützte Peak-Profile umfassen: `Lorentzian`, `Gaussian`, `PseudoVoigt`, `LorentzianAsym`, `GaussianAsym`, `Fano`, `DecaySingleExp` und `DecayBiExp`.
-- Klicken Sie auf das Zahnrad-Symbol in der Gruppe `Peaks`, um direkt den Abschnitt **Globale Peak-Grenzen** (Global Peak Limits) in den **Fit-Einstellungen** (Fit Settings) zu öffnen und dort **Peak-Profile** (z. B. Raman, PL, XRD) zu wechseln oder zu speichern.
+- Verwenden Sie die Auswahlliste **Peak-Profil** (Peak profile:) in der Gruppe `Peaks`, um direkt zwischen den Voreinstellungen für globale Peak-Grenzen (z. B. Raman, PL (eV), PL (nm), XRD) zu wechseln, oder klicken Sie auf das Zahnrad-Symbol daneben, um direkt zum Abschnitt **Globale Peak-Grenzen** (Global Peak Limits) in den **Fit-Einstellungen** (Fit Settings) zu springen.
 
 #### **4.2. Unterstützte Peak-Profile** { #42-supported-peak-profiles }
 

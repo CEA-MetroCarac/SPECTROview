@@ -366,6 +366,7 @@ class SettingsDialog(QDialog):
         self.spin_maxshift = self._tab_fit.spin_maxshift
         self.spin_minfwhm = self._tab_fit.spin_minfwhm
         self.spin_maxfwhm = self._tab_fit.spin_maxfwhm
+        self.spin_default_fwhm = self._tab_fit.spin_default_fwhm
 
         # AI tab
         self.edit_custom = self._tab_ai.edit_custom
@@ -518,6 +519,7 @@ class SettingsDialog(QDialog):
         maxshift: float,
         minfwhm: float,
         maxfwhm: float,
+        default_fwhm: float,
         suggested_name: str,
     ) -> None:
         working_folder = self._resolve_working_folder()
@@ -558,6 +560,7 @@ class SettingsDialog(QDialog):
             maxshift,
             minfwhm,
             maxfwhm,
+            default_fwhm=default_fwhm,
             working_folder=working_folder,
         )
         all_profiles, user_profiles = self.vm.get_peak_profiles(working_folder)

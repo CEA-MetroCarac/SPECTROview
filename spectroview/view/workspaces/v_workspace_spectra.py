@@ -39,6 +39,7 @@ from spectroview.viewmodel.analysis.vm_mva import VMMVA
 
 class VWorkspaceSpectra(QWidget):
     fit_settings_requested = Signal()
+    peak_profile_changed = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -269,6 +270,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.peaks_copy_requested.connect(vm.copy_peaks)
         self.v_fit_model_builder.peaks_paste_requested.connect(vm.paste_peaks)
         self.v_fit_model_builder.peaks_delete_requested.connect(vm.delete_peaks)
+        self.v_fit_model_builder.peak_profile_changed.connect(self._on_peak_profile_selected)
         self.v_fit_model_builder.fit_settings_requested.connect(self.fit_settings_requested.emit)
         self.v_fit_model_builder.peak_shape_changed.connect(self.vm.set_peak_shape)
 
@@ -386,6 +388,18 @@ class VWorkspaceSpectra(QWidget):
         # Sync sidebar icons with theme changes
         # Called externally by main.py via apply_theme()
         self.apply_theme("gray")  # Default initial call, updated by main.py soon after
+        self.refresh_peak_profiles()
+
+    def refresh_peak_profiles(self) -> None:
+        """Reload available peak profiles and active selection into FitModelBuilder."""
+        profiles = self.m_settings.get_all_peak_profiles()
+        active = self.m_settings.get_active_peak_profile_name()
+        self.v_fit_model_builder.set_peak_profiles(list(profiles.keys()), active)
+
+    def _on_peak_profile_selected(self, name: str) -> None:
+        """Apply the chosen peak profile globally and notify sibling workspaces."""
+        if self.m_settings.apply_peak_profile(name) is not None:
+            self.peak_profile_changed.emit(name)
 
     def apply_theme(self, theme: str):
         """Called by main.py to update icons based on the global theme."""

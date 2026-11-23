@@ -298,7 +298,7 @@ Le panneau `Fitting` vous guide pour bâtir un modèle robuste en quatre étapes
 - Ajoutez des pics directement dans `SpectraViewer` par clic gauche (assurez-vous que le bouton **Peak** est activé). Vous pouvez ajuster interactivement leurs paramètres initiaux en les faisant glisser à la souris.
 - Chaque pic ajouté au graphique est immédiatement répertorié dans **`PeakTable`**.
 - Les profils de pics pris en charge comprennent : `Lorentzian`, `Gaussian`, `PseudoVoigt`, `LorentzianAsym`, `GaussianAsym`, `Fano`, `DecaySingleExp` et `DecayBiExp`.
-- Cliquez sur le bouton engrenage du groupe `Peaks` pour ouvrir directement la section **Global Peak Limits** dans **Fit Settings**, afin de basculer ou d'enregistrer vos préréglages de **Peak profile** (Raman, PL, XRD, etc.).
+- Utilisez la liste déroulante **Peak profile** dans le groupe `Peaks` pour basculer directement entre les préréglages de limites globales des pics (Raman, PL (eV), PL (nm), XRD, etc.), ou cliquez sur le bouton engrenage juste à côté pour ouvrir la section **Global Peak Limits** dans **Fit Settings**.
 
 #### **4.2. Profils de pics pris en charge**
 

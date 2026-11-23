@@ -26,6 +26,7 @@ from spectroview.i18n import (
     bind_text,
     bind_tooltip,
     bind_title,
+    combo_data_or_text,
     on_language_changed,
     set_combo_by_data_or_text,
     tr,
@@ -51,6 +52,7 @@ class VFitModelBuilder(QWidget):
     peaks_copy_requested = Signal()
     peaks_paste_requested = Signal(bool)    # apply_all
     peaks_delete_requested = Signal(bool)  # apply_all
+    peak_profile_changed = Signal(str)
     fit_settings_requested = Signal()
 
     fitmodel_copy_requested = Signal()
@@ -673,6 +675,16 @@ class VFitModelBuilder(QWidget):
         )
         self.btn_peak_paste.clicked.connect(self._on_peak_paste_clicked)
 
+        self.cbb_peak_profile = QComboBox()
+        self.cbb_peak_profile.setMinimumWidth(95)
+        self.cbb_peak_profile.setMaximumWidth(145)
+        bind_tooltip(
+            self.cbb_peak_profile,
+            "Select active peak profile for global peak limits",
+        )
+        self.cbb_peak_profile.currentIndexChanged.connect(self._on_peak_profile_changed)
+        on_language_changed(self, self._retranslate_peak_profile_custom)
+
         self.btn_peak_settings = QPushButton()
         self.btn_peak_settings.setFixedSize(30, 24)
         self.btn_peak_settings.setCursor(Qt.PointingHandCursor)
@@ -682,11 +694,39 @@ class VFitModelBuilder(QWidget):
         for b in (self.btn_peak_delete, self.btn_peak_copy, self.btn_peak_paste):
             row2.addWidget(b)
         row2.addStretch()
+        row2.addWidget(self.cbb_peak_profile)
         row2.addWidget(self.btn_peak_settings)
 
         v.addLayout(row1)
         v.addLayout(row2)
         return gb
+
+    def _retranslate_peak_profile_custom(self):
+        """Retranslate the trailing 'Custom' entry in cbb_peak_profile."""
+        idx = self.cbb_peak_profile.findData("__custom__")
+        if idx >= 0:
+            self.cbb_peak_profile.setItemText(idx, tr("Custom"))
+
+    def set_peak_profiles(self, profile_names: list[str], active_profile: str = "") -> None:
+        """Populate cbb_peak_profile with available profile names and select the active one."""
+        was_blocked = self.cbb_peak_profile.blockSignals(True)
+        try:
+            self.cbb_peak_profile.clear()
+            for name in profile_names:
+                self.cbb_peak_profile.addItem(name, name)
+            self.cbb_peak_profile.addItem(tr("Custom"), "__custom__")
+
+            target = active_profile if active_profile in profile_names else "__custom__"
+            idx = self.cbb_peak_profile.findData(target)
+            if idx >= 0:
+                self.cbb_peak_profile.setCurrentIndex(idx)
+        finally:
+            self.cbb_peak_profile.blockSignals(was_blocked)
+
+    def _on_peak_profile_changed(self, _index: int) -> None:
+        key = combo_data_or_text(self.cbb_peak_profile)
+        if key and key != "__custom__":
+            self.peak_profile_changed.emit(key)
 
     def _emit_with_ctrl(self, signal):
         """Helper to emit signal with apply_all based on Ctrl key."""

@@ -201,6 +201,12 @@ class Main(QMainWindow):
         self.v_maps_workspace.fit_settings_requested.connect(
             lambda: self._open_settings(section="fit", highlight="peak_limits")
         )
+        self.v_spectra_workspace.peak_profile_changed.connect(
+            lambda _name: self.v_maps_workspace.refresh_peak_profiles()
+        )
+        self.v_maps_workspace.peak_profile_changed.connect(
+            lambda _name: self.v_spectra_workspace.refresh_peak_profiles()
+        )
 
         # Inject Graphs workspace into Maps ViewModel for cross-workspace communication
         self.v_maps_workspace.vm.set_graphs_workspace(self.v_graphs_workspace)
@@ -459,6 +465,10 @@ class Main(QMainWindow):
                 self.v_spectra_workspace.v_spectra_viewer._plot()
             if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'v_spectra_viewer'):
                 self.v_maps_workspace.v_spectra_viewer._plot()
+            if hasattr(self, 'v_spectra_workspace') and hasattr(self.v_spectra_workspace, 'refresh_peak_profiles'):
+                self.v_spectra_workspace.refresh_peak_profiles()
+            if hasattr(self, 'v_maps_workspace') and hasattr(self.v_maps_workspace, 'refresh_peak_profiles'):
+                self.v_maps_workspace.refresh_peak_profiles()
             self._sync_mcp_runtime()
             if self._chat_panel is not None:
                 self._chat_panel.reload_settings()

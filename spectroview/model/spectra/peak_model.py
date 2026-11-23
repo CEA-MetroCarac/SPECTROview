@@ -1,6 +1,16 @@
 import numpy as np
 
-def initialize_peak_params(peak_model: dict, peak_shape: str, x0: float, ampli: float, minfwhm: float, maxfwhm: float, maxshift: float, y_arr=None):
+def initialize_peak_params(
+    peak_model: dict,
+    peak_shape: str,
+    x0: float,
+    ampli: float,
+    minfwhm: float,
+    maxfwhm: float,
+    maxshift: float,
+    y_arr=None,
+    default_fwhm: float | None = None,
+):
     """Build canonical parameters dictionary based on peak shape."""
     peak_model.clear()
     
@@ -26,7 +36,10 @@ def initialize_peak_params(peak_model: dict, peak_shape: str, x0: float, ampli: 
     peak_model["ampli"] = {"value": ampli, "min": 0.0, "max": ampli * 1e6, "vary": True, "expr": None}
     peak_model["x0"] = {"value": x0, "min": x0 - maxshift, "max": x0 + maxshift, "vary": True, "expr": None}
     
-    init_fwhm = 5.0 if minfwhm <= 5.0 <= maxfwhm else round((minfwhm + maxfwhm) / 2.0, 6)
+    if default_fwhm is not None:
+        init_fwhm = float(np.clip(float(default_fwhm), minfwhm, maxfwhm))
+    else:
+        init_fwhm = 5.0 if minfwhm <= 5.0 <= maxfwhm else round((minfwhm + maxfwhm) / 2.0, 6)
     if peak_shape in ["GaussianAsym", "LorentzianAsym"]:
         peak_model["fwhm_l"] = {"value": init_fwhm, "min": minfwhm, "max": maxfwhm, "vary": True, "expr": None}
         peak_model["fwhm_r"] = {"value": init_fwhm, "min": minfwhm, "max": maxfwhm, "vary": True, "expr": None}

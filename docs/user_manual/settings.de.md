@@ -89,7 +89,7 @@ Diese Parameter steuern das Verhalten der **Vektorisierten Batch-Fit-Engine (`VB
 Diese Parameter legen **absolute Randbedingungen** fest, die anwendungsweit für alle Peaks gelten. Wenn Sie einem Fit-Modell einen neuen Peak hinzufügen, werden diese Grenzwerte automatisch zur Initialisierung der Parameterbereiche verwendet. Über das Zahnrad-Symbol in der Gruppe `Peaks` von `Fit Model Builder` können Sie direkt in diesen Bereich springen.
 
 - **Peak-Profil** (Peak profile:): Wechseln Sie zwischen integrierten Technik-Voreinstellungen (**Raman (cm⁻¹)**, **PL (eV)**, **PL (nm)**, **XRD (°)**) oder Ihren eigenen gespeicherten Profilen.
-- **Profil speichern / löschen**: Klicken Sie auf das Speichern-Symbol neben **Peak-Profil**, um die aktuellen Werte für `Max peak shift`, `Min peak FWHM` und `Max peak FWHM` unter einem eigenen Namen in `<Arbeitsordner>/peak_profile/` zu speichern. Wählen Sie ein benutzerdefiniertes Profil aus und klicken Sie auf das Papierkorb-Symbol, um es zu löschen. Eine manuelle Änderung der Grenzwerte schaltet die Auswahl auf **Benutzerdefiniert** (Custom).
+- **Profil speichern / löschen**: Klicken Sie auf das Speichern-Symbol neben **Peak-Profil**, um die aktuellen Werte für `Max peak shift`, `Min peak FWHM`, `Max peak FWHM` und `Default peak FWHM` unter einem eigenen Namen in `<Arbeitsordner>/peak_profile/` zu speichern. Wählen Sie ein benutzerdefiniertes Profil aus und klicken Sie auf das Papierkorb-Symbol, um es zu löschen. Eine manuelle Änderung der Grenzwerte schaltet die Auswahl auf **Benutzerdefiniert** (Custom).
 
 > **Hinweis**: Sie können das Kontrollkästchen **Grenzen** (Limits) unterhalb von `PeakTable` aktivieren, um die tatsächlichen Grenzen jedes Peaks anzuzeigen.
 
@@ -98,6 +98,7 @@ Diese Parameter legen **absolute Randbedingungen** fest, die anwendungsweit für
 | **Max. Peak-Verschiebung** | 20 | 0 – 10 000 | Maximal zulässige Verschiebung der Peak-Mitte (`x0`) gegenüber ihrem Startwert. <br><i>x</i><sub>0</sub> - maxshift &le; <i>x</i><sub>0</sub><sup>fitted</sup> &le; <i>x</i><sub>0</sub> + maxshift |
 | **Min. Peak-FWHM** | 0.1 | 0.0001 – 10 000 | Minimal zulässige Halbwertsbreite (`FWHM`). Verhindert, dass Peaks zu Delta-Funktions-Artefakten kollabieren. |
 | **Max. Peak-FWHM** | 200 | 0.001 – 10 000 | Maximal zulässige `FWHM`. Verhindert, dass sich Peaks zu flachen Basislinien verbreitern. |
+| **Standard-Peak-FWHM** (Default peak FWHM:) | 5.0 | 0.0001 – 10 000 | Anfängliche `FWHM` beim Hinzufügen eines neuen Peaks per Klick im `SpectraViewer` (z. B. `5.0` für Raman, `0.05` für PL (eV)). |
 
 ---
 

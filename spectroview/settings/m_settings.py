@@ -14,11 +14,18 @@ _DEFAULT_THEME = "gray"
 _VALID_THEMES = ("dark", "gray", "light", "classic_dark", "classic_light")
 
 BUILTIN_PEAK_PROFILES: dict[str, dict[str, float]] = {
-    "Raman (cm⁻¹)": {"maxshift": 20.0, "minfwhm": 0.1, "maxfwhm": 200.0},
-    "PL (eV)": {"maxshift": 0.1, "minfwhm": 0.001, "maxfwhm": 0.5},
-    "PL (nm)": {"maxshift": 20.0, "minfwhm": 0.5, "maxfwhm": 150.0},
-    "XRD (°)": {"maxshift": 0.5, "minfwhm": 0.01, "maxfwhm": 5.0},
+    "Raman (cm⁻¹)": {"maxshift": 20.0, "minfwhm": 0.1, "maxfwhm": 200.0, "default_fwhm": 5.0},
+    "PL (eV)": {"maxshift": 0.1, "minfwhm": 0.001, "maxfwhm": 0.5, "default_fwhm": 0.05},
+    "PL (nm)": {"maxshift": 20.0, "minfwhm": 0.5, "maxfwhm": 150.0, "default_fwhm": 15.0},
+    "XRD (°)": {"maxshift": 0.5, "minfwhm": 0.01, "maxfwhm": 5.0, "default_fwhm": 0.2},
 }
+
+
+def _fallback_default_fwhm(minfwhm: float, maxfwhm: float) -> float:
+    """Return 5.0 when inside [minfwhm, maxfwhm], otherwise the interval midpoint."""
+    if minfwhm <= 5.0 <= maxfwhm:
+        return 5.0
+    return round((minfwhm + maxfwhm) / 2.0, 6)
 
 
 def _sanitize_profile_filename(name: str) -> str:
@@ -94,6 +101,7 @@ class MSettings:
             "maxshift": self.settings.value("fit_settings/maxshift", 20.0, float),
             "maxfwhm": self.settings.value("fit_settings/maxfwhm", 200.0, float),
             "minfwhm": self.settings.value("fit_settings/minfwhm", 0.1, float),
+            "default_fwhm": self.settings.value("fit_settings/default_fwhm", 5.0, float),
             "loss": self.settings.value("fit_settings/loss", "linear", str),
             "f_scale": self.settings.value("fit_settings/f_scale", 1.0, float),
             "peak_profile": self.settings.value("fit_settings/peak_profile", "", str),
@@ -349,10 +357,19 @@ class MSettings:
                 name = str(raw.get("name") or os.path.splitext(fname)[0]).strip()
                 if not name:
                     continue
+                minfwhm = float(raw["minfwhm"])
+                maxfwhm = float(raw["maxfwhm"])
+                raw_default = raw.get("default_fwhm")
+                default_fwhm = (
+                    float(raw_default)
+                    if raw_default is not None
+                    else _fallback_default_fwhm(minfwhm, maxfwhm)
+                )
                 profiles[name] = {
                     "maxshift": float(raw["maxshift"]),
-                    "minfwhm": float(raw["minfwhm"]),
-                    "maxfwhm": float(raw["maxfwhm"]),
+                    "minfwhm": minfwhm,
+                    "maxfwhm": maxfwhm,
+                    "default_fwhm": default_fwhm,
                 }
             except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError):
                 continue
@@ -374,6 +391,7 @@ class MSettings:
         maxshift: float,
         minfwhm: float,
         maxfwhm: float,
+        default_fwhm: Optional[float] = None,
         working_folder: Optional[str] = None,
     ) -> str:
         """Persist a peak limit profile JSON file in `<working_folder>/peak_profile/`."""
@@ -388,11 +406,17 @@ class MSettings:
         os.makedirs(profile_dir, exist_ok=True)
         stem = _sanitize_profile_filename(clean_name)
         filepath = os.path.join(profile_dir, f"{stem}.json")
+        resolved_default = (
+            float(default_fwhm)
+            if default_fwhm is not None
+            else _fallback_default_fwhm(float(minfwhm), float(maxfwhm))
+        )
         payload = {
             "name": clean_name,
             "maxshift": float(maxshift),
             "minfwhm": float(minfwhm),
             "maxfwhm": float(maxfwhm),
+            "default_fwhm": resolved_default,
         }
         tmp_path = f"{filepath}.tmp"
         try:
@@ -446,6 +470,47 @@ class MSettings:
         except OSError:
             pass
         return False
+
+    def get_active_peak_profile_name(self, working_folder: Optional[str] = None) -> str:
+        """Return the peak profile name matching current fit limits, or '' if custom."""
+        fit_settings = self.load_fit_settings()
+        profiles = self.get_all_peak_profiles(working_folder)
+        tol = 1e-6
+
+        def _matches(vals: dict[str, float]) -> bool:
+            return (
+                abs(float(fit_settings["maxshift"]) - float(vals["maxshift"])) <= tol
+                and abs(float(fit_settings["minfwhm"]) - float(vals["minfwhm"])) <= tol
+                and abs(float(fit_settings["maxfwhm"]) - float(vals["maxfwhm"])) <= tol
+                and abs(float(fit_settings["default_fwhm"]) - float(vals["default_fwhm"])) <= tol
+            )
+
+        preferred = str(fit_settings.get("peak_profile", "") or "")
+        if preferred and preferred in profiles and _matches(profiles[preferred]):
+            return preferred
+        for name, vals in profiles.items():
+            if _matches(vals):
+                return name
+        return ""
+
+    def apply_peak_profile(
+        self, name: str, working_folder: Optional[str] = None
+    ) -> Optional[dict[str, float]]:
+        """Persist the named peak profile's limits as active fit settings."""
+        profiles = self.get_all_peak_profiles(working_folder)
+        if name not in profiles:
+            return None
+        vals = dict(profiles[name])
+        self.save_fit_settings(
+            {
+                "maxshift": float(vals["maxshift"]),
+                "minfwhm": float(vals["minfwhm"]),
+                "maxfwhm": float(vals["maxfwhm"]),
+                "default_fwhm": float(vals["default_fwhm"]),
+                "peak_profile": name,
+            }
+        )
+        return vals
 
     def get_plot_recipe_folder(self) -> str:
         working_folder = self.get_working_folder()

@@ -89,7 +89,7 @@ Ces paramètres contrôlent le comportement du **moteur Vectorized Batch Fit (`V
 Ces paramètres définissent des **conditions aux limites absolues** appliquées globalement à tous les pics dans l'application. Lorsque vous ajoutez un pic à un modèle d'ajustement, ces limites initialisent automatiquement ses bornes de paramètres. Vous pouvez ouvrir directement cette section depuis le groupe `Peaks` de `Fit Model Builder` via le bouton engrenage.
 
 - **Peak Profile** : Basculez entre les préréglages intégrés (**Raman (cm⁻¹)**, **PL (eV)**, **PL (nm)**, **XRD (°)**) ou vos propres profils personnalisés.
-- **Enregistrer / Supprimer un profil** : Cliquez sur l'icône d'enregistrement à côté du sélecteur **Peak profile** pour sauvegarder les valeurs actuelles (`Max peak shift`, `Min peak FWHM`, `Max peak FWHM`) sous un nom personnalisé dans `<Dossier de travail>/peak_profile/`. Sélectionnez un profil personnalisé et cliquez sur la corbeille pour le supprimer. Modifier manuellement une limite bascule le sélecteur sur **Custom**.
+- **Enregistrer / Supprimer un profil** : Cliquez sur l'icône d'enregistrement à côté du sélecteur **Peak profile** pour sauvegarder les valeurs actuelles (`Max peak shift`, `Min peak FWHM`, `Max peak FWHM`, `Default peak FWHM`) sous un nom personnalisé dans `<Dossier de travail>/peak_profile/`. Sélectionnez un profil personnalisé et cliquez sur la corbeille pour le supprimer. Modifier manuellement une limite bascule le sélecteur sur **Custom**.
 
 > **Remarque** : Vous pouvez cocher l'option « Limits » sous `PeakTable` pour afficher les bornes effectives de chaque pic.
 
@@ -98,6 +98,7 @@ Ces paramètres définissent des **conditions aux limites absolues** appliquées
 | **Max Peak Shift** | 20 | 0 – 10 000 | Déplacement maximal autorisé pour le centre d'un pic (`x0`) par rapport à sa valeur initiale.<br><i>x</i><sub>0</sub> - maxshift &le; <i>x</i><sub>0</sub><sup>fitted</sup> &le; <i>x</i><sub>0</sub> + maxshift |
 | **Min Peak FWHM** | 0.1 | 0.0001 – 10 000 | Largeur à mi-hauteur minimale autorisée (`FWHM`). Empêche les pics de s'effondrer en fonctions de Dirac. |
 | **Max Peak FWHM** | 200 | 0.001 – 10 000 | Largeur à mi-hauteur maximale autorisée (`FWHM`). Empêche les pics de s'étaler en lignes de base plates. |
+| **Default Peak FWHM** | 5.0 | 0.0001 – 10 000 | `FWHM` initiale attribuée lors de l'ajout d'un pic par clic dans `SpectraViewer` (ex. `5.0` pour Raman, `0.05` pour PL (eV)). |
 
 ---
 

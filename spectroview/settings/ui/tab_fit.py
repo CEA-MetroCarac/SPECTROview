@@ -48,6 +48,7 @@ DEFAULT_FIT_SETTINGS: dict[str, Any] = {
     "maxshift": 20.0,
     "minfwhm": 0.1,
     "maxfwhm": 200.0,
+    "default_fwhm": 5.0,
 }
 
 
@@ -65,7 +66,7 @@ def _highlight_label_style() -> str:
 class FitSettingsTabPage(QWidget):
     """The Fit Settings tab: solver convergence parameters, peak bounds, and options."""
 
-    save_profile_requested = Signal(float, float, float, str)
+    save_profile_requested = Signal(float, float, float, float, str)
     delete_profile_requested = Signal(str)
 
     KEYWORDS = [
@@ -265,9 +266,16 @@ class FitSettingsTabPage(QWidget):
         self.spin_maxfwhm.setDecimals(4)
         add_bounds_row("Max peak FWHM:", self.spin_maxfwhm, "Maximum allowable full-width at half-maximum", ["fwhm", "maxfwhm", "width", "largeur"])
 
+        self.spin_default_fwhm = QDoubleSpinBox()
+        self.spin_default_fwhm.setRange(0.0001, 10000.0)
+        self.spin_default_fwhm.setSingleStep(1.0)
+        self.spin_default_fwhm.setDecimals(4)
+        add_bounds_row("Default peak FWHM:", self.spin_default_fwhm, "Initial full-width at half-maximum when adding a new peak", ["fwhm", "default_fwhm", "width", "largeur"])
+
         self.spin_maxshift.valueChanged.connect(self._on_bounds_spin_changed)
         self.spin_minfwhm.valueChanged.connect(self._on_bounds_spin_changed)
         self.spin_maxfwhm.valueChanged.connect(self._on_bounds_spin_changed)
+        self.spin_default_fwhm.valueChanged.connect(self._on_bounds_spin_changed)
 
         self.set_peak_profiles(self._peak_profiles, [])
 
@@ -289,12 +297,14 @@ class FitSettingsTabPage(QWidget):
         maxshift: float,
         minfwhm: float,
         maxfwhm: float,
+        default_fwhm: float,
         profile: dict[str, float],
     ) -> bool:
         return (
             abs(float(maxshift) - float(profile["maxshift"])) <= _PROFILE_MATCH_TOL
             and abs(float(minfwhm) - float(profile["minfwhm"])) <= _PROFILE_MATCH_TOL
             and abs(float(maxfwhm) - float(profile["maxfwhm"])) <= _PROFILE_MATCH_TOL
+            and abs(float(default_fwhm) - float(profile["default_fwhm"])) <= _PROFILE_MATCH_TOL
         )
 
     def _find_matching_profile(
@@ -302,13 +312,14 @@ class FitSettingsTabPage(QWidget):
         maxshift: float,
         minfwhm: float,
         maxfwhm: float,
+        default_fwhm: float,
         preferred: str = "",
     ) -> str:
         if preferred and preferred in self._peak_profiles:
-            if self._values_match_profile(maxshift, minfwhm, maxfwhm, self._peak_profiles[preferred]):
+            if self._values_match_profile(maxshift, minfwhm, maxfwhm, default_fwhm, self._peak_profiles[preferred]):
                 return preferred
         for name, vals in self._peak_profiles.items():
-            if self._values_match_profile(maxshift, minfwhm, maxfwhm, vals):
+            if self._values_match_profile(maxshift, minfwhm, maxfwhm, default_fwhm, vals):
                 return name
         return _CUSTOM_PROFILE_KEY
 
@@ -342,6 +353,7 @@ class FitSettingsTabPage(QWidget):
                         self.spin_maxshift.value(),
                         self.spin_minfwhm.value(),
                         self.spin_maxfwhm.value(),
+                        self.spin_default_fwhm.value(),
                     )
                 )
             if idx >= 0:
@@ -358,6 +370,7 @@ class FitSettingsTabPage(QWidget):
                 (self.spin_maxshift, float(vals["maxshift"])),
                 (self.spin_minfwhm, float(vals["minfwhm"])),
                 (self.spin_maxfwhm, float(vals["maxfwhm"])),
+                (self.spin_default_fwhm, float(vals["default_fwhm"])),
             ):
                 spin.blockSignals(True)
                 spin.setValue(val)
@@ -369,6 +382,7 @@ class FitSettingsTabPage(QWidget):
             self.spin_maxshift.value(),
             self.spin_minfwhm.value(),
             self.spin_maxfwhm.value(),
+            self.spin_default_fwhm.value(),
             preferred=combo_data_or_text(self.cbb_peak_profile),
         )
         idx = self.cbb_peak_profile.findData(matched)
@@ -385,6 +399,7 @@ class FitSettingsTabPage(QWidget):
             self.spin_maxshift.value(),
             self.spin_minfwhm.value(),
             self.spin_maxfwhm.value(),
+            self.spin_default_fwhm.value(),
             suggested,
         )
 
@@ -416,10 +431,12 @@ class FitSettingsTabPage(QWidget):
         maxshift = float(data.get("maxshift", DEFAULT_FIT_SETTINGS["maxshift"]))
         minfwhm = float(data.get("minfwhm", DEFAULT_FIT_SETTINGS["minfwhm"]))
         maxfwhm = float(data.get("maxfwhm", DEFAULT_FIT_SETTINGS["maxfwhm"]))
+        default_fwhm = float(data.get("default_fwhm", DEFAULT_FIT_SETTINGS["default_fwhm"]))
         for spin, val in (
             (self.spin_maxshift, maxshift),
             (self.spin_minfwhm, minfwhm),
             (self.spin_maxfwhm, maxfwhm),
+            (self.spin_default_fwhm, default_fwhm),
         ):
             spin.blockSignals(True)
             spin.setValue(val)
@@ -429,6 +446,7 @@ class FitSettingsTabPage(QWidget):
             maxshift,
             minfwhm,
             maxfwhm,
+            default_fwhm,
             preferred=str(data.get("peak_profile", "") or ""),
         )
         p_idx = self.cbb_peak_profile.findData(matched)
@@ -457,6 +475,7 @@ class FitSettingsTabPage(QWidget):
             "maxshift": self.spin_maxshift.value(),
             "minfwhm": self.spin_minfwhm.value(),
             "maxfwhm": self.spin_maxfwhm.value(),
+            "default_fwhm": self.spin_default_fwhm.value(),
             "peak_profile": profile_key if profile_key and profile_key != _CUSTOM_PROFILE_KEY else "",
         }
 

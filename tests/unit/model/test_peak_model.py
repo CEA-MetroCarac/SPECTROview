@@ -80,6 +80,18 @@ class TestStandardShapes:
         assert peak_model["fwhm"]["max"] == 0.5
         assert 0.001 <= peak_model["fwhm"]["value"] <= 0.5
 
+    def test_explicit_default_fwhm_is_used_and_clamped(self):
+        peak_model = {}
+        initialize_peak_params(peak_model, "Gaussian", x0=1.85, ampli=100.0,
+                                minfwhm=0.001, maxfwhm=0.5, maxshift=0.1, default_fwhm=0.05)
+        assert peak_model["fwhm"]["value"] == 0.05
+
+        clamped = {}
+        initialize_peak_params(clamped, "LorentzianAsym", x0=1.85, ampli=100.0,
+                                minfwhm=0.01, maxfwhm=0.5, maxshift=0.1, default_fwhm=2.0)
+        assert clamped["fwhm_l"]["value"] == 0.5
+        assert clamped["fwhm_r"]["value"] == 0.5
+
 
 class TestDecayShapes:
     def test_decay_single_exp_uses_data_extrema(self):

@@ -166,6 +166,7 @@ class SpectraFittingMixin:
         maxshift = fit_settings.get("maxshift", 20.0)
         maxfwhm = fit_settings.get("maxfwhm", 200.0)
         minfwhm = fit_settings.get("minfwhm", 0.0)
+        default_fwhm = fit_settings.get("default_fwhm", None)
         peak_shape = self._current_peak_shape or "Lorentzian"
 
         # Determine which spectrum index to use
@@ -196,7 +197,7 @@ class SpectraFittingMixin:
 
         peak_model = {}
         self._initialize_peak_params(
-            peak_model, peak_shape, x, y_val, minfwhm, maxfwhm, maxshift, y_arr
+            peak_model, peak_shape, x, y_val, minfwhm, maxfwhm, maxshift, y_arr, default_fwhm
         )
 
         while len(md.fit_model["peak_labels"]) <= next_idx:
@@ -215,11 +216,11 @@ class SpectraFittingMixin:
         self._emit_selected_spectra()
 
     def _initialize_peak_params(
-        self, peak_model, peak_shape, x0, ampli, minfwhm, maxfwhm, maxshift, y_arr=None
+        self, peak_model, peak_shape, x0, ampli, minfwhm, maxfwhm, maxshift, y_arr=None, default_fwhm=None
     ):
         """Build canonical parameters dictionary based on peak shape."""
         initialize_peak_params(
-            peak_model, peak_shape, x0, ampli, minfwhm, maxfwhm, maxshift, y_arr
+            peak_model, peak_shape, x0, ampli, minfwhm, maxfwhm, maxshift, y_arr, default_fwhm=default_fwhm
         )
 
     def remove_peak_at(self, x: float):
@@ -704,6 +705,7 @@ class SpectraFittingMixin:
         maxshift = fit_settings.get("maxshift", 20.0)
         maxfwhm = fit_settings.get("maxfwhm", 200.0)
         minfwhm = fit_settings.get("minfwhm", 0.0)
+        default_fwhm = fit_settings.get("default_fwhm", None)
 
         new_params = {}
 
@@ -715,7 +717,7 @@ class SpectraFittingMixin:
 
         y_arr = md.y_matrix[spec_idx]
         self._initialize_peak_params(
-            new_params, model_name, x0, ampli, minfwhm, maxfwhm, maxshift, y_arr
+            new_params, model_name, x0, ampli, minfwhm, maxfwhm, maxshift, y_arr, default_fwhm
         )
 
         md.fit_model["peak_models"][str(index)] = {model_name: new_params}

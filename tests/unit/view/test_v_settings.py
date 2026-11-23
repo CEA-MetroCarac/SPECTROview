@@ -480,6 +480,7 @@ class TestPeakProfilesUI:
         assert fit_page.spin_maxshift.value() == 0.1
         assert fit_page.spin_minfwhm.value() == 0.001
         assert fit_page.spin_maxfwhm.value() == 0.5
+        assert fit_page.spin_default_fwhm.value() == 0.05
         assert fit_page.btn_delete_profile.isEnabled() is False
 
         # Manual edit switches combobox to Custom
@@ -507,6 +508,7 @@ class TestPeakProfilesUI:
         dialog._tab_fit.spin_maxshift.setValue(0.08)
         dialog._tab_fit.spin_minfwhm.setValue(0.002)
         dialog._tab_fit.spin_maxfwhm.setValue(0.4)
+        dialog._tab_fit.spin_default_fwhm.setValue(0.03)
 
         monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("My_PL_eV", True))
         dialog._tab_fit.btn_save_profile.click()
@@ -521,6 +523,7 @@ class TestPeakProfilesUI:
         assert reloaded.spin_maxshift.value() == 0.08
         assert reloaded.spin_minfwhm.value() == 0.002
         assert reloaded.spin_maxfwhm.value() == 0.4
+        assert reloaded.spin_default_fwhm.value() == 0.03
 
         monkeypatch.setattr(QMessageBox, "question", lambda *args, **kwargs: QMessageBox.Yes)
         reloaded.btn_delete_peak_profile.click()

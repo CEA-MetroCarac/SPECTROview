@@ -89,7 +89,7 @@ These parameters control the behavior of the **Vectorized Batch Fit (`VBF`) engi
 These parameters define **absolute boundary conditions** that are applied globally to all peaks across the application. When you add a new peak to a fit model, these limits are used to set the initial parameter bounds automatically. You can quickly jump to this section from the `Peaks` panel in `Fit Model Builder` by clicking its gear button.
 
 - **Peak Profile**: Switch between built-in technique presets (**Raman (cm⁻¹)**, **PL (eV)**, **PL (nm)**, **XRD (°)**) or your own saved custom profiles.
-- **Save / Delete Profile**: Click the save icon next to the **Peak profile** selector to store the current `Max peak shift`, `Min peak FWHM`, and `Max peak FWHM` values under a custom name inside `<Working Folder>/peak_profile/`. Select a custom profile and click the trash icon to remove it. Editing any limit manually switches the selector to **Custom**.
+- **Save / Delete Profile**: Click the save icon next to the **Peak profile** selector to store the current `Max peak shift`, `Min peak FWHM`, `Max peak FWHM`, and `Default peak FWHM` values under a custom name inside `<Working Folder>/peak_profile/`. Select a custom profile and click the trash icon to remove it. Editing any limit manually switches the selector to **Custom**.
 
 > **Note**: You can check the "Limits" checkbox under the `PeakTable` to display the actual bounds of each peak.
 
@@ -98,6 +98,7 @@ These parameters define **absolute boundary conditions** that are applied global
 | **Max Peak Shift** | 20 | 0 – 10,000 | Maximum allowed displacement of a peak center (`x0`) from its initial value. <br><i>x</i><sub>0</sub> - maxshift &le; <i>x</i><sub>0</sub><sup>fitted</sup> &le; <i>x</i><sub>0</sub> + maxshift |
 | **Min Peak FWHM** | 0.1 | 0.0001 – 10,000 | Minimum allowed Full Width at Half Maximum (`FWHM`). Prevents peaks from collapsing into delta-function artifacts. |
 | **Max Peak FWHM** | 200 | 0.001 – 10,000 | Maximum allowed `FWHM`. Prevents peaks from broadening into flat baselines. |
+| **Default Peak FWHM** | 5.0 | 0.0001 – 10,000 | Initial `FWHM` assigned when adding a new peak by clicking in `SpectraViewer` (e.g. `5.0` for Raman, `0.05` for PL (eV)). |
 
 ---
 

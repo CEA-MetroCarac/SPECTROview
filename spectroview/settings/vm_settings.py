@@ -126,6 +126,7 @@ class VMSettings(QObject):
         maxshift: float,
         minfwhm: float,
         maxfwhm: float,
+        default_fwhm: Optional[float] = None,
         working_folder: Optional[str] = None,
     ) -> str:
         """Save a custom peak profile under `<working_folder>/peak_profile/`."""
@@ -134,6 +135,7 @@ class VMSettings(QObject):
             maxshift=maxshift,
             minfwhm=minfwhm,
             maxfwhm=maxfwhm,
+            default_fwhm=default_fwhm,
             working_folder=working_folder,
         )
 

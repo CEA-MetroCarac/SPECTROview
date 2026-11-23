@@ -4,6 +4,7 @@
 from PySide6.QtCore import QSettings  # noqa: F401
 
 from spectroview.settings.m_settings import (  # noqa: F401
+    BUILTIN_PEAK_PROFILES,
     MSettings,
     LIVE_MAPS_VIEW_OPTION_DEFAULTS,
     _WORKING_SUBFOLDERS,

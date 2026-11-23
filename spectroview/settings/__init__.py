@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from spectroview.settings.m_settings import MSettings
+from spectroview.settings.m_settings import BUILTIN_PEAK_PROFILES, MSettings
 from spectroview.settings.vm_settings import VMSettings
 from spectroview.settings.build_info import (
     TRACKED_PACKAGES,
@@ -24,6 +24,7 @@ from spectroview.settings.ui import (
 )
 
 __all__ = [
+    "BUILTIN_PEAK_PROFILES",
     "MSettings",
     "VMSettings",
     "SettingsDialog",

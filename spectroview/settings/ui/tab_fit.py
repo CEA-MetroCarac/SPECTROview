@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -22,8 +22,19 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from spectroview.i18n import bind_text, bind_title, bind_tooltip, tr
+from spectroview.i18n import (
+    bind_text,
+    bind_title,
+    bind_tooltip,
+    combo_data_or_text,
+    on_language_changed,
+    tr,
+)
+from spectroview.settings.m_settings import BUILTIN_PEAK_PROFILES
 from spectroview.view.theme import Icons
+
+_CUSTOM_PROFILE_KEY = "__custom__"
+_PROFILE_MATCH_TOL = 1e-6
 
 
 DEFAULT_FIT_SETTINGS: dict[str, Any] = {
@@ -54,17 +65,25 @@ def _highlight_label_style() -> str:
 class FitSettingsTabPage(QWidget):
     """The Fit Settings tab: solver convergence parameters, peak bounds, and options."""
 
+    save_profile_requested = Signal(float, float, float, str)
+    delete_profile_requested = Signal(str)
+
     KEYWORDS = [
         "fit", "fitting", "ajustement", "solver", "solveur", "convergence", "negative", "négatif",
         "absorption", "iterations", "itérations", "tolerance", "tolérance", "xtol", "ftol",
         "noise", "bruit", "threshold", "seuil", "loss", "perte", "scale", "échelle", "f_scale",
         "bounds", "bornes", "limits", "limites", "fwhm", "shift", "décalage",
+        "profile", "profil", "preset", "raman", "pl", "xrd",
         "reset", "réinitialiser", "default", "defaults", "défaut",
     ]
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._searchable_rows: list[tuple[list[str], QLabel, QGroupBox]] = []
+        self._peak_profiles: dict[str, dict[str, float]] = {
+            name: dict(vals) for name, vals in BUILTIN_PEAK_PROFILES.items()
+        }
+        self._user_peak_profiles: set[str] = set()
         self._init_ui()
 
     def _init_ui(self) -> None:
@@ -188,23 +207,69 @@ class FitSettingsTabPage(QWidget):
             self._searchable_rows.append((terms, lbl, self.grp_bounds))
             return lbl
 
+        # Peak profile row
+        profile_row = QHBoxLayout()
+        profile_row.setSpacing(6)
+        lbl_profile = QLabel()
+        bind_text(lbl_profile, "Peak profile:")
+        lbl_profile.setMinimumWidth(180)
+        lbl_profile.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        profile_tooltip = "Select a technique preset or user-saved profile for global peak limits"
+        bind_tooltip(lbl_profile, profile_tooltip)
+
+        self.cbb_peak_profile = QComboBox()
+        bind_tooltip(self.cbb_peak_profile, profile_tooltip)
+        self.cbb_peak_profile.currentIndexChanged.connect(self._on_peak_profile_changed)
+
+        self.btn_save_profile = QPushButton()
+        self.btn_save_profile.setIcon(Icons.save())
+        self.btn_save_profile.setFixedSize(28, 24)
+        self.btn_save_profile.setCursor(Qt.PointingHandCursor)
+        bind_tooltip(self.btn_save_profile, "Save current peak limits as a profile")
+        self.btn_save_profile.clicked.connect(self._on_save_profile_clicked)
+
+        self.btn_delete_profile = QPushButton()
+        self.btn_delete_profile.setIcon(Icons.trash())
+        self.btn_delete_profile.setFixedSize(28, 24)
+        self.btn_delete_profile.setCursor(Qt.PointingHandCursor)
+        bind_tooltip(self.btn_delete_profile, "Delete selected custom peak profile")
+        self.btn_delete_profile.clicked.connect(self._on_delete_profile_clicked)
+
+        profile_row.addWidget(lbl_profile)
+        profile_row.addWidget(self.cbb_peak_profile, 1)
+        profile_row.addWidget(self.btn_save_profile)
+        profile_row.addWidget(self.btn_delete_profile)
+        bounds_layout.addLayout(profile_row)
+        self._searchable_rows.append((
+            ["peak profile", "profile", "profil", "preset", "raman", "pl", "xrd", tr("Peak profile:").lower()],
+            lbl_profile,
+            self.grp_bounds,
+        ))
+        on_language_changed(self, self._retranslate_custom_profile_item)
+
         self.spin_maxshift = QDoubleSpinBox()
-        self.spin_maxshift.setRange(0, 100)
-        self.spin_maxshift.setSingleStep(5)
-        self.spin_maxshift.setDecimals(2)
+        self.spin_maxshift.setRange(0.0, 10000.0)
+        self.spin_maxshift.setSingleStep(1.0)
+        self.spin_maxshift.setDecimals(4)
         add_bounds_row("Max peak shift:", self.spin_maxshift, "Maximum allowable center position shift during fit", ["shift", "décalage", "maxshift", "position"])
 
         self.spin_minfwhm = QDoubleSpinBox()
-        self.spin_minfwhm.setRange(0.01, 500)
-        self.spin_minfwhm.setSingleStep(1)
-        self.spin_minfwhm.setDecimals(2)
+        self.spin_minfwhm.setRange(0.0001, 10000.0)
+        self.spin_minfwhm.setSingleStep(0.1)
+        self.spin_minfwhm.setDecimals(4)
         add_bounds_row("Min peak FWHM:", self.spin_minfwhm, "Minimum allowable full-width at half-maximum", ["fwhm", "minfwhm", "width", "largeur"])
 
         self.spin_maxfwhm = QDoubleSpinBox()
-        self.spin_maxfwhm.setRange(1, 1000)
-        self.spin_maxfwhm.setSingleStep(20)
-        self.spin_maxfwhm.setDecimals(2)
+        self.spin_maxfwhm.setRange(0.001, 10000.0)
+        self.spin_maxfwhm.setSingleStep(10.0)
+        self.spin_maxfwhm.setDecimals(4)
         add_bounds_row("Max peak FWHM:", self.spin_maxfwhm, "Maximum allowable full-width at half-maximum", ["fwhm", "maxfwhm", "width", "largeur"])
+
+        self.spin_maxshift.valueChanged.connect(self._on_bounds_spin_changed)
+        self.spin_minfwhm.valueChanged.connect(self._on_bounds_spin_changed)
+        self.spin_maxfwhm.valueChanged.connect(self._on_bounds_spin_changed)
+
+        self.set_peak_profiles(self._peak_profiles, [])
 
         layout.addWidget(self.grp_bounds)
 
@@ -213,7 +278,129 @@ class FitSettingsTabPage(QWidget):
         self._scroll.setWidget(container)
         outer_layout.addWidget(self._scroll)
 
+    def _retranslate_custom_profile_item(self) -> None:
+        """Retranslate the trailing 'Custom' entry in cbb_peak_profile."""
+        idx = self.cbb_peak_profile.findData(_CUSTOM_PROFILE_KEY)
+        if idx >= 0:
+            self.cbb_peak_profile.setItemText(idx, tr("Custom"))
+
+    @staticmethod
+    def _values_match_profile(
+        maxshift: float,
+        minfwhm: float,
+        maxfwhm: float,
+        profile: dict[str, float],
+    ) -> bool:
+        return (
+            abs(float(maxshift) - float(profile["maxshift"])) <= _PROFILE_MATCH_TOL
+            and abs(float(minfwhm) - float(profile["minfwhm"])) <= _PROFILE_MATCH_TOL
+            and abs(float(maxfwhm) - float(profile["maxfwhm"])) <= _PROFILE_MATCH_TOL
+        )
+
+    def _find_matching_profile(
+        self,
+        maxshift: float,
+        minfwhm: float,
+        maxfwhm: float,
+        preferred: str = "",
+    ) -> str:
+        if preferred and preferred in self._peak_profiles:
+            if self._values_match_profile(maxshift, minfwhm, maxfwhm, self._peak_profiles[preferred]):
+                return preferred
+        for name, vals in self._peak_profiles.items():
+            if self._values_match_profile(maxshift, minfwhm, maxfwhm, vals):
+                return name
+        return _CUSTOM_PROFILE_KEY
+
+    def _update_delete_profile_button(self) -> None:
+        key = combo_data_or_text(self.cbb_peak_profile)
+        self.btn_delete_profile.setEnabled(key in self._user_peak_profiles)
+
+    def set_peak_profiles(
+        self,
+        profiles: dict[str, dict[str, float]],
+        user_profiles: list[str] | set[str] | None = None,
+        select_name: Optional[str] = None,
+    ) -> None:
+        """Populate the peak profile combobox and sync delete button state."""
+        self._peak_profiles = {name: dict(vals) for name, vals in profiles.items()}
+        self._user_peak_profiles = set(user_profiles or [])
+
+        target_key = select_name if select_name is not None else combo_data_or_text(self.cbb_peak_profile)
+
+        was_blocked = self.cbb_peak_profile.blockSignals(True)
+        try:
+            self.cbb_peak_profile.clear()
+            for name in self._peak_profiles:
+                self.cbb_peak_profile.addItem(name, name)
+            self.cbb_peak_profile.addItem(tr("Custom"), _CUSTOM_PROFILE_KEY)
+
+            idx = self.cbb_peak_profile.findData(target_key)
+            if idx < 0:
+                idx = self.cbb_peak_profile.findData(
+                    self._find_matching_profile(
+                        self.spin_maxshift.value(),
+                        self.spin_minfwhm.value(),
+                        self.spin_maxfwhm.value(),
+                    )
+                )
+            if idx >= 0:
+                self.cbb_peak_profile.setCurrentIndex(idx)
+        finally:
+            self.cbb_peak_profile.blockSignals(was_blocked)
+        self._update_delete_profile_button()
+
+    def _on_peak_profile_changed(self, _index: int) -> None:
+        key = combo_data_or_text(self.cbb_peak_profile)
+        if key in self._peak_profiles:
+            vals = self._peak_profiles[key]
+            for spin, val in (
+                (self.spin_maxshift, float(vals["maxshift"])),
+                (self.spin_minfwhm, float(vals["minfwhm"])),
+                (self.spin_maxfwhm, float(vals["maxfwhm"])),
+            ):
+                spin.blockSignals(True)
+                spin.setValue(val)
+                spin.blockSignals(False)
+        self._update_delete_profile_button()
+
+    def _on_bounds_spin_changed(self, _value: float) -> None:
+        matched = self._find_matching_profile(
+            self.spin_maxshift.value(),
+            self.spin_minfwhm.value(),
+            self.spin_maxfwhm.value(),
+            preferred=combo_data_or_text(self.cbb_peak_profile),
+        )
+        idx = self.cbb_peak_profile.findData(matched)
+        if idx >= 0 and idx != self.cbb_peak_profile.currentIndex():
+            self.cbb_peak_profile.blockSignals(True)
+            self.cbb_peak_profile.setCurrentIndex(idx)
+            self.cbb_peak_profile.blockSignals(False)
+        self._update_delete_profile_button()
+
+    def _on_save_profile_clicked(self) -> None:
+        key = combo_data_or_text(self.cbb_peak_profile)
+        suggested = key if key in self._user_peak_profiles else ""
+        self.save_profile_requested.emit(
+            self.spin_maxshift.value(),
+            self.spin_minfwhm.value(),
+            self.spin_maxfwhm.value(),
+            suggested,
+        )
+
+    def _on_delete_profile_clicked(self) -> None:
+        key = combo_data_or_text(self.cbb_peak_profile)
+        if key in self._user_peak_profiles:
+            self.delete_profile_requested.emit(key)
+
     def apply_settings(self, data: dict) -> None:
+        if "peak_profiles" in data and isinstance(data["peak_profiles"], dict):
+            self.set_peak_profiles(
+                data["peak_profiles"],
+                data.get("user_peak_profiles", []),
+                select_name=data.get("peak_profile") or None,
+            )
+
         self.chk_fit_negative.setChecked(data.get("fit_negative", DEFAULT_FIT_SETTINGS["fit_negative"]))
         self.spin_max_iter.setValue(data.get("max_ite", DEFAULT_FIT_SETTINGS["max_ite"]))
         self.spin_x_tol.setValue(data.get("xtol", DEFAULT_FIT_SETTINGS["xtol"]))
@@ -226,15 +413,39 @@ class FitSettingsTabPage(QWidget):
             self.combo_loss.setCurrentIndex(idx)
         self.spin_f_scale.setValue(float(data.get("f_scale", DEFAULT_FIT_SETTINGS["f_scale"])))
 
-        self.spin_maxshift.setValue(data.get("maxshift", DEFAULT_FIT_SETTINGS["maxshift"]))
-        self.spin_minfwhm.setValue(data.get("minfwhm", DEFAULT_FIT_SETTINGS["minfwhm"]))
-        self.spin_maxfwhm.setValue(data.get("maxfwhm", DEFAULT_FIT_SETTINGS["maxfwhm"]))
+        maxshift = float(data.get("maxshift", DEFAULT_FIT_SETTINGS["maxshift"]))
+        minfwhm = float(data.get("minfwhm", DEFAULT_FIT_SETTINGS["minfwhm"]))
+        maxfwhm = float(data.get("maxfwhm", DEFAULT_FIT_SETTINGS["maxfwhm"]))
+        for spin, val in (
+            (self.spin_maxshift, maxshift),
+            (self.spin_minfwhm, minfwhm),
+            (self.spin_maxfwhm, maxfwhm),
+        ):
+            spin.blockSignals(True)
+            spin.setValue(val)
+            spin.blockSignals(False)
+
+        matched = self._find_matching_profile(
+            maxshift,
+            minfwhm,
+            maxfwhm,
+            preferred=str(data.get("peak_profile", "") or ""),
+        )
+        p_idx = self.cbb_peak_profile.findData(matched)
+        if p_idx >= 0:
+            self.cbb_peak_profile.blockSignals(True)
+            self.cbb_peak_profile.setCurrentIndex(p_idx)
+            self.cbb_peak_profile.blockSignals(False)
+        self._update_delete_profile_button()
 
     def reset_to_defaults(self) -> None:
         """Reset all fit settings and peak limits to factory default values."""
-        self.apply_settings(DEFAULT_FIT_SETTINGS)
+        defaults = dict(DEFAULT_FIT_SETTINGS)
+        defaults["peak_profile"] = "Raman (cm⁻¹)"
+        self.apply_settings(defaults)
 
     def get_settings(self) -> dict:
+        profile_key = combo_data_or_text(self.cbb_peak_profile)
         return {
             "fit_negative": self.chk_fit_negative.isChecked(),
             "max_ite": self.spin_max_iter.value(),
@@ -246,7 +457,14 @@ class FitSettingsTabPage(QWidget):
             "maxshift": self.spin_maxshift.value(),
             "minfwhm": self.spin_minfwhm.value(),
             "maxfwhm": self.spin_maxfwhm.value(),
+            "peak_profile": profile_key if profile_key and profile_key != _CUSTOM_PROFILE_KEY else "",
         }
+
+    def highlight_peak_limits(self) -> None:
+        """Highlight the Global Peak Limits groupbox and scroll it into view."""
+        self.highlight_search("")
+        self.grp_bounds.setStyleSheet(_highlight_group_style())
+        self._scroll.ensureWidgetVisible(self.grp_bounds, 0, 30)
 
     # ───── Search Highlighting & Scrolling ─────
     def highlight_search(self, query: str) -> None:

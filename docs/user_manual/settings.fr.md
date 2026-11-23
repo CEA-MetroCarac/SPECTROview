@@ -26,11 +26,12 @@ Le panneau `Settings Panel` propose une interface moderne à deux volets avec fi
 
 ### **1. Dossier de travail SPECTROview et préférences** *(onglet General)*
 
-Définissez un dossier racine unique pour l'ensemble des modèles, recettes, styles, historiques de discussion IA et sauvegardes de configuration de SPECTROview. Lors de sa définition, cinq sous-dossiers et un fichier de configuration portable y sont créés automatiquement :
+Définissez un dossier racine unique pour l'ensemble des modèles, profils de pics, recettes, styles, historiques de discussion IA et sauvegardes de configuration de SPECTROview. Lors de sa définition, six sous-dossiers et un fichier de configuration portable y sont créés automatiquement :
 
 | Sous-dossier / Fichier | Contenu |
 |------------------|----------|
 | `fit_model/` | Modèles d'ajustement personnalisés (JSON). `Fit Model Builder` scanne ce dossier et liste chaque modèle pour une réutilisation en un clic. |
+| `peak_profile/` | Profils personnalisés de limites globales des pics (JSON) enregistrant `maxshift`, `minfwhm` et `maxfwhm` par technique. |
 | `plot_recipe/` | Recettes de tracé (*Plot Recipes*) — ensembles sauvegardés de configurations complètes (liaisons de données + style) pour l'espace `Graphs`. |
 | `plot_style/` | Modèles de style (*Style Templates*) — styles d'apparence uniquement applicables à n'importe quel graphique existant. |
 | `ai_chat_history/` | Journaux de conversations IA (JSON). Les échanges y sont enregistrés automatiquement. |
@@ -85,15 +86,18 @@ Ces paramètres contrôlent le comportement du **moteur Vectorized Batch Fit (`V
 
 ### **3. Limites globales des pics** *(onglet Fit Settings)*
 
-Ces paramètres définissent des **conditions aux limites absolues** appliquées globalement à tous les pics dans l'application. Lorsque vous ajoutez un pic à un modèle d'ajustement, ces limites initialisent automatiquement ses bornes de paramètres.
+Ces paramètres définissent des **conditions aux limites absolues** appliquées globalement à tous les pics dans l'application. Lorsque vous ajoutez un pic à un modèle d'ajustement, ces limites initialisent automatiquement ses bornes de paramètres. Vous pouvez ouvrir directement cette section depuis le groupe `Peaks` de `Fit Model Builder` via le bouton engrenage.
+
+- **Peak Profile** : Basculez entre les préréglages intégrés (**Raman (cm⁻¹)**, **PL (eV)**, **PL (nm)**, **XRD (°)**) ou vos propres profils personnalisés.
+- **Enregistrer / Supprimer un profil** : Cliquez sur l'icône d'enregistrement à côté du sélecteur **Peak profile** pour sauvegarder les valeurs actuelles (`Max peak shift`, `Min peak FWHM`, `Max peak FWHM`) sous un nom personnalisé dans `<Dossier de travail>/peak_profile/`. Sélectionnez un profil personnalisé et cliquez sur la corbeille pour le supprimer. Modifier manuellement une limite bascule le sélecteur sur **Custom**.
 
 > **Remarque** : Vous pouvez cocher l'option « Limits » sous `PeakTable` pour afficher les bornes effectives de chaque pic.
 
 | Limite | Défaut | Plage | Description et contrainte |
 |-------|---------|-------|--------------------------|
-| **Max Peak Shift** | 20 | 0 – 100 | Déplacement maximal autorisé pour le centre d'un pic (`x0`) par rapport à sa valeur initiale.<br><i>x</i><sub>0</sub> - maxshift &le; <i>x</i><sub>0</sub><sup>fitted</sup> &le; <i>x</i><sub>0</sub> + maxshift |
-| **Min Peak FWHM** | 0.1 | 0.01 – 500 | Largeur à mi-hauteur minimale autorisée (`FWHM`). Empêche les pics de s'effondrer en fonctions de Dirac. |
-| **Max Peak FWHM** | 200 | 1 – 1 000 | Largeur à mi-hauteur maximale autorisée (`FWHM`). Empêche les pics de s'étaler en lignes de base plates. |
+| **Max Peak Shift** | 20 | 0 – 10 000 | Déplacement maximal autorisé pour le centre d'un pic (`x0`) par rapport à sa valeur initiale.<br><i>x</i><sub>0</sub> - maxshift &le; <i>x</i><sub>0</sub><sup>fitted</sup> &le; <i>x</i><sub>0</sub> + maxshift |
+| **Min Peak FWHM** | 0.1 | 0.0001 – 10 000 | Largeur à mi-hauteur minimale autorisée (`FWHM`). Empêche les pics de s'effondrer en fonctions de Dirac. |
+| **Max Peak FWHM** | 200 | 0.001 – 10 000 | Largeur à mi-hauteur maximale autorisée (`FWHM`). Empêche les pics de s'étaler en lignes de base plates. |
 
 ---
 

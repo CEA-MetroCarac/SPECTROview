@@ -120,6 +120,7 @@ class GeneralTabPage(QWidget):
             self.lbl_working_hint,
             "Universal working folder. Automatically manages:\n"
             "• fit_model/ (saved peak fitting models)\n"
+            "• peak_profile/ (saved global peak limit profiles)\n"
             "• plot_recipe/ & plot_style/ (graph recipes and custom styles)\n"
             "• ai_chat_history/ (AI assistant conversation logs)\n"
             "• template/ (general plot templates)\n"

@@ -195,6 +195,13 @@ class Main(QMainWindow):
         self.menu_bar.theme_selected.connect(self.toggle_theme)
         self.menu_bar.ai_chat_requested.connect(self.open_ai_chat)
         
+        self.v_spectra_workspace.fit_settings_requested.connect(
+            lambda: self._open_settings(section="fit", highlight="peak_limits")
+        )
+        self.v_maps_workspace.fit_settings_requested.connect(
+            lambda: self._open_settings(section="fit", highlight="peak_limits")
+        )
+
         # Inject Graphs workspace into Maps ViewModel for cross-workspace communication
         self.v_maps_workspace.vm.set_graphs_workspace(self.v_graphs_workspace)
 
@@ -432,13 +439,15 @@ class Main(QMainWindow):
         else:
             QMessageBox.warning(self, tr("No Tab Selected"), tr("Nothing to clear."))
 
-    def _open_settings(self, section: str = "general"):
+    def _open_settings(self, section: str = "general", highlight: str = ""):
         """Open settings dialog, optionally selecting a specific section."""
         if not isinstance(section, str):
             section = "general"
         vm = VMSettings()
         dlg = VSettingsDialog(vm, self)
         dlg.select_section(section)
+        if highlight == "peak_limits":
+            dlg.highlight_peak_limits()
         dlg.check_updates_requested.connect(self._manual_update_check)
         dlg.theme_selected.connect(self.toggle_theme)
         dlg.language_selected.connect(self.set_language)

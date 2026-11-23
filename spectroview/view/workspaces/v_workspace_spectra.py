@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QShortcut, QKeySequence
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication,
@@ -38,6 +38,8 @@ from spectroview.viewmodel.analysis.vm_mva import VMMVA
 
 
 class VWorkspaceSpectra(QWidget):
+    fit_settings_requested = Signal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.m_settings = MSettings()
@@ -267,6 +269,7 @@ class VWorkspaceSpectra(QWidget):
         self.v_fit_model_builder.peaks_copy_requested.connect(vm.copy_peaks)
         self.v_fit_model_builder.peaks_paste_requested.connect(vm.paste_peaks)
         self.v_fit_model_builder.peaks_delete_requested.connect(vm.delete_peaks)
+        self.v_fit_model_builder.fit_settings_requested.connect(self.fit_settings_requested.emit)
         self.v_fit_model_builder.peak_shape_changed.connect(self.vm.set_peak_shape)
 
         #Fit control

@@ -72,6 +72,14 @@ class TestStandardShapes:
                                 minfwhm=1.0, maxfwhm=50.0, maxshift=10.0)
         assert "leftover_key" not in peak_model
 
+    def test_sub_unit_fwhm_bounds_initialize_inside_range(self):
+        peak_model = {}
+        initialize_peak_params(peak_model, "Gaussian", x0=1.85, ampli=100.0,
+                                minfwhm=0.001, maxfwhm=0.5, maxshift=0.1)
+        assert peak_model["fwhm"]["min"] == 0.001
+        assert peak_model["fwhm"]["max"] == 0.5
+        assert 0.001 <= peak_model["fwhm"]["value"] <= 0.5
+
 
 class TestDecayShapes:
     def test_decay_single_exp_uses_data_extrema(self):

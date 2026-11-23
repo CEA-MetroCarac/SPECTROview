@@ -30,6 +30,7 @@ class TestWorkingFolder:
 
     def test_all_subfolders_of_working_folder(self, tmp_path):
         settings.set_working_folder(tmp_path)
+        assert settings.get_peak_profile_folder() == str(tmp_path / "peak_profile")
         assert settings.get_plot_recipe_folder() == str(tmp_path / "plot_recipe")
         assert settings.get_plot_style_folder() == str(tmp_path / "plot_style")
         assert settings.get_template_folder() == str(tmp_path / "template")

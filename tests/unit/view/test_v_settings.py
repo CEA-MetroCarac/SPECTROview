@@ -466,3 +466,94 @@ class TestPrereleaseUpdateSetting:
 
         dialog._search_edit.setText("")
         assert dialog._tab_general.grp_updates.styleSheet() == ""
+
+
+class TestPeakProfilesUI:
+    def test_switching_profile_updates_limits_including_sub_unit_pl_ev(self, qapp):
+        dialog = _dialog(qapp)
+        fit_page = dialog._tab_fit
+
+        idx_pl = fit_page.cbb_peak_profile.findData("PL (eV)")
+        assert idx_pl >= 0
+        fit_page.cbb_peak_profile.setCurrentIndex(idx_pl)
+
+        assert fit_page.spin_maxshift.value() == 0.1
+        assert fit_page.spin_minfwhm.value() == 0.001
+        assert fit_page.spin_maxfwhm.value() == 0.5
+        assert fit_page.btn_delete_profile.isEnabled() is False
+
+        # Manual edit switches combobox to Custom
+        fit_page.spin_maxshift.setValue(0.35)
+        assert fit_page.cbb_peak_profile.currentData() == "__custom__"
+        assert fit_page.get_settings()["peak_profile"] == ""
+
+    def test_save_profile_requires_working_folder(self, qapp, monkeypatch):
+        from PySide6.QtWidgets import QMessageBox
+
+        dialog = _dialog(qapp)
+        warnings = []
+        monkeypatch.setattr(QMessageBox, "warning", lambda p, t, m: warnings.append((t, m)))
+        dialog._tab_fit.btn_save_profile.click()
+        assert len(warnings) == 1
+        assert "Working Folder" in warnings[0][0]
+
+    def test_save_reload_and_delete_custom_profile(self, qapp, tmp_path, monkeypatch):
+        from PySide6.QtWidgets import QInputDialog, QMessageBox
+
+        dialog = _dialog(qapp)
+        dialog.vm.settings.set_working_folder(str(tmp_path))
+        dialog.vm.load()
+
+        dialog._tab_fit.spin_maxshift.setValue(0.08)
+        dialog._tab_fit.spin_minfwhm.setValue(0.002)
+        dialog._tab_fit.spin_maxfwhm.setValue(0.4)
+
+        monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("My_PL_eV", True))
+        dialog._tab_fit.btn_save_profile.click()
+
+        assert (tmp_path / "peak_profile" / "My_PL_eV.json").is_file()
+        assert dialog.cbb_peak_profile.currentData() == "My_PL_eV"
+        assert dialog.btn_delete_peak_profile.isEnabled() is True
+
+        dialog._on_accept()
+        reloaded = _dialog(qapp)
+        assert reloaded.cbb_peak_profile.currentData() == "My_PL_eV"
+        assert reloaded.spin_maxshift.value() == 0.08
+        assert reloaded.spin_minfwhm.value() == 0.002
+        assert reloaded.spin_maxfwhm.value() == 0.4
+
+        monkeypatch.setattr(QMessageBox, "question", lambda *args, **kwargs: QMessageBox.Yes)
+        reloaded.btn_delete_peak_profile.click()
+        assert not (tmp_path / "peak_profile" / "My_PL_eV.json").is_file()
+        assert reloaded.cbb_peak_profile.findData("My_PL_eV") == -1
+
+    def test_highlight_peak_limits_and_open_settings(self, qapp, monkeypatch):
+        import spectroview.main as main_mod
+        from spectroview.settings.ui.settings_dialog import SettingsDialog
+
+        dialog = _dialog(qapp)
+        dialog.select_section("fit")
+        dialog.highlight_peak_limits()
+        assert dialog._stack.currentWidget() is dialog._tab_fit
+        assert "border" in dialog._tab_fit.grp_bounds.styleSheet()
+
+        monkeypatch.setattr(main_mod.Main, "_prewarm_ai_chat", lambda self: None)
+        win = main_mod.Main()
+        captured = []
+        try:
+            def _fake_exec(dlg):
+                captured.append((
+                    dlg._stack.currentWidget() is dlg._tab_fit,
+                    "border" in dlg._tab_fit.grp_bounds.styleSheet(),
+                ))
+                return 0
+
+            monkeypatch.setattr(SettingsDialog, "exec", _fake_exec)
+            win.v_spectra_workspace.v_fit_model_builder.btn_peak_settings.click()
+            win.v_maps_workspace.v_fit_model_builder.btn_peak_settings.click()
+            assert captured == [(True, True), (True, True)]
+        finally:
+            win.close()
+            win.deleteLater()
+            qapp.processEvents()
+

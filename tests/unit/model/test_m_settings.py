@@ -3,7 +3,7 @@
 Relies on the session-wide _isolate_qsettings autouse fixture (tests/conftest.py)
 so these round-trips never touch the real user registry/plist.
 """
-from spectroview.model.m_settings import MSettings
+from spectroview.model.m_settings import BUILTIN_PEAK_PROFILES, MSettings
 
 
 class TestFitSettings:
@@ -57,6 +57,7 @@ class TestWorkingFolder:
         working = tmp_path / "spectroview_data"
         settings.set_working_folder(str(working))
         assert (working / "fit_model").is_dir()
+        assert (working / "peak_profile").is_dir()
         assert (working / "plot_recipe").is_dir()
         assert (working / "plot_style").is_dir()
         assert (working / "ai_chat_history").is_dir()
@@ -75,12 +76,14 @@ class TestWorkingFolder:
     def test_derived_subfolder_getters(self, settings, tmp_path):
         settings.set_working_folder(str(tmp_path))
         assert settings.get_fit_model_folder() == str(tmp_path / "fit_model")
+        assert settings.get_peak_profile_folder() == str(tmp_path / "peak_profile")
         assert settings.get_plot_recipe_folder() == str(tmp_path / "plot_recipe")
         assert settings.get_plot_style_folder() == str(tmp_path / "plot_style")
         assert settings.get_template_folder() == str(tmp_path / "template")
 
     def test_derived_subfolder_getters_empty_when_unconfigured(self, settings):
         assert settings.get_fit_model_folder() == ""
+        assert settings.get_peak_profile_folder() == ""
         assert settings.get_plot_recipe_folder() == ""
         assert settings.get_plot_style_folder() == ""
         assert settings.get_template_folder() == ""
@@ -458,5 +461,45 @@ class TestLanguageSettings:
 
         assert settings.import_config(backup) is True
         assert settings.get_language() == "fr"
+
+
+class TestPeakProfiles:
+    def test_builtin_profiles_exist(self, settings):
+        profiles = settings.get_all_peak_profiles()
+        assert "Raman (cm⁻¹)" in profiles
+        assert "PL (eV)" in profiles
+        assert "PL (nm)" in profiles
+        assert "XRD (°)" in profiles
+        assert profiles["Raman (cm⁻¹)"] == BUILTIN_PEAK_PROFILES["Raman (cm⁻¹)"]
+
+    def test_save_load_override_and_delete_user_profile(self, settings, tmp_path):
+        import pytest
+
+        with pytest.raises(ValueError):
+            settings.save_peak_profile("NoFolder", 1.0, 0.1, 2.0)
+
+        settings.set_working_folder(str(tmp_path))
+        saved_path = settings.save_peak_profile("PL/eV:Custom*", 0.25, 0.002, 0.8)
+        assert saved_path.endswith(".json")
+        assert (tmp_path / "peak_profile").is_dir()
+
+        user_profiles = settings.load_user_peak_profiles()
+        assert "PL/eV:Custom*" in user_profiles
+        assert user_profiles["PL/eV:Custom*"] == {"maxshift": 0.25, "minfwhm": 0.002, "maxfwhm": 0.8}
+
+        merged = settings.get_all_peak_profiles()
+        assert "PL/eV:Custom*" in merged
+
+        assert settings.delete_peak_profile("PL/eV:Custom*") is True
+        assert "PL/eV:Custom*" not in settings.load_user_peak_profiles()
+        assert settings.delete_peak_profile("NonExistent") is False
+
+    def test_fit_settings_persists_peak_profile_name(self, settings):
+        assert settings.load_fit_settings()["peak_profile"] == ""
+        settings.save_fit_settings({"peak_profile": "PL (eV)", "maxshift": 0.1})
+        reloaded = MSettings().load_fit_settings()
+        assert reloaded["peak_profile"] == "PL (eV)"
+        assert reloaded["maxshift"] == 0.1
+
 
 

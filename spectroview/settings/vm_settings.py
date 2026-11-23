@@ -59,7 +59,10 @@ class VMSettings(QObject):
     # ---------- Load ----------
     def load(self):
         data = self.settings.load_fit_settings()
-        data["working_folder"] = self.settings.get_working_folder()
+        working_folder = self.settings.get_working_folder()
+        data["working_folder"] = working_folder
+        data["peak_profiles"] = self.settings.get_all_peak_profiles(working_folder)
+        data["user_peak_profiles"] = sorted(self.settings.load_user_peak_profiles(working_folder).keys())
         ai_data = self.settings.load_ai_settings()
         data.update(ai_data)
         data.update(self.settings.load_mcp_settings())
@@ -73,6 +76,8 @@ class VMSettings(QObject):
     def save(self, data: dict):
         working_folder = data.pop("working_folder", "")
         data.pop("history_folder", None)
+        data.pop("peak_profiles", None)
+        data.pop("user_peak_profiles", None)
 
         if "check_updates_startup" in data:
             self.settings.set_check_for_updates(bool(data.pop("check_updates_startup")))
@@ -105,6 +110,36 @@ class VMSettings(QObject):
             self.settings.export_config()
 
         self.settings_saved.emit()
+
+    # ---------- Peak Profiles ----------
+    def get_peak_profiles(
+        self, working_folder: Optional[str] = None
+    ) -> tuple[dict[str, dict[str, float]], list[str]]:
+        """Return `(all_profiles, user_profile_names)` for the configured working folder."""
+        all_profiles = self.settings.get_all_peak_profiles(working_folder)
+        user_profiles = sorted(self.settings.load_user_peak_profiles(working_folder).keys())
+        return all_profiles, user_profiles
+
+    def save_peak_profile(
+        self,
+        name: str,
+        maxshift: float,
+        minfwhm: float,
+        maxfwhm: float,
+        working_folder: Optional[str] = None,
+    ) -> str:
+        """Save a custom peak profile under `<working_folder>/peak_profile/`."""
+        return self.settings.save_peak_profile(
+            name=name,
+            maxshift=maxshift,
+            minfwhm=minfwhm,
+            maxfwhm=maxfwhm,
+            working_folder=working_folder,
+        )
+
+    def delete_peak_profile(self, name: str, working_folder: Optional[str] = None) -> bool:
+        """Delete a custom peak profile from `<working_folder>/peak_profile/`."""
+        return self.settings.delete_peak_profile(name=name, working_folder=working_folder)
 
     # ---------- Folder picker ----------
     def pick_working_folder(self):

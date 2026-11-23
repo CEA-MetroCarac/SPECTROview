@@ -26,11 +26,12 @@ The `Settings Panel` features a modern two-panel interface with real-time search
 
 ### **1. SPECTROview Working Folder & Preferences** *(General tab)*
 
-Specify a single universal root folder for all of SPECTROview's templates, recipes, styles, AI chat history, and configuration backup. When you set it, five subfolders and a portable configuration file are created automatically inside it:
+Specify a single universal root folder for all of SPECTROview's templates, recipes, styles, peak profiles, AI chat history, and configuration backup. When you set it, six subfolders and a portable configuration file are created automatically inside it:
 
 | Subfolder / File | Contents |
 |------------------|----------|
 | `fit_model/` | Custom fit models (JSON). The `Fit Model Builder` scans this folder and lists every model here for one-click reuse. |
+| `peak_profile/` | Custom global peak limit profiles (JSON) storing `maxshift`, `minfwhm`, and `maxfwhm` presets per technique. |
 | `plot_recipe/` | Plot Recipes — saved sets of full plot configurations (data bindings + style) for the `Graphs` workspace. |
 | `plot_style/` | Style Templates — saved appearance-only styles that can be applied to any existing graph. |
 | `ai_chat_history/` | AI chat conversation logs (JSON). Conversations are automatically saved here. |
@@ -85,15 +86,18 @@ These parameters control the behavior of the **Vectorized Batch Fit (`VBF`) engi
 
 ### **3. Global Peak Limits** *(Fit Settings tab)*
 
-These parameters define **absolute boundary conditions** that are applied globally to all peaks across the application. When you add a new peak to a fit model, these limits are used to set the initial parameter bounds automatically.
+These parameters define **absolute boundary conditions** that are applied globally to all peaks across the application. When you add a new peak to a fit model, these limits are used to set the initial parameter bounds automatically. You can quickly jump to this section from the `Peaks` panel in `Fit Model Builder` by clicking its gear button.
+
+- **Peak Profile**: Switch between built-in technique presets (**Raman (cm⁻¹)**, **PL (eV)**, **PL (nm)**, **XRD (°)**) or your own saved custom profiles.
+- **Save / Delete Profile**: Click the save icon next to the **Peak profile** selector to store the current `Max peak shift`, `Min peak FWHM`, and `Max peak FWHM` values under a custom name inside `<Working Folder>/peak_profile/`. Select a custom profile and click the trash icon to remove it. Editing any limit manually switches the selector to **Custom**.
 
 > **Note**: You can check the "Limits" checkbox under the `PeakTable` to display the actual bounds of each peak.
 
 | Limit | Default | Range | Description & Constraint |
 |-------|---------|-------|--------------------------| 
-| **Max Peak Shift** | 20 | 0 – 100 | Maximum allowed displacement of a peak center (`x0`) from its initial value. <br><i>x</i><sub>0</sub> - maxshift &le; <i>x</i><sub>0</sub><sup>fitted</sup> &le; <i>x</i><sub>0</sub> + maxshift |
-| **Min Peak FWHM** | 0.1 | 0.01 – 500 | Minimum allowed Full Width at Half Maximum (`FWHM`). Prevents peaks from collapsing into delta-function artifacts. |
-| **Max Peak FWHM** | 200 | 1 – 1,000 | Maximum allowed `FWHM`. Prevents peaks from broadening into flat baselines. |
+| **Max Peak Shift** | 20 | 0 – 10,000 | Maximum allowed displacement of a peak center (`x0`) from its initial value. <br><i>x</i><sub>0</sub> - maxshift &le; <i>x</i><sub>0</sub><sup>fitted</sup> &le; <i>x</i><sub>0</sub> + maxshift |
+| **Min Peak FWHM** | 0.1 | 0.0001 – 10,000 | Minimum allowed Full Width at Half Maximum (`FWHM`). Prevents peaks from collapsing into delta-function artifacts. |
+| **Max Peak FWHM** | 200 | 0.001 – 10,000 | Maximum allowed `FWHM`. Prevents peaks from broadening into flat baselines. |
 
 ---
 

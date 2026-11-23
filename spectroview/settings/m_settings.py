@@ -13,6 +13,22 @@ from PySide6.QtCore import QSettings
 _DEFAULT_THEME = "gray"
 _VALID_THEMES = ("dark", "gray", "light", "classic_dark", "classic_light")
 
+BUILTIN_PEAK_PROFILES: dict[str, dict[str, float]] = {
+    "Raman (cm⁻¹)": {"maxshift": 20.0, "minfwhm": 0.1, "maxfwhm": 200.0},
+    "PL (eV)": {"maxshift": 0.1, "minfwhm": 0.001, "maxfwhm": 0.5},
+    "PL (nm)": {"maxshift": 20.0, "minfwhm": 0.5, "maxfwhm": 150.0},
+    "XRD (°)": {"maxshift": 0.5, "minfwhm": 0.01, "maxfwhm": 5.0},
+}
+
+
+def _sanitize_profile_filename(name: str) -> str:
+    """Map a user-defined peak profile name to a safe filename stem."""
+    cleaned = str(name or "").strip().strip(".")
+    for ch in '<>:"/\\|?*':
+        cleaned = cleaned.replace(ch, "_")
+    cleaned = cleaned.strip()
+    return cleaned or "profile"
+
 
 def _normalize_app_theme(theme: Optional[str]) -> str:
     """Normalize legacy/alias application theme names to canonical keys."""
@@ -80,6 +96,7 @@ class MSettings:
             "minfwhm": self.settings.value("fit_settings/minfwhm", 0.1, float),
             "loss": self.settings.value("fit_settings/loss", "linear", str),
             "f_scale": self.settings.value("fit_settings/f_scale", 1.0, float),
+            "peak_profile": self.settings.value("fit_settings/peak_profile", "", str),
         }
 
     def save_fit_settings(self, data: dict):
@@ -244,9 +261,17 @@ class MSettings:
 
     # ---------- Working folder ----------
     # Universal user-configured root folder with auto-created subfolders:
-    # fit_model/ (fit models), plot_recipe/ (recipes), plot_style/ (styles),
+    # fit_model/ (fit models), peak_profile/ (global peak limit profiles),
+    # plot_recipe/ (recipes), plot_style/ (styles),
     # ai_chat_history/ (chat logs), template/ (templates), plus config.json.
-    _WORKING_SUBFOLDERS = ("fit_model", "plot_recipe", "plot_style", "ai_chat_history", "template")
+    _WORKING_SUBFOLDERS = (
+        "fit_model",
+        "peak_profile",
+        "plot_recipe",
+        "plot_style",
+        "ai_chat_history",
+        "template",
+    )
     CONFIG_FILENAME = "config.json"
 
     def get_working_folder(self) -> str:
@@ -290,6 +315,137 @@ class MSettings:
     def get_fit_model_folder(self) -> str:
         working_folder = self.get_working_folder()
         return os.path.join(working_folder, "fit_model") if working_folder else ""
+
+    def get_peak_profile_folder(self) -> str:
+        """Return the folder for global peak limit profiles ('peak_profile' subfolder)."""
+        working_folder = self.get_working_folder()
+        return os.path.join(working_folder, "peak_profile") if working_folder else ""
+
+    def _resolve_peak_profile_folder(self, working_folder: Optional[str] = None) -> str:
+        folder = (working_folder or "").strip() if working_folder is not None else self.get_working_folder()
+        return os.path.join(folder, "peak_profile") if folder else ""
+
+    def load_user_peak_profiles(self, working_folder: Optional[str] = None) -> dict[str, dict[str, float]]:
+        """Load user-saved peak limit profiles from `<working_folder>/peak_profile/*.json`."""
+        profile_dir = self._resolve_peak_profile_folder(working_folder)
+        if not profile_dir or not os.path.isdir(profile_dir):
+            return {}
+
+        profiles: dict[str, dict[str, float]] = {}
+        try:
+            filenames = sorted(f for f in os.listdir(profile_dir) if f.lower().endswith(".json"))
+        except OSError:
+            return {}
+
+        for fname in filenames:
+            fpath = os.path.join(profile_dir, fname)
+            if not os.path.isfile(fpath):
+                continue
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    raw = json.load(f)
+                if not isinstance(raw, dict):
+                    continue
+                name = str(raw.get("name") or os.path.splitext(fname)[0]).strip()
+                if not name:
+                    continue
+                profiles[name] = {
+                    "maxshift": float(raw["maxshift"]),
+                    "minfwhm": float(raw["minfwhm"]),
+                    "maxfwhm": float(raw["maxfwhm"]),
+                }
+            except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError):
+                continue
+        return profiles
+
+    def get_all_peak_profiles(self, working_folder: Optional[str] = None) -> dict[str, dict[str, float]]:
+        """Return merged built-in and user-saved peak limit profiles."""
+        merged: dict[str, dict[str, float]] = {
+            name: dict(vals) for name, vals in BUILTIN_PEAK_PROFILES.items()
+        }
+        user_profiles = self.load_user_peak_profiles(working_folder)
+        for name in sorted(user_profiles):
+            merged[name] = dict(user_profiles[name])
+        return merged
+
+    def save_peak_profile(
+        self,
+        name: str,
+        maxshift: float,
+        minfwhm: float,
+        maxfwhm: float,
+        working_folder: Optional[str] = None,
+    ) -> str:
+        """Persist a peak limit profile JSON file in `<working_folder>/peak_profile/`."""
+        clean_name = str(name or "").strip()
+        if not clean_name:
+            raise ValueError("Peak profile name cannot be empty.")
+
+        profile_dir = self._resolve_peak_profile_folder(working_folder)
+        if not profile_dir:
+            raise ValueError("SPECTROview Working Folder must be configured before saving peak profiles.")
+
+        os.makedirs(profile_dir, exist_ok=True)
+        stem = _sanitize_profile_filename(clean_name)
+        filepath = os.path.join(profile_dir, f"{stem}.json")
+        payload = {
+            "name": clean_name,
+            "maxshift": float(maxshift),
+            "minfwhm": float(minfwhm),
+            "maxfwhm": float(maxfwhm),
+        }
+        tmp_path = f"{filepath}.tmp"
+        try:
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                json.dump(payload, f, indent=2, ensure_ascii=False)
+            if os.path.exists(filepath):
+                os.replace(tmp_path, filepath)
+            else:
+                os.rename(tmp_path, filepath)
+        except Exception:
+            if os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except OSError:
+                    pass
+            raise
+        return filepath
+
+    def delete_peak_profile(self, name: str, working_folder: Optional[str] = None) -> bool:
+        """Delete a user-saved peak limit profile JSON file from `<working_folder>/peak_profile/`."""
+        clean_name = str(name or "").strip()
+        if not clean_name:
+            return False
+        profile_dir = self._resolve_peak_profile_folder(working_folder)
+        if not profile_dir or not os.path.isdir(profile_dir):
+            return False
+
+        # First try sanitized filename directly
+        candidate = os.path.join(profile_dir, f"{_sanitize_profile_filename(clean_name)}.json")
+        if os.path.isfile(candidate):
+            try:
+                os.remove(candidate)
+                return True
+            except OSError:
+                return False
+
+        # Fallback: scan files in case internal 'name' differs from filename
+        try:
+            for fname in os.listdir(profile_dir):
+                if not fname.lower().endswith(".json"):
+                    continue
+                fpath = os.path.join(profile_dir, fname)
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        raw = json.load(f)
+                    if isinstance(raw, dict) and str(raw.get("name", "")).strip() == clean_name:
+                        os.remove(fpath)
+                        return True
+                except (OSError, json.JSONDecodeError, TypeError):
+                    continue
+        except OSError:
+            pass
+        return False
 
     def get_plot_recipe_folder(self) -> str:
         working_folder = self.get_working_folder()

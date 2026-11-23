@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFrame,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -333,6 +334,8 @@ class SettingsDialog(QDialog):
         self._tab_general.theme_changed.connect(self.theme_selected.emit)
         self._tab_general.language_changed.connect(self.language_selected.emit)
         self._tab_about.check_updates_requested.connect(self.check_updates_requested.emit)
+        self._tab_fit.save_profile_requested.connect(self._on_save_peak_profile)
+        self._tab_fit.delete_profile_requested.connect(self._on_delete_peak_profile)
 
     def _bind_compat_properties(self) -> None:
         """Bind widget attributes directly on dialog for test suite and caller backward compatibility."""
@@ -357,6 +360,9 @@ class SettingsDialog(QDialog):
         self.spin_coef_noise = self._tab_fit.spin_coef_noise
         self.combo_loss = self._tab_fit.combo_loss
         self.spin_f_scale = self._tab_fit.spin_f_scale
+        self.cbb_peak_profile = self._tab_fit.cbb_peak_profile
+        self.btn_save_peak_profile = self._tab_fit.btn_save_profile
+        self.btn_delete_peak_profile = self._tab_fit.btn_delete_profile
         self.spin_maxshift = self._tab_fit.spin_maxshift
         self.spin_minfwhm = self._tab_fit.spin_minfwhm
         self.spin_maxfwhm = self._tab_fit.spin_maxfwhm
@@ -499,6 +505,78 @@ class SettingsDialog(QDialog):
     def open_about_tab(self) -> None:
         """Focus directly on the About tab."""
         self.select_section("about")
+
+    def highlight_peak_limits(self) -> None:
+        """Highlight the Global Peak Limits groupbox on the Fit Settings tab."""
+        self._tab_fit.highlight_peak_limits()
+
+    def _resolve_working_folder(self) -> str:
+        return self.le_working_folder.text().strip() or self.vm.settings.get_working_folder()
+
+    def _on_save_peak_profile(
+        self,
+        maxshift: float,
+        minfwhm: float,
+        maxfwhm: float,
+        suggested_name: str,
+    ) -> None:
+        working_folder = self._resolve_working_folder()
+        if not working_folder:
+            QMessageBox.warning(
+                self,
+                tr("Working Folder Required"),
+                tr("Please configure a SPECTROview Working Folder in the General tab before saving peak profiles."),
+            )
+            return
+
+        name, ok = QInputDialog.getText(
+            self,
+            tr("Save Peak Profile"),
+            tr("Profile name:"),
+            text=suggested_name,
+        )
+        if not ok:
+            return
+        clean_name = name.strip()
+        if not clean_name:
+            return
+
+        _, existing_user = self.vm.get_peak_profiles(working_folder)
+        if clean_name in existing_user:
+            ans = QMessageBox.question(
+                self,
+                tr("Overwrite Peak Profile"),
+                tr("A peak profile named '{name}' already exists. Overwrite it?", name=clean_name),
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+            if ans != QMessageBox.Yes:
+                return
+
+        self.vm.save_peak_profile(
+            clean_name,
+            maxshift,
+            minfwhm,
+            maxfwhm,
+            working_folder=working_folder,
+        )
+        all_profiles, user_profiles = self.vm.get_peak_profiles(working_folder)
+        self._tab_fit.set_peak_profiles(all_profiles, user_profiles, select_name=clean_name)
+
+    def _on_delete_peak_profile(self, name: str) -> None:
+        ans = QMessageBox.question(
+            self,
+            tr("Delete Peak Profile"),
+            tr("Delete peak profile '{name}'?", name=name),
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+        if ans != QMessageBox.Yes:
+            return
+        working_folder = self._resolve_working_folder()
+        if self.vm.delete_peak_profile(name, working_folder=working_folder):
+            all_profiles, user_profiles = self.vm.get_peak_profiles(working_folder)
+            self._tab_fit.set_peak_profiles(all_profiles, user_profiles)
 
     # ──────────────────────────────────────────────
     # Action Handlers

@@ -51,6 +51,7 @@ class VFitModelBuilder(QWidget):
     peaks_copy_requested = Signal()
     peaks_paste_requested = Signal(bool)    # apply_all
     peaks_delete_requested = Signal(bool)  # apply_all
+    fit_settings_requested = Signal()
 
     fitmodel_copy_requested = Signal()
     fitmodel_paste_requested = Signal(bool)
@@ -672,9 +673,16 @@ class VFitModelBuilder(QWidget):
         )
         self.btn_peak_paste.clicked.connect(self._on_peak_paste_clicked)
 
+        self.btn_peak_settings = QPushButton()
+        self.btn_peak_settings.setFixedSize(30, 24)
+        self.btn_peak_settings.setCursor(Qt.PointingHandCursor)
+        bind_tooltip(self.btn_peak_settings, "Open Fit Settings (Global Peak Limits)")
+        self.btn_peak_settings.clicked.connect(self.fit_settings_requested.emit)
+
         for b in (self.btn_peak_delete, self.btn_peak_copy, self.btn_peak_paste):
             row2.addWidget(b)
         row2.addStretch()
+        row2.addWidget(self.btn_peak_settings)
 
         v.addLayout(row1)
         v.addLayout(row2)
@@ -862,6 +870,7 @@ class VFitModelBuilder(QWidget):
         self.btn_peak_delete.setIcon(Icons.trash())
         self.btn_peak_copy.setIcon(Icons.copy())
         self.btn_peak_paste.setIcon(Icons.paste())
+        self.btn_peak_settings.setIcon(Icons.settings())
         self.btn_copy.setIcon(Icons.copy())
         self.btn_paste.setIcon(Icons.paste())
         self.btn_save.setIcon(Icons.save())
@@ -888,6 +897,7 @@ class VFitModelBuilder(QWidget):
         self.btn_peak_delete.setIcon(Icons.trash(color=icon_color))
         self.btn_peak_copy.setIcon(Icons.copy(color=icon_color))
         self.btn_peak_paste.setIcon(Icons.paste(color=icon_color))
+        self.btn_peak_settings.setIcon(Icons.settings(color=icon_color))
         # Fit control buttons
         self.btn_copy.setIcon(Icons.copy(color=icon_color))
         self.btn_paste.setIcon(Icons.paste(color=icon_color))

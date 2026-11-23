@@ -135,6 +135,16 @@ class TestVFitModelBuilderCopyPasteFeedback:
         builder.flash_feedback("baseline_copy")
         builder.flash_feedback("peaks_copy")
 
+    def test_peak_settings_gear_button_emits_signal(self, qapp):
+        builder = VFitModelBuilder()
+        emitted = []
+        builder.fit_settings_requested.connect(lambda: emitted.append(True))
+        assert hasattr(builder, "btn_peak_settings")
+        assert not builder.btn_peak_settings.icon().isNull()
+        assert "Global Peak Limits" in builder.btn_peak_settings.toolTip()
+        builder.btn_peak_settings.click()
+        assert emitted == [True]
+
 
 class TestLowerTabsPackageExports:
     def test_package_exports_and_mva_hierarchy(self, qapp):

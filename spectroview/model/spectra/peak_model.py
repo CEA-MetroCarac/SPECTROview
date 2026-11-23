@@ -26,11 +26,12 @@ def initialize_peak_params(peak_model: dict, peak_shape: str, x0: float, ampli: 
     peak_model["ampli"] = {"value": ampli, "min": 0.0, "max": ampli * 1e6, "vary": True, "expr": None}
     peak_model["x0"] = {"value": x0, "min": x0 - maxshift, "max": x0 + maxshift, "vary": True, "expr": None}
     
+    init_fwhm = 5.0 if minfwhm <= 5.0 <= maxfwhm else round((minfwhm + maxfwhm) / 2.0, 6)
     if peak_shape in ["GaussianAsym", "LorentzianAsym"]:
-        peak_model["fwhm_l"] = {"value": 5.0, "min": minfwhm, "max": maxfwhm, "vary": True, "expr": None}
-        peak_model["fwhm_r"] = {"value": 5.0, "min": minfwhm, "max": maxfwhm, "vary": True, "expr": None}
+        peak_model["fwhm_l"] = {"value": init_fwhm, "min": minfwhm, "max": maxfwhm, "vary": True, "expr": None}
+        peak_model["fwhm_r"] = {"value": init_fwhm, "min": minfwhm, "max": maxfwhm, "vary": True, "expr": None}
     else:
-        peak_model["fwhm"] = {"value": 5.0, "min": minfwhm, "max": maxfwhm, "vary": True, "expr": None}
+        peak_model["fwhm"] = {"value": init_fwhm, "min": minfwhm, "max": maxfwhm, "vary": True, "expr": None}
 
     if peak_shape == "PseudoVoigt":
         peak_model["alpha"] = {"value": 0.5, "min": 0.0, "max": 1.0, "vary": True, "expr": None}

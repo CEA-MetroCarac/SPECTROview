@@ -50,6 +50,12 @@ def get_fit_model_folder() -> str:
     return MSettings().get_fit_model_folder()
 
 
+def get_peak_profile_folder() -> str:
+    """Return the folder SPECTROview scans for global peak limit profiles
+    (the `peak_profile` subfolder of the Working Folder)."""
+    return MSettings().get_peak_profile_folder()
+
+
 def get_plot_recipe_folder() -> str:
     """Return the folder for Graph Workspace plot recipes
     (the `plot_recipe` subfolder of the Working Folder)."""

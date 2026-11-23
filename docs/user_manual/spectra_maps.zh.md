@@ -293,6 +293,7 @@ _______
 - 在确保**峰**切换按钮开启的前提下，直接在 `SpectraViewer` 中左键点击添加峰，并可通过鼠标拖动交互式调整峰的初始猜测参数。
 - 添加到图中的每个峰都会立即显示在 **`PeakTable`** 中。
 - 支持的峰型轮廓包括：`Lorentzian`、`Gaussian`、`PseudoVoigt`、`LorentzianAsym`、`GaussianAsym`、`Fano`、`DecaySingleExp` 和 `DecayBiExp`。
+- 点击 `Peaks` 分组中的齿轮按钮，即可直接打开**拟合设置** (Fit Settings) 中的**全局峰限制** (Global Peak Limits) 区域，快速切换或保存**峰位配置方案**（如 Raman、PL、XRD）。
 
 #### **4.2. 支持的峰型轮廓** { #42-supported-peak-profiles }
 

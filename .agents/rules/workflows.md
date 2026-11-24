@@ -87,7 +87,7 @@ Step-by-step implementation touchpoints for recurring tasks. Always read the ref
 
 1. Determine the previous release tag (`<prev_tag>`) and inspect **every** commit in `<prev_tag>..HEAD` (`git rev-list --count <prev_tag>..HEAD`, full subjects + bodies).
 2. Cross-check evolving commits against the final code on `main` and `.github/workflows/release.yml` artifact names.
-3. Author the release notes strictly following the structure, headings, bullet style, and public-safe commit-log convention in [.agents/rules/release-notes.md](release-notes.md).
+3. Author concise, user-focused release notes following the compact structure, single-level bullet style, and public-safe rules in [.agents/rules/release-notes.md](release-notes.md).
 
 ---
 

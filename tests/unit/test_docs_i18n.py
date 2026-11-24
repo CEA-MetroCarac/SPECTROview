@@ -10,13 +10,18 @@ internal link, `#fragment` anchor, search index, and language switcher target.
 
 from __future__ import annotations
 
+import ast
 import datetime
 import importlib.util
+import inspect
 import json
 import os
 import posixpath
+import re
 import subprocess
 import sys
+import textwrap
+import tomllib
 from html.parser import HTMLParser
 from pathlib import Path
 from types import SimpleNamespace
@@ -156,9 +161,36 @@ def test_all_nav_pages_have_localized_files(locale: str):
 @pytest.mark.parametrize("locale", ["de", "ru", "zh"])
 def test_i18n_check_structural_parity(locale: str):
     pytest.importorskip("markdown")
+    pytest.importorskip("pymdownx")
     chk = _load_i18n_check_module()
     failures = chk.validate_language(locale)
     assert not failures, f"Structural i18n_check failures for {locale}: {failures}"
+
+
+def test_test_extra_and_structural_parity_guard_pymdownx():
+    pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    optional_deps = pyproject["project"]["optional-dependencies"]
+    for extra in ("test", "dev"):
+        pkg_names = {
+            re.split(r"[<>=!~;\s\[]", spec, maxsplit=1)[0].strip().lower()
+            for spec in optional_deps[extra]
+        }
+        assert "pymdown-extensions" in pkg_names, (
+            f"'pymdown-extensions' missing from [project.optional-dependencies].{extra}"
+        )
+
+    tree = ast.parse(textwrap.dedent(inspect.getsource(test_i18n_check_structural_parity)))
+    importorskip_args = [
+        node.args[0].value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "importorskip"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+    ]
+    assert "markdown" in importorskip_args
+    assert "pymdownx" in importorskip_args
 
 
 @pytest.mark.parametrize("locale", ["fr", "de", "ru", "zh"])

@@ -36,6 +36,7 @@ _SITE_LOCALE_URL_RE = re.compile(
 )
 _FENCE_RE = re.compile(r"^[ \t]*(`{3,}|~{3,})(.*)$")
 _HEADING_LINE_RE = re.compile(r"^[ \t]*(#{1,6})\s+(.+?)\s*$")
+_MATERIAL_ICON_SHORTCODE_RE = re.compile(r":(?:material|octicons|fontawesome|simple)-[a-z0-9_-]+:")
 _INLINE_CODE_RE = re.compile(r"`[^`\n]+`")
 _ATTR_LIST_RE = re.compile(r"\{\s*#[^}]+\}")
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
@@ -153,9 +154,52 @@ class _RenderedHtmlParser(HTMLParser):
                 self.link_hrefs.append(href)
 
 
+def _has_material_emoji() -> bool:
+    """Return True when ``material.extensions.emoji`` is importable."""
+    try:
+        from material.extensions import emoji
+
+        return emoji is not None
+    except ImportError:
+        return False
+
+
+def _strip_material_icons_in_headings(md_text: str) -> str:
+    """Strip Material icon shortcodes from ATX headings outside fenced code blocks."""
+    out: list[str] = []
+    in_fence = False
+    fence_char = ""
+    fence_len = 0
+    for line in md_text.splitlines():
+        m_fence = _FENCE_RE.match(line)
+        if m_fence:
+            marker = m_fence.group(1)
+            if not in_fence:
+                in_fence = True
+                fence_char = marker[0]
+                fence_len = len(marker)
+            elif marker[0] == fence_char and len(marker) >= fence_len and not m_fence.group(2).strip():
+                in_fence = False
+            out.append(line)
+            continue
+        if not in_fence:
+            m_head = _HEADING_LINE_RE.match(line)
+            if m_head:
+                indent = line[: m_head.start(1)]
+                hashes, title = m_head.group(1), m_head.group(2)
+                cleaned = _MATERIAL_ICON_SHORTCODE_RE.sub("", title)
+                cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+                line = f"{indent}{hashes} {cleaned}" if cleaned else f"{indent}{hashes}"
+        out.append(line)
+    trailing = "\n" if md_text.endswith("\n") else ""
+    return "\n".join(out) + trailing
+
+
 def render_and_extract(md_text: str) -> tuple[list[str], list[str], list[str]]:
     """Render Markdown and return ``(heading_ids, img_srcs, link_hrefs)``."""
     spaced = _DOCS_HOOKS.ensure_markdown_spacing(md_text)
+    if not _has_material_emoji():
+        spaced = _strip_material_icons_in_headings(spaced)
     md = _make_markdown_renderer()
     html = md.convert(spaced)
     parser = _RenderedHtmlParser()

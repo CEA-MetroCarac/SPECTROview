@@ -123,7 +123,7 @@ switch_to_graphs_tab    = Signal()        # request tab switch after profile ext
 | **Map selection & order** | `select_map(name)`, `select_maps(names, primary)`, `reorder_maps(new_order)`, `_show_map_spectra(name)` |
 | **Map deletion** | `delete_current_map()`, `remove_map(name)` |
 | **Map data** | `get_current_map_dataframe()`, `get_fit_results_dataframe()` |
-| **Export** | `save_current_map_to_csv(file_path)` |
+| **Export** | `save_selected_maps_to_csv(dir_path)`, `save_current_map_to_csv(file_path)` |
 | **Fit** | `fit()`, `_run_fit_thread()`, `collect_fit_results()` — all override parent |
 | **Cross-workspace** | `send_selected_spectra_to_spectra_workspace()`, `extract_and_send_profile_to_graphs()` |
 | **Persistence** | `save_work()`, `load_work()`, `_load_legacy_maps()` |
@@ -177,7 +177,7 @@ The most complex View component (~1 300 lines). It renders both 2D rectangular m
 
 **File**: [`v_map_list.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/lists/v_map_list.py)
 
-Displays loaded map names in an internal `_ReorderableMapsList(QListWidget)` (`ExtendedSelection` for `Shift+Click` / `Ctrl+Click` multi-selection with Primary focus tracking via `maps_selection_changed(selected_names, primary_name)`, plus `InternalMove` drag-and-drop reordering emitting `maps_order_changed(new_order)` while ignoring external URL MIME drops so file drops propagate to parent windows). On internal drop, selection and Primary focus are preserved without transient selection churn and forwarded to `VMWorkspaceMaps.reorder_maps()`, which reorders `self.maps`, `SpectraStore.reorder_maps()`, and `selected_map_names` and refreshes both `VMapsList` and Live Maps without resetting `VMapViewer`. Paired with quick management buttons (View, Delete — prompting confirmation when deleting multiple selected maps, Export CSV) and unified spectra action buttons (Select All, Reinitialize, Fitting Statistics, Send to Spectra Workspace) targeting the Primary map and its spatially selected spectra.
+Displays loaded map names in an internal `_ReorderableMapsList(QListWidget)` (`ExtendedSelection` for `Shift+Click` / `Ctrl+Click` multi-selection with Primary focus tracking via `maps_selection_changed(selected_names, primary_name)`, plus `InternalMove` drag-and-drop reordering emitting `maps_order_changed(new_order)` while ignoring external URL MIME drops so file drops propagate to parent windows). On internal drop, selection and Primary focus are preserved without transient selection churn and forwarded to `VMWorkspaceMaps.reorder_maps()`, which reorders `self.maps`, `SpectraStore.reorder_maps()`, and `selected_map_names` and refreshes both `VMapsList` and Live Maps without resetting `VMapViewer`. Paired with quick management buttons (View, Delete — prompting confirmation when deleting multiple selected maps, Export CSV — saving all selected map(s) into a chosen folder) and unified spectra action buttons (Select All, Reinitialize, Fitting Statistics, Send to Spectra Workspace) targeting the Primary map and its spatially selected spectra.
 
 ### `VMapViewerDialog` — Detachable Window
 
@@ -194,7 +194,7 @@ The Maps workspace maintains **two stores** for the same data:
 1. **`self.maps[map_name]`** — a `pd.DataFrame` with columns `X, Y, w1, w2, ...` (one row per spectrum). This is the legacy store populated at load time from the file parser.
 2. **`self.store.get_map_data(map_name)`** — the `MapData` tensor block with all processing state.
 
-The DataFrame is used for **heatmap input** (pivot table → imshow) and **CSV export**. The tensor block is used for **all analysis operations** (baseline, fitting, results collection). When saving processed data to CSV, `save_current_map_to_csv()` reads from `md.x` / `md.Y` (processed) rather than the raw DataFrame.
+The DataFrame is used for **heatmap input** (pivot table → imshow) and **CSV export**. The tensor block is used for **all analysis operations** (baseline, fitting, results collection). When saving processed data to CSV, `save_selected_maps_to_csv()` and `save_current_map_to_csv()` read from `md.x` / `md.Y` (processed) rather than the raw DataFrame.
 
 > [!IMPORTANT]
 > When a new developer is confused about "where is the data?", the answer is: **both places, for different purposes**. The DataFrame is the entry point from the file loader and the input to the heatmap pipeline. The tensor block is the source of truth for all analysis. Modifications (baseline, crop) only affect the tensor block — they do not update the DataFrame.

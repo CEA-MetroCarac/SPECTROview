@@ -591,3 +591,142 @@ class TestTwoTierMultiSelectionAndBatchDelete:
         assert single.dtype == np.float32 and single.shape == (101,)
         np.testing.assert_allclose(md.Y_bestfit[1], single, rtol=1e-5, atol=1e-5)
 
+
+class TestSaveMapsToCsv:
+    def test_save_selected_maps_to_csv_multiple_maps_and_roundtrip(self, vm, tmp_path):
+        from spectroview.model.io.m_io import load_map_file
+
+        md_a = _load_map(vm, "map_A", n_rows_side=2, seed=10)
+        _load_map(vm, "map_B", n_rows_side=2, seed=11)
+        md_c = _load_map(vm, "map_C", n_rows_side=2, seed=12)
+
+        # Crop map_A only so we verify processed md.x / md.Y export
+        vm.select_map("map_A")
+        vm.apply_spectral_range(400.0, 600.0, apply_all=False)
+
+        vm.select_maps(["map_A", "map_C"], primary_name="map_A")
+
+        notifications = []
+        vm.notify.connect(notifications.append)
+
+        count = vm.save_selected_maps_to_csv(str(tmp_path))
+
+        assert count == 2
+        path_a = tmp_path / "map_A.csv"
+        path_c = tmp_path / "map_C.csv"
+        assert path_a.exists()
+        assert path_c.exists()
+        assert not (tmp_path / "map_B.csv").exists()
+
+        with open(path_a, encoding="utf-8") as f:
+            assert f.readline() == "SPECTROview Map Data\n"
+        with open(path_c, encoding="utf-8") as f:
+            assert f.readline() == "SPECTROview Map Data\n"
+
+        reloaded_a = load_map_file(path_a)
+        reloaded_c = load_map_file(path_c)
+
+        np.testing.assert_allclose(reloaded_a[["X", "Y"]].to_numpy(), md_a.coords)
+        assert [float(c) for c in reloaded_a.columns[2:]] == pytest.approx(
+            [float(w) for w in md_a.x_axis]
+        )
+        np.testing.assert_allclose(
+            reloaded_a.iloc[:, 2:].to_numpy(), md_a.y_matrix, rtol=1e-5, atol=1e-5
+        )
+
+        np.testing.assert_allclose(reloaded_c[["X", "Y"]].to_numpy(), md_c.coords)
+        assert [float(c) for c in reloaded_c.columns[2:]] == pytest.approx(
+            [float(w) for w in md_c.x_axis]
+        )
+        np.testing.assert_allclose(
+            reloaded_c.iloc[:, 2:].to_numpy(), md_c.y_matrix, rtol=1e-5, atol=1e-5
+        )
+
+        assert vm.settings.get_last_directory() == str(tmp_path)
+        assert notifications[-1] == "Successfully saved 2 maps."
+
+    def test_save_selected_maps_to_csv_single_map_and_current_fallback(self, vm, tmp_path):
+        _load_map(vm, "map_one", n_rows_side=2, seed=20)
+        vm.select_map("map_one")
+        # Force fallback to current_map_name when selected_map_names is cleared
+        vm.selected_map_names = []
+
+        notifications = []
+        vm.notify.connect(notifications.append)
+
+        count = vm.save_selected_maps_to_csv(str(tmp_path))
+
+        assert count == 1
+        assert (tmp_path / "map_one.csv").exists()
+        assert notifications[-1] == "Successfully saved 1 map."
+
+    def test_save_selected_maps_to_csv_no_selection_notifies(self, vm, tmp_path):
+        out_dir = tmp_path / "exports"
+        out_dir.mkdir()
+        notifications = []
+        vm.notify.connect(notifications.append)
+
+        count = vm.save_selected_maps_to_csv(str(out_dir))
+
+        assert count == 0
+        assert list(out_dir.iterdir()) == []
+        assert notifications == ["No map selected."]
+
+    def test_save_selected_maps_to_csv_sanitizes_and_deduplicates_filenames(self, vm, tmp_path):
+        from spectroview.model.io.m_io import load_map_file
+
+        md1 = _load_map(vm, "sample/1", n_rows_side=2, seed=31)
+        md2 = _load_map(vm, "sample:1", n_rows_side=2, seed=32)
+        vm.select_maps(["sample/1", "sample:1"], primary_name="sample/1")
+
+        count = vm.save_selected_maps_to_csv(str(tmp_path))
+
+        assert count == 2
+        p1 = tmp_path / "sample1.csv"
+        p2 = tmp_path / "sample1_2.csv"
+        assert p1.exists() and p2.exists()
+
+        df1 = load_map_file(p1)
+        df2 = load_map_file(p2)
+        np.testing.assert_allclose(df1.iloc[:, 2:].to_numpy(), md1.y_matrix, rtol=1e-5, atol=1e-5)
+        np.testing.assert_allclose(df2.iloc[:, 2:].to_numpy(), md2.y_matrix, rtol=1e-5, atol=1e-5)
+
+    def test_save_selected_maps_to_csv_partial_error_continues(self, vm, tmp_path):
+        _load_map(vm, "map_broken", n_rows_side=2, seed=41)
+        _load_map(vm, "map_ok", n_rows_side=2, seed=42)
+        vm.select_maps(["map_broken", "map_ok"], primary_name="map_ok")
+
+        # Remove map_broken from store only so export fails for it while map_ok succeeds
+        vm.store.remove_map("map_broken")
+
+        notifications = []
+        vm.notify.connect(notifications.append)
+
+        count = vm.save_selected_maps_to_csv(str(tmp_path))
+
+        assert count == 1
+        assert not (tmp_path / "map_broken.csv").exists()
+        assert (tmp_path / "map_ok.csv").exists()
+        assert any("Error saving map_broken.csv" in msg for msg in notifications)
+        assert notifications[-1] == "Successfully saved 1 map."
+
+    def test_save_current_map_to_csv_backward_compatibility(self, vm, tmp_path):
+        from spectroview.model.io.m_io import load_map_file
+
+        md = _load_map(vm, "map_A", n_rows_side=2, seed=50)
+        vm.select_map("map_A")
+
+        notifications = []
+        vm.notify.connect(notifications.append)
+
+        out_base = tmp_path / "single"
+        vm.save_current_map_to_csv(str(out_base))
+
+        out_csv = tmp_path / "single.csv"
+        assert out_csv.exists()
+        reloaded = load_map_file(out_csv)
+        np.testing.assert_allclose(
+            reloaded.iloc[:, 2:].to_numpy(), md.y_matrix, rtol=1e-5, atol=1e-5
+        )
+        assert notifications[-1] == "Map 'map_A' saved to CSV."
+

@@ -123,7 +123,7 @@ switch_to_graphs_tab    = Signal()        # request tab switch after profile ext
 | **Выбор и порядок карт** | `select_map(name)`, `select_maps(names, primary)`, `reorder_maps(new_order)`, `_show_map_spectra(name)` |
 | **Удаление карт** | `delete_current_map()`, `remove_map(name)` |
 | **Данные карты** | `get_current_map_dataframe()`, `get_fit_results_dataframe()` |
-| **Экспорт** | `save_current_map_to_csv(file_path)` |
+| **Экспорт** | `save_selected_maps_to_csv(dir_path)`, `save_current_map_to_csv(file_path)` |
 | **Аппроксимация** | `fit()`, `_run_fit_thread()`, `collect_fit_results()` — все переопределяют методы родительского класса |
 | **Межмодульное взаимодействие** | `send_selected_spectra_to_spectra_workspace()`, `extract_and_send_profile_to_graphs()` |
 | **Сохранение состояния** | `save_work()`, `load_work()`, `_load_legacy_maps()` |
@@ -177,7 +177,7 @@ switch_to_graphs_tab    = Signal()        # request tab switch after profile ext
 
 **Файл**: [`v_map_list.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/lists/v_map_list.py)
 
-Отображает имена загруженных карт во внутреннем списке `_ReorderableMapsList(QListWidget)` (`ExtendedSelection` для множественного выбора с помощью `Shift+Click` / `Ctrl+Click` с отслеживанием основного фокуса через `maps_selection_changed(selected_names, primary_name)`, а также переупорядочивание перетаскиванием `InternalMove`, которое испускает сигнал `maps_order_changed(new_order)` и игнорирует перетаскивание внешних URL MIME, чтобы перетаскивание файлов передавалось родительским окнам). При внутреннем перетаскивании выделение и основной фокус сохраняются без лишнего мелькания выбора и передаются в `VMWorkspaceMaps.reorder_maps()`, который переупорядочивает `self.maps`, `SpectraStore.reorder_maps()` и `selected_map_names`, обновляя `VMapsList` и Live-карты без сброса `VMapViewer`. Дополняется кнопками быстрого управления (View, **Удалить** (Delete) — с запросом подтверждения при удалении нескольких выбранных карт, Export CSV) и унифицированными кнопками действий со спектрами (**Выбрать все** (Select All), Reinitialize, Fitting Statistics, Send to Spectra Workspace), которые применяются к основной карте и её пространственно выбранным спектрам.
+Отображает имена загруженных карт во внутреннем списке `_ReorderableMapsList(QListWidget)` (`ExtendedSelection` для множественного выбора с помощью `Shift+Click` / `Ctrl+Click` с отслеживанием основного фокуса через `maps_selection_changed(selected_names, primary_name)`, а также переупорядочивание перетаскиванием `InternalMove`, которое испускает сигнал `maps_order_changed(new_order)` и игнорирует перетаскивание внешних URL MIME, чтобы перетаскивание файлов передавалось родительским окнам). При внутреннем перетаскивании выделение и основной фокус сохраняются без лишнего мелькания выбора и передаются в `VMWorkspaceMaps.reorder_maps()`, который переупорядочивает `self.maps`, `SpectraStore.reorder_maps()` и `selected_map_names`, обновляя `VMapsList` и Live-карты без сброса `VMapViewer`. Дополняется кнопками быстрого управления (View, **Удалить** (Delete) — с запросом подтверждения при удалении нескольких выбранных карт, Export CSV — сохранение всех выбранных карт в выбранную папку) и унифицированными кнопками действий со спектрами (**Выбрать все** (Select All), Reinitialize, Fitting Statistics, Send to Spectra Workspace), которые применяются к основной карте и её пространственно выбранным спектрам.
 
 ### `VMapViewerDialog` — открепляемое окно { #vmapviewerdialog-detachable-window }
 
@@ -194,7 +194,7 @@ switch_to_graphs_tab    = Signal()        # request tab switch after profile ext
 1. **`self.maps[map_name]`** — объект `pd.DataFrame` со столбцами `X, Y, w1, w2, ...` (по одной строке на спектр). Это устаревшее хранилище, заполняемое при загрузке парсером файлов.
 2. **`self.store.get_map_data(map_name)`** — тензорный блок `MapData` со всем состоянием обработки.
 
-DataFrame используется как **входные данные для тепловой карты** (сводная таблица → imshow) и для **экспорта в CSV**. Тензорный блок применяется во **всех аналитических операциях** (базовая линия, аппроксимация, сбор результатов). При сохранении обработанных данных в CSV метод `save_current_map_to_csv()` читает из `md.x` / `md.Y` (обработанных данных), а не из исходного DataFrame.
+DataFrame используется как **входные данные для тепловой карты** (сводная таблица → imshow) и для **экспорта в CSV**. Тензорный блок применяется во **всех аналитических операциях** (базовая линия, аппроксимация, сбор результатов). При сохранении обработанных данных в CSV методы `save_selected_maps_to_csv()` и `save_current_map_to_csv()` читают из `md.x` / `md.Y` (обработанных данных), а не из исходного DataFrame.
 
 > [!IMPORTANT]
 > Когда новый разработчик задаётся вопросом «где находятся данные?», ответ таков: **в обоих местах, для разных задач**. DataFrame является входной точкой от загрузчика файлов и входом для конвейера тепловой карты. Тензорный блок является источником истины для всего анализа. Модификации (базовая линия, обрезка) затрагивают только тензорный блок — они не обновляют DataFrame.

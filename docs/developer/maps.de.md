@@ -123,7 +123,7 @@ switch_to_graphs_tab    = Signal()        # request tab switch after profile ext
 | **Kartenauswahl & -reihenfolge** | `select_map(name)`, `select_maps(names, primary)`, `reorder_maps(new_order)`, `_show_map_spectra(name)` |
 | **Karten löschen** | `delete_current_map()`, `remove_map(name)` |
 | **Kartendaten** | `get_current_map_dataframe()`, `get_fit_results_dataframe()` |
-| **Export** | `save_current_map_to_csv(file_path)` |
+| **Export** | `save_selected_maps_to_csv(dir_path)`, `save_current_map_to_csv(file_path)` |
 | **Fit** | `fit()`, `_run_fit_thread()`, `collect_fit_results()` — alle überschreiben die Elternklasse |
 | **Arbeitsbereichsübergreifend** | `send_selected_spectra_to_spectra_workspace()`, `extract_and_send_profile_to_graphs()` |
 | **Persistenz** | `save_work()`, `load_work()`, `_load_legacy_maps()` |
@@ -177,7 +177,7 @@ Die komplexeste View-Komponente (~1 300 Zeilen). Sie rendert sowohl rechteckige 
 
 **Datei**: [`v_map_list.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/lists/v_map_list.py)
 
-Zeigt geladene Kartennamen in einem internen `_ReorderableMapsList(QListWidget)` an (`ExtendedSelection` für Mehrfachauswahl per `Shift+Click` / `Ctrl+Click` mit Nachverfolgung des primären Fokus über `maps_selection_changed(selected_names, primary_name)`, sowie internes Umsortieren per Drag-and-Drop über `InternalMove`, das `maps_order_changed(new_order)` sendet und gleichzeitig externe URL-MIME-Drops ignoriert, sodass abgelegte Dateien an übergeordnete Fenster weitergereicht werden). Beim internen Ablegen bleiben Auswahl und primärer Fokus ohne zwischenzeitliches Auswahlflackern erhalten und werden an `VMWorkspaceMaps.reorder_maps()` weitergeleitet, welches `self.maps`, `SpectraStore.reorder_maps()` und `selected_map_names` neu anordnet und sowohl `VMapsList` als auch Live-Karten aktualisiert, ohne `VMapViewer` zurückzusetzen. Ergänzt wird dies durch schnelle Verwaltungsschaltflächen (View, **Löschen** (Delete) — mit Bestätigungsabfrage beim Löschen mehrerer ausgewählter Karten, Export CSV) sowie einheitliche Spektrenaktions-Schaltflächen (**Alle auswählen** (Select All), Reinitialize, Fitting Statistics, Send to Spectra Workspace), die auf die primäre Karte und deren räumlich ausgewählte Spektren wirken.
+Zeigt geladene Kartennamen in einem internen `_ReorderableMapsList(QListWidget)` an (`ExtendedSelection` für Mehrfachauswahl per `Shift+Click` / `Ctrl+Click` mit Nachverfolgung des primären Fokus über `maps_selection_changed(selected_names, primary_name)`, sowie internes Umsortieren per Drag-and-Drop über `InternalMove`, das `maps_order_changed(new_order)` sendet und gleichzeitig externe URL-MIME-Drops ignoriert, sodass abgelegte Dateien an übergeordnete Fenster weitergereicht werden). Beim internen Ablegen bleiben Auswahl und primärer Fokus ohne zwischenzeitliches Auswahlflackern erhalten und werden an `VMWorkspaceMaps.reorder_maps()` weitergeleitet, welches `self.maps`, `SpectraStore.reorder_maps()` und `selected_map_names` neu anordnet und sowohl `VMapsList` als auch Live-Karten aktualisiert, ohne `VMapViewer` zurückzusetzen. Ergänzt wird dies durch schnelle Verwaltungsschaltflächen (View, **Löschen** (Delete) — mit Bestätigungsabfrage beim Löschen mehrerer ausgewählter Karten, Export CSV — Speichern aller ausgewählten Karten in einem gewählten Zielordner) sowie einheitliche Spektrenaktions-Schaltflächen (**Alle auswählen** (Select All), Reinitialize, Fitting Statistics, Send to Spectra Workspace), die auf die primäre Karte und deren räumlich ausgewählte Spektren wirken.
 
 ### `VMapViewerDialog` — Abkoppelbares Fenster { #vmapviewerdialog-detachable-window }
 
@@ -194,7 +194,7 @@ Der Arbeitsbereich `Maps` führt **zwei Datenspeicher** für dieselben Daten:
 1. **`self.maps[map_name]`** — ein `pd.DataFrame` mit den Spalten `X, Y, w1, w2, ...` (eine Zeile pro Spektrum). Dies ist der beim Laden vom Dateiparser befüllte Legacy-Speicher.
 2. **`self.store.get_map_data(map_name)`** — der `MapData`-Tensorblock mit dem gesamten Verarbeitungszustand.
 
-Der DataFrame dient als **Eingabe für die Heatmap** (Pivottabelle → `imshow`) sowie für den **CSV-Export**. Der Tensorblock wird für **alle Analyseoperationen** verwendet (Basislinie, Fitting, Ergebnissammlung). Beim Speichern verarbeiteter Daten als CSV liest `save_current_map_to_csv()` aus `md.x` / `md.Y` (verarbeitet) statt aus dem rohen DataFrame.
+Der DataFrame dient als **Eingabe für die Heatmap** (Pivottabelle → `imshow`) sowie für den **CSV-Export**. Der Tensorblock wird für **alle Analyseoperationen** verwendet (Basislinie, Fitting, Ergebnissammlung). Beim Speichern verarbeiteter Daten als CSV lesen `save_selected_maps_to_csv()` und `save_current_map_to_csv()` aus `md.x` / `md.Y` (verarbeitet) statt aus dem rohen DataFrame.
 
 > [!IMPORTANT]
 > Wenn sich ein neuer Entwickler fragt, „wo liegen eigentlich die Daten?“, lautet die Antwort: **an beiden Orten, für unterschiedliche Zwecke**. Der DataFrame ist der Einstiegspunkt aus dem Dateilader und die Eingabe für die Heatmap-Pipeline. Der Tensorblock ist die maßgebliche Quelle für alle Analysen. Änderungen (Basislinie, Zuschneiden) betreffen ausschließlich den Tensorblock — sie aktualisieren den DataFrame nicht.

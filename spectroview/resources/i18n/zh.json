@@ -967,9 +967,9 @@
     "Save all currently open plots as a Plot Recipe": "将当前打开的所有图表保存为绘图配方",
     "Save current peak limits as a profile": "将当前峰限制保存为配置方案",
     "Save fit results to Excel file": "将拟合结果保存为 Excel 文件",
+    "Save selected map(s) to CSV": "将所选图谱保存为 CSV",
     "Save selected spectra data to TXT file": "将所选光谱数据保存为 TXT 文件",
     "Save the current fit model.": "保存当前拟合模型。",
-    "Save the selected map": "保存所选图谱",
     "Save work": "保存工作区",
     "Saved style '{name}'.": "已保存样式 '{name}'。",
     "Scale:": "刻度：",
@@ -1000,6 +1000,7 @@
     "Select Arrow Color": "选择箭头颜色",
     "Select Axis Color": "选择坐标轴颜色",
     "Select Background Color": "选择背景颜色",
+    "Select Directory to Save Map Data": "选择图谱数据保存目录",
     "Select Directory to Save Spectra Data": "选择光谱数据保存目录",
     "Select Edge Color": "选择边框颜色",
     "Select Face Color": "选择填充颜色",
@@ -1423,6 +1424,9 @@
     ],
     "Successfully exported {count} graph.|Successfully exported {count} graphs.": [
       "成功导出 {count} 个图表。"
+    ],
+    "Successfully saved {count} map.|Successfully saved {count} maps.": [
+      "成功保存 {count} 幅图谱。"
     ],
     "Successfully saved {count} spectrum.|Successfully saved {count} spectra.": [
       "成功保存 {count} 条光谱。"

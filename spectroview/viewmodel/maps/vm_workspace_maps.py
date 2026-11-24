@@ -349,6 +349,57 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
         mask = idx.isin(list(active_coords))
         return df[mask]
 
+    def get_selected_map_names(self) -> list[str]:
+        """Return ordered list of selected map names, falling back to primary map."""
+        targets = [n for n in self.selected_map_names if n in self.maps]
+        if not targets and self.current_map_name and self.current_map_name in self.maps:
+            targets = [self.current_map_name]
+        return targets
+
+    @staticmethod
+    def _sanitize_map_filename(map_name: str, used_names: set[str]) -> str:
+        """Return a filesystem-safe, collision-free CSV filename for *map_name*."""
+        safe_stem = "".join(
+            c
+            for c in str(map_name)
+            if c.isalpha() or c.isdigit() or c in (" ", ".", "_", "-")
+        ).rstrip(" .")
+        if safe_stem.lower().endswith(".csv"):
+            safe_stem = safe_stem[:-4].rstrip(" .")
+        if not safe_stem:
+            safe_stem = "map"
+
+        candidate = f"{safe_stem}.csv"
+        suffix_idx = 2
+        while candidate.lower() in used_names:
+            candidate = f"{safe_stem}_{suffix_idx}.csv"
+            suffix_idx += 1
+        used_names.add(candidate.lower())
+        return candidate
+
+    @staticmethod
+    def _write_map_data_to_csv(md, file_path: str) -> str:
+        """Write *md* (processed if available, else raw) as a SPECTROview CSV file."""
+        x_axis = md.x_axis
+        y_matrix = md.y_matrix
+        coords = (
+            md.coords
+            if md.coords is not None
+            else np.zeros((y_matrix.shape[0], 2), dtype=np.float64)
+        )
+
+        col_names = ["X", "Y"] + [str(float(w)) for w in x_axis]
+        data = np.hstack([coords, y_matrix.astype(np.float64)])
+        df = pd.DataFrame(data, columns=col_names)
+
+        if not file_path.lower().endswith(".csv"):
+            file_path += ".csv"
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write("SPECTROview Map Data\n")
+        df.to_csv(file_path, sep=";", index=False, mode="a")
+        return file_path
+
     def save_current_map_to_csv(self, file_path: str):
         """Save the currently selected map to a CSV file (readable by m_io.py)."""
         if not self.current_map_name or self.current_map_name not in self.maps:
@@ -361,23 +412,50 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
                 self.notify.emit(tr("Map data not found."))
                 return
 
-            x_axis = md.x_axis
-            y_matrix = md.y_matrix
-
-            col_names = ["X", "Y"] + [str(float(w)) for w in x_axis]
-            data = np.hstack([md.coords, y_matrix.astype(np.float64)])
-            df = pd.DataFrame(data, columns=col_names)
-
-            if not file_path.lower().endswith(".csv"):
-                file_path += ".csv"
-
-            with open(file_path, "w", encoding="utf-8") as f:
-                f.write("SPECTROview Map Data\n")
-            df.to_csv(file_path, sep=";", index=False, mode="a")
-
+            self._write_map_data_to_csv(md, file_path)
             self.notify.emit(tr("Map '{name}' saved to CSV.", name=self.current_map_name))
         except Exception as e:
             self.notify.emit(tr("Error saving map: {error}", error=e))
+
+    def save_selected_maps_to_csv(self, dir_path: str) -> int:
+        """Save all selected maps as separate CSV files inside *dir_path*."""
+        targets = self.get_selected_map_names()
+        if not targets:
+            self.notify.emit(tr("No map selected."))
+            return 0
+        if not dir_path:
+            return 0
+
+        used_names: set[str] = set()
+        saved_count = 0
+        for map_name in targets:
+            safe_name = self._sanitize_map_filename(map_name, used_names)
+            file_path = str(Path(dir_path) / safe_name)
+
+            md = self.store.get_map_data(map_name)
+            if not md:
+                self.notify.emit(
+                    tr("Error saving {name}: {error}", name=safe_name, error=tr("Map data not found."))
+                )
+                continue
+
+            try:
+                self._write_map_data_to_csv(md, file_path)
+                saved_count += 1
+            except Exception as e:
+                self.notify.emit(tr("Error saving {name}: {error}", name=safe_name, error=e))
+
+        if saved_count > 0:
+            self.notify.emit(
+                tr_plural(
+                    "Successfully saved {count} map.",
+                    "Successfully saved {count} maps.",
+                    saved_count,
+                )
+            )
+            self.settings.set_last_directory(dir_path)
+
+        return saved_count
 
     def delete_current_map(self):
         """Delete the currently selected Primary map."""
@@ -391,9 +469,7 @@ class VMWorkspaceMaps(MapsFittingMixin, MapsPersistenceMixin, VMWorkspaceSpectra
 
     def delete_selected_maps(self):
         """Delete all currently selected maps (batch delete when multiple selected)."""
-        targets = [n for n in self.selected_map_names if n in self.maps]
-        if not targets and self.current_map_name and self.current_map_name in self.maps:
-            targets = [self.current_map_name]
+        targets = self.get_selected_map_names()
         if not targets:
             self.notify.emit(tr("No map selected."))
             return

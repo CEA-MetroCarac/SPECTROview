@@ -13,7 +13,7 @@ _______
 
 `MapList` and `MapViewer` are widgets designed for the efficient navigation and management of your hyperspectral datasets. The `MapList` displays all loaded map files, including wafer maps and standard 2D maps.
 
-The action buttons located beside the `MapList` allow you to: (1) view the selected map data, (2) delete the selected map from the workspace, or (3) export the selected map directly to an Excel file.
+The action buttons located beside the `MapList` allow you to: (1) view the selected map data, (2) delete the selected map(s) from the workspace, or (3) save all selected map(s) as CSV files into a chosen folder.
 
 You can easily navigate between loaded 2D maps using the `MapList`, select multiple maps with `Ctrl+Click` or `Shift+Click`, and **drag and drop** one or more selected maps within the list to reorder them (updating Live Maps comparison order while keeping your active Primary map unchanged). The Primary selected map is rendered in the `MapViewer`. When opening or selecting a map, **the first spectrum in the map is automatically selected** and highlighted on the heatmap plot, immediately rendering its curve in `SpectraViewer` and synchronizing the baseline, peak table, and metadata. By default, the `MapViewer` displays a heatmap of signal "Intensity" or "Area". If the map has been fitted, you can select and visualize the heatmap of any fitted parameter.
 
@@ -204,6 +204,7 @@ Each button activates a corresponding pair of draggable vertical markers (bracke
   - **Comparing Multiple 1D Profiles**: When the Primary map is a 1D line scan, all selected 1D profiles are overlaid together inside each channel subpanel with uniform line thickness (toggle the **Legend** button to identify individual curves on the canvas).
   - **Switching Between Selected 2D Maps**: When the Primary map is a 2D map, a compact `◀ [2D Map Selector] ▶` switcher appears in the Live Maps header so you can cycle through selected 2D heatmaps without losing your selection.
   - **Batch Deletion**: Pressing **Delete** while multiple maps are selected prompts for confirmation before removing all selected maps together.
+  - **Batch Export**: Clicking the **Save** button while one or multiple maps are selected opens a folder selector and exports each selected map as an individual `.csv` file in that folder.
 
 ##### **Live Maps Tab Visualization & Subpanels**
 The **Live Maps** tab is located on the bottom tab bar between **Fit Results** and **MVA** (with the **More** tab positioned at the end of the tabs list).

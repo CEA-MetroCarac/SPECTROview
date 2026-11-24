@@ -13,7 +13,7 @@ _______
 
 `MapList` und `MapViewer` sind spezialisierte Bedienelemente für die effiziente Navigation und Verwaltung Ihrer hyperspektralen Datensätze. In `MapList` werden alle geladenen Kartendateien angezeigt, einschließlich Wafer-Karten und regulärer 2D-Karten.
 
-Über die Aktionsschaltflächen neben `MapList` können Sie: (1) die Daten der ausgewählten Karte anzeigen, (2) die ausgewählte Karte aus dem Arbeitsbereich entfernen oder (3) die ausgewählte Karte direkt in eine Excel-Datei exportieren.
+Über die Aktionsschaltflächen neben `MapList` können Sie: (1) die Daten der ausgewählten Karte anzeigen, (2) die ausgewählte(n) Karte(n) aus dem Arbeitsbereich entfernen oder (3) alle ausgewählten Karten als CSV-Dateien in einem gewählten Zielordner speichern.
 
 Sie können über `MapList` bequem zwischen geladenen 2D-Karten wechseln, mit `Ctrl+Click` oder `Shift+Click` mehrere Karten gleichzeitig markieren und eine oder mehrere ausgewählte Karten per **Drag-and-Drop** innerhalb der Liste neu anordnen (wodurch sich die Vergleichsreihenfolge in den Live-Karten aktualisiert, während Ihre aktive Hauptkarte unverändert bleibt). Die als Hauptkarte ausgewählte Karte wird im `MapViewer` dargestellt. Beim Öffnen oder Auswählen einer Karte wird **automatisch das erste Spektrum der Karte ausgewählt** und auf dem Heatmap-Plot hervorgehoben; gleichzeitig erscheint seine Kurve sofort im `SpectraViewer`, und Basislinie, Peak-Tabelle sowie Metadaten werden synchronisiert. Standardmäßig zeigt der `MapViewer` eine Heatmap des Signals **Intensität** (Intensity) oder **Fläche** (Area). Wurde die Karte bereits gefittet, lässt sich die Heatmap jedes beliebigen Fit-Parameters auswählen und visualisieren.
 
@@ -201,6 +201,7 @@ Jede Schaltfläche aktiviert ein zugehöriges Paar verschiebbarer vertikaler Mar
   - **Mehrere 1D-Profile vergleichen**: Handelt es sich bei der Hauptkarte um einen 1D-Linienscan, werden alle ausgewählten 1D-Profile gemeinsam in jedem Kanal-Unterpanel mit einheitlicher Linienstärke überlagert (schalten Sie die Schaltfläche **Legend** ein, um die einzelnen Kurven auf der Zeichenfläche zuzuordnen).
   - **Zwischen ausgewählten 2D-Karten wechseln**: Ist die Hauptkarte eine 2D-Karte, erscheint in der Kopfzeile der Live-Karten ein kompakter Umschalter `◀ [2D Map Selector] ▶`, über den Sie durch die ausgewählten 2D-Heatmaps blättern können, ohne Ihre Auswahl zu verlieren.
   - **Stapellöschung**: Ein Klick auf **Löschen** (Delete) bei mehreren ausgewählten Karten bittet zunächst um Bestätigung, bevor alle markierten Karten gemeinsam entfernt werden.
+  - **Stapel-Export**: Ein Klick auf die Schaltfläche **Save** bei einer oder mehreren ausgewählten Karten öffnet eine Ordnerauswahl und exportiert jede ausgewählte Karte als eigene `.csv`-Datei in diesen Ordner.
 
 ##### **Visualisierung und Unterpanels des Tabs Live-Karten** { #live-maps-tab-visualization-subpanels }
 

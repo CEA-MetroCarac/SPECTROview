@@ -967,9 +967,9 @@
     "Save all currently open plots as a Plot Recipe": "Сохранить все открытые графики как рецепт",
     "Save current peak limits as a profile": "Сохранить текущие ограничения пиков как профиль",
     "Save fit results to Excel file": "Сохранить результаты аппроксимации в файл Excel",
+    "Save selected map(s) to CSV": "Сохранить выбранные карты в CSV",
     "Save selected spectra data to TXT file": "Сохранить данные выбранных спектров в файл TXT",
     "Save the current fit model.": "Сохранить текущую модель аппроксимации.",
-    "Save the selected map": "Сохранить выбранную карту",
     "Save work": "Сохранить проект",
     "Saved style '{name}'.": "Стиль '{name}' сохранён.",
     "Scale:": "Масштаб:",
@@ -1000,6 +1000,7 @@
     "Select Arrow Color": "Выбрать цвет стрелки",
     "Select Axis Color": "Выбрать цвет оси",
     "Select Background Color": "Выбрать цвет фона",
+    "Select Directory to Save Map Data": "Выберите папку для сохранения данных карт",
     "Select Directory to Save Spectra Data": "Выберите папку для сохранения спектров",
     "Select Edge Color": "Выбрать цвет контура",
     "Select Face Color": "Выбрать цвет заливки",
@@ -1451,6 +1452,11 @@
       "Успешно экспортирован {count} график.",
       "Успешно экспортированы {count} графика.",
       "Успешно экспортировано {count} графиков."
+    ],
+    "Successfully saved {count} map.|Successfully saved {count} maps.": [
+      "Успешно сохранена {count} карта.",
+      "Успешно сохранены {count} карты.",
+      "Успешно сохранено {count} карт."
     ],
     "Successfully saved {count} spectrum.|Successfully saved {count} spectra.": [
       "Успешно сохранён {count} спектр.",

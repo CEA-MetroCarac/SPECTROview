@@ -967,9 +967,9 @@
     "Save all currently open plots as a Plot Recipe": "Enregistrer tous les graphiques ouverts sous forme de recette de tracé",
     "Save current peak limits as a profile": "Enregistrer les limites de pics actuelles comme profil",
     "Save fit results to Excel file": "Enregistrer les résultats d'ajustement dans un fichier Excel",
+    "Save selected map(s) to CSV": "Enregistrer les cartes sélectionnées en CSV",
     "Save selected spectra data to TXT file": "Enregistrer les données des spectres sélectionnés dans un fichier TXT",
     "Save the current fit model.": "Enregistrer le modèle d'ajustement actuel.",
-    "Save the selected map": "Enregistrer la carte sélectionnée",
     "Save work": "Enregistrer le travail",
     "Saved style '{name}'.": "Style '{name}' enregistré.",
     "Scale:": "Échelle :",
@@ -1000,6 +1000,7 @@
     "Select Arrow Color": "Choisir la couleur de la flèche",
     "Select Axis Color": "Choisir la couleur de l'axe",
     "Select Background Color": "Choisir la couleur de fond",
+    "Select Directory to Save Map Data": "Sélectionner le dossier d'enregistrement des cartes",
     "Select Directory to Save Spectra Data": "Sélectionner le dossier d'enregistrement des spectres",
     "Select Edge Color": "Choisir la couleur de bordure",
     "Select Face Color": "Choisir la couleur de remplissage",
@@ -1437,6 +1438,10 @@
     "Successfully exported {count} graph.|Successfully exported {count} graphs.": [
       "{count} graphique exporté avec succès.",
       "{count} graphiques exportés avec succès."
+    ],
+    "Successfully saved {count} map.|Successfully saved {count} maps.": [
+      "{count} carte enregistrée avec succès.",
+      "{count} cartes enregistrées avec succès."
     ],
     "Successfully saved {count} spectrum.|Successfully saved {count} spectra.": [
       "{count} spectre enregistré avec succès.",

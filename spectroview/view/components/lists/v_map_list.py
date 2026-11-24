@@ -132,7 +132,7 @@ class VMapsList(QWidget):
     maps_order_changed = Signal(list)                 # New order of map indices after drag-drop
     view_map_requested = Signal()                     # View map DataFrame
     delete_map_requested = Signal()                   # Delete selected map(s)
-    save_requested = Signal()                         # Save map to Excel / CSV
+    save_requested = Signal()                         # Save selected map(s) to CSV
     select_all_requested = Signal()                   # Select all spectra
     reinitialize_requested = Signal()                 # Reinitialize selected spectra
     send_to_spectra_requested = Signal()              # Send to Spectra workspace
@@ -234,7 +234,7 @@ class VMapsList(QWidget):
         
         self.btn_save = QPushButton()
         self.btn_save.setIcon(Icons.save())
-        bind_tooltip(self.btn_save, "Save the selected map")
+        bind_tooltip(self.btn_save, "Save selected map(s) to CSV")
         self.btn_save.setFixedSize(32, 32)
         self.btn_save.clicked.connect(self.save_requested.emit)
         

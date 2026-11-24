@@ -122,7 +122,7 @@ switch_to_graphs_tab    = Signal()        # request tab switch after profile ext
 | **图谱选择与排序** | `select_map(name)`, `select_maps(names, primary)`, `reorder_maps(new_order)`, `_show_map_spectra(name)` |
 | **图谱删除** | `delete_current_map()`, `remove_map(name)` |
 | **图谱数据** | `get_current_map_dataframe()`, `get_fit_results_dataframe()` |
-| **导出** | `save_current_map_to_csv(file_path)` |
+| **导出** | `save_selected_maps_to_csv(dir_path)`, `save_current_map_to_csv(file_path)` |
 | **拟合** (Fit) | `fit()`, `_run_fit_thread()`, `collect_fit_results()` —— 均覆写父类方法 |
 | **跨工作区** | `send_selected_spectra_to_spectra_workspace()`, `extract_and_send_profile_to_graphs()` |
 | **持久化** | `save_work()`, `load_work()`, `_load_legacy_maps()` |
@@ -176,7 +176,7 @@ switch_to_graphs_tab    = Signal()        # request tab switch after profile ext
 
 **文件**：[`v_map_list.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/lists/v_map_list.py)
 
-在内部的 `_ReorderableMapsList(QListWidget)` 中展示已加载的图谱名称（支持通过 `Shift+Click` / `Ctrl+Click` 进行 `ExtendedSelection` 多选，并通过 `maps_selection_changed(selected_names, primary_name)` 跟踪主图谱焦点；同时支持 `InternalMove` 拖放重排并发射 `maps_order_changed(new_order)` 信号，同时忽略外部 URL MIME 拖放以便文件拖放能够传递至父窗口）。在内部拖放时，系统会保留当前选区与主图谱焦点而不会产生瞬时选择抖动，并将新顺序转发至 `VMWorkspaceMaps.reorder_maps()`，从而更新 `self.maps`、`SpectraStore.reorder_maps()` 与 `selected_map_names`，并同步刷新 `VMapsList` 和实时图谱，而无需重置 `VMapViewer`。同时配备快捷管理按钮（View、**删除** (Delete)——在删除多幅所选图谱时会弹出确认提示、Export CSV）以及统一的光谱操作按钮（**全选** (Select All)、Reinitialize、Fitting Statistics、Send to Spectra Workspace），针对主图谱及其空间选中的光谱执行对应操作。
+在内部的 `_ReorderableMapsList(QListWidget)` 中展示已加载的图谱名称（支持通过 `Shift+Click` / `Ctrl+Click` 进行 `ExtendedSelection` 多选，并通过 `maps_selection_changed(selected_names, primary_name)` 跟踪主图谱焦点；同时支持 `InternalMove` 拖放重排并发射 `maps_order_changed(new_order)` 信号，同时忽略外部 URL MIME 拖放以便文件拖放能够传递至父窗口）。在内部拖放时，系统会保留当前选区与主图谱焦点而不会产生瞬时选择抖动，并将新顺序转发至 `VMWorkspaceMaps.reorder_maps()`，从而更新 `self.maps`、`SpectraStore.reorder_maps()` 与 `selected_map_names`，并同步刷新 `VMapsList` 和实时图谱，而无需重置 `VMapViewer`。同时配备快捷管理按钮（View、**删除** (Delete)——在删除多幅所选图谱时会弹出确认提示、Export CSV——将所有所选图谱保存至指定目录）以及统一的光谱操作按钮（**全选** (Select All)、Reinitialize、Fitting Statistics、Send to Spectra Workspace），针对主图谱及其空间选中的光谱执行对应操作。
 
 ### `VMapViewerDialog` — 可分离独立窗口 { #vmapviewerdialog-detachable-window }
 
@@ -193,7 +193,7 @@ switch_to_graphs_tab    = Signal()        # request tab switch after profile ext
 1. **`self.maps[map_name]`** —— 包含 `X, Y, w1, w2, ...` 列的 `pd.DataFrame`（每行对应一条光谱）。这是加载阶段由文件解析器填充的历史兼容存储结构。
 2. **`self.store.get_map_data(map_name)`** —— 包含全部处理状态的 `MapData` 张量数据块。
 
-DataFrame 用于**热图输入**（数据透视表 → `imshow`）和 **CSV 导出**；张量数据块则用于**所有分析运算**（基线处理、拟合、结果汇总）。将已处理数据保存为 CSV 时，`save_current_map_to_csv()` 会从 `md.x` / `md.Y`（已处理数据）而非原始 DataFrame 中读取。
+DataFrame 用于**热图输入**（数据透视表 → `imshow`）和 **CSV 导出**；张量数据块则用于**所有分析运算**（基线处理、拟合、结果汇总）。将已处理数据保存为 CSV 时，`save_selected_maps_to_csv()` 和 `save_current_map_to_csv()` 会从 `md.x` / `md.Y`（已处理数据）而非原始 DataFrame 中读取。
 
 > [!IMPORTANT]
 > 当新开发者疑惑“数据究竟存在哪里？”时，答案是：**两处均有存储，但各自承担不同职责**。DataFrame 是文件加载器的入口以及热图流水线的输入源；张量数据块则是所有分析运算的唯一事实来源。各类预处理修改（基线、裁剪）仅作用于张量数据块——不会回写更新 DataFrame。

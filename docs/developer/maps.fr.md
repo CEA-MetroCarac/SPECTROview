@@ -123,7 +123,7 @@ switch_to_graphs_tab      = Signal()        # demande de bascule d'onglet après
 | **Sélection et ordre** | `select_map(name)`, `select_maps(names, primary)`, `reorder_maps(new_order)`, `_show_map_spectra(name)` |
 | **Suppression** | `delete_current_map()`, `remove_map(name)` |
 | **Données de carte** | `get_current_map_dataframe()`, `get_fit_results_dataframe()` |
-| **Export** | `save_current_map_to_csv(file_path)` |
+| **Export** | `save_selected_maps_to_csv(dir_path)`, `save_current_map_to_csv(file_path)` |
 | **Ajustement** | `fit()`, `_run_fit_thread()`, `collect_fit_results()` — toutes surchargent la classe parente |
 | **Inter-espaces** | `send_selected_spectra_to_spectra_workspace()`, `extract_and_send_profile_to_graphs()` |
 | **Persistance** | `save_work()`, `load_work()`, `_load_legacy_maps()` |
@@ -177,7 +177,7 @@ Composant View parmi les plus riches (~1 300 lignes), il affiche à la fois des 
 
 **Fichier** : [`v_map_list.py`](https://github.com/CEA-MetroCarac/SPECTROview/blob/main/spectroview/view/components/lists/v_map_list.py)
 
-Affiche les noms des cartes chargées dans un `_ReorderableMapsList(QListWidget)` (`ExtendedSelection` pour multi-sélection `Shift+Click` / `Ctrl+Click` avec suivi de la carte principale via `maps_selection_changed(selected_names, primary_name)`, et réorganisation interne par glisser-déposer `InternalMove` émettant `maps_order_changed(new_order)` tout en ignorant les dépôts d'URL externes pour laisser passer les ouvertures de fichiers). Sur dépôt interne, la sélection et la carte principale sont préservées et transmises à `VMWorkspaceMaps.reorder_maps()`, réordonnant `self.maps`, `SpectraStore.reorder_maps()` et `selected_map_names` sans réinitialiser `VMapViewer`. Associé aux boutons de gestion rapide (`View`, `Delete` avec confirmation sur sélections multiples, `Export CSV`) et aux boutons d'action sur spectres (`Select All`, `Reinitialize`, `Fitting Statistics`, `Send to Spectra Workspace`).
+Affiche les noms des cartes chargées dans un `_ReorderableMapsList(QListWidget)` (`ExtendedSelection` pour multi-sélection `Shift+Click` / `Ctrl+Click` avec suivi de la carte principale via `maps_selection_changed(selected_names, primary_name)`, et réorganisation interne par glisser-déposer `InternalMove` émettant `maps_order_changed(new_order)` tout en ignorant les dépôts d'URL externes pour laisser passer les ouvertures de fichiers). Sur dépôt interne, la sélection et la carte principale sont préservées et transmises à `VMWorkspaceMaps.reorder_maps()`, réordonnant `self.maps`, `SpectraStore.reorder_maps()` et `selected_map_names` sans réinitialiser `VMapViewer`. Associé aux boutons de gestion rapide (`View`, `Delete` avec confirmation sur sélections multiples, `Export CSV` enregistrant toutes les cartes sélectionnées dans un dossier choisi) et aux boutons d'action sur spectres (`Select All`, `Reinitialize`, `Fitting Statistics`, `Send to Spectra Workspace`).
 
 ### `VMapViewerDialog` — Fenêtre détachable
 
@@ -194,7 +194,7 @@ L'espace Maps conserve **deux structures** pour les mêmes données :
 1. **`self.maps[map_name]`** — un `pd.DataFrame` de colonnes `X, Y, w1, w2, ...` (une ligne par spectre). C'est le stockage historique renseigné au chargement depuis l'analyseur de fichier.
 2. **`self.store.get_map_data(map_name)`** — le bloc tensoriel `MapData` contenant l'ensemble de l'état de traitement.
 
-Le DataFrame sert à l'**entrée de carte thermique** (table pivot → `imshow`) et à l'**export CSV**. Le bloc tensoriel sert à **toutes les opérations analytiques** (ligne de base, ajustement, collecte des résultats). Lors de l'exportation des données traitées en CSV, `save_current_map_to_csv()` lit depuis `md.x` / `md.Y` (données traitées) plutôt que depuis le DataFrame brut.
+Le DataFrame sert à l'**entrée de carte thermique** (table pivot → `imshow`) et à l'**export CSV**. Le bloc tensoriel sert à **toutes les opérations analytiques** (ligne de base, ajustement, collecte des résultats). Lors de l'exportation des données traitées en CSV, `save_selected_maps_to_csv()` et `save_current_map_to_csv()` lisent depuis `md.x` / `md.Y` (données traitées) plutôt que depuis le DataFrame brut.
 
 > [!IMPORTANT]
 > Lorsqu'un développeur se demande « où sont stockées les données ? », la réponse est : **aux deux endroits, pour des usages distincts**. Le DataFrame constitue l'entrée issue du lecteur de fichier et du pipeline de carte thermique. Le bloc tensoriel fait autorité pour toute l'analyse. Les transformations (ligne de base, recadrage) ne modifient que le bloc tensoriel — elles ne mettent pas à jour le DataFrame.

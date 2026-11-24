@@ -23,6 +23,7 @@ class TestVMapsListUnit:
         assert hasattr(w, "btn_view")
         assert hasattr(w, "btn_delete")
         assert hasattr(w, "btn_save")
+        assert w.btn_save.toolTip() == "Save selected map(s) to CSV"
         assert hasattr(w, "btn_select_all")
         assert hasattr(w, "btn_reinit")
         assert not hasattr(w, "btn_stats")
@@ -476,3 +477,100 @@ class TestVWorkspaceMapsReorderIntegration:
             ws.vm.reorder_maps(bad_order)
             assert list(ws.vm.maps.keys()) == ["map_A", "map_B"]
             assert ws.vm.store.map_names == ["map_A", "map_B"]
+
+
+class TestVWorkspaceMapsSaveSelectedMapsIntegration:
+    """Integration tests for saving one or multiple selected maps to a folder."""
+
+    def _load_three_maps(self, workspace, map_2d_file, tmp_path):
+        import shutil
+
+        src_dir = tmp_path / "inputs"
+        src_dir.mkdir(exist_ok=True)
+        paths = []
+        for name in ("map_A", "map_B", "map_C"):
+            dst = src_dir / f"{name}{map_2d_file.suffix}"
+            shutil.copy(map_2d_file, dst)
+            paths.append(str(dst))
+        workspace.vm.load_map_files(paths)
+
+    def test_save_button_saves_all_selected_maps_to_folder(
+        self, qapp, settings, map_2d_file, tmp_path, monkeypatch
+    ):
+        from PySide6.QtWidgets import QFileDialog
+        from spectroview.view.workspaces import VWorkspaceMaps
+
+        out_dir = tmp_path / "exports"
+        out_dir.mkdir()
+
+        ws = VWorkspaceMaps()
+        try:
+            self._load_three_maps(ws, map_2d_file, tmp_path)
+            ws.v_maps_list.set_selected_maps(["map_A", "map_C"], primary_name="map_A")
+            ws._on_maps_selection_changed(["map_A", "map_C"], "map_A")
+
+            dialog_calls = []
+
+            def _fake_get_dir(parent, title, directory):
+                dialog_calls.append((parent, title, directory))
+                return str(out_dir)
+
+            monkeypatch.setattr(QFileDialog, "getExistingDirectory", _fake_get_dir)
+
+            ws.v_maps_list.btn_save.click()
+            qapp.processEvents()
+
+            assert len(dialog_calls) == 1
+            assert dialog_calls[0][1] == "Select Directory to Save Map Data"
+            assert (out_dir / "map_A.csv").exists()
+            assert (out_dir / "map_C.csv").exists()
+            assert not (out_dir / "map_B.csv").exists()
+            assert ws.vm.settings.get_last_directory() == str(out_dir)
+        finally:
+            ws.close()
+            ws.deleteLater()
+
+    def test_save_button_cancel_folder_dialog_writes_nothing(
+        self, qapp, settings, map_2d_file, tmp_path, monkeypatch
+    ):
+        from PySide6.QtWidgets import QFileDialog
+        from spectroview.view.workspaces import VWorkspaceMaps
+
+        out_dir = tmp_path / "exports_cancel"
+        out_dir.mkdir()
+
+        ws = VWorkspaceMaps()
+        try:
+            self._load_three_maps(ws, map_2d_file, tmp_path)
+            ws.v_maps_list.set_selected_maps(["map_A", "map_B"], primary_name="map_A")
+            ws._on_maps_selection_changed(["map_A", "map_B"], "map_A")
+
+            monkeypatch.setattr(QFileDialog, "getExistingDirectory", lambda *a, **k: "")
+            ws.v_maps_list.btn_save.click()
+            qapp.processEvents()
+
+            assert list(out_dir.iterdir()) == []
+        finally:
+            ws.close()
+            ws.deleteLater()
+
+    def test_save_button_with_no_maps_does_not_open_dialog(self, qapp, monkeypatch):
+        from PySide6.QtWidgets import QFileDialog
+        from spectroview.view.workspaces import VWorkspaceMaps
+
+        ws = VWorkspaceMaps()
+        try:
+            called = []
+
+            def _unexpected_dialog(*_args, **_kwargs):
+                called.append(True)
+                return ""
+
+            monkeypatch.setattr(QFileDialog, "getExistingDirectory", _unexpected_dialog)
+            ws.v_maps_list.btn_save.click()
+            qapp.processEvents()
+
+            assert called == []
+        finally:
+            ws.close()
+            ws.deleteLater()

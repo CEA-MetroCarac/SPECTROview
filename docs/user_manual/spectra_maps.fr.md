@@ -13,7 +13,7 @@ _______
 
 `MapList` et `MapViewer` sont des composants dédiés à la navigation et à la gestion efficaces de vos jeux de données hyperspectraux. `MapList` affiche tous les fichiers de cartes chargés, y compris les cartographies de plaquettes (*wafer maps*) et les cartes 2D standard.
 
-Les boutons d'action situés à côté de `MapList` vous permettent de : (1) afficher les données de la carte sélectionnée, (2) supprimer la carte sélectionnée de l'espace de travail, ou (3) exporter directement la carte sélectionnée vers un fichier Excel.
+Les boutons d'action situés à côté de `MapList` vous permettent de : (1) afficher les données de la carte sélectionnée, (2) supprimer la ou les cartes sélectionnées de l'espace de travail, ou (3) enregistrer toutes les cartes sélectionnées au format CSV dans un dossier choisi.
 
 Vous pouvez facilement naviguer entre les cartes 2D chargées via `MapList`, sélectionner plusieurs cartes avec `Ctrl+Click` ou `Shift+Click`, et **glisser-déposer** une ou plusieurs cartes sélectionnées dans la liste pour les réordonner (ce qui met à jour l'ordre de comparaison dans **Live Maps** tout en conservant inchangée votre carte principale active). La carte principale sélectionnée (*Primary*) est affichée dans `MapViewer`. Lors de l'ouverture ou de la sélection d'une carte, **le premier spectre de la carte est automatiquement sélectionné** et mis en évidence sur la carte thermique ; sa courbe s'affiche immédiatement dans `SpectraViewer` et la ligne de base, le tableau des pics ainsi que les métadonnées sont synchronisés. Par défaut, `MapViewer` affiche une carte thermique du signal « Intensity » ou « Area ». Si la carte a été ajustée, vous pouvez sélectionner et visualiser la carte thermique de n'importe quel paramètre ajusté.
 
@@ -205,6 +205,7 @@ Chaque bouton active une paire de curseurs verticaux déplaçables (crochets et 
   - **Comparer plusieurs profils 1D** : Lorsque la carte principale est un profil linéaire 1D, tous les profils 1D sélectionnés sont superposés ensemble dans chaque sous-panneau de canal avec une épaisseur de trait uniforme (basculez le bouton **Legend** pour identifier chaque courbe sur le canevas).
   - **Basculer entre plusieurs cartes 2D sélectionnées** : Lorsque la carte principale est une carte 2D, un sélecteur compact `◀ [2D Map Selector] ▶` apparaît dans l'en-tête de Live Maps pour parcourir les cartes thermiques 2D sélectionnées sans perdre votre sélection.
   - **Suppression par lots** : Appuyer sur **Delete** alors que plusieurs cartes sont sélectionnées demande confirmation avant de supprimer l'ensemble des cartes sélectionnées.
+  - **Exportation par lots** : Cliquer sur le bouton **Save** alors qu'une ou plusieurs cartes sont sélectionnées ouvre un sélecteur de dossier et exporte chaque carte sélectionnée dans un fichier `.csv` distinct dans ce dossier.
 
 ##### **Visualisation et sous-panneaux de l'onglet Live Maps**
 

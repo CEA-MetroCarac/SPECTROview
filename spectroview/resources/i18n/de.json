@@ -967,9 +967,9 @@
     "Save all currently open plots as a Plot Recipe": "Alle aktuell geöffneten Diagramme als Plot-Rezept speichern",
     "Save current peak limits as a profile": "Aktuelle Peak-Grenzen als Profil speichern",
     "Save fit results to Excel file": "Fit-Ergebnisse in Excel-Datei speichern",
+    "Save selected map(s) to CSV": "Ausgewählte Karte(n) als CSV speichern",
     "Save selected spectra data to TXT file": "Ausgewählte Spektrendaten als TXT-Datei speichern",
     "Save the current fit model.": "Aktuelles Fit-Modell speichern.",
-    "Save the selected map": "Ausgewählte Karte speichern",
     "Save work": "Arbeit speichern",
     "Saved style '{name}'.": "Stil '{name}' gespeichert.",
     "Scale:": "Skalierung:",
@@ -1000,6 +1000,7 @@
     "Select Arrow Color": "Pfeilfarbe wählen",
     "Select Axis Color": "Achsenfarbe wählen",
     "Select Background Color": "Hintergrundfarbe wählen",
+    "Select Directory to Save Map Data": "Zielordner für Kartendaten wählen",
     "Select Directory to Save Spectra Data": "Zielordner für Spektrendaten wählen",
     "Select Edge Color": "Randfarbe wählen",
     "Select Face Color": "Füllfarbe wählen",
@@ -1437,6 +1438,10 @@
     "Successfully exported {count} graph.|Successfully exported {count} graphs.": [
       "{count} Diagramm erfolgreich exportiert.",
       "{count} Diagramme erfolgreich exportiert."
+    ],
+    "Successfully saved {count} map.|Successfully saved {count} maps.": [
+      "{count} Karte erfolgreich gespeichert.",
+      "{count} Karten erfolgreich gespeichert."
     ],
     "Successfully saved {count} spectrum.|Successfully saved {count} spectra.": [
       "{count} Spektrum erfolgreich gespeichert.",
